@@ -2,7 +2,11 @@
 ###   init   ###
 ################
 
-# init build system variables
+####
+## build system config
+####
+
+# build system variables
 scripts_dir := scripts
 project_type := c
 config := ./config
@@ -10,84 +14,133 @@ config_tree := $(scripts_dir)/config
 use_config_sys := y
 config_ftype := Kconfig
 
-# include config
--include $(config)
-
-# set parameter based on selected target
-ifeq ($(CONFIG_P5020),y)
-  platform := qoriq
-  arch := powerpc
-  board := p5020
-  core := e5500
-  arch_header := "<arch/$(arch)/board-$(board)/board.h>"
-endif
-
-ifeq ($(CONFIG_P4080),y)
-  platform := qoriq
-  arch := powerpc
-  board := p4080
-  core := e5500
-  arch_header := "<arch/$(arch)/board-$(board)/board.h>"
-endif
-
-# init source and build tree
+# source- and build-tree
 default_build_tree := build/
-src_dirs := arch kernel lib sys init driver scripts/memlayout scripts/sysroot
+src_dirs := arch kernel lib sys init driver $(scripts_dir)/memlayout
 
-# include build system Makefile
+####
+## include build system Makefile
+####
+
 include $(scripts_dir)/Makefile.inc
 
-# init default flags
-cflags := $(CFLAGS) $(CONFIG_CFLAGS) -nostdinc -Wall -fno-builtin -Wno-unknown-pragmas
-cxxflags := $(CXXFLAGS) $(CONFIG_CXXFLAGS)
-cppflags := $(CPPFLAGS) $(CONFIG_CPPFLAGS) \
+
+####
+## flags
+####
+
+# init default target flags
+cflags := \
+	$(CFLAGS) \
+	$(CONFIG_CFLAGS) \
+	$(cflags) \
+	-nostdinc \
+	-Wall \
+	-Wno-unknown-pragmas \
+	-fno-builtin
+
+cxxflags := \
+	$(CXXFLAGS) \
+	$(CONFIG_CXXFLAGS) \
+	$(cxxflags)
+
+cppflags := \
+	$(CPPFLAGS) \
+	$(CONFIG_CPPFLAGS) \
+	$(cppflags) \
 	-I"$(src_tree)/include/" \
-	-DNCORES=$(CONFIG_NCORES) \
-	-DCORE_MASK=$(CONFIG_CORE_MASK) \
-	-DPLATFORM_$(call upper_case,$(platform)) \
-	-DARCH_$(call upper_case,$(arch)) \
-	-DBOARD_$(call upper_case,$(board)) \
-	-DCORE_$(call upper_case,$(core)) \
-	-DARCH_HEADER=$(arch_header) \
-	-DSILICON_REV=$(CONFIG_SILICON_REV) \
-	-DPLATFORM_CLOCK=$(CONFIG_PLATFORM_CLOCK) \
-	-DCORE_CLOCK=$(CONFIG_CORE_CLOCK)
+	-I"$(build_tree)/" \
+	-DARCH_HEADER="$(CONFIG_ARCH_HEADER)"
 
-ldflags := $(LDFLAGS) $(CONFIG_LDFLAGS) -L"$(build_tree)/lib/" -nostartfiles -nostdlib -static
-ldrflags := $(LDRFLAGS) $(CONFIG_LDRFLAGS)
-asflags := $(ASFLAGS) $(CONFIG_ASFLAGS)
-archflags := $(ARCHFLAGS) $(CONFIG_ARCHFLAGS)
-hostcflags := $(HOSTCFLAGS) $(CONFIG_HOSTCFLAGS)
-hostcxxflags := $(HOSTCXXFLAGS) $(CONFIG_HOSTCCCFLAGS)
-hostcppflags := $(HOSTCPPFLAGS) $(CONFIG_HOSTCPPFLAGS) \
-	-DNCORES=$(CONFIG_NCORES) \
-	-DPLATFORM_$(call upper_case,$(platform)) \
-	-DARCH_$(call upper_case,$(arch)) \
-	-DBOARD_$(call upper_case,$(board)) \
-	-DCORE_$(call upper_case,$(core)) \
-	-DARCH_HEADER=$(arch_header)
+ldflags := \
+	$(LDFLAGS) \
+	$(CONFIG_LDFLAGS) \
+	$(ldflags) \
+	-nostartfiles \
+	-nostdlib \
+	-static \
+	-L$(build_tree)/lib/
 
-hostldflags := $(HOSTLDFLAGS) $(CONFIG_HOSTLDFLAGS)
-hostldrflags := $(HOSTLDRFLAGS) $(CONFIG_HOSTLDRFLAGS)
-hostasflags := $(HOSTASFLAGS) $(CONFIG_HOSTASFLAGS)
-hostarchflags := $(HOSTARCHFLAGS) $(CONFIG_HOSTARCHFLAGS)
-yaccflags := $(YACCFLAGS)
-lexflags := $(LEXFLAGS)
-gperfflags := $(GPERFFLAGS)
+ldrflags := \
+	$(LDRFLAGS) \
+	$(CONFIG_LDRFLAGS) \
+	$(ldrflags)
 
-# init build variables
-LAST_BUILD ?= last_build
-last_build := $(LAST_BUILD)
+asflags := \
+	$(ASFLAGS) \
+	$(CONFIG_ASFLAGS) \
+	$(asflags)
 
-SYSROOT ?= sysroot
-sysroot := $(SYSROOT)
+archflags := \
+	$(ARCHFLAGS) \
+	$(CONFIG_ARCHFLAGS) \
+	$(archflags)
 
-memlayout := $(build_tree)/scripts/memlayout/memlayout
-macro_replacer := $(build_tree)/scripts/sysroot/macro_replacer
+# init default host flags
+hostcflags := \
+	$(HOSTCFLAGS) \
+	$(CONFIG_HOSTCFLAGS) \
+	$(hostcflags)
+
+hostcxxflags := \
+	$(HOSTCXXFLAGS) \
+	$(CONFIG_HOSTCCCFLAGS) \
+	$(hostcxxflags)
+
+hostcppflags := \
+	$(HOSTCPPFLAGS) \
+	$(CONFIG_HOSTCPPFLAGS) \
+	$(hostcppflags) \
+	-I"$(build_tree)/" \
+	-DARCH_HEADER="$(CONFIG_ARCH_HEADER)"
+
+hostldflags := \
+	$(HOSTLDFLAGS) \
+	$(CONFIG_HOSTLDFLAGS) \
+	$(hostldflags)
+
+hostldrflags := \
+	$(HOSTLDRFLAGS) \
+	$(CONFIG_HOSTLDRFLAGS) \
+	$(hostldrflags)
+
+hostasflags := \
+	$(HOSTASFLAGS) \
+	$(CONFIG_HOSTASFLAGS) \
+	$(hostasflags)
+
+hostarchflags := \
+	$(HOSTARCHFLAGS) \
+	$(CONFIG_HOSTARCHFLAGS) \
+	$(hostarchflags)
+
+yaccflags := \
+	$(YACCFLAGS) \
+	$(yaccflags)
+
+lexflags := \
+	$(LEXFLAGS) \
+	$(lexflags)
+
+gperfflags := \
+	$(GPERFFLAGS) \
+	$(gperfflags)
+
+
+####
+## janos specific variables
+####
+
 kernel := $(build_tree)/kimg.elf
-kernel_obj := $(addprefix $(build_tree)/,kernel/obj.o arch/obj.o sys/obj.o driver/obj.o)
+kernel_deps := kernel/ arch/ sys/ driver/
 libsys := $(build_tree)/lib/libsys.a
-libsys_obj := $(addprefix $(build_tree)/,lib/obj.o sys/obj.o arch/for_libsys.o)
+libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
+
+sysroot := sysroot
+recent := recent
+
+memlayout := $(build_tree)/$(scripts_dir)/memlayout/memlayout
+sysroot_create := $(scripts_dir)/sysroot/create.sh
 
 
 ###################
@@ -97,33 +150,34 @@ libsys_obj := $(addprefix $(build_tree)/,lib/obj.o sys/obj.o arch/for_libsys.o)
 ####
 ## build
 ####
+
 # kernel target
 .PHONY: kernel
+kernel: cppflags += -DKERNEL
 kernel: check_config $(memlayout) $(kernel)
-	@$(memlayout)
+	$(QUTIL)$(memlayout)
 
-$(kernel): ldflags += -L scripts/linker -T kernel_$(arch).lds -lgcc
-$(kernel): $(kernel_obj)
+$(kernel): ldflags += -L$(scripts_dir)/linker -Tkernel_$(CONFIG_ARCH).lds
+$(kernel): ldflags += -Wl,--section-start=.base=$(CONFIG_KERNEL_BASE_ADDR)
+$(kernel): ldflags += -lgcc -lm
+$(kernel): $(addsuffix obj.o, $(addprefix $(build_tree)/, $(kernel_deps)))
 	$(call compile_bin_o)
 
 # libsys targets
 .PHONY: libsys
+libsys: cppflags += -DLIBSYS
 libsys: check_config $(libsys)
 
-$(libsys): ldflags += -L scripts/linker -T libsys_$(arch).lds
-$(libsys): $(libsys_obj)
+$(libsys): ldflags += -L$(scripts_dir)/linker -Tlibsys_$(CONFIG_ARCH).lds
+$(libsys): $(addprefix $(build_tree)/, $(libsys_dep))
 	$(call compile_lib_o)
-
-.PHONY: libsys_dep
-libsys_dep:
-	$(echo) $(libsys_obj)
 
 # sysroot target
 .PHONY: sysroot
-sysroot: check_config $(macro_replacer) $(kernel) $(libsys)
-	$(rm) $(last_build)
-	$(sym_link) $(build_tree) $(last_build); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"last_build\",\nmake sure to update &build_dir within lauterbach/setup_env.cmm and\nthe path to init.elf within lauterbach/apps.txt\033[0m"; exit 0
-	@scripts/sysroot/create.sh $(build_tree) $(sysroot) $(arch)
+sysroot: check_config $(kernel) $(libsys)
+	$(rm) $(recent)
+	$(sym_link) $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
+	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(build_tree)/config/config.h
 
 .PHONY: all
 all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)
@@ -131,13 +185,14 @@ all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)
 ####
 ## cleanup
 ####
+
 .PHONY: clean
 clean: clean-kernel clean-init clean-scripts
-	$(rm) $(filter-out $(build_tree)/$(scripts_dir),$(wildcard $(build_tree)/*)) $(last_build)
+	$(rm) $(filter-out $(build_tree)/$(scripts_dir),$(wildcard $(build_tree)/*))
 
 .PHONY: clean-kernel
 clean-kernel:
-	$(rm) $(build_tree)/kernel $(build_tree)/driver $(build_tree)/sys $(build_tree)/lib $(build_tree)/arch $(kernel) $(last_build)
+	$(rm) $(build_tree)/kernel $(build_tree)/driver $(build_tree)/sys $(build_tree)/lib $(build_tree)/arch $(kernel) $(recent)
 
 .PHONY: clean-init
 clean-init:
@@ -145,7 +200,7 @@ clean-init:
 
 .PHONY: clean-scripts
 clean-scripts:
-	$(rm) $(build_tree)/scripts
+	$(rm) $(build_tree)/$(scripts_dir)
 
 .PHONY: clean-sysroot
 clean-sysroot:
@@ -153,4 +208,4 @@ clean-sysroot:
 
 .PHONY: distclean
 distclean:
-	$(rm) config config.old $(last_build) $(build_tree)
+	$(rm) config config.old $(recent) $(build_tree)

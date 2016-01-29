@@ -1,5 +1,5 @@
 /* add .init section containing init routine calls */
-.init ALIGN(0x100) : {
+.init ALIGN(0x4) : {
 	__core_init0_base = .;
 	*(.core_init_stage0)
 
