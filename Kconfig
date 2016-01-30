@@ -1,0 +1,156 @@
+mainmenu "janos configuration"
+
+#
+# processor type
+#
+menu "Processor type"
+	source "arch/Kconfig"
+endmenu
+
+#
+# kernel
+#
+menu "Kernel"
+	source kernel/Kconfig
+endmenu
+
+#
+# device driver
+#
+menu "Device driver"
+	source "driver/Kconfig"
+endmenu
+
+#
+# build system
+#
+menu "Build system"
+	# build type
+	choice
+		prompt "Build type"
+
+		config BUILD_DEBUG
+			bool "debug"
+
+		config BUILD_RELEASE
+			bool "release"
+	endchoice
+
+	menu "Hidden"
+		visible if 0
+
+		config BUILD_TYPE
+			string "Build type"
+			default "debug" if BUILD_DEBUG
+			default "release" if BUILD_RELEASE
+	endmenu
+
+	# build tree
+	config BUILD_TREE
+		string "build tree"
+		default "build/$(CONFIG_PROCESSOR)/$(CONFIG_BUILD_TYPE)"
+
+	# toolchain prefixes
+	config TOOLCHAIN_PREFIX
+		string "Target toolchain prefix"
+		default ""
+
+	menu "Hidden"
+		visible if 0
+
+		config CC
+			string CC
+			default "$(CONFIG_TOOLCHAIN_PREFIX)gcc"
+
+		config CXX
+			string CXX
+			default "$(CONFIG_TOOLCHAIN_PREFIX)g++"
+
+		config AS
+			string AS
+			default "$(CONFIG_TOOLCHAIN_PREFIX)as"
+
+		config AR
+			string AR
+			default "$(CONFIG_TOOLCHAIN_PREFIX)ar"
+
+		config LD
+			string LD
+			default "$(CONFIG_TOOLCHAIN_PREFIX)ld"
+	endmenu
+
+	config HOSTTOOLCHAIN_PREFIX
+		string "Host toolchain prefix"
+		default ""
+
+	menu "Hidden"
+		visible if 0
+
+		config HOSTCC
+			string HOSTCC
+			default "$(HOSTCONFIG_TOOLCHAIN_PREFIX)gcc"
+
+		config HOSTCXX
+			string HOSTCXX
+			default "$(HOSTCONFIG_TOOLCHAIN_PREFIX)g++"
+
+		config HOSTAS
+			string HOSTAS
+			default "$(HOSTCONFIG_TOOLCHAIN_PREFIX)as"
+
+		config HOSTAR
+			string HOSTAR
+			default "$(HOSTCONFIG_TOOLCHAIN_PREFIX)ar"
+
+		config HOSTLD
+			string HOSTLD
+			default "$(HOSTCONFIG_TOOLCHAIN_PREFIX)ld"
+	endmenu
+
+	# toolchain flags
+	menu "Target flags"
+		config CFLAGS
+			string CFLAGS
+
+		config CXXFLAGS
+			string CXXFLAGS
+
+		config CPPFLAGS
+			string CPPFLAGS
+
+		config ASFLAGS
+			string ASFLAGS
+
+		config LDFLAGS
+			string LDFLAGS
+
+		config LDRFLAGS
+			string LDRFLAGS
+
+		config ARCHFLAGS
+			string ARCHFLAGS
+	endmenu
+
+	menu "Host flags"
+		config HOSTCFLAGS
+			string HOSTCFLAGS
+
+		config HOSTCXXFLAGS
+			string HOSTCXXFLAGS
+
+		config HOSTCPPFLAGS
+			string HOSTCPPFLAGS
+
+		config HOSTASFLAGS
+			string HOSTASFLAGS
+
+		config HOSTLDFLAGS
+			string HOSTLDFLAGS
+
+		config HOSTLDRFLAGS
+			string HOSTLDRFLAGS
+
+		config HOSTARCHFLAGS
+			string HOSTARCHFLAGS
+	endmenu
+endmenu

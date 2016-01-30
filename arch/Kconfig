@@ -1,0 +1,48 @@
+#
+# processor type and features menus
+#
+choice
+	prompt "Processor type"
+endchoice
+
+menu "Hidden"
+	visible if 0
+
+	config ARCH
+		string "Architecture"
+	
+	config PROCESSOR
+		string "Processor"
+
+	config ADDR_WIDTH_8
+		bool "8-bit"
+
+	config ADDR_WIDTH_16
+		bool "16-bit"
+
+	config ADDR_WIDTH_32
+		bool "32-bit"
+
+	config ADDR_WIDTH
+		int "Address width"
+		default 8 if ADDR_WIDTH_8
+		default 16 if ADDR_WIDTH_16
+		default 32 if ADDR_WIDTH_32
+		default 32
+endmenu
+
+#
+# generic configs
+#
+config NCORES
+	int "Number of cores"
+	default 1
+
+config CORE_MASK
+	hex "Core mask"
+	range 0x1 0x0fffffff
+	default 0x1
+
+config CORE_CLOCK_HZ
+	int "Core clock [HZ]"
+	default 1000000

@@ -1,0 +1,150 @@
+#
+# uart driver
+#
+config UART
+	bool "Uart"
+	default true
+
+# baud rate
+choice
+	prompt "Uart baud rate"
+	depends on UART
+
+	config UART_BR_2400
+		bool "Uart baud rate 2400"
+
+	config UART_BR_4800
+		bool "Uart baud rate 4800"
+
+	config UART_BR_9600
+		bool "Uart baud rate 9600"
+
+	config UART_BR_14400
+		bool "Uart baud rate 14400"
+
+	config UART_BR_19200
+		bool "Uart baud rate 19200"
+
+	config UART_BR_28800
+		bool "Uart baud rate 28800"
+
+	config UART_BR_38400
+		bool "Uart baud rate 38400"
+
+	config UART_BR_57600
+		bool "Uart baud rate 57600"
+
+	config UART_BR_76800
+		bool "Uart baud rate 76800"
+
+	config UART_BR_115200
+		bool "Uart baud rate 115200"
+
+	config UART_BR_230400
+		bool "Uart baud rate 230400"
+
+	config UART_BR_250000
+		bool "Uart baud rate 250000"
+
+		config UART_BR_500000
+		bool "Uart baud rate 500000"
+
+	config UART_BR_1000000
+		bool "Uart baud rate 1000000"
+endchoice
+
+menu "Hidden"
+	visible if 0
+	depends on UART
+
+	config UART_BAUDRATE
+		int "Uart baud rate"
+		default 2400	if UART_BR_2400
+		default 4800	if UART_BR_4800
+		default 9600	if UART_BR_9600
+		default 14400	if UART_BR_14400
+		default 19200	if UART_BR_19200
+		default 28800	if UART_BR_28800
+		default 38400	if UART_BR_38400
+		default 57600	if UART_BR_57600
+		default 76800	if UART_BR_76800
+		default 115200	if UART_BR_115200
+		default 230400	if UART_BR_230400
+		default 250000	if UART_BR_250000
+		default 500000	if UART_BR_500000
+		default 1000000	if UART_BR_1000000
+endmenu
+
+# parity
+choice
+	prompt "Parity"
+	depends on UART
+	default UART_PARITY_NONE
+
+	config UART_PARITY_ODD
+		bool "Odd"
+
+	config UART_PARITY_EVEN
+		bool "Even"
+
+	config UART_PARITY_NONE
+		bool "None"
+endchoice
+
+# word length
+choice
+	prompt "Word length"
+	depends on UART
+	default UART_WLEN_8
+
+	config UART_WLEN_5
+		bool "5"
+
+	config UART_WLEN_6
+		bool "6"
+
+	config UART_WLEN_7
+		bool "7"
+
+	config UART_WLEN_8
+		bool "8" 
+
+	config UART_WLEN_9
+		bool "9"
+endchoice
+
+menu "Hidden"
+	visible if 0
+	depends on UART
+
+	config UART_WORDLENGTH
+		int "Word length"
+		default 5	if UART_WLEN_5
+		default 6	if UART_WLEN_6
+		default 7	if UART_WLEN_7
+		default 8	if UART_WLEN_8
+		default 9	if UART_WLEN_9
+endmenu
+
+# stop bits
+choice
+	prompt "Stop bits"
+	depends on UART
+	default UART_STOPB_1
+
+	config UART_STOPB_1
+		bool "1"
+
+	config UART_STOPB_2
+		bool "2"
+endchoice
+
+menu "Hidden"
+	visible if 0
+	depends on UART
+
+	config UART_STOPBITS
+		int "Stop bits"
+		default 1	if UART_STOPB_1
+		default 2	if UART_STOPB_2
+endmenu
