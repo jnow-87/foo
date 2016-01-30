@@ -1,0 +1,3 @@
+/* global functions */
+void kernel(){
+}
