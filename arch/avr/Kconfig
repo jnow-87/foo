@@ -1,0 +1,30 @@
+#
+# MCU
+#
+choice
+	prompt "Target MCU"
+		
+	config ATMEGA1284P
+		bool "Atmega1284P"
+		select ADDR_WIDTH_8
+
+	config ATMEGA88PA
+		bool "Atmega88PA"
+		select ADDR_WIDTH_8
+endchoice
+
+menu "Hidden"
+	visible if 0
+
+	# MCU
+	config MCU
+		string "MCU"
+		default "atmega1284p" if ATMEGA1284P
+		default "atmega88pa" if ATMEGA88PA
+		default "unknown MCU"
+
+	# architecture defining header
+	config ARCH_HEADER
+		string "Arch Header"
+		default "<arch/$(CONFIG_ARCH)/atmega.h>" if AVR
+endmenu

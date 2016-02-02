@@ -5,4 +5,5 @@ menu "Hidden"
 	config KERNEL_BASE_ADDR
 		hex "Kernel starting address"
 		range 0x0 0x0fffffff
+		default 0x00000100 if AVR
 endmenu

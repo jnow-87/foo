@@ -1,8 +1,5 @@
 /* janos header */
 #include ARCH_HEADER
-#include ARCH_MEM
-#include <sys/macro.h>
-#include <sys/math.h>
 
 /* host header */
 #include <stdio.h>
@@ -18,11 +15,11 @@ int main(){
 	printf("%15.15s: 0x%8.8x - 0x%8.8x %8.uk (%#8.8x)\n", "KIMG", KERNEL_IMG_BASE, KERNEL_IMG_BASE + KERNEL_IMG_SIZE - 1, KERNEL_IMG_SIZE / 1024, KERNEL_IMG_SIZE);
 	printf("%15.15s: 0x%8.8x - 0x%8.8x %8.uk (%#8.8x)\n", "STACK", KERNEL_STACK_BASE, KERNEL_STACK_BASE + KERNEL_STACK_SIZE - 1, KERNEL_STACK_SIZE / 1024, KERNEL_STACK_SIZE);
 
-	for(i=0; i<NCORES; i++)
+	for(i=0; i<CONFIG_NCORES; i++)
 		printf("%13.13s%2d: 0x%8.8x - 0x%8.8x %8.uk (%#8.8x)\n", "STACK CORE", i, KERNEL_STACK_CORE_BASE(i), KERNEL_STACK_CORE_BASE(i) + KERNEL_STACK_CORE_SIZE - 1, KERNEL_STACK_CORE_SIZE / 1024, KERNEL_STACK_CORE_SIZE);
 
 	printf("%15.15s: 0x%8.8x - 0x%8.8x %8.uk (%#8.8x)\n", "HEAP", KERNEL_HEAP_BASE, KERNEL_HEAP_BASE + KERNEL_HEAP_SIZE - 1, KERNEL_HEAP_SIZE / 1024, KERNEL_HEAP_SIZE);
-	printf("%15.15s: 0x%8.8x - 0x%8.8x %8.uk (%#8.8x)\n", "ARCH DEPENDENT", ARCH_DEP_BASE, ARCH_DEP_BASE + ARCH_DEP_SIZE - 1, ARCH_DEP_SIZE / 1024, ARCH_DEP_SIZE);
+	printf("%15.15s: 0x%8.8x - 0x%8.8x %8.uk (%#8.8x)\n", "IO", IO_BASE, IO_BASE + IO_SIZE - 1, IO_SIZE / 1024, IO_SIZE);
 	printf("%15.15s: 0x%8.8x - 0x%8.8x %8.uk (%#8.8x)\n", "FS", RAMFS_BASE, RAMFS_BASE + RAMFS_SIZE - 1, RAMFS_SIZE / 1024, RAMFS_SIZE);
 	printf("%15.15s: 0x%8.8x - 0x%8.8x %8.uk (%#8.8x)\n", "PROC", PROCESS_BASE, PROCESS_BASE + PROCESS_SIZE - 1, PROCESS_SIZE / 1024, PROCESS_SIZE);
 

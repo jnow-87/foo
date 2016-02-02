@@ -3,16 +3,26 @@
 #
 choice
 	prompt "Processor type"
+
+	config AVR
+		bool "AVR"
 endchoice
+
+menu "AVR features"
+	visible if AVR
+	source "arch/avr/Kconfig"
+endmenu
 
 menu "Hidden"
 	visible if 0
 
 	config ARCH
 		string "Architecture"
+		default "avr" if AVR
 	
 	config PROCESSOR
 		string "Processor"
+		default MCU if AVR
 
 	config ADDR_WIDTH_8
 		bool "8-bit"
