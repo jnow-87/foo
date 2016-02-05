@@ -52,19 +52,19 @@ cppflags := \
 	-I"$(build_tree)/" \
 	-DARCH_HEADER="$(CONFIG_ARCH_HEADER)"
 
-ldflags := \
-	$(LDFLAGS) \
-	$(CONFIG_LDFLAGS) \
-	$(ldflags) \
+ldlibs := \
+	$(LDLIBS) \
+	$(CONFIG_LDLIBS) \
+	$(ldlibs) \
 	-nostartfiles \
 	-nostdlib \
 	-static \
 	-L$(build_tree)/lib/
 
-ldrflags := \
-	$(LDRFLAGS) \
-	$(CONFIG_LDRFLAGS) \
-	$(ldrflags)
+ldflags := \
+	$(LDFLAGS) \
+	$(CONFIG_LDFLAGS) \
+	$(ldflags)
 
 asflags := \
 	$(ASFLAGS) \
@@ -94,15 +94,15 @@ hostcppflags := \
 	-I"$(build_tree)/" \
 	-DARCH_HEADER="$(CONFIG_ARCH_HEADER)"
 
+hostldlibs := \
+	$(HOSTLDLIBS) \
+	$(CONFIG_HOSTLDLIBS) \
+	$(hostldlibs)
+
 hostldflags := \
 	$(HOSTLDFLAGS) \
 	$(CONFIG_HOSTLDFLAGS) \
 	$(hostldflags)
-
-hostldrflags := \
-	$(HOSTLDRFLAGS) \
-	$(CONFIG_HOSTLDRFLAGS) \
-	$(hostldrflags)
 
 hostasflags := \
 	$(HOSTASFLAGS) \
@@ -157,9 +157,9 @@ kernel: cppflags += -DKERNEL
 kernel: check_config $(memlayout) $(kernel)
 	$(QUTIL)$(memlayout)
 
-$(kernel): ldflags += -L$(scripts_dir)/linker -Tkernel_$(CONFIG_ARCH).lds
-$(kernel): ldflags += -Wl,--section-start=.base=$(CONFIG_KERNEL_BASE_ADDR)
-$(kernel): ldflags += -lgcc -lm
+$(kernel): ldlibs += -L$(scripts_dir)/linker -Tkernel_$(CONFIG_ARCH).lds
+$(kernel): ldlibs += -Wl,--section-start=.base=$(CONFIG_KERNEL_BASE_ADDR)
+$(kernel): ldlibs += -lgcc -lm
 $(kernel): $(addsuffix obj.o, $(addprefix $(build_tree)/, $(kernel_deps)))
 	$(call compile_bin_o)
 
@@ -168,7 +168,7 @@ $(kernel): $(addsuffix obj.o, $(addprefix $(build_tree)/, $(kernel_deps)))
 libsys: cppflags += -DLIBSYS
 libsys: check_config $(libsys)
 
-$(libsys): ldflags += -L$(scripts_dir)/linker -Tlibsys_$(CONFIG_ARCH).lds
+$(libsys): ldlibs += -L$(scripts_dir)/linker -Tlibsys_$(CONFIG_ARCH).lds
 $(libsys): $(addprefix $(build_tree)/, $(libsys_dep))
 	$(call compile_lib_o)
 

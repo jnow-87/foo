@@ -5,7 +5,7 @@ $(loc_build_tree)/zconf.tab.host.o: $(loc_build_tree)/zconf.lex.c $(loc_build_tr
 
 mconfig-y := zconf.tab.o mconf.o lxdialog/
 
-mconfig-hostldflags := -lncurses
+mconfig-hostldlibs := -lncurses
 mconfig-hostcppflags := -I"$(loc_src_tree)" -I"$(loc_build_tree)" -DYYDEBUG -DCURSES_LOC="<ncurses.h>"
 mconfig-hostcflags := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
 mconfig-yaccflags := --name-prefix=zconf
