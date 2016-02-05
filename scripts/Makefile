@@ -159,7 +159,7 @@ kernel: check_config $(memlayout) $(kernel)
 
 $(kernel): ldlibs += -L$(scripts_dir)/linker -Tkernel_$(CONFIG_ARCH).lds
 $(kernel): ldlibs += -Wl,--section-start=.base=$(CONFIG_KERNEL_BASE_ADDR)
-$(kernel): ldlibs += -lgcc -lm
+$(kernel): ldlibs += -lgcc
 $(kernel): $(addsuffix obj.o, $(addprefix $(build_tree)/, $(kernel_deps)))
 	$(call compile_bin_o)
 

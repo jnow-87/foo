@@ -12,6 +12,7 @@ SECTIONS {
 	.base 0x0 : {
 	}
 
+
 	/* interrupt vectors */
 	.intvec ADDR(.base) : {
 		*(.intvec)
@@ -57,6 +58,13 @@ SECTIONS {
 
 	__bss_start = ADDR(.bss);
 	__bss_end = __bss_start + SIZEOF(.bss);
+
+
+	/* discard sections */
+	/DISCARD/ : {
+		*(.init4)	/* libgcc .data initialisation not needed */
+	}
+
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */
