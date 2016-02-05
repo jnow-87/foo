@@ -1,6 +1,3 @@
-OUTPUT_FORMAT("elf32-avr")
-
-
 SECTIONS {
 	/* code */
 	.text : {

@@ -23,6 +23,11 @@ menu "Hidden"
 		default "atmega88pa" if ATMEGA88PA
 		default "unknown MCU"
 
+	config ISA
+		string "ISA"
+		default "avr4" if ATMEGA88PA
+		default "avr51" if ATMEGA1284P
+
 	# architecture defining header
 	config ARCH_HEADER
 		string "Arch Header"
