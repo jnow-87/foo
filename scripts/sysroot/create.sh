@@ -5,6 +5,8 @@ build_dir=${1}
 sysroot=${2}
 arch_hdr=${3}
 cfg_hdr=${4}
+kernel_name=${5}
+lib_name=${6}
 
 
 # defines
@@ -33,8 +35,8 @@ echo create sysroot at \"${sysroot_dir}\"
 [ -e ${sysroot_dir} ] && rm -r ${sysroot_dir}
 
 # copy files
-copy ${build_dir}/kimg.elf ${sysroot_dir}
-copy ${build_dir}/lib/libsys.a ${sysroot_dir}/lib
+copy ${build_dir}/${kernel_name} ${sysroot_dir}
+copy ${build_dir}/lib/${lib_name} ${sysroot_dir}/lib
 copy ${cfg_hdr} ${sysroot_dir}/usr/include/config
 
 for dir in ${src_dirs}

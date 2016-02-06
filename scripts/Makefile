@@ -18,6 +18,10 @@ config_ftype := Kconfig
 default_build_tree := build/
 src_dirs := arch kernel lib sys init driver $(scripts_dir)/memlayout
 
+kernel_name := kimg.elf
+lib_name := libsys.a
+
+
 ####
 ## include build system Makefile
 ####
@@ -131,9 +135,9 @@ gperfflags := \
 ## janos specific variables
 ####
 
-kernel := $(build_tree)/kimg.elf
+kernel := $(build_tree)/$(kernel_name)
 kernel_deps := kernel/ arch/ sys/ driver/
-libsys := $(build_tree)/lib/libsys.a
+libsys := $(build_tree)/lib/$(lib_name)
 libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
 
 sysroot := sysroot
@@ -177,7 +181,7 @@ $(libsys): $(addprefix $(build_tree)/, $(libsys_dep))
 sysroot: check_config $(kernel) $(libsys)
 	$(rm) $(recent)
 	$(sym_link) $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
-	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(build_tree)/config/config.h
+	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(build_tree)/config/config.h $(kernel_name) $(lib_name)
 
 .PHONY: all
 all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)

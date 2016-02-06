@@ -16,7 +16,7 @@ $(loc_build_tree)/atmega_lib.o: $(loc_src_tree)/atmega.c
 
 
 # AVR specific flags
-%/kimg.elf: ldlibs += \
+%/$(kernel_name): ldlibs += \
 	-Tmem_$(shell echo $(CONFIG_AVR_MCU) | grep -o -e '^[a-z]*[0-9]*').lds \
 	-Wl,-Map=$(basename $@).map,--cref
 
