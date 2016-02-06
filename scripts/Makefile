@@ -38,15 +38,21 @@ cflags := \
 	$(CFLAGS) \
 	$(CONFIG_CFLAGS) \
 	$(cflags) \
-	-nostdinc \
 	-Wall \
 	-Wno-unknown-pragmas \
-	-fno-builtin
+	-nostdinc \
+	-fno-builtin \
+	-O0
 
 cxxflags := \
 	$(CXXFLAGS) \
 	$(CONFIG_CXXFLAGS) \
-	$(cxxflags)
+	$(cxxflags) \
+	-Wall \
+	-Wno-unknown-pragmas \
+	-nostdinc \
+	-fno-builtin \
+	-O0
 
 cppflags := \
 	$(CPPFLAGS) \
@@ -84,12 +90,18 @@ archflags := \
 hostcflags := \
 	$(HOSTCFLAGS) \
 	$(CONFIG_HOSTCFLAGS) \
-	$(hostcflags)
+	$(hostcflags) \
+	-Wall \
+	-Wno-unknown-pragmas \
+	-O2
 
 hostcxxflags := \
 	$(HOSTCXXFLAGS) \
 	$(CONFIG_HOSTCCCFLAGS) \
-	$(hostcxxflags)
+	$(hostcxxflags) \
+	-Wall \
+	-Wno-unknown-pragmas \
+	-O2
 
 hostcppflags := \
 	$(HOSTCPPFLAGS) \
@@ -158,7 +170,7 @@ sysroot_create := $(scripts_dir)/sysroot/create.sh
 # kernel target
 .PHONY: kernel
 kernel: cppflags += -DKERNEL
-kernel: check_config $(memlayout) $(kernel)
+kernel: check_config check_configheader $(memlayout) $(kernel)
 	$(QUTIL)$(memlayout)
 
 $(kernel): ldlibs += -L$(scripts_dir)/linker -Tkernel_$(CONFIG_ARCH).lds
@@ -184,6 +196,15 @@ sysroot: check_config $(kernel) $(libsys)
 	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(build_tree)/config/config.h $(kernel_name) $(lib_name)
 
 .PHONY: all
+ifeq ($(CONFIG_BUILD_DEBUG),y)
+all: cflags += -g
+all: cxxflags += -g
+all: asflags += -g
+all: hostcflags += -g
+all: hostcxxflags += -g
+all: hostasflags += -g
+endif
+
 all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)
 
 ####
@@ -212,4 +233,4 @@ clean-sysroot:
 
 .PHONY: distclean
 distclean:
-	$(rm) config config.old $(recent) $(build_tree)
+	$(rm) $(config) $(config).old $(recent) $(build_tree)
