@@ -16,6 +16,7 @@
 #ifndef _x86_
 #ifndef __x86_64__
 
+#include <arch/avr/register.h>
 #include <arch/avr/timebase.h>
 #include <sys/types.h>
 
