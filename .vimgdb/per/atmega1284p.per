@@ -1,0 +1,735 @@
+range 0x1 31{	// range cannot start at 0x0, since gdb doesn't
+				// allow to read memory from address 0x0
+
+	/* General Purpose Working Registers */
+	section "General Purpose Working Registes"{
+		// unable to read R0, since it is located at address 0x0
+		// which cannot be read by gdb
+		register "R1"		""		0	1{}
+		register "R2"		""		1	1{}
+		register "R3"		""		2	1{}
+		register "R4"		""		3	1{}
+		register "R5"		""		4	1{}
+		register "R6"		""		5	1{}
+		register "R7"		""		6	1{}
+		register "R8"		""		7	1{}
+		register "R9"		""		8	1{}
+		register "R10"		""		9	1{}
+		register "R11"		""		10	1{}
+		register "R12"		""		11	1{}
+		register "R13"		""		12	1{}
+		register "R14"		""		13	1{}
+		register "R15"		""		14	1{}
+		register "R16"		""		15	1{}
+		register "R17"		""		16	1{}
+		register "R18"		""		17	1{}
+		register "R19"		""		18	1{}
+		register "R20"		""		19	1{}
+		register "R21"		""		20	1{}
+		register "R22"		""		21	1{}
+		register "R23"		""		22	1{}
+		register "R24"		""		23	1{}
+		register "R25"		""		24	1{}
+		register "R26"		""		25	1{}
+		register "R27"		""		26	1{}
+		register "R28"		""		27	1{}
+		register "R29"		""		28	1{}
+		register "R30"		""		29	1{}
+		register "R31"		""		30	1{}
+
+		emptyline
+
+		register "X"		""		25	2 swap {}
+		register "Y"		""		27	2 swap {}
+		register "Z"		""		29	2 swap {}
+	}
+}
+
+range 0x20 175{
+	/* MCU Control */
+	section "MCU General Control and Status"{
+		heading "MCU Control and Status"
+		register "MCUCR"	"MCU Control Register"								53	1{
+			bits "JTD"		7	1
+			bits "BODS"		6	1
+			bits "BODSE"	5	1
+			bits "PUD"		4	1
+			bits "IVSEL"	1	1
+			bits "IVCE"		0	1
+		}
+
+		register "MCUSR"	"MCU Status Register"								52	1{
+			bits "JTRF"		4	1
+			bits "WDRF"		3	1
+			bits "BORF"		2	1
+			bits "EXTRF"	1	1
+			bits "PROF"		0	1
+		}
+
+		register "SREG"		"Status Register"									63	1{
+			bits "I"	7	1
+			bits "T"	6	1
+			bits "H"	5	1
+			bits "S"	4	1
+			bits "V"	3	1
+			bits "N"	2	1
+			bits "Z"	1	1
+			bits "C"	0	1
+		}
+
+		register "SPL"		"Stack Pointer Low"									61	1{
+			bits "VALUEL"	0	8
+		}
+
+		register "SPH"		"Stack Pointer High"								62	1{
+			bits "VALUEH"	0	8
+		}
+
+		register "SMCR"	"Sleep Mode Control Register"							51	1{
+			bits "SM"		1	3
+			bits "SE"		0	1
+		}
+
+		register "SPMCSR"	"Store Program Memory Control and Status Register"	55	1{
+			bits "SPMIE"	7	1
+			bits "RWWSB"	6	1
+			bits "SIGRD"	5	1
+			bits "RWWSRE"	4	1
+			bits "BLBSET"	3	1
+			bits "PGWRT"	2	1
+			bits "PGERS"	1	0
+			bits "SPMEN"	0	0
+		}
+
+		register "OCDR"	"On-chip Debug Register"								49	1{
+			bits "VALUE"	0	8
+		}
+		
+		heading "DDR - Data Direction Regiters"
+		register "DDRA"		""		1	1{}
+		register "DDRB"		""		4	1{}
+		register "DDRC"		""		7	1{}
+		register "DDRD"		""		10	1{}
+
+		emptyline
+		heading "PIN - Port Input Register"
+		register "PINA"		""		0	1{}
+		register "PINB"		""		3	1{}
+		register "PINC"		""		6	1{}
+		register "PIND"		""		9	1{}
+
+		emptyline
+		heading "PORT - Data Register"
+		register "PORTA"	""		2	1{}
+		register "PORTB"	""		5	1{}
+		register "PROTC"	""		8	1{}
+		register "PORTD"	""		11	1{}
+		emptyline
+
+		heading "General Purpose Registers (GPIO)"
+		register "GPIOR0"	""		30	1{}
+		register "GPIOR1"	""		42	1{}
+		register "GPIOR2"	""		43	1{}
+
+		emptyline
+
+		heading "Pin Change Interrupts"
+		register "PCICR"	"Pin Change Interrupt Control Register"	72	1{
+			bits "PCIE3"	3	1
+			bits "PCIE2"	2	1
+			bits "PCIE1"	1	1
+			bits "PCIE0"	0	1
+		}
+
+		register "PCMSK0"	"Pin Change Interrupt Mask 0"	75	1{
+			bits "PCINT7"	7	1
+			bits "PCINT6"	6	1
+			bits "PCINT5"	5	1
+			bits "PCINT4"	4	1
+			bits "PCINT3"	3	1
+			bits "PCINT2"	2	1
+			bits "PCINT1"	1	1
+			bits "PCINT0"	0	1
+		}
+
+		register "PCMSK1"	"Pin Change Interrupt Mask 1"	76	1{
+			bits "PCINT15"	7	1
+			bits "PCINT14"	6	1
+			bits "PCINT13"	5	1
+			bits "PCINT12"	4	1
+			bits "PCINT11"	3	1
+			bits "PCINT10"	2	1
+			bits "PCINT9"	1	1
+			bits "PCINT8"	0	1
+		}
+
+		register "PCMSK2"	"Pin Change Interrupt Mask 2"	77	1{
+			bits "PCINT23"	7	1
+			bits "PCINT22"	6	1
+			bits "PCINT21"	5	1
+			bits "PCINT20"	4	1
+			bits "PCINT19"	3	1
+			bits "PCINT18"	2	1
+			bits "PCINT17"	1	1
+			bits "PCINT16"	0	1
+		}
+
+		register "PCMSK3"	"Pin Change Interrupt Mask 3"	83	1{
+			bits "PCINT31"	7	1
+			bits "PCINT30"	6	1
+			bits "PCINT29"	5	1
+			bits "PCINT28"	4	1
+			bits "PCINT27"	3	1
+			bits "PCINT26"	2	1
+			bits "PCINT25"	1	1
+			bits "PCINT24"	0	1
+		}
+
+		register "PCIFR"	"Pin Change Interrupt Flag Register"	27	1{
+			bits "PCIF3"	3	1
+			bits "PCIF2"	2	1
+			bits "PCIF1"	1	1
+			bits "PCIF0"	0	1
+		}
+
+		heading "External Interrupts"
+		register "EICRA"	"External Interrupt Control Register A"	73	1{
+			bits "ISC21"	5	1
+			bits "ISC20"	4	1
+			bits "ISC11"	3	1
+			bits "ISC10"	2	1
+			bits "ISC01"	1	1
+			bits "ISC00"	0	1
+		}
+
+		register "EIMSK"	"External Interrupt Mask Register"		29	1{
+			bits "INT2"		2	1
+			bits "INT1"		1	1
+			bits "INT0"		0	1
+		}
+
+		register "EIFR"		"External Interrupt Flag Register"		28	1{
+			bits "INTF2"	2	1
+			bits "INTF1"	1	1
+			bits "INTF0"	0	1
+		}
+
+		heading "Clocking"
+		register "CLKPR"	"Clock Prescale Register"	65	1{
+			bits "CLKPCE"	7	1
+			bits "CLKPS"	0	4
+		}
+
+		register "OSCCAL"	"Oscillator Calibration Register"	70	1{
+			bits "VALUE"	0	8
+		}
+
+		heading "Power Consumption"
+		register "PRR0"		"Power Reduction Register 0"	68	1{
+			bits "PRTWI"	7	1
+			bits "PRTIM2"	6	1
+			bits "PRTIM0"	5	1
+			bits "PRUSART1"	4	1
+			bits "PRTIM1"	3	1
+			bits "PRSPI"	2	1
+			bits "PRUSART0"	1	1
+			bits "PRADC"	0	1
+		}
+
+		register "PRR1"		"Power Reduction Register 1"	69	1{
+			bits "PRTIM3"	0	1
+		}
+
+		heading "Watchdog Timer"
+		register "WDTCSR"	"Watchdog Timer Control Register"	64	1{
+			bits "WDIF"	7	1
+			bits "WDIE"	6	1
+			bits "WDP3"	5	1
+			bits "WDCE"	4	1
+			bits "WDE"	3	1
+			bits "WDP2"	2	1
+			bits "WDP1"	1	1
+			bits "WDP0"	0	1
+		}
+	}
+
+	/* USART */
+	section "Universal Synchronous and Asynchronous Serial Receiver and Transmitter (USART)"{
+		heading "USART0"
+		register "UCSR0A"	"USART Control and Status Register A"	160	1{
+			bits "RXC"		7	1
+			bits "TXC"		6	1
+			bits "UDRE"		5	1
+			bits "FE"		4	1
+			bits "DOR"		3	1
+			bits "UPE"		2	1
+			bits "U2X"		1	1
+			bits "MPCM"		0	1
+		}
+
+		register "UCSR0B"	"USART Control and Status Register B"	161	1{
+			bits "RXCIE"	7	1
+			bits "TXCIE"	6	1
+			bits "UDRIE"	5	1
+			bits "RXEN"		4	1
+			bits "TXEN"		3	1
+			bits "UCSZ2"	2	1
+			bits "RXB8"		1	1
+			bits "TXB8"		0	1
+		}
+
+		register "UCSR0C"	"USART Control and Status Register C"	162	1{
+			bits "UMSEL1"	7	1
+			bits "UMSEL0"	6	1
+			bits "UPM1"		5	1
+			bits "UPM0"		4	1
+			bits "USBS"		3	1
+			bits "UCSZ1"	2	1
+			bits "UCSZ0"	1	1
+			bits "UCPOL"	0	1
+		}
+
+		register "UBRR0L"	"USART Baud Rate Register Low"			164	1{
+			bits "Low"		0	8
+		}
+
+		register "UBRR0H"	"USART Baud Rate Register High"			165	1{
+			bits "High"		0	4
+		}
+
+		register "UDR0"		"USART Date Register"					166	1{
+			bits "Data"		0	8
+		}
+
+		heading "USART1"
+		register "UCSR1A"	"USART Control and Status Register A"	168	1{
+			bits "RXC"		7	1
+			bits "TXC"		6	1
+			bits "UDRE"		5	1
+			bits "FE"		4	1
+			bits "DOR"		3	1
+			bits "UPE"		2	1
+			bits "U2X"		1	1
+			bits "MPCM"		0	1
+		}
+
+		register "UCSR1B"	"USART Control and Status Register B"	169	1{
+			bits "RXCIE"	7	1
+			bits "TXCIE"	6	1
+			bits "UDRIE"	5	1
+			bits "RXEN"		4	1
+			bits "TXEN"		3	1
+			bits "UCSZ2"	2	1
+			bits "RXB8"		1	1
+			bits "TXB8"		0	1
+		}
+
+		register "UCSR1C"	"USART Control and Status Register C"	170	1{
+			bits "UMSEL1"	7	1
+			bits "UMSEL0"	6	1
+			bits "UPM1"		5	1
+			bits "UPM0"		4	1
+			bits "USBS"		3	1
+			bits "UCSZ1"	2	1
+			bits "UCSZ0"	1	1
+			bits "UCPOL"	0	1
+		}
+
+		register "UBRR1L"	"USART Baud Rate Register Low"			172	1{
+			bits "Low"		0	8
+		}
+
+		register "UBRR1H"	"USART Baud Rate Register High"			173	1{
+			bits "High"		0	4
+		}
+
+		register "UDR1"		"USART Date Register"					174	1{
+			bits "Data"		0	8
+		}
+	}
+
+	/* TWI */
+	section "Two Wire Interface (TWI)"{
+		register "TWCR"		"TWI Control Register"					156	1{
+			bits "TWINT"	7	1
+			bits "TWEA"		6	1
+			bits "TWSTA"	5	1
+			bits "TWSTO"	4	1
+			bits "TWWC"		3	1
+			bits "TWEN"		2	1
+			bits "TWIE"		0	1
+		}
+
+		register "TWSR"		"TWI Status Register"					153	1{
+			bits "TWS7"		7	1
+			bits "TWS6"		6	1
+			bits "TWS5"		5	1
+			bits "TWS4"		4	1
+			bits "TWS3"		3	1
+			bits "TWPS1"	1	1
+			bits "TWPS0"	0	1
+		}
+
+		register "TWDR"		"TWI Date Register"						155	1{
+			bits "Data"		0	8
+		}
+
+		register "TWBR"		"TWI Bit Rate Register"					152	1{
+			bits "BR"		0	8
+		}
+
+		register "TWAR"		"TWI (Slave)Address Register"			154	1{
+			bits "TWA"		1	7
+			bits "TWGCE"	0	1
+		}
+
+		register "TWAMR"	"TWI (Slave) Address Mask Register"		157	1{
+			bits "TWAM"		1	7
+		}
+	}
+
+	/* SPI */
+	section "Serial Peripheral Interface (SPI)"{
+		register "SPCR"	"SPI Control Register"	44	1{
+			bits "SPIE0"	7	1
+			bits "SPE0"		6	1
+			bits "DORD0"	5	1
+			bits "MSTR0"	4	1
+			bits "CPOL0"	3	1
+			bits "CPHA0"	2	1
+			bits "SPR0"		0	2
+		}
+
+		register "SPSR"	"SPI Status Register"	45	1{
+			bits "SPIF0"	7	1
+			bits "WCOL0"	6	1
+			bits "SPI2X0"	0	1
+		}
+
+		register "SPDR"	"SPI Data Register"		46	1{
+			bits "DATA"		0	8
+		}
+	}
+
+	/* Timer/Counter 0 */
+	section "Timer/Counter 0 (8-bit)"{
+		register "TCCR0A"	"Timer/Counter Control Register A"	36	1{
+			bits "COMA"		6	2
+			bits "COMB"		4	2
+			bits "WGM1"		1	1
+			bits "WGM0"		0	1
+		}
+
+		register "TCCR0B"	"Timer/Counter Control Register B"	37	1{
+			bits "FOCA"		7	1
+			bits "FOCB"		6	1
+			bits "WGM2"		3	1
+			bits "CS"		0	3
+		}
+
+		register "TCNT0"	"Timer/Counter Value"				38	1{
+			bits "CNT"		0	8
+		}
+
+		register "OCR0A"	"Output Compare Register A"			39	1{
+			bits "VALUE"	0	8
+		}
+
+		register "OCR0B"	"Output Compare Register B"			40	1{
+			bits "VALUE"	0	8
+		}
+
+		register "TIMSK0"	"Timer/Counter Interrupt Mask Register"	78	1{
+			bits "OCIE0B"	2	1
+			bits "OCIE0A"	1	1
+			bits "TOIE0"	0	1
+		}
+
+		register "TIFR0"	"Timer/Counter Interrupt Flag Register"	21	1{
+			bits "OCF0B"	2	1
+			bits "OCF0A"	1	1
+			bits "TOV0"		0	1
+		}
+	}
+
+	/* Timer/Counter 1 */
+	section "Timer/Counter 1 (16-bit)"{
+		register "TCCR1A"	"Timer/Counter Control Register A"				96	1{
+			bits "COMA"		6	2
+			bits "COMB"		4	2
+			bits "WGM1"		1	1
+			bits "WGM0"		0	1
+		}
+
+		register "TCCR1B"	"Timer/Counter Control Register B"				97	1{
+			bits "ICNC"		7	1
+			bits "ICES"		6	1
+			bits "WGM3"		4	1
+			bits "WGM2"		3	1
+			bits "CS"		0	3
+		}
+
+		register "TCCR1C"	"Timer/Counter Control Register C"				98	1{
+			bits "FOCA"		7	1
+			bits "FOCB"		6	1
+		}
+
+		register "TCNT1L"	"Timer/Counter Value Low"						100	1{
+			bits "CNTL"		0	8
+		}
+
+		register "TCNT1H"	"Timer/Counter Value High"						101	1{
+			bits "CNTH"		0	8
+		}
+
+		register "ICR1L"	"Timer/Counter Input Capture Register Low"		102	1{
+			bits "VALUEL"	0	8
+		}
+
+		register "ICR1H"	"Timer/Counter Input Capture Register High"		103	1{
+			bits "VALUEH"	0	8
+		}
+
+		register "OCR1AL"	"Output Compare Register A Low"					104	1{
+			bits "VALUEL"	0	8
+		}
+
+		register "OCR1AH"	"Output Compare Register A High"				105	1{
+			bits "VALUEH"	0	8
+		}
+
+		register "OCR1BL"	"Output Compare Register B Low"					106	1{
+			bits "VALUEL"	0	8
+		}
+
+		register "OCR1BH"	"Output Compare Register B High"				107	1{
+			bits "VALUEH"	0	8
+		}
+
+		register "TIMSK1"	"Timer/Counter Interrupt Mask Register"	79	1{
+			bits "ICIE1"	5	1
+			bits "OCIE1B"	2	1
+			bits "OCIE1A"	1	1
+			bits "TOIE1"	0	1
+		}
+
+		register "TIFR1"	"Timer/Counter Interrupt Flag Register"	22	1{
+			bits "ICF1"		5	1
+			bits "OCF1B"	2	1
+			bits "OCF1A"	1	1
+			bits "TOV1"		0	1
+		}
+	}
+
+	/* Timer/Counter 2 */
+	section "Timer/Counter 2 (8-bit)"{
+		register "TCCR2A"	"Timer/Counter Control Register A"	144	1{
+			bits "COMA"		6	2
+			bits "COMB"		4	2
+			bits "WGM1"		1	1
+			bits "WGM0"		0	1
+		}
+
+		register "TCCR2B"	"Timer/Counter Control Register B"	145	1{
+			bits "FOCA"		7	1
+			bits "FOCB"		6	1
+			bits "WGM2"		3	1
+			bits "CS"		0	3
+		}
+
+		register "TCNT2"	"Timer/Counter Value"				146	1{
+			bits "CNT"		0	8
+		}
+
+		register "OCR2A"	"Output Compare Register A"			147	1{
+			bits "VALUE"	0	8
+		}
+
+		register "OCR2B"	"Output Compare Register B"			148	1{
+			bits "VALUE"	0	8
+		}
+
+		register "ASSR"		"Asynchronous Status Register"		150	1{
+			bits "EXCLK"	6	1
+			bits "AS2"		5	1
+			bits "TCNUB"	4	1
+			bits "OCRAUB"	3	1
+			bits "OCRBUB"	2	1
+			bits "TCRAUB"	1	1
+			bits "TCRBUB"	0	1
+		}
+
+		register "GTCCR"	"General Timer/Counter Control Register"	35	1{
+			bits "TSM"		7	1
+			bits "PSRASY"	1	1
+			bits "PSRSYNC"	0	1
+		}
+
+		register "TIMSK2"	"Timer/Counter Interrupt Mask Register"	80	1{
+			bits "OCIE2B"	2	1
+			bits "OCIE2A"	1	1
+			bits "TOIE2"	0	1
+		}
+
+		register "TIFR2"	"Timer/Counter Interrupt Flag Register"	23	1{
+			bits "OCF2B"	2	1
+			bits "OCF2A"	1	1
+			bits "TOV2"		0	1
+		}
+	}
+
+	/* Timer/Counter 3 */
+	section "Timer/Counter 3 (16-bit)"{
+		register "TCCR3A"	"Timer/Counter Control Register A"				112	1{
+			bits "COMA"		6	2
+			bits "COMB"		4	2
+			bits "WGM1"		1	1
+			bits "WGM0"		0	1
+		}
+
+		register "TCCR3B"	"Timer/Counter Control Register B"				113	1{
+			bits "ICNC"		7	1
+			bits "ICES"		6	1
+			bits "WGM3"		4	1
+			bits "WGM2"		3	1
+			bits "CS"		0	3
+		}
+
+		register "TCCR3C"	"Timer/Counter Control Register C"				114	1{
+			bits "FOCA"		7	1
+			bits "FOCB"		6	1
+		}
+
+		register "TCNT3L"	"Timer/Counter Value Low"						116	1{
+			bits "CNTL"		0	8
+		}
+
+		register "TCNT3H"	"Timer/Counter Value High"						117	1{
+			bits "CNTH"		0	8
+		}
+
+		register "ICR3L"	"Timer/Counter Input Capture Register Low"		118	1{
+			bits "VALUEL"	0	8
+		}
+
+		register "ICR3H"	"Timer/Counter Input Capture Register High"		119	1{
+			bits "VALUEH"	0	8
+		}
+
+		register "OCR3AL"	"Output Compare Register A Low"					120	1{
+			bits "VALUEL"	0	8
+		}
+
+		register "OCR3AH"	"Output Compare Register A High"				121	1{
+			bits "VALUEH"	0	8
+		}
+
+		register "OCR3BL"	"Output Compare Register B Low"					122	1{
+			bits "VALUEL"	0	8
+		}
+
+		register "OCR3BH"	"Output Compare Register B High"				123	1{
+			bits "VALUEH"	0	8
+		}
+
+		register "TIMSK3"	"Timer/Counter Interrupt Mask Register"	81	1{
+			bits "ICIE3"	5	1
+			bits "OCIE3B"	2	1
+			bits "OCIE3A"	1	1
+			bits "TOIE3"	0	1
+		}
+
+		register "TIFR3"	"Timer/Counter Interrupt Flag Register"	24	1{
+			bits "ICF3"		5	1
+			bits "OCF3B"	2	1
+			bits "OCF3A"	1	1
+			bits "TOV3"		0	1
+		}
+	}
+
+	/* Analog Comparator */
+	section "Analog Comparator and Digital Converter"{
+		register "ADCL"		"ADC Data Register Low"								88	1{
+			bits "DATAL"	0	8
+		}
+
+		register "ADCH"		"ADC Data Register High"							89	1{
+			bits "DATAH"	0	8
+		}
+
+		register "ADCSRA"	"ADC Control and Status Register A"					90	1{
+			bits "ADEN"		7	1
+			bits "ADSC"		6	1
+			bits "ADATE"	5	1
+			bits "ADIF"		4	1
+			bits "ADIE"		3	1
+			bits "ADPS"		0	3
+		}
+
+		register "ADCSRB"	"ADC Control and Status Register B"					91	1{
+			bits "ACME"		6	1
+			bits "ADTS"		0	3
+		}
+
+		register "ADMUX"	"ADC Multiplexer Select"							92	1{
+			bits "REFS1"	7	1
+			bits "REFS0"	6	1
+			bits "ADLAR"	5	1
+			bits "MUX4"		4	1
+			bits "MUX3"		3	1
+			bits "MUX2"		2	1
+			bits "MUX1"		1	1
+			bits "MUX0"		0	1
+		}
+
+		register "DIDR0"	"Digital Input Disable Register 0"					94	1{
+			bits "ADC7D"	7	1
+			bits "ADC6D"	6	1
+			bits "ADC5D"	5	1
+			bits "ADC4D"	4	1
+			bits "ADC3D"	3	1
+			bits "ADC2D"	2	1
+			bits "ADC1D"	1	1
+			bits "ADC0D"	0	1
+		}
+
+		register "DIDR1"	"Digital Input Disable Register 1"					95	1{
+			bits "AIN1D"	1	1
+			bits "AIN0D"	0	1
+		}
+
+		register "ACSR"		"Analog Comparator Control and Status Register"		48	1{
+			bits "ACD"		7	1
+			bits "ACBG"		6	1
+			bits "ACO"		5	1
+			bits "ACI"		4	1
+			bits "ACIE"		3	1
+			bits "ACIC"		2	1
+			bits "ACIS"		0	2
+		}
+	}
+
+	/* EEPROM */
+	section "Electrically Erasable Programmable Read-Only Memory (EEPROM)"{
+		register "EECR"		"EEPROM Control Register"		31	1{
+			bits "EEPM1"	5	1
+			bits "EEPM0"	4	1
+			bits "EERIE"	3	1
+			bits "EEMPE"	2	1
+			bits "EEPE"		1	1
+			bits "EERE"		0	1
+		}
+
+		register "EEDR"		"EEPROM Data Register"			32	1{
+			bits "DATA"		0	8
+		}
+
+		register "EEARL"	"EEPROM Address Register Low"	33	1{
+			bits "ADDRL"	0	8
+		}
+
+		register "EEARH"	"EEPROM Address Register High"	34	1{
+			bits "ADDRH"	0	4
+		}
+	}
+}
