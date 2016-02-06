@@ -13,18 +13,16 @@ SECTIONS {
 	}
 
 
-	/* interrupt vectors */
-	.intvec ADDR(.base) : {
-		*(.intvec)
-
-		. += 0x10;
-	} > kernel
-
-
 	/* code */
-	.text : {
+	.text ADDR(.base) : {
+		/* interrupt vectors */
+		*(.reset)
+
+		. += 0x8;
+
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
+		*(.trampolines)
 	} > kernel
 
 
