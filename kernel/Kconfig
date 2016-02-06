@@ -1,9 +1,5 @@
 # define SMP kernel, removing mutex calls etc. if single-core
-menu "Hidden"
-	visible if 0
-
-	config KERNEL_BASE_ADDR
-		hex "Kernel starting address"
-		range 0x0 0x0fffffff
-		default 0x00000100 if AVR
-endmenu
+config KERNEL_BASE_ADDR
+	hex "Kernel starting address"
+	range 0x0 0x0fffffff
+	default 0x0
