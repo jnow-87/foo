@@ -42,23 +42,23 @@ SECTIONS {
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */
-	.debug	: { *(.debug) }
-	.line	: { *(.line) }
+	.debug	0 : { *(.debug) }
+	.line	0 : { *(.line) }
 
 	/* GNU DWARF 1 extensions */
-	.debug_srcinfo	: { *(.debug_srcinfo) }
-	.debug_sfnames	: { *(.debug_sfnames) }
+	.debug_srcinfo	0 : { *(.debug_srcinfo) }
+	.debug_sfnames	0 : { *(.debug_sfnames) }
 
 	/* DWARF 1.1 and DWARF 2 */
-	.debug_aranges	: { *(.debug_aranges) }
-	.debug_pubnames	: { *(.debug_pubnames) }
+	.debug_aranges	0 : { *(.debug_aranges) }
+	.debug_pubnames	0 : { *(.debug_pubnames) }
 
 	/* DWARF 2 */
-	.debug_info		: { *(.debug_info .gnu.linkonce.wi.*) }
-	.debug_abbrev	: { *(.debug_abbrev) }
-	.debug_line		: { *(.debug_line) }
-	.debug_frame	: { *(.debug_frame) }
-	.debug_str		: { *(.debug_str) }
-	.debug_loc		: { *(.debug_loc) }
-	.debug_macinfo	: { *(.debug_macinfo) }
+	.debug_info		0 : { *(.debug_info .gnu.linkonce.wi.*) }
+	.debug_abbrev	0 : { *(.debug_abbrev) }
+	.debug_line		0 : { *(.debug_line) }
+	.debug_frame	0 : { *(.debug_frame) }
+	.debug_str		0 : { *(.debug_str) }
+	.debug_loc		0 : { *(.debug_loc) }
+	.debug_macinfo	0 : { *(.debug_macinfo) }
 }
