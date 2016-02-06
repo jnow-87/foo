@@ -45,67 +45,79 @@ menu "Build system"
 			default "release" if BUILD_RELEASE
 	endmenu
 
-	# build tree
-	config BUILD_TREE
-		string "build tree"
-		default "build/$(CONFIG_PROCESSOR)/$(CONFIG_BUILD_TYPE)"
-
 	# AVR programmer
 	menu "AVR programmer"
 		depends on AVR
 
-		choice
-			prompt "Programmer"
+		config AVR_FUSER
+			string "Fuser"
+			default "avrfuser"
 
-			config PROG_DRAGON_JTAG
+		config AVR_PROG
+			string "Programmer"
+			default "avrdude"
+
+		config AVR_DEBUGGER
+			string "Debugger"
+			default "avarice"
+
+		choice
+			prompt "Programmer type"
+
+			config AVR_DRAGON_JTAG
 				bool "AVR Dragon JTAG"
 				depends on ATMEGA1284P
 
-			config PROG_DRAGON_ISP
+			config AVR_DRAGON_ISP
 				bool "AVR Dragon ISP"
 
-			config PROG_STK500V2
+			config AVR_STK500V2
 				bool "STK500v2"
 		endchoice
 
 		choice
 			prompt "Programmer port"
 
-			config PROG_PORT_USB
+			config AVR_PROG_PORT_USB
 				bool "usb"
 
-			config PROG_PORT_UART
+			config AVR_PROG_PORT_UART
 				bool "uart"
 		endchoice
 
-		config PROG_UART_DEV
+		config AVR_PROG_UART_DEV
 			string "Uart device"
 			default "/dev/ttyUSB0"
-			depends on PROG_PORT_UART
+			depends on AVR_PROG_PORT_UART
 
 		menu "Hidden"
 			visible if 0
 
-			config PROG_PORT
+			config AVR_PROG_PORT
 				string "Programmer port"
-				default "usb" if PROG_PORT_USB
-				default PROG_UART_DEV if PROG_PORT_UART
+				default "usb" if AVR_PROG_PORT_USB
+				default AVR_PROG_UART_DEV if AVR_PROG_PORT_UART
 				default "unknown programmer port"
 
-			config PROG_DEBUG_ARGS
+			config AVR_PROG_DEBUG_ARGS
 				string "Programmer debug arguments"
-				default "--debugwire" if PROG_DRAGON_ISP || PROG_STK500V2
-				default "--dragon --jtag $(CONFIG_PROG_PORT) --jtag-bitrate $(shell echo '$(CONFIG_CORE_CLOCK_HZ) / (4 * 1000)' | bc -q)kHz" if PROG_DRAGON_JTAG
+				default "--debugwire" if AVR_DRAGON_ISP || AVR_STK500V2
+				default "--dragon --jtag $(CONFIG_AVR_PROG_PORT) --jtag-bitrate $(shell echo '$(CONFIG_CORE_CLOCK_HZ) / (4 * 1000)' | bc -q)kHz" if AVR_DRAGON_JTAG
 				default ""
 
-			config PROG
+			config AVR_PROG_TYPE
 				string "Programmer"
-				default "dragon_jtag" if PROG_DRAGON_JTAG
-				default "dragon_isp" if PROG_DRAGON_ISP
-				default "stk500v2" if PROG_STK500V2
+				default "dragon_jtag" if AVR_DRAGON_JTAG
+				default "dragon_isp" if AVR_DRAGON_ISP
+				default "stk500v2" if AVR_STK500V2
 				default "unkown programmer"
 		endmenu
 	endmenu
+
+	# build tree
+	config BUILD_TREE
+		string "build tree"
+		default "build/$(CONFIG_PROCESSOR)/$(CONFIG_BUILD_TYPE)"
 
 	# toolchain prefixes
 	config TOOLCHAIN_PREFIX

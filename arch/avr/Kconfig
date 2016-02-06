@@ -17,13 +17,13 @@ menu "Hidden"
 	visible if 0
 
 	# MCU
-	config MCU
+	config AVR_MCU
 		string "MCU"
 		default "atmega1284p" if ATMEGA1284P
 		default "atmega88pa" if ATMEGA88PA
 		default "unknown MCU"
 
-	config ISA
+	config AVR_ISA
 		string "ISA"
 		default "avr4" if ATMEGA88PA
 		default "avr51" if ATMEGA1284P

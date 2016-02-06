@@ -22,7 +22,7 @@ menu "Hidden"
 	
 	config PROCESSOR
 		string "Processor"
-		default MCU if AVR
+		default AVR_MCU if AVR
 
 	config ADDR_WIDTH_8
 		bool "8-bit"
