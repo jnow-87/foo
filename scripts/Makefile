@@ -6,6 +6,7 @@
 ## build system config
 ####
 
+
 # build system variables
 scripts_dir := scripts
 project_type := c
@@ -197,12 +198,12 @@ sysroot: check_config $(kernel) $(libsys)
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)
-all: cflags += -g
-all: cxxflags += -g
-all: asflags += -g
-all: hostcflags += -g
-all: hostcxxflags += -g
-all: hostasflags += -g
+cflags += -g
+cxxflags += -g
+asflags += -g
+hostcflags += -g
+hostcxxflags += -g
+hostasflags += -g
 endif
 
 all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)
