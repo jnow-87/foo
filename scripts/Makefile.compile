@@ -27,6 +27,9 @@ define compile_cxx_gperf
 	$(gperf_cxx_header) $@ $(basename $@).h
 endef
 
+# define 'ASM' for preprocessed assembly files
+%.S.i: cppflags += -DASM
+
 define compile_i
 	$(echo) [$(call upper_case,$(1))CC] $@
 	$($(1)cc) $($(1)cppflags) $($(1)archflags) -E $< -o $@
