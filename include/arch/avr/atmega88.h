@@ -2,4 +2,19 @@
 #define ATMEGA88_H
 
 
+#include <arch/avr/atmega88_register.h>
+#include <sys/const.h>
+
+
+/* memory layout */
+#define MCU_FLASH_SIZE		_8k
+#define MCU_SRAM_SIZE		_1k
+
+#define KERNEL_STACK_SIZE	128
+#define KERNEL_HEAP_SIZE	128
+
+#define IO_BASE				0x0
+#define IO_SIZE				256
+
+
 #endif // ATMEGA88_H

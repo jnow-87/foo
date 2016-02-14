@@ -1,7 +1,10 @@
 #ifndef ATMEGA_H
 #define ATMEGA_H
 
+
 #include <config/config.h>
+#include <sys/const.h>
+
 
 /* mcu-specific header */
 #if CONFIG_ATMEGA1284P == 1
@@ -28,22 +31,17 @@
 
 /* macros */
 // memory layout
-#define KERNEL_IMG_BASE					0x0
-#define KERNEL_IMG_SIZE					0x0
+#define KERNEL_IMG_BASE					CONFIG_KERNEL_BASE_ADDR
+#define KERNEL_IMG_SIZE					(MCU_FLASH_SIZE - KERNEL_IMG_BASE)
 
-#define KERNEL_STACK_BASE				0x0
-#define KERNEL_STACK_SIZE				0x0
-#define KERNEL_STACK_CORE_BASE(core)	0x0
-#define KERNEL_STACK_CORE_SIZE			0x0
+#define KERNEL_STACK_BASE				(MCU_SRAM_SIZE - KERNEL_STACK_SIZE)
+#define KERNEL_STACK_CORE_BASE(core)	(KERNEL_STACK_BASE + ((core) * KERNEL_STACK_CORE_SIZE))
+#define KERNEL_STACK_CORE_SIZE			(KERNEL_STACK_SIZE / CONFIG_NCORES)
 
-#define KERNEL_HEAP_BASE				0x0
-#define KERNEL_HEAP_SIZE				0x0
+#define KERNEL_HEAP_BASE				(KERNEL_STACK_BASE - KERNEL_HEAP_SIZE)
 
-#define PROCESS_BASE					0x0
-#define PROCESS_SIZE					0x0
-
-#define IO_BASE							0x0
-#define IO_SIZE							0x0
+#define PROCESS_BASE					(IO_BASE + IO_SIZE)
+#define PROCESS_SIZE					(KERNEL_HEAP_BASE - PROCESS_BASE)
 
 #define RAMFS_BASE						0x0
 #define RAMFS_SIZE						0x0
