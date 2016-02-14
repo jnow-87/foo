@@ -188,7 +188,7 @@
 
 /* SPL */
 // register
-#define SPÖ			0x5d
+#define SPL			0x5d
 
 /* SPH */
 // register
