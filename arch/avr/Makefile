@@ -21,7 +21,7 @@ $(loc_build_tree)/atmega_lib.o: $(loc_src_tree)/atmega.c
 	-Wl,-Map=$(basename $@).map,--cref
 
 archflags += -mmcu=$(CONFIG_AVR_MCU)
-ldflags += -m$(CONFIG_AVR_ISA)
+ldflags += -m$(CONFIG_AVR_ISA) --discard-all
 
 
 # AVR specific rules
