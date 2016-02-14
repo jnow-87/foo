@@ -72,7 +72,7 @@ erase:
 	$(CONFIG_AVR_PROG) -e -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE)
 
 .PHONY: flash
-flash: kernel
+flash: kernel sysroot
 	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(kernel)
 
 .PHONY: dump
