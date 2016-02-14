@@ -7,26 +7,33 @@ choice
 	config ATMEGA1284P
 		bool "Atmega1284P"
 		select ADDR_WIDTH_8
+		select AVR_ISA_AVR51
 
 	config ATMEGA88PA
 		bool "Atmega88PA"
 		select ADDR_WIDTH_8
+		select AVR_ISA_AVR4
 endchoice
 
 menu "Hidden"
 	visible if 0
 
-	# MCU
 	config AVR_MCU
 		string "MCU"
 		default "atmega1284p" if ATMEGA1284P
 		default "atmega88pa" if ATMEGA88PA
 		default "unknown MCU"
 
+	config AVR_ISA_AVR4
+		bool "AVR4"
+
+	config AVR_ISA_AVR51
+		bool "AVR51"
+
 	config AVR_ISA
 		string "ISA"
-		default "avr4" if ATMEGA88PA
-		default "avr51" if ATMEGA1284P
+		default "avr4" if AVR_ISA_AVR4
+		default "avr51" if AVR_ISA_AVR51
 
 	# architecture defining header
 	config ARCH_HEADER
