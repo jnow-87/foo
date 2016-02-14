@@ -18,8 +18,6 @@ SECTIONS {
 		/* interrupt vectors */
 		*(.reset)
 
-		. += 0x8;
-
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
 		*(.trampolines)
