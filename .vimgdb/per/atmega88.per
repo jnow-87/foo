@@ -50,7 +50,6 @@ range 0x20 175{
 	section "MCU General Control and Status"{
 		heading "MCU Control and Status"
 		register "MCUCR"	"MCU Control Register"								53	1{
-			bits "JTD"		7	1
 			bits "BODS"		6	1
 			bits "BODSE"	5	1
 			bits "PUD"		4	1
@@ -59,7 +58,6 @@ range 0x20 175{
 		}
 
 		register "MCUSR"	"MCU Status Register"								52	1{
-			bits "JTRF"		4	1
 			bits "WDRF"		3	1
 			bits "BORF"		2	1
 			bits "EXTRF"	1	1
@@ -77,13 +75,8 @@ range 0x20 175{
 			bits "C"	0	1
 		}
 
-		register "SPL"		"Stack Pointer Low"									61	1{
-			bits "VALUEL"	0	8
-		}
-
-		register "SPH"		"Stack Pointer High"								62	1{
-			bits "VALUEH"	0	8
-		}
+		register "SP"		"Stack Pointer"										61	2 swap {}
+		emptyline
 
 		register "SMCR"	"Sleep Mode Control Register"							51	1{
 			bits "SM"		1	3
@@ -93,7 +86,6 @@ range 0x20 175{
 		register "SPMCSR"	"Store Program Memory Control and Status Register"	55	1{
 			bits "SPMIE"	7	1
 			bits "RWWSB"	6	1
-			bits "SIGRD"	5	1
 			bits "RWWSRE"	4	1
 			bits "BLBSET"	3	1
 			bits "PGWRT"	2	1
@@ -101,19 +93,13 @@ range 0x20 175{
 			bits "SPMEN"	0	0
 		}
 
-		register "OCDR"	"On-chip Debug Register"								49	1{
-			bits "VALUE"	0	8
-		}
-		
 		heading "DDR - Data Direction Regiters"
-		register "DDRA"		""		1	1{}
 		register "DDRB"		""		4	1{}
 		register "DDRC"		""		7	1{}
 		register "DDRD"		""		10	1{}
 
 		emptyline
 		heading "PIN - Port Input Register"
-		register "PINA"		""		0	1{}
 		register "PINB"		""		3	1{}
 		register "PINC"		""		6	1{}
 		register "PIND"		""		9	1{}
@@ -121,8 +107,7 @@ range 0x20 175{
 		emptyline
 		heading "PORT - Data Register"
 		register "PORTA"	""		2	1{}
-		register "PORTB"	""		5	1{}
-		register "PROTC"	""		8	1{}
+		register "PORTC"	""		8	1{}
 		register "PORTD"	""		11	1{}
 		emptyline
 
@@ -135,7 +120,6 @@ range 0x20 175{
 
 		heading "Pin Change Interrupts"
 		register "PCICR"	"Pin Change Interrupt Control Register"	72	1{
-			bits "PCIE3"	3	1
 			bits "PCIE2"	2	1
 			bits "PCIE1"	1	1
 			bits "PCIE0"	0	1
@@ -153,7 +137,6 @@ range 0x20 175{
 		}
 
 		register "PCMSK1"	"Pin Change Interrupt Mask 1"	76	1{
-			bits "PCINT15"	7	1
 			bits "PCINT14"	6	1
 			bits "PCINT13"	5	1
 			bits "PCINT12"	4	1
@@ -174,19 +157,7 @@ range 0x20 175{
 			bits "PCINT16"	0	1
 		}
 
-		register "PCMSK3"	"Pin Change Interrupt Mask 3"	83	1{
-			bits "PCINT31"	7	1
-			bits "PCINT30"	6	1
-			bits "PCINT29"	5	1
-			bits "PCINT28"	4	1
-			bits "PCINT27"	3	1
-			bits "PCINT26"	2	1
-			bits "PCINT25"	1	1
-			bits "PCINT24"	0	1
-		}
-
 		register "PCIFR"	"Pin Change Interrupt Flag Register"	27	1{
-			bits "PCIF3"	3	1
 			bits "PCIF2"	2	1
 			bits "PCIF1"	1	1
 			bits "PCIF0"	0	1
@@ -194,8 +165,6 @@ range 0x20 175{
 
 		heading "External Interrupts"
 		register "EICRA"	"External Interrupt Control Register A"	73	1{
-			bits "ISC21"	5	1
-			bits "ISC20"	4	1
 			bits "ISC11"	3	1
 			bits "ISC10"	2	1
 			bits "ISC01"	1	1
@@ -203,13 +172,11 @@ range 0x20 175{
 		}
 
 		register "EIMSK"	"External Interrupt Mask Register"		29	1{
-			bits "INT2"		2	1
 			bits "INT1"		1	1
 			bits "INT0"		0	1
 		}
 
 		register "EIFR"		"External Interrupt Flag Register"		28	1{
-			bits "INTF2"	2	1
 			bits "INTF1"	1	1
 			bits "INTF0"	0	1
 		}
@@ -229,7 +196,6 @@ range 0x20 175{
 			bits "PRTWI"	7	1
 			bits "PRTIM2"	6	1
 			bits "PRTIM0"	5	1
-			bits "PRUSART1"	4	1
 			bits "PRTIM1"	3	1
 			bits "PRSPI"	2	1
 			bits "PRUSART0"	1	1
@@ -255,7 +221,6 @@ range 0x20 175{
 
 	/* USART */
 	section "Universal Synchronous and Asynchronous Serial Receiver and Transmitter (USART)"{
-		heading "USART0"
 		register "UCSR0A"	"USART Control and Status Register A"	160	1{
 			bits "RXC"		7	1
 			bits "TXC"		6	1
@@ -298,52 +263,6 @@ range 0x20 175{
 		}
 
 		register "UDR0"		"USART Date Register"					166	1{
-			bits "Data"		0	8
-		}
-
-		heading "USART1"
-		register "UCSR1A"	"USART Control and Status Register A"	168	1{
-			bits "RXC"		7	1
-			bits "TXC"		6	1
-			bits "UDRE"		5	1
-			bits "FE"		4	1
-			bits "DOR"		3	1
-			bits "UPE"		2	1
-			bits "U2X"		1	1
-			bits "MPCM"		0	1
-		}
-
-		register "UCSR1B"	"USART Control and Status Register B"	169	1{
-			bits "RXCIE"	7	1
-			bits "TXCIE"	6	1
-			bits "UDRIE"	5	1
-			bits "RXEN"		4	1
-			bits "TXEN"		3	1
-			bits "UCSZ2"	2	1
-			bits "RXB8"		1	1
-			bits "TXB8"		0	1
-		}
-
-		register "UCSR1C"	"USART Control and Status Register C"	170	1{
-			bits "UMSEL1"	7	1
-			bits "UMSEL0"	6	1
-			bits "UPM1"		5	1
-			bits "UPM0"		4	1
-			bits "USBS"		3	1
-			bits "UCSZ1"	2	1
-			bits "UCSZ0"	1	1
-			bits "UCPOL"	0	1
-		}
-
-		register "UBRR1L"	"USART Baud Rate Register Low"			172	1{
-			bits "Low"		0	8
-		}
-
-		register "UBRR1H"	"USART Baud Rate Register High"			173	1{
-			bits "High"		0	4
-		}
-
-		register "UDR1"		"USART Date Register"					174	1{
 			bits "Data"		0	8
 		}
 	}
@@ -482,29 +401,14 @@ range 0x20 175{
 			bits "CNTH"		0	8
 		}
 
-		register "ICR1L"	"Timer/Counter Input Capture Register Low"		102	1{
-			bits "VALUEL"	0	8
-		}
+		register "ICR1"		"Timer/Counter Input Capture Register"			102	2 swap {}
+		emptyline
 
-		register "ICR1H"	"Timer/Counter Input Capture Register High"		103	1{
-			bits "VALUEH"	0	8
-		}
+		register "OCR1A"	"Output Compare Register A"						104	2 swap {}
+		emptyline
 
-		register "OCR1AL"	"Output Compare Register A Low"					104	1{
-			bits "VALUEL"	0	8
-		}
-
-		register "OCR1AH"	"Output Compare Register A High"				105	1{
-			bits "VALUEH"	0	8
-		}
-
-		register "OCR1BL"	"Output Compare Register B Low"					106	1{
-			bits "VALUEL"	0	8
-		}
-
-		register "OCR1BH"	"Output Compare Register B High"				107	1{
-			bits "VALUEH"	0	8
-		}
+		register "OCR1B"	"Output Compare Register B"						106	2 swap {}
+		emptyline
 
 		register "TIMSK1"	"Timer/Counter Interrupt Mask Register"	79	1{
 			bits "ICIE1"	5	1
@@ -578,75 +482,6 @@ range 0x20 175{
 		}
 	}
 
-	/* Timer/Counter 3 */
-	section "Timer/Counter 3 (16-bit)"{
-		register "TCCR3A"	"Timer/Counter Control Register A"				112	1{
-			bits "COMA"		6	2
-			bits "COMB"		4	2
-			bits "WGM1"		1	1
-			bits "WGM0"		0	1
-		}
-
-		register "TCCR3B"	"Timer/Counter Control Register B"				113	1{
-			bits "ICNC"		7	1
-			bits "ICES"		6	1
-			bits "WGM3"		4	1
-			bits "WGM2"		3	1
-			bits "CS"		0	3
-		}
-
-		register "TCCR3C"	"Timer/Counter Control Register C"				114	1{
-			bits "FOCA"		7	1
-			bits "FOCB"		6	1
-		}
-
-		register "TCNT3L"	"Timer/Counter Value Low"						116	1{
-			bits "CNTL"		0	8
-		}
-
-		register "TCNT3H"	"Timer/Counter Value High"						117	1{
-			bits "CNTH"		0	8
-		}
-
-		register "ICR3L"	"Timer/Counter Input Capture Register Low"		118	1{
-			bits "VALUEL"	0	8
-		}
-
-		register "ICR3H"	"Timer/Counter Input Capture Register High"		119	1{
-			bits "VALUEH"	0	8
-		}
-
-		register "OCR3AL"	"Output Compare Register A Low"					120	1{
-			bits "VALUEL"	0	8
-		}
-
-		register "OCR3AH"	"Output Compare Register A High"				121	1{
-			bits "VALUEH"	0	8
-		}
-
-		register "OCR3BL"	"Output Compare Register B Low"					122	1{
-			bits "VALUEL"	0	8
-		}
-
-		register "OCR3BH"	"Output Compare Register B High"				123	1{
-			bits "VALUEH"	0	8
-		}
-
-		register "TIMSK3"	"Timer/Counter Interrupt Mask Register"	81	1{
-			bits "ICIE3"	5	1
-			bits "OCIE3B"	2	1
-			bits "OCIE3A"	1	1
-			bits "TOIE3"	0	1
-		}
-
-		register "TIFR3"	"Timer/Counter Interrupt Flag Register"	24	1{
-			bits "ICF3"		5	1
-			bits "OCF3B"	2	1
-			bits "OCF3A"	1	1
-			bits "TOV3"		0	1
-		}
-	}
-
 	/* Analog Comparator */
 	section "Analog Comparator and Digital Converter"{
 		register "ADCL"		"ADC Data Register Low"								88	1{
@@ -675,7 +510,6 @@ range 0x20 175{
 			bits "REFS1"	7	1
 			bits "REFS0"	6	1
 			bits "ADLAR"	5	1
-			bits "MUX4"		4	1
 			bits "MUX3"		3	1
 			bits "MUX2"		2	1
 			bits "MUX1"		1	1
