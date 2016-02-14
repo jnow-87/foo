@@ -125,18 +125,6 @@
 // register
 #define R31			0x1f
 
-/* X */
-// register
-#define X			0x1a
-
-/* Y */
-// register
-#define Y			0x1c
-
-/* Z */
-// register
-#define Z			0x1e
-
 /**
  *	MCU General Control and Status
  */
@@ -206,21 +194,9 @@
 // register
 #define SPL			0x5d
 
-// bits
-#define SPL_VALUEL		0
-
-// masks
-#define SPL_VALUEL_MASK	0xff
-
 /* SPH */
 // register
 #define SPH			0x5e
-
-// bits
-#define SPH_VALUEH		0
-
-// masks
-#define SPH_VALUEH_MASK	0xff
 
 /* SMCR */
 // register
@@ -268,6 +244,10 @@
 // masks
 #define OCDR_VALUE_MASK	0xff
 
+/* RAMPZ */
+// register
+#define RAMPZ			0x5b
+
 /* DDRA */
 // register
 #define DDRA			0x21
@@ -308,9 +288,9 @@
 // register
 #define PORTB			0x25
 
-/* PROTC */
+/* PORTC */
 // register
-#define PROTC			0x28
+#define PORTC			0x28
 
 /* PORTD */
 // register
@@ -1091,65 +1071,17 @@
 // masks
 #define TCNT1H_CNTH_MASK	0xff
 
-/* ICR1L */
+/* ICR1 */
 // register
-#define ICR1L			0x86
+#define ICR1			0x86
 
-// bits
-#define ICR1L_VALUEL		0
-
-// masks
-#define ICR1L_VALUEL_MASK	0xff
-
-/* ICR1H */
+/* OCR1A */
 // register
-#define ICR1H			0x87
+#define OCR1A			0x88
 
-// bits
-#define ICR1H_VALUEH		0
-
-// masks
-#define ICR1H_VALUEH_MASK	0xff
-
-/* OCR1AL */
+/* OCR1B */
 // register
-#define OCR1AL			0x88
-
-// bits
-#define OCR1AL_VALUEL		0
-
-// masks
-#define OCR1AL_VALUEL_MASK	0xff
-
-/* OCR1AH */
-// register
-#define OCR1AH			0x89
-
-// bits
-#define OCR1AH_VALUEH		0
-
-// masks
-#define OCR1AH_VALUEH_MASK	0xff
-
-/* OCR1BL */
-// register
-#define OCR1BL			0x8a
-
-// bits
-#define OCR1BL_VALUEL		0
-
-// masks
-#define OCR1BL_VALUEL_MASK	0xff
-
-/* OCR1BH */
-// register
-#define OCR1BH			0x8b
-
-// bits
-#define OCR1BH_VALUEH		0
-
-// masks
-#define OCR1BH_VALUEH_MASK	0xff
+#define OCR1B			0x8a
 
 /* TIMSK1 */
 // register
@@ -1381,65 +1313,17 @@
 // masks
 #define TCNT3H_CNTH_MASK	0xff
 
-/* ICR3L */
+/* ICR3 */
 // register
-#define ICR3L			0x96
+#define ICR3			0x96
 
-// bits
-#define ICR3L_VALUEL		0
-
-// masks
-#define ICR3L_VALUEL_MASK	0xff
-
-/* ICR3H */
+/* OCR3A */
 // register
-#define ICR3H			0x97
+#define OCR3A			0x98
 
-// bits
-#define ICR3H_VALUEH		0
-
-// masks
-#define ICR3H_VALUEH_MASK	0xff
-
-/* OCR3AL */
+/* OCR3B */
 // register
-#define OCR3AL			0x98
-
-// bits
-#define OCR3AL_VALUEL		0
-
-// masks
-#define OCR3AL_VALUEL_MASK	0xff
-
-/* OCR3AH */
-// register
-#define OCR3AH			0x99
-
-// bits
-#define OCR3AH_VALUEH		0
-
-// masks
-#define OCR3AH_VALUEH_MASK	0xff
-
-/* OCR3BL */
-// register
-#define OCR3BL			0x9a
-
-// bits
-#define OCR3BL_VALUEL		0
-
-// masks
-#define OCR3BL_VALUEL_MASK	0xff
-
-/* OCR3BH */
-// register
-#define OCR3BH			0x9b
-
-// bits
-#define OCR3BH_VALUEH		0
-
-// masks
-#define OCR3BH_VALUEH_MASK	0xff
+#define OCR3B			0x9a
 
 /* TIMSK3 */
 // register
