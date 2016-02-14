@@ -5,6 +5,7 @@
 #include ARCH_HEADER
 
 
+#ifndef ASM
 #ifdef KERNEL
 
 #include <kernel/process.h>
@@ -94,6 +95,8 @@ extern arch_callbacks_kernel_t arch_cbs_kernel;
 
 extern arch_callbacks_common_t arch_cbs_common;
 extern arch_info_t arch_info;
+
+#endif // ASM
 
 
 #endif // ARCH_H
