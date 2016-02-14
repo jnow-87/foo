@@ -1,4 +1,4 @@
-obj-y := start.o isr.o atmega_kernel.o
+obj-y := start.o isr.o isr_hdlr.o atmega_kernel.o
 obj-nobuiltin-y := libsys.o
 
 
