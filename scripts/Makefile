@@ -145,7 +145,7 @@ gperfflags := \
 
 
 ####
-## janos specific variables
+## brickos specific variables
 ####
 
 kernel := $(build_tree)/$(kernel_name)

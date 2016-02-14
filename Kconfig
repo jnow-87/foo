@@ -1,9 +1,9 @@
-mainmenu "janos configuration"
+mainmenu "brickos configuration"
 
 #
 # processor type
 #
-menu "Processor type"
+menu "Processor"
 	source "arch/Kconfig"
 endmenu
 
