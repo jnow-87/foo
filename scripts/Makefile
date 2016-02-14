@@ -171,8 +171,7 @@ sysroot_create := $(scripts_dir)/sysroot/create.sh
 # kernel target
 .PHONY: kernel
 kernel: cppflags += -DKERNEL
-kernel: check_config check_configheader $(memlayout) $(kernel)
-	$(QUTIL)$(memlayout)
+kernel: check_config check_configheader $(kernel)
 
 $(kernel): ldlibs += -L$(scripts_dir)/linker -Tkernel_$(CONFIG_ARCH).lds
 $(kernel): ldlibs += -Wl,--section-start=.base=$(CONFIG_KERNEL_BASE_ADDR)
@@ -195,6 +194,11 @@ sysroot: check_config $(kernel) $(libsys)
 	$(rm) $(recent)
 	$(sym_link) $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
 	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(build_tree)/config/config.h $(kernel_name) $(lib_name)
+
+# memlayout
+.PHONY: memlayout
+memlayout: check_configheader $(memlayout)
+	$(QUTIL)$(memlayout)
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)
