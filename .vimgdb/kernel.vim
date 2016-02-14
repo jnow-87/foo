@@ -12,7 +12,16 @@ let vimgdb_gdblog_show = 0
 
 Vimgdb start
 
-exec "Inferior bin " . kimg
-exec "Inferior sym " . kimg
+exec "Inferior " . kimg
 
-Per .vimgdb/per/atmega1284p.per
+Per .vimgdb/per/atmega1284.per
+sleep 50m
+Per fold 3
+Per fold 1
+sleep 50m
+
+call vimgdb#window#focus(bufwinnr("callstack"))
+
+rightbelow 40vsplit
+Break view
+Break add __start
