@@ -13,6 +13,7 @@
 #endif // CONFIG_ATMEGA*
 
 
+#ifndef ASM
 #ifndef _x86_
 #ifndef __x86_64__
 
@@ -22,6 +23,7 @@
 
 #endif // __x86_64__
 #endif // _x86_
+#endif // ASM
 
 
 /* macros */
