@@ -190,7 +190,7 @@ $(libsys): $(addprefix $(build_tree)/, $(libsys_dep))
 
 # sysroot target
 .PHONY: sysroot
-sysroot: check_config $(kernel) $(libsys)
+sysroot: kernel libsys
 	$(rm) $(recent)
 	$(sym_link) $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
 	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(build_tree)/config/config.h $(kernel_name) $(lib_name)
