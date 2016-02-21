@@ -1,3 +1,0 @@
-/* global functions */
-void kernel(){
-}

@@ -6,9 +6,6 @@
 	__core_init1_base = .;
 	*(.core_init_stage1)
 
-	__core_init2_base = .;
-	*(.core_init_stage2)
-
 	__platform_init0_base = .;
 	*(.platform_init_stage0)
 
@@ -26,9 +23,6 @@
 
 	__driver_init0_base = .;
 	*(.driver_init_stage0)
-
-	__driver_init1_base = .;
-	*(.driver_init_stage1)
 
 	__init_end = .;
 } > kernel

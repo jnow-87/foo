@@ -1,6 +1,5 @@
-/* macros */
-#define NISR	35
+#include <arch/avr/interrupt.h>
 
 
 /* global variables */
-int (*isr_hdlr[NISR])(void) = { 0x0 };
+int (*isr_hdlr[NINTERRUPTS])(void) = { 0x0 };

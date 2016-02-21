@@ -23,6 +23,7 @@
 #ifndef __x86_64__
 
 #include <arch/avr/register.h>
+#include <arch/avr/interrupt.h>
 #include <arch/avr/timebase.h>
 #include <sys/types.h>
 
@@ -32,6 +33,13 @@
 
 
 /* macros */
+// architecture re-defines
+#ifdef PIR
+#undef PIR
+#endif // PIR
+
+#define PIR	0
+
 // memory layout
 #define KERNEL_IMG_BASE					CONFIG_KERNEL_BASE_ADDR
 #define KERNEL_IMG_SIZE					(MCU_FLASH_SIZE - KERNEL_IMG_BASE)

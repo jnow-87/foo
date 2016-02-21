@@ -3,3 +3,27 @@ config KERNEL_BASE_ADDR
 	hex "Kernel starting address"
 	range 0x0 0x0fffffff
 	default 0x0
+
+config KERNEL_EARLY_PRINT
+	bool "Print error on failed kernel init calls"
+
+config KERNEL_MSG_FATAL
+	bool "Print kernel FATAL messages"
+
+config KERNEL_MSG_WARN
+	bool "Print kernel WARNING messages"
+
+config KERNEL_MSG_INFO
+	bool "Print kernel INFO messages"
+
+config KERNEL_MSG_DEBUG
+	bool "Print kernel DEBUG messages"
+
+config KERNEL_MSG_STAT
+	bool "Print kernel STATISTIC messages"
+
+config KERNEL_TEST
+	bool "Execute 'kernel_test()' on boot"
+
+config KERNEL_STAT
+	bool "Execute 'kernel_stat()' on boot"

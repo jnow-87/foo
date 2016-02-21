@@ -78,11 +78,11 @@ __start:
 
 	/* goto kernel */
 #ifdef CONFIG_ATMEGA88PA
-	ldi		r30, lo8(kernel)
-	ldi		r31, hi8(kernel)
+	ldi		r30, lo8(init)
+	ldi		r31, hi8(init)
 	icall
 #else
-	call	kernel
+	call	init
 #endif
 
 	/* should never happen */
