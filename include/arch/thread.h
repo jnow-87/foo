@@ -6,13 +6,8 @@
 
 
 /* macros */
-#define thread_call(t) arch_thread_call(t)
-#define arch_thread_call(t) \
-	arch_kernel_call(thread_call, 0)(t)
-
-#define thread_kill(r) arch_thread_kill(r)
-#define arch_thread_kill(r) \
-	arch_kernel_call(thread_kill, 0)(r)
+#define thread_call(t)	arch_kernel_call(thread_call, 0)(t)
+#define thread_kill(r)	arch_kernel_call(thread_kill, 0)(r)
 
 
 #endif // ARCH_THREAD_H

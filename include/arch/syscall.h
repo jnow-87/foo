@@ -6,8 +6,7 @@
 
 
 /* macros */
-#define arch_syscall(num, param, size) \
-	arch_common_call(syscall, -1)(num, param, size)
+#define syscall(num, param)	arch_common_call(syscall, -1)(num, param, sizeof(*param))
 
 
 #endif // ARCH_SYSCALL_H

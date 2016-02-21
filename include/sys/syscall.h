@@ -6,13 +6,6 @@
 #include <sys/compiler.h>
 
 
-/* macros */
-// needs to be a macro, otherwise sizeof(*param)
-// wouldn't work
-#define syscall(num, param) \
-	arch_syscall(num, param, sizeof(*param))
-
-
 /* types */
 typedef enum __packed{
 	NSYSCALLS

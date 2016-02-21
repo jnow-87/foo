@@ -6,14 +6,13 @@
 
 
 /* macros */
-#define PIR	arch_core_id()
-#define core_id() arch_core_id()
-#define arch_core_id() \
-	arch_common_call(core_id, 0)()
+#ifndef PIR
+#define PIR				core_id()
+#endif // PIR
 
-#define core_halt() arch_core_halt()
-#define arch_core_halt() \
-	arch_common_call(core_halt, 0)()
+#define core_id()		arch_common_call(core_id, 0)()
+#define core_sleep()	arch_common_call(core_sleep, 0)()
+#define core_halt()		arch_common_call(core_halt, 0)()
 
 
 #endif // ARCH_CORE_ID_H
