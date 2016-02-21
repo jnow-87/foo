@@ -42,8 +42,7 @@ cflags := \
 	-Wall \
 	-Wno-unknown-pragmas \
 	-nostdinc \
-	-fno-builtin \
-	-O0
+	-fno-builtin
 
 cxxflags := \
 	$(CXXFLAGS) \
@@ -52,8 +51,7 @@ cxxflags := \
 	-Wall \
 	-Wno-unknown-pragmas \
 	-nostdinc \
-	-fno-builtin \
-	-O0
+	-fno-builtin
 
 cppflags := \
 	$(CPPFLAGS) \

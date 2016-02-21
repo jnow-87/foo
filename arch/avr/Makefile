@@ -5,6 +5,10 @@ obj-nobuiltin-y := libsys.o
 libsys-y := atmega_lib.o
 
 
+# flags
+cppflags-$(CONFIG_AVR) := -Os
+
+
 # object versions for kernel and lib
 $(loc_build_tree)/atmega_kernel.o: $(loc_src_tree)/atmega.c
 	$(mkdir) $(dir $@)
