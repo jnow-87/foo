@@ -64,6 +64,7 @@ typedef struct{
 
 	/* terminal I/O */
 	int (*putchar)(int c);
+	int (*puts)(const char* s);
 	int (*getchar)(void);
 } arch_callbacks_kernel_t;
 
@@ -79,6 +80,7 @@ typedef struct{
 
 	/* core */
 	int (*core_id)(void);
+	void (*core_sleep)(void);
 	void (*core_halt)(void);
 
 	/* syscall */

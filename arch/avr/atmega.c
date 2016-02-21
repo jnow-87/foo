@@ -27,6 +27,7 @@ arch_callbacks_kernel_t arch_cbs_kernel = {
 	.thread_kill = 0x0,
 
 	.putchar = 0x0,
+	.puts = 0x0,
 	.getchar = 0x0,
 };
 
@@ -42,6 +43,7 @@ arch_callbacks_common_t arch_cbs_common = {
 
 	/* core */
 	.core_id = 0x0,
+	.core_sleep = 0x0,
 	.core_halt = 0x0,
 
 	/* syscall */
