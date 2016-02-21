@@ -209,7 +209,7 @@ configtools: $(config_tools)
 .PHONY: check_configheader
 check_configheader: $(config_header)
 
-$(config_header): $(config) configtools
+$(config_header): $(config) $(config_tools)
 	$(confheader) $(config_ftype) $(dir $(config_header)) $(config_header) 
 
 .PHONY: menuconfig
