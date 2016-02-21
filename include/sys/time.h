@@ -2,8 +2,8 @@
 #define SYS_TIME_H
 
 
-/* macro */
-#define TIME_INITIALIZER \
+/* macros */
+#define TIME_INITIALISER \
 	{ \
 		.s = 0, \
 		.ms = 0, \

@@ -2,6 +2,8 @@
 #include <arch/arch.h>
 
 
+/* global variables */
+// kernel callbacks
 #ifdef KERNEL
 
 arch_callbacks_kernel_t arch_cbs_kernel = {
@@ -30,7 +32,7 @@ arch_callbacks_kernel_t arch_cbs_kernel = {
 
 #endif // KERNEL
 
-
+// common callbacks
 arch_callbacks_common_t arch_cbs_common = {
 	.timebase = 0x0,
 	.timebase_to_time = 0x0,
@@ -46,6 +48,7 @@ arch_callbacks_common_t arch_cbs_common = {
 	.syscall = 0x0,
 };
 
+// architecture info
 arch_info_t arch_info = {
 	.core_clock_khz = CONFIG_CORE_CLOCK_HZ / 1000,
 	.timebase_clock_khz = 0x0,

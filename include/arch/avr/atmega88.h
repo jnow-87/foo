@@ -6,7 +6,8 @@
 #include <sys/const.h>
 
 
-/* memory layout */
+/* macros */
+// memory layout
 #define MCU_FLASH_SIZE		_8k
 #define MCU_SRAM_SIZE		_1k
 

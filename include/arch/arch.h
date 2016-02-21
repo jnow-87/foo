@@ -21,7 +21,7 @@
 #include <sys/types.h>
 
 
-/* macro */
+/* macros */
 #ifdef KERNEL
 
 #define arch_kernel_call(p, err_ret) \

@@ -6,7 +6,7 @@
 
 
 /* macros */
-#define TIMEBASE_INITIALIZER	0
+#define TIMEBASE_INITIALISER	0
 
 
 /* types */

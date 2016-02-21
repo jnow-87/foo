@@ -13,9 +13,9 @@
 
 
 /* prototypes */
+unsigned int log(unsigned int x, unsigned long base);
 unsigned long long pow(unsigned long long x, unsigned long long y);
 unsigned int powi(unsigned int x, unsigned int y);
-
 
 #ifdef CONFIG_HAS_FLOAT
 
@@ -24,9 +24,6 @@ float powf(float x, float y);
 long double powl(long double x, long double y);
 
 #endif // CONFIG_HAS_FLOAT
-
-
-unsigned int log(unsigned int x, unsigned long base);
 
 
 #endif // SYS_MATH_H

@@ -8,9 +8,11 @@
 
 /* mcu-specific header */
 #if CONFIG_ATMEGA1284P == 1
+
 #include <arch/avr/atmega1284.h>
 
 #elif CONFIG_ATMEGA88PA == 1
+
 #include <arch/avr/atmega88.h>
 
 #endif // CONFIG_ATMEGA*
@@ -60,5 +62,6 @@ typedef struct{
 #endif // ASM
 #endif // __x86_64__
 #endif // _x86_
+
 
 #endif // ATMEGA_H

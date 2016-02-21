@@ -2,7 +2,8 @@
 #define SYS_UNITS_H
 
 
-/* numeric constants */
+/* macros */
+// numeric constants
 #define _1k		(1 * 1024)
 #define _2k		(2 * 1024)
 #define _4k		(4 * 1024)

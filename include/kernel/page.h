@@ -44,7 +44,6 @@ typedef enum __packed{
 	PAGESIZE_4G
 } page_size_t;
 
-
 typedef struct page_t{
 	/* mapping */
 	page_size_t psize;							// page size

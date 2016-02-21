@@ -7,11 +7,12 @@
 
 /* macros */
 #define false	0
-#define true	(!true)
+#define true	(!false)
 
 
 /* architecture independent types */
 typedef char	bool;
+
 
 /* architecture dependent types */
 #if CONFIG_ADDR_WIDTH == 8
