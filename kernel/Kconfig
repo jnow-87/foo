@@ -27,3 +27,4 @@ config KERNEL_TEST
 
 config KERNEL_STAT
 	bool "Execute 'kernel_stat()' on boot"
+	select KERNEL_MSG_STAT
