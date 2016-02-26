@@ -1,22 +1,12 @@
-obj-y := start.o isr.o isr_hdlr.o atmega_kernel.o
+obj-y := start.o isr.o isr_hdlr.o
 obj-nobuiltin-y := libsys.o
 
 
-libsys-y := atmega_lib.o
+libsys-y :=
 
 
 # flags
 cppflags-$(CONFIG_AVR) := -Os
-
-
-# object versions for kernel and lib
-$(loc_build_tree)/atmega_kernel.o: $(loc_src_tree)/atmega.c
-	$(mkdir) $(dir $@)
-	$(call compile_o_c)
-
-$(loc_build_tree)/atmega_lib.o: $(loc_src_tree)/atmega.c
-	$(mkdir) $(dir $@)
-	$(call compile_o_c)
 
 
 # AVR specific flags
