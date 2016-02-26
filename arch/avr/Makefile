@@ -1,8 +1,8 @@
-obj-y := start.o isr.o isr_hdlr.o
+obj-y := start.o isr.o isr_hdlr.o core.o
 obj-nobuiltin-y := libsys.o
 
 
-libsys-y :=
+libsys-y := core.o
 
 
 # flags

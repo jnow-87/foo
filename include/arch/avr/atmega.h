@@ -56,6 +56,7 @@
 #ifndef __x86_64__
 
 #include <arch/types.h>
+#include <arch/avr/core.h>
 
 
 typedef struct{
@@ -114,8 +115,8 @@ static const arch_callbacks_common_t arch_cbs_common = {
 
 	/* core */
 	.core_id = 0x0,
-	.core_sleep = 0x0,
-	.core_halt = 0x0,
+	.core_sleep = avr_core_sleep,
+	.core_halt = avr_core_halt,
 
 	/* syscall */
 	.syscall = 0x0,				/* TODO */
