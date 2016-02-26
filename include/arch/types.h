@@ -34,8 +34,9 @@ typedef struct{
 	void (*copy_to_user)(void* const target, void* const src, unsigned int n, process_t* const this_p);
 
 	/* interrupts */
-	void (*int_enable)(int_num_t mask);
-	int (*int_get_mask)(void);
+	void (*int_enable)(int_num_t num);
+	void (*int_disable)(int_num_t num);
+	int_num_t (*int_enabled)(void);
 	int (*int_hdlr_register)(int_num_t num, int_hdlr_t hdlr);
 	int (*int_hdlr_release)(int_num_t num);
 

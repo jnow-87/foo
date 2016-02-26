@@ -85,28 +85,29 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.copy_from_user = 0x0,
 	.copy_to_user = 0x0,
 
-	.int_enable = 0x0,
-	.int_get_mask = 0x0,
-	.int_hdlr_register = 0x0,
-	.int_hdlr_release = 0x0,
+	.int_enable = 0x0,			/* TODO */
+	.int_disable = 0x0,			/* TODO */
+	.int_enabled = 0x0,			/* TODO */
+	.int_hdlr_register = 0x0,	/* TODO */
+	.int_hdlr_release = 0x0,	/* TODO */
 
 	.ipi_sleep = 0x0,
 	.ipi_wake = 0x0,
 
-	.thread_call = 0x0,
-	.thread_kill = 0x0,
+	.thread_call = 0x0,			/* TODO */
+	.thread_kill = 0x0,			/* TODO */
 
-	.putchar = 0x0,
-	.puts = 0x0,
-	.getchar = 0x0,
+	.putchar = 0x0,				/* TODO */
+	.puts = 0x0,				/* TODO */
+	.getchar = 0x0,				/* TODO */
 };
 
 #endif // KERNEL
 
 // common callbacks
 static const arch_callbacks_common_t arch_cbs_common = {
-	.timebase = 0x0,
-	.timebase_to_time = 0x0,
+	.timebase = 0x0,			/* TODO */
+	.timebase_to_time = 0x0,	/* TODO */
 
 	/* atomics */
 	.cas = 0x0,
@@ -117,7 +118,7 @@ static const arch_callbacks_common_t arch_cbs_common = {
 	.core_halt = 0x0,
 
 	/* syscall */
-	.syscall = 0x0,
+	.syscall = 0x0,				/* TODO */
 };
 
 // architecture info
