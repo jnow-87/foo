@@ -91,41 +91,6 @@ choice
 		bool "None"
 endchoice
 
-# word length
-choice
-	prompt "Word length"
-	depends on UART
-	default UART_WLEN_8
-
-	config UART_WLEN_5
-		bool "5"
-
-	config UART_WLEN_6
-		bool "6"
-
-	config UART_WLEN_7
-		bool "7"
-
-	config UART_WLEN_8
-		bool "8" 
-
-	config UART_WLEN_9
-		bool "9"
-endchoice
-
-menu "Hidden"
-	visible if 0
-	depends on UART
-
-	config UART_WORDLENGTH
-		int "Word length"
-		default 5	if UART_WLEN_5
-		default 6	if UART_WLEN_6
-		default 7	if UART_WLEN_7
-		default 8	if UART_WLEN_8
-		default 9	if UART_WLEN_9
-endmenu
-
 # stop bits
 choice
 	prompt "Stop bits"

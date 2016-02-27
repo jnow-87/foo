@@ -1,4 +1,4 @@
-obj-y := start.o isr.o isr_hdlr.o core.o
+obj-y := start.o isr.o isr_hdlr.o core.o uart.o
 obj-nobuiltin-y := libsys.o
 
 

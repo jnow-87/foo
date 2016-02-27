@@ -57,6 +57,7 @@
 
 #include <arch/types.h>
 #include <arch/avr/core.h>
+#include <arch/avr/uart.h>
 
 
 typedef struct{
@@ -98,9 +99,8 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.thread_call = 0x0,			/* TODO */
 	.thread_kill = 0x0,			/* TODO */
 
-	.putchar = 0x0,				/* TODO */
-	.puts = 0x0,				/* TODO */
-	.getchar = 0x0,				/* TODO */
+	.putchar = avr_putchar,
+	.puts = avr_puts,
 };
 
 #endif // KERNEL
