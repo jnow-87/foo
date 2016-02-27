@@ -25,12 +25,12 @@ SECTIONS {
 
 
 	/* data */
-	INCLUDE kernel_init.lds
-
 	.data : {
 		*(.data .data.* .gnu.linkonce.d.*)
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
 		*(.rodata1)
+
+		INCLUDE kernel_init.lds
 	} > data AT>kernel
 
 	__data_start = ADDR(.data);
