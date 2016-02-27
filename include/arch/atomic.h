@@ -6,7 +6,7 @@
 
 
 /* macros */
-#define cas(v, o, n)	arch_common_call(cas, 0)(v, o, n)
+#define cas(v, o, n)	(arch_common_call(cas, 0)(v, o, n))
 
 
 #endif // ARCH_ATOMIC_H
