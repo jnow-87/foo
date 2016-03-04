@@ -4,7 +4,6 @@
 
 #include <kernel/page.h>
 #include <kernel/process.h>
-#include <sys/compiler.h>
 
 
 /* incomplete types */
@@ -12,7 +11,7 @@ struct process_t;
 
 
 /* types */
-typedef enum __packed{
+typedef enum{
 	READY = 1,
 	WAITING,
 	RUNNING,

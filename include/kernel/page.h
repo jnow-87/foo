@@ -3,7 +3,6 @@
 
 
 #include <sys/math.h>
-#include <sys/compiler.h>
 
 
 /* macros */
@@ -11,18 +10,18 @@
 
 
 /* types */
-typedef enum __packed{
+typedef enum{
 	PAGE_R = 0x1,
 	PAGE_W = 0x2,
 	PAGE_X = 0x4
 } page_perm_t;
 
-typedef enum __packed{
+typedef enum{
 	PAGE_KERNEL = 0,
 	PAGE_USER
 } page_priv_t;
 
-typedef enum __packed{
+typedef enum{
 	PAGE_COHERENT = 0x1,
 	PAGE_NOREORDER = 0x2,
 	PAGE_NOCACHE = 0x4,
@@ -30,7 +29,7 @@ typedef enum __packed{
 	PAGE_WRITE_THROUGH = 0x10
 } page_flags_t;
 
-typedef enum __packed{
+typedef enum{
 	PAGESIZE_4k = 0x0,
 	PAGESIZE_16k,
 	PAGESIZE_64k,

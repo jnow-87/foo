@@ -6,7 +6,7 @@
 
 
 /* types */
-typedef enum __packed{
+typedef enum{
 	FATAL = 0x1,
 	WARN = 0x2,
 	DEBUG = 0x4,

@@ -4,11 +4,10 @@
 
 #include <sys/list.h>
 #include <sys/fcntl.h>
-#include <sys/compiler.h>
 
 
 /* types */
-typedef enum __packed{
+typedef enum{
 	FS_DIR = 1,
 	FS_FILE
 } fs_node_type_t;

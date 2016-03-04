@@ -3,11 +3,10 @@
 
 
 #include <arch/syscall.h>
-#include <sys/compiler.h>
 
 
 /* types */
-typedef enum __packed{
+typedef enum{
 	NSYSCALLS
 } syscall_t;
 

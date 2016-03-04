@@ -2,15 +2,12 @@
 #define AVR_INTERRUPT_H
 
 
-#include <sys/compiler.h>
-
-
 /* macros */
 #define NINTERRUPTS			35
 
 
 /* types */
-typedef enum int_num_t {
+typedef enum int_num_t{
 	INT_NONE = 0,
 	INT_0,
 	INT_1,

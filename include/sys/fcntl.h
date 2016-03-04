@@ -2,11 +2,8 @@
 #define SYS_FCNTL_H
 
 
-#include <sys/compiler.h>
-
-
 /* types */
-typedef enum __packed{
+typedef enum{
 	F_CREATE = 1,
 	F_APPEND
 } f_mode_t;
