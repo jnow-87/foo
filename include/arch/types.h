@@ -5,11 +5,11 @@
 #ifndef ASM
 #ifdef KERNEL
 
+#include <arch/interrupt.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>
 #include <kernel/page.h>
 #include <kernel/ipi.h>
-#include <kernel/interrupt.h>
 
 #endif // KERNEL
 
@@ -35,9 +35,8 @@ typedef struct{
 	error_t (*copy_to_user)(void* const target, void* const src, unsigned int n, process_t* const this_p);
 
 	/* interrupts */
-	error_t (*int_enable)(int_num_t num);
-	error_t (*int_disable)(int_num_t num);
-	int_num_t (*int_enabled)(void);
+	error_t (*int_enable)(int_type_t mask);
+	int_type_t (*int_enabled)(void);
 	error_t (*int_hdlr_register)(int_num_t num, int_hdlr_t hdlr);
 	error_t (*int_hdlr_release)(int_num_t num);
 

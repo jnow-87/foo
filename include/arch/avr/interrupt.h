@@ -3,12 +3,19 @@
 
 
 /* macros */
-#define NINTERRUPTS			35
+#define INT_ALL ((int_type_t)(INT_GLOBAL))
 
 
 /* types */
+typedef enum int_type_t{
+	INT_NONE = 0x0,
+	INT_GLOBAL = 0x1,
+} int_type_t;
+
 typedef enum int_num_t{
-	INT_NONE = 0,
+	// XXX: order has to match the hardware
+	// 		interrupt vector table
+	INT_RESET = 0,
 	INT_0,
 	INT_1,
 	INT_2,
@@ -43,7 +50,9 @@ typedef enum int_num_t{
 	INT_TIMER3_COMPA,
 	INT_TIMER3_COMPB,
 	INT_TIMER3_OVFL,
-	INT_ALL,
+
+	// end of hardware interrupt vector table
+	NINTERRUPTS,
 } int_num_t;
 
 

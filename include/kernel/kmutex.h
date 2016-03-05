@@ -2,20 +2,20 @@
 #define KERNEL_MUTEX_H
 
 
-#include <kernel/interrupt.h>
+#include <arch/interrupt.h>
 #include <sys/mutex.h>
 
 
 /* types */
 typedef struct{
-	int_num_t int_mask;
+	int_type_t imask;
 	mutex_t m;
 } kmutex_t;
 
 
 /* macros */
 #define _KMUTEX_INITIALISER(nest){ \
-	.int_mask = 0x0, \
+	.imask = INT_NONE, \
 	.m = _MUTEX_INITIASIZER(nest) \
 }
 
@@ -29,18 +29,18 @@ typedef struct{
 
 #define kmutex_init(_m){ \
 	mutex_init(&((_m)->m)); \
-	(_m)->int_mask = 0x0; \
+	(_m)->imask = INT_NONE; \
 }
 
 #define kmutex_lock(_m){ \
 	mutex_lock(&((_m)->m)); \
-	(_m)->int_mask = arch_int_get_mask(); \
+	(_m)->imask = int_enabled(); \
 	int_enable(INT_NONE); \
 }
 
 #define kmutex_unlock(_m){ \
 	mutex_unlock(&((_m)->m)); \
-	int_enable((_m)->int_mask); \
+	int_enable((_m)->imask); \
 }
 
 #define kmutex_trylock(_m) ({ \
@@ -48,8 +48,8 @@ typedef struct{
 	\
 	\
 	if((r = mutex_trylock(&((_m)->m))) == 0){ \
-		(_m)->int_mask = arch_int_get_mask(); \
-		arch_int_enable(0x0); \
+		(_m)->imask = int_enabled(); \
+		int_enable(INT_NONE); \
 	} \
 	r; \
 })
