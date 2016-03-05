@@ -3,10 +3,11 @@
 
 
 #include <arch/arch.h>
+#include <sys/error.h>
 
 
 /* macros */
-#define syscall(num, param)	(arch_common_call(syscall, -1)(num, param, sizeof(*param)))
+#define syscall(num, param)	(arch_common_call(syscall, E_NOIMP)(num, param, sizeof(*param)))
 
 
 #endif // ARCH_SYSCALL_H

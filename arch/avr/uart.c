@@ -2,6 +2,7 @@
 #include <arch/arch.h>
 #include <arch/avr/register.h>
 #include <kernel/init.h>
+#include <sys/error.h>
 
 
 /* macros */
@@ -9,16 +10,16 @@
 
 
 /* global functions */
-int avr_putchar(int c){
+error_t avr_putchar(char c){
 	while(!(mreg_r(UCSR0A) & (0x1 << UCSR0A_UDRE)));
 	mreg_w(UDR0, c);
 
-	return c;
+	return E_OK;
 }
 
-int avr_puts(const char* s){
+error_t avr_puts(const char* s){
 	if(s == 0)
-		return -1;
+		return E_INVAL;
 
 	while(*s != 0){
 		while(!(mreg_r(UCSR0A) & (0x1 << UCSR0A_UDRE)));
@@ -26,7 +27,7 @@ int avr_puts(const char* s){
 		s++;
 	}
 
-	return 0;
+	return E_OK;
 }
 
 

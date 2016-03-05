@@ -2,8 +2,12 @@
 #define AVR_UART_H
 
 
-int avr_putchar(int c);
-int avr_puts(const char* s);
+#include <sys/error.h>
+
+
+/* prototypes */
+error_t avr_putchar(char c);
+error_t avr_puts(const char* s);
 
 
 #endif // AVR_UART_H
