@@ -7,8 +7,8 @@
 
 
 /* macros */
-#define mregbits(reg_addr, idx, mask) \
-	bits(regr(reg_addr), idx, mask)
+#define mreg_bits(reg_addr, idx, mask) \
+	bits(mreg_r(reg_addr), idx, mask)
 
 #define bits(val, idx, mask) \
 	(((val) & ((mask) << (idx))) >> (idx))
