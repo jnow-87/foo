@@ -126,6 +126,8 @@ __isr_call:
 	breq	__isr_zero_hdlr
 
 	/* call the handler from Z */
+	// TODO provide int_num as argument
+	ldi		r24, 0x0
 	icall
 
 	/* clear stack arguments pushed by the interrupt vector 'call' instruction*/

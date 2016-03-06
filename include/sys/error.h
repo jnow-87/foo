@@ -10,6 +10,7 @@ typedef enum{
 	E_NOENT = -3,
 	E_IO = -4,
 	E_NOIMP = -5,
+	E_INUSE = -6,
 } error_t;
 
 

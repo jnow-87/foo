@@ -2,6 +2,12 @@
 #define AVR_INTERRUPT_H
 
 
+#include <arch/interrupt.h>
+#include <sys/error.h>
+#include <sys/types.h>
+#include <sys/compiler.h>
+
+
 /* macros */
 #define INT_ALL ((int_type_t)(INT_GLOBAL))
 
@@ -54,6 +60,14 @@ typedef enum int_num_t{
 	// end of hardware interrupt vector table
 	NINTERRUPTS,
 } int_num_t;
+
+
+/* prototypes */
+error_t avr_int_enable(int_type_t mask);
+int_type_t avr_int_enabled(void);
+
+error_t avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr);
+error_t avr_int_hdlr_release(int_num_t num);
 
 
 #endif // AVR_INTERRUPT_H
