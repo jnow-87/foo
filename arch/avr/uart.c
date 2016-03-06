@@ -31,10 +31,10 @@ error_t avr_puts(const char* s){
 }
 
 
-/* static functions */
-static int avr_uart_init(void){
+/* local functions */
+static error_t avr_uart_init(void){
 	if(BAUDRATE == 0)
-		return -1;
+		return E_INVAL;
 
 	mreg_w(PRR0, (mreg_r(PRR0) & (-1 ^ (0x1 << PRR0_PRUSART0))));
 
@@ -66,7 +66,7 @@ static int avr_uart_init(void){
 #endif // CONFIG_UART_STOPBITS
 	);
 
-	return 0;
+	return E_OK;
 }
 
 platform_init(1, avr_uart_init);

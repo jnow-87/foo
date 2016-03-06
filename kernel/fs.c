@@ -18,16 +18,16 @@ static fs_t fs_list = LIST_INITIALIZER(&fs_list);
 static int fs_id = 0;
 
 
-/* local prototypes */
-static int fs_init(void);
-static int sc_hdlr_open(void*);
-static int sc_hdlr_close(void*);
-static int sc_hdlr_read(void*);
-static int sc_hdlr_write(void*);
-static int sc_hdlr_ioctl(void*);
-static int sc_hdlr_fcntl(void*);
-static int sc_hdlr_rmnode(void*);
-static int sc_hdlr_chdir(void*);
+/* local/static prototypes */
+static error_t fs_init(void);
+static error_t sc_hdlr_open(void*);
+static error_t sc_hdlr_close(void*);
+static error_t sc_hdlr_read(void*);
+static error_t sc_hdlr_write(void*);
+static error_t sc_hdlr_ioctl(void*);
+static error_t sc_hdlr_fcntl(void*);
+static error_t sc_hdlr_rmnode(void*);
+static error_t sc_hdlr_chdir(void*);
 
 
 /* global functions */
@@ -45,20 +45,20 @@ int fs_register(fs_ops_t* ops){
 	fs_t* new;
 
 	if(ops == 0)
-		return -1;
+		return E_INVAL;
 
 	if(fs_id >= 0x7fffffff)
-		return -2;
+		return E_INVAL;
 
 	new = kmalloc(sizeof(fs_t));
 	if(new == 0)
-		return -3;
+		return E_NOMEM;
 
 	new->fs_type = fs_id++;
 	new->ops = kmalloc(sizeof(fs_ops_t));
 
 	if(new->ops == 0)
-		return -3;
+		return E_NOMEM;
 
 	memcpy(new->ops, ops, sizeof(fs_ops_t));
 	list_add_tail(&fs_list, new);
@@ -73,7 +73,7 @@ int fs_register(fs_ops_t* ops){
  *
  * \return	0
  */
-int fs_unregister(int fs_type){
+error_t fs_unregister(int fs_type){
 	fs_t* fs;
 
 
@@ -84,7 +84,7 @@ int fs_unregister(int fs_type){
 		kfree(fs);
 	}
 
-	return 0;
+	return E_OK;
 }
 
 /**
@@ -221,7 +221,7 @@ void fs_cleanup_fds(fs_filed_t* fds, unsigned int pid){
 
 
 /* local functions */
-int fs_init(void){
+static error_t fs_init(void){
 	sc_hdlr_register(SC_OPEN, sc_hdlr_open);
 	sc_hdlr_register(SC_CLOSE, sc_hdlr_close);
 	sc_hdlr_register(SC_READ, sc_hdlr_read);
@@ -231,13 +231,13 @@ int fs_init(void){
 	sc_hdlr_register(SC_RMNODE, sc_hdlr_rmnode);
 	sc_hdlr_register(SC_CHDIR, sc_hdlr_chdir);
 
-	return 0;
+	return E_OK;
 }
 
 kernel_init(1, fs_init);
 
 
-int sc_hdlr_open(void* _p){
+static error_t sc_hdlr_open(void* _p){
 	char *path;
 	error_t e;
 	sc_param_open_t* p;
@@ -253,7 +253,7 @@ int sc_hdlr_open(void* _p){
 	path = kmalloc(p->path_len + 1);
 	if(path == 0){
 		WARN("out of kernel memory\n");
-		e = ENOMEM;
+		e = E_NOMEM;
 		goto err_0;
 	}
 
@@ -280,15 +280,15 @@ int sc_hdlr_open(void* _p){
 ok:
 	kfree(path);
 
-	return OK;
+	return E_OK;
 
 err_0:
 	p->fd = 0;
 
-	return e;
+	return E_OK;
 }
 
-int sc_hdlr_close(void* _p){
+static error_t sc_hdlr_close(void* _p){
 	error_t e;
 	sc_param_close_t* p;
 	process_t* this_p;
@@ -306,27 +306,27 @@ int sc_hdlr_close(void* _p){
 	ops = fs_get_ops(fd->node->fs_type);
 	if(ops == 0){
 		WARN("no operations found for fs_type %d\n", fd->node->fs_type);
-		e = EINVAL;
+		e = E_INVAL;
 		goto err;
 	}
 
 	if(ops->close == 0){
 		WARN("close not implemented for this file\n");
-		e = EINVAL;
+		e = E_INVAL;
 		goto err;
 	}
 
 	p->ret = ops->close(fd);
 
-	return OK;
+	return E_OK;
 
 err:
 	p->ret = e;
 
-	return 0;
+	return E_OK;
 }
 
-int sc_hdlr_read(void* _p){
+static error_t sc_hdlr_read(void* _p){
 	char* buf;
 	sc_param_read_t* p;
 	process_t* this_p;
@@ -344,21 +344,21 @@ int sc_hdlr_read(void* _p){
 	ops = fs_get_ops(fd->node->fs_type);
 	if(ops == 0){
 		WARN("no operations found for fs_type %d\n", fd->node->fs_type);
-		p->ret = EINVAL;
-		goto err_0;
+		p->ret = E_INVAL;
+		goto end;
 	}
 
 	if(ops->read == 0){
 		WARN("read not implemented for this file\n");
-		p->ret = EINVAL;
-		goto err_0;
+		p->ret = E_INVAL;
+		goto end;
 	}
 
 	buf = kmalloc(p->n);
 	if(buf == 0){
 		WARN("out of kernel memory\n");
-		p->ret = ENOMEM;
-		goto err_1;
+		p->ret = E_NOMEM;
+		goto end;
 	}
 
 	p->ret = ops->read(fd, buf, p->n);
@@ -368,16 +368,11 @@ int sc_hdlr_read(void* _p){
 
 	kfree(buf);
 
-	return 0;
-
-err_0:
-	return 0;
-
-err_1:
-	return p->ret;
+end:
+	return E_OK;
 }
 
-int sc_hdlr_write(void* _p){
+static error_t sc_hdlr_write(void* _p){
 	char* buf;
 	sc_param_write_t* p;
 	process_t* this_p;
@@ -395,37 +390,32 @@ int sc_hdlr_write(void* _p){
 	ops = fs_get_ops(fd->node->fs_type);
 	if(ops == 0){
 		WARN("no operations found for fs_type %d\n", fd->node->fs_type);
-		p->ret = EINVAL;
-		goto err_0;
+		p->ret = E_INVAL;
+		goto end;
 	}
 
 	if(ops->write == 0){
 		WARN("write not implemented for this file\n");
-		p->ret = EINVAL;
-		goto err_0;
+		p->ret = E_INVAL;
+		goto end;
 	}
 
 	buf = kmalloc(p->n);
 	if(buf == 0){
 		WARN("out of kernel memory\n");
-		p->ret = ENOMEM;
-		goto err_1;
+		p->ret = E_NOMEM;
+		goto end;
 	}
 
 	arch_copy_from_user(buf, p->buf, p->n, this_p);
 	p->ret = ops->write(fd, buf, p->n);
 	kfree(buf);
 
-	return 0;
-
-err_0:
-	return 0;
-
-err_1:
-	return p->ret;
+end:
+	return E_OK;
 }
 
-int sc_hdlr_ioctl(void* _p){
+static error_t sc_hdlr_ioctl(void* _p){
 	sc_param_ioctl_t* p;
 	process_t* this_p;
 	fs_filed_t* fd;
@@ -442,25 +432,23 @@ int sc_hdlr_ioctl(void* _p){
 	ops = fs_get_ops(fd->node->fs_type);
 	if(ops == 0){
 		WARN("no operations found for fs_type %d\n", fd->node->fs_type);
-		p->ret = EINVAL;
-		goto err;
+		p->ret = E_INVAL;
+		goto end;
 	}
 
 	if(ops->ioctl == 0){
 		WARN("ioctl not implemented for this file\n");
-		p->ret = EINVAL;
-		goto err;
+		p->ret = E_INVAL;
+		goto end;
 	}
 
 	p->ret = ops->ioctl(fd, p->request, p->param);
 
-	return 0;
-
-err:
-	return 0;
+end:
+	return E_OK;
 }
 
-int sc_hdlr_fcntl(void* _p){
+static error_t sc_hdlr_fcntl(void* _p){
 	sc_param_fcntl_t* p;
 	process_t* this_p;
 	fs_filed_t* fd;
@@ -477,25 +465,23 @@ int sc_hdlr_fcntl(void* _p){
 	ops = fs_get_ops(fd->node->fs_type);
 	if(ops == 0){
 		WARN("no operations found for fs_type %d\n", fd->node->fs_type);
-		p->ret = EINVAL;
-		goto err;
+		p->ret = E_INVAL;
+		goto end;
 	}
 
 	if(ops->fcntl == 0){
 		WARN("fcntl not implemented for this file\n");
-		p->ret = EINVAL;
-		goto err;
+		p->ret = E_INVAL;
+		goto end;
 	}
 
 	p->ret = ops->fcntl(fd, p->cmd, p->param);
 
-	return 0;
-
-err:
-	return 0;
+end:
+	return E_OK;
 }
 
-int sc_hdlr_rmnode(void* _p){
+static error_t sc_hdlr_rmnode(void* _p){
 	char* path;
 	sc_param_rmnode_t* p;
 	process_t* this_p;
@@ -510,7 +496,7 @@ int sc_hdlr_rmnode(void* _p){
 	path = kmalloc(p->path_len + 1);
 	if(path == 0){
 		WARN("out of kernel memory\n");
-		p->ret = ENOMEM;
+		p->ret = E_NOMEM;
 		goto err_0;
 	}
 
@@ -524,30 +510,29 @@ int sc_hdlr_rmnode(void* _p){
 	ops = fs_get_ops(start->fs_type);
 	if(ops == 0){
 		WARN("no operations found for fs_type %d\n", start->fs_type);
-		p->ret = EINVAL;
+		p->ret = E_INVAL;
 		goto err_1;
 	}
 
 	if(ops->rmnode == 0){
 		WARN("rmnode not implemented for this file\n");
-		p->ret = EINVAL;
+		p->ret = E_INVAL;
 		goto err_1;
 	}
 
 	p->ret = ops->rmnode(start, path);
 	kfree(path);
 
-	return 0;
+	return E_OK;
 
 err_1:
 	kfree(path);
-	return 0;
 
 err_0:
-	return p->ret;
+	return E_OK;
 }
 
-static int sc_hdlr_chdir(void* _p){
+static error_t sc_hdlr_chdir(void* _p){
 	char* path;
 	sc_param_chdir_t* p;
 	process_t* this_p;
@@ -561,7 +546,7 @@ static int sc_hdlr_chdir(void* _p){
 	path = kmalloc(p->path_len + 1);
 	if(path == 0){
 		WARN("out of kernel memory\n");
-		p->ret = ENOMEM;
+		p->ret = E_NOMEM;
 		goto err_0;
 	}
 
@@ -574,25 +559,24 @@ static int sc_hdlr_chdir(void* _p){
 	ops = fs_get_ops(start->fs_type);
 	if(ops == 0){
 		WARN("no operations found for fs_type %d\n", start->fs_type);
-		p->ret = EINVAL;
+		p->ret = E_INVAL;
 		goto err_1;
 	}
 
 	if(ops->chdir == 0){
 		WARN("chdir not implemented for this file\n");
-		p->ret = EINVAL;
+		p->ret = E_INVAL;
 		goto err_1;
 	}
 
 	p->ret = ops->chdir(start, path);
 	kfree(path);
 
-	return 0;
+	return E_OK;
 
 err_1:
 	kfree(path);
-	return 0;
 
 err_0:
-	return p->ret;
+	return E_OK;
 }

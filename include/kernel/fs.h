@@ -60,7 +60,7 @@ typedef struct fs_t{
 
 /* prototyes */
 int fs_register(fs_ops_t* ops);
-int fs_unregister(int fs_type);
+error_t fs_unregister(int fs_type);
 fs_ops_t* fs_get_ops(int fs_type);
 fs_node_t* fs_get_cwd(fs_node_t* node);
 fs_filed_t* fs_mkfd(fs_node_t* node, void* data);

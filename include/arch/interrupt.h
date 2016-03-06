@@ -2,6 +2,9 @@
 #define ARCH_INTERRUPT_H
 
 
+#include <sys/error.h>
+
+
 /* macros */
 #define int_enable(mask)				(arch_kernel_call(int_enable, E_OK)(mask))
 #define int_enabled()					(arch_kernel_call(int_enabled, INT_NONE)())
@@ -14,7 +17,7 @@ enum int_num_t;
 
 
 /* types */
-typedef int(*int_hdlr_t)(enum int_num_t);
+typedef error_t (*int_hdlr_t)(enum int_num_t);
 
 
 #include <arch/arch.h>

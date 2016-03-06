@@ -37,20 +37,20 @@ extern init_call_t __core_init0_base[],
 kopt_t kopt = KOPT_INITIALISER;
 
 
-/* static prototypes */
+/* local/static prototypes */
 #ifdef CONFIG_KERNEL_EARLY_PRINT
 
-void _do_init_call(init_call_t* base, init_call_t* end, const char* stage, bool p_err);
+static void _do_init_call(init_call_t* base, init_call_t* end, const char* stage, bool p_err);
 
 #else
 
-void _do_init_call(init_call_t* base, init_call_t* end);
+static void _do_init_call(init_call_t* base, init_call_t* end);
 
 #endif // CONFIG_KERNEL_EARLY_PRINT
 
 
 /* global functions */
-void init(){
+void init(void){
 	/* core local (stage: core 0) */
 	do_init_call(__core_init0_base, __core_init1_base, "", false);
 
@@ -101,22 +101,22 @@ void init(){
 /* local functions */
 #ifdef CONFIG_KERNEL_EARLY_PRINT
 
-void _do_init_call(init_call_t* base, init_call_t* end, const char* stage, bool p_err){
-	int r;
+static void _do_init_call(init_call_t* base, init_call_t* end, const char* stage, bool p_err){
+	error_t r;
 	init_call_t* p;
 
 
 	for(p=base; p<end; p++){
 		r = (*p)();
 
-		if(r != 0)
+		if(r != E_OK)
 			cprintf(WARN, "\033[33m init-call $s at %#x failed with return code %d\n\033[0m", stage, *p, r);
 	}
 }
 
 #else
 
-void _do_init_call(init_call_t* base, init_call_t* end){
+static void _do_init_call(init_call_t* base, init_call_t* end){
 	init_call_t* p;
 
 

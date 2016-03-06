@@ -68,7 +68,7 @@ typedef struct{
 	void (*core_halt)(void);
 
 	/* syscall */
-	int (*syscall)(syscall_t num, void* const param, unsigned int param_size);
+	error_t (*syscall)(syscall_t num, void* const param, unsigned int param_size);
 } arch_callbacks_common_t;
 
 
