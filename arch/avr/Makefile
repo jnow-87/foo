@@ -1,5 +1,8 @@
-obj-y := start.o isr.o interrupt.o core.o uart.o
+obj-y := start.o isr.o interrupt.o core.o
 obj-nobuiltin-y := libsys.o
+
+
+obj-$(CONFIG_KERNEL_UART) += uart.o
 
 
 libsys-y := core.o

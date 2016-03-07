@@ -1,3 +1,7 @@
+#
+# mutex
+#
+# {{{
 config SYS_MUTEX_DEBUG
 	bool "Enable mutex debugging"
 	depends on SYS_SMP
@@ -13,3 +17,4 @@ menu "hidden"
 		bool "Enable floating point support"
 		default 0
 endmenu
+# }}}

@@ -3,34 +3,43 @@ mainmenu "brickos configuration"
 #
 # processor type
 #
+# {{{
 menu "Processor"
 	source "arch/Kconfig"
 endmenu
+# }}}
 
 #
 # kernel
 #
+# {{{
 menu "Kernel"
 	source kernel/Kconfig
 endmenu
+# }}}
 
 #
 # device driver
 #
+# {{{
 menu "Device driver"
 	source "driver/Kconfig"
 endmenu
+# }}}
 
 #
 # sys
 #
+# {{{
 menu "Sys"
 	source "sys/Kconfig"
 endmenu
+# }}}
 
 #
 # build system
 #
+# {{{
 menu "Build system"
 	# build type
 	choice
@@ -231,3 +240,4 @@ menu "Build system"
 			string HOSTARCHFLAGS
 	endmenu
 endmenu
+# }}}

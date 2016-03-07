@@ -1,6 +1,7 @@
 #
 # processor type and features menus
 #
+# {{{
 choice
 	prompt "Processor type"
 
@@ -40,10 +41,12 @@ menu "Hidden"
 		default 32 if ADDR_WIDTH_32
 		default 32
 endmenu
+# }}}
 
 #
 # generic configs
 #
+# {{{
 config NCORES
 	int "Number of cores"
 	default 1
@@ -56,3 +59,4 @@ config CORE_MASK
 config CORE_CLOCK_HZ
 	int "Core clock [HZ]"
 	default 1000000
+# }}}

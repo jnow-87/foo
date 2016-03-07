@@ -1,6 +1,7 @@
 #
 # MCU
 #
+# {{{
 choice
 	prompt "Target MCU"
 		
@@ -40,3 +41,4 @@ menu "Hidden"
 		string "Arch Header"
 		default "<arch/$(CONFIG_ARCH)/atmega.h>" if AVR
 endmenu
+# }}}

@@ -6,7 +6,7 @@
 
 
 /* macros */
-#define BAUDRATE	((int)(((CONFIG_CORE_CLOCK_HZ / (16.0 * CONFIG_UART_BAUDRATE)) - 1) + 0.5))
+#define BAUDRATE	((int)(((CONFIG_CORE_CLOCK_HZ / (16.0 * CONFIG_KERNEL_UART_BAUDRATE)) - 1) + 0.5))
 
 
 /* global functions */
@@ -49,24 +49,24 @@ static error_t avr_uart_init(void){
 	mreg_w(UCSR0C,
 		(0x3 << UCSR0C_UCSZ0) |	// 8-bit character size
 
-#if CONFIG_UART_PARITY_ODD
+#if CONFIG_KERNEL_UART_PARITY_ODD
 		(0x3 << UCSR0C_UPM0)
-#elif CONFIG_UART_PARITY_EVEN
+#elif CONFIG_KERNEL_UART_PARITY_EVEN
 		(0x2 << UCSR0C_UPM0)
 #else
 		(0x0 << UCSR0C_UPM0)
-#endif // CONFIG_UART_PARITY
+#endif // CONFIG_KERNEL_UART_PARITY
 
 		|
 
-#if CONFIG_UART_STOPBITS == 1
+#if CONFIG_KERNEL_UART_STOPBITS == 1
 		(0x0 << UCSR0C_USBS)
-#elif CONFIG_UART_STOPBITS == 2
+#elif CONFIG_KERNEL_UART_STOPBITS == 2
 		(0x1 << UCSR0C_USBS)
-#endif // CONFIG_UART_STOPBITS
+#endif // CONFIG_KERNEL_UART_STOPBITS
 	);
 
 	return E_OK;
 }
 
-platform_init(1, avr_uart_init);
+platform_init(0, avr_uart_init);

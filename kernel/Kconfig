@@ -1,30 +1,171 @@
-# define SMP kernel, removing mutex calls etc. if single-core
+#
+# base address
+#
+# {{{
 config KERNEL_BASE_ADDR
 	hex "Kernel starting address"
 	range 0x0 0x0fffffff
 	default 0x0
+# }}}
 
+#
+# kprintf
+#
+# {{{
 config KERNEL_EARLY_PRINT
 	bool "Print error on failed kernel init calls"
+	select KERNEL_UART
 
 config KERNEL_MSG_FATAL
 	bool "Print kernel FATAL messages"
+	select KERNEL_UART
 
 config KERNEL_MSG_WARN
 	bool "Print kernel WARNING messages"
+	select KERNEL_UART
 
 config KERNEL_MSG_INFO
 	bool "Print kernel INFO messages"
+	select KERNEL_UART
 
 config KERNEL_MSG_DEBUG
 	bool "Print kernel DEBUG messages"
+	select KERNEL_UART
 
 config KERNEL_MSG_STAT
 	bool "Print kernel STATISTIC messages"
+	select KERNEL_UART
+# }}}
 
+#
+# uart parameter
+#
+# {{{
+config KERNEL_UART
+	bool "Kernel uart"
+
+menu "Kernel uart parameter"
+	depends on KERNEL_UART
+
+# baud rate
+choice
+	prompt "Uart baud rate"
+
+	config KERNEL_UART_BR_2400
+		bool "Uart baud rate 2400"
+
+	config KERNEL_UART_BR_4800
+		bool "Uart baud rate 4800"
+
+	config KERNEL_UART_BR_9600
+		bool "Uart baud rate 9600"
+
+	config KERNEL_UART_BR_14400
+		bool "Uart baud rate 14400"
+
+	config KERNEL_UART_BR_19200
+		bool "Uart baud rate 19200"
+
+	config KERNEL_UART_BR_28800
+		bool "Uart baud rate 28800"
+
+	config KERNEL_UART_BR_38400
+		bool "Uart baud rate 38400"
+
+	config KERNEL_UART_BR_57600
+		bool "Uart baud rate 57600"
+
+	config KERNEL_UART_BR_76800
+		bool "Uart baud rate 76800"
+
+	config KERNEL_UART_BR_115200
+		bool "Uart baud rate 115200"
+
+	config KERNEL_UART_BR_230400
+		bool "Uart baud rate 230400"
+
+	config KERNEL_UART_BR_250000
+		bool "Uart baud rate 250000"
+
+		config KERNEL_UART_BR_500000
+		bool "Uart baud rate 500000"
+
+	config KERNEL_UART_BR_1000000
+		bool "Uart baud rate 1000000"
+endchoice
+
+menu "Hidden"
+	visible if 0
+
+	config KERNEL_UART_BAUDRATE
+		int "Uart baud rate"
+		default 2400	if KERNEL_UART_BR_2400
+		default 4800	if KERNEL_UART_BR_4800
+		default 9600	if KERNEL_UART_BR_9600
+		default 14400	if KERNEL_UART_BR_14400
+		default 19200	if KERNEL_UART_BR_19200
+		default 28800	if KERNEL_UART_BR_28800
+		default 38400	if KERNEL_UART_BR_38400
+		default 57600	if KERNEL_UART_BR_57600
+		default 76800	if KERNEL_UART_BR_76800
+		default 115200	if KERNEL_UART_BR_115200
+		default 230400	if KERNEL_UART_BR_230400
+		default 250000	if KERNEL_UART_BR_250000
+		default 500000	if KERNEL_UART_BR_500000
+		default 1000000	if KERNEL_UART_BR_1000000
+endmenu
+
+# parity
+choice
+	prompt "Parity"
+	default KERNEL_UART_PARITY_NONE
+
+	config KERNEL_UART_PARITY_ODD
+		bool "Odd"
+
+	config KERNEL_UART_PARITY_EVEN
+		bool "Even"
+
+	config KERNEL_UART_PARITY_NONE
+		bool "None"
+endchoice
+
+# stop bits
+choice
+	prompt "Stop bits"
+	default KERNEL_UART_STOPB_1
+
+	config KERNEL_UART_STOPB_1
+		bool "1"
+
+	config KERNEL_UART_STOPB_2
+		bool "2"
+endchoice
+
+menu "Hidden"
+	visible if 0
+
+	config KERNEL_UART_STOPBITS
+		int "Stop bits"
+		default 1	if KERNEL_UART_STOPB_1
+		default 2	if KERNEL_UART_STOPB_2
+endmenu
+endmenu
+# }}}
+
+#
+# kernel test
+#
+# {{{
 config KERNEL_TEST
 	bool "Execute 'kernel_test()' on boot"
+# }}}
 
+#
+# kernel stat
+#
+# {{{
 config KERNEL_STAT
 	bool "Execute 'kernel_stat()' on boot"
 	select KERNEL_MSG_STAT
+# }}}

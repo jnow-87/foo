@@ -49,6 +49,8 @@
 #define RAMFS_BASE						0x0
 #define RAMFS_SIZE						0x0
 
+// scheduler timer
+#define INT_SCHED						INT_TIMER0_OVFL
 
 /* types */
 #ifndef ASM
@@ -98,8 +100,13 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.thread_call = 0x0,			/* TODO */
 	.thread_kill = 0x0,			/* TODO */
 
+#ifdef CONFIG_KERNEL_UART
 	.putchar = avr_putchar,
 	.puts = avr_puts,
+#else
+	.putchar = 0x0,
+	.puts = 0x0,
+#endif // CONFIG_KERNEL_UART
 };
 
 #endif // KERNEL
