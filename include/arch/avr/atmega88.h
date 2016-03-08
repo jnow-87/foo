@@ -7,6 +7,8 @@
 
 
 /* macros */
+#define __ATMEGA__
+
 // memory layout
 #define MCU_FLASH_SIZE		_8k
 #define MCU_SRAM_SIZE		_1k
@@ -16,6 +18,7 @@
 
 #define IO_BASE				0x0
 #define IO_SIZE				256
+
 
 
 #endif // ATMEGA88_H

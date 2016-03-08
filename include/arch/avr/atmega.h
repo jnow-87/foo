@@ -17,6 +17,20 @@
 
 #endif // CONFIG_ATMEGA*
 
+#if defined(__ATMEGA__) || defined(__XMEGA__)
+
+// interrupt handling
+#define ICALL				call
+#define INT_VEC_WORDS		2
+
+#else
+
+// interrupt handling
+#define ICALL				rcall
+#define INT_VEC_WORDS		1
+
+#endif
+
 
 #ifndef ASM
 #ifndef _x86_
