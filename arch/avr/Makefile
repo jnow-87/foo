@@ -1,4 +1,4 @@
-obj-y := start.o isr.o interrupt.o core.o
+obj-y := start.o isr.o interrupt.o core.o watchdog.o
 obj-nobuiltin-y := libsys.o
 
 

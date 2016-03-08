@@ -41,4 +41,41 @@ menu "Hidden"
 		string "Arch Header"
 		default "<arch/$(CONFIG_ARCH)/atmega.h>" if AVR
 endmenu
+
+#
+# scheduler ticks
+#
+choice
+	prompt "Watchdog prescaler"
+
+	config AVR_WATCHDOG_PRESCALE_2k
+		bool "2k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_4k
+		bool "4k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_8k
+		bool "8k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_16k
+		bool "16k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_32k
+		bool "32k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_64k
+		bool "64k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_128k
+		bool "128k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_256k
+		bool "256k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_512k
+		bool "512k cycles"
+
+	config AVR_WATCHDOG_PRESCALE_1M
+		bool "1M cycles"
+endchoice
 # }}}
