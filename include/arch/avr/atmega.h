@@ -64,7 +64,8 @@
 #define RAMFS_SIZE						0x0
 
 // scheduler timer
-#define INT_SCHED						INT_TIMER0_OVFL
+#define INT_SCHED						INT_WATCHDOG
+
 
 /* types */
 #ifndef ASM
