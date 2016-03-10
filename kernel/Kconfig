@@ -1,11 +1,15 @@
 #
-# base address
+# kernel basics
 #
 # {{{
 config KERNEL_BASE_ADDR
 	hex "Kernel starting address"
 	range 0x0 0x0fffffff
 	default 0x0
+
+config KERNEL_SMP
+	bool "Build an SMP system"
+	default 0
 # }}}
 
 #

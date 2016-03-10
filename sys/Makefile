@@ -1,6 +1,6 @@
 obj-y :=
 
-obj-$(CONFIG_SYS_SMP) += mutex.o
+obj-$(CONFIG_KERNEL_SMP) += mutex.o
 
 
 # flags

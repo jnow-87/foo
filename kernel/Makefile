@@ -1,6 +1,6 @@
 obj-y := init.o
 
-obj-$(CONFIG_SYS_SMP) += lock.o
+obj-$(CONFIG_KERNEL_SMP) += lock.o
 obj-$(CONFIG_KERNEL_STAT) += stat.o
 obj-$(CONFIG_KERNEL_TEST) += test.o
 
