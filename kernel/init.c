@@ -73,8 +73,10 @@ void init(void){
 		/* driver (stage: driver 0) */
 		do_init_call(__driver_init0_base, __init_end, "driver_init_stage0", true);
 
+#ifdef CONFIG_KERNEL_SMP
 		/* core SMP (stage: core 1) */
 		do_init_call(__core_init1_base, __platform_init0_base, "core_init_stage1", true);
+#endif // CONFIG_KERNEL_SMP
 	}
 
 	/* kernel statistics */
