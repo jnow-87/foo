@@ -1,4 +1,5 @@
-obj-y :=
+obj-y := string.o
+hostobj-y := string.o
 
 obj-$(CONFIG_KERNEL_SMP) += mutex.o
 
