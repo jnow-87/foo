@@ -17,7 +17,7 @@ config_ftype := Kconfig
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := arch kernel lib sys init driver testing $(scripts_dir)/memlayout
+src_dirs := arch kernel lib sys init testing $(scripts_dir)/memlayout
 
 kernel_name := kimg.elf
 lib_name := libsys.a
@@ -150,7 +150,7 @@ gperfflags := \
 ####
 
 kernel := $(build_tree)/$(kernel_name)
-kernel_deps := kernel/ arch/ sys/ driver/
+kernel_deps := kernel/ arch/ sys/
 libsys := $(build_tree)/lib/$(lib_name)
 libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
 
