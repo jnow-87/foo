@@ -14,7 +14,7 @@
 
 
 /* static variables */
-static fs_t fs_list = LIST_INITIALIZER(&fs_list);
+static fs_t fs_list = LIST_INITIALISER(&fs_list);
 static int fs_id = 0;
 
 

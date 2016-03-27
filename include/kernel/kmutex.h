@@ -16,7 +16,7 @@ typedef struct{
 /* macros */
 #define _KMUTEX_INITIALISER(nest){ \
 	.imask = INT_NONE, \
-	.m = _MUTEX_INITIASIZER(nest) \
+	.m = _MUTEX_INITIALISER(nest) \
 }
 
 #define KMUTEX_INITIALISER() 		_KMUTEX_INITIALISER(-1)
