@@ -1,4 +1,37 @@
 #
+# printf
+#
+# {{{
+config PRINTF_MINIMAL
+	bool "Minimalistic printf (disable long and exotic specifiers)"
+
+config PRINTF_LONG
+	bool "Enable support for printf 'l' (long) specifier"
+	depends on !PRINTF_MINIMAL
+
+config PRINTF_LONGLONG
+	bool "Enable support for printf 'll' (long long) specifier"
+	depends on !PRINTF_MINIMAL
+	select PRINTF_LONG
+
+config PRINTF_INTMAX
+	bool "Enable support for printf 'j' (intmax_t) specifier"
+	depends on !PRINTF_MINIMAL
+
+config PRINTF_SIZET
+	bool "Enable support for printf 'z' (size_t) specifier"
+	depends on !PRINTF_MINIMAL
+
+config PRINTF_PTRDIFF
+	bool "Enable support for printf 't' (ptrdiff_t) specifier"
+	depends on !PRINTF_MINIMAL
+
+config PRINTF_LONGDOUBLE
+	bool "Enable support for printf 'L' (long double) specifier"
+	depends on !PRINTF_MINIMAL && !NOFLOAT
+# }}}
+
+#
 # mutex
 #
 # {{{
