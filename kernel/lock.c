@@ -1,3 +1,4 @@
+#include <arch/core.h>
 #include <kernel/kmutex.h>
 #include <kernel/kprintf.h>
 
