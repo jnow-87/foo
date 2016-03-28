@@ -6,8 +6,8 @@
 
 
 /* prototypes */
-error_t avr_putchar(char c);
-error_t avr_puts(const char* s);
+char avr_putchar(char c);
+int avr_puts(const char* s);
 
 
 #endif // AVR_UART_H

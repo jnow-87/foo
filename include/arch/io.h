@@ -7,8 +7,8 @@
 
 
 /* macros */
-#define putchar(c)	(arch_kernel_call(putchar, E_NOIMP)(c))
-#define puts(s)		(arch_kernel_call(puts, E_NOIMP)(s))
+#define putchar(c)	(arch_kernel_call(putchar, !c)(c))
+#define puts(s)		(arch_kernel_call(puts, 0)(s))
 
 
 #endif // ARCH_IO_H

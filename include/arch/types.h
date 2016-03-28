@@ -48,8 +48,8 @@ typedef struct{
 	error_t (*thread_kill)(int rcode);
 
 	/* terminal I/O */
-	error_t (*putchar)(char c);
-	error_t (*puts)(const char* s);
+	char (*putchar)(char c);
+	int (*puts)(const char* s);
 } arch_callbacks_kernel_t;
 
 #endif // KERNEL

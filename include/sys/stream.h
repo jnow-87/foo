@@ -22,13 +22,13 @@ typedef struct{
 
 	fstate_t state;
 
-	int (*putc)(int c);
+	char (*putc)(char c);
 	int (*puts)(const char* s);
 } FILE;
 
 
 /* prototypes */
-int fputc(int c, FILE* stream);
+char fputc(char c, FILE* stream);
 int fputs(const char* s, FILE* stream);
 
 int vfprintf(FILE* stream, const char* format, va_list lst);

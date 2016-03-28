@@ -10,24 +10,30 @@
 
 
 /* global functions */
-error_t avr_putchar(char c){
+char avr_putchar(char c){
 	while(!(mreg_r(UCSR0A) & (0x1 << UCSR0A_UDRE)));
 	mreg_w(UDR0, c);
 
-	return E_OK;
+	return c;
 }
 
-error_t avr_puts(const char* s){
+int avr_puts(const char* s){
+	int n;
+
+
 	if(s == 0)
 		return E_INVAL;
 
-	while(*s != 0){
+	n = 0;
+
+	while(s[n] != 0){
 		while(!(mreg_r(UCSR0A) & (0x1 << UCSR0A_UDRE)));
-		mreg_w(UDR0, *s);
-		s++;
+
+		mreg_w(UDR0, s[n]);
+		n++;
 	}
 
-	return E_OK;
+	return n;
 }
 
 

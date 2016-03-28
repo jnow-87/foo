@@ -84,7 +84,7 @@ static size_t utoa_inv(UINTTYPE v, char* s, unsigned int base, fflag_t flags);
 
 
 /* global functions */
-int fputc(int c, FILE* stream){
+char fputc(char c, FILE* stream){
 	if(stream->state & F_EOF)
 		return F_EOF;
 
