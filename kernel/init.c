@@ -1,10 +1,11 @@
 #include <arch/interrupt.h>
 #include <arch/core.h>
-#include <arch/io.h>
 #include <kernel/init.h>
 #include <kernel/opt.h>
+#include <kernel/kprintf.h>
 #include <kernel/stat.h>
 #include <kernel/test.h>
+#include <sys/escape.h>
 
 
 /* macros */
@@ -62,7 +63,7 @@ void init(void){
 		do_init_call(__platform_init0_base, __kernel_init0_base, "", false);
 
 		/* print init message */
-		puts("\n\t\t=== \033[44mboot system\033[0m ===\n");
+		kprintf(KMSG_ANY, "\n\t\t" FG_BLUE "::: boot system :::" RESET_ATTR "\n");
 
 		/* kernel infrastructure (stage: kernel 1) */
 		do_init_call(__kernel_init1_base, __kernel_init2_base, "kernel_init_stage1", true);
