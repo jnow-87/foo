@@ -21,7 +21,7 @@
 		"sts	%0, %1\n" \
 		: \
 		: "i" (reg_addr), "r" ((uint8_t)(reg_val)) \
-	);
+	)
 
 #define mreg_bset_sync(reg_addr, bit_c, bit_c_en){ \
 	register uint8_t t; \
