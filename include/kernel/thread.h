@@ -8,6 +8,7 @@
 
 /* incomplete types */
 struct process_t;
+struct thread_context_t;
 
 
 /* types */
@@ -26,6 +27,7 @@ typedef struct thread_t{
 	void* entry;
 	page_t* stack;
 	thread_state_t state;
+	struct thread_context_t* ctx;
 
 	struct process_t* parent;
 

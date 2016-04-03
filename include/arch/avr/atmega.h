@@ -39,6 +39,7 @@
 #include <arch/avr/register.h>
 #include <arch/avr/interrupt.h>
 #include <arch/avr/timebase.h>
+#include <arch/avr/thread.h>
 #include <sys/types.h>
 
 #endif // __x86_64__

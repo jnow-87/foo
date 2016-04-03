@@ -7,6 +7,10 @@
 static error_t sched_tick(int_num_t num);
 
 
+/* global variables */
+thread_t* current_thread[CONFIG_NCORES];
+
+
 /* static variables */
 // TODO scheduler lists
 
