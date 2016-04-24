@@ -1,5 +1,6 @@
 /* target header */
 #include ARCH_HEADER
+#include <sys/escape.h>
 
 /* host header */
 #include <stdio.h>
@@ -44,16 +45,16 @@
 
 // print table header
 #define PRINT_HEAD(name) \
-	printf("\n\033[4m\033[47m\033[30m%s:\033[0m\n\033[47m\033[30m         target         base          end        size               \033[0m\n", name);
+	printf("\n" UNDERLINE BG_WHITE FG_BLACK "%s:" RESET_ATTR "\n" BG_WHITE FG_BLACK "         target         base          end        size               " RESET_ATTR "\n", name);
 
 // print a table line if size is non-zero
 #define PRINT_RANGE(name, base, size) \
 	if(size) \
-		printf("\033[1m%20.20s\033[0m: 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", name, base, (base) + (size) - 1, (size) / 1024.0, size);
+		printf(BOLD "%20.20s" RESET_ATTR ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", name, base, (base) + (size) - 1, (size) / 1024.0, size);
 
 // print an 'unknown' message
 #define PRINT_UNKNOWN(name, base, size) \
-	printf("\033[1m%20.20s\033[0m: \033[31munknown\033[0m, please define %s and %s\n", name, #base, #size);
+	printf(BOLD "%20.20s" RESET_ATTR ": " FG_RED "unknown" RESET_ATTR ", please define %s and %s\n", name, #base, #size);
 
 // print a table line or unknown message
 #define PRINT_RANGE_EE(name, base, size) \
@@ -70,7 +71,7 @@ int main(){
 
 
 	/* header */
-	printf("\n                       \033[4m\033[47m\033[30mbrickos memory layout\033[0m\n");
+	printf("\n                       " UNDERLINE BG_WHITE FG_BLACK "brickos memory layout" RESET_ATTR "\n");
 
 	/* mandatory */
 	PRINT_HEAD("mandatory");
@@ -84,7 +85,7 @@ int main(){
 #if KERNEL_STACK_CORE_SIZE == 0
 		PRINT_UNKNOWN("kernel stack core", "KERNEL_STACK_CORE_BASE", "KERNEL_STACK_CORE_SIZE");
 #else
-		printf("\033[1m%18.18s%2d\033[0m: 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", "kernel stack core", i, KERNEL_STACK_CORE_BASE(i), KERNEL_STACK_CORE_BASE(i) + KERNEL_STACK_CORE_SIZE - 1, KERNEL_STACK_CORE_SIZE / 1024.0, KERNEL_STACK_CORE_SIZE);
+		printf(BOLD "%18.18s%2d" RESET_ATTR ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", "kernel stack core", i, KERNEL_STACK_CORE_BASE(i), KERNEL_STACK_CORE_BASE(i) + KERNEL_STACK_CORE_SIZE - 1, KERNEL_STACK_CORE_SIZE / 1024.0, KERNEL_STACK_CORE_SIZE);
 #endif
 #endif
 
