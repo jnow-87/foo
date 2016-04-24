@@ -69,6 +69,9 @@ typedef struct{
 
 	/* syscall */
 	error_t (*syscall)(syscall_t num, void* const param, unsigned int param_size);
+
+	/* main entry */
+	int (*libmain)(int argc, char** argv);
 } arch_callbacks_common_t;
 
 

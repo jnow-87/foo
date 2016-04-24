@@ -40,6 +40,7 @@
 #include <arch/avr/interrupt.h>
 #include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
+#include <arch/avr/libmain.h>
 #include <sys/types.h>
 
 #endif // __x86_64__
@@ -142,6 +143,13 @@ static const arch_callbacks_common_t arch_cbs_common = {
 
 	/* syscall */
 	.syscall = 0x0,				/* TODO */
+
+	/* main entry */
+#ifdef KERNEL
+	.libmain = 0x0,
+#else
+	.libmain = avr_libmain,
+#endif // KERNEL
 };
 
 // architecture info

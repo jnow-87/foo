@@ -5,7 +5,7 @@ obj-nobuiltin-y := libsys.o
 obj-$(CONFIG_KERNEL_UART) += uart.o
 
 
-libsys-y := core.o
+libsys-y := core.o libmain.o
 
 
 # flags
