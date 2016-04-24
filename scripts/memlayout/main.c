@@ -97,13 +97,19 @@ int main(){
 	PRINT_RANGE("mapped register", IO_BASE, IO_SIZE);
 	PRINT_RANGE("filesystem", RAMFS_BASE, RAMFS_SIZE);
 
-#ifdef PLATFORM_QORIQ
-	PRINT_HEAD("QorIQ Specific");
+#ifdef CONFIG_POWERPC_QORIQ
+	PRINT_HEAD("qoriq specific");
 
 	PRINT_RANGE("CCSR", CCSRBAR, CCSRBAR_SIZE);
 	PRINT_RANGE("DCSR", DCSRBAR, DCSRBAR_SIZE);
 	PRINT_RANGE("DPAA", DPAA_BASE, DPAA_SIZE);
-#endif
+#endif // CONFIG_POWERPC_QORIQ
+
+#ifdef CONFIG_AVR
+	PRINT_HEAD("avr specific");
+
+	PRINT_RANGE("sram data", IO_BASE + IO_SIZE, DATA_SIZE);
+#endif // CONFIG_AVR
 
 	printf("\n");
 
