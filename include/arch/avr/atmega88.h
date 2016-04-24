@@ -19,6 +19,8 @@
 #define IO_BASE				0x0
 #define IO_SIZE				256
 
+#define DATA_SIZE			_1k
+
 // clocking
 #define WATCHDOG_CLOCK_HZ	128000
 
