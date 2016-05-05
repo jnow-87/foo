@@ -39,7 +39,7 @@
 
 
 /* local/static prototypes */
-static size_t fprintf(FILE* f, const char* format, ...);
+static size_t fprintf(FILE* f, char const* format, ...);
 
 
 /* local functions */
@@ -237,7 +237,7 @@ static int tc_vfprintf(int log){
 test_case(tc_vfprintf, "vfprintf");
 
 
-static size_t fprintf(FILE* f, const char* format, ...){
+static size_t fprintf(FILE* f, char const* format, ...){
 	size_t n;
 	va_list lst;
 

@@ -18,7 +18,7 @@ FILE kout = {
 
 
 /* global functions */
-void kprintf(kmsg_t lvl, const char* format, ...){
+void kprintf(kmsg_t lvl, char const* format, ...){
 	va_list lst;
 
 

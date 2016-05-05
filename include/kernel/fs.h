@@ -4,6 +4,7 @@
 
 #include <sys/list.h>
 #include <sys/fcntl.h>
+#include <sys/error.h>
 
 
 /* types */
@@ -39,14 +40,14 @@ typedef struct fs_filed_t{
 } fs_filed_t;
 
 typedef struct{
-	int (*open)(fs_node_t* start, const char* path, f_mode_t mode);				// \return	fd							find fs_node under start matching path (if a node is not found create it), return fd created with fs_mkfd()
+	int (*open)(fs_node_t* start, char const* path, f_mode_t mode);				// \return	fd							find fs_node under start matching path (if a node is not found create it), return fd created with fs_mkfd()
 	int (*close)(fs_filed_t* fd);												// \return	0 success, -1 error			free fd->data, then call fs_rmfd() (which cleans up the rest)
 	int (*read)(fs_filed_t* fd, void* buf, unsigned int n);						// \return	number of bytes read		copy data into buf
 	int (*write)(fs_filed_t* fd, void* buf, unsigned int n);					// \return	number of bytes written		copy data from buf
 	int (*ioctl)(fs_filed_t* fd, int request, void* param);						// \return	0 success, -1 error
 	int (*fcntl)(fs_filed_t* fd, int cmd, void* param);							// \return	0 success, -1 error
-	int (*rmnode)(fs_node_t* start, const char* path);							// \return	0 success, -1 error			find node matching path and remove it from filesystem
-	int (*chdir)(fs_node_t* start, const char* path);							// \return	0 success, -1 error			change processes CWD to node matching path
+	int (*rmnode)(fs_node_t* start, char const* path);							// \return	0 success, -1 error			find node matching path and remove it from filesystem
+	int (*chdir)(fs_node_t* start, char const* path);							// \return	0 success, -1 error			change processes CWD to node matching path
 } fs_ops_t;
 
 typedef struct fs_t{

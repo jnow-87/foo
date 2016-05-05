@@ -17,7 +17,7 @@ char avr_putchar(char c){
 	return c;
 }
 
-int avr_puts(const char* s){
+int avr_puts(char const* s){
 	int n;
 
 

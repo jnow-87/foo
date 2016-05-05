@@ -41,7 +41,7 @@ kopt_t kopt = KOPT_INITIALISER;
 /* local/static prototypes */
 #ifdef CONFIG_KERNEL_EARLY_PRINT
 
-static void _do_init_call(init_call_t* base, init_call_t* end, const char* stage, bool p_err);
+static void _do_init_call(init_call_t* base, init_call_t* end, char const* stage, bool p_err);
 
 #else
 
@@ -104,7 +104,7 @@ void init(void){
 /* local functions */
 #ifdef CONFIG_KERNEL_EARLY_PRINT
 
-static void _do_init_call(init_call_t* base, init_call_t* end, const char* stage, bool p_err){
+static void _do_init_call(init_call_t* base, init_call_t* end, char const* stage, bool p_err){
 	error_t r;
 	init_call_t* p;
 

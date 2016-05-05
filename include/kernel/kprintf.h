@@ -68,7 +68,7 @@ typedef enum{
 /* protoypes */
 #if CONFIG_KERNEL_MSG_FATAL || CONFIG_KERNEL_MSG_WARN || CONFIG_KERNEL_MSG_DEBUG || CONFIG_KERNEL_MSG_INFO || CONFIG_KERNEL_MSG_STAT
 
-void kprintf(kmsg_t lvl, const char* format, ...);
+void kprintf(kmsg_t lvl, char const* format, ...);
 
 #endif // CONFIG_KERNEL_MSG_*
 

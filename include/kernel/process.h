@@ -47,8 +47,8 @@ typedef struct process_t{
 
 
 /* prototypes */
-process_t* process_create(void* elf_location, char* const name, unsigned int priority, unsigned int affinity, unsigned int argc, char** argv, fs_node_t* const cwd);
-void process_destroy(process_t* const this_p);
+process_t* process_create(void* elf_location, char const* name, unsigned int priority, unsigned int affinity, unsigned int argc, char** argv, fs_node_t* cwd);
+void process_destroy(process_t* this_p);
 
 
 #endif // KERNEL_PROCESS_H

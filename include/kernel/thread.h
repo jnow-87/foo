@@ -37,9 +37,9 @@ typedef struct thread_t{
 
 
 /* prototypes */
-thread_t* thread_create(struct process_t* const this_p, void* const entry);
-void thread_destroy(struct thread_t* const this_t);
-int thread_call(struct thread_t* const this);
+thread_t* thread_create(struct process_t* this_p, void* entry);
+void thread_destroy(struct thread_t* this_t);
+int thread_call(struct thread_t* this);
 
 
 #endif // KERNEL_THREAD_H

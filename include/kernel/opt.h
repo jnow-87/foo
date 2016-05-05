@@ -56,7 +56,7 @@ typedef struct{
 		 kernel_stat;			// print kernel statistics
 
 	void* init_elf;				// memory address to init elf file
-	const char init_arg[255];	// argument string for init
+	char const init_arg[255];	// argument string for init
 
 	kmsg_t dbg_lvl;				// kernel debug level
 } kopt_t;
