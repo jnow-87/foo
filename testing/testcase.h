@@ -36,12 +36,25 @@ int snprintf(char *str, size_t size, char const* format, ...);
 	\
 	\
 	_res = expr; \
-	if(_res == ref) \
+	if(_res == (ref)) \
 		tlog(log, "%s: res(%d) == ref(%d)\n", #expr, _res, ref) \
 	else \
 		tlog(log, "%s: res(%d) != ref(%d)\n", #expr, _res, ref) \
 	\
-	(_res == ref) ? 0 : 1; \
+	(_res == (ref)) ? 0 : 1; \
+})
+
+#define check_ptr(log, expr, ref)({ \
+	void* _res; \
+	\
+	\
+	_res = expr; \
+	if(_res == (ref)) \
+		tlog(log, "%s: res(%#x) == ref(%#x)\n", #expr, _res, ref) \
+	else \
+		tlog(log, "%s: res(%#x) != ref(%#x)\n", #expr, _res, ref) \
+	\
+	(_res == (ref)) ? 0 : 1; \
 })
 
 #define check_str(log, expr, s, ref)({ \

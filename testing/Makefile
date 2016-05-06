@@ -1,7 +1,7 @@
 hostbin-y := main
 
 
-main-y := main.o sys/ string.o vfprintf.o
+main-y := main.o sys/ string.o vfprintf.o list.o
 
 main-hostcppflags += -I$(src_tree) -I$(src_tree)/include -I/usr/include
 main-hostcflags += -fno-builtin
