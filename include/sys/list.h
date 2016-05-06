@@ -59,7 +59,7 @@
  * \brief	add an element at the end of the list
  *
  * \param	head	pointer to list head
- * \param	el		poiinter to element to insert
+ * \param	el		pointer to element to insert
  *
  * \return	none
  */
@@ -80,6 +80,33 @@
 }
 
 /**
+ * \brief	remove an element and insert a new one at its location
+ *
+ * \param	head	pointer to list head
+ * \param	old		element to replace
+ * \param	new		element to insert
+ *
+ * \return	none
+ */
+#define list_replace(head, old, new){ \
+	if(*(head) == 0){ \
+		*(head) = new; \
+		(new)->prev = new; \
+		(new)->next = 0; \
+	} \
+	else{ \
+		(new)->prev = ((*(head))->next == 0) ? new : (old)->prev; \
+		(new)->next = (old)->next; \
+		\
+		if((old)->next)	(old)->next->prev = new; \
+		else			(*(head))->prev = new; \
+		\
+		if(old != *(head))	(old)->prev->next = new; \
+		else				*(head) = new; \
+	} \
+}
+
+/**
  * \brief	remove element from list
  *
  * \param	head	pointer to list head
@@ -89,11 +116,12 @@
  * \return new head (head is updated of entry == head)
  */
 #define list_rm(head, entry){ \
-	if((entry) != (*(head))) (entry)->prev->next = (entry)->next; \
-	if((entry)->next != 0) (entry)->next->prev = (entry)->prev; \
-	else (*(head))->prev = (entry)->prev; \
+	if((entry) != (*(head)))	(entry)->prev->next = (entry)->next; \
 	\
-	*(head) = (entry) == (*(head)) ? (entry)->next : *(head); \
+	if((entry)->next != 0)		(entry)->next->prev = (entry)->prev; \
+	else						(*(head))->prev = (entry)->prev; \
+	\
+	if((entry) == (*(head)))	*(head) = (entry)->next; \
 }
 
 /**
@@ -193,7 +221,7 @@
  *
  * \return none
  */
-#define list_for_each(head, entry) entry=(head); for(typeof(header) next=((head) == 0 ? 0 : (head)->next); (entry)!=0; entry=(next), next=(next == 0 ? 0 : next->next))
+#define list_for_each(head, entry) entry=(head); for(typeof(head) next=((head) == 0 ? 0 : (head)->next); (entry)!=0; entry=(next), next=(next == 0 ? 0 : next->next))
 
 
 #endif // SYS_LIST_H
