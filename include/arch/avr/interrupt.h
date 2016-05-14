@@ -66,7 +66,7 @@ typedef enum int_num_t{
 
 
 /* prototypes */
-struct thread_context_t* avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t* tc);
+struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *tc);
 
 error_t avr_int_enable(int_type_t mask);
 int_type_t avr_int_enabled(void);

@@ -11,9 +11,9 @@
 #include "util.h"
 
 
-int file_map(const char* filename, int* _fd, void** _map, unsigned int* _size){
+int file_map(const char *filename, int *_fd, void **_map, unsigned int *_size){
 	int fd;
-	void* map;
+	void *map;
 	struct stat st;
 
 
@@ -55,7 +55,7 @@ err:
 	return -1;
 }
 
-void file_unmap(int fd, void* map, unsigned int size){
+void file_unmap(int fd, void *map, unsigned int size){
 	munmap(map, size);
 	close(fd);
 }

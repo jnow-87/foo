@@ -17,21 +17,21 @@ typedef enum{
 } fstate_t;
 
 typedef struct{
-	char* buf;
+	char *buf;
 	unsigned int pos;
 
 	fstate_t state;
 
 	char (*putc)(char c);
-	int (*puts)(char const* s);
+	int (*puts)(char const *s);
 } FILE;
 
 
 /* prototypes */
-char fputc(char c, FILE* stream);
-int fputs(char const* s, FILE* stream);
+char fputc(char c, FILE *stream);
+int fputs(char const *s, FILE *stream);
 
-int vfprintf(FILE* stream, char const* format, va_list lst);
+int vfprintf(FILE *stream, char const *format, va_list lst);
 
 
 #endif // SYS_STDIO_H

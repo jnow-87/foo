@@ -41,8 +41,8 @@ static error_t sc_hdlr_chdir(void*);
  * 			-2	max. number of filesystem ids used
  * 			-3	out of kernel memory
  */
-int fs_register(fs_ops_t* ops){
-	fs_t* new;
+int fs_register(fs_ops_t *ops){
+	fs_t *new;
 
 	if(ops == 0)
 		return E_INVAL;
@@ -74,7 +74,7 @@ int fs_register(fs_ops_t* ops){
  * \return	0
  */
 error_t fs_unregister(int fs_type){
-	fs_t* fs;
+	fs_t *fs;
 
 
 	fs = list_find(&fs_list, fs_type, fs_type);
@@ -94,8 +94,8 @@ error_t fs_unregister(int fs_type){
  * \return	pointer to callback function struct
  * 			0 if no entry found
  */
-fs_ops_t* fs_get_ops(int fs_type){
-	fs_t* fs;
+fs_ops_t *fs_get_ops(int fs_type){
+	fs_t *fs;
 	
 	fs = list_find(&fs_list, fs_type, fs_type);
 	if(fs != 0)
@@ -110,8 +110,8 @@ fs_ops_t* fs_get_ops(int fs_type){
  *
  * \return	pointer to cwd
  */
-fs_node_t* fs_get_cwd(fs_node_t* node){
-	fs_node_t* cwd;
+fs_node_t *fs_get_cwd(fs_node_t *node){
+	fs_node_t *cwd;
 
 	cwd = node;
 	if(cwd == 0)
@@ -128,10 +128,10 @@ fs_node_t* fs_get_cwd(fs_node_t* node){
  * \return	0		error
  * 			else	pointer to filed
  */
-fs_filed_t* fs_mkfd(fs_node_t* node, void* data){
+fs_filed_t *fs_mkfd(fs_node_t *node, void *data){
 	int fdi;
-	fs_filed_t* fd;
-	process_t* this_p;
+	fs_filed_t *fd;
+	process_t *this_p;
 
 
 	this_p = current_process[PIR];
@@ -174,8 +174,8 @@ err:
  *
  * \param	fd	filed to free
  */
-void fs_rmfd(fs_filed_t* fd){
-	process_t* this_p;
+void fs_rmfd(fs_filed_t *fd){
+	process_t *this_p;
 
 
 	this_p = current_process[PIR];
@@ -194,9 +194,9 @@ void fs_rmfd(fs_filed_t* fd){
  *
  * \param	fds		pointer to file descriptor list
  */
-void fs_cleanup_fds(fs_filed_t* fds, unsigned int pid){
-	fs_filed_t* fd;
-	fs_ops_t* ops;
+void fs_cleanup_fds(fs_filed_t *fds, unsigned int pid){
+	fs_filed_t *fd;
+	fs_ops_t *ops;
 
 
 	// set current_process, because fs_rmfd (maybe called by ops->close())
@@ -237,13 +237,13 @@ static error_t fs_init(void){
 kernel_init(1, fs_init);
 
 
-static error_t sc_hdlr_open(void* _p){
+static error_t sc_hdlr_open(void *_p){
 	char *path;
 	error_t e;
-	sc_param_open_t* p;
+	sc_param_open_t *p;
 	fs_node_t *start;
-	fs_ops_t* ops;
-	process_t* this_p;
+	fs_ops_t *ops;
+	process_t *this_p;
 
 
 	/* initials */
@@ -288,12 +288,12 @@ err_0:
 	return E_OK;
 }
 
-static error_t sc_hdlr_close(void* _p){
+static error_t sc_hdlr_close(void *_p){
 	error_t e;
-	sc_param_close_t* p;
-	process_t* this_p;
-	fs_filed_t* fd;
-	fs_ops_t* ops;
+	sc_param_close_t *p;
+	process_t *this_p;
+	fs_filed_t *fd;
+	fs_ops_t *ops;
 
 
 	p = (sc_param_close_t*)_p;
@@ -326,12 +326,12 @@ err:
 	return E_OK;
 }
 
-static error_t sc_hdlr_read(void* _p){
-	char* buf;
-	sc_param_read_t* p;
-	process_t* this_p;
-	fs_filed_t* fd;
-	fs_ops_t* ops;
+static error_t sc_hdlr_read(void *_p){
+	char *buf;
+	sc_param_read_t *p;
+	process_t *this_p;
+	fs_filed_t *fd;
+	fs_ops_t *ops;
 
 
 	p = (sc_param_read_t*)_p;
@@ -372,12 +372,12 @@ end:
 	return E_OK;
 }
 
-static error_t sc_hdlr_write(void* _p){
-	char* buf;
-	sc_param_write_t* p;
-	process_t* this_p;
-	fs_filed_t* fd;
-	fs_ops_t* ops;
+static error_t sc_hdlr_write(void *_p){
+	char *buf;
+	sc_param_write_t *p;
+	process_t *this_p;
+	fs_filed_t *fd;
+	fs_ops_t *ops;
 
 
 	p = (sc_param_write_t*)_p;
@@ -415,11 +415,11 @@ end:
 	return E_OK;
 }
 
-static error_t sc_hdlr_ioctl(void* _p){
-	sc_param_ioctl_t* p;
-	process_t* this_p;
-	fs_filed_t* fd;
-	fs_ops_t* ops;
+static error_t sc_hdlr_ioctl(void *_p){
+	sc_param_ioctl_t *p;
+	process_t *this_p;
+	fs_filed_t *fd;
+	fs_ops_t *ops;
 
 
 	p = (sc_param_ioctl_t*)_p;
@@ -448,11 +448,11 @@ end:
 	return E_OK;
 }
 
-static error_t sc_hdlr_fcntl(void* _p){
-	sc_param_fcntl_t* p;
-	process_t* this_p;
-	fs_filed_t* fd;
-	fs_ops_t* ops;
+static error_t sc_hdlr_fcntl(void *_p){
+	sc_param_fcntl_t *p;
+	process_t *this_p;
+	fs_filed_t *fd;
+	fs_ops_t *ops;
 
 
 	p = (sc_param_fcntl_t*)_p;
@@ -481,12 +481,12 @@ end:
 	return E_OK;
 }
 
-static error_t sc_hdlr_rmnode(void* _p){
-	char* path;
-	sc_param_rmnode_t* p;
-	process_t* this_p;
-	fs_ops_t* ops;
-	fs_node_t* start;
+static error_t sc_hdlr_rmnode(void *_p){
+	char *path;
+	sc_param_rmnode_t *p;
+	process_t *this_p;
+	fs_ops_t *ops;
+	fs_node_t *start;
 
 
 	/* initials */
@@ -532,12 +532,12 @@ err_0:
 	return E_OK;
 }
 
-static error_t sc_hdlr_chdir(void* _p){
-	char* path;
-	sc_param_chdir_t* p;
-	process_t* this_p;
-	fs_node_t* start;
-	fs_ops_t* ops;
+static error_t sc_hdlr_chdir(void *_p){
+	char *path;
+	sc_param_chdir_t *p;
+	process_t *this_p;
+	fs_node_t *start;
+	fs_ops_t *ops;
 
 
 	p = (sc_param_chdir_t*)_p;

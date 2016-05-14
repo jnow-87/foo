@@ -43,7 +43,7 @@ test_case(tc_list_print, "list macros: addresses");
 
 static int tc_list_empty(int log){
 	unsigned int n;
-	list_t* head;
+	list_t *head;
 
 
 	n = 0;
@@ -64,7 +64,7 @@ test_case(tc_list_empty, "list_empty");
 
 static int tc_list_first_last(int log){
 	unsigned int n;
-	list_t* head;
+	list_t *head;
 
 
 	n = 0;
@@ -84,7 +84,7 @@ test_case(tc_list_first_last, "list_first/last");
 
 static int tc_list_add_head(int log){
 	unsigned int n;
-	list_t* head;
+	list_t *head;
 
 
 	n = 0;
@@ -108,7 +108,7 @@ test_case(tc_list_add_head, "list_add_head");
 
 static int tc_list_add_tail(int log){
 	unsigned int n;
-	list_t* head;
+	list_t *head;
 
 
 	n = 0;
@@ -132,7 +132,7 @@ test_case(tc_list_add_tail, "list_add_tail");
 
 static int tc_list_add_in(int log){
 	unsigned int n;
-	list_t* head;
+	list_t *head;
 
 
 	n = 0;
@@ -156,7 +156,7 @@ test_case(tc_list_add_in, "list_add_in");
 
 static int tc_list_replace(int log){
 	unsigned int n;
-	list_t* head;
+	list_t *head;
 
 
 	n = 0;
@@ -218,7 +218,7 @@ test_case(tc_list_replace, "list_replace");
 
 static int tc_list_rm(int log){
 	unsigned int n;
-	list_t* head;
+	list_t *head;
 
 
 	n = 0;
@@ -258,7 +258,7 @@ test_case(tc_list_rm, "list_rm");
 
 static int tc_list_find(int log){
 	unsigned int n;
-	list_t* head;
+	list_t *head;
 
 
 	n = 0;

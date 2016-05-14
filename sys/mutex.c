@@ -18,19 +18,19 @@ mutex_t *mutex_debug_try[8] = { 0, 0, 0, 0, 0, 0, 0, 0 },
 
 
 /* global functions */
-void mutex_init(mutex_t* m){
+void mutex_init(mutex_t *m){
 	m->nest_cnt = -1;
 	m->lock.lock_i = LOCK_CLEAR;
 	m->waiting = 0;
 }
 
-void mutex_init_nested(mutex_t* m){
+void mutex_init_nested(mutex_t *m){
 	m->nest_cnt = 0;
 	m->lock.lock_i = LOCK_CLEAR;
 	m->waiting = 0;
 }
 
-void mutex_lock(mutex_t* m){
+void mutex_lock(mutex_t *m){
 #ifdef CONFIG_SYS_MUTEX_DEBUG
 	mutex_debug_try[PIR] = m;
 #endif // CONFIG_SYS_MUTEX_DEBUG
@@ -51,7 +51,7 @@ void mutex_lock(mutex_t* m){
 	}
 }
 
-int mutex_lock_nested(mutex_t* m){
+int mutex_lock_nested(mutex_t *m){
 	if(m->nest_cnt == -1)
 		return -1;
 
@@ -77,11 +77,11 @@ int mutex_lock_nested(mutex_t* m){
 	return 0;
 }
 
-int mutex_trylock(mutex_t* m){
+int mutex_trylock(mutex_t *m){
 	return cas((int*)(&m->lock.lock_i), LOCK_CLEAR, LOCK_SET(PIR));
 }
 
-int mutex_trylock_nested(mutex_t* m){
+int mutex_trylock_nested(mutex_t *m){
 	if(m->lock.lock_i == LOCK_SET(PIR)){
 		m->nest_cnt++;
 		return 0;
@@ -92,7 +92,7 @@ int mutex_trylock_nested(mutex_t* m){
 	return -1;
 }
 
-void mutex_unlock(mutex_t* m){
+void mutex_unlock(mutex_t *m){
 #ifdef CONFIG_SYS_MUTEX_DEBUG
 	mutex_debug_hold[PIR] = 0;
 #endif // CONFIG_SYS_MUTEX_DEBUG
@@ -100,7 +100,7 @@ void mutex_unlock(mutex_t* m){
 	m->lock.lock_i = LOCK_CLEAR;
 }
 
-void mutex_unlock_nested(mutex_t* m){
+void mutex_unlock_nested(mutex_t *m){
 	if(m->nest_cnt == -1)
 		return;
 

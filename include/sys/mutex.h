@@ -39,17 +39,17 @@ typedef struct{
 
 
 /* prototypes */
-void mutex_init(mutex_t* m);
-void mutex_init_nested(mutex_t* m);
+void mutex_init(mutex_t *m);
+void mutex_init_nested(mutex_t *m);
 
-void mutex_lock(mutex_t* m);
-int mutex_lock_nested(mutex_t* m);
+void mutex_lock(mutex_t *m);
+int mutex_lock_nested(mutex_t *m);
 
-void mutex_unlock(mutex_t* m);
-void mutex_unlock_nested(mutex_t* m);
+void mutex_unlock(mutex_t *m);
+void mutex_unlock_nested(mutex_t *m);
 
-int mutex_trylock(mutex_t* m);
-int mutex_trylock_nested(mutex_t* m);
+int mutex_trylock(mutex_t *m);
+int mutex_trylock_nested(mutex_t *m);
 
 
 #endif // SYS_MUTEX_H

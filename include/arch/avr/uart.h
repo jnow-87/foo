@@ -7,7 +7,7 @@
 
 /* prototypes */
 char avr_putchar(char c);
-int avr_puts(char const* s);
+int avr_puts(char const *s);
 
 
 #endif // AVR_UART_H

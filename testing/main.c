@@ -14,16 +14,16 @@
 extern test_case_t __test_case_hdlr_base[];
 extern test_case_t __test_case_hdlr_end[];
 
-extern char* __test_case_desc_base[];
-extern char* __test_case_desc_end[];
+extern char *__test_case_desc_base[];
+extern char *__test_case_desc_end[];
 
 
 /* global functions */
-int main(int argc, char** argv){
-	char** desc;
+int main(int argc, char **argv){
+	char **desc;
 	int log;
 	unsigned int passed, failed;
-	test_case_t* hdlr;
+	test_case_t *hdlr;
 
 
 	/* init */

@@ -120,8 +120,8 @@ static void update_prereq(const char *m, int slen);
 
 /* global variables */
 char *depfile;
-char* conf_header;
-char* conf_dir;
+char *conf_header;
+char *conf_dir;
 
 
 /* global functions */
@@ -167,7 +167,7 @@ static void parse_dep_file(void *dmap, size_t len){
 	int fd;
 	unsigned int size;
 	unsigned int confh_len = strlen(conf_header);
-	char* fmap;
+	char *fmap;
 
 
 	/* clear hash table */

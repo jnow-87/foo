@@ -10,12 +10,12 @@
 
 
 /* global functions */
-void memblock_init(memblock_t* pool, size_t len){
+void memblock_init(memblock_t *pool, size_t len){
 	list_init(pool);
 	pool->len = len;
 }
 
-void* memblock_alloc(memblock_t** pool, size_t n){
+void *memblock_alloc(memblock_t **pool, size_t n){
 	memblock_t *free,
 			   *blk;
 
@@ -51,7 +51,7 @@ void* memblock_alloc(memblock_t** pool, size_t n){
 	return 0x0;
 }
 
-error_t memblock_free(memblock_t** pool, void* addr){
+error_t memblock_free(memblock_t **pool, void *addr){
 	memblock_t *blk,
 			   *el;
 

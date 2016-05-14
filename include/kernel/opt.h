@@ -55,7 +55,7 @@ typedef struct{
 	bool kernel_test,			// define wether to call kernel_test() (true - enabled, false - disabled)
 		 kernel_stat;			// print kernel statistics
 
-	void* init_elf;				// memory address to init elf file
+	void *init_elf;				// memory address to init elf file
 	char const init_arg[255];	// argument string for init
 
 	kmsg_t dbg_lvl;				// kernel debug level

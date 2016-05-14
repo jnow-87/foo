@@ -12,7 +12,7 @@
 
 /* architecture dependent types */
 typedef char					bool;
-typedef void*					addr_t;
+typedef void					*addr_t;
 
 
 /* fixed-width types */

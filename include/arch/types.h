@@ -26,13 +26,13 @@
 
 typedef struct{
 	/* virtual memory management */
-	error_t (*page_entry_write)(page_t const* page);
+	error_t (*page_entry_write)(page_t const *page);
 	error_t (*page_entry_inval_idx)(unsigned int idx, bool sync_cores);
-	error_t (*page_entry_inval_va)(void* virt_addr, bool sync_cores);
-	error_t (*page_entry_search)(page_t const* param, page_t* result);
+	error_t (*page_entry_inval_va)(void *virt_addr, bool sync_cores);
+	error_t (*page_entry_search)(page_t const *param, page_t *result);
 
-	error_t (*copy_from_user)(void* target, void const* src, unsigned int n, process_t const* this_p);
-	error_t (*copy_to_user)(void* target, void const* src, unsigned int n, process_t const* this_p);
+	error_t (*copy_from_user)(void *target, void const *src, unsigned int n, process_t const *this_p);
+	error_t (*copy_to_user)(void *target, void const *src, unsigned int n, process_t const *this_p);
 
 	/* interrupts */
 	error_t (*int_enable)(int_type_t mask);
@@ -44,23 +44,23 @@ typedef struct{
 	error_t (*ipi_wake)(ipi_t type, unsigned int core, bool bcast);
 
 	/* threading */
-	error_t (*thread_call)(thread_t* this_t);
+	error_t (*thread_call)(thread_t *this_t);
 	error_t (*thread_kill)(int rcode);
 
 	/* terminal I/O */
 	char (*putchar)(char c);
-	int (*puts)(char const* s);
+	int (*puts)(char const *s);
 } arch_callbacks_kernel_t;
 
 #endif // KERNEL
 
 typedef struct{
 	/* time */
-	timebase_t* (*timebase)(void);
-	time_t* (*timebase_to_time)(timebase_t* tb);
+	timebase_t * (*timebase)(void);
+	time_t * (*timebase_to_time)(timebase_t *tb);
 
 	/* atomics */
-	error_t (*cas)(volatile int* v, int old, int new);
+	error_t (*cas)(volatile int *v, int old, int new);
 
 	/* core */
 	int (*core_id)(void);
@@ -68,10 +68,10 @@ typedef struct{
 	void (*core_halt)(void);
 
 	/* syscall */
-	error_t (*syscall)(syscall_t num, void* param, unsigned int param_size);
+	error_t (*syscall)(syscall_t num, void *param, unsigned int param_size);
 
 	/* main entry */
-	int (*libmain)(int argc, char** argv);
+	int (*libmain)(int argc, char **argv);
 } arch_callbacks_common_t;
 
 

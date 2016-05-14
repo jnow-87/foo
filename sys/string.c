@@ -2,7 +2,7 @@
 
 
 /* global functions */
-size_t strlen(char const* s){
+size_t strlen(char const *s){
 	size_t i;
 
 	
@@ -12,7 +12,7 @@ size_t strlen(char const* s){
 	return i;
 }
 
-int strcmp(char const* s0, char const* s1){
+int strcmp(char const *s0, char const *s1){
 	while(*s0 && *s1){
 		if(*s0 < *s1)		return -1;
 		else if(*s0 > *s1)	return 1;
@@ -27,7 +27,7 @@ int strcmp(char const* s0, char const* s1){
 	return 0;
 }
 
-void* memcpy(void* dest, void const* src, size_t n){
+void *memcpy(void *dest, void const *src, size_t n){
 	size_t i;
 
 
@@ -51,7 +51,7 @@ void* memcpy(void* dest, void const* src, size_t n){
 	return dest;
 }
 
-void* memset(void* p, char c, size_t n){
+void *memset(void *p, char c, size_t n){
 	while(1){
 		((char*)p)[--n] = c;
 
@@ -62,7 +62,7 @@ void* memset(void* p, char c, size_t n){
 	return p;
 }
 
-int memcmp(void const* s0, void const* s1, size_t n){
+int memcmp(void const *s0, void const *s1, size_t n){
 	size_t i;
 
 

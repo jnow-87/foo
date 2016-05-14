@@ -12,14 +12,14 @@
 /* prototypes */
 // unable to include stdio.h due to conflicts with brickos
 // hence declare the required prototypes separately
-int snprintf(char *str, size_t size, char const* format, ...);
+int snprintf(char *str, size_t size, char const *format, ...);
 
 
 /* macros */
 #define test_case(hdlr, desc) \
 	static test_case_t test_case_##hdlr __section(".test_case_hdlr") __used = hdlr; \
 	static char const test_case_desc_str_##hdlr[]  __used = desc; \
-	static char const* test_case_desc_##hdlr __section(".test_case_desc") __used = test_case_desc_str_##hdlr;
+	static char const *test_case_desc_##hdlr __section(".test_case_desc") __used = test_case_desc_str_##hdlr;
 
 #define tlog(log, fmt, ...){ \
 	char _s[256]; \
@@ -45,7 +45,7 @@ int snprintf(char *str, size_t size, char const* format, ...);
 })
 
 #define check_ptr(log, expr, ref)({ \
-	void* _res; \
+	void *_res; \
 	\
 	\
 	_res = expr; \

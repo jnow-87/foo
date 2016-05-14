@@ -15,7 +15,7 @@ static void avr_int_inval(void);
 
 
 /* external variables */
-extern thread_t* current_thread[CONFIG_NCORES];
+extern thread_t *current_thread[CONFIG_NCORES];
 
 
 /* global variables */
@@ -24,7 +24,7 @@ int_hdlr_t int_map[NINTERRUPTS] = { 0x0 };
 
 
 /* global functions */
-struct thread_context_t* avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t* tc){
+struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *tc){
 	int_num_t num;
 
 

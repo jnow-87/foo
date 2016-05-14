@@ -13,12 +13,12 @@
 
 
 /* prototypes */
-size_t strlen(char const* s);
-int strcmp(char const* s0, char const* s1);
+size_t strlen(char const *s);
+int strcmp(char const *s0, char const *s1);
 
-void* memcpy(void* dest, void const* src, size_t n);
-void* memset(void* p, char c, size_t n);
-int memcmp(void const* s0, void const* s1, size_t n);
+void *memcpy(void *dest, void const *src, size_t n);
+void *memset(void *p, char c, size_t n);
+int memcmp(void const *s0, void const *s1, size_t n);
 
 
 #endif // SYS_STRING_H

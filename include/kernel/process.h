@@ -19,7 +19,7 @@ struct thread_t;
 /* types */
 typedef struct{
 	mem_info_t addr_space;		// mem_info struct to manage processes virtual memory space
-	page_t* pages;				// list to manage allocated addresses in user memory (umalloc, ufree in umem.h)
+	page_t *pages;				// list to manage allocated addresses in user memory (umalloc, ufree in umem.h)
 } process_mem_t;
 
 typedef struct process_t{
@@ -29,15 +29,15 @@ typedef struct process_t{
 				 priority;
 
 	unsigned int argc;
-	char** argv;
+	char **argv;
 
-	char* name;
+	char *name;
 
 	process_mem_t memory;
 
-	struct thread_t* threads;
-	fs_filed_t* fds;
-	fs_node_t* cwd;
+	struct thread_t *threads;
+	fs_filed_t *fds;
+	fs_node_t *cwd;
 
 	page_flags_t page_flags;
 
@@ -47,8 +47,8 @@ typedef struct process_t{
 
 
 /* prototypes */
-process_t* process_create(void* elf_location, char const* name, unsigned int priority, unsigned int affinity, unsigned int argc, char** argv, fs_node_t* cwd);
-void process_destroy(process_t* this_p);
+process_t *process_create(void *elf_location, char const *name, unsigned int priority, unsigned int affinity, unsigned int argc, char **argv, fs_node_t *cwd);
+void process_destroy(process_t *this_p);
 
 
 #endif // KERNEL_PROCESS_H

@@ -833,10 +833,10 @@ next:
 	return 0;
 }
 
-int conf_write_autoconf(const char* conf_header)
+int conf_write_autoconf(const char *conf_header)
 {
 	struct symbol *sym;
-	FILE* out_h;
+	FILE *out_h;
 	int i;
 
 	sym_clear_all_valid();

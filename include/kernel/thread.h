@@ -24,12 +24,12 @@ typedef struct thread_t{
 				 affinity,
 				 priority;
 
-	void* entry;
-	page_t* stack;
+	void *entry;
+	page_t *stack;
 	thread_state_t state;
-	struct thread_context_t* ctx;
+	struct thread_context_t *ctx;
 
-	struct process_t* parent;
+	struct process_t *parent;
 
 	struct thread_t *next,
 					*prev;
@@ -37,9 +37,9 @@ typedef struct thread_t{
 
 
 /* prototypes */
-thread_t* thread_create(struct process_t* this_p, void* entry);
-void thread_destroy(struct thread_t* this_t);
-int thread_call(struct thread_t* this);
+thread_t *thread_create(struct process_t *this_p, void *entry);
+void thread_destroy(struct thread_t *this_t);
+int thread_call(struct thread_t *this);
 
 
 #endif // KERNEL_THREAD_H

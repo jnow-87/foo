@@ -54,7 +54,7 @@ test_case(tc_memblock_print, "memblock: addresses");
  */
 static int tc_memblock_alloc_empty(int log){
 	unsigned int n;
-	void* blk;
+	void *blk;
 	memblock_t *pool;
 
 
@@ -84,7 +84,7 @@ test_case(tc_memblock_alloc_empty, "memblock_alloc: empty pool");
  */
 static int tc_memblock_alloc_small(int log){
 	unsigned int n;
-	void* blk;
+	void *blk;
 	memblock_t *pool;
 
 
@@ -120,7 +120,7 @@ test_case(tc_memblock_alloc_small, "memblock_alloc: small pool");
  */
 static int tc_memblock_alloc_perfect_fit(int log){
 	unsigned int n;
-	void* blk;
+	void *blk;
 	memblock_t *pool;
 
 
@@ -173,7 +173,7 @@ test_case(tc_memblock_alloc_perfect_fit, "memblock_alloc: perfect fit");
  */
 static int tc_memblock_alloc_split_fit(int log){
 	unsigned int n;
-	void* blk;
+	void *blk;
 	memblock_t *pool;
 
 

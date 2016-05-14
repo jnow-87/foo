@@ -77,14 +77,14 @@ typedef enum{
 
 
 /* local/static prototypes */
-static size_t put_spec(FILE* stream, char spec, char const* buf, size_t buf_len, bool buf_inv, fflag_t flags, int width, int prec);
-static size_t put_padding(FILE* stream, char pad, size_t n);
-static size_t put_buf(FILE* stream, char const* b, size_t n, bool inv);
-static size_t utoa_inv(UINTTYPE v, char* s, unsigned int base, fflag_t flags);
+static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, int width, int prec);
+static size_t put_padding(FILE *stream, char pad, size_t n);
+static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv);
+static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags);
 
 
 /* global functions */
-char fputc(char c, FILE* stream){
+char fputc(char c, FILE *stream){
 	if(stream->state & F_EOF)
 		return F_EOF;
 
@@ -103,7 +103,7 @@ err:
 	return F_EOF;
 }
 
-int fputs(char const* s, FILE* stream){
+int fputs(char const *s, FILE *stream){
 	size_t len;
 
 
@@ -130,8 +130,8 @@ err:
 	return F_EOF;
 }
 
-int vfprintf(FILE* stream, char const* format, va_list lst){
-	char const* fp;
+int vfprintf(FILE *stream, char const *format, va_list lst){
+	char const *fp;
 	int width,
 		prec;
 	size_t n,
@@ -143,7 +143,7 @@ int vfprintf(FILE* stream, char const* format, va_list lst){
 		char c;
 		short int s;
 		int i;
-		void* p;
+		void *p;
 
 #ifdef CONFIG_PRINTF_LONG
 		long int l;
@@ -611,7 +611,7 @@ spec_err:
 }
 
 /* local functions */
-static size_t put_spec(FILE* stream, char spec, char const* buf, size_t buf_len, bool buf_inv, fflag_t flags, int width, int prec){
+static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, int width, int prec){
 	size_t n,
 		   n_sign,
 		   n_prefix;
@@ -685,7 +685,7 @@ static size_t put_spec(FILE* stream, char spec, char const* buf, size_t buf_len,
 	return n;
 }
 
-static size_t put_padding(FILE* stream, char pad, size_t n){
+static size_t put_padding(FILE *stream, char pad, size_t n){
 	size_t i;
 
 
@@ -694,7 +694,7 @@ static size_t put_padding(FILE* stream, char pad, size_t n){
 	return n;
 }
 
-static size_t put_buf(FILE* stream, char const* b, size_t n, bool inv){
+static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv){
 	size_t i;
 	int8_t dir;
 
@@ -714,7 +714,7 @@ static size_t put_buf(FILE* stream, char const* b, size_t n, bool inv){
 	return n;
 }
 
-static size_t utoa_inv(UINTTYPE v, char* s, unsigned int base, fflag_t flags){
+static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags){
 	unsigned int i;
 	char d;
 
