@@ -1,5 +1,5 @@
-obj-y := string.o stream.o
-hostobj-y := string.o stream.o
+obj-y := string.o stream.o memblock.o
+hostobj-y := string.o stream.o memblock.o
 
 obj-$(CONFIG_KERNEL_SMP) += mutex.o
 

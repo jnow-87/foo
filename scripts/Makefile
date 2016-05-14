@@ -59,6 +59,7 @@ cppflags := \
 	$(CPPFLAGS) \
 	$(CONFIG_CPPFLAGS) \
 	$(cppflags) \
+	-std=gnu99 \
 	-I"$(src_tree)/include/" \
 	-I"$(build_tree)/" \
 	-DARCH_HEADER="$(CONFIG_ARCH_HEADER)"
@@ -108,6 +109,7 @@ hostcppflags := \
 	$(HOSTCPPFLAGS) \
 	$(CONFIG_HOSTCPPFLAGS) \
 	$(hostcppflags) \
+	-std=gnu99 \
 	-I"$(build_tree)/" \
 	-DARCH_HEADER="$(CONFIG_ARCH_HEADER)" \
 	-DHOST

@@ -6,10 +6,12 @@
 
 
 /* macros */
-#define abs(x) (((x) > 0) ? (x) : (-(x)))
+#define ABS(x) (((x) > 0) ? (x) : (-(x)))
+#define MIN(x, y)			((x) > (y) ? (y) : (x))
+#define MAX(x, y)			((x) > (y) ? (x) : (y))
 
 // requires base to be power of 2
-#define ALIGN(tgt, base) (((tgt) + (base) - 1) & ~((base) - 1))
+#define ALIGNP2(x, base)	(((x) + (base - 1)) & (~((base) - 1)))
 
 
 /* prototypes */
