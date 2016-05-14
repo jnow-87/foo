@@ -80,6 +80,28 @@
 }
 
 /**
+ * \brief	add an element between the two given elements
+ *
+ * \param	head	pointer to list head
+ * \param	el		pointer to element to insert
+ * \param	front	pointer to element that is in front of el
+ * \param	back	pointer to element that is after el
+ *
+ * \return	none
+ */
+#define list_add_in(head, el, front, back){ \
+	typeof(el) _el = el; \
+	typeof(el) _front = front; \
+	typeof(el) _back = back; \
+	\
+	\
+	(_el)->prev = front; \
+	(_el)->next = back; \
+	(_front)->next = _el; \
+	(_back)->prev = _el; \
+}
+
+/**
  * \brief	remove an element and insert a new one at its location
  *
  * \param	head	pointer to list head

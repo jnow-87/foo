@@ -6,10 +6,10 @@
 
 /* macros */
 #define INIT_EL() \
-	el0.prev = el0.next = 0; \
-	el1.prev = el1.next = 0; \
-	el2.prev = el2.next = 0; \
-	el3.prev = el3.next = 0; \
+	el0.prev = el0.next = (void*)0x1; \
+	el1.prev = el1.next = (void*)0x1; \
+	el2.prev = el2.next = (void*)0x1; \
+	el3.prev = el3.next = (void*)0x1; \
 
 
 /* types */
@@ -128,6 +128,30 @@ static int tc_list_add_tail(int log){
 }
 
 test_case(tc_list_add_tail, "list_add_tail");
+
+
+static int tc_list_add_in(int log){
+	unsigned int n;
+	list_t* head;
+
+
+	n = 0;
+	head = 0;
+	INIT_EL();
+
+	list_add_tail(&head, &el0);
+	list_add_tail(&head, &el1);
+	list_add_in(&head, &el2, &el0, el0.next);
+
+	n += check_ptr(log, el1.prev, &el2);
+	n += check_ptr(log, el0.next, &el2);
+	n += check_ptr(log, el2.prev, &el0);
+	n += check_ptr(log, el2.next, &el1);
+
+	return -n;
+}
+
+test_case(tc_list_add_in, "list_add_in");
 
 
 static int tc_list_replace(int log){
