@@ -43,16 +43,16 @@
  *
  * \return	new head
  */
-#define list_add_head(head, _el){ \
-	typeof(_el) el = (_el); \
+#define list_add_head(head, el){ \
+	typeof(el) _el = (el); \
 	\
 	\
-	(el)->next = *(head); \
-	(el)->prev = (*(head) == 0 ? (el) : (*(head))->prev); \
+	(_el)->next = *(head); \
+	(_el)->prev = (*(head) == 0 ? (_el) : (*(head))->prev); \
 	if(*(head) != 0) \
-		(*(head))->prev = el; \
+		(*(head))->prev = _el; \
 	\
-	*(head) = el; \
+	*(head) = _el; \
 }
 
 /**
@@ -63,19 +63,19 @@
  *
  * \return	none
  */
-#define list_add_tail(head, _el){ \
-	typeof(_el) el = _el; \
+#define list_add_tail(head, el){ \
+	typeof(el) _el = el; \
 	\
 	\
-	(el)->next = 0; \
+	(_el)->next = 0; \
 	if(*(head) == 0){ \
-		*(head) = el; \
-		(el)->prev = el; \
+		*(head) = _el; \
+		(_el)->prev = _el; \
 	} \
 	else{ \
-		(el)->prev = (*(head))->prev; \
-		(*(head))->prev->next = el; \
-		(*(head))->prev = el; \
+		(_el)->prev = (*(head))->prev; \
+		(*(head))->prev->next = _el; \
+		(*(head))->prev = _el; \
 	} \
 }
 
@@ -89,20 +89,23 @@
  * \return	none
  */
 #define list_replace(head, old, new){ \
+	typeof(new) _new = new; \
+	\
+	\
 	if(*(head) == 0){ \
-		*(head) = new; \
-		(new)->prev = new; \
-		(new)->next = 0; \
+		*(head) = _new; \
+		(_new)->prev = _new; \
+		(_new)->next = 0; \
 	} \
 	else{ \
-		(new)->prev = ((*(head))->next == 0) ? new : (old)->prev; \
-		(new)->next = (old)->next; \
+		(_new)->prev = ((*(head))->next == 0) ? _new : (old)->prev; \
+		(_new)->next = (old)->next; \
 		\
-		if((old)->next)	(old)->next->prev = new; \
-		else			(*(head))->prev = new; \
+		if((old)->next)	(old)->next->prev = _new; \
+		else			(*(head))->prev = _new; \
 		\
-		if(old != *(head))	(old)->prev->next = new; \
-		else				*(head) = new; \
+		if(old != *(head))	(old)->prev->next = _new; \
+		else				*(head) = _new; \
 	} \
 }
 
@@ -156,14 +159,14 @@
  * 			0 if no valid element found
  */
 #define list_find(head, member, value) ({ \
-	typeof(head) tmp = (head); \
+	typeof(head) _head = (head); \
 \
-	for(;tmp!=0; tmp=tmp->next){ \
-		if(tmp->member == value) \
+	for(;_head!=0; _head=_head->next){ \
+		if(_head->member == value) \
 			break; \
 	} \
 \
-	(tmp == 0 || tmp->member != value) ? 0 : tmp; \
+	(_head == 0 || _head->member != value) ? 0 : _head; \
 })
 
 /**
@@ -178,28 +181,28 @@
  * 			0 if no valid element found
  */
 #define list_find_str(head, member, str) ({ \
-	typeof(head) tmp = (head); \
+	typeof(head) _head = (head); \
 \
-	for(;tmp!=0; tmp=tmp->next){ \
-		if(strcmp(tmp->member, (str)) == 0) \
+	for(;_head!=0; _head=_head->next){ \
+		if(strcmp(_head->member, (str)) == 0) \
 			break; \
 	} \
 \
-	(tmp == 0 || strcmp(tmp->member, str) != 0) ? 0: tmp; \
+	(_head == 0 || strcmp(_head->member, str) != 0) ? 0: _head; \
 })
 
 /**
  * \brief	same as list_find_str but use strncmp
  */
 #define list_find_strn(head, member, str, n) ({ \
-	typeof(head) tmp = (head); \
+	typeof(head) _head = (head); \
 \
-	for(;tmp!=0; tmp=tmp->next){ \
-		if(strncmp(tmp->member, (str), (n)) == 0) \
+	for(;_head!=0; _head=_head->next){ \
+		if(strncmp(_head->member, (str), (n)) == 0) \
 			break; \
 	} \
 \
-	(tmp == 0 || strncmp(tmp->member, str, (n)) != 0) ? 0 : tmp; \
+	(_head == 0 || strncmp(_head->member, str, (n)) != 0) ? 0 : _head; \
 })
 
 /**
