@@ -61,7 +61,7 @@ ifneq ($(project_type),c)
 endif
 
 # init build system variables
-all_flags := cflags cxxflags cppflags asflags ldflags ldrflags archflags hostcflags hostcxxflags hostcppflags hostasflags hostldflags hostarchflags yaccflags lexflags gperfflags
+all_flags := cflags cxxflags cppflags asflags ldflags archflags ldlibs hostcflags hostcxxflags hostcppflags hostasflags hostldflags hostarchflags hostldlibs yaccflags lexflags gperfflags
 
 obj_types := obj obj-nobuiltin hostobj hostobj-nobuiltin
 lib_types := lib hostlib
@@ -286,7 +286,7 @@ help-buildsys:
 	$(printf) "         %25s\t%s\n" "cppflags" "c pre-processor flags"
 	$(printf) "         %25s\t%s\n" "asflags" "assembler flags"
 	$(printf) "         %25s\t%s\n" "ldflags" "linker flags"
-	$(printf) "         %25s\t%s\n" "ldrflags" "linker flags for creating relocatable output (ld -r)"
+	$(printf) "         %25s\t%s\n" "ldlibs" "compiler flags when it is supposed to invoke the linker"
 	$(printf) "         %25s\t%s\n" "archflags" "architecture specific flags"
 	$(printf) "         %25s\t%s\n" "yaccflags" "yacc flags"
 	$(printf) "         %25s\t%s\n" "lexflags" "lex flags"
@@ -317,6 +317,7 @@ help-buildsys:
 	$(printf) "         %25s\t%s\n" "[HOST]CXXFLAGS"
 	$(printf) "         %25s\t%s\n" "[HOST]CPPFLAGS"
 	$(printf) "         %25s\t%s\n" "[HOST]LDFLAGS"
+	$(printf) "         %25s\t%s\n" "[HOST]LDLIBS"
 	$(printf) "         %25s\t%s\n" "[HOST]ASFLAGS"
 	$(printf) "         %25s\t%s\n" "[HOST]ARCHFLAGS"
 	$(printf) "         %25s\t%s\n" "LEXFLAGS"

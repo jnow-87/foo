@@ -27,6 +27,9 @@ define compile_cxx_gperf
 	$(gperf_cxx_header) $@ $(basename $@).h
 endef
 
+# define 'ASM' for preprocessed assembly files
+%.S.i: cppflags += -DASM
+
 define compile_i
 	$(echo) [$(call upper_case,$(1))CC] $@
 	$($(1)cc) $($(1)cppflags) $($(1)archflags) -E $< -o $@
@@ -62,7 +65,7 @@ endef
 
 define compile_o_s
 	$(echo) [$(call upper_case,$(1))AS] $@
-	$($(1)as) $($(1)asflags) $< -o $@
+	$($(1)as) $($(1)asflags) $($(1)archflags) $< -o $@
 endef
 
 define compile_o_c
@@ -89,7 +92,7 @@ endef
 
 define compile_o_o
 	$(echo) [$(call upper_case,$(1))LD] $@
-	$($(1)ld) -r $^ -o $@
+	$($(1)ld) $($(1)ldflags) -r $^ -o $@
 endef
 
 define compile_lib_o
@@ -100,12 +103,12 @@ endef
 ifeq ($(project_type),c)
 define compile_bin_o
 	$(echo) [$(call upper_case,$(1))CC] $@
-	$($(1)cc) $($(1)archflags) $^ -o $@ $($(1)ldflags)
+	$($(1)cc) $($(1)archflags) $^ -o $@ $($(1)ldlibs)
 endef
 else
 define compile_bin_o
 	$(echo) [$(call upper_case,$(1))CXX] $@
-	$($(1)cxx) $($(1)archflags) $^ -o $@ $($(1)ldflags)
+	$($(1)cxx) $($(1)archflags) $^ -o $@ $($(1)ldlibs)
 endef
 endif
 
