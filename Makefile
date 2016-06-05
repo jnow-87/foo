@@ -17,7 +17,7 @@ config_ftype := Kconfig
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := arch kernel lib sys init testing $(scripts_dir)/memlayout
+src_dirs := arch kernel lib sys init testing scripts/memlayout
 
 kernel_name := kimg.elf
 lib_name := libsys.a
@@ -159,8 +159,8 @@ libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
 sysroot := sysroot
 recent := recent
 
-memlayout := $(build_tree)/$(scripts_dir)/memlayout/memlayout
-sysroot_create := $(scripts_dir)/sysroot/create.sh
+memlayout := $(build_tree)/scripts/memlayout/memlayout
+sysroot_create := scripts/sysroot/create.sh
 
 
 ###################
@@ -176,7 +176,7 @@ sysroot_create := $(scripts_dir)/sysroot/create.sh
 kernel: cppflags += -DKERNEL
 kernel: check_config check_configheader $(kernel)
 
-$(kernel): ldlibs += -L$(scripts_dir)/linker -Tkernel_$(CONFIG_ARCH).lds
+$(kernel): ldlibs += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
 $(kernel): ldlibs += -Wl,--section-start=.base=$(CONFIG_KERNEL_BASE_ADDR)
 $(kernel): ldlibs += -lgcc
 $(kernel): $(addsuffix obj.o, $(addprefix $(build_tree)/, $(kernel_deps)))
@@ -187,7 +187,7 @@ $(kernel): $(addsuffix obj.o, $(addprefix $(build_tree)/, $(kernel_deps)))
 libsys: cppflags += -DLIBSYS
 libsys: check_config $(libsys)
 
-$(libsys): ldlibs += -L$(scripts_dir)/linker -Tlibsys_$(CONFIG_ARCH).lds
+$(libsys): ldlibs += -Lscripts/linker -Tlibsys_$(CONFIG_ARCH).lds
 $(libsys): $(addprefix $(build_tree)/, $(libsys_dep))
 	$(call compile_lib_o)
 
@@ -221,7 +221,7 @@ all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)
 
 .PHONY: clean
 clean: clean-kernel clean-sysroot clean-init
-	$(rm) $(filter-out $(build_tree)/$(scripts_dir),$(wildcard $(build_tree)/*))
+	$(rm) $(filter-out $(build_tree)/scripts,$(wildcard $(build_tree)/*))
 
 .PHONY: clean-kernel
 clean-kernel:
@@ -233,7 +233,7 @@ clean-init:
 
 .PHONY: clean-scripts
 clean-scripts:
-	$(rm) $(build_tree)/$(scripts_dir)
+	$(rm) $(build_tree)/scripts
 
 .PHONY: clean-sysroot
 clean-sysroot:
