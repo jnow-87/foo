@@ -1,7 +1,7 @@
 build/
 recent
-config
-config.old
+.config
+.config.old
 .clang
 .vimgdb/break.vim
 .vimgdb/mem.vim
