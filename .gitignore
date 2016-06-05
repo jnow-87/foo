@@ -3,3 +3,7 @@ recent
 config
 config.old
 .clang
+.vimgdb/break.vim
+.vimgdb/mem.vim
+.vimgeb/per.vim
+.vimgdb/var.vim
