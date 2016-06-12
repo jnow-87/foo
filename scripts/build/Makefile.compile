@@ -56,9 +56,9 @@ define compile_s_cxx
 	$(echo) [$(call upper_case,$(1))CXX] $@
 	$($(1)cxx) $($(1)cppflags) $($(1)archflags) -S $< -o $@
 	$(if $(do_basic), \
-		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
+		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
-		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
+		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
 		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
 	)
 endef
@@ -83,9 +83,9 @@ define compile_o_cxx
 	$(echo) [$(call upper_case,$(1))CXX] $@
 	$($(1)cxx) $($(1)cxxflags) $($(1)cflags) $($(1)cppflags) $($(1)archflags) -c $< -o $@
 	$(if $(do_basic), \
-		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
+		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
-		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
+		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
 		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
 	)
 endef
