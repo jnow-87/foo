@@ -5,6 +5,12 @@
 style_ignore=(
 	# strings
 	"-e 's/\"[^\"]*\"/\"\"/g'"
+
+	# c single-line comments
+	"-e 's://.*://:g'"
+
+	# c multi-line comments
+	"-e 's:/\*.*\*/:/**/:g'"
 )
 
 # grep regex patterns, checking for style guide violations
