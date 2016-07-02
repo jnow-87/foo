@@ -133,7 +133,7 @@ int conf_write_confheader(const char *path){
 			fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 			write(fd, sym_get_string_value(sym), strlen(sym_get_string_value(sym)));
 		}
-			
+
 		close(fd);
 	}
 

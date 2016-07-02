@@ -158,7 +158,7 @@ githooks:
 
 .PHONY: check_coding_style
 check_coding_style:
-	$(QBUILD) ${githooks_tree}/pre-commit $(shell find -type f | grep -v -e './.git/' -e './build/')
+	$(QBUILD) ${githooks_tree}/pre-commit $(shell find -type f | grep -v -e '\./\.git/' -e '\./build/')
 
 all: githooks
 endif
