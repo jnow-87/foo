@@ -209,7 +209,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 			case '-':
 				flags |= FFL_LEFTALIGN;
 				break;
-				
+
 			case '+':
 				flags |= FFL_FORCESIGN;
 				break;
@@ -530,7 +530,7 @@ parse_width:
 			buf[0] = v.c;
 			break;
 		}
-		
+
 		/* output specifier */
 		if(*format == 'n'){
 			switch(len){

@@ -450,7 +450,7 @@ static int tc_memblock_free_mid_frontmerge(int log){
 	n += check_int(log, el0->len, SIZE_EL0 + SIZE_EL1);
 	n += check_ptr(log, el0->prev, el3);
 	n += check_ptr(log, el0->next, el3);
-	
+
 	// check el3 (no changes)
 	n += check_int(log, el3->len, SIZE_EL3);
 	n += check_ptr(log, el3->prev, el0);

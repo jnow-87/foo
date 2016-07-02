@@ -96,7 +96,7 @@ error_t fs_unregister(int fs_type){
  */
 fs_ops_t *fs_get_ops(int fs_type){
 	fs_t *fs;
-	
+
 	fs = list_find(&fs_list, fs_type, fs_type);
 	if(fs != 0)
 		return fs->ops;
@@ -179,7 +179,7 @@ void fs_rmfd(fs_filed_t *fd){
 
 
 	this_p = current_process[PIR];
-	
+
 	fd->node->ref_cnt--;
 
 	// remove fd from processes fd list
