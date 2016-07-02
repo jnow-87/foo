@@ -14,6 +14,7 @@ config := .config
 config_tree := scripts/config
 use_config_sys := y
 config_ftype := Kconfig
+githooks_tree := .githooks
 
 # source- and build-tree
 default_build_tree := build/
