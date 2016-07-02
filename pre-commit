@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# \brief	pre-commit git hook script
+#			if invoken without parameter staged files are check against coding style violations
+#			otherwise the supplied files are checked
+
+# \param	... files to be checked for coding style violations
+
+
+# source style checker
+source .git/hooks/style
+
+# init
+have_violation=0
+
+echo "checking for style guide violations"
+
+
+# get list of files staged
+if [ $# -ge 1 ];then
+	files=$@
+else
+	files=$(git diff --cached --name-only)
+fi
+
+# iterate through files
+for file in ${files}
+do
+	# check style guide
+	if ! check_style_guide ${file} "cat ${file}"
+	then
+		have_violation=1
+	fi
+done
+
+exit ${have_violation}
