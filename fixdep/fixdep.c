@@ -194,7 +194,7 @@ static void parse_dep_file(void *dmap, size_t len){
 		while(m < end && (*m == ' ' || *m == '\\' || *m == '\n')) m++;
 
 		prereq = m;
-		
+
 		while(m < end && *m != ' ' && *m != '\n' && *m != '\\') m++;
 
 		// break if prerequisite is actually a target
