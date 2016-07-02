@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# source style checker
+source hooks/style
+
+# init
+ref=$1
+old=$2
+new=$3
+
+violations=0
+log="/tmp/out"
+
+echo -e "\n    *** checking for style guide violations ***\n"
+
+# check if its an initial push
+if ! git rev-parse --verify HEAD >/dev/null 2>&1;then
+	# diff against an empty tree object
+	old=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
+# get list of commits
+read -r -a commits <<< $(echo ${old}; git rev-list --reverse ${old}..${new})
+
+i=1
+# iterate through commits
+while [ $i -lt ${#commits[*]} ]
+do
+	# get list of changed files
+	files=$(git diff --name-only ${commits[$i-1]} ${commits[$i]})
+	violated=0
+
+	echo -e "\033[35m${commits[$i]}\033[0m"
+
+	# iterate through files
+	for file in ${files}
+	do
+		# check style guide
+		if ! check_style_guide ${file} "git show ${commits[$i]}:${file} 2>/dev/null " ${log}
+		then
+			violated=1
+			echo -e "${file} \033[31mviolation\033[0m"
+			cat ${log} | sed 's/^/\t/'
+			echo ""
+		else
+			echo -e "${file} \033[32mok\033[0m"
+		fi
+	done
+
+	# update violations counter
+	if [ ! ${violated} -eq 0 ];then
+		let violations=${violations}+1
+	fi
+
+	echo ""
+	let i=$i+1
+done
+
+# check global result
+if [ ${violations} -gt 0 ];then
+	echo -e "    \033[1m*** detected style guide violations in ${violations} commit(s) on ${ref} ***\033[0m\n"
+fi
+
+# delete log
+rm -f ${log}
+
+exit ${violations}
