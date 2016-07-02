@@ -127,6 +127,7 @@ yacc := $(QBUILD)$(YACC)
 gperf := $(QBUILD)$(GPERF)
 gperf_c_header := $(QBUILD)$(scripts_dir)/gperf_c_header.sh
 gperf_cxx_header := $(QBUILD)$(scripts_dir)/gperf_cxx_header.sh
+versionheader := $(QBUILD)$(scripts_dir)/version_header.sh
 
 echo := @echo
 printf := @printf
@@ -144,13 +145,23 @@ sym_link := $(QUTIL)ln -s
 
 # fake target as default target
 .PHONY: all
-all: init_githooks check_user_tools check_build_tools check_config dotclang
+all: check_user_tools check_build_tools check_config dotclang versionheader
 
-.PHONY: init_githooks
-.SILENT: init_githooks
-init_githooks:
-	ln -frs .githooks/style .git/hooks/style
-	ln -frs .githooks/pre-commit .git/hooks/pre-commit
+ifneq ("$(githooks_tree)","")
+.PHONY: githooks
+.SILENT: githooks
+githooks:
+	test -e "$(githooks_tree)/style" || (echo $(githooks_tree)/style does not exist; exit 1)
+	test -e "$(githooks_tree)/pre-commit" || (echo $(githooks_tree)/pre-commit does not exist; exit 1)
+	ln -frs $(githooks_tree)/style .git/hooks/style
+	ln -frs $(githooks_tree)/pre-commit .git/hooks/pre-commit
+
+.PHONY: check_coding_style
+check_coding_style:
+	$(QBUILD) ${githooks_tree}/pre-commit $(shell find -type f | grep -v -e './.git/' -e './build/')
+
+all: githooks
+endif
 
 # check if all build tools are available
 check_build_tools_error := "please make sure that $${id} or CONFIG_$${id} is initialised correctly, current value is \"$${val}\""
@@ -226,6 +237,13 @@ else
   do_basic := y
 endif
 
+# version header
+version_header := $(build_tree)/version.h
+
+.PHONY: versionheader
+versionheader:
+	$(versionheader) $(version_header)
+
 # default config targets
 ifneq ("$(config_tree)","")
 config_files = $(notdir $(wildcard $(config_tree)/*))
@@ -258,6 +276,7 @@ help-buildsys:
 	$(printf) "\n"
 	$(printf) "     \033[1moptional variables\033[0m\n"
 	$(printf) "         %25s\t%s\n" "config_tree" "directory containing project configurations, used with 'defconfig_*' targets"
+	$(printf) "         %25s\t%s\n" "githooks_tree" "directory containing git hooks"
 	$(printf) "         %25s\t%s\n" "tool_deps" "list of space-separated tools that are required to properly execute the project"
 	$(printf) "\n\n"
 	$(printf) "   \033[1m\033[4msub-directory Makefile syntax\033[0m\n"
