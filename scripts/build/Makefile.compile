@@ -30,13 +30,24 @@ endef
 # define 'ASM' for preprocessed assembly files
 %.S.i: cppflags += -DASM
 
-define compile_i
+define compile_i_c
 	$(echo) [$(call upper_case,$(1))CC] $@
 	$($(1)cc) $($(1)cppflags) $($(1)archflags) -E $< -o $@
 	$(if $(do_basic), \
 		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
 		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
+		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
+	)
+endef
+
+define compile_i_cxx
+	$(echo) [$(call upper_case,$(1))CXX] $@
+	$($(1)cxx) $($(1)cppflags) $($(1)archflags) -E $< -o $@
+	$(if $(do_basic), \
+		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
+		,
+		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
 		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
 	)
 endef

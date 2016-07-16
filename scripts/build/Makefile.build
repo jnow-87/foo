@@ -276,15 +276,15 @@ $(call pdebug1,generate pattern rules)
 # pattern rules
 
 # C/C++/Asm -> .i
-$(call gen_rule_basic,    compile_i,            $(loc_build_tree)/%.host.S.i,      $(loc_src_tree)/%.S,            host    )
-$(call gen_rule_basic,    compile_i,            $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.S,            host    )
-$(call gen_rule_basic,    compile_i,            $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.c,            host    )
-$(call gen_rule_basic,    compile_i,            $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.cc,           host    )
+$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.host.S.i,      $(loc_src_tree)/%.S,            host    )
+$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.S,            host    )
+$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.c,            host    )
+$(call gen_rule_basic,    compile_i_cxx,        $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.cc,           host    )
 
-$(call gen_rule_basic,    compile_i,            $(loc_build_tree)/%.S.i,           $(loc_src_tree)/%.S,                    )
-$(call gen_rule_basic,    compile_i,            $(loc_build_tree)/%.i,             $(loc_src_tree)/%.S,                    )
-$(call gen_rule_basic,    compile_i,            $(loc_build_tree)/%.i,             $(loc_src_tree)/%.c,                    )
-$(call gen_rule_basic,    compile_i,            $(loc_build_tree)/%.i,             $(loc_src_tree)/%.cc,                   )
+$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.S.i,           $(loc_src_tree)/%.S,                    )
+$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.i,             $(loc_src_tree)/%.S,                    )
+$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.i,             $(loc_src_tree)/%.c,                    )
+$(call gen_rule_basic,    compile_i_cxx,        $(loc_build_tree)/%.i,             $(loc_src_tree)/%.cc,                   )
 
 # C/C++ -> .S
 $(call gen_rule_basic,    compile_s_c,          $(loc_build_tree)/%.S,             $(loc_src_tree)/%.c,                    )
