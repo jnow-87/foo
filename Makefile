@@ -222,7 +222,7 @@ all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)
 
 .PHONY: clean
 clean: clean-kernel clean-sysroot clean-init
-	$(rm) $(filter-out $(build_tree)/scripts,$(wildcard $(build_tree)/*))
+	$(rm) $(filter-out $(patsubst %/,%,$(dir $(build_tree)/$(scripts_dir))),$(wildcard $(build_tree)/*))
 
 .PHONY: clean-kernel
 clean-kernel:
