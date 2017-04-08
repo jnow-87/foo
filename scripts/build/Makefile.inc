@@ -152,9 +152,15 @@ ifneq ("$(githooks_tree)","")
 .SILENT: githooks
 githooks:
 	test -e "$(githooks_tree)/style" || (echo $(githooks_tree)/style does not exist; exit 1)
+	test -e "$(githooks_tree)/mantis" || (echo $(githooks_tree)/mantis does not exist; exit 1)
+	test -e "$(githooks_tree)/util_print" || (echo $(githooks_tree)/util_print does not exist; exit 1)
 	test -e "$(githooks_tree)/pre-commit" || (echo $(githooks_tree)/pre-commit does not exist; exit 1)
+	test -e "$(githooks_tree)/post-commit" || (echo $(githooks_tree)/post-commit does not exist; exit 1)
 	ln -frs $(githooks_tree)/style .git/hooks/style
+	ln -frs $(githooks_tree)/mantis .git/hooks/mantis
+	ln -frs $(githooks_tree)/util_print .git/hooks/util_print
 	ln -frs $(githooks_tree)/pre-commit .git/hooks/pre-commit
+	ln -frs $(githooks_tree)/post-commit .git/hooks/post-commit
 
 .PHONY: check_coding_style
 check_coding_style:
