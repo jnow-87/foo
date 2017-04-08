@@ -6,9 +6,11 @@
 
 # \param	... files to be checked for coding style violations
 
+# source helper
+source $(dirname $0)/util_print
 
 # source style checker
-source .git/hooks/style
+source $(dirname $0)/style
 
 # init
 have_violation=0
