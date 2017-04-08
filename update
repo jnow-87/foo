@@ -1,17 +1,22 @@
 #!/bin/bash
 
-# source style checker
-source hooks/style
+# source helper
+source $(dirname $0)/util_print
 
-# init
+# source style checker
+source $(dirname $0)/style
+
+# source mantis issue tracker functions
+source $(dirname $0)/mantis
+
+
+####
+## acquire commit data
+####
+
 ref=$1
 old=$2
 new=$3
-
-violations=0
-log="/tmp/out"
-
-echo -e "\n    *** checking for style guide violations ***\n"
 
 # check if its an initial push
 if ! git rev-parse --verify HEAD >/dev/null 2>&1;then
@@ -22,28 +27,41 @@ fi
 # get list of commits
 read -r -a commits <<< $(echo ${old}; git rev-list --reverse ${old}..${new})
 
-i=1
+
+####
+## style guide violation check
+####
+
+violations=0
+log="/tmp/out"
+
+echo -e "\n    *** checking for style guide violations ***\n"
+
 # iterate through commits
+i=1
+
 while [ $i -lt ${#commits[*]} ]
 do
 	# get list of changed files
 	files=$(git diff --name-only ${commits[$i-1]} ${commits[$i]})
 	violated=0
 
-	echo -e "\033[35m${commits[$i]}\033[0m"
+	print ${FG_PURPLE} "${commits[$i]}"
 
 	# iterate through files
 	for file in ${files}
 	do
+		echo -n "${file} "
+
 		# check style guide
 		if ! check_style_guide ${file} "git show ${commits[$i]}:${file} 2>/dev/null " ${log}
 		then
 			violated=1
-			echo -e "${file} \033[31mviolation\033[0m"
+			perror "violation"
 			cat ${log} | sed 's/^/\t/'
 			echo ""
 		else
-			echo -e "${file} \033[32mok\033[0m"
+			pok "ok"
 		fi
 	done
 
@@ -56,12 +74,86 @@ do
 	let i=$i+1
 done
 
-# check global result
-if [ ${violations} -gt 0 ];then
-	echo -e "    \033[1m*** detected style guide violations in ${violations} commit(s) on ${ref} ***\033[0m\n"
-fi
-
 # delete log
 rm -f ${log}
 
-exit ${violations}
+# check result
+if [ ${violations} -gt 0 ];then
+	perror "    *** detected style guide violations in ${violations} commit(s) on ${ref} ***"
+	exit 1
+fi
+
+
+####
+## issue tracker upadate
+####
+
+echo -e "\n    *** issue tracker update ***\n"
+
+# check mantis config
+has_cfg=0
+mantis_check_config
+[ $? -eq 0 ] && has_cfg=1
+
+# iterate through commits, checking for issue tags
+i=1
+
+while [ $i -lt ${#commits[*]} ]
+do
+	# get commit message
+	msg=$(git log -1 --format=tformat:'%s\n%b' ${commits[$i]})
+
+	# get issue ids from commit message
+	issue_ids=$(mantis_check_commit "${msg}")
+
+	# check what to do
+	if [ ${has_cfg} -eq 0 -a -n "${issue_ids}" ];then
+		# issue mentioned in commit message but issue tracker config is missing
+		pwarn "detected issue tag in commit message, while issue tracker config is missing"
+
+	elif [ ${require_tag} -eq 1 -a -z "${issue_ids}" ];then
+		# no issue in commit message while one is expected
+		perror "commit ${commits[$i]} does not contain an issue tracker reference"
+		exit 1
+	fi
+
+	# check if all data match the database configuration
+	mantis_check_db ${issue_ids}; [ $? -eq 0 ] && exit 1
+
+	let i=$i+1
+done
+
+# iterate through commits, updating mantis database
+i=1
+
+while [ $i -lt ${#commits[*]} ]
+do
+	# get commit message
+	msg=$(git log -1 --format=tformat:'%s\n%b' ${commits[$i]})
+
+	# get data that shall be stored to the issue tracker database
+	# current values:
+	#	commit hash (long)
+	#	author mail
+	#	date
+	data=$(git log -1 --date=format:'%Y-%m-%d %k:%M' --format=tformat:'%H %ae %ad' ${commits[$i]})
+
+	# get issue ids from commit message
+	issue_ids=$(mantis_check_commit "${msg}")
+
+	# update mantis database
+	if [ -n "${issue_ids}" ];then
+		print ${FG_PURPLE} "${commits[$i]}"
+		mantis_update_db "${msg}" "${data}" "${issue_ids}"
+		echo ""
+	fi
+
+	let i=$i+1
+done
+
+
+####
+## exit
+####
+
+exit 0
