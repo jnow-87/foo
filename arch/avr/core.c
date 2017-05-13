@@ -18,9 +18,8 @@ void avr_core_halt(void){
 
 /* local functions */
 static error_t avr_core_init(void){
-	/* set MCUCR[IVSEL]
-	 * 	moving interrupt vectors to boot flash */
-	mreg_bset_sync(MCUCR, MCUCR_IVSEL, MCUCR_IVCE);
+	/* set MCUCR[IVSEL], moving interrupt vectors to boot flash */
+	mreg_bit_set_sync(MCUCR, MCUCR_IVSEL, MCUCR_IVCE);
 
 	return E_OK;
 }

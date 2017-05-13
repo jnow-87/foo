@@ -23,39 +23,57 @@
 		: "i" (reg_addr), "r" ((uint8_t)(reg_val)) \
 	)
 
-#define mreg_bset_sync(reg_addr, bit_c, bit_c_en){ \
+/**
+ * \brief	set bit synchronously
+ * 			this sequence is intented for bits that require a change enable flag
+ * 			in order to allow changing the actual bit
+ *
+ * \param	reg_addr		address of the register to modify
+ * \param	bit				bit that shall be modified
+ * \param	chg_en			change enable bit
+ */
+#define mreg_bit_set_sync(reg_addr, bit, chg_en){ \
 	register uint8_t t; \
 	\
 	\
 	asm volatile( \
 		"lds	%[tmp], %[addr]\n" \
-		"ori	%[tmp], %[v_en]\n" \
+		"ori	%[tmp], %[val_en]\n" \
 		"sts	%[addr], %[tmp]\n" \
-		"ori	%[tmp], %[v_new]\n" \
-		"andi	%[tmp], %[v_di]\n" \
+		"ori	%[tmp], %[val_reg]\n" \
+		"andi	%[tmp], %[val_di]\n" \
 		"sts	%[addr], %[tmp]\n" \
 		: [tmp] "=r" (t) \
 		: [addr] "i" (reg_addr), \
-		  [v_en] "i" (0x1 << bit_c_en), \
-		  [v_di] "i" (0xff ^ (0x1 << bit_c_en)), \
-		  [v_new] "i" (0x1 << bit_c) \
+		  [val_en] "i" (0x1 << chg_en), \
+		  [val_di] "i" (0xff ^ (0x1 << chg_en)), \
+		  [val_reg] "i" (0x1 << bit) \
 	); \
 }
 
-#define mreg_bclr_sync(reg_addr, bit_c, bit_c_en){ \
+/**
+ * \brief	clear bit synchronously
+ * 			this sequence is intented for bits that require a change enable flag
+ * 			in order to allow changing the actual bit
+ *
+ * \param	reg_addr		address of the register to modify
+ * \param	bit				bit that shall be modified
+ * \param	chg_en			change enable bit
+ */
+#define mreg_bit_clr_sync(reg_addr, bit, chg_en){ \
 	register uint8_t t; \
 	\
 	\
 	asm volatile( \
 		"lds	%[tmp], %[addr]\n" \
-		"ori	%[tmp], %[v_en]\n" \
+		"ori	%[tmp], %[val_en]\n" \
 		"sts	%[addr], %[tmp]\n" \
-		"andi	%[tmp], %[v_di]\n" \
+		"andi	%[tmp], %[val_di]\n" \
 		"sts	%[addr], %[tmp]\n" \
 		: [tmp] "=r" (t) \
 		: [addr] "i" (reg_addr), \
-		  [v_en] "i" (0x1 << bit_c_en), \
-		  [v_di] "i" (0xff ^ ((0x1 << bit_c_en) | (0x1 << bit_c))) \
+		  [val_en] "i" (0x1 << chg_en), \
+		  [val_di] "i" (0xff ^ ((0x1 << chg_en) | (0x1 << bit))) \
 	); \
 }
 
