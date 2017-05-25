@@ -18,20 +18,20 @@ exec "Inferior " . kimg
 " open peripherals window
 rightbelow 60vsplit
 Window view peripherals
-silent! source .vimgdb/per.vim
+silent source .vimgdb/per.vim
 
 " add memory dumps
 Window focus source
-40vsplit
+leftabove 40vsplit
 Window view memory
-silent! source .vimgdb/mem.vim
+silent source .vimgdb/mem.vim
 
 " open breakpoint window
 Window focus peripherals
 rightbelow 10split
 Window view breakpoints
 Window focus source
-silent! source .vimgdb/break.vim
+silent source .vimgdb/break.vim
 
 " open callstack window
 Window focus source
@@ -42,7 +42,7 @@ Window view callstack
 Window focus memory
 rightbelow 10split
 Window view variables
-silent! source .vimgdb/var.vim
+silent source .vimgdb/var.vim
 
 " focus source window
 Window focus source
