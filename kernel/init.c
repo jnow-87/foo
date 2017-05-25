@@ -6,6 +6,7 @@
 #include <kernel/stat.h>
 #include <kernel/test.h>
 #include <sys/escape.h>
+#include <version.h>
 
 
 /* macros */
@@ -63,7 +64,7 @@ void init(void){
 		do_init_call(__platform_init0_base, __kernel_init0_base, "", false);
 
 		/* print init message */
-		kprintf(KMSG_ANY, "\n\t\t" FG_BLUE "::: boot system :::" RESET_ATTR "\n");
+		kprintf(KMSG_ANY, "\n\t\t" FG_BLUE "::: boot system :::" RESET_ATTR "\n" VERSION "\n");
 
 		/* kernel infrastructure (stage: kernel 1) */
 		do_init_call(__kernel_init1_base, __kernel_init2_base, "kernel_init_stage1", true);
