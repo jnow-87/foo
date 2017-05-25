@@ -20,7 +20,7 @@ typedef enum{
 } thread_state_t;
 
 typedef struct thread_t{
-	unsigned int tid,
+	unsigned int tid,		// TODO make arch-dependent
 				 affinity,
 				 priority;
 

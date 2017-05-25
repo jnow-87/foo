@@ -31,6 +31,8 @@
  * \param	reg_addr		address of the register to modify
  * \param	bit				bit that shall be modified
  * \param	chg_en			change enable bit
+ *
+ * \pre		interrupts are assumed to be disabled, otherwise the following sequence might fail
  */
 #define mreg_bit_set_sync(reg_addr, bit, chg_en){ \
 	register uint8_t t; \
@@ -59,6 +61,8 @@
  * \param	reg_addr		address of the register to modify
  * \param	bit				bit that shall be modified
  * \param	chg_en			change enable bit
+ *
+ * \pre		interrupts are assumed to be disabled, otherwise the following sequence might fail
  */
 #define mreg_bit_clr_sync(reg_addr, bit, chg_en){ \
 	register uint8_t t; \

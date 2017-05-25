@@ -34,7 +34,7 @@ define term
 	$(2)
 endef
 
-# asking for using input, exiting with error if not 'y'
+# asking for user input, exiting with error if not 'y'
 #
 #	$(call yesno,<prompt>)
 define yesno

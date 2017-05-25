@@ -5,7 +5,7 @@
 #include <kernel/page.h>
 #include <kernel/thread.h>
 #include <kernel/fs.h>
-#include <sys/mem_region.h>
+#include <sys/memblock.h>
 
 
 /* macros */
@@ -18,13 +18,13 @@ struct thread_t;
 
 /* types */
 typedef struct{
-	mem_info_t addr_space;		// mem_info struct to manage processes virtual memory space
+	memblock_t addr_space;		// memblock struct to manage processes virtual memory space
 	page_t *pages;				// list to manage allocated addresses in user memory (umalloc, ufree in umem.h)
 } process_mem_t;
 
 typedef struct process_t{
-	unsigned int pid,
-				 lpid,
+	unsigned int pid,			// TODO make arch-dependent
+				 lpid,			// TODO make arch-dependent and add CONFIG_ surroundings
 				 affinity,
 				 priority;
 

@@ -28,9 +28,11 @@ struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *
 	int_num_t num;
 
 
+	/* save thread context when coming from a process */
 	if(inkernel_nest == 1)
 		current_thread[PIR]->ctx = tc;
 
+	/* call respective interrupt handler */
 	num = (addr - __isr_reset - INT_VEC_WORDS) / INT_VEC_WORDS;
 
 	if(int_map[num] != 0)	int_map[num](num);

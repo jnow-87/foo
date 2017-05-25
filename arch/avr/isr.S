@@ -8,6 +8,10 @@ __isr_##name: \
 	ICALL tgt
 
 
+/* external functions */
+.extern __start
+
+
 /* external variables */
 .extern inkernel_nest
 
@@ -60,7 +64,10 @@ __isr_call:
 	/* save ISR return address
 	 *	store return address to GPIOR1, GPRIO2
 	 */
+	// save r16
 	sts		GPIOR0, r16
+
+	// get return address from stack
 	pop		r16
 	sts		GPIOR1, r16
 	pop		r16
