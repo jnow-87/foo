@@ -1,6 +1,3 @@
-ENTRY(__start)
-
-
 /** MEMORY sections are defined in a separate script depending on the
  *  configured target MCU, cf. scripts/linker/mem_*
  */
