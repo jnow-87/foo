@@ -243,3 +243,16 @@ clean-sysroot:
 .PHONY: distclean
 distclean:
 	$(rm) $(config) $(config).old $(recent) $(build_tree)
+
+####
+## documentation
+####
+doxygen_config = doc/doxygen.conf
+
+documentation:
+	@sed -i -e 's>OUTPUT_DIRECTORY[ \t]*=.*>OUTPUT_DIRECTORY=$(build_tree)/doc/>' $(doxygen_config)
+	@doxygen $(doxygen_config)
+	@cp -r doc/* $(build_tree)/doc/latex
+	@cp -r $(src_dirs) include $(build_tree)/doc/latex
+	@make -C $(build_tree)/doc/latex
+	$(echo) "\n\ndocumentation generated at $(build_tree)/doc"

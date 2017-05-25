@@ -1,0 +1,42 @@
+\chapter{Introduction}
+\brickos is operating system kernel targeted to multiple diverse host platforms. It shall provide a common hardware abstraction through the system library.
+
+The project contains the following main components
+\begin{description}
+	\item[Kernel] The kernel provides interfaces for basic process and thread scheduling, event handling as well as inter-thread communication, cf. Chapter~\ref{chap:arch}.
+	\item[Architecture Abstraction Layer] The architecture abstraction is the main interface to specific target hardware that is required by kernel and system library, cf. Chapter~\ref{chap:kernel}.
+	\item[Driver] Device drivers exposes interfaces to specific target hardware, that is not required by kernel or system library, cf. Chapter~\ref{chap:driver}.
+	\item[System Library] The system library implements the interface between the kernel and user applications and thus is required to be linked against each application.
+	\item[Common Functions] Functions that are required by kernel, system library as well as user functions are grouped and linked against kernel as well as user applications.
+\end{description}
+
+\section{Style Guidelines}
+\subsection{Pointer Syntax}
+	\begin{itemize}
+		\item \lstinline{'*'} belongs to the name\\
+			\lstinline{int *p;}
+
+		\item function pointers with pointer return types shall have the \lstinline{'*'} of the return type surrounded by spaces\\
+		  	\lstinline{int * (*fct)(void);}
+
+		\item \lstinline{const} shall be placed right of the type\\
+			\lstinline{int const i;}
+	\end{itemize}
+
+\subsection{Comments}
+	\begin{itemize}
+		\item \lstinline{/* macros */}
+		\item \lstinline{/* types */}
+		\item \lstinline{/* prototypes */}
+		\item \lstinline{/* local/static prototypes */}
+		\item \lstinline{/* external variables */}
+		\item \lstinline{/* global variables */}
+		\item \lstinline{/* static variables */}
+		\item \lstinline{/* global functions */}
+		\item \lstinline{/* local functions */}
+	\end{itemize}
+	
+\subsection{Prototypes}
+	\begin{itemize}
+		\item \lstinline{static} shall be used for prototype and function definition
+	\end{itemize}

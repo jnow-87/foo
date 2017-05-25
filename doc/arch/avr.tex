@@ -1,0 +1,9 @@
+\section{Atmel AVR}
+	This section summarises some critical specifics of the AVR architecture.
+
+	\subsection{Interrupt Handling and Reset}
+		At reset execution is started at the processor reset address. The location of the reset address is controlled through the \lstinline{BOOTRST} fuse and might be at the start of the application section (\lstinline{0x0}) or the boot loader. The start of the boot loader section is further controlled through the \lstinline{BOOTSZ0, BOOTSZ1} fuse bits. Depending on the memory configuration of the target controller the boot loader start address may vary.
+		
+		Depending on the fuse bit configuration the kernel base address has to be set through\\\lstinline{CONFIG_KERNEL_BASE_ADDR}. \remark{It shall be noted that the application flash is address is 2-byte chucks, hence addresses listed in the manual need to be multiplied by two in order to get the byte address.}
+
+		The location of the interrupt vectors (except the reset vector) is controlled through \lstinline{MCUCR[IVSEL]}. They can either be placed at the start of the application section or the boot loader section. In the current implementation all interrupt vectors, including the reset vector, are mapped to the same location depending on \lstinline{CONFIG_KERNEL_BASE_ADDR}.
