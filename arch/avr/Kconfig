@@ -78,4 +78,29 @@ choice
 	config AVR_WATCHDOG_PRESCALE_1M
 		bool "1M cycles"
 endchoice
+
+#
+# sleep modes
+#
+choice
+	prompt "Sleep mode"
+
+	config AVR_SLEEPMODE_IDLE
+		bool "idle"
+
+	config AVR_SLEEPMODE_ADCNR
+		bool "adc noice reduction"
+
+	config AVR_SLEEPMODE_PWRDWN
+		bool "power down"
+
+	config AVR_SLEEPMODE_PWRSAVE
+		bool "power save"
+
+	config AVR_SLEEPMODE_STANDBY
+		bool "standby"
+
+	config AVR_SLEEPMODE_EXTSTANDBY
+		bool "extended standby"
+endchoice
 # }}}
