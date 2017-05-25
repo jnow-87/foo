@@ -11,7 +11,7 @@ extern void __isr_reset(void);
 
 
 /* local/static prototypes */
-static void avr_int_inval(void);
+static void avr_int_inval(int_num_t num);
 
 
 /* external variables */
@@ -35,8 +35,13 @@ struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *
 	/* call respective interrupt handler */
 	num = (addr - __isr_reset - INT_VEC_WORDS) / INT_VEC_WORDS;
 
+	if(num >= NINTERRUPTS){
+		FATAL("out of bound interrupt num %d\n", num);
+		core_halt();
+	}
+
 	if(int_map[num] != 0)	int_map[num](num);
-	else					avr_int_inval();
+	else					avr_int_inval(num);
 
 	return current_thread[PIR]->ctx;
 }
@@ -72,7 +77,7 @@ error_t avr_int_hdlr_release(int_num_t num){
 
 
 /* local functions */
-static void avr_int_inval(void){
-	puts("invalid isr\n");
+static void avr_int_inval(int_num_t num){
+	FATAL("invalid isr %d\n", num);
 	core_halt();
 }
