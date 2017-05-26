@@ -1,4 +1,4 @@
-obj-y := init.o sched.o
+obj-y := init.o sched.o panic.o
 
 obj-$(CONFIG_KERNEL_SMP) += lock.o
 obj-$(CONFIG_KERNEL_STAT) += stat.o

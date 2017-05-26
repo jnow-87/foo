@@ -32,10 +32,14 @@ void avr_core_sleep(void){
 }
 
 void avr_core_halt(void){
-	asm volatile(
-		"break\n"
-		"sleep\n"
-	);
+	/* set sleep mode to power down */
+	mreg_w(SMCR, (0x1 << SMCR_SE) | (0x2 << SMCR_SM));
+
+	/* signal debugger */
+	asm volatile("break");
+
+	/* send core to sleep */
+	asm volatile("sleep");
 }
 
 
