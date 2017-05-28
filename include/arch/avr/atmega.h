@@ -7,15 +7,13 @@
 
 
 /* mcu-specific header */
-#if CONFIG_ATMEGA1284P == 1
-
+#ifdef CONFIG_ATMEGA1284P
 #include <arch/avr/atmega1284.h>
+#endif // CONFIG_ATMEGA1284P
 
-#elif CONFIG_ATMEGA88PA == 1
-
+#ifdef CONFIG_ATMEGA88PA
 #include <arch/avr/atmega88.h>
-
-#endif // CONFIG_ATMEGA*
+#endif // CONFIG_ATMEGA88PA
 
 #if defined(__ATMEGA__) || defined(__XMEGA__)
 

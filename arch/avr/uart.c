@@ -55,9 +55,9 @@ static error_t avr_uart_init(void){
 	mreg_w(UCSR0C,
 		(0x3 << UCSR0C_UCSZ0) |	// 8-bit character size
 
-#if CONFIG_KERNEL_UART_PARITY_ODD
+#if defined(CONFIG_KERNEL_UART_PARITY_ODD)
 		(0x3 << UCSR0C_UPM0)
-#elif CONFIG_KERNEL_UART_PARITY_EVEN
+#elif defined(CONFIG_KERNEL_UART_PARITY_EVEN)
 		(0x2 << UCSR0C_UPM0)
 #else
 		(0x0 << UCSR0C_UPM0)

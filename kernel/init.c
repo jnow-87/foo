@@ -14,7 +14,7 @@
 
 #define do_init_call(b, e, s, pe)	_do_init_call(b, e, s, pe)
 
-#else
+#else // CONFIG_KERNEL_EARLY_PRINT
 
 #define do_init_call(b, e, s, pe)	_do_init_call(b, e)
 
@@ -44,7 +44,7 @@ kopt_t kopt = KOPT_INITIALISER;
 
 static void _do_init_call(init_call_t *base, init_call_t *end, char const *stage, bool p_err);
 
-#else
+#else // CONFIG_KERNEL_EARLY_PRINT
 
 static void _do_init_call(init_call_t *base, init_call_t *end);
 
@@ -118,7 +118,7 @@ static void _do_init_call(init_call_t *base, init_call_t *end, char const *stage
 	}
 }
 
-#else
+#else // CONFIG_KERNEL_EARLY_PRINT
 
 static void _do_init_call(init_call_t *base, init_call_t *end){
 	init_call_t *p;

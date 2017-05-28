@@ -7,17 +7,17 @@
 void avr_core_sleep(void){
 	/* set sleep mode */
 	mreg_w(SMCR, (0x1 << SMCR_SE) |
-#if CONFIG_AVR_SLEEPMODE_IDLE
+#if defined(CONFIG_AVR_SLEEPMODE_IDLE)
 		(0x0 << SMCR_SM)
-#elif CONFIG_AVR_SLEEPMODE_ADCNR
+#elif defined(CONFIG_AVR_SLEEPMODE_ADCNR)
 		(0x1 << SMCR_SM)
-#elif CONFIG_AVR_SLEEPMODE_PWRDWN
+#elif defined(CONFIG_AVR_SLEEPMODE_PWRDWN)
 		(0x2 << SMCR_SM)
-#elif CONFIG_AVR_SLEEPMODE_PWRSAVE
+#elif defined(CONFIG_AVR_SLEEPMODE_PWRSAVE)
 		(0x3 << SMCR_SM)
-#elif CONFIG_AVR_SLEEPMODE_STANDBY
+#elif defined(CONFIG_AVR_SLEEPMODE_STANDBY)
 		(0x6 << SMCR_SM)
-#elif CONFIG_AVR_SLEEPMODE_EXTSTANDBY
+#elif defined(CONFIG_AVR_SLEEPMODE_EXTSTANDBY)
 		(0x7 << SMCR_SM)
 #else
 	#error "invalid sleep mode, check kernel config"

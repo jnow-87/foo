@@ -9,7 +9,7 @@
 
 
 /* macros */
-#if CONFIG_KERNEL_SMP == 1
+#ifdef CONFIG_KERNEL_SMP
 
 #define _MUTEX_INITIALISER(nest){ \
 	.nest_cnt = nest, \
@@ -31,7 +31,7 @@
 
 
 /* types */
-#if CONFIG_KERNEL_SMP == 1
+#ifdef CONFIG_KERNEL_SMP
 
 typedef union{
 	volatile char lock_c[4];			// lock[3] indicates lock status (0 = free, 1 = locked)

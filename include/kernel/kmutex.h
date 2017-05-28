@@ -9,7 +9,7 @@
 
 
 /* types */
-#if CONFIG_KERNEL_SMP == 1
+#ifdef CONFIG_KERNEL_SMP
 
 typedef struct{
 	int_type_t imask;
@@ -24,7 +24,7 @@ typedef char kmutex_t __unused;
 
 
 /* macros */
-#if CONFIG_KERNEL_SMP == 1
+#ifdef CONFIG_KERNEL_SMP
 
 #define _KMUTEX_INITIALISER(nest){ \
 	.imask = INT_NONE, \
