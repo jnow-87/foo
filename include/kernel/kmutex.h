@@ -2,18 +2,30 @@
 #define KERNEL_MUTEX_H
 
 
+#include <config/config.h>
 #include <arch/interrupt.h>
+#include <sys/compiler.h>
 #include <sys/mutex.h>
 
 
 /* types */
+#if CONFIG_KERNEL_SMP == 1
+
 typedef struct{
 	int_type_t imask;
 	mutex_t m;
 } kmutex_t;
 
+#else // CONFIG_KERNEL_SMP
+
+typedef char kmutex_t __unused;
+
+#endif // CONFIG_KERNEL_SMP
+
 
 /* macros */
+#if CONFIG_KERNEL_SMP == 1
+
 #define _KMUTEX_INITIALISER(nest){ \
 	.imask = INT_NONE, \
 	.m = _MUTEX_INITIALISER(nest) \
@@ -54,5 +66,21 @@ typedef struct{
 	r; \
 })
 
+#else // CONFIG_KERNEL_SMP
 
+#define _KMUTEX_INITIALISER(nest)	0
+#define KMUTEX_INITIALISER()		0
+#define NESTED_KMUTEX_INITIALISER	0
+
+#define kmutex_init_nested(_m)
+#define kmutex_lock_nested(_m)
+#define kmutex_unlock(_m)
+#define kmutex_trylock_nested(_m)
+
+#define kmutex_init(_m)
+#define kmutex_lock(_m)
+#define kmutex_unlock(_m)
+#define kmutex_trylock(_m)
+
+#endif // CONFIG_KERNEL_SMP
 #endif // KERNEL_MUTEX_H

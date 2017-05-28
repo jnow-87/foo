@@ -2,12 +2,15 @@
 #define SYS_MUTEX_H
 
 
+#include <config/config.h>
 #include <arch/arch.h>
 #include <sys/compiler.h>
 #include <sys/types.h>
 
 
 /* macros */
+#if CONFIG_KERNEL_SMP == 1
+
 #define _MUTEX_INITIALISER(nest){ \
 	.nest_cnt = nest, \
 	.lock.lock_c[3] = 0, \
@@ -18,8 +21,18 @@
 #define MUTEX_INITIALISER()			_MUTEX_INITIALISER(-1)
 #define NESTED_MUTEX_INITIALISER()	_MUTEX_INITIALISER(0)
 
+#else // CONFIG_KERNEL_SMP
+
+#define _MUTEX_INITIALISER(nest)	0
+#define MUTEX_INITIALISER()			0
+#define NESTED_MUTEX_INITIALISER	0
+
+#endif // CONFIG_KERNEL_SMP
+
 
 /* types */
+#if CONFIG_KERNEL_SMP == 1
+
 typedef union{
 	volatile char lock_c[4];			// lock[3] indicates lock status (0 = free, 1 = locked)
 										// lock[2] indicates lock id (core number - 0xff = none)
@@ -36,6 +49,14 @@ typedef struct{
 		;
 #endif
 } mutex_t;
+
+#else // CONFIG_KERNEL_SMP
+
+typedef char mutex_lock_t __unused;
+typedef char mutex_t __unused;
+
+#endif // CONFIG_KERNEL_SMP
+
 
 
 /* prototypes */
