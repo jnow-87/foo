@@ -10,6 +10,29 @@ config KERNEL_BASE_ADDR
 config KERNEL_SMP
 	bool "Build an SMP system"
 	default 0
+
+menu "Hidden"
+	visible if 0
+
+	config KERNEL_NO_VIRT_MEM
+		bool "Kernel virtual memory support"
+		default n
+
+	config KERNEL_VIRT_MEM
+		bool "Kernel virtual memory support"
+		default n	if KERNEL_NO_VIRT_MEM
+		default y
+endmenu
+# }}}
+
+
+#
+# scheduler, process and thread
+#
+# {{{
+config THREAD_STACK_SIZE
+	int "Thread stack size"
+	default 4096
 # }}}
 
 #

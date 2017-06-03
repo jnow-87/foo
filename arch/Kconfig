@@ -8,6 +8,7 @@ choice
 	config AVR
 		bool "AVR"
 		select NOFLOAT
+		select KERNEL_NO_VIRT_MEM
 endchoice
 
 menu "AVR features"
