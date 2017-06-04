@@ -57,8 +57,8 @@ typedef struct page_t{
 	unsigned int idx;							// index in page table/TLB
 
 	/* list handling */
-	struct page_t *next,
-				  *prev;
+	struct page_t *prev,
+				  *next;
 } page_t;
 
 

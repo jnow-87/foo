@@ -1,6 +1,7 @@
 #include <sys/memblock.h>
 #include <sys/list.h>
 #include <sys/math.h>
+#include <sys/errno.h>
 
 
 /* macros */
@@ -9,9 +10,14 @@
 
 
 /* global functions */
-void memblock_init(memblock_t *pool, size_t len){
-	list_init(pool);
+errno_t memblock_init(memblock_t *pool, size_t len){
+	if(pool == 0)
+		return E_INVAL;
+
+	list_init_el(pool);
 	pool->len = len;
+
+	return E_OK;
 }
 
 void *memblock_alloc(memblock_t **pool, size_t n){
@@ -34,14 +40,14 @@ void *memblock_alloc(memblock_t **pool, size_t n){
 			blk->len = n;
 
 			// update list
-			list_replace(pool, blk, free);
+			list_replace(*pool, blk, free);
 
 			return (void*)blk + sizeof(memblock_t);
 		}
 		// block is large enough for n
 		else if(blk->len >= n){
 			// remove block from pool if it is used entirely
-			list_rm(pool, blk);
+			list_rm(*pool, blk);
 
 			return (void*)blk + sizeof(memblock_t);
 		}
@@ -72,11 +78,11 @@ void memblock_free(memblock_t **pool, void *addr){
 		if((void*)blk + blk->len == el){
 			// merge with head
 			blk->len += el->len;
-			list_replace(pool, el, blk);
+			list_replace(*pool, el, blk);
 		}
 		else{
 			// do not merge with head
-			list_add_head(pool, blk);
+			list_add_head(*pool, blk);
 		}
 	}
 	/* insert blk at tail */
@@ -89,7 +95,7 @@ void memblock_free(memblock_t **pool, void *addr){
 		}
 		else{
 			// do not merge with tail
-			list_add_tail(pool, blk);
+			list_add_tail(*pool, blk);
 		}
 	}
 	/* insert blk in-between two list elements */
@@ -103,7 +109,7 @@ void memblock_free(memblock_t **pool, void *addr){
 		}
 		else{
 			// do not merge with front
-			list_add_in(pool, blk, el, el->next);
+			list_add_in(blk, el, el->next);
 		}
 
 		el = blk->next;
@@ -111,7 +117,7 @@ void memblock_free(memblock_t **pool, void *addr){
 		if((void*)blk + blk->len == el){
 			// merge with back
 			blk->len += el->len;
-			list_rm(pool, el);
+			list_rm(*pool, el);
 		}
 	}
 }

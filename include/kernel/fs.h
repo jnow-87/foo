@@ -24,8 +24,8 @@ typedef struct fs_node_t{
 	struct fs_node_t *childs,	// list of all childs
 					 *parent;	// pointer to parent
 
-	struct fs_node_t *next,	// next, prev pointer to be used with list.h macros
-					 *prev;
+	struct fs_node_t *prev,		// next, prev pointer to be used with list.h macros
+					 *next;
 } fs_node_t;
 
 typedef struct fs_filed_t{
@@ -35,8 +35,8 @@ typedef struct fs_filed_t{
 	void *data;
 	fs_node_t *node;
 
-	struct fs_filed_t *next,
-					  *prev;
+	struct fs_filed_t *prev,
+					  *next;
 } fs_filed_t;
 
 typedef struct{
@@ -54,8 +54,8 @@ typedef struct fs_t{
 	int fs_type;
 	fs_ops_t *ops;				// pointer to the filesystems callback functions
 
-	struct fs_t *next,			// next, prev pointer to be used with list.h macros
-				*prev;
+	struct fs_t *prev,			// next, prev pointer to be used with list.h macros
+				*next;
 } fs_t;
 
 

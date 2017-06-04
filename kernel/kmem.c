@@ -43,9 +43,8 @@ void *addr_phys_to_virt(void *pa){
 /* local functions */
 static errno_t kmem_init(void){
 	kernel_heap = (void*)(KERNEL_HEAP_BASE);
-	memblock_init(kernel_heap, KERNEL_HEAP_SIZE);
 
-	return E_OK;
+	return memblock_init(kernel_heap, KERNEL_HEAP_SIZE);
 }
 
 kernel_init(0, kmem_init);

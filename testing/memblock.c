@@ -46,6 +46,32 @@ static int tc_memblock_print(int log){
 
 test_case(tc_memblock_print, "memblock: addresses");
 
+
+/**
+ * \brief	init pool
+ *
+ * \return 0x0
+ */
+static int tc_memblock_init(int log){
+	unsigned int n;
+
+
+	n = 0;
+
+	/* prepare element */
+	memblock_init(el0, 10);
+
+	/* check */
+	n += check_int(log, el0->len, 10);
+	n += check_ptr(log, el0->prev, el0);
+	n += check_ptr(log, el0->next, 0);
+
+	return -n;
+}
+
+test_case(tc_memblock_init, "memblock_init");
+
+
 /**
  * \brief	empty pool
  * 			pool with no elements
@@ -94,7 +120,7 @@ static int tc_memblock_alloc_small(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_head(&pool, el0);
+	list_add_head(pool, el0);
 
 	/* alloc */
 	blk = memblock_alloc(&pool, SIZE_EL0);
@@ -130,9 +156,9 @@ static int tc_memblock_alloc_perfect_fit(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el0);
-	list_add_tail(&pool, el1);
-	list_add_tail(&pool, el2);
+	list_add_tail(pool, el0);
+	list_add_tail(pool, el1);
+	list_add_tail(pool, el2);
 
 	/* alloc */
 	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t));
@@ -183,9 +209,9 @@ static int tc_memblock_alloc_split_fit(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el0);
-	list_add_tail(&pool, el3);
-	list_add_tail(&pool, el2);
+	list_add_tail(pool, el0);
+	list_add_tail(pool, el3);
+	list_add_tail(pool, el2);
 
 	/* alloc */
 	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t));
@@ -241,7 +267,7 @@ static int tc_memblock_free_head_nomerge(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el2);
+	list_add_tail(pool, el2);
 
 	/* free */
 	memblock_free(&pool, (void*)el0 + sizeof(memblock_t));
@@ -280,8 +306,8 @@ static int tc_memblock_free_head_merge(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el1);
-	list_add_tail(&pool, el2);
+	list_add_tail(pool, el1);
+	list_add_tail(pool, el2);
 
 	/* free */
 	memblock_free(&pool, (void*)el0 + sizeof(memblock_t));
@@ -321,7 +347,7 @@ static int tc_memblock_free_tail_nomerge(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el0);
+	list_add_tail(pool, el0);
 
 	/* free */
 	memblock_free(&pool, (void*)el2 + sizeof(memblock_t));
@@ -360,7 +386,7 @@ static int tc_memblock_free_tail_merge(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el0);
+	list_add_tail(pool, el0);
 
 	/* free */
 	memblock_free(&pool, (void*)el1 + sizeof(memblock_t));
@@ -394,8 +420,8 @@ static int tc_memblock_free_mid_nomerge(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el0);
-	list_add_tail(&pool, el4);
+	list_add_tail(pool, el0);
+	list_add_tail(pool, el4);
 
 	/* free */
 	memblock_free(&pool, (void*)el2 + sizeof(memblock_t));
@@ -439,8 +465,8 @@ static int tc_memblock_free_mid_frontmerge(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el0);
-	list_add_tail(&pool, el3);
+	list_add_tail(pool, el0);
+	list_add_tail(pool, el3);
 
 	/* free */
 	memblock_free(&pool, (void*)el1 + sizeof(memblock_t));
@@ -479,8 +505,8 @@ static int tc_memblock_free_mid_backmerge(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el0);
-	list_add_tail(&pool, el3);
+	list_add_tail(pool, el0);
+	list_add_tail(pool, el3);
 
 	/* free */
 	memblock_free(&pool, (void*)el2 + sizeof(memblock_t));
@@ -518,8 +544,8 @@ static int tc_memblock_free_mid_merge(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el0);
-	list_add_tail(&pool, el2);
+	list_add_tail(pool, el0);
+	list_add_tail(pool, el2);
 
 	/* free */
 	memblock_free(&pool, (void*)el1 + sizeof(memblock_t));
@@ -554,7 +580,7 @@ int tc_memblock_cycle(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	list_add_tail(&pool, el3);
+	list_add_tail(pool, el3);
 
 	/* alloc */
 	blk0 = memblock_alloc(&pool, 4);

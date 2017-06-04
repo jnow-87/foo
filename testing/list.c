@@ -40,6 +40,25 @@ static int tc_list_print(int log){
 
 test_case(tc_list_print, "list macros: addresses");
 
+static int tc_list_init_el(int log){
+	unsigned int n;
+	list_t *head;
+
+
+	n = 0;
+
+	head = &el0;
+
+	list_init_el(head);
+
+	n += check_ptr(log, head->prev, head);
+	n += check_ptr(log, head->next, 0);
+
+	return -n;
+}
+
+test_case(tc_list_init_el, "list_init_el");
+
 
 static int tc_list_empty(int log){
 	unsigned int n;
@@ -52,7 +71,7 @@ static int tc_list_empty(int log){
 
 	n += check_int(log, list_empty(head), true);
 
-	list_add_head(&head, &el0);
+	list_add_head(head, &el0);
 
 	n += check_int(log, list_empty(head), false);
 
@@ -71,7 +90,7 @@ static int tc_list_first_last(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_head(&head, &el3);
+	list_add_head(head, &el3);
 
 	n += check_ptr(log, list_first(head), &el3);
 	n += check_ptr(log, list_last(head), &el3);
@@ -91,8 +110,8 @@ static int tc_list_add_head(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_head(&head, &el0);
-	list_add_head(&head, &el1);
+	list_add_head(head, &el0);
+	list_add_head(head, &el1);
 
 	n += check_ptr(log, head, &el1);
 	n += check_ptr(log, el1.prev, &el0);
@@ -115,8 +134,8 @@ static int tc_list_add_tail(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_tail(&head, &el0);
-	list_add_tail(&head, &el1);
+	list_add_tail(head, &el0);
+	list_add_tail(head, &el1);
 
 	n += check_ptr(log, head, &el0);
 	n += check_ptr(log, el0.prev, &el1);
@@ -139,9 +158,9 @@ static int tc_list_add_in(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_tail(&head, &el0);
-	list_add_tail(&head, &el1);
-	list_add_in(&head, &el2, &el0, el0.next);
+	list_add_tail(head, &el0);
+	list_add_tail(head, &el1);
+	list_add_in(&el2, &el0, el0.next);
 
 	n += check_ptr(log, el1.prev, &el2);
 	n += check_ptr(log, el0.next, &el2);
@@ -165,7 +184,7 @@ static int tc_list_replace(int log){
 	head = 0;
 	INIT_EL();
 
-	list_replace(&head, &el0, &el1);
+	list_replace(head, &el0, &el1);
 
 	n += check_ptr(log, head, &el1);
 	n += check_ptr(log, el1.prev, &el1);
@@ -175,8 +194,8 @@ static int tc_list_replace(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_tail(&head, &el0);
-	list_replace(&head, &el0, &el1);
+	list_add_tail(head, &el0);
+	list_replace(head, &el0, &el1);
 
 	n += check_ptr(log, head, &el1);
 	n += check_ptr(log, el1.prev, &el1);
@@ -186,9 +205,9 @@ static int tc_list_replace(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_tail(&head, &el0);
-	list_add_tail(&head, &el1);
-	list_replace(&head, &el1, &el2);
+	list_add_tail(head, &el0);
+	list_add_tail(head, &el1);
+	list_replace(head, &el1, &el2);
 
 	n += check_ptr(log, list_last(head), &el2);
 	n += check_ptr(log, el0.prev, &el2);
@@ -200,10 +219,10 @@ static int tc_list_replace(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_tail(&head, &el0);
-	list_add_tail(&head, &el1);
-	list_add_tail(&head, &el2);
-	list_replace(&head, &el1, &el3);
+	list_add_tail(head, &el0);
+	list_add_tail(head, &el1);
+	list_add_tail(head, &el2);
+	list_replace(head, &el1, &el3);
 
 	n += check_ptr(log, el0.next, &el3);
 	n += check_ptr(log, el2.prev, &el3);
@@ -225,12 +244,12 @@ static int tc_list_rm(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_tail(&head, &el0);
-	list_add_tail(&head, &el1);
-	list_add_tail(&head, &el2);
+	list_add_tail(head, &el0);
+	list_add_tail(head, &el1);
+	list_add_tail(head, &el2);
 
 	// remove middle element
-	list_rm(&head, &el1);
+	list_rm(head, &el1);
 
 	n += check_ptr(log, head, &el0);
 	n += check_ptr(log, el0.prev, &el2);
@@ -239,14 +258,14 @@ static int tc_list_rm(int log){
 	n += check_ptr(log, el2.next, 0);
 
 	// remove tail element
-	list_rm(&head, &el2);
+	list_rm(head, &el2);
 
 	n += check_ptr(log, head, &el0);
 	n += check_ptr(log, el0.prev, &el0);
 	n += check_ptr(log, el0.next, 0);
 
 	// remove head element
-	list_rm(&head, &el0);
+	list_rm(head, &el0);
 
 	n += check_ptr(log, head, 0);
 
@@ -265,10 +284,10 @@ static int tc_list_find(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_tail(&head, &el0);
-	list_add_tail(&head, &el1);
-	list_add_tail(&head, &el2);
-	list_add_tail(&head, &el3);
+	list_add_tail(head, &el0);
+	list_add_tail(head, &el1);
+	list_add_tail(head, &el2);
+	list_add_tail(head, &el3);
 
 	/* list_find() */
 	n += check_ptr(log, list_find(head, el, 2), &el2);
@@ -301,13 +320,13 @@ static int tc_list_for_each(int log){
 	head = 0;
 	INIT_EL();
 
-	list_add_tail(&head, &el0);
-	list_add_tail(&head, &el1);
-	list_add_tail(&head, &el2);
-	list_add_tail(&head, &el3);
+	list_add_tail(head, &el0);
+	list_add_tail(head, &el1);
+	list_add_tail(head, &el2);
+	list_add_tail(head, &el3);
 
 	list_for_each(head, el)
-		list_rm(&head, el);
+		list_rm(head, el);
 
 	n += check_int(log, list_empty(head), true);
 

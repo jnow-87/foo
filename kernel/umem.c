@@ -33,9 +33,8 @@ void ufree(void *addr){
 /* local functions */
 static errno_t umem_init(void){
 	process_mem = (void*)(PROCESS_BASE);
-	memblock_init(process_mem, PROCESS_SIZE);
 
-	return E_OK;
+	return memblock_init(process_mem, PROCESS_SIZE);
 }
 
 kernel_init(0, umem_init);

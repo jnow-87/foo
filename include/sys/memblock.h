@@ -3,6 +3,7 @@
 
 
 #include <sys/types.h>
+#include <sys/errno.h>
 
 
 /* types */
@@ -23,7 +24,7 @@ typedef struct memblock_t{
 
 
 /* prototypes */
-void memblock_init(memblock_t *pool, size_t len);
+errno_t memblock_init(memblock_t *pool, size_t len);
 void *memblock_alloc(memblock_t **pool, size_t n);
 void memblock_free(memblock_t **pool, void *addr);
 
