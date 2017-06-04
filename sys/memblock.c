@@ -1,7 +1,6 @@
 #include <sys/memblock.h>
 #include <sys/list.h>
 #include <sys/math.h>
-#include <sys/error.h>
 
 
 /* macros */
@@ -51,13 +50,13 @@ void *memblock_alloc(memblock_t **pool, size_t n){
 	return 0x0;
 }
 
-error_t memblock_free(memblock_t **pool, void *addr){
+void memblock_free(memblock_t **pool, void *addr){
 	memblock_t *blk,
 			   *el;
 
 
 	if(addr == 0)
-		return E_INVAL;
+		return;
 
 	/* get block address */
 	blk = addr - sizeof(memblock_t);
@@ -115,6 +114,4 @@ error_t memblock_free(memblock_t **pool, void *addr){
 			list_rm(pool, el);
 		}
 	}
-
-	return E_OK;
 }

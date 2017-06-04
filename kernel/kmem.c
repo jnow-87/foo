@@ -1,7 +1,6 @@
 #include <arch/arch.h>
 #include <kernel/init.h>
 #include <kernel/kmutex.h>
-#include <kernel/panic.h>
 #include <sys/types.h>
 #include <sys/memblock.h>
 
@@ -19,9 +18,6 @@ void *kmalloc(size_t n){
 	kmutex_lock(&kmem_mutex);
 	p = memblock_alloc(&kernel_heap, n);
 	kmutex_unlock(&kmem_mutex);
-
-	if(p == 0)
-		kernel_panic();
 
 	return p;
 }
