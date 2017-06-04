@@ -4,7 +4,7 @@
 #include <kernel/opt.h>
 #include <sys/stream.h>
 #include <sys/stdarg.h>
-
+#include <sys/errno.h>
 
 
 /* static variables */
@@ -32,7 +32,7 @@ void kprintf(kmsg_t lvl, char const *format, ...){
 
 
 /* local functions */
-static error_t kprintf_init(void){
+static errno_t kprintf_init(void){
 	kout.putc = arch_cbs_kernel.putchar;
 	kout.puts = arch_cbs_kernel.puts;
 

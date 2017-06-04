@@ -3,7 +3,7 @@
 
 
 #include <arch/arch.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* macros */

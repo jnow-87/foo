@@ -2,7 +2,7 @@
 #define ARCH_INTERRUPT_H
 
 
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* macros */
@@ -17,11 +17,11 @@ enum int_num_t;
 
 
 /* types */
-typedef error_t (*int_hdlr_t)(enum int_num_t);
+typedef errno_t (*int_hdlr_t)(enum int_num_t);
 
 
 #include <arch/arch.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 #endif // ARCH_INTERRUPT_H

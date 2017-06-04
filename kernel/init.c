@@ -6,6 +6,7 @@
 #include <kernel/stat.h>
 #include <kernel/test.h>
 #include <sys/escape.h>
+#include <sys/errno.h>
 #include <version.h>
 
 
@@ -106,15 +107,14 @@ void init(void){
 #ifdef CONFIG_KERNEL_EARLY_PRINT
 
 static void _do_init_call(init_call_t *base, init_call_t *end, char const *stage, bool p_err){
-	error_t r;
 	init_call_t *p;
 
 
 	for(p=base; p<end; p++){
-		r = (*p)();
+		(void)(*p)();
 
-		if(r != E_OK && p_err)
-			cprintf(WARN, "\033[33m init-call $s at %#x failed with return code %d\n\033[0m", stage, *p, r);
+		if(errno != E_OK && p_err)
+			cprintf(WARN, "\033[33m init-call $s at %#x failed with return code %d\n\033[0m", stage, *p, errno);
 	}
 }
 

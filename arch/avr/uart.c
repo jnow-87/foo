@@ -2,7 +2,7 @@
 #include <arch/arch.h>
 #include <arch/avr/register.h>
 #include <kernel/init.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* macros */
@@ -38,9 +38,9 @@ int avr_puts(char const *s){
 
 
 /* local functions */
-static error_t avr_uart_init(void){
+static errno_t avr_uart_init(void){
 	if(BAUDRATE == 0)
-		return E_INVAL;
+		return_errno(E_INVAL);
 
 	mreg_w(PRR0, (mreg_r(PRR0) & (-1 ^ (0x1 << PRR0_PRUSART0))));
 

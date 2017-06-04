@@ -1,6 +1,6 @@
 #include <arch/arch.h>
 #include <kernel/init.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* global functions */
@@ -44,7 +44,7 @@ void avr_core_halt(void){
 
 
 /* local functions */
-static error_t avr_core_init(void){
+static errno_t avr_core_init(void){
 	/* set MCUCR[IVSEL], moving interrupt vectors to boot flash if required */
 #if CONFIG_KERNEL_BASE_ADDR == 0
 	mreg_bit_clr_sync(MCUCR, MCUCR_IVSEL, MCUCR_IVCE);

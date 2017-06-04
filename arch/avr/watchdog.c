@@ -1,11 +1,11 @@
 #include <config/config.h>
 #include <arch/arch.h>
 #include <kernel/init.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* local functions */
-static error_t avr_watchdog_init(void){
+static errno_t avr_watchdog_init(void){
 	/* clear reset flags */
 	mreg_w(MCUSR, 0x0);
 

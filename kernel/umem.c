@@ -3,6 +3,7 @@
 #include <kernel/kmutex.h>
 #include <sys/types.h>
 #include <sys/memblock.h>
+#include <sys/errno.h>
 
 
 /* static variables */
@@ -30,7 +31,7 @@ void ufree(void *addr){
 
 
 /* local functions */
-static error_t umem_init(void){
+static errno_t umem_init(void){
 	process_mem = (void*)(PROCESS_BASE);
 	memblock_init(process_mem, PROCESS_SIZE);
 

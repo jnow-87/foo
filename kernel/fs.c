@@ -10,7 +10,7 @@
 #include <kernel/init.h>
 #include <driver/rootfs.h>
 #include <sys/string.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* static variables */
@@ -19,15 +19,15 @@ static int fs_id = 0;
 
 
 /* local/static prototypes */
-static error_t fs_init(void);
-static error_t sc_hdlr_open(void*);
-static error_t sc_hdlr_close(void*);
-static error_t sc_hdlr_read(void*);
-static error_t sc_hdlr_write(void*);
-static error_t sc_hdlr_ioctl(void*);
-static error_t sc_hdlr_fcntl(void*);
-static error_t sc_hdlr_rmnode(void*);
-static error_t sc_hdlr_chdir(void*);
+static errno_t fs_init(void);
+static errno_t sc_hdlr_open(void*);
+static errno_t sc_hdlr_close(void*);
+static errno_t sc_hdlr_read(void*);
+static errno_t sc_hdlr_write(void*);
+static errno_t sc_hdlr_ioctl(void*);
+static errno_t sc_hdlr_fcntl(void*);
+static errno_t sc_hdlr_rmnode(void*);
+static errno_t sc_hdlr_chdir(void*);
 
 
 /* global functions */
@@ -73,7 +73,7 @@ int fs_register(fs_ops_t *ops){
  *
  * \return	0
  */
-error_t fs_unregister(int fs_type){
+errno_t fs_unregister(int fs_type){
 	fs_t *fs;
 
 
@@ -221,7 +221,7 @@ void fs_cleanup_fds(fs_filed_t *fds, unsigned int pid){
 
 
 /* local functions */
-static error_t fs_init(void){
+static errno_t fs_init(void){
 	sc_hdlr_register(SC_OPEN, sc_hdlr_open);
 	sc_hdlr_register(SC_CLOSE, sc_hdlr_close);
 	sc_hdlr_register(SC_READ, sc_hdlr_read);
@@ -237,9 +237,9 @@ static error_t fs_init(void){
 kernel_init(1, fs_init);
 
 
-static error_t sc_hdlr_open(void *_p){
+static errno_t sc_hdlr_open(void *_p){
 	char *path;
-	error_t e;
+	errno_t e;
 	sc_param_open_t *p;
 	fs_node_t *start;
 	fs_ops_t *ops;
@@ -288,8 +288,8 @@ err_0:
 	return E_OK;
 }
 
-static error_t sc_hdlr_close(void *_p){
-	error_t e;
+static errno_t sc_hdlr_close(void *_p){
+	errno_t e;
 	sc_param_close_t *p;
 	process_t *this_p;
 	fs_filed_t *fd;
@@ -326,7 +326,7 @@ err:
 	return E_OK;
 }
 
-static error_t sc_hdlr_read(void *_p){
+static errno_t sc_hdlr_read(void *_p){
 	char *buf;
 	sc_param_read_t *p;
 	process_t *this_p;
@@ -372,7 +372,7 @@ end:
 	return E_OK;
 }
 
-static error_t sc_hdlr_write(void *_p){
+static errno_t sc_hdlr_write(void *_p){
 	char *buf;
 	sc_param_write_t *p;
 	process_t *this_p;
@@ -415,7 +415,7 @@ end:
 	return E_OK;
 }
 
-static error_t sc_hdlr_ioctl(void *_p){
+static errno_t sc_hdlr_ioctl(void *_p){
 	sc_param_ioctl_t *p;
 	process_t *this_p;
 	fs_filed_t *fd;
@@ -448,7 +448,7 @@ end:
 	return E_OK;
 }
 
-static error_t sc_hdlr_fcntl(void *_p){
+static errno_t sc_hdlr_fcntl(void *_p){
 	sc_param_fcntl_t *p;
 	process_t *this_p;
 	fs_filed_t *fd;
@@ -481,7 +481,7 @@ end:
 	return E_OK;
 }
 
-static error_t sc_hdlr_rmnode(void *_p){
+static errno_t sc_hdlr_rmnode(void *_p){
 	char *path;
 	sc_param_rmnode_t *p;
 	process_t *this_p;
@@ -532,7 +532,7 @@ err_0:
 	return E_OK;
 }
 
-static error_t sc_hdlr_chdir(void *_p){
+static errno_t sc_hdlr_chdir(void *_p){
 	char *path;
 	sc_param_chdir_t *p;
 	process_t *this_p;

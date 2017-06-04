@@ -4,7 +4,7 @@
 
 #include <arch/interrupt.h>
 #include <kernel/thread.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 #include <sys/types.h>
 #include <sys/compiler.h>
 
@@ -68,11 +68,11 @@ typedef enum int_num_t{
 /* prototypes */
 struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *tc);
 
-error_t avr_int_enable(int_type_t mask);
+errno_t avr_int_enable(int_type_t mask);
 int_type_t avr_int_enabled(void);
 
-error_t avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr);
-error_t avr_int_hdlr_release(int_num_t num);
+errno_t avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr);
+errno_t avr_int_hdlr_release(int_num_t num);
 
 
 #endif // AVR_INTERRUPT_H

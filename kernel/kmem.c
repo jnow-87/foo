@@ -3,6 +3,7 @@
 #include <kernel/kmutex.h>
 #include <sys/types.h>
 #include <sys/memblock.h>
+#include <sys/errno.h>
 
 
 /* static variables */
@@ -40,7 +41,7 @@ void *addr_phys_to_virt(void *pa){
 
 
 /* local functions */
-static error_t kmem_init(void){
+static errno_t kmem_init(void){
 	kernel_heap = (void*)(KERNEL_HEAP_BASE);
 	memblock_init(kernel_heap, KERNEL_HEAP_SIZE);
 

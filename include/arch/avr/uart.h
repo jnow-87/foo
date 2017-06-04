@@ -2,7 +2,7 @@
 #define AVR_UART_H
 
 
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* prototypes */

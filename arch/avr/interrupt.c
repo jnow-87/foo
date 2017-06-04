@@ -3,7 +3,7 @@
 #include <arch/core.h>
 #include <arch/io.h>
 #include <kernel/kprintf.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* external prototypes */
@@ -46,7 +46,7 @@ struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *
 	return current_thread[PIR]->ctx;
 }
 
-error_t avr_int_enable(int_type_t mask){
+errno_t avr_int_enable(int_type_t mask){
 	if(mask)	asm volatile("sei");
 	else		asm volatile("cli");
 
@@ -59,10 +59,10 @@ int_type_t avr_int_enabled(void){
 	return INT_NONE;
 }
 
-error_t avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
+errno_t avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
 	if(int_map[num] != 0x0){
 		WARN("interrupt already registerd %u %#x\n", num, int_map[num]);
-		return E_INUSE;
+		return_errno(E_INUSE);
 	}
 
 	int_map[num] = hdlr;
@@ -70,7 +70,7 @@ error_t avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
 	return E_OK;
 }
 
-error_t avr_int_hdlr_release(int_num_t num){
+errno_t avr_int_hdlr_release(int_num_t num){
 	int_map[num] = 0x0;
 	return E_OK;
 }

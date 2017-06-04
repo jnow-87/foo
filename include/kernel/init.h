@@ -3,11 +3,11 @@
 
 
 #include <sys/compiler.h>
-#include <sys/error.h>
+#include <sys/errno.h>
 
 
 /* types */
-typedef error_t (*init_call_t)(void);
+typedef errno_t (*init_call_t)(void);
 
 
 /* macros */
