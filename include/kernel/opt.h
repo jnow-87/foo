@@ -4,6 +4,7 @@
 
 #include <config/config.h>
 #include <kernel/kprintf.h>
+#include <kernel/binloader.h>
 #include <sys/types.h>
 
 
@@ -44,7 +45,8 @@
 #define KOPT_INITIALISER { \
 	.kernel_test = false, \
 	.kernel_stat = true, \
-	.init_elf = (void*)RAMFS_BASE, \
+	.init_bin = (void*)CONFIG_INIT_BINARY, \
+	.init_type = CONFIG_INIT_BINTYPE, \
 	.init_arg = "init", \
 	.dbg_lvl = CONFIG_KMSG_FATAL | CONFIG_KMSG_WARN | CONFIG_KMSG_INFO | CONFIG_KMSG_DEBUG | CONFIG_KMSG_STAT, \
 }
@@ -56,7 +58,8 @@ typedef struct{
 	bool kernel_test,			// define wether to call kernel_test() (true - enabled, false - disabled)
 		 kernel_stat;			// print kernel statistics
 
-	void *init_elf;				// memory address to init elf file
+	void *init_bin;				// memory address to init file
+	bin_type_t init_type;		// binary type of init
 	char const init_arg[255];	// argument string for init
 
 	kmsg_t dbg_lvl;				// kernel debug level

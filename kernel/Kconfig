@@ -9,7 +9,7 @@ config KERNEL_BASE_ADDR
 
 config KERNEL_SMP
 	bool "Build an SMP system"
-	default 0
+	default n
 
 menu "Hidden"
 	visible if 0
@@ -23,16 +23,6 @@ menu "Hidden"
 		default n	if KERNEL_NO_VIRT_MEM
 		default y
 endmenu
-# }}}
-
-
-#
-# scheduler, process and thread
-#
-# {{{
-config THREAD_STACK_SIZE
-	int "Thread stack size"
-	default 4096
 # }}}
 
 #
@@ -196,3 +186,43 @@ config KERNEL_STAT
 	bool "Execute 'kernel_stat()' on boot"
 	select KERNEL_MSG_STAT
 # }}}
+
+#
+# init binary
+#
+# {{{
+menu "Init binary settings"
+	config INIT_BINARY
+		hex "Adress of the init binary"
+
+	choice
+		prompt "Init binary type"
+
+		config INIT_BINTYPE_RAW
+			bool "INIT_BINARY points to the init entry address"
+
+		config INIT_BINARY_ELF
+			bool "INIT_BINARY points to an ELF file"
+	endchoice
+
+	menu "Hidden"
+		visible if 0
+
+		config INIT_BINTYPE
+			int "Init binary type"
+			default 0	if INIT_BINTYPE_RAW
+			default 1	if INIT_BINARY_ELF
+	endmenu
+endmenu
+
+#
+# process and thread
+#
+# {{{
+menu "Thread and process settings"
+	config THREAD_STACK_SIZE
+		int "Thread stack size"
+		default 4096
+endmenu
+# }}}
+
