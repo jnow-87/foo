@@ -45,7 +45,7 @@ menu "Hidden"
 
 	config NOFLOAT
 		bool "Enable floating point support"
-		default 0
+		default n
 endmenu
 # }}}
 
