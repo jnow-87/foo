@@ -3,7 +3,7 @@
 
 
 #include <arch/interrupt.h>
-#include <kernel/thread.h>
+#include <arch/thread.h>
 #include <sys/errno.h>
 #include <sys/types.h>
 #include <sys/compiler.h>
