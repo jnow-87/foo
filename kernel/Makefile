@@ -1,4 +1,4 @@
-obj-y := init.o sched.o panic.o kmem.o umem.o page.o binloader.o binloader_raw.o
+obj-y := init.o thread.o sched.o panic.o kmem.o umem.o page.o binloader.o binloader_raw.o
 
 obj-$(CONFIG_KERNEL_SMP) += lock.o
 obj-$(CONFIG_KERNEL_STAT) += stat.o
