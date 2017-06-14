@@ -70,6 +70,10 @@ typedef enum{
 
 void kprintf(kmsg_t lvl, char const *format, ...);
 
+#else
+
+#define kprintf(lvl, fmt, ...)
+
 #endif // CONFIG_KERNEL_MSG_*
 
 
