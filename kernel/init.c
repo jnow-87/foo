@@ -3,6 +3,7 @@
 #include <kernel/init.h>
 #include <kernel/opt.h>
 #include <kernel/kprintf.h>
+#include <kernel/panic.h>
 #include <kernel/stat.h>
 #include <kernel/test.h>
 #include <sys/escape.h>
@@ -82,6 +83,10 @@ void init(void){
 #endif // CONFIG_KERNEL_SMP
 	}
 
+	/* stop execution if any of the init calls failed */
+	if(errno != E_OK)
+		kernel_panic();
+
 	/* kernel statistics */
 #ifdef CONFIG_KERNEL_STAT
 	kernel_stat();
@@ -91,7 +96,6 @@ void init(void){
 #ifdef CONFIG_KERNEL_TEST
 	kernel_test();
 #endif // CONFIG_KERNEL_TEST
-
 
 	/* enable interrupts */
 	int_enable(INT_ALL);

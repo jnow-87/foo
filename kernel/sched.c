@@ -26,6 +26,7 @@ static errno_t sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
 
 /* global variables */
+void *kernel_stack[CONFIG_NCORES] = { 0 };
 thread_t *current_thread[CONFIG_NCORES];
 process_t *process_table = 0;
 
@@ -50,13 +51,23 @@ static errno_t sched_init(void){
 
 	/* register scheduler interrupt */
 	if(int_hdlr_register(CONFIG_SCHED_INT, sched_tick) != E_OK)
-		goto err_0;
+		goto err;
+
+	/* allocate kernel stack */
+	for(i=0; i<CONFIG_NCORES; i++){
+		kernel_stack[i] = kmalloc(KERNEL_STACK_SIZE);
+
+		if(kernel_stack[i] == 0)
+			goto_errno(err, E_NOMEM);
+
+		kernel_stack[i] += KERNEL_STACK_SIZE - 1;
+	}
 
 	/* create kernel process */
 	this_p = kmalloc(sizeof(process_t));
 
 	if(this_p == 0)
-		goto_errno(err_0, E_NOMEM);
+		goto_errno(err, E_NOMEM);
 
 	memset(this_p, 0x0, sizeof(process_t));
 
@@ -71,7 +82,7 @@ static errno_t sched_init(void){
 		this_t = kmalloc(sizeof(thread_t));
 
 		if(this_t == 0)
-			goto_errno(err_1, E_NOMEM);
+			goto_errno(err, E_NOMEM);
 
 		memset(this_t, 0x0, sizeof(thread_t));
 
@@ -89,7 +100,7 @@ static errno_t sched_init(void){
 	// add kernel threads to ready queue
 	list_for_each(this_p->threads, this_t){
 		if(sched_queue_add(&queue_ready, this_t) != E_OK)
-			goto err_2;
+			goto err;
 	}
 
 	/* create init process */
@@ -97,34 +108,20 @@ static errno_t sched_init(void){
 	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, 0);
 
 	if(this_p == 0)
-		goto err_2;
+		goto err;
 
 	list_add_tail(process_table, this_p);
 
 	// add first thread to ready queue
 	if(sched_queue_add(&queue_ready, this_p->threads) != E_OK)
-		goto err_2;
+		goto err;
 
 	return E_OK;
 
-err_2:
-	list_for_each(queue_ready, queue_e){
-		list_rm(queue_ready, queue_e);
-		kfree(queue_e);
-	}
-
-err_1:
-	list_for_each(process_table, this_p){
-		list_for_each(this_p->threads, this_t){
-			list_rm(this_p->threads, this_t);
-			kfree(this_t);
-		}
-
-		list_rm(process_table, this_p);
-		kfree(this_p);
-	}
-
-err_0:
+err:
+	/* XXX: cleanup in case of an error is not required, since the kernel will stop
+	 * anyways if any of the init calls fails
+	 */
 	return errno;
 }
 
