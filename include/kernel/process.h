@@ -38,11 +38,8 @@ typedef struct process_t{
 	unsigned int affinity,
 				 priority;
 
-	unsigned int argc;
-	char const **argv;
-	char *args;
-
-	char *name;
+	char *name,
+		 *args;
 
 	process_mem_t memory;
 

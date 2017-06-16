@@ -16,10 +16,8 @@
 /* global functions */
 process_t *process_create(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd){
 	void *entry;
-	char *_args;
 	process_t *this_p;
 	thread_t *this_t;
-	unsigned int i;
 
 
 	/* allocate process structure */
@@ -62,66 +60,13 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	mutex_init(&this_p->memory.mtx);
 #endif // CONFIG_KERNEL_SMP
 
-	/* init arguments */
-	// allocate args
+	/* init argument string */
 	this_p->args = kmalloc(strlen(args) + 1);
 
 	if(this_p->args == 0)
 		goto_errno(err_2, E_NOMEM);
 
 	strcpy(this_p->args, args);
-
-	// identify number of arguments
-	this_p->argc = (*args != 0) ? 1 : 0;
-
-	while(*args != 0){
-		// skip blanks
-		while(*args != 0 && (*args == ' ' || *args == '\t'))
-			++args;
-
-		if(*args != 0)
-			++this_p->argc;
-
-		// skip non-blanks
-		while(*args != 0 && (*args != ' ' && *args != '\t'))
-			++args;
-	}
-
-	// allocate argv
-	this_p->argv = 0;
-
-	if(this_p->argc > 0){
-		this_p->argv = kmalloc(sizeof(char*) * this_p->argc);
-
-		if(this_p->argv == 0)
-			goto_errno(err_3, E_NOMEM);
-
-		memset(this_p->argv, 0x0, sizeof(char*) * this_p->argc);
-
-		_args = this_p->args;
-		i = 0;
-
-		while(*_args != 0){
-			// skip blanks
-			while(*_args != 0 && (*_args == ' ' || *_args == '\t'))
-				++_args;
-
-			if(*_args != 0){
-				this_p->argv[i] = _args;
-				++i;
-			}
-
-			// skip non-blanks
-			while(*_args != 0 && (*_args != ' ' && *_args != '\t'))
-				++_args;
-
-			// terminate current argument
-			if(*_args == 0)
-				break;
-
-			*(_args++) = 0;
-		}
-	}
 
 	/* init file system handles */
 	this_p->fds = 0x0;
@@ -131,25 +76,22 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	entry = 0x0;
 
 	if(bin_load(binary, bin_type, this_p, &entry) != E_OK)
-		goto err_4;
+		goto err_3;
 
 	if(entry == 0x0)
-		goto err_4;
+		goto err_3;
 
 	/* create first thread */
 	this_t = thread_create(this_p, 0, entry);
 
 	if(this_t == 0)
-		goto err_4;
+		goto err_3;
 
 	this_p->threads = 0x0;
 	list_add_tail(this_p->threads, this_t);
 
 	return this_p;
 
-
-err_4:
-	kfree(this_p->argv);
 
 err_3:
 	kfree(this_p->args);
@@ -179,7 +121,6 @@ void process_destroy(process_t *this_p){
 	// TODO implement -- call fs_cleanup_fds()
 
 	/* free arguments */
-	kfree(this_p->argv);
 	kfree(this_p->args);
 
 	/* free process memory */
