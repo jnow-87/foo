@@ -22,6 +22,7 @@ src_dirs := arch kernel lib sys init testing scripts/memlayout
 
 kernel_name := kimg.elf
 lib_name := libsys.a
+init_name := init.elf
 
 
 ####
@@ -44,7 +45,8 @@ cflags := \
 	-Wno-unknown-pragmas \
 	-nostdinc \
 	-fno-builtin \
-	-fshort-enums
+	-fshort-enums \
+	-flto
 
 cxxflags := \
 	$(CXXFLAGS) \
@@ -54,7 +56,8 @@ cxxflags := \
 	-Wno-unknown-pragmas \
 	-nostdinc \
 	-fno-builtin \
-	-fshort-enums
+	-fshort-enums \
+	-flto
 
 cppflags := \
 	$(CPPFLAGS) \
@@ -96,7 +99,8 @@ hostcflags := \
 	$(hostcflags) \
 	-Wall \
 	-Wno-unknown-pragmas \
-	-O2
+	-O2 \
+	-flto
 
 hostcxxflags := \
 	$(HOSTCXXFLAGS) \
@@ -104,7 +108,8 @@ hostcxxflags := \
 	$(hostcxxflags) \
 	-Wall \
 	-Wno-unknown-pragmas \
-	-O2
+	-O2 \
+	-flto
 
 hostcppflags := \
 	$(HOSTCPPFLAGS) \
@@ -153,9 +158,11 @@ gperfflags := \
 ####
 
 kernel := $(build_tree)/$(kernel_name)
-kernel_deps := kernel/ arch/ sys/
+kernel_deps := kernel/obj.o arch/obj.o sys/obj.o
 libsys := $(build_tree)/lib/$(lib_name)
 libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
+init := $(build_tree)/$(init_name)
+init_deps := init/obj.o
 
 sysroot := sysroot
 recent := recent
@@ -175,22 +182,34 @@ sysroot_create := scripts/sysroot/create.sh
 # kernel target
 .PHONY: kernel
 kernel: cppflags += -DKERNEL
-kernel: check_config check_configheader $(kernel)
+kernel: check_config check_configheader versionheader $(kernel)
 
 $(kernel): ldlibs += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
-$(kernel): ldlibs += -Wl,--section-start=.base=$(CONFIG_KERNEL_BASE_ADDR)
+$(kernel): ldlibs += -Wl,--section-start=.text=$(CONFIG_KERNEL_TEXT_BASE)
+$(kernel): ldlibs += -Wl,--section-start=.data=$(CONFIG_KERNEL_DATA_BASE)
 $(kernel): ldlibs += -lgcc
-$(kernel): $(addsuffix obj.o, $(addprefix $(build_tree)/, $(kernel_deps)))
+$(kernel): $(addprefix $(build_tree)/, $(kernel_deps))
 	$(call compile_bin_o)
 
 # libsys targets
 .PHONY: libsys
 libsys: cppflags += -DLIBSYS
-libsys: check_config $(libsys)
+libsys: check_config check_configheader $(libsys)
 
 $(libsys): ldlibs += -Lscripts/linker -Tlibsys_$(CONFIG_ARCH).lds
 $(libsys): $(addprefix $(build_tree)/, $(libsys_dep))
 	$(call compile_lib_o)
+
+# init targets
+.PHONY: init
+init: cppflags += -DINIT
+init: check_config check_configheader libsys $(init)
+
+$(init): ldlibs += -Lscripts/linker -Tinit_$(CONFIG_ARCH).lds
+$(init): ldlibs += -Wl,--section-start=.data=0x800400
+$(init): ldlibs += -lsys -lgcc
+$(init): $(addprefix $(build_tree)/, $(init_deps))
+	$(call compile_bin_o)
 
 # sysroot target
 .PHONY: sysroot
