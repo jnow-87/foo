@@ -44,7 +44,7 @@ typedef struct thread_t{
 
 
 /* prototypes */
-thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry);
+thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, void *thread_arg);
 void thread_destroy(struct thread_t *this_t);
 
 

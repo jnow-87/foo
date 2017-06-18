@@ -8,7 +8,7 @@
 
 
 /* global functions */
-thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry){
+thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, void *thread_arg){
 	thread_t *this_t;
 
 
@@ -39,7 +39,7 @@ thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry){
 	list_add_tail(this_p->memory.pages, this_t->stack);
 
 	/* init thread context */
-	this_t->ctx = thread_context_init(this_t);
+	this_t->ctx = thread_context_init(this_t, thread_arg);
 
 	if(this_t->ctx == 0)
 		goto_errno(err_2, E_INVAL);

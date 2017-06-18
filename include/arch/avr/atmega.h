@@ -90,9 +90,7 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.ipi_sleep = 0x0,
 	.ipi_wake = 0x0,
 
-	.thread_context_init = 0x0,	/* TODO */
-	.thread_call = 0x0,			/* TODO */
-	.thread_kill = 0x0,			/* TODO */
+	.thread_context_init = avr_thread_context_init,
 
 #ifdef CONFIG_KERNEL_UART
 	.putchar = avr_putchar,
