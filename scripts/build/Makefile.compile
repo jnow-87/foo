@@ -101,10 +101,17 @@ define compile_o_cxx
 	)
 endef
 
+ifeq ($(project_type),c)
 define compile_o_o
-	$(echo) [$(call upper_case,$(1))LD] $@
-	$($(1)ld) $($(1)ldflags) -r $^ -o $@
+	$(echo) [$(call upper_case,$(1))CC] $@
+	$($(1)cc) $($(1)cflags) -nostdlib -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $^ -o $@
 endef
+else
+define compile_o_o
+	$(echo) [$(call upper_case,$(1))CXX] $@
+	$($(1)cxx) $($(1)cxxflags) -nostdlib -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $^ -o $@
+endef
+endif
 
 define compile_lib_o
 	$(echo) [$(call upper_case,$(1))AR] $@

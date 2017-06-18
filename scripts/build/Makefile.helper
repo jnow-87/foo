@@ -1,3 +1,14 @@
+######################
+## helper variables ##
+######################
+
+# variables that contain ' ' and ',' required for some replacements, that
+# do not work with the characters used literally 
+space :=
+space +=
+comma := ,
+
+
 ##############################
 ##   directory traversal   ###
 ##############################
