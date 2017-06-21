@@ -60,6 +60,10 @@ else
 	$(call term, $(CONFIG_AVR_DEBUGGER) -R -P $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_DEBUG_ARGS) :1212 | grep -C 1000 'Waiting for connection', &)
 endif
 
+####
+## update flash and fuses
+####
+
 .PHONY: fuse
 fuse:
 	$(CONFIG_AVR_FUSER) $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_TYPE) $(CONFIG_AVR_PROG_PORT)
@@ -72,6 +76,17 @@ erase:
 flash: kernel sysroot
 	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(kernel)
 
-.PHONY: dump
-dump:
-	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:r:dump:r
+####
+## read flash
+####
+
+objdump := avr-objdump
+dump_name := dump.bin
+
+.PHONY: dump-read
+dump-read:
+	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:r:$(dump_name):r
+	
+.PHONY: dump-disassemble
+dump-disassemble: dump-read
+	$(objdump) -b binary -m avr -D $(dump_name) | less
