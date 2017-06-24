@@ -59,51 +59,100 @@ endmenu
 # {{{
 menu "Memory configuration"
 config KERNEL_TEXT_BASE
-	hex "Kernel .text section base address"
+	hex "Kernel flash base address"
 	range 0x0 0x0fffffff
 	default 0x0
+	help
+		Flash address to map the kernel image .text section to.
+
+		Note: Flash addresses given in the datasheet are word addresses, i.e. they
+		      need to be multiplied by 2 to get byte addresses.
 
 config KERNEL_TEXT_SIZE
-	int "Kernel .text section size"
+	int "Kernel flash size"
 	default 0
+	help
+		Size of the kernel flash.
+
+		Note: The kernel .data section needs to be mapped to the flash memory also.
+		      Hence the kernel flash section needs to be large enough to hold both
+		      the kernel's .text and .data sections.
 
 config KERNEL_DATA_BASE
 	hex "Kernel .data section base address"
 	range 0x0 0x0fffffff
 	default 0x0
+	help
+		SRAM address to map the kernel .data section to.
+
+		Note: The .data section is part of the kernel image. As such it is programmed
+		      to flash memory and loaded to SRAM at runtime. This address constitutes
+		      the SRAM address.
+
+		Note: gcc applies an offset of 0x00800000 to SRAM address in order to
+		      distinguish them from flash addresses. This offset needs to be part of
+		      this address.
 
 config KERNEL_DATA_SIZE
 	int "Kernel .data section size"
 	default 0
+	help
+		Size of the kernel .data section.
 
 config APP_TEXT_BASE
-	hex "Application .text section base address"
+	hex "Application flash base address"
 	range 0x0 0x0fffffff
 	default 0x0
+	help
+		Flash address to map the init application image .text section to.
+
+		Note: Flash addresses given in the datasheet are word addresses, i.e. they
+		      need to be multiplied by 2 to get byte addresses.
 
 config APP_TEXT_SIZE
 	int "Max. application .text section size"
 	default 0
+	help
+		Size of the init application .text section.
+
+		Note: The init application .data section needs to be mapped to the flash
+		      memory also. Hence the init applications flash section needs to be
+		      large enough to hold both the .text and .data sections.
 
 config APP_DATA_BASE
 	hex "Application .data section base address"
 	range 0x0 0x0fffffff
 	default 0x0
+	help
+		SRAM address to map the init application .data section to.
+
+		Note: The .data section is part of the init application. As such it is
+		      programmed to flash memory and loaded to SRAM at runtime. This address
+		      constitutes the SRAM address.
+
+		Note: gcc applies an offset of 0x00800000 to SRAM address in order to
+		      distinguish them from flash addresses. This offset needs to be part of
+		      this address.
 
 config APP_DATA_SIZE
 	int "Max. application .data section size"
 	default 0
+	help
+		Size of the init application .data section.
 
 config MREG_BASE
 	hex "Memory mapped register space base address"
 	range 0x0 0x0fffffff
 	default 0x0
+	help
+		SRAM address of memory mapped register space.
 
 config MREG_SIZE
 	int "Memory mapped register space size"
 	default 0
+	help
+		Size of the memory mapped register space.
 endmenu
-
 # }}}
 
 #
