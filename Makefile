@@ -270,12 +270,28 @@ distclean:
 ####
 ## documentation
 ####
-doxygen_config = doc/doxygen.conf
+doxygen_config := doc/doxygen.conf
+graphicspath := doc/img
 
-documentation:
+svggraphics := $(shell find $(graphicspath) -name \*.svg)
+pdfgraphics := $(patsubst %.svg, $(build_tree)/%.pdf, $(svggraphics))
+
+
+documentation: fig_svg
 	@sed -i -e 's>OUTPUT_DIRECTORY[ \t]*=.*>OUTPUT_DIRECTORY=$(build_tree)/doc/>' $(doxygen_config)
 	@doxygen $(doxygen_config)
 	@cp -r doc/* $(build_tree)/doc/latex
 	@cp -r $(src_dirs) include $(build_tree)/doc/latex
+	@cp -ru $(build_tree)/$(graphicspath) $(build_tree)/doc/latex/
 	@make -C $(build_tree)/doc/latex
 	$(echo) "\n\ndocumentation generated at $(build_tree)/doc"
+
+.PHONY:	fig_svg
+fig_svg: fig_cp $(pdfgraphics)
+
+.PHONY: fig_cp
+fig_cp:
+	@cp -ru $(graphicspath) $(build_tree)/doc
+
+$(pdfgraphics): %.pdf : %.svg
+	inkscape -D -z -f $< --export-pdf=$@
