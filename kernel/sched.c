@@ -1,3 +1,4 @@
+#include <config/config.h>
 #include <arch/interrupt.h>
 #include <kernel/init.h>
 #include <sys/errno.h>
@@ -19,7 +20,7 @@ thread_t *current_thread[CONFIG_NCORES];
 static errno_t sched_init(void){
 	// TODO init scheduler lists
 	// TODO register sched_tick as timer interrupt handler
-	if(int_hdlr_register(INT_SCHED, sched_tick) != E_OK)
+	if(int_hdlr_register(CONFIG_SCHED_INT, sched_tick) != E_OK)
 		return_errno(E_INUSE);
 
 	// TODO load init application

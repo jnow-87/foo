@@ -168,6 +168,7 @@ sysroot := sysroot
 recent := recent
 
 memlayout := $(build_tree)/scripts/memlayout/memlayout
+memlayout_check := $(build_tree)/scripts/memlayout/memlayout_check
 sysroot_create := scripts/sysroot/create.sh
 
 
@@ -182,11 +183,10 @@ sysroot_create := scripts/sysroot/create.sh
 # kernel target
 .PHONY: kernel
 kernel: cppflags += -DKERNEL
-kernel: check_config check_configheader versionheader $(kernel)
+kernel: check_config check_configheader check_memlayout versionheader $(kernel)
 
+$(kernel): ldlibs += $(ldlibs-kernel-arch)
 $(kernel): ldlibs += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
-$(kernel): ldlibs += -Wl,--section-start=.text=$(CONFIG_KERNEL_TEXT_BASE)
-$(kernel): ldlibs += -Wl,--section-start=.data=$(CONFIG_KERNEL_DATA_BASE)
 $(kernel): ldlibs += -lgcc
 $(kernel): $(addprefix $(build_tree)/, $(kernel_deps))
 	$(call compile_bin_o)
@@ -222,6 +222,10 @@ sysroot: kernel libsys
 .PHONY: memlayout
 memlayout: check_configheader $(memlayout)
 	$(QUTIL)$(memlayout)
+
+.PHONY: check_memlayout
+check_memlayout: check_configheader $(memlayout_check)
+	$(QUTIL)$(memlayout_check)
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)
@@ -266,12 +270,28 @@ distclean:
 ####
 ## documentation
 ####
-doxygen_config = doc/doxygen.conf
+doxygen_config := doc/doxygen.conf
+graphicspath := doc/img
 
-documentation:
+svggraphics := $(shell find $(graphicspath) -name \*.svg)
+pdfgraphics := $(patsubst %.svg, $(build_tree)/%.pdf, $(svggraphics))
+
+
+documentation: fig_svg
 	@sed -i -e 's>OUTPUT_DIRECTORY[ \t]*=.*>OUTPUT_DIRECTORY=$(build_tree)/doc/>' $(doxygen_config)
 	@doxygen $(doxygen_config)
 	@cp -r doc/* $(build_tree)/doc/latex
 	@cp -r $(src_dirs) include $(build_tree)/doc/latex
+	@cp -ru $(build_tree)/$(graphicspath) $(build_tree)/doc/latex/
 	@make -C $(build_tree)/doc/latex
 	$(echo) "\n\ndocumentation generated at $(build_tree)/doc"
+
+.PHONY:	fig_svg
+fig_svg: fig_cp $(pdfgraphics)
+
+.PHONY: fig_cp
+fig_cp:
+	@cp -ru $(graphicspath) $(build_tree)/doc
+
+$(pdfgraphics): %.pdf : %.svg
+	inkscape -D -z -f $< --export-pdf=$@

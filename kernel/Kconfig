@@ -2,11 +2,6 @@
 # kernel basics
 #
 # {{{
-config KERNEL_BASE_ADDR
-	hex "Kernel starting address"
-	range 0x0 0x0fffffff
-	default 0x0
-
 config KERNEL_SMP
 	bool "Build an SMP system"
 	default n
@@ -22,6 +17,53 @@ menu "Hidden"
 		bool "Kernel virtual memory support"
 		default n	if KERNEL_NO_VIRT_MEM
 		default y
+endmenu
+# }}}
+
+#
+# kernel memory layout
+#
+# {{{
+menu "Memory configuration"
+config KERNEL_IMAGE_BASE
+	hex "Kernel image base address"
+	default 0x0
+
+config KERNEL_IMAGE_SIZE
+	int "Kernel image size"
+	default 0
+	
+config KERNEL_STACK_BASE
+	hex "Kernel stack base address"
+	default 0x0
+
+config KERNEL_STACK_SIZE
+	int "Kernel stack size"
+	default 0
+
+config KERNEL_HEAP_BASE
+	hex "Kernel heap base address"
+	default 0x0
+
+config KERNEL_HEAP_SIZE
+	int "Kernel heap size"
+	default 0
+
+config KERNEL_PROC_BASE
+	hex "Process heap base address"
+	default 0x0
+
+config KERNEL_PROC_SIZE
+	int "Process heap size"
+	default 0
+
+config KERNEL_INITRAMFS_BASE
+	hex "Init ram file system base address"
+	default 0x0
+
+config KERNEL_INITRAMFS_SIZE
+	int "Init ram file system size"
+	default 0
 endmenu
 # }}}
 
@@ -214,6 +256,7 @@ menu "Init binary settings"
 			default 1	if INIT_BINARY_ELF
 	endmenu
 endmenu
+# }}}
 
 #
 # process and thread

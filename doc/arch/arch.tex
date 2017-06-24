@@ -29,31 +29,12 @@
 		\end{itemize}
 
 	\subsection{Callback Functions}
-		The callback functions are registers by defining variables of type \hyperref[structarch__callbacks__kernel__t]{arch\_callbacks\_kernel\_t} and \hyperref[structarch__callbacks__common__t]{arch\_callbacks\_common\_t} names \lstinline{arch_cbs_kernel} and \lstinline{arch_cbs_common}. Further, in order to get access to the architecture specific data, a variable of type \lstinline{arch_info_t}, named \lstinline{arch_info} needs to be declared.
+		The callback functions are registers by defining variables of type \hyperref[structarch__callbacks__kernel__t]{arch\_callbacks\_kernel\_t} and \hyperref[structarch__callbacks__common__t]{arch\_callbacks\_common\_t} named \lstinline{arch_cbs_kernel} and \lstinline{arch_cbs_common}. Further, in order to get access to the architecture specific data, a variable of type \lstinline{arch_info_t}, named \lstinline{arch_info} needs to be declared.
 
 	\subsection{Macros}
 		\begin{itemize}
 			\item \lstinline{NINTERRUPTS}: number of interrupts
-			\item \lstinline{INT_SCHED}: interrupt number that shall be used as scheduler trigger\\
-
 			\item \lstinline{TIMEBASE_INITIALISER}: init value for variable of type \lstinline{timebase_t}\\
-
-			\item \lstinline{KERNEL_IMG_BASE}: kernel image base address
-			\item \lstinline{KERNEL_IMG_SIZE}: kernel image size
-			\item \lstinline{KERNEL_STACK_BASE}: kernel stack base address
-			\item \lstinline{KERNEL_STACK_SIZE}: kernel stack size
-			\item \lstinline{KERNEL_STACK_CORE_BASE(i)}: kernel stack base address for core i
-			\item \lstinline{KERNEL_STACK_CORE_SIZE}: kernel stack size per core
-			\item \lstinline{KERNEL_HEAP_BASE}: kernel heap base address
-			\item \lstinline{KERNEL_HEAP_SIZE}: kernel heap size\\
-
-			\item \lstinline{PROCESS_BASE}: base address of process memory
-			\item \lstinline{PROCESS_SIZE}: size of process memory\\
-
-			\item \lstinline{IO_BASE} (optional): base address of memory mapped registers
-			\item \lstinline{IO_SIZE} (optional): size of the memory mapped register space
-			\item \lstinline{RAMFS_BASE} (optional): memory file system base address
-			\item \lstinline{RAMFS_SIZE} (optional): memory file system size
 		\end{itemize}
 
 	\subsection{Kconfig}
@@ -71,12 +52,14 @@
 	\subsection{Build System}
 		\begin{itemize}
 			\item libsys.o shall containing all objects that are required to be linked against applications
-			\item linker script scripts/linker/kernel\_<arch>.lds
-			\item memory layout (optional): scripts/memlayout/, if target specific sections are required
+			\item linker script scripts/linker/kernel\_$<$arch$>$.lds
+			\item memory layout print (optional): scripts/memlayout/main.c, if target specific sections are required
 				\begin{itemize}
 					\item mandatory memory sections shall be printed using \lstinline{PRINT_RANGE_EE}
 					\item optional memory sections shall be printed using \lstinline{PRINT_RANGE}
 				\end{itemize}
+
+			\item memory layout check: scripts/memlayout/check.c, if target specific sections shall be checked add them to the \lstinline{regs} array.
 		\end{itemize}
 
 \vfill

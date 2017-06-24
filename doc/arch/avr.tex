@@ -2,11 +2,19 @@
 	This section summarises some critical specifics of the \avr architecture.
 
 	\subsection{Linker sections}
-		The \avr memory is split into code (flash) and data (\gls{sram}). Since the \gls{sram} is volatile memory all data that belong to linker sections such as .data and .bss are initially programmed to the flash memory and need to be copied to \gls{sram} during startup. The respective section offsets are defined in the linker scripts used to link the kernel (\fileref{scripts/linker/kernel\_avr.lds}). In case of the .data section, the base address within the flash is defined as \lstinline{__data_load_start} while the end address is defined as \lstinline{__data_load_end}. The respective target address in \gls{sram} are defined in \lstinline{__data_start} and \lstinline{__data_end}.
+		The \avr memory is split into code (flash) and data (\gls{sram}). Since the \gls{sram} is volatile memory all data that belongs to linker sections such as .data and .bss are initially programmed to the flash memory and need to be copied to \gls{sram} during startup. The respective section offsets are defined in the linker scripts used to link the kernel (\fileref{scripts/linker/kernel\_avr.lds}). In case of the .data section, the base address within the flash is defined as \lstinline{__data_load_start} while the end address is defined as \lstinline{__data_load_end}. The respective target address in \gls{sram} are defined in \lstinline{__data_start} and \lstinline{__data_end}.
+
+		The memory layout is defined through the configuration options in the kernel section as well as the architecture specific options for the \avr architecture. As described above .data and .bss sections are programmed to flash and loaded to \gls{sram} at runtime. Hence, the respective sections of kernel and init application require a share of the flash memory as well as the \gls{sram}. The required space in the flash memory has to be respected such, that the size defined through \lstinline{CONFIG_KERNEL_TEXT_SIZE} has to be large enough to hold the kernel .text, .data and .bss sections. The required space in \gls{sram} needs to be considered when defining the kernel memory layout through, i.e. kernel image, stack and heap, as well as process heap and init ram filesystem. An exemplary memory layout is shown in Figure~\ref{fig:avr_memory_layout}.
+		\begin{figure}[h]
+			\centering	
+			\includegraphics[scale=.75]{arch/avr_memory_layout}
+			\caption{Exemplary \avr memory layout.}
+			\label{fig:avr_memory_layout}
+		\end{figure}
 
 	\subsection{Interrupt Handling and Reset}
 		At reset execution is started at the processor reset address. The location of the reset address is controlled through the \lstinline{BOOTRST} fuse and might be at the start of the application section (\lstinline{0x0}) or the boot loader. The start of the boot loader section is further controlled through the \lstinline{BOOTSZ0, BOOTSZ1} fuse bits. Depending on the memory configuration of the target controller the boot loader start address may vary.
 		
-		Depending on the fuse bit configuration the kernel base address has to be set through\\\lstinline{CONFIG_KERNEL_BASE_ADDR}. \remark{It shall be noted that the application flash is address is 2-byte chucks, hence addresses listed in the manual need to be multiplied by two in order to get the byte address.}
+		Depending on the fuse bit configuration the kernel base address has to be set through\\\lstinline{CONFIG_KERNEL_TEXT_BASE}. \remark{It shall be noted that the application flash is address is 2-byte chucks, hence addresses listed in the manual need to be multiplied by two in order to get the byte address.}
 
-		The location of the interrupt vectors (except the reset vector) is controlled through \lstinline{MCUCR[IVSEL]}. They can either be placed at the start of the application section or the boot loader section. In the current implementation all interrupt vectors, including the reset vector, are mapped to the same location depending on \lstinline{CONFIG_KERNEL_BASE_ADDR}.
+		The location of the interrupt vectors (except the reset vector) is controlled through \lstinline{MCUCR[IVSEL]}. They can either be placed at the start of the application section or the boot loader section. In the current implementation all interrupt vectors, including the reset vector, are mapped to the same location depending on \lstinline{CONFIG_KERNEL_TEXT_BASE}.

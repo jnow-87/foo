@@ -1,3 +1,4 @@
+#include <config/config.h>
 #include <arch/arch.h>
 
 
@@ -131,8 +132,8 @@ __isr_call:
 	brne	1f
 
 	// init kernel stack pointer
-	ldi		r17, lo8(KERNEL_STACK_BASE + KERNEL_STACK_SIZE - 1)
-	ldi		r18, hi8(KERNEL_STACK_BASE + KERNEL_STACK_SIZE - 1)
+	ldi		r17, lo8(CONFIG_KERNEL_STACK_BASE + CONFIG_KERNEL_STACK_SIZE - 1)
+	ldi		r18, hi8(CONFIG_KERNEL_STACK_BASE + CONFIG_KERNEL_STACK_SIZE - 1)
 	sts		SPL, r17
 	sts		SPH, r18
 

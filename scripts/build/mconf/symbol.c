@@ -78,7 +78,7 @@ const char *sym_type_name(enum symbol_type type)
 	case S_STRING:
 		return "string";
 	case S_QSTRING:
-		return "quoted_string";
+		return "qstring";
 	case S_UNKNOWN:
 		return "unknown";
 	case S_OTHER:
