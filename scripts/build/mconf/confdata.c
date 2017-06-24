@@ -554,7 +554,7 @@ header_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
 		break;
 	}
 	case S_STRING:
-		fprintf(fp, "#define %s%s \"%s\"\n",
+		fprintf(fp, "#define %s%s %s\n",
 		    CONFIG_, sym->name, value);
 		break;
 
