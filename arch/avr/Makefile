@@ -7,21 +7,41 @@ obj-$(CONFIG_KERNEL_UART) += uart.o
 
 libsys-y := core.o libmain.o
 
+####
+## linker script: memory layout
+####
 
-# flags
+
+
+
+####
+## flags
+####
+
+## general flags
 cppflags-$(CONFIG_AVR) := -Os
-
-
-# AVR specific flags
-%/$(kernel_name): ldlibs += \
-	-Tmem_$(shell echo $(CONFIG_AVR_MCU) | grep -o -e '^[a-z]*[0-9]*').lds \
-	-Wl,-Map=$(basename $@).map,--cref
 
 archflags += -mmcu=$(CONFIG_AVR_MCU)
 ldflags += -m$(CONFIG_AVR_ISA) --discard-all
 
+## kernel flags
+ldlibs-kernel-arch := \
+	-T$(avr_mem_lds) \
+	-Wl,--section-start=.text=$(CONFIG_KERNEL_TEXT_BASE) \
+	-Wl,--section-start=.data=$(CONFIG_KERNEL_DATA_BASE) \
+	-Wl,-Map=$(build_tree)/$(basename $(kernel_name)).map,--cref
 
-# AVR specific rules
+## init application flags
+ldlibs-app-arch := \
+	-T$(avr_mem_lds) \
+	-Wl,--section-start=.text=$(CONFIG_APP_TEXT_BASE) \
+	-Wl,--section-start=.data=$(CONFIG_APP_DATA_BASE) \
+	-Wl,-Map=$(build_tree)/init/init.map,--cref
+
+
+##############################
+###   AVR specific rules   ###
+##############################
 
 # open a xterm window using the specified command
 #
@@ -42,6 +62,9 @@ define yesno
   test $$x = y || exit 1
 endef
 
+####
+## debug
+####
 
 .PHONY: debug
 debug:

@@ -184,9 +184,8 @@ sysroot_create := scripts/sysroot/create.sh
 kernel: cppflags += -DKERNEL
 kernel: check_config check_configheader versionheader $(kernel)
 
+$(kernel): ldlibs += $(ldlibs-kernel-arch)
 $(kernel): ldlibs += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
-$(kernel): ldlibs += -Wl,--section-start=.text=$(CONFIG_KERNEL_TEXT_BASE)
-$(kernel): ldlibs += -Wl,--section-start=.data=$(CONFIG_KERNEL_DATA_BASE)
 $(kernel): ldlibs += -lgcc
 $(kernel): $(addprefix $(build_tree)/, $(kernel_deps))
 	$(call compile_bin_o)

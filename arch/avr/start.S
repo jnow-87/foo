@@ -6,8 +6,8 @@
 
 __start:
 	/* init stack pointer */
-	ldi		r16, lo8(KERNEL_STACK_BASE + KERNEL_STACK_SIZE - 1)
-	ldi		r17, hi8(KERNEL_STACK_BASE + KERNEL_STACK_SIZE - 1)
+	ldi		r16, lo8(CONFIG_KERNEL_STACK_BASE + CONFIG_KERNEL_STACK_SIZE - 1)
+	ldi		r17, hi8(CONFIG_KERNEL_STACK_BASE + CONFIG_KERNEL_STACK_SIZE - 1)
 	sts		SPL, r16
 	sts		SPH, r17
 

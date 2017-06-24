@@ -7,41 +7,8 @@
 
 
 /* macros */
-// ensure macros for the respective memory areas are available
-#ifndef KERNEL_IMG_SIZE
-#define KERNEL_IMG_BASE 0x0
-#define KERNEL_IMG_SIZE 0x0
-#endif
-
-#ifndef KERNEL_STACK_SIZE
-#define KERNEL_STACK_BASE 0x0
-#define KERNEL_STACK_SIZE 0x0
-#endif
-
-#ifndef KERNEL_STACK_CORE_SIZE
-#define KERNEL_STACK_CORE_BASE 0x0
-#define KERNEL_STACK_CORE_SIZE 0x0
-#endif
-
-#ifndef KERNEL_HEAP_SIZE
-#define KERNEL_HEAP_BASE 0x0
-#define KERNEL_HEAP_SIZE 0x0
-#endif
-
-#ifndef PROCESS_SIZE
-#define PROCESS_BASE 0x0
-#define PROCESS_SIZE 0x0
-#endif
-
-#ifndef IO_SIZE
-#define IO_BASE 0x0
-#define IO_SIZE 0x0
-#endif
-
-#ifndef RAMFS_SIZE
-#define RAMFS_BASE 0x0
-#define RAMFS_SIZE 0x0
-#endif
+#define KERNEL_STACK_CORE_SIZE			(CONFIG_KERNEL_STACK_SIZE / CONFIG_NCORES)
+#define KERNEL_STACK_CORE_BASE(core)	(CONFIG_KERNEL_STACK_BASE + ((core) * CONFIG_KERNEL_STACK_CORE_SIZE))
 
 // print table header
 #define PRINT_HEAD(name) \
@@ -76,8 +43,8 @@ int main(){
 	/* mandatory */
 	PRINT_HEAD("mandatory");
 
-	PRINT_RANGE_EE("kernel image", KERNEL_IMG_BASE, KERNEL_IMG_SIZE);
-	PRINT_RANGE_EE("kernel stack", KERNEL_STACK_BASE, KERNEL_STACK_SIZE);
+	PRINT_RANGE_EE("kernel image", CONFIG_KERNEL_IMAGE_BASE, CONFIG_KERNEL_IMAGE_SIZE);
+	PRINT_RANGE_EE("kernel stack", CONFIG_KERNEL_STACK_BASE, CONFIG_KERNEL_STACK_SIZE);
 
 	// stack per core
 #if CONFIG_NCORES > 1
@@ -89,14 +56,14 @@ int main(){
 #endif
 #endif
 
-	PRINT_RANGE_EE("kernel heap", KERNEL_HEAP_BASE, KERNEL_HEAP_SIZE);
-	PRINT_RANGE_EE("process", PROCESS_BASE, PROCESS_SIZE);
+	PRINT_RANGE_EE("kernel heap", CONFIG_KERNEL_HEAP_BASE, CONFIG_KERNEL_HEAP_SIZE);
+	PRINT_RANGE_EE("process heap", CONFIG_KERNEL_PROC_BASE, CONFIG_KERNEL_PROC_SIZE);
 
 	/* optional */
 	PRINT_HEAD("optional");
 
-	PRINT_RANGE("mapped register", IO_BASE, IO_SIZE);
-	PRINT_RANGE("filesystem", RAMFS_BASE, RAMFS_SIZE);
+	PRINT_RANGE("mapped register", CONFIG_MREG_BASE, CONFIG_MREG_SIZE);
+	PRINT_RANGE("filesystem", CONFIG_KERNEL_INITRAMFS_BASE, CONFIG_KERNEL_INITRAMFS_SIZE);
 
 #ifdef CONFIG_POWERPC_QORIQ
 	PRINT_HEAD("qoriq specific");
@@ -109,7 +76,10 @@ int main(){
 #ifdef CONFIG_AVR
 	PRINT_HEAD("avr specific");
 
-	PRINT_RANGE("sram data", IO_BASE + IO_SIZE, DATA_SIZE);
+	PRINT_RANGE("kernel flash", CONFIG_KERNEL_TEXT_BASE, CONFIG_KERNEL_TEXT_SIZE);
+	PRINT_RANGE("kernel data", CONFIG_KERNEL_DATA_BASE, CONFIG_KERNEL_DATA_SIZE);
+	PRINT_RANGE("application flash", CONFIG_APP_TEXT_BASE, CONFIG_APP_TEXT_SIZE);
+	PRINT_RANGE("application data", CONFIG_APP_DATA_BASE, CONFIG_APP_DATA_SIZE);
 #endif // CONFIG_AVR
 
 	printf("\n");

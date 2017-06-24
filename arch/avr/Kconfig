@@ -9,11 +9,13 @@ choice
 		bool "Atmega1284P"
 		select ADDR_WIDTH_8
 		select AVR_ISA_AVR51
+		select AVR_ATMEGA
 
 	config ATMEGA88PA
 		bool "Atmega88PA"
 		select ADDR_WIDTH_8
 		select AVR_ISA_AVR4
+		select AVR_ATMEGA
 endchoice
 
 menu "Hidden"
@@ -36,15 +38,82 @@ menu "Hidden"
 		default "avr4" if AVR_ISA_AVR4
 		default "avr51" if AVR_ISA_AVR51
 
+	config AVR_ATMEGA
+		bool "Atmega MCU"
+		default n
+
+	config AVR_XMEGA
+		bool "Xmega MCU"
+		default n
+
 	# architecture defining header
 	config ARCH_HEADER
 		string "Arch Header"
 		default "<arch/$(CONFIG_ARCH)/atmega.h>" if AVR
 endmenu
+# }}}
 
 #
-# scheduler ticks
+# memory configuration
 #
+# {{{
+menu "Memory configuration"
+config KERNEL_TEXT_BASE
+	hex "Kernel .text section base address"
+	range 0x0 0x0fffffff
+	default 0x0
+
+config KERNEL_TEXT_SIZE
+	int "Kernel .text section size"
+	default 0
+
+config KERNEL_DATA_BASE
+	hex "Kernel .data section base address"
+	range 0x0 0x0fffffff
+	default 0x0
+
+config KERNEL_DATA_SIZE
+	int "Kernel .data section size"
+	default 0
+
+config APP_TEXT_BASE
+	hex "Application .text section base address"
+	range 0x0 0x0fffffff
+	default 0x0
+
+config APP_TEXT_SIZE
+	int "Max. application .text section size"
+	default 0
+
+config APP_DATA_BASE
+	hex "Application .data section base address"
+	range 0x0 0x0fffffff
+	default 0x0
+
+config APP_DATA_SIZE
+	int "Max. application .data section size"
+	default 0
+
+config MREG_BASE
+	hex "Memory mapped register space base address"
+	range 0x0 0x0fffffff
+	default 0x0
+
+config MREG_SIZE
+	int "Memory mapped register space size"
+	default 0
+endmenu
+
+# }}}
+
+#
+# scheduler
+#
+# {{{
+config SCHED_INT
+	string "Scheduler interrupt"
+	default ""
+
 choice
 	prompt "Watchdog prescaler"
 
@@ -78,10 +147,12 @@ choice
 	config AVR_WATCHDOG_PRESCALE_1M
 		bool "1M cycles"
 endchoice
+# }}}
 
 #
 # sleep modes
 #
+# {{{
 choice
 	prompt "Sleep mode"
 

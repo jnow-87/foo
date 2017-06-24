@@ -1,3 +1,4 @@
+#include <config/config.h>
 #include <arch/arch.h>
 #include <kernel/init.h>
 #include <kernel/kmutex.h>
@@ -32,9 +33,9 @@ void ufree(void *addr){
 
 /* local functions */
 static errno_t umem_init(void){
-	process_mem = (void*)(PROCESS_BASE);
+	process_mem = (void*)(CONFIG_KERNEL_PROC_BASE);
 
-	return memblock_init(process_mem, PROCESS_SIZE);
+	return memblock_init(process_mem, CONFIG_KERNEL_PROC_SIZE);
 }
 
 kernel_init(0, umem_init);

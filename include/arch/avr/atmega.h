@@ -5,30 +5,13 @@
 #include <config/config.h>
 #include <sys/const.h>
 
-
-/* mcu-specific header */
 #ifdef CONFIG_ATMEGA1284P
-#include <arch/avr/atmega1284.h>
+#include <arch/avr/atmega1284_register.h>
 #endif // CONFIG_ATMEGA1284P
 
 #ifdef CONFIG_ATMEGA88PA
-#include <arch/avr/atmega88.h>
+#include <arch/avr/atmega88_register.h>
 #endif // CONFIG_ATMEGA88PA
-
-#if defined(__ATMEGA__) || defined(__XMEGA__)
-
-// interrupt handling
-#define ICALL				call
-#define INT_VEC_WORDS		2
-
-#else
-
-// interrupt handling
-#define ICALL				rcall
-#define INT_VEC_WORDS		1
-
-#endif
-
 
 #ifndef ASM
 #ifndef _x86_
@@ -47,24 +30,18 @@
 
 
 /* macros */
-// memory layout
-#define KERNEL_IMG_BASE					CONFIG_KERNEL_BASE_ADDR
-#define KERNEL_IMG_SIZE					(MCU_FLASH_SIZE - KERNEL_IMG_BASE)
+// interrupt handling
+#if defined(CONFIG_AVR_ATMEGA) || defined(CONFIG_AVR_XMEGA)
 
-#define KERNEL_STACK_BASE				(MCU_SRAM_SIZE - KERNEL_STACK_SIZE)
-#define KERNEL_STACK_CORE_BASE(core)	(KERNEL_STACK_BASE + ((core) * KERNEL_STACK_CORE_SIZE))
-#define KERNEL_STACK_CORE_SIZE			(KERNEL_STACK_SIZE / CONFIG_NCORES)
+#define ICALL				call
+#define INT_VEC_WORDS		2
 
-#define KERNEL_HEAP_BASE				(KERNEL_STACK_BASE - KERNEL_HEAP_SIZE)
+#else
 
-#define PROCESS_BASE					(IO_BASE + IO_SIZE + DATA_SIZE)
-#define PROCESS_SIZE					(KERNEL_HEAP_BASE - PROCESS_BASE)
+#define ICALL				rcall
+#define INT_VEC_WORDS		1
 
-#define RAMFS_BASE						0x0
-#define RAMFS_SIZE						0x0
-
-// scheduler timer
-#define INT_SCHED						INT_WATCHDOG
+#endif
 
 
 /* types */
