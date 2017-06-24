@@ -168,6 +168,7 @@ sysroot := sysroot
 recent := recent
 
 memlayout := $(build_tree)/scripts/memlayout/memlayout
+memlayout_check := $(build_tree)/scripts/memlayout/memlayout_check
 sysroot_create := scripts/sysroot/create.sh
 
 
@@ -182,7 +183,7 @@ sysroot_create := scripts/sysroot/create.sh
 # kernel target
 .PHONY: kernel
 kernel: cppflags += -DKERNEL
-kernel: check_config check_configheader versionheader $(kernel)
+kernel: check_config check_configheader check_memlayout versionheader $(kernel)
 
 $(kernel): ldlibs += $(ldlibs-kernel-arch)
 $(kernel): ldlibs += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
@@ -221,6 +222,10 @@ sysroot: kernel libsys
 .PHONY: memlayout
 memlayout: check_configheader $(memlayout)
 	$(QUTIL)$(memlayout)
+
+.PHONY: check_memlayout
+check_memlayout: check_configheader $(memlayout_check)
+	$(QUTIL)$(memlayout_check)
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)
