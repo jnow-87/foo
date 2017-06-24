@@ -11,7 +11,14 @@ libsys-y := core.o libmain.o
 ## linker script: memory layout
 ####
 
+avr_mem_lds_create := scripts/linker/avr_mem_lds_create.sh
+avr_mem_lds := $(loc_build_tree)/avr_mem.lds
 
+kernel: gen_avr_mem_linker_script
+
+.PHONY: gen_avr_mem_linker_script
+gen_avr_mem_linker_script: $(avr_mem_lds_create)
+	@$(avr_mem_lds_create) $(config) $(avr_mem_lds)
 
 
 ####

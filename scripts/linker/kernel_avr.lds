@@ -3,22 +3,15 @@
  */
 
 SECTIONS {
-	/** dummy section, allowing to define the starting address
-	 *  through the command line
-	 */
-	.base 0x0 : {
-	}
-
-
 	/* code */
-	.text ADDR(.base) : {
+	.text : {
 		/* interrupt vectors */
 		*(.reset)
 
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
 		*(.trampolines)
-	} > kernel
+	} > flash_kernel
 
 
 	/* data */
@@ -28,7 +21,7 @@ SECTIONS {
 		*(.rodata1)
 
 		INCLUDE kernel_init.lds
-	} > data AT>kernel
+	} > data_kernel AT>flash_kernel
 
 	__data_start = ADDR(.data);
 	__data_end = __data_start + SIZEOF(.data);
@@ -47,7 +40,7 @@ SECTIONS {
 		*(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 		*(.scommon)
 		*(COMMON)
-	} > data AT>data
+	} > data_kernel AT>data_kernel
 
 	__bss_start = ADDR(.bss);
 	__bss_end = __bss_start + SIZEOF(.bss);
