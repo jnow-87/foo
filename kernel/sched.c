@@ -46,7 +46,6 @@ static errno_t sched_init(void){
 	unsigned int i;
 	process_t *this_p;
 	thread_t *this_t;
-	sched_queue_t *queue_e;
 
 
 	/* register scheduler interrupt */
@@ -55,12 +54,12 @@ static errno_t sched_init(void){
 
 	/* allocate kernel stack */
 	for(i=0; i<CONFIG_NCORES; i++){
-		kernel_stack[i] = kmalloc(KERNEL_STACK_SIZE);
+		kernel_stack[i] = kmalloc(CONFIG_KERNEL_STACK_SIZE);
 
 		if(kernel_stack[i] == 0)
 			goto_errno(err, E_NOMEM);
 
-		kernel_stack[i] += KERNEL_STACK_SIZE - 1;
+		kernel_stack[i] += CONFIG_KERNEL_STACK_SIZE - 1;
 	}
 
 	/* create kernel process */
@@ -90,7 +89,7 @@ static errno_t sched_init(void){
 		this_t->state = CREATED;
 		this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
 		this_t->affinity = (0x1 << i);
-		this_t->stack = (void*)KERNEL_STACK_CORE_BASE(i);
+		this_t->stack = (void*)(CONFIG_KERNEL_STACK_BASE + (i * CONFIG_KERNEL_STACK_SIZE / CONFIG_NCORES));
 		this_t->parent = this_p;
 
 		list_add_tail(this_p->threads, this_t);
@@ -128,6 +127,16 @@ err:
 kernel_init(2, sched_init);
 
 static errno_t sched_tick(int_num_t num){
+	static sched_queue_t *e = 0;
+
+
+	/* temporary simple thread select */
+	if(e == 0)
+		e = list_first(queue_ready);
+
+	current_thread[PIR] = e->thread;
+	e = e->next;
+
 	// TODO check for next thread
 	// TODO switch thread or goto sleep
 	return E_OK;
