@@ -2,44 +2,50 @@
 #define KERNEL_THREAD_H
 
 
-#include <kernel/page.h>
+#include <arch/thread.h>
 #include <kernel/process.h>
+#include <sys/errno.h>
+
+
+/* macros */
+#define THREAD_ID_MAX	((thread_id_t)(~0))
 
 
 /* incomplete types */
 struct process_t;
-struct thread_context_t;
+struct page_t;
 
 
 /* types */
 typedef enum{
-	READY = 1,
+	CREATED = 1,
+	READY,
 	WAITING,
 	RUNNING,
 	FINISHED
 } thread_state_t;
 
 typedef struct thread_t{
-	unsigned int tid,		// TODO make arch-dependent
-				 affinity,
+	thread_id_t tid;
+
+	unsigned int affinity,
 				 priority;
 
 	void *entry;
-	page_t *stack;
+	struct page_t *stack;
 	thread_state_t state;
-	struct thread_context_t *ctx;
+	thread_context_t *ctx;
 
 	struct process_t *parent;
 
-	struct thread_t *next,
-					*prev;
+	struct thread_t *prev,
+					*next;
 } thread_t;
 
 
 /* prototypes */
-thread_t *thread_create(struct process_t *this_p, void *entry);
+thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, void *thread_arg);
 void thread_destroy(struct thread_t *this_t);
-int thread_call(struct thread_t *this);
 
 
 #endif // KERNEL_THREAD_H

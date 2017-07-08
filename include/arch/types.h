@@ -21,6 +21,15 @@
 #endif // ASM
 
 
+/* incomplete types */
+#ifdef KERNEL
+
+struct process_t;
+struct thread_t;
+
+#endif // KERNEL
+
+
 /* types */
 #ifdef KERNEL
 
@@ -31,8 +40,8 @@ typedef struct{
 	errno_t (*page_entry_inval_va)(void *virt_addr, bool sync_cores);
 	errno_t (*page_entry_search)(page_t const *param, page_t *result);
 
-	errno_t (*copy_from_user)(void *target, void const *src, unsigned int n, process_t const *this_p);
-	errno_t (*copy_to_user)(void *target, void const *src, unsigned int n, process_t const *this_p);
+	errno_t (*copy_from_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
+	errno_t (*copy_to_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
 
 	/* interrupts */
 	errno_t (*int_enable)(int_type_t mask);
@@ -44,8 +53,7 @@ typedef struct{
 	errno_t (*ipi_wake)(ipi_t type, unsigned int core, bool bcast);
 
 	/* threading */
-	errno_t (*thread_call)(thread_t *this_t);
-	errno_t (*thread_kill)(int rcode);
+	thread_context_t * (*thread_context_init)(struct thread_t *this_t, void *thread_arg);
 
 	/* terminal I/O */
 	char (*putchar)(char c);

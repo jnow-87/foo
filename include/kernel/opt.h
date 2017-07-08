@@ -47,7 +47,7 @@
 	.kernel_stat = true, \
 	.init_bin = (void*)CONFIG_INIT_BINARY, \
 	.init_type = CONFIG_INIT_BINTYPE, \
-	.init_arg = "init", \
+	.init_arg = CONFIG_INIT_ARGS, \
 	.dbg_lvl = CONFIG_KMSG_FATAL | CONFIG_KMSG_WARN | CONFIG_KMSG_INFO | CONFIG_KMSG_DEBUG | CONFIG_KMSG_STAT, \
 }
 

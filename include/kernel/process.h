@@ -2,36 +2,44 @@
 #define KERNEL_PROCESS_H
 
 
-#include <kernel/page.h>
+#include <config/config.h>
 #include <kernel/thread.h>
+#include <kernel/binloader.h>
 #include <kernel/fs.h>
 #include <sys/memblock.h>
+#include <sys/mutex.h>
 
 
 /* macros */
-#define MAX_MEMORY_ENTRIES	32
+#define PROCESS_ID_MAX	((process_id_t)(~0))
 
 
 /* incomplete types */
 struct thread_t;
+struct page_t;
 
 
 /* types */
 typedef struct{
-	memblock_t addr_space;		// memblock struct to manage processes virtual memory space
-	page_t *pages;				// list to manage allocated addresses in user memory (umalloc, ufree in umem.h)
+#ifdef CONFIG_KERNEL_VIRT_MEM
+	memblock_t *addr_space;		// memblock struct to manage processes virtual memory space
+#endif // CONFIG_KERNEL_VIRT_MEM
+
+	struct page_t *pages;		// list to manage allocated addresses in user memory (umalloc, ufree in umem.h)
+
+#ifdef CONFIG_KERNEL_SMP
+	mutex_t mtx;				// mutex to protect access
+#endif // CONFIG_KERNEL_SMP
 } process_mem_t;
 
 typedef struct process_t{
-	unsigned int pid,			// TODO make arch-dependent
-				 lpid,			// TODO make arch-dependent and add CONFIG_ surroundings
-				 affinity,
+	process_id_t  pid;
+
+	unsigned int affinity,
 				 priority;
 
-	unsigned int argc;
-	char **argv;
-
-	char *name;
+	char *name,
+		 *args;
 
 	process_mem_t memory;
 
@@ -39,15 +47,13 @@ typedef struct process_t{
 	fs_filed_t *fds;
 	fs_node_t *cwd;
 
-	page_flags_t page_flags;
-
-	struct process_t *next,
-					 *prev;
+	struct process_t *prev,
+					 *next;
 } process_t;
 
 
 /* prototypes */
-process_t *process_create(void *elf_location, char const *name, unsigned int priority, unsigned int affinity, unsigned int argc, char **argv, fs_node_t *cwd);
+process_t *process_create(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd);
 void process_destroy(process_t *this_p);
 
 

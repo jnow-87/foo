@@ -7,8 +7,7 @@
 
 
 /* macros */
-#define thread_call(t)	(arch_kernel_call(thread_call, E_NOIMP)(t))
-#define thread_kill(r)	(arch_kernel_call(thread_kill, E_NOIMP)(r))
+#define thread_context_init(thread, thread_arg)	(arch_kernel_call(thread_context_init, 0x0)(thread, thread_arg))
 
 
 #endif // ARCH_THREAD_H

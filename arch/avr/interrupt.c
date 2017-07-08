@@ -19,7 +19,7 @@ extern thread_t *current_thread[CONFIG_NCORES];
 
 
 /* global variables */
-uint8_t inkernel_nest = 1;
+uint8_t inkernel_nest = 0;
 int_hdlr_t int_map[NINTERRUPTS] = { 0x0 };
 
 

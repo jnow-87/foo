@@ -3,7 +3,7 @@
 
 
 /* macros */
-#define isr(name, tgt) \
+#define ISR(name, tgt) \
 .global __isr_##name $ \
 __isr_##name: \
 	ICALL tgt
@@ -15,46 +15,47 @@ __isr_##name: \
 
 /* external variables */
 .extern inkernel_nest
+.extern kernel_stack
 
 
 /* interrupt vectors */
 .section .reset
 
-isr(reset, __start)
-isr(int0, __isr_call)
-isr(int1, __isr_call)
-isr(int2, __isr_call)
-isr(pcint0, __isr_call)
-isr(pcint1, __isr_call)
-isr(pcint2, __isr_call)
-isr(pcint3, __isr_call)
-isr(watchdog, __isr_call)
-isr(timer2_comp_a, __isr_call)
-isr(timer2_comp_b, __isr_call)
-isr(timer2_ovfl, __isr_call)
-isr(timer1_capture, __isr_call)
-isr(timer1_comp_a, __isr_call)
-isr(timer1_comp_b, __isr_call)
-isr(timer1_ovfl, __isr_call)
-isr(timer0_comp_a, __isr_call)
-isr(timer0_comp_b, __isr_call)
-isr(timer0_ovfl, __isr_call)
-isr(spi_tx, __isr_call)
-isr(usart0_rx, __isr_call)
-isr(usart0_udre, __isr_call)
-isr(usart0_tx, __isr_call)
-isr(analog_comp, __isr_call)
-isr(adc, __isr_call)
-isr(eeprom_rdy, __isr_call)
-isr(twi, __isr_call)
-isr(spm_rdy, __isr_call)
-isr(usart1_rx, __isr_call)
-isr(usart1_udre, __isr_call)
-isr(usart1_tx, __isr_call)
-isr(timer3_capture, __isr_call)
-isr(timer3_comp_a, __isr_call)
-isr(timer3_comp_b, __isr_call)
-isr(timer3_ovfl, __isr_call)
+ISR(reset, __start)
+ISR(int0, __isr_call)
+ISR(int1, __isr_call)
+ISR(int2, __isr_call)
+ISR(pcint0, __isr_call)
+ISR(pcint1, __isr_call)
+ISR(pcint2, __isr_call)
+ISR(pcint3, __isr_call)
+ISR(watchdog, __isr_call)
+ISR(timer2_comp_a, __isr_call)
+ISR(timer2_comp_b, __isr_call)
+ISR(timer2_ovfl, __isr_call)
+ISR(timer1_capture, __isr_call)
+ISR(timer1_comp_a, __isr_call)
+ISR(timer1_comp_b, __isr_call)
+ISR(timer1_ovfl, __isr_call)
+ISR(timer0_comp_a, __isr_call)
+ISR(timer0_comp_b, __isr_call)
+ISR(timer0_ovfl, __isr_call)
+ISR(spi_tx, __isr_call)
+ISR(usart0_rx, __isr_call)
+ISR(usart0_udre, __isr_call)
+ISR(usart0_tx, __isr_call)
+ISR(analog_comp, __isr_call)
+ISR(adc, __isr_call)
+ISR(eeprom_rdy, __isr_call)
+ISR(twi, __isr_call)
+ISR(spm_rdy, __isr_call)
+ISR(usart1_rx, __isr_call)
+ISR(usart1_udre, __isr_call)
+ISR(usart1_tx, __isr_call)
+ISR(timer3_capture, __isr_call)
+ISR(timer3_comp_a, __isr_call)
+ISR(timer3_comp_b, __isr_call)
+ISR(timer3_ovfl, __isr_call)
 
 
 .section .text
@@ -68,11 +69,14 @@ __isr_call:
 	// save r16
 	sts		GPIOR0, r16
 
-	// get return address from stack
+	// get ISR return address from stack
+	// return address to interrupted function stays on stack
 	pop		r16
 	sts		GPIOR1, r16
 	pop		r16
 	sts		GPIOR2, r16
+
+	// restore r16
 	lds		r16, GPIOR0
 
 	/* save context */
@@ -131,17 +135,34 @@ __isr_call:
 	cpi		r16, 0x0
 	brne	1f
 
-	// init kernel stack pointer
-	ldi		r17, lo8(CONFIG_KERNEL_STACK_BASE + CONFIG_KERNEL_STACK_SIZE - 1)
-	ldi		r18, hi8(CONFIG_KERNEL_STACK_BASE + CONFIG_KERNEL_STACK_SIZE - 1)
+	// Z = kernel stack address
+	ldi		r30, lo8(kernel_stack)
+	ldi		r31, hi8(kernel_stack)
+
+	// RAMPZ = kernel_stack[16..23]
+#ifdef CONFIG_AVR_ISA_AVR51
+	ldi		r16, hh8(kernel_stack)
+	sts		RAMPZ, r16
+#endif
+
+#if CONFIG_NCORES > 1
+	// assuming a single core, thus kernel_stack[] contains a single entry
+	#error "handling of multiple cores is not implemented for AVR processors"
+#endif // CONFIG_NCORES
+
+	// load kernel stack from memory
+	ld		r17, Z+
+	ld		r18, Z
 	sts		SPL, r17
 	sts		SPH, r18
 
 	/* ABI requirements */
+	// clear r1
 	clr		r1
 
 1:
 	/* increment inkernel_nest */
+	lds		r16, inkernel_nest
 	inc		r16
 	sts		inkernel_nest, r16
 

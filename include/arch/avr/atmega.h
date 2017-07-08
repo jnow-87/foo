@@ -21,6 +21,7 @@
 #include <arch/avr/interrupt.h>
 #include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
+#include <arch/avr/process.h>
 #include <arch/avr/libmain.h>
 #include <sys/types.h>
 
@@ -89,8 +90,7 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.ipi_sleep = 0x0,
 	.ipi_wake = 0x0,
 
-	.thread_call = 0x0,			/* TODO */
-	.thread_kill = 0x0,			/* TODO */
+	.thread_context_init = avr_thread_context_init,
 
 #ifdef CONFIG_KERNEL_UART
 	.putchar = avr_putchar,
