@@ -82,5 +82,10 @@ typedef struct{
 	int (*libmain)(int argc, char **argv);
 } arch_callbacks_common_t;
 
+typedef struct{
+	uint16_t core_clock_khz;
+	uint16_t timebase_clock_khz;
+} arch_info_t;
+
 
 #endif
