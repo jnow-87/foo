@@ -10,14 +10,14 @@
 
 
 /* global functions */
-errno_t memblock_init(memblock_t *pool, size_t len){
+int memblock_init(memblock_t *pool, size_t len){
 	if(pool == 0)
-		return E_INVAL;
+		return_errno(E_INVAL);
 
 	list_init_el(pool);
 	pool->len = len;
 
-	return E_OK;
+	return_errno(E_OK);
 }
 
 void *memblock_alloc(memblock_t **pool, size_t n){

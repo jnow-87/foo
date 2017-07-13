@@ -32,7 +32,7 @@ void ufree(void *addr){
 
 
 /* local functions */
-static errno_t umem_init(void){
+static int umem_init(void){
 	process_mem = (void*)(CONFIG_KERNEL_PROC_BASE);
 
 	return memblock_init(process_mem, CONFIG_KERNEL_PROC_SIZE);

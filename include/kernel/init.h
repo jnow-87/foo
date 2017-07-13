@@ -7,7 +7,7 @@
 
 
 /* types */
-typedef errno_t (*init_call_t)(void);
+typedef int (*init_call_t)(void);
 
 
 /* macros */
