@@ -35,22 +35,22 @@ struct thread_t;
 
 typedef struct{
 	/* virtual memory management */
-	errno_t (*page_entry_write)(page_t const *page);
-	errno_t (*page_entry_inval_idx)(unsigned int idx, bool sync_cores);
-	errno_t (*page_entry_inval_va)(void *virt_addr, bool sync_cores);
-	errno_t (*page_entry_search)(page_t const *param, page_t *result);
+	int (*page_entry_write)(page_t const *page);
+	int (*page_entry_inval_idx)(unsigned int idx, bool sync_cores);
+	int (*page_entry_inval_va)(void *virt_addr, bool sync_cores);
+	int (*page_entry_search)(page_t const *param, page_t *result);
 
-	errno_t (*copy_from_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
-	errno_t (*copy_to_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
+	int (*copy_from_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
+	int (*copy_to_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
 
 	/* interrupts */
-	errno_t (*int_enable)(int_type_t mask);
+	int (*int_enable)(int_type_t mask);
 	int_type_t (*int_enabled)(void);
-	errno_t (*int_hdlr_register)(int_num_t num, int_hdlr_t hdlr);
-	errno_t (*int_hdlr_release)(int_num_t num);
+	int (*int_hdlr_register)(int_num_t num, int_hdlr_t hdlr);
+	int (*int_hdlr_release)(int_num_t num);
 
-	errno_t (*ipi_sleep)(void);
-	errno_t (*ipi_wake)(ipi_t type, unsigned int core, bool bcast);
+	int (*ipi_sleep)(void);
+	int (*ipi_wake)(ipi_t type, unsigned int core, bool bcast);
 
 	/* threading */
 	thread_context_t * (*thread_context_init)(struct thread_t *this_t, void *thread_arg);
@@ -68,7 +68,7 @@ typedef struct{
 	time_t * (*timebase_to_time)(timebase_t *tb);
 
 	/* atomics */
-	errno_t (*cas)(volatile int *v, int old, int new);
+	int (*cas)(volatile int *v, int old, int new);
 
 	/* core */
 	int (*core_id)(void);
@@ -76,11 +76,16 @@ typedef struct{
 	void (*core_halt)(void);
 
 	/* syscall */
-	errno_t (*syscall)(syscall_t num, void *param, unsigned int param_size);
+	int (*syscall)(syscall_t num, void *param, unsigned int param_size);
 
 	/* main entry */
 	int (*libmain)(int argc, char **argv);
 } arch_callbacks_common_t;
+
+typedef struct{
+	uint16_t core_clock_khz;
+	uint16_t timebase_clock_khz;
+} arch_info_t;
 
 
 #endif

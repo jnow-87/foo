@@ -38,7 +38,7 @@ int avr_puts(char const *s){
 
 
 /* local functions */
-static errno_t avr_uart_init(void){
+static int avr_uart_init(void){
 	if(BAUDRATE == 0)
 		return_errno(E_INVAL);
 
@@ -72,7 +72,7 @@ static errno_t avr_uart_init(void){
 #endif // CONFIG_KERNEL_UART_STOPBITS
 	);
 
-	return E_OK;
+	return_errno(E_OK);
 }
 
 platform_init(0, avr_uart_init);

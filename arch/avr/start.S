@@ -2,6 +2,7 @@
 #include <arch/arch.h>
 
 
+.extern kernel
 .globl __start
 
 __start:
@@ -82,7 +83,7 @@ __start:
 	ldi		r31, hi8(init)
 	icall
 #else
-	call	init
+	call	kernel
 #endif
 
 	/* should never happen */

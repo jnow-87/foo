@@ -4,8 +4,8 @@
 
 
 /* global functions */
-errno_t bin_load_raw(void *binary, process_t *this_p, void **entry){
+int bin_load_raw(void *binary, process_t *this_p, void **entry){
 	*entry = binary;
 
-	return E_OK;
+	return_errno(E_OK);
 }

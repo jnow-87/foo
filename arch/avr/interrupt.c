@@ -46,11 +46,11 @@ struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *
 	return current_thread[PIR]->ctx;
 }
 
-errno_t avr_int_enable(int_type_t mask){
+int avr_int_enable(int_type_t mask){
 	if(mask)	asm volatile("sei");
 	else		asm volatile("cli");
 
-	return E_OK;
+	return_errno(E_OK);
 }
 
 int_type_t avr_int_enabled(void){
@@ -59,7 +59,7 @@ int_type_t avr_int_enabled(void){
 	return INT_NONE;
 }
 
-errno_t avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
+int avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
 	if(int_map[num] != 0x0){
 		WARN("interrupt already registerd %u %#x\n", num, int_map[num]);
 		return_errno(E_INUSE);
@@ -67,12 +67,12 @@ errno_t avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
 
 	int_map[num] = hdlr;
 
-	return E_OK;
+	return_errno(E_OK);
 }
 
-errno_t avr_int_hdlr_release(int_num_t num){
+int avr_int_hdlr_release(int_num_t num){
 	int_map[num] = 0x0;
-	return E_OK;
+	return_errno(E_OK);
 }
 
 

@@ -17,12 +17,15 @@
 #ifndef _x86_
 #ifndef __x86_64__
 
+#include <arch/avr/core.h>
+#include <arch/avr/uart.h>
 #include <arch/avr/register.h>
 #include <arch/avr/interrupt.h>
 #include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
 #include <arch/avr/process.h>
 #include <arch/avr/libmain.h>
+#include <arch/types.h>
 #include <sys/types.h>
 
 #endif // __x86_64__
@@ -43,26 +46,6 @@
 #define INT_VEC_WORDS		1
 
 #endif
-
-
-/* types */
-#ifndef ASM
-#ifndef _x86_
-#ifndef __x86_64__
-
-#include <arch/types.h>
-#include <arch/avr/core.h>
-#include <arch/avr/uart.h>
-
-
-typedef struct{
-	uint16_t core_clock_khz;
-	uint16_t timebase_clock_khz;
-} arch_info_t;
-
-#endif // __x86_64__
-#endif // _x86_
-#endif // ASM
 
 
 /* static variables */

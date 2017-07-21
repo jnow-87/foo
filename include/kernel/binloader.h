@@ -19,7 +19,7 @@ typedef enum{
 
 
 /* prototypes */
-errno_t bin_load(void *binary, bin_type_t bin_type, struct process_t *this_p, void **entry);
+int bin_load(void *binary, bin_type_t bin_type, struct process_t *this_p, void **entry);
 
 
 #endif // KERNEL_BINLOADER_H

@@ -20,9 +20,9 @@ typedef struct sched_queue_t{
 
 
 /* local/static prototypes */
-static errno_t sched_init(void);
-static errno_t sched_tick(int_num_t num);
-static errno_t sched_queue_add(sched_queue_t **queue, thread_t *this_t);
+static int sched_init(void);
+static int sched_tick(int_num_t num);
+static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
 
 /* global variables */
@@ -42,7 +42,7 @@ void sched_resched(void){
 
 
 /* local functions */
-static errno_t sched_init(void){
+static int sched_init(void){
 	unsigned int i;
 	process_t *this_p;
 	thread_t *this_t;
@@ -115,18 +115,18 @@ static errno_t sched_init(void){
 	if(sched_queue_add(&queue_ready, this_p->threads) != E_OK)
 		goto err;
 
-	return E_OK;
+	return_errno(E_OK);
 
 err:
 	/* XXX: cleanup in case of an error is not required, since the kernel will stop
 	 * anyways if any of the init calls fails
 	 */
-	return errno;
+	return_errno(errno);
 }
 
 kernel_init(2, sched_init);
 
-static errno_t sched_tick(int_num_t num){
+static int sched_tick(int_num_t num){
 	static sched_queue_t *e = 0;
 
 
@@ -139,10 +139,10 @@ static errno_t sched_tick(int_num_t num){
 
 	// TODO check for next thread
 	// TODO switch thread or goto sleep
-	return E_OK;
+	return_errno(E_OK);
 }
 
-static errno_t sched_queue_add(sched_queue_t **queue, thread_t *this_t){
+static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	sched_queue_t *e;
 
 
@@ -154,8 +154,7 @@ static errno_t sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	e->thread = this_t;
 	list_add_tail(*queue, e);
 
-	return E_OK;
-
+	return_errno(E_OK);
 
 err:
 	return_errno(E_NOMEM);

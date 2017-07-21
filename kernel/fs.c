@@ -19,15 +19,15 @@ static int fs_id = 0;
 
 
 /* local/static prototypes */
-static errno_t fs_init(void);
-static errno_t sc_hdlr_open(void*);
-static errno_t sc_hdlr_close(void*);
-static errno_t sc_hdlr_read(void*);
-static errno_t sc_hdlr_write(void*);
-static errno_t sc_hdlr_ioctl(void*);
-static errno_t sc_hdlr_fcntl(void*);
-static errno_t sc_hdlr_rmnode(void*);
-static errno_t sc_hdlr_chdir(void*);
+static int fs_init(void);
+static int sc_hdlr_open(void*);
+static int sc_hdlr_close(void*);
+static int sc_hdlr_read(void*);
+static int sc_hdlr_write(void*);
+static int sc_hdlr_ioctl(void*);
+static int sc_hdlr_fcntl(void*);
+static int sc_hdlr_rmnode(void*);
+static int sc_hdlr_chdir(void*);
 
 
 /* global functions */
@@ -73,7 +73,7 @@ int fs_register(fs_ops_t *ops){
  *
  * \return	0
  */
-errno_t fs_unregister(int fs_type){
+int fs_unregister(int fs_type){
 	fs_t *fs;
 
 
@@ -84,7 +84,7 @@ errno_t fs_unregister(int fs_type){
 		kfree(fs);
 	}
 
-	return E_OK;
+	return_errno(E_OK);
 }
 
 /**
@@ -221,7 +221,7 @@ void fs_cleanup_fds(fs_filed_t *fds, unsigned int pid){
 
 
 /* local functions */
-static errno_t fs_init(void){
+static int fs_init(void){
 	sc_hdlr_register(SC_OPEN, sc_hdlr_open);
 	sc_hdlr_register(SC_CLOSE, sc_hdlr_close);
 	sc_hdlr_register(SC_READ, sc_hdlr_read);
@@ -231,15 +231,14 @@ static errno_t fs_init(void){
 	sc_hdlr_register(SC_RMNODE, sc_hdlr_rmnode);
 	sc_hdlr_register(SC_CHDIR, sc_hdlr_chdir);
 
-	return E_OK;
+	return_errno(E_OK);
 }
 
 kernel_init(1, fs_init);
 
 
-static errno_t sc_hdlr_open(void *_p){
+static int sc_hdlr_open(void *_p){
 	char *path;
-	errno_t e;
 	sc_param_open_t *p;
 	fs_node_t *start;
 	fs_ops_t *ops;
@@ -253,8 +252,7 @@ static errno_t sc_hdlr_open(void *_p){
 	path = kmalloc(p->path_len + 1);
 	if(path == 0){
 		WARN("out of kernel memory\n");
-		e = E_NOMEM;
-		goto err_0;
+		goto_errno(err_0, E_NOMEM);
 	}
 
 	arch_copy_from_user(path, p->path, p->path_len + 1, this_p);
@@ -280,16 +278,15 @@ static errno_t sc_hdlr_open(void *_p){
 ok:
 	kfree(path);
 
-	return E_OK;
+	return_errno(E_OK);
 
 err_0:
 	p->fd = 0;
 
-	return E_OK;
+	return_errno(E_OK);
 }
 
-static errno_t sc_hdlr_close(void *_p){
-	errno_t e;
+static int sc_hdlr_close(void *_p){
 	sc_param_close_t *p;
 	process_t *this_p;
 	fs_filed_t *fd;
@@ -306,27 +303,25 @@ static errno_t sc_hdlr_close(void *_p){
 	ops = fs_get_ops(fd->node->fs_type);
 	if(ops == 0){
 		WARN("no operations found for fs_type %d\n", fd->node->fs_type);
-		e = E_INVAL;
-		goto err;
+		goto_errno(err, E_INVAL);
 	}
 
 	if(ops->close == 0){
 		WARN("close not implemented for this file\n");
-		e = E_INVAL;
-		goto err;
+		goto_errno(err, E_INVAL);
 	}
 
 	p->ret = ops->close(fd);
 
-	return E_OK;
+	return_errno(E_OK);
 
 err:
-	p->ret = e;
+	p->ret = errno;
 
-	return E_OK;
+	return_errno(E_OK);
 }
 
-static errno_t sc_hdlr_read(void *_p){
+static int sc_hdlr_read(void *_p){
 	char *buf;
 	sc_param_read_t *p;
 	process_t *this_p;
@@ -369,10 +364,10 @@ static errno_t sc_hdlr_read(void *_p){
 	kfree(buf);
 
 end:
-	return E_OK;
+	return_errno(E_OK);
 }
 
-static errno_t sc_hdlr_write(void *_p){
+static int sc_hdlr_write(void *_p){
 	char *buf;
 	sc_param_write_t *p;
 	process_t *this_p;
@@ -412,10 +407,10 @@ static errno_t sc_hdlr_write(void *_p){
 	kfree(buf);
 
 end:
-	return E_OK;
+	return_errno(E_OK);
 }
 
-static errno_t sc_hdlr_ioctl(void *_p){
+static int sc_hdlr_ioctl(void *_p){
 	sc_param_ioctl_t *p;
 	process_t *this_p;
 	fs_filed_t *fd;
@@ -445,10 +440,10 @@ static errno_t sc_hdlr_ioctl(void *_p){
 	p->ret = ops->ioctl(fd, p->request, p->param);
 
 end:
-	return E_OK;
+	return_errno(E_OK);
 }
 
-static errno_t sc_hdlr_fcntl(void *_p){
+static int sc_hdlr_fcntl(void *_p){
 	sc_param_fcntl_t *p;
 	process_t *this_p;
 	fs_filed_t *fd;
@@ -478,10 +473,10 @@ static errno_t sc_hdlr_fcntl(void *_p){
 	p->ret = ops->fcntl(fd, p->cmd, p->param);
 
 end:
-	return E_OK;
+	return_errno(E_OK);
 }
 
-static errno_t sc_hdlr_rmnode(void *_p){
+static int sc_hdlr_rmnode(void *_p){
 	char *path;
 	sc_param_rmnode_t *p;
 	process_t *this_p;
@@ -523,16 +518,16 @@ static errno_t sc_hdlr_rmnode(void *_p){
 	p->ret = ops->rmnode(start, path);
 	kfree(path);
 
-	return E_OK;
+	return_errno(E_OK);
 
 err_1:
 	kfree(path);
 
 err_0:
-	return E_OK;
+	return_errno(E_OK);
 }
 
-static errno_t sc_hdlr_chdir(void *_p){
+static int sc_hdlr_chdir(void *_p){
 	char *path;
 	sc_param_chdir_t *p;
 	process_t *this_p;
@@ -572,11 +567,11 @@ static errno_t sc_hdlr_chdir(void *_p){
 	p->ret = ops->chdir(start, path);
 	kfree(path);
 
-	return E_OK;
+	return_errno(E_OK);
 
 err_1:
 	kfree(path);
 
 err_0:
-	return E_OK;
+	return_errno(E_OK);
 }

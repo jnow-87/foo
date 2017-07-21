@@ -17,7 +17,7 @@ enum int_num_t;
 
 
 /* types */
-typedef errno_t (*int_hdlr_t)(enum int_num_t);
+typedef int (*int_hdlr_t)(enum int_num_t);
 
 
 #include <arch/arch.h>

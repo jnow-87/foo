@@ -54,7 +54,7 @@ static void _do_init_call(init_call_t *base, init_call_t *end);
 
 
 /* global functions */
-void init(void){
+void kernel(void){
 	/* core local (stage: core 0) */
 	do_init_call(__core_init0_base, __core_init1_base, "", false);
 
@@ -100,7 +100,7 @@ void init(void){
 	/* enable interrupts */
 	int_enable(INT_ALL);
 
-	/* done */
+	/* kernel thread */
 	while(1){
 		core_sleep();
 	}
