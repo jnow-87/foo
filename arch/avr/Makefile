@@ -15,6 +15,7 @@ avr_mem_lds_create := scripts/linker/avr_mem_lds_create.sh
 avr_mem_lds := $(loc_build_tree)/avr_mem.lds
 
 kernel: gen_avr_mem_linker_script
+init: gen_avr_mem_linker_script
 
 .PHONY: gen_avr_mem_linker_script
 gen_avr_mem_linker_script: $(avr_mem_lds_create)
@@ -98,13 +99,10 @@ endif
 fuse:
 	$(CONFIG_AVR_FUSER) $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_TYPE) $(CONFIG_AVR_PROG_PORT)
 
-.PHONY: erase
-erase:
-	$(CONFIG_AVR_PROG) -e -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE)
-
 .PHONY: flash
-flash: kernel sysroot
-	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(kernel)
+flash: kernel init sysroot
+	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(init)
+	sleep 3; $(CONFIG_AVR_PROG) -D -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(kernel)
 
 ####
 ## read flash

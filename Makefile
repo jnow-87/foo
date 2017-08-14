@@ -22,7 +22,6 @@ src_dirs := arch kernel lib sys init testing scripts/memlayout
 
 kernel_name := kimg.elf
 lib_name := libsys.a
-init_name := init.elf
 
 
 ####
@@ -161,8 +160,6 @@ kernel := $(build_tree)/$(kernel_name)
 kernel_deps := kernel/obj.o arch/obj.o sys/obj.o
 libsys := $(build_tree)/lib/$(lib_name)
 libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
-init := $(build_tree)/$(init_name)
-init_deps := init/obj.o
 
 sysroot := sysroot
 recent := recent
@@ -191,6 +188,11 @@ $(kernel): ldlibs += -lgcc
 $(kernel): $(addprefix $(build_tree)/, $(kernel_deps))
 	$(call compile_bin_o)
 
+# init target
+.PHONY: init
+init: cppflags += -DINIT
+init: check_config check_configheader $(init)
+
 # libsys targets
 .PHONY: libsys
 libsys: cppflags += -DLIBSYS
@@ -200,20 +202,9 @@ $(libsys): ldlibs += -Lscripts/linker -Tlibsys_$(CONFIG_ARCH).lds
 $(libsys): $(addprefix $(build_tree)/, $(libsys_dep))
 	$(call compile_lib_o)
 
-# init targets
-.PHONY: init
-init: cppflags += -DINIT
-init: check_config check_configheader libsys $(init)
-
-$(init): ldlibs += -Lscripts/linker -Tinit_$(CONFIG_ARCH).lds
-$(init): ldlibs += -Wl,--section-start=.data=0x800400
-$(init): ldlibs += -lsys -lgcc
-$(init): $(addprefix $(build_tree)/, $(init_deps))
-	$(call compile_bin_o)
-
 # sysroot target
 .PHONY: sysroot
-sysroot: kernel libsys
+sysroot: kernel libsys init
 	$(rm) $(recent)
 	$(sym_link) $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
 	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(build_tree)/config/config.h $(kernel_name) $(lib_name)

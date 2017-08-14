@@ -248,7 +248,7 @@ menu "Init binary settings"
 	endchoice
 
 	config INIT_ARGS
-		string "Init argument string"
+		qstring "Init argument string"
 		default ""
 
 	menu "Hidden"
