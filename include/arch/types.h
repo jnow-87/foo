@@ -78,8 +78,9 @@ typedef struct{
 	/* syscall */
 	int (*syscall)(syscall_t num, void *param, unsigned int param_size);
 
-	/* main entry */
-	int (*libmain)(int argc, char **argv);
+	/* libsys functionality */
+	int (*lib_init)(void);
+	int (*lib_main)(int argc, char **argv);
 } arch_callbacks_common_t;
 
 typedef struct{

@@ -3,7 +3,8 @@
 
 
 /* prototypes */
-int avr_libmain(int argc, char **argv);
+int avr_lib_init(void);
+int avr_lib_main(int argc, char **argv);
 
 
 #endif // AVR_LIBMAIN_H
