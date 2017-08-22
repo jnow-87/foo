@@ -3,11 +3,12 @@
 
 
 #include <arch/arch.h>
+#include <sys/errno.h>
 
 
 /* macros */
-#define ipi_sleep()					(arch_common_call(ipi_sleep, -1)())
-#define ipi_wake(num, core, bcast)	(arch_common_call(ipi_wake, -1)(num, core, bcast))
+#define ipi_sleep()					(arch_common_call(ipi_sleep, -E_NOIMP)())
+#define ipi_wake(num, core, bcast)	(arch_common_call(ipi_wake, -E_NOIMP)(num, core, bcast))
 
 
 #endif // ARCH_IPI_H

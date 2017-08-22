@@ -22,7 +22,7 @@ int avr_puts(char const *s){
 
 
 	if(s == 0)
-		return E_INVAL;
+		return_errno(E_INVAL);
 
 	n = 0;
 

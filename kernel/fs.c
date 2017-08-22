@@ -45,20 +45,20 @@ int fs_register(fs_ops_t *ops){
 	fs_t *new;
 
 	if(ops == 0)
-		return E_INVAL;
+		return_errno(E_INVAL);
 
 	if(fs_id >= 0x7fffffff)
-		return E_INVAL;
+		return_errno(E_INVAL);
 
 	new = kmalloc(sizeof(fs_t));
 	if(new == 0)
-		return E_NOMEM;
+		return_errno(E_NOMEM);
 
 	new->fs_type = fs_id++;
 	new->ops = kmalloc(sizeof(fs_ops_t));
 
 	if(new->ops == 0)
-		return E_NOMEM;
+		return_errno(E_NOMEM);
 
 	memcpy(new->ops, ops, sizeof(fs_ops_t));
 	list_add_tail(&fs_list, new);
