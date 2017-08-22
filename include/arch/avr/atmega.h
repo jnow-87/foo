@@ -24,7 +24,7 @@
 #include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
 #include <arch/avr/process.h>
-#include <arch/avr/libmain.h>
+#include <arch/avr/lib.h>
 #include <arch/types.h>
 #include <sys/types.h>
 

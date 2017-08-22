@@ -1,4 +1,4 @@
-#include <arch/libmain.h>
+#include <arch/lib.h>
 
 
 /* global functions */
