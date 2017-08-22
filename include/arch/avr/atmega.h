@@ -24,7 +24,7 @@
 #include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
 #include <arch/avr/process.h>
-#include <arch/avr/libmain.h>
+#include <arch/avr/lib.h>
 #include <arch/types.h>
 #include <sys/types.h>
 
@@ -104,9 +104,11 @@ static const arch_callbacks_common_t arch_cbs_common = {
 
 	/* main entry */
 #ifdef KERNEL
-	.libmain = 0x0,
+	.lib_init = 0x0,
+	.lib_main = 0x0,
 #else
-	.libmain = avr_libmain,
+	.lib_init = avr_lib_init,
+	.lib_main = avr_lib_main,
 #endif // KERNEL
 };
 
