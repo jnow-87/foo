@@ -10,10 +10,6 @@
 extern void __isr_reset(void);
 
 
-/* local/static prototypes */
-static void avr_int_inval(int_num_t num);
-
-
 /* external variables */
 extern thread_t *current_thread[CONFIG_NCORES];
 
@@ -24,7 +20,8 @@ int_hdlr_t int_map[NINTERRUPTS] = { 0x0 };
 
 
 /* global functions */
-struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *tc){
+struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
+	uint8_t t;
 	int_num_t num;
 
 
@@ -33,16 +30,29 @@ struct thread_context_t *avr_int_hdlr(isr_hdlr_t addr, struct thread_context_t *
 		current_thread[PIR]->ctx = tc;
 
 	/* call respective interrupt handler */
-	num = (addr - __isr_reset - INT_VEC_WORDS) / INT_VEC_WORDS;
+	// swap bytes of interrupt vector address
+	t = (unsigned int)(tc->int_vec) >> 8;
+	tc->int_vec = (void*)((unsigned int)(tc->int_vec) << 8 | t);
 
+	// compute interrupt number
+	num = ((void (*)(void))tc->int_vec - __isr_reset - INT_VEC_WORDS) / INT_VEC_WORDS;
+
+	// check interrupt number
 	if(num >= NINTERRUPTS){
 		FATAL("out of bound interrupt num %d\n", num);
 		core_halt();
 	}
 
-	if(int_map[num] != 0)	int_map[num](num);
-	else					avr_int_inval(num);
+	if(int_map[num] == 0x0){
+		FATAL("unhandled interrupt %d\n", num)
+		core_halt();
+	}
 
+	// call handler
+	if(int_map[num](num) != E_OK)
+		WARN("error handling interrupt %u: %x\n", num, errno);
+
+	/* return context of active thread */
 	return current_thread[PIR]->ctx;
 }
 
@@ -73,11 +83,4 @@ int avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
 int avr_int_hdlr_release(int_num_t num){
 	int_map[num] = 0x0;
 	return_errno(E_OK);
-}
-
-
-/* local functions */
-static void avr_int_inval(int_num_t num){
-	FATAL("invalid isr %d\n", num);
-	core_halt();
 }
