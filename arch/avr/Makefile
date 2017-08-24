@@ -1,11 +1,24 @@
-obj-y := start.o isr.o interrupt.o core.o watchdog.o thread.o
+obj-y := start.o isr.o interrupt.o core.o watchdog.o thread.o syscall_kernel.o
 obj-nobuiltin-y := libsys.o
 
 
 obj-$(CONFIG_KERNEL_UART) += uart.o
 
 
-libsys-y := core.o lib.o
+libsys-y := core.o lib.o syscall_lib.o
+
+
+# custom rules to generate syscall.o for kernel and libsys
+syscall_kernel-cppflags := -DKERNEL
+$(loc_build_tree)/syscall_kernel.o: $(loc_src_tree)/syscall.c
+	$(mkdir) $(dir $@)
+	$(call compile_o_c)
+
+syscall_lib-cppflags := -DLIBSYS
+$(loc_build_tree)/syscall_lib.o: $(loc_src_tree)/syscall.c
+	$(mkdir) $(dir $@)
+	$(call compile_o_c)
+
 
 ####
 ## linker script: memory layout

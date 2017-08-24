@@ -76,7 +76,7 @@ typedef struct{
 	void (*core_halt)(void);
 
 	/* syscall */
-	int (*syscall)(syscall_t num, void *param, unsigned int param_size);
+	int (*syscall)(syscall_t num, void *param, size_t psize);
 
 	/* libsys functionality */
 	int (*lib_init)(void);

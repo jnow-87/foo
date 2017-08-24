@@ -24,6 +24,7 @@
 #include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
 #include <arch/avr/process.h>
+#include <arch/avr/syscall.h>
 #include <arch/avr/lib.h>
 #include <arch/types.h>
 #include <sys/types.h>
@@ -100,7 +101,11 @@ static const arch_callbacks_common_t arch_cbs_common = {
 	.core_halt = avr_core_halt,
 
 	/* syscall */
-	.syscall = 0x0,				/* TODO */
+#ifdef KERNEL
+	.syscall = 0x0,
+#else
+	.syscall = avr_syscall,
+#endif // KERNEL
 
 	/* main entry */
 #ifdef KERNEL

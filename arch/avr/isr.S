@@ -63,22 +63,6 @@ ISR(timer3_ovfl, __isr_call)
 /* ISR */
 .global __isr_call
 __isr_call:
-	/* save ISR return address
-	 *	store return address to GPIOR1, GPRIO2
-	 */
-	// save r16
-	sts		GPIOR0, r16
-
-	// get ISR return address from stack
-	// return address to interrupted function stays on stack
-	pop		r16
-	sts		GPIOR1, r16
-	pop		r16
-	sts		GPIOR2, r16
-
-	// restore r16
-	lds		r16, GPIOR0
-
 	/* save context */
 	push	r31
 	push	r30
@@ -119,9 +103,9 @@ __isr_call:
 	push	r16
 	lds		r16, SREG
 
-	/* avr_int_hdlr arg1: stack pointer aka thread_context_t pointer */
-	lds		r22, SPL
-	lds		r23, SPH
+	/* avr_int_hdlr argument: stack pointer aka thread_context_t pointer */
+	lds		r24, SPL
+	lds		r25, SPH
 
 	// save last register
 	push	r16
@@ -165,10 +149,6 @@ __isr_call:
 	lds		r16, inkernel_nest
 	inc		r16
 	sts		inkernel_nest, r16
-
-	/* avr_int_hdlr arg0: ISR return address */
-	lds		r25, GPIOR1
-	lds		r24, GPIOR2
 
 	ICALL	avr_int_hdlr
 
@@ -230,5 +210,9 @@ __isr_call:
 	pop		r29
 	pop		r30
 	pop		r31
+
+	/* pop interrupt vector address */
+	pop		r0
+	pop		r0
 
 	reti
