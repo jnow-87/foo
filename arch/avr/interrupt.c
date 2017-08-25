@@ -22,6 +22,7 @@ int_hdlr_t int_map[NINTERRUPTS] = { 0x0 };
 /* global functions */
 struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	uint8_t t;
+	int terrno;
 	int_num_t num;
 
 
@@ -48,9 +49,14 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 		core_halt();
 	}
 
-	// call handler
+	// call handler, saving errno
+	terrno = errno;
+	errno = E_OK;
+
 	if(int_map[num](num) != E_OK)
-		WARN("error handling interrupt %u: %x\n", num, errno);
+		WARN("error handling interrupt %u: %#x\n", num, errno);
+
+	errno = terrno;
 
 	/* return context of active thread */
 	return current_thread[PIR]->ctx;

@@ -7,7 +7,7 @@
 
 
 /* macros */
-#define syscall(num, param)	(arch_common_call(syscall, -E_NOIMP)(num, param, sizeof(*param)))
+#define sc(num, param)	(arch_common_call(sc, -E_NOIMP)(num, param, sizeof(*param)))
 
 
 #endif // ARCH_SYSCALL_H

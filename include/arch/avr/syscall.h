@@ -7,7 +7,7 @@
 
 
 /* prototypes */
-int avr_syscall(syscall_t num, void *param, size_t psize);
+int avr_sc(sc_t num, void *param, size_t psize);
 
 
 #endif // AVR_SYSCALL_H

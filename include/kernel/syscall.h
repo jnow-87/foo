@@ -7,14 +7,14 @@
 
 
 /* types */
-typedef int (*syscall_hdlr_t)(void *param);
+typedef int (*sc_hdlr_t)(void *param);
 
 
 /* prototypes */
-int syscall_register(syscall_t num, syscall_hdlr_t hdlr);
-int syscall_release(syscall_t num);
+int sc_register(sc_t num, sc_hdlr_t hdlr);
+int sc_release(sc_t num);
 
-int ksyscall_hdlr(syscall_t num, void *param, size_t psize);
+int ksc_hdlr(sc_t num, void *param, size_t psize);
 
 
 #endif // KERNEL_SYSCALL_H
