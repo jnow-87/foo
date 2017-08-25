@@ -102,9 +102,9 @@ static const arch_callbacks_common_t arch_cbs_common = {
 
 	/* syscall */
 #ifdef KERNEL
-	.syscall = 0x0,
+	.sc = 0x0,
 #else
-	.syscall = avr_syscall,
+	.sc = avr_sc,
 #endif // KERNEL
 
 	/* main entry */

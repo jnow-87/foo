@@ -8,7 +8,7 @@
 /* types */
 typedef enum{
 	NSYSCALLS
-} syscall_t;
+} sc_t;
 
 
 #endif // SYS_SYSCALL_H

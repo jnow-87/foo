@@ -7,11 +7,11 @@
 
 
 /* static variables */
-syscall_hdlr_t sc_map[NSYSCALLS] = { 0x0 };
+sc_hdlr_t sc_map[NSYSCALLS] = { 0x0 };
 
 
 /* global functions */
-int syscall_register(syscall_t num, syscall_hdlr_t hdlr){
+int sc_register(sc_t num, sc_hdlr_t hdlr){
 	if(num >= NSYSCALLS)
 		return_errno(E_INVAL);
 
@@ -24,7 +24,7 @@ int syscall_register(syscall_t num, syscall_hdlr_t hdlr){
 	return E_OK;
 }
 
-int syscall_release(syscall_t num){
+int sc_release(sc_t num){
 	if(num >= NSYSCALLS)
 		return_errno(E_INVAL);
 
@@ -33,7 +33,7 @@ int syscall_release(syscall_t num){
 	return E_OK;
 }
 
-int ksyscall_hdlr(syscall_t num, void *param, size_t psize){
+int ksc_hdlr(sc_t num, void *param, size_t psize){
 	void *kparam;
 
 
