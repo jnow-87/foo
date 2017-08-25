@@ -54,26 +54,27 @@ int ksyscall_hdlr(syscall_t num, void *param, size_t psize){
 		return errno;
 
 	if(copy_from_user(kparam, param, psize, current_thread[PIR]->parent) != E_OK)
-		goto err_0;
+		goto err;
 #else
 	kparam = param;
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* execute callback */
 	if(sc_map[num](kparam) != E_OK)
-		goto err_0;
+		goto err;
 
 	/* copy result to user space */
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	if(copy_to_user(param, kparam, psize, current_thread[PIR]->parent) != E_OK)
-		goto err_0;
-^
+		goto err;
+
 	kfree(kparam);
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	return E_OK;
 
-err_0:
+
+err:
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	kfree(kparam);
 #endif // CONFIG_KERNEL_VIRT_MEM

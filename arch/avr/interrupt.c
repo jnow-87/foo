@@ -50,7 +50,7 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 
 	// call handler
 	if(int_map[num](num) != E_OK)
-		WARN("error handling interrupt %u: %x\n", num, errno);
+		WARN("error handling interrupt %u: %#x\n", num, errno);
 
 	/* return context of active thread */
 	return current_thread[PIR]->ctx;

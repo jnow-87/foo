@@ -67,8 +67,9 @@ static int avr_syscall_init(void){
 }
 
 driver_init(avr_syscall_init);
+#endif // KERNEL
 
-
+#ifdef KERNEL
 static int avr_syscall_hdlr(int_num_t num){
 	avr_syscall_arg_t *arg;
 

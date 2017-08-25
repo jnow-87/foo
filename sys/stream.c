@@ -98,6 +98,7 @@ char fputc(char c, FILE *stream){
 		return c;
 	}
 
+
 err:
 	stream->state = F_EOF;
 	return F_EOF;
@@ -124,6 +125,7 @@ int fputs(char const *s, FILE *stream){
 		stream->pos += len;
 		return len;
 	}
+
 
 err:
 	stream->state = F_EOF;

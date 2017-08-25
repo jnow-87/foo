@@ -117,6 +117,7 @@ static int sched_init(void){
 
 	return_errno(E_OK);
 
+
 err:
 	/* XXX: cleanup in case of an error is not required, since the kernel will stop
 	 * anyways if any of the init calls fails
@@ -155,6 +156,7 @@ static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	list_add_tail(*queue, e);
 
 	return_errno(E_OK);
+
 
 err:
 	return_errno(E_NOMEM);
