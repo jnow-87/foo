@@ -4,9 +4,8 @@
 
 /* types */
 typedef enum{
-	F_CREATE = 1,
-	F_APPEND
-} f_mode_t;
+	F_SEEK = 1,
+} fcntl_cmd_t;
 
 
 #endif // SYS_FCNTL_H

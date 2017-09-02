@@ -2,71 +2,73 @@
 #define KERNEL_FS_H
 
 
-#include <sys/list.h>
-#include <sys/fcntl.h>
-#include <sys/errno.h>
+#include <sys/file.h>
+#include <sys/types.h>
+
+
+/* incomplete types */
+struct process_t;
 
 
 /* types */
-typedef enum{
-	FS_DIR = 1,
-	FS_FILE
-} fs_node_type_t;
-
+// file system node types
 typedef struct fs_node_t{
-	int fs_type;				// filesystem id	(0 reserved for root)
-	fs_node_type_t node_type;
+	int fs_id;
+	char *name;
 
-	unsigned int ref_cnt;		// reference counter
-	char *name;					// name
 	void *data;
+	unsigned int ref_cnt;
+	bool is_dir;
 
-	struct fs_node_t *childs,	// list of all childs
-					 *parent;	// pointer to parent
+	struct fs_node_t *childs,
+					 *parent;
 
-	struct fs_node_t *prev,		// next, prev pointer to be used with list.h macros
+	struct fs_node_t *prev,
 					 *next;
 } fs_node_t;
 
+// file descriptor types
 typedef struct fs_filed_t{
-	unsigned int fd,
-				 fp;
-
-	void *data;
+	int id;
+	unsigned int fp;
 	fs_node_t *node;
 
 	struct fs_filed_t *prev,
 					  *next;
 } fs_filed_t;
 
+// file system types
 typedef struct{
-	int (*open)(fs_node_t *start, char const *path, f_mode_t mode);				// \return	fd							find fs_node under start matching path (if a node is not found create it), return fd created with fs_mkfd()
-	int (*close)(fs_filed_t *fd);												// \return	0 success, -1 error			free fd->data, then call fs_rmfd() (which cleans up the rest)
-	int (*read)(fs_filed_t *fd, void *buf, unsigned int n);						// \return	number of bytes read		copy data into buf
-	int (*write)(fs_filed_t *fd, void *buf, unsigned int n);					// \return	number of bytes written		copy data from buf
-	int (*ioctl)(fs_filed_t *fd, int request, void *param);						// \return	0 success, -1 error
-	int (*fcntl)(fs_filed_t *fd, int cmd, void *param);							// \return	0 success, -1 error
-	int (*rmnode)(fs_node_t *start, char const *path);							// \return	0 success, -1 error			find node matching path and remove it from filesystem
-	int (*chdir)(fs_node_t *start, char const *path);							// \return	0 success, -1 error			change processes CWD to node matching path
+																				/**  \return	success			error */
+	int (*open)(fs_node_t *start, char const *path, f_mode_t mode);				/**< \return	descriptor id	<0		allocate file descriptor using fs_mkfd() for given path */
+	int (*close)(fs_filed_t *fd);												/**< \return	E_OK			<0		free file descriptor using fs_rmfd() */
+	size_t (*read)(fs_filed_t *fd, void *buf, size_t n);						/**< \return	#bytes read		0		copy data to buffer */
+	size_t (*write)(fs_filed_t *fd, void *buf, size_t n);						/**< \return	#bytes written	0		copy data from buffer */
+	int (*ioctl)(fs_filed_t *fd, int request, void *data);						/**< \return	E_OK			<0 		file dependent operation */
+	int (*fcntl)(fs_filed_t *fd, int cmd, void *data);							/**< \return	E_OK 			<0 		file dependent operation */
+	int (*rmnode)(fs_node_t *start, char const *path);							/**< \return	E_OK			<0		remove given node from file system */
+	int (*chdir)(fs_node_t *start, char const *path);							/**< \return	E_OK			<0		change current working directory of current process */
 } fs_ops_t;
 
 typedef struct fs_t{
-	int fs_type;
-	fs_ops_t *ops;				// pointer to the filesystems callback functions
+	int id;
+	fs_ops_t *ops;
 
-	struct fs_t *prev,			// next, prev pointer to be used with list.h macros
+	struct fs_t *prev,
 				*next;
 } fs_t;
 
 
-/* prototyes */
+/* prototypes */
+// file system operations
 int fs_register(fs_ops_t *ops);
-int fs_unregister(int fs_type);
-fs_ops_t *fs_get_ops(int fs_type);
-fs_node_t *fs_get_cwd(fs_node_t *node);
-fs_filed_t *fs_mkfd(fs_node_t *node, void *data);
+int fs_release(int fs_id);
+
+fs_ops_t *fs_get_ops(int fs_id);
+
+// file operations
+fs_filed_t *fs_mkfd(fs_node_t *node);
 void fs_rmfd(fs_filed_t *fd);
-void fs_cleanup_fds(fs_filed_t *fds, unsigned int pid);
 
 
 #endif // KERNEL_FS_H

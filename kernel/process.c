@@ -1,16 +1,14 @@
 #include <config/config.h>
+#include <arch/core.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <kernel/kmem.h>
+#include <kernel/fs.h>
 #include <kernel/binloader.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
-
-
-/* macros */
-#define MAX_MEMORY_ENTRIES	32
 
 
 /* global functions */
@@ -104,8 +102,11 @@ err_0:
 }
 
 void process_destroy(process_t *this_p){
-	thread_t *this_t;
+	thread_t *this_t,
+			 *cur_thread;
 	page_t *page;
+	fs_filed_t *fd;
+	fs_ops_t *ops;
 
 
 	/* destroy all threads */
@@ -115,7 +116,19 @@ void process_destroy(process_t *this_p){
 	}
 
 	/* clear file system handles */
-	// TODO implement -- call fs_cleanup_fds()
+	// set current_thread, because subsequent calls rely on it and it might not
+	// be set to any of this process' threads
+	cur_thread = current_thread[PIR];
+	current_thread[PIR] = list_first(this_p->threads);
+
+	list_for_each(this_p->fds, fd){
+		ops = fs_get_ops(fd->node->fs_id);
+
+		if(ops != 0x0 && ops->close != 0x0)	ops->close(fd);
+		else								fs_rmfd(fd);
+	}
+
+	current_thread[PIR] = cur_thread;
 
 	/* free arguments */
 	kfree(this_p->args);
