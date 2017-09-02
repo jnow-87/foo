@@ -32,7 +32,7 @@ init: gen_avr_mem_linker_script
 
 .PHONY: gen_avr_mem_linker_script
 gen_avr_mem_linker_script: $(avr_mem_lds_create)
-	@$(avr_mem_lds_create) $(config) $(avr_mem_lds)
+	$(QBUILD)$(avr_mem_lds_create) $(config) $(avr_mem_lds)
 
 
 ####
