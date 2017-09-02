@@ -3,15 +3,12 @@
 #include <arch/core.h>
 #include <arch/io.h>
 #include <kernel/kprintf.h>
+#include <kernel/sched.h>
 #include <sys/errno.h>
 
 
 /* external prototypes */
 extern void __isr_reset(void);
-
-
-/* external variables */
-extern thread_t *current_thread[CONFIG_NCORES];
 
 
 /* global variables */
