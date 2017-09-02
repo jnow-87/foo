@@ -89,7 +89,8 @@ static int sched_init(void){
 		this_t->state = CREATED;
 		this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
 		this_t->affinity = (0x1 << i);
-		this_t->stack = (void*)(CONFIG_KERNEL_STACK_BASE + (i * CONFIG_KERNEL_STACK_SIZE / CONFIG_NCORES));
+		this_t->stack = (void*)CONFIG_KERNEL_STACK_BASE;
+		this_t->stack += i * (CONFIG_KERNEL_STACK_SIZE / CONFIG_NCORES);
 		this_t->parent = this_p;
 
 		list_add_tail(this_p->threads, this_t);

@@ -22,10 +22,9 @@ int main(void){
 		{ .name = "process heap",		.base = CONFIG_KERNEL_PROC_BASE,					.size = CONFIG_KERNEL_PROC_SIZE,		.allow_zero_size = 0 },
 		{ .name = "init ram fs",		.base = CONFIG_KERNEL_INITRAMFS_BASE,				.size = CONFIG_KERNEL_INITRAMFS_SIZE,	.allow_zero_size = 1 },
 #ifdef CONFIG_AVR
-		// XXX: base addresses have an offset of 0x00800000 for gcc to distinguish those sram from flash addresses
-		{ .name = "kernel data",		.base = (CONFIG_KERNEL_DATA_BASE & 0x007fffff),		.size = CONFIG_KERNEL_DATA_SIZE,		.allow_zero_size = 0 },
-		{ .name = "application data",	.base = (CONFIG_APP_DATA_BASE & 0x007fffff),		.size = CONFIG_APP_DATA_SIZE,			.allow_zero_size = 0 },
-		{ .name = "mapped registers",	.base = (CONFIG_MREG_BASE & 0x007fffff),			.size = CONFIG_MREG_SIZE,				.allow_zero_size = 0 },
+		{ .name = "kernel data",		.base = (CONFIG_KERNEL_DATA_BASE),		.size = CONFIG_KERNEL_DATA_SIZE,		.allow_zero_size = 0 },
+		{ .name = "application data",	.base = (CONFIG_APP_DATA_BASE),		.size = CONFIG_APP_DATA_SIZE,			.allow_zero_size = 0 },
+		{ .name = "mapped registers",	.base = (CONFIG_MREG_BASE),			.size = CONFIG_MREG_SIZE,				.allow_zero_size = 0 },
 #endif // CONFIG_AVR
 	};
 
