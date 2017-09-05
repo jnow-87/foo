@@ -37,7 +37,7 @@ static int fs_init(void){
 	return e;
 }
 
-kernel_init(1, fs_init);
+kernel_init(0, fs_init);
 
 static int sc_hdlr_open(void *_p){
 	char path[((sc_fs_t*)(_p))->data_len];
@@ -53,7 +53,7 @@ static int sc_hdlr_open(void *_p){
 		goto err;
 
 	/* identify file system and call its open callback */
-	root = (path[0] == '/') ? fs_root : current_thread[PIR]->parent->cwd;
+	root = (path[0] == '/') ? (&fs_root) : current_thread[PIR]->parent->cwd;
 
 	ops = fs_get_ops(root->fs_id);
 
@@ -249,7 +249,7 @@ static int sc_hdlr_rmnode(void *_p){
 		goto err;
 
 	/* identify file system and call its rmnode callback */
-	root = (path[0] == '/') ? fs_root : current_thread[PIR]->parent->cwd;
+	root = (path[0] == '/') ? (&fs_root) : current_thread[PIR]->parent->cwd;
 
 	ops = fs_get_ops(root->fs_id);
 
@@ -282,7 +282,7 @@ static int sc_hdlr_chdir(void *_p){
 		goto err;
 
 	/* identify file system and call its chdir callback */
-	root = (path[0] == '/') ? fs_root : current_thread[PIR]->parent->cwd;
+	root = (path[0] == '/') ? (&fs_root) : current_thread[PIR]->parent->cwd;
 
 	ops = fs_get_ops(root->fs_id);
 

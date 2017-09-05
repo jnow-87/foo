@@ -287,3 +287,12 @@ menu "Scheduler settigns"
 		default 0x1
 endmenu
 # }}}
+
+
+#
+# file system
+#
+# {{{
+menu "File system"
+	source "kernel/fs/Kconfig"
+endmenu
