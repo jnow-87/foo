@@ -9,5 +9,13 @@ config_kprintf := $(findstring y,$(CONFIG_KERNEL_MSG_FATAL) $(CONFIG_KERNEL_MSG_
 obj-$(config_kprintf) += kprintf.o
 
 
+####
 # flags
-cppflags-$(CONFIG_AVR) := -Os
+####
+
+## avr
+# disable jump tables if kernel is mapped to addresses larger than 64k
+# this is required due to avr-gcc implementation of jump tables
+ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u" 0x10000); echo $$?),0)
+  cflags-$(CONFIG_AVR) := -fno-jump-tables
+endif
