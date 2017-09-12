@@ -2,9 +2,6 @@
 #define SYS_SYSCALL_H
 
 
-#include <arch/syscall.h>
-
-
 /* types */
 typedef enum{
 	SC_OPEN,

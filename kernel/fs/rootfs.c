@@ -1,4 +1,5 @@
 #include <arch/core.h>
+#include <arch/mem.h>
 #include <kernel/init.h>
 #include <kernel/fs.h>
 #include <kernel/rootfs.h>
@@ -35,6 +36,7 @@ static int node_find(fs_node_t **start, char const **path);
 
 static rootfs_file_t *file_alloc(void);
 static void file_free(rootfs_file_t *file);
+static int file_seek(fs_filed_t *fd, seek_t *p);
 
 
 /* global functions */
@@ -176,10 +178,12 @@ static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 				return_errno(E_UNAVAIL);
 
 			// create node
-			start = node_alloc(start->parent, path, n, (path[n] == '/' ? true : false));
+			start = node_alloc(start, path, n, (path[n] == '/' ? true : false));
 
 			if(start == 0x0)
 				return errno;
+
+			path += n;
 			break;
 		}
 	}
@@ -203,20 +207,27 @@ static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n){
 		list_for_each(fd->node->childs, child){
 			if(m == fd->fp)
 				break;
+
+			++m;
 		}
 
 		/* no further child available */
 		if(child == 0x0)
-			return_errno(E_END);
+			goto_errno(err, E_END);
 
 		/* check if buffer is large enough */
-		if(strlen(child->name) > n)
-			return_errno(E_LIMIT);
+		m = strlen(child->name);
+
+		if(m > n)
+			goto_errno(err, E_LIMIT);
 
 		/* copy child name to buffer */
-		memcpy(buf, child->name, strlen(child->name));
+		memcpy(buf, child->name, m);
 
-		return E_OK;
+		/* update file pointer */
+		fd->fp++;
+
+		return m;
 
 	}
 	else{
@@ -224,7 +235,7 @@ static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n){
 
 		/* check if data is left to read */
 		if(fd->fp == file->data_used)
-			return_errno(E_END);
+			goto_errno(err, E_END);
 
 		/* identify number of bytes to read and copy them to buf */
 		m = MIN(n, file->data_used - fd->fp);
@@ -233,8 +244,12 @@ static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n){
 		/* update file pointer */
 		fd->fp += m;
 
-		return E_OK;
+		return m;
 	}
+
+
+err:
+	return 0;
 }
 
 static size_t rootfs_write(fs_filed_t *fd, void *buf, size_t n){
@@ -245,7 +260,7 @@ static size_t rootfs_write(fs_filed_t *fd, void *buf, size_t n){
 
 	/* write to a directory is not defined */
 	if(fd->node->is_dir)
-		return_errno(E_INVAL);
+		goto_errno(err, E_INVAL);
 
 	file = fd->node->data;
 
@@ -258,7 +273,7 @@ static size_t rootfs_write(fs_filed_t *fd, void *buf, size_t n){
 		data = kmalloc(f_size);
 
 		if(data == 0x0)
-			return_errno(E_NOMEM);
+			goto_errno(err, E_NOMEM);
 
 		memcpy(data, file->data, file->data_used);
 
@@ -272,14 +287,28 @@ static size_t rootfs_write(fs_filed_t *fd, void *buf, size_t n){
 	fd->fp += n;
 	file->data_used = MAX(fd->fp, file->data_used);
 
-	return E_OK;
+	return n;
+
+
+err:
+	return 0;
 }
 
 static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data){
+	seek_t seek_p;
+
+
 	switch(cmd){
 	case F_SEEK:
-		// TODO implement this
-		return_errno(E_NOIMP);
+		(void)copy_from_user(&seek_p, data, sizeof(seek_t), current_thread[PIR]->parent);
+
+		return file_seek(fd, &seek_p);
+
+	case F_TELL:
+		seek_p.pos = fd->fp;
+		(void)copy_to_user(data, &seek_p, sizeof(seek_t), current_thread[PIR]->parent);
+
+		return errno;
 
 	default:
 		return_errno(E_INVAL);
@@ -308,9 +337,11 @@ static int rootfs_rmnode(fs_node_t *start, char const *path){
 		return ops->rmnode(start, path);
 
 	case -1:
+		/* part of path is not a directory */
 		return_errno(E_INVAL);
 
 	default:
+		/* target node not found */
 		return_errno(E_UNAVAIL);
 	}
 }
@@ -371,7 +402,7 @@ static fs_node_t *node_alloc(fs_node_t *parent, char const *name, size_t name_le
 
 	node->data = 0x0;
 
-	if(is_dir == false){
+	if(is_dir == false && strcmp(name, ".") != 0 && strcmp(name, "..") != 0){
 		node->data = file_alloc();
 
 		if(node->data == 0x0)
@@ -456,12 +487,13 @@ static int node_free(fs_node_t *node){
  */
 static int node_find(fs_node_t **start, char const **path){
 	size_t n;
+	fs_node_t *child;
 
 
 	while(1){
 		/* skip leading '/' */
 		while(**path == '/' && **path != 0)
-			++path;
+			++(*path);
 
 		/* end of path reached, hence start is the desired node */
 		if(**path == 0)
@@ -477,12 +509,13 @@ static int node_find(fs_node_t **start, char const **path){
 		while((*path)[n] != '/' && (*path)[n] != 0)
 			++n;
 
-		*start = list_find_strn((*start)->childs, name, *path, n);
+		child = list_find_strn((*start)->childs, name, *path, n);
 
 		/* no matching child found */
-		if(*start == 0x0)
+		if(child == 0x0)
 			return n;
 
+		*start = child;
 		*path += n;
 
 		/* child is of different file system id */
@@ -526,4 +559,25 @@ static void file_free(rootfs_file_t *file){
 
 	kfree(file->data);
 	kfree(file);
+}
+
+static int file_seek(fs_filed_t *fd, seek_t *p){
+	size_t whence;
+	rootfs_file_t *file;
+
+
+	file = (rootfs_file_t*)fd->node->data;
+
+	if(p->whence == SEEK_SET)		whence = 0;
+	else if(p->whence == SEEK_CUR)	whence = fd->fp;
+	else if(p->whence == SEEK_END)	whence = file->data_used;
+
+	if(whence + p->offset > file->data_used)
+		goto_errno(k_ok, E_LIMIT);
+
+	fd->fp = whence + p->offset;
+
+
+k_ok:
+	return E_OK;
 }

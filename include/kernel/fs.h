@@ -30,7 +30,7 @@ typedef struct fs_node_t{
 // file descriptor types
 typedef struct fs_filed_t{
 	int id;
-	unsigned int fp;
+	size_t fp;
 	fs_node_t *node;
 
 	struct fs_filed_t *prev,

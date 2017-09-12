@@ -5,6 +5,7 @@
 #include <kernel/sched.h>
 #include <kernel/process.h>
 #include <kernel/kmem.h>
+#include <kernel/rootfs.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
@@ -72,6 +73,7 @@ static int sched_init(void){
 
 	this_p->affinity = CONFIG_SCHED_AFFINITY_DEFAULT;
 	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;
+	this_p->cwd = &fs_root;
 
 	list_add_tail(process_table, this_p);
 

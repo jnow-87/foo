@@ -4,7 +4,7 @@
 #include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <kernel/kmem.h>
-#include <kernel/fs.h>
+#include <kernel/rootfs.h>
 #include <kernel/binloader.h>
 #include <sys/errno.h>
 #include <sys/list.h>
@@ -68,7 +68,11 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 
 	/* init file system handles */
 	this_p->fds = 0x0;
-	this_p->cwd = 0x0;	// TODO implement -- call fs_get_cwd()
+
+	this_p->cwd = &fs_root;
+
+	if(current_thread[PIR] != 0x0)
+		this_p->cwd = current_thread[PIR]->parent->cwd;
 
 	/* load binary */
 	entry = 0x0;
