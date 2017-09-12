@@ -13,6 +13,7 @@ SECTIONS {
 		 */
 		. = 0x0;
 		*(.app_start)
+		*( .progmem.gcc*)
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
 		*(.trampolines)

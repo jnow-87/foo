@@ -7,6 +7,7 @@
 
 
 /* external variables */
+extern thread_t *current_thread[CONFIG_NCORES];
 extern process_t *process_table;
 
 

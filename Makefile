@@ -191,7 +191,7 @@ $(kernel): $(addprefix $(build_tree)/, $(kernel_deps))
 # init target
 .PHONY: init
 init: cppflags += -DINIT
-init: check_config check_configheader $(init)
+init: check_config check_configheader libsys $(init)
 
 # libsys targets
 .PHONY: libsys

@@ -7,7 +7,7 @@ SECTIONS {
 	.text : {
 		/* interrupt vectors */
 		*(.reset)
-
+		*( .progmem.gcc*)
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
 		*(.trampolines)
