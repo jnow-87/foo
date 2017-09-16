@@ -57,7 +57,7 @@ fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, b
 
 
 	/* check parameter */
-	if(ops == 0x0)
+	if(ops == 0x0 || ops->open == 0x0)
 		goto_errno(err_0, E_INVAL);
 
 	/* allocate node */
