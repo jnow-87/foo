@@ -20,7 +20,7 @@ extern fs_node_t fs_root;
 
 
 /* prototypes */
-fs_node_t *rootfs_mkdir(int fs_id, char const *path);
+fs_node_t *rootfs_mkdir(char const *path, fs_ops_t *ops);
 int rootfs_rmdir(fs_node_t *node);
 
 

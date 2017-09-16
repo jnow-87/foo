@@ -17,8 +17,8 @@
 fs_node_t fs_root;
 
 
-/* static variables */
-static int rootfs_id;
+/* local variables */
+static fs_ops_t rootfs_ops;
 
 
 /* local/static prototypes */
@@ -30,17 +30,13 @@ static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data);
 static int rootfs_rmnode(fs_node_t *start, char const *path);
 static int rootfs_chdir(fs_node_t *start, char const *path);
 
-static fs_node_t *node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir);
-static int node_free(fs_node_t *node);
-static int node_find(fs_node_t **start, char const **path);
-
 static rootfs_file_t *file_alloc(void);
 static void file_free(rootfs_file_t *file);
 static int file_seek(fs_filed_t *fd, seek_t *p);
 
 
 /* global functions */
-fs_node_t *rootfs_mkdir(int fs_id, char const *path){
+fs_node_t *rootfs_mkdir(char const *path, fs_ops_t *ops){
 	int n;
 	fs_node_t *node;
 
@@ -51,7 +47,7 @@ fs_node_t *rootfs_mkdir(int fs_id, char const *path){
 	node = &fs_root;
 
 	while(1){
-		n = node_find(&node, &path);
+		n = fs_node_find(&node, &path);
 
 		switch(n){
 		case 0:
@@ -63,8 +59,7 @@ fs_node_t *rootfs_mkdir(int fs_id, char const *path){
 			if(!list_empty(node->childs))
 				goto_errno(err, E_INUSE);
 
-			// change file system type of target node and return it
-			node->fs_id = fs_id;
+			node->ops = ops;
 
 			return node;
 
@@ -75,10 +70,12 @@ fs_node_t *rootfs_mkdir(int fs_id, char const *path){
 
 		default:
 			/* no matching node found, try to create it */
-			node = node_alloc(node->parent, path, n, (path[n] == '/' ? true : false));
+			node = fs_node_alloc(node->parent, path, n, true, &rootfs_ops);
 
 			if(node == 0x0)
 				goto err;
+
+			path += n;
 			break;
 		}
 	}
@@ -91,35 +88,28 @@ err:
 int rootfs_rmdir(fs_node_t *node){
 	if(!list_empty(node->childs) || node->data != 0x0)
 		return_errno(E_INUSE);
-	return node_free(node);
+	return fs_node_free(node);
 }
 
 
 /* local functions */
 static int rootfs_init(void){
-	fs_ops_t ops;
-
-
 	/* register rootfs */
-	ops.open = rootfs_open;
-	ops.close = rootfs_close;
-	ops.read = rootfs_read;
-	ops.write = rootfs_write;
-	ops.ioctl = 0x0;
-	ops.fcntl = rootfs_fcntl;
-	ops.rmnode = rootfs_rmnode;
-	ops.chdir = rootfs_chdir;
-
-	rootfs_id = fs_register(&ops);
-
-	if(rootfs_id < 0)
-		return errno;
+	rootfs_ops.open = rootfs_open;
+	rootfs_ops.close = rootfs_close;
+	rootfs_ops.read = rootfs_read;
+	rootfs_ops.write = rootfs_write;
+	rootfs_ops.ioctl = 0x0;
+	rootfs_ops.fcntl = rootfs_fcntl;
+	rootfs_ops.rmnode = rootfs_rmnode;
+	rootfs_ops.chdir = rootfs_chdir;
 
 	/* init fs_root */
 	memset(&fs_root, 0x0, sizeof(fs_node_t));
 
-	fs_root.fs_id = rootfs_id;
+	fs_root.ops = &rootfs_ops;
 	fs_root.is_dir = true;
+	fs_root.parent = &fs_root;
 
 	fs_root.name = kmalloc(2);
 
@@ -136,19 +126,18 @@ kernel_init(1, rootfs_init);
 static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 	int n;
 	fs_filed_t *fd;
-	fs_ops_t *ops;
 
 
 	if(*path == 0)
 		return_errno(E_INVAL);
 
 	while(1){
-		n = node_find(&start, &path);
+		n = fs_node_find(&start, &path);
 
 		switch(n){
 		case 0:
 			/* target node found, so create file descriptor */
-			fd = fs_mkfd(start);
+			fd = fs_fd_alloc(start);
 
 			if(fd == 0x0)
 				return errno;
@@ -160,12 +149,10 @@ static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 
 		case -2:
 			/* file system boundary reached, hence call subsequent file system handler */
-			ops = fs_get_ops(start->fs_id);
-
-			if(ops == 0x0 || ops->open == 0x0)
+			if(start->ops->open == 0x0)
 				return_errno(E_NOIMP);
 
-			return ops->open(start, path, mode);
+			return start->ops->open(start, path, mode);
 
 		case -1:
 			/* error occured */
@@ -178,19 +165,32 @@ static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 				return_errno(E_UNAVAIL);
 
 			// create node
-			start = node_alloc(start, path, n, (path[n] == '/' ? true : false));
+			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), 0x0);
 
 			if(start == 0x0)
 				return errno;
+
+			// allocate file
+			if(start->is_dir == false){
+				start->data = file_alloc();
+
+				if(start->data == 0x0)
+					goto_errno(err, E_NOMEM);
+			}
 
 			path += n;
 			break;
 		}
 	}
+
+
+err:
+	fs_node_free(start);
+	return errno;
 }
 
 static int rootfs_close(fs_filed_t *fd){
-	fs_rmfd(fd);
+	fs_fd_free(fd);
 	return E_OK;
 }
 
@@ -316,25 +316,23 @@ static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data){
 }
 
 static int rootfs_rmnode(fs_node_t *start, char const *path){
-	fs_ops_t *ops;
-
-
 	if(*path == 0)
 		return_errno(E_INVAL);
 
-	switch(node_find(&start, &path)){
+	switch(fs_node_find(&start, &path)){
 	case 0:
 		/* target node found, so remove it */
-		return node_free(start);
+		if(start->data)
+			file_free(start->data);
+
+		return fs_node_free(start);
 
 	case -2:
 		/* file system boundary reached, hence call subsequent file system handler */
-		ops = fs_get_ops(start->fs_id);
-
-		if(ops == 0x0 || ops->rmnode == 0x0)
+		if(start->ops->rmnode == 0x0)
 			return_errno(E_NOIMP);
 
-		return ops->rmnode(start, path);
+		return start->ops->rmnode(start, path);
 
 	case -1:
 		/* part of path is not a directory */
@@ -347,13 +345,10 @@ static int rootfs_rmnode(fs_node_t *start, char const *path){
 }
 
 static int rootfs_chdir(fs_node_t *start, char const *path){
-	fs_ops_t *ops;
-
-
 	if(*path == 0)
 		return_errno(E_INVAL);
 
-	switch(node_find(&start, &path)){
+	switch(fs_node_find(&start, &path)){
 	case 0:
 		/* target node found, set current process working directory */
 		current_thread[PIR]->parent->cwd = start;
@@ -361,166 +356,16 @@ static int rootfs_chdir(fs_node_t *start, char const *path){
 
 	case -2:
 		/* file system boundary reached, hence call subsequent file system handler */
-		ops = fs_get_ops(start->fs_id);
-
-		if(ops == 0x0 || ops->chdir == 0x0)
+		if(start->ops->chdir == 0x0)
 			return_errno(E_NOIMP);
 
-		return ops->chdir(start, path);
+		return start->ops->chdir(start, path);
 
 	case -1:
 		return_errno(E_INVAL);
 
 	default:
 		return_errno(E_UNAVAIL);
-	}
-}
-
-static fs_node_t *node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir){
-	fs_node_t *node,
-			  *child;
-
-
-	/* allocate node */
-	node = kmalloc(sizeof(fs_node_t));
-
-	if(node == 0x0)
-		goto_errno(err_0, E_NOMEM);
-
-	node->name = kmalloc(name_len + 1);
-
-	if(node->name == 0x0)
-		goto_errno(err_1, E_NOMEM);
-
-	/* init node attributes */
-	node->fs_id = rootfs_id;
-	node->ref_cnt = 0;
-	node->is_dir = is_dir;
-
-	strncpy(node->name, name, name_len);
-	node->name[name_len] = 0;
-
-	node->data = 0x0;
-
-	if(is_dir == false && strcmp(name, ".") != 0 && strcmp(name, "..") != 0){
-		node->data = file_alloc();
-
-		if(node->data == 0x0)
-			goto_errno(err_2, E_NOMEM);
-	}
-
-	/* add node to file system */
-	node->parent = parent;
-	node->childs = 0x0;
-
-	// add '.' and '..' childs for directories
-	if(is_dir){
-		child = node_alloc(node, ".", 1, false);
-
-		if(child == 0x0)
-			goto err_2;
-
-		child = node_alloc(node, "..", 2, false);
-
-		if(child == 0x0)
-			goto err_3;
-	}
-
-	list_add_tail(parent->childs, node);
-
-	return node;
-
-
-err_3:
-	node_free(node->childs);
-
-err_2:
-	kfree(node->name);
-
-err_1:
-	kfree(node);
-
-err_0:
-	return 0;
-}
-
-static int node_free(fs_node_t *node){
-	fs_node_t *child;
-
-
-	if(node->ref_cnt > 0)
-		return_errno(E_INUSE);
-
-	list_for_each(node->childs, child){
-		if(node_free(child) != E_OK)
-			return errno;
-	}
-
-	list_rm(node->parent->childs, node);
-
-	file_free(node->data);
-	kfree(node->name);
-	kfree(node);
-
-	return E_OK;
-}
-
-/**
- * \brief	try to find the node specified in path
- *
- * \param	start	node to use as search root
- * \param	path	path to search for
- *
- * \return	0	target node found
- * 			>0	no matching node found for the name of the next n characters of path
- * 			-1	a part of path is not a directory
- *			-2	start is of different file system type than rootfs_id
- *
- * \post	start contains a pointer to the last valid node.
- * 			if the return value is 0, start contains the target node.
- * 			if the return value is 1 the file system id of the current
- * 			node is different from rootfs_id, hence a subsequent file
- * 			system needs to be called to continue the search.
- *
- * \post	path points to the next part of the path that needs to be
- * 			evaluated. if start is the target node, path points to 0x0.
- */
-static int node_find(fs_node_t **start, char const **path){
-	size_t n;
-	fs_node_t *child;
-
-
-	while(1){
-		/* skip leading '/' */
-		while(**path == '/' && **path != 0)
-			++(*path);
-
-		/* end of path reached, hence start is the desired node */
-		if(**path == 0)
-			return 0;
-
-		/* return if start is no directory */
-		if((*start)->is_dir == false)
-			return -1;
-
-		/* descent directory hierarchy */
-		n = 0;
-
-		while((*path)[n] != '/' && (*path)[n] != 0)
-			++n;
-
-		child = list_find_strn((*start)->childs, name, *path, n);
-
-		/* no matching child found */
-		if(child == 0x0)
-			return n;
-
-		*start = child;
-		*path += n;
-
-		/* child is of different file system id */
-		if((*start)->fs_id != rootfs_id)
-			return -2;
 	}
 }
 

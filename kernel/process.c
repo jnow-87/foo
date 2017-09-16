@@ -126,10 +126,10 @@ void process_destroy(process_t *this_p){
 	current_thread[PIR] = list_first(this_p->threads);
 
 	list_for_each(this_p->fds, fd){
-		ops = fs_get_ops(fd->node->fs_id);
+		ops = fd->node->ops;
 
-		if(ops != 0x0 && ops->close != 0x0)	ops->close(fd);
-		else								fs_rmfd(fd);
+		if(ops->close != 0x0)	ops->close(fd);
+		else					fs_fd_free(fd);
 	}
 
 	current_thread[PIR] = cur_thread;
