@@ -14,11 +14,11 @@
 /* macros */
 #ifdef CONFIG_KERNEL_EARLY_PRINT
 
-#define do_init_call(b, e, s, pe)	_do_init_call(b, e, s, pe)
+#define do_init_call(b, e, s, pe)	{ if(errno == E_OK) _do_init_call(b, e, s, pe); }
 
 #else // CONFIG_KERNEL_EARLY_PRINT
 
-#define do_init_call(b, e, s, pe)	_do_init_call(b, e)
+#define do_init_call(b, e, s, pe)	{ if(errno == E_OK) _do_init_call(b, e); }
 
 #endif // CONFIG_KERNEL_EARLY_PRINT
 
@@ -118,7 +118,7 @@ static void _do_init_call(init_call_t *base, init_call_t *end, char const *stage
 		(void)(*p)();
 
 		if(errno != E_OK && p_err)
-			cprintf(WARN, "\033[33m init-call $s at %#x failed with return code %d\n\033[0m", stage, *p, errno);
+			WARN("\033[33minit-call %s at %#x failed with return code %#x\n\033[0m", stage, *p, errno);
 	}
 }
 

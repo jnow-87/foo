@@ -17,11 +17,11 @@ typedef int (*init_call_t)(void);
  * currently defined init levels, order according to calling sequence
  *
  *	core 0		-	core local initialisation, e.g. caches, mmu
- * 	kernel 0	-	kernel basic services, e.g. kmalloc
+ * 	kernel 0	-	kernel basic services, e.g. kmalloc, basic file system
  *	platform 0	-	platform basic initialisation
  *	platform 1	-	platform device initialisation (afterwards uart shall be usable)
- *	kernel 1	-	kernel infrastructure, e.g. umalloc, basic filesystem
- *	kernel 2	-	kernel higher services, e.g. rootfs, devfs, scheduler
+ *	kernel 1	-	kernel infrastructure, e.g. umalloc, rootfs
+ *	kernel 2	-	kernel higher services, e.g. devfs, scheduler
  *	driver		-	driver
  *	core 1		-	core SMP initialisation
  */
