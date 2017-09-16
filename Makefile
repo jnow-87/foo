@@ -18,7 +18,7 @@ githooks_tree := .githooks
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := arch kernel lib sys init testing scripts/memlayout
+src_dirs := arch kernel driver lib sys init testing scripts/memlayout
 
 kernel_name := kimg.elf
 lib_name := libsys.a
@@ -157,7 +157,7 @@ gperfflags := \
 ####
 
 kernel := $(build_tree)/$(kernel_name)
-kernel_deps := kernel/obj.o arch/obj.o sys/obj.o
+kernel_deps := kernel/obj.o arch/obj.o driver/obj.o sys/obj.o
 libsys := $(build_tree)/lib/$(lib_name)
 libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
 
