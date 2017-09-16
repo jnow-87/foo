@@ -34,11 +34,11 @@
 #define CONFIG_KMSG_DEBUG	0x0
 #endif // CONFIG_KERNEL_MSG_DEBUG
 
-#ifdef CONFIG_KERNEL_MSG_STAT
+#ifdef CONFIG_KERNEL_STAT
 #define CONFIG_KMSG_STAT	KMSG_STAT
 #else
 #define CONFIG_KMSG_STAT	0x0
-#endif // CONFIG_KERNEL_MSG_STAT
+#endif // CONFIG_KERNEL_STAT
 
 
 // kernel option initializer

@@ -3,6 +3,7 @@
 #include <kernel/rootfs.h>
 #include <kernel/devfs.h>
 #include <kernel/kmem.h>
+#include <kernel/kprintf.h>
 #include <sys/list.h>
 
 
@@ -27,6 +28,8 @@ int devfs_dev_register(char const *name, devfs_ops_t *ops){
 	devfs_dev_t *dev;
 	fs_node_t *node;
 
+
+	DEBUG("register device \"%s\"\n", name);
 
 	if(id < 0)
 		return_errno(E_LIMIT);
@@ -109,6 +112,7 @@ static int devfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 
 	if(start == 0x0)
 		return_errno(E_INVAL);
+	DEBUG("open device \"%s\"\n", start->name);
 
 	fd = fs_fd_alloc(start);
 

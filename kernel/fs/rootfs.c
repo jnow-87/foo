@@ -5,6 +5,7 @@
 #include <kernel/rootfs.h>
 #include <kernel/kmem.h>
 #include <kernel/sched.h>
+#include <kernel/kprintf.h>
 #include <sys/file.h>
 #include <sys/fcntl.h>
 #include <sys/types.h>
@@ -43,6 +44,8 @@ fs_node_t *rootfs_mkdir(char const *path, fs_ops_t *ops){
 
 	if(*path == 0)
 		goto_errno(err, E_INVAL);
+
+	DEBUG("register file system to \"%s\"\n", path);
 
 	node = &fs_root;
 
@@ -88,6 +91,9 @@ err:
 int rootfs_rmdir(fs_node_t *node){
 	if(!list_empty(node->childs) || node->data != 0x0)
 		return_errno(E_INUSE);
+
+	DEBUG("release file system from \"%s\"\n", node->name);
+
 	return fs_node_free(node);
 }
 
@@ -131,6 +137,8 @@ static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 	if(*path == 0)
 		return_errno(E_INVAL);
 
+	DEBUG("handle open for \"%s\"\n", path);
+
 	while(1){
 		n = fs_node_find(&start, &path);
 
@@ -145,12 +153,16 @@ static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 			if(start->is_dir == false && (mode & F_APPEND))
 				fd->fp = ((rootfs_file_t*)(start->data))->data_used;
 
+			DEBUG("created file descriptor with id %d\n", fd->id);
+
 			return fd->id;
 
 		case -2:
 			/* file system boundary reached, hence call subsequent file system handler */
 			if(start->ops->open == 0x0)
 				return_errno(E_NOIMP);
+
+			DEBUG("call subsequent file system\n");
 
 			return start->ops->open(start, path, mode);
 
@@ -190,6 +202,8 @@ err:
 }
 
 static int rootfs_close(fs_filed_t *fd){
+	DEBUG("handle close for %d\n", fd->id);
+
 	fs_fd_free(fd);
 	return E_OK;
 }
@@ -199,6 +213,8 @@ static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n){
 	fs_node_t *child;
 	rootfs_file_t *file;
 
+
+	DEBUG("handle read for %d\n", fd->id);
 
 	if(fd->node->is_dir){
 		m = 0;
@@ -258,6 +274,8 @@ static size_t rootfs_write(fs_filed_t *fd, void *buf, size_t n){
 	rootfs_file_t *file;
 
 
+	DEBUG("handle write for %d\n", fd->id);
+
 	/* write to a directory is not defined */
 	if(fd->node->is_dir)
 		goto_errno(err, E_INVAL);
@@ -298,6 +316,8 @@ static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data){
 	seek_t seek_p;
 
 
+	DEBUG("handle fcntl for %d\n", fd->id);
+
 	switch(cmd){
 	case F_SEEK:
 		(void)copy_from_user(&seek_p, data, sizeof(seek_t), current_thread[PIR]->parent);
@@ -318,6 +338,8 @@ static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data){
 static int rootfs_rmnode(fs_node_t *start, char const *path){
 	if(*path == 0)
 		return_errno(E_INVAL);
+
+	DEBUG("remove file system node \"%s\"\n", path);
 
 	switch(fs_node_find(&start, &path)){
 	case 0:

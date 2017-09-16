@@ -12,15 +12,7 @@
 
 
 /* macros */
-#ifdef CONFIG_KERNEL_EARLY_PRINT
-
-#define do_init_call(b, e, s, pe)	{ if(errno == E_OK) _do_init_call(b, e, s, pe); }
-
-#else // CONFIG_KERNEL_EARLY_PRINT
-
-#define do_init_call(b, e, s, pe)	{ if(errno == E_OK) _do_init_call(b, e); }
-
-#endif // CONFIG_KERNEL_EARLY_PRINT
+#define do_init_call(base, end, stage, pr_err)	{ if(errno == E_OK) _do_init_call(base, end, stage, pr_err); }
 
 
 /* extern variables */
@@ -42,15 +34,7 @@ kopt_t kopt = KOPT_INITIALISER;
 
 
 /* local/static prototypes */
-#ifdef CONFIG_KERNEL_EARLY_PRINT
-
 static void _do_init_call(init_call_t *base, init_call_t *end, char const *stage, bool p_err);
-
-#else // CONFIG_KERNEL_EARLY_PRINT
-
-static void _do_init_call(init_call_t *base, init_call_t *end);
-
-#endif // CONFIG_KERNEL_EARLY_PRINT
 
 
 /* global functions */
@@ -88,28 +72,24 @@ void kernel(void){
 		kernel_panic();
 
 	/* kernel statistics */
-#ifdef CONFIG_KERNEL_STAT
 	kernel_stat();
-#endif // CONFIG_KERNEL_STAT
 
 	/* kernel test */
-#ifdef CONFIG_KERNEL_TEST
 	kernel_test();
-#endif // CONFIG_KERNEL_TEST
 
 	/* enable interrupts */
 	int_enable(INT_ALL);
 
 	/* kernel thread */
 	while(1){
+		// TODO implement kernel thread processing
+		// TODO call sched_resched()
 		core_sleep();
 	}
 }
 
 
 /* local functions */
-#ifdef CONFIG_KERNEL_EARLY_PRINT
-
 static void _do_init_call(init_call_t *base, init_call_t *end, char const *stage, bool p_err){
 	init_call_t *p;
 
@@ -117,20 +97,9 @@ static void _do_init_call(init_call_t *base, init_call_t *end, char const *stage
 	for(p=base; p<end; p++){
 		(void)(*p)();
 
+#ifdef CONFIG_KERNEL_EARLY_PRINT
 		if(errno != E_OK && p_err)
 			WARN("\033[33minit-call %s at %#x failed with return code %#x\n\033[0m", stage, *p, errno);
-	}
-}
-
-#else // CONFIG_KERNEL_EARLY_PRINT
-
-static void _do_init_call(init_call_t *base, init_call_t *end){
-	init_call_t *p;
-
-
-	for(p=base; p<end; p++){
-		(*p)();
-	}
-}
-
 #endif // CONFIG_KERNEL_EARLY_PRINT
+	}
+}
