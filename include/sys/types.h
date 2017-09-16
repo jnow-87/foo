@@ -16,7 +16,7 @@ typedef void					*addr_t;
 
 
 /* fixed-width types */
-#ifndef HOST
+#ifndef BUILD_HOST
 #if CONFIG_ADDR_WIDTH == 8
 
 typedef signed char				int8_t;
@@ -68,7 +68,7 @@ typedef long long int			sptrdiff_t;
 
 #endif // CONFIG_ADDR_WIDTH
 
-#else // HOST
+#else // BUILD_HOST
 
 #include <inttypes.h>
 #include <stddef.h>
@@ -77,7 +77,7 @@ typedef long int				ssize_t;
 typedef ptrdiff_t				sptrdiff_t;
 #define PTRDIFF_T				unsigned long long int
 
-#endif // HOST
+#endif // BUILD_HOST
 
 
 #endif // SYS_TYPES_H

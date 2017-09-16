@@ -1,5 +1,5 @@
 /* target header */
-#include ARCH_HEADER
+#include BUILD_ARCH_HEADER
 #include <sys/escape.h>
 
 /* host header */

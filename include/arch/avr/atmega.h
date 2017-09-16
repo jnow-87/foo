@@ -55,7 +55,7 @@
 #ifndef __x86_64__
 
 // kernel callbacks
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 
 static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.page_entry_write = 0x0,
@@ -85,7 +85,7 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 #endif // CONFIG_KERNEL_UART
 };
 
-#endif // KERNEL
+#endif // BUILD_KERNEL
 
 // common callbacks
 static const arch_callbacks_common_t arch_cbs_common = {
@@ -101,20 +101,20 @@ static const arch_callbacks_common_t arch_cbs_common = {
 	.core_halt = avr_core_halt,
 
 	/* syscall */
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 	.sc = 0x0,
 #else
 	.sc = avr_sc,
-#endif // KERNEL
+#endif // BUILD_KERNEL
 
 	/* main entry */
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 	.lib_init = 0x0,
 	.lib_main = 0x0,
 #else
 	.lib_init = avr_lib_init,
 	.lib_main = avr_lib_main,
-#endif // KERNEL
+#endif // BUILD_KERNEL
 };
 
 // architecture info
