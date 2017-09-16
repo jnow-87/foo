@@ -108,10 +108,6 @@ static int devfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 	devfs_dev_t *dev;
 
 
-	start = list_find_str(start->childs, name, path);
-
-	if(start == 0x0)
-		return_errno(E_INVAL);
 	DEBUG("open device \"%s\"\n", start->name);
 
 	fd = fs_fd_alloc(start);
