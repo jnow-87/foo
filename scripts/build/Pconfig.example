@@ -39,8 +39,8 @@ menu "Build system"
 	config LDFLAGS
 		string LDFLAGS
 
-	config LDRFLAGS
-		string LDRFLAGS
+	config LDLIBS
+		string LDLIBS
 
 	config ARCHFLAGS
 		string ARCHFLAGS
@@ -82,7 +82,7 @@ menu "Build system"
 	config HOSTLDFLAGS
 		string HOSTLDFLAGS
 
-	config HOSTLDRFLAGS
+	config HOSTLDLIBS
 		string HOSTLDRFLAGS
 
 	config HOSTARCHFLAGS

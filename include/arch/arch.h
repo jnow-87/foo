@@ -2,16 +2,16 @@
 #define ARCH_H
 
 
-#include ARCH_HEADER
+#include BUILD_ARCH_HEADER
 
 
 /* macros */
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 
 #define arch_kernel_call(p, err_ret) \
 	(arch_cbs_kernel.p == 0) ? (err_ret) : arch_cbs_kernel.p
 
-#endif // KERNEL
+#endif // BUILD_KERNEL
 
 #define arch_common_call(p, err_ret) \
 	(arch_cbs_common.p == 0) ? (err_ret) : arch_cbs_common.p

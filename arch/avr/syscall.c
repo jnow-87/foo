@@ -19,13 +19,13 @@ typedef struct{
 
 
 /* local/static prototypes */
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 static int avr_sc_hdlr(int_num_t num);
-#endif // KERNEL
+#endif // BUILD_KERNEL
 
 
 /* global functions */
-#ifdef LIBSYS
+#ifdef BUILD_LIBSYS
 avr_sc_arg_t sc_arg;
 
 int avr_sc(sc_t num, void *param, size_t psize){
@@ -46,11 +46,11 @@ int avr_sc(sc_t num, void *param, size_t psize){
 
 	return E_OK;
 }
-#endif // LIBSYS
+#endif // BUILD_LIBSYS
 
 
 /* local functions */
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 static int avr_sc_init(void){
 	/* enable interrupt used to trigger a syscall */
 	// enable configured pin change interrupt
@@ -67,9 +67,9 @@ static int avr_sc_init(void){
 }
 
 driver_init(avr_sc_init);
-#endif // KERNEL
+#endif // BUILD_KERNEL
 
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 static int avr_sc_hdlr(int_num_t num){
 	avr_sc_arg_t *arg;
 
@@ -84,4 +84,4 @@ static int avr_sc_hdlr(int_num_t num){
 	/* call kernel syscall handler */
 	return ksc_hdlr(arg->num, arg->param, arg->psize);
 }
-#endif // KERNEL
+#endif // BUILD_KERNEL

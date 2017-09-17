@@ -8,13 +8,28 @@
 
 /* incomplete types */
 struct process_t;
+struct fs_filed_t;
+struct fs_node_t;
 
 
 /* types */
+// file system types
+typedef struct{
+																					/**  \return	success			error */
+	int (*open)(struct fs_node_t *start, char const *path, f_mode_t mode);				/**< \return	descriptor id	<0		allocate file descriptor using fs_fd_alloc() for given path */
+	int (*close)(struct fs_filed_t *fd);												/**< \return	E_OK			<0		free file descriptor using fs_fd_free() */
+	size_t (*read)(struct fs_filed_t *fd, void *buf, size_t n);							/**< \return	#bytes read		0		copy data to buffer */
+	size_t (*write)(struct fs_filed_t *fd, void *buf, size_t n);						/**< \return	#bytes written	0		copy data from buffer */
+	int (*ioctl)(struct fs_filed_t *fd, int request, void *data);						/**< \return	E_OK			<0 		file dependent operation */
+	int (*fcntl)(struct fs_filed_t *fd, int cmd, void *data);							/**< \return	E_OK 			<0 		file dependent operation */
+	int (*rmnode)(struct fs_node_t *start, char const *path);							/**< \return	E_OK			<0		remove given node from file system */
+	int (*chdir)(struct fs_node_t *start, char const *path);							/**< \return	E_OK			<0		change current working directory of current process */
+} fs_ops_t;
+
 // file system node types
 typedef struct fs_node_t{
-	int fs_id;
 	char *name;
+	fs_ops_t *ops;
 
 	void *data;
 	unsigned int ref_cnt;
@@ -37,38 +52,17 @@ typedef struct fs_filed_t{
 					  *next;
 } fs_filed_t;
 
-// file system types
-typedef struct{
-																				/**  \return	success			error */
-	int (*open)(fs_node_t *start, char const *path, f_mode_t mode);				/**< \return	descriptor id	<0		allocate file descriptor using fs_mkfd() for given path */
-	int (*close)(fs_filed_t *fd);												/**< \return	E_OK			<0		free file descriptor using fs_rmfd() */
-	size_t (*read)(fs_filed_t *fd, void *buf, size_t n);						/**< \return	#bytes read		0		copy data to buffer */
-	size_t (*write)(fs_filed_t *fd, void *buf, size_t n);						/**< \return	#bytes written	0		copy data from buffer */
-	int (*ioctl)(fs_filed_t *fd, int request, void *data);						/**< \return	E_OK			<0 		file dependent operation */
-	int (*fcntl)(fs_filed_t *fd, int cmd, void *data);							/**< \return	E_OK 			<0 		file dependent operation */
-	int (*rmnode)(fs_node_t *start, char const *path);							/**< \return	E_OK			<0		remove given node from file system */
-	int (*chdir)(fs_node_t *start, char const *path);							/**< \return	E_OK			<0		change current working directory of current process */
-} fs_ops_t;
-
-typedef struct fs_t{
-	int id;
-	fs_ops_t *ops;
-
-	struct fs_t *prev,
-				*next;
-} fs_t;
-
 
 /* prototypes */
-// file system operations
-int fs_register(fs_ops_t *ops);
-int fs_release(int fs_id);
-
-fs_ops_t *fs_get_ops(int fs_id);
-
 // file operations
-fs_filed_t *fs_mkfd(fs_node_t *node);
-void fs_rmfd(fs_filed_t *fd);
+fs_filed_t *fs_fd_alloc(fs_node_t *node);
+void fs_fd_free(fs_filed_t *fd);
+
+// file node operations
+fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, fs_ops_t *ops);
+int fs_node_free(fs_node_t *node);
+int fs_node_find(fs_node_t **start, char const **path);
+
 
 
 #endif // KERNEL_FS_H

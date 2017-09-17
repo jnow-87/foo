@@ -20,6 +20,7 @@ typedef enum{
 /* macros */
 #define KMSG_ANY	(KMSG_FATAL | KMSG_WARN | KMSG_DEBUG | KMSG_INFO | KMSG_STAT)
 
+// general print macros
 #ifdef CONFIG_KERNEL_MSG_FATAL
 #define	FATAL(fmt, ...)		cprintf(KMSG_FATAL, FG_RED "[FATAL]" RESET_ATTR " %25s()\t" FG_RED fmt RESET_ATTR, __FUNCTION__, ##__VA_ARGS__);
 #else
@@ -32,25 +33,31 @@ typedef enum{
 #define WARN(fmt, ...)
 #endif // CONFIG_KERNEL_MSG_WARN
 
-#ifdef CONFIG_KERNEL_MSG_DEBUG
-#define DEBUG(fmt, ...)		cprintf(KMSG_DEBUG, "[DEBUG] %25s()\t"fmt, __FUNCTION__, ##__VA_ARGS__)
-#else
-#define DEBUG(fmt, ...)
-#endif // CONFIG_KERNEL_MSG_DEBUG
-
 #ifdef CONFIG_KERNEL_MSG_INFO
 #define INFO(fmt, ...)		cprintf(KMSG_INFO, "[INFO] "fmt, ##__VA_ARGS__)
 #else
 #define INFO(fmt, ...)
-#endif // CONFIG_KERNEL_MSG_STAT
+#endif // CONFIG_KERNEL_MSG_INFO
 
-#ifdef CONFIG_KERNEL_MSG_STAT
+#ifdef CONFIG_KERNEL_STAT
 #define STAT(fmt, ...)		kprintf(KMSG_STAT, fmt, ##__VA_ARGS__)
 #else
 #define STAT(fmt, ...)
-#endif // CONFIG_KERNEL_MSG_STAT
+#endif // CONFIG_KERNEL_STAT
 
-#if CONFIG_KERNEL_MSG_FATAL || CONFIG_KERNEL_MSG_WARN || CONFIG_KERNEL_MSG_DEBUG || CONFIG_KERNEL_MSG_INFO || CONFIG_KERNEL_MSG_STAT
+// debug print macros
+#if !defined(CONFIG_KERNEL_MSG_DEBUG) \
+ || (defined(BUILD_KERNEL_SYSCALL) && !defined(CONFIG_KERNEL_SC_DEBUG)) \
+ || (defined(BUILD_KERNEL_SMP) && !defined(CONFIG_KERNEL_SMP_DEBUG)) \
+ || (defined(BUILD_KERNEL_FS) && !defined(CONFIG_KERNEL_FS_DEBUG)) \
+ || (defined(BUILD_DRIVER) && !defined(CONFIG_DRIVER_DEBUG))
+#define DEBUG(fmt, ...)
+#else
+#define DEBUG(fmt, ...)		cprintf(KMSG_DEBUG, "[DEBUG] %25s()\t"fmt, __FUNCTION__, ##__VA_ARGS__)
+#endif
+
+// kprintf
+#if CONFIG_KERNEL_MSG_FATAL || CONFIG_KERNEL_MSG_WARN || CONFIG_KERNEL_MSG_DEBUG || CONFIG_KERNEL_MSG_INFO || CONFIG_KERNEL_STAT
 #ifdef CONFIG_KERNEL_SMP
 
 #define cprintf(lvl, fmt, ...) \
@@ -66,7 +73,7 @@ typedef enum{
 
 
 /* protoypes */
-#if CONFIG_KERNEL_MSG_FATAL || CONFIG_KERNEL_MSG_WARN || CONFIG_KERNEL_MSG_DEBUG || CONFIG_KERNEL_MSG_INFO || CONFIG_KERNEL_MSG_STAT
+#if CONFIG_KERNEL_MSG_FATAL || CONFIG_KERNEL_MSG_WARN || CONFIG_KERNEL_MSG_DEBUG || CONFIG_KERNEL_MSG_INFO || CONFIG_KERNEL_STAT
 
 void kprintf(kmsg_t lvl, char const *format, ...);
 

@@ -2,6 +2,8 @@
 #define SYS_LIST_H
 
 
+#include <sys/string.h>
+
 /**
  * \brief	macros to handle a double-linked list
  * 			they can be used with any structure that

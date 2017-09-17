@@ -85,6 +85,9 @@ static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags);
 
 /* global functions */
 char fputc(char c, FILE *stream){
+	if(stream->putc == 0x0 && stream->buf == 0x0)
+		return F_EOF;
+
 	if(stream->state & F_EOF)
 		return F_EOF;
 
@@ -94,6 +97,8 @@ char fputc(char c, FILE *stream){
 		return c;
 	}
 	else if(stream->buf){
+		// FIXME size of the buffer is not checked
+		// 		 struct FILE is missing a buffer len
 		stream->buf[stream->pos++] = c;
 		return c;
 	}
@@ -108,6 +113,9 @@ int fputs(char const *s, FILE *stream){
 	size_t len;
 
 
+	if(stream->puts == 0x0 && stream->buf == 0x0)
+		return F_EOF;
+
 	if(stream->state & F_EOF)
 		return F_EOF;
 
@@ -117,6 +125,8 @@ int fputs(char const *s, FILE *stream){
 		return 0;
 	}
 	else if(stream->buf){
+		// FIXME size of the buffer is not checked
+		// 		 struct FILE is missing a buffer len
 		len = strlen(s);
 
 		if(strncpy(stream->buf + stream->pos, s, len) < 0)
@@ -180,6 +190,9 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 	char buf[23];
 #endif // CONFIG_NOFLOAT
 
+
+	if((stream->putc == 0x0 || stream->puts == 0x0) && stream->buf == 0x0)
+		return 0;
 
 	n = 0;
 	blen = 0;

@@ -18,7 +18,7 @@ githooks_tree := .githooks
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := arch kernel lib sys init testing scripts/memlayout
+src_dirs := arch kernel driver lib sys init testing scripts/memlayout
 
 kernel_name := kimg.elf
 lib_name := libsys.a
@@ -65,7 +65,7 @@ cppflags := \
 	-std=gnu99 \
 	-I"$(src_tree)/include/" \
 	-I"$(build_tree)/" \
-	-DARCH_HEADER="$(CONFIG_ARCH_HEADER)"
+	-DBUILD_ARCH_HEADER="$(CONFIG_ARCH_HEADER)"
 
 ldlibs := \
 	$(LDLIBS) \
@@ -116,8 +116,8 @@ hostcppflags := \
 	$(hostcppflags) \
 	-std=gnu99 \
 	-I"$(build_tree)/" \
-	-DARCH_HEADER="$(CONFIG_ARCH_HEADER)" \
-	-DHOST
+	-DBUILD_ARCH_HEADER="$(CONFIG_ARCH_HEADER)" \
+	-DBUILD_HOST
 
 hostldlibs := \
 	$(HOSTLDLIBS) \
@@ -157,7 +157,7 @@ gperfflags := \
 ####
 
 kernel := $(build_tree)/$(kernel_name)
-kernel_deps := kernel/obj.o arch/obj.o sys/obj.o
+kernel_deps := kernel/obj.o arch/obj.o driver/obj.o sys/obj.o
 libsys := $(build_tree)/lib/$(lib_name)
 libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
 
@@ -179,7 +179,7 @@ sysroot_create := scripts/sysroot/create.sh
 
 # kernel target
 .PHONY: kernel
-kernel: cppflags += -DKERNEL
+kernel: cppflags += -DBUILD_KERNEL
 kernel: check_config check_configheader check_memlayout versionheader $(kernel)
 
 $(kernel): ldlibs += $(ldlibs-kernel-arch)
@@ -190,12 +190,12 @@ $(kernel): $(addprefix $(build_tree)/, $(kernel_deps))
 
 # init target
 .PHONY: init
-init: cppflags += -DINIT
+init: cppflags += -DBUILD_INIT
 init: check_config check_configheader libsys $(init)
 
 # libsys targets
 .PHONY: libsys
-libsys: cppflags += -DLIBSYS
+libsys: cppflags += -DBUILD_LIBSYS
 libsys: check_config check_configheader $(libsys)
 
 $(libsys): ldlibs += -Lscripts/linker -Tlibsys_$(CONFIG_ARCH).lds

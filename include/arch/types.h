@@ -3,7 +3,7 @@
 
 
 #ifndef ASM
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 
 #include <arch/interrupt.h>
 #include <kernel/process.h>
@@ -11,7 +11,7 @@
 #include <kernel/page.h>
 #include <kernel/ipi.h>
 
-#endif // KERNEL
+#endif // BUILD_KERNEL
 
 #include <sys/errno.h>
 #include <sys/syscall.h>
@@ -22,16 +22,16 @@
 
 
 /* incomplete types */
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 
 struct process_t;
 struct thread_t;
 
-#endif // KERNEL
+#endif // BUILD_KERNEL
 
 
 /* types */
-#ifdef KERNEL
+#ifdef BUILD_KERNEL
 
 typedef struct{
 	/* virtual memory management */
@@ -60,7 +60,7 @@ typedef struct{
 	int (*puts)(char const *s);
 } arch_callbacks_kernel_t;
 
-#endif // KERNEL
+#endif // BUILD_KERNEL
 
 typedef struct{
 	/* time */

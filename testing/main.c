@@ -11,19 +11,15 @@
 
 
 /* external variables */
-extern test_case_t __test_case_hdlr_base[];
-extern test_case_t __test_case_hdlr_end[];
-
-extern char *__test_case_desc_base[];
-extern char *__test_case_desc_end[];
+extern test_case_t __test_cases_base[];
+extern test_case_t __test_cases_end[];
 
 
 /* global functions */
 int main(int argc, char **argv){
-	char **desc;
 	int log;
 	unsigned int passed, failed;
-	test_case_t *hdlr;
+	test_case_t *tc;
 
 
 	/* init */
@@ -43,29 +39,27 @@ int main(int argc, char **argv){
 	}
 
 	/* iterate through test cases */
-	hdlr = __test_case_hdlr_base;
-	desc = __test_case_desc_base;
+	tc = __test_cases_base;
 
-	while(hdlr != __test_case_hdlr_end && desc != __test_case_desc_end){
-		printf("run test case: %s... ", *desc);
-		tlog(log, " === test case: %s ===\n\n", *desc);
+	while(tc != __test_cases_end){
+		printf("run test case: %s... ", tc->desc);
+		tlog(log, " === test case: %s ===\n\n", tc->desc);
 
 
-		if((*hdlr)(log) == 0){
+		if((tc->hdlr)(log) == 0){
 			printf(FG_GREEN "passed\n" RESET_ATTR);
-			tlog(log, "\n === test case: %s passed ===\n\n\n", *desc);
+			tlog(log, "\n === test case: %s passed ===\n\n\n", tc->desc);
 
 			passed++;
 		}
 		else{
 			printf(FG_RED "failed\n" RESET_ATTR);
-			tlog(log, "\n === test case: %s failed ===\n\n\n", *desc);
+			tlog(log, "\n === test case: %s failed ===\n\n\n", tc->desc);
 
 			failed++;
 		}
 
-		hdlr++;
-		desc++;
+		tc++;
 	}
 
 	/* summary */

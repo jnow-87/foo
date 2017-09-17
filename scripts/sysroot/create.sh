@@ -46,5 +46,5 @@ done
 
 [ ${verbose} -gt 0 ] && echo -e "\n"
 
-# replace ARCH_HEADER macro by actual architecture header
-sed -i -e "s:\bARCH_HEADER\b:<${arch_hdr}>:" ${sysroot_dir}/usr/include/arch/arch.h
+# replace BUILD_ARCH_HEADER macro by actual architecture header
+sed -i -e "s:\bBUILD_ARCH_HEADER\b:<${arch_hdr}>:" ${sysroot_dir}/usr/include/arch/arch.h

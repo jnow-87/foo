@@ -1,0 +1,4 @@
+menu "loopback device"
+	config LOOP_BUF_SIZE
+	int "Loop device buffer size"
+endmenu

@@ -1,4 +1,4 @@
-obj-y :=
+obj-y := loop/
 
 
 ####
@@ -11,3 +11,7 @@ obj-y :=
 ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u" 0x10000); echo $$?),0)
   cflags-$(CONFIG_AVR) := -fno-jump-tables
 endif
+
+
+## feature
+cppflags-y := -DBUILD_DRIVER
