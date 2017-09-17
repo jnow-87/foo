@@ -85,7 +85,7 @@ static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags);
 
 /* global functions */
 char fputc(char c, FILE *stream){
-	if(stream->putc == 0x0)
+	if(stream->putc == 0x0 && stream->buf == 0x0)
 		return F_EOF;
 
 	if(stream->state & F_EOF)
@@ -113,7 +113,7 @@ int fputs(char const *s, FILE *stream){
 	size_t len;
 
 
-	if(stream->puts == 0x0)
+	if(stream->puts == 0x0 && stream->buf == 0x0)
 		return F_EOF;
 
 	if(stream->state & F_EOF)
@@ -191,7 +191,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 #endif // CONFIG_NOFLOAT
 
 
-	if(stream->putc == 0x0 || stream->puts == 0x0)
+	if((stream->putc == 0x0 || stream->puts == 0x0) && stream->buf == 0x0)
 		return 0;
 
 	n = 0;
