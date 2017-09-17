@@ -16,10 +16,9 @@ int snprintf(char *str, size_t size, char const *format, ...);
 
 
 /* macros */
-#define test_case(hdlr, desc) \
-	static test_case_t test_case_##hdlr __section(".test_case_hdlr") __used = hdlr; \
-	static char const test_case_desc_str_##hdlr[]  __used = desc; \
-	static char const *test_case_desc_##hdlr __section(".test_case_desc") __used = test_case_desc_str_##hdlr;
+#define test_case(_hdlr, _desc) \
+	static char const test_case_desc_##_hdlr[]  __used = _desc; \
+	static test_case_t test_case_##_hdlr __section(".test_cases") __used = { .hdlr = _hdlr, .desc = test_case_desc_##_hdlr, }
 
 #define tlog(log, fmt, ...){ \
 	char _s[256]; \
@@ -79,7 +78,11 @@ int snprintf(char *str, size_t size, char const *format, ...);
 
 
 /* types */
-typedef int (*test_case_t)(int fd_log);
+typedef int (*tc_hdlr_t)(int fd_log);
+typedef struct{
+	tc_hdlr_t hdlr;
+	char const *desc;
+} test_case_t;
 
 
 #endif // TESTCASE_H

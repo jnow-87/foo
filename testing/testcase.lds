@@ -1,15 +1,9 @@
 SECTIONS {
 	.testing : {
-		__test_case_hdlr_base = .;
+		__test_cases_base = .;
 
-		*(.test_case_hdlr)
+		*(.test_cases)
 
-		__test_case_hdlr_end = .;
-
-		__test_case_desc_base = .;
-
-		*(.test_case_desc)
-
-		__test_case_desc_end = .;
+		__test_cases_end = .;
 	}
 }
