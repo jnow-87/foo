@@ -1,17 +1,15 @@
 #include <kernel/init.h>
 #include <kernel/devfs.h>
 #include <kernel/kprintf.h>
+#include <kernel/kmem.h>
 #include <sys/errno.h>
 #include <sys/string.h>
-
-
-/* macros */
-#define LOOP_BUF_SIZE	16
+#include <sys/ringbuf.h>
 
 
 /* local variables */
 static int loop_dev_id = 0;
-static char loop_buf[LOOP_BUF_SIZE];
+static ringbuf_t loop_buf;
 
 
 /* local/static prototypes */
@@ -25,9 +23,19 @@ static int loop_fcntl(int id, fs_filed_t *fd, int cmd, void *data);
 
 /* local functions */
 static int loop_init(void){
+	char *b;
 	devfs_ops_t ops;
 
 
+	/* init device buffer */
+	b = kmalloc(CONFIG_LOOP_BUF_SIZE);
+
+	if(b == 0x0)
+		return_errno(E_NOMEM);
+
+	ringbuf_init(&loop_buf, b, CONFIG_LOOP_BUF_SIZE);
+
+	/* register device */
 	ops.open = loop_open;
 	ops.close = loop_close;
 	ops.read = loop_read;
@@ -38,8 +46,14 @@ static int loop_init(void){
 	loop_dev_id = devfs_dev_register("loop", &ops);
 
 	if(loop_dev_id < 0)
-		return errno;
+		goto err;
+
 	return E_OK;
+
+
+err:
+	kfree(b);
+	return errno;
 }
 
 driver_init(loop_init);
@@ -55,23 +69,16 @@ static int loop_close(int id){
 }
 
 static int loop_read(int id, fs_filed_t *fd, void *buf, size_t n){
-	if(n > LOOP_BUF_SIZE)
-		n = LOOP_BUF_SIZE;
-
-	DEBUG("copy from loop buffer \"%*.*s\"\n", n, n, loop_buf);
-	memcpy(buf, loop_buf, n);
+	n = ringbuf_read(&loop_buf, buf, n);
+	DEBUG("copy from loop buffer \"%*.*s\"\n", n, n, buf);
 
 	return n;
 }
 
 static int loop_write(int id, fs_filed_t *fd, void *buf, size_t n){
-	if(n > LOOP_BUF_SIZE){
-		DEBUG("data too large for loop buffer\n");
-		return_errno(E_LIMIT);
-	}
+	n = ringbuf_write(&loop_buf, buf, n);
 
 	DEBUG("copy to buffer \"%*.*s\"\n", n, n, buf);
-	memcpy(loop_buf, buf, n);
 
 	return n;
 }
