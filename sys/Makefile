@@ -1,5 +1,5 @@
-obj-y := errno.o string.o stream.o memblock.o
-hostobj-y := errno.o string.o stream.o memblock.o
+obj-y := errno.o string.o stream.o memblock.o ringbuf.o
+hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o
 
 obj-$(CONFIG_KERNEL_SMP) += mutex.o
 
