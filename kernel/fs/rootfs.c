@@ -177,7 +177,7 @@ static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 				return_errno(E_UNAVAIL);
 
 			// create node
-			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), 0x0);
+			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), start->ops);
 
 			if(start == 0x0)
 				return errno;
