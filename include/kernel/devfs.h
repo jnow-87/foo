@@ -9,7 +9,7 @@
 /* types */
 typedef struct{
 	int (*open)(int id, fs_filed_t *fd, f_mode_t mode);
-	int (*close)(int id);
+	int (*close)(int id, fs_filed_t *fd);
 	int (*read)(int id, fs_filed_t *fd, void *buf, size_t n);
 	int (*write)(int id, fs_filed_t *fd, void *buf, size_t n);
 	int (*ioctl)(int id, fs_filed_t *fd, int request, void *data);
