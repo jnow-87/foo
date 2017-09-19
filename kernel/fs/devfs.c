@@ -120,7 +120,15 @@ static int devfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 	if(dev->ops.open == 0x0)
 		return fd->id;
 
-	return dev->ops.open(dev->id, fd, mode);
+	if(dev->ops.open(dev->id, fd, mode) != E_OK)
+		goto err;
+
+	return fd->id;
+
+
+err:
+	fs_fd_free(fd);
+	return errno;
 }
 
 static int devfs_close(fs_filed_t *fd){
@@ -130,7 +138,7 @@ static int devfs_close(fs_filed_t *fd){
 	dev = (devfs_dev_t*)fd->node->data;
 
 	if(dev->ops.close != 0x0){
-		if(dev->ops.close(dev->id) != E_OK)
+		if(dev->ops.close(dev->id, fd) != E_OK)
 			return errno;
 	}
 

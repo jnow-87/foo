@@ -71,12 +71,14 @@ int write(int fd, void *buf, size_t n){
 	return p.data_len;
 }
 
-int ioctl(int fd, int cmd, void *data){
+int ioctl(int fd, int cmd, void *data, size_t data_len){
 	sc_fs_t p;
 
 
+	p.fd = fd;
 	p.cmd = cmd;
 	p.data = data;
+	p.data_len = data_len;
 	p.errno = E_OK;
 
 	errno = sc(SC_IOCTL, &p);
@@ -87,12 +89,14 @@ int ioctl(int fd, int cmd, void *data){
 	return 0;
 }
 
-int fcntl(int fd, int request, void *data){
+int fcntl(int fd, int request, void *data, size_t data_len){
 	sc_fs_t p;
 
 
+	p.fd = fd;
 	p.cmd = request;
 	p.data = data;
+	p.data_len = data_len;
 	p.errno = E_OK;
 
 	errno = sc(SC_FCNTL, &p);
@@ -142,7 +146,7 @@ int fseek(int fd, int offset, whence_t whence){
 	p.whence = whence;
 	p.offset = offset;
 
-	if(fcntl(fd, F_SEEK, &p) != E_OK)
+	if(fcntl(fd, F_SEEK, &p, sizeof(seek_t)) != E_OK)
 		return -1;
 	return 0;
 }
@@ -151,6 +155,6 @@ int ftell(int fd){
 	seek_t p;
 
 
-	fcntl(fd, F_TELL, &p);
+	fcntl(fd, F_TELL, &p, sizeof(seek_t));
 	return p.pos;
 }

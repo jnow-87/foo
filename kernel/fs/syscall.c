@@ -168,12 +168,16 @@ err:
 }
 
 static int sc_hdlr_ioctl(void *_p){
+	char data[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
 
 
 	/* initials */
 	p = (sc_fs_t*)_p;
+
+	if(copy_from_user(data, p->data, p->data_len, current_thread[PIR]->parent) != E_OK)
+		goto err;
 
 	/* get file descriptor */
 	fd = list_find(current_thread[PIR]->parent->fds, id, p->fd);
@@ -185,20 +189,34 @@ static int sc_hdlr_ioctl(void *_p){
 	if(fd->node->ops->ioctl == 0x0)
 		goto_errno(k_ok, E_NOIMP);
 
-	(void)fd->node->ops->ioctl(fd, p->cmd, p->data);
+	(void)fd->node->ops->ioctl(fd, p->cmd, data);
+
+	/* update user space */
+	if(copy_to_user(p->data, data, p->data_len, current_thread[PIR]->parent) != E_OK)
+		goto err;
+
 
 k_ok:
 	p->errno = errno;
 	return E_OK;
+
+
+err:
+	p->errno = errno;
+	return errno;
 }
 
 static int sc_hdlr_fcntl(void *_p){
+	char data[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
 
 
 	/* initials */
 	p = (sc_fs_t*)_p;
+
+	if(copy_from_user(data, p->data, p->data_len, current_thread[PIR]->parent) != E_OK)
+		goto err;
 
 	/* get file descriptor */
 	fd = list_find(current_thread[PIR]->parent->fds, id, p->fd);
@@ -210,11 +228,20 @@ static int sc_hdlr_fcntl(void *_p){
 	if(fd->node->ops->fcntl == 0x0)
 		goto_errno(k_ok, E_NOIMP);
 
-	(void)fd->node->ops->fcntl(fd, p->cmd, p->data);
+	(void)fd->node->ops->fcntl(fd, p->cmd, data);
+
+	/* update user space */
+	if(copy_to_user(p->data, data, p->data_len, current_thread[PIR]->parent) != E_OK)
+		goto err;
+
 
 k_ok:
 	p->errno = errno;
 	return E_OK;
+
+err:
+	p->errno = errno;
+	return errno;
 }
 
 static int sc_hdlr_rmnode(void *_p){

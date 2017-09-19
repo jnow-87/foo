@@ -177,7 +177,7 @@ static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
 				return_errno(E_UNAVAIL);
 
 			// create node
-			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), 0x0);
+			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), start->ops);
 
 			if(start == 0x0)
 				return errno;
@@ -214,7 +214,7 @@ static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n){
 	rootfs_file_t *file;
 
 
-	DEBUG("handle read for %d\n", fd->id);
+	DEBUG("handle read for %d from fp %u, %u bytes\n", fd->id, fd->fp, n);
 
 	if(fd->node->is_dir){
 		m = 0;
@@ -244,7 +244,6 @@ static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n){
 		fd->fp++;
 
 		return m;
-
 	}
 	else{
 		file = fd->node->data;
@@ -274,7 +273,7 @@ static size_t rootfs_write(fs_filed_t *fd, void *buf, size_t n){
 	rootfs_file_t *file;
 
 
-	DEBUG("handle write for %d\n", fd->id);
+	DEBUG("handle write for %d to fp %u, %u bytes\n", fd->id, fd->fp, n);
 
 	/* write to a directory is not defined */
 	if(fd->node->is_dir)
@@ -313,21 +312,14 @@ err:
 }
 
 static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data){
-	seek_t seek_p;
-
-
 	DEBUG("handle fcntl for %d\n", fd->id);
 
 	switch(cmd){
 	case F_SEEK:
-		(void)copy_from_user(&seek_p, data, sizeof(seek_t), current_thread[PIR]->parent);
-
-		return file_seek(fd, &seek_p);
+		return file_seek(fd, data);
 
 	case F_TELL:
-		seek_p.pos = fd->fp;
-		(void)copy_to_user(data, &seek_p, sizeof(seek_t), current_thread[PIR]->parent);
-
+		((seek_t*)data)->pos = fd->fp;
 		return errno;
 
 	default:
