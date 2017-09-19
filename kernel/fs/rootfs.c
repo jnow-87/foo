@@ -244,7 +244,6 @@ static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n){
 		fd->fp++;
 
 		return m;
-
 	}
 	else{
 		file = fd->node->data;

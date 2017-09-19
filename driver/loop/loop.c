@@ -60,7 +60,7 @@ driver_init(loop_init);
 
 static int loop_open(int id, fs_filed_t *fd, f_mode_t mode){
 	DEBUG("dummy callback for loop device\n");
-	return fd->id;
+	return E_OK;
 }
 
 static int loop_close(int id){
