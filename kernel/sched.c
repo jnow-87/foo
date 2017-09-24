@@ -21,8 +21,8 @@ typedef struct sched_queue_t{
 
 
 /* local/static prototypes */
-static int sched_init(void);
-static int sched_tick(int_num_t num);
+static int init(void);
+static int tick(int_num_t num);
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
 
@@ -43,14 +43,14 @@ void sched_resched(void){
 
 
 /* local functions */
-static int sched_init(void){
+static int init(void){
 	unsigned int i;
 	process_t *this_p;
 	thread_t *this_t;
 
 
 	/* register scheduler interrupt */
-	if(int_hdlr_register(CONFIG_SCHED_INT, sched_tick) != E_OK)
+	if(int_hdlr_register(CONFIG_SCHED_INT, tick) != E_OK)
 		goto err;
 
 	/* allocate kernel stack */
@@ -128,9 +128,9 @@ err:
 	return_errno(errno);
 }
 
-kernel_init(2, sched_init);
+kernel_init(2, init);
 
-static int sched_tick(int_num_t num){
+static int tick(int_num_t num){
 	static sched_queue_t *e = 0;
 
 

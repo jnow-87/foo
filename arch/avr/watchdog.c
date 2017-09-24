@@ -5,7 +5,7 @@
 
 
 /* local functions */
-static int avr_watchdog_init(void){
+static int init(void){
 	/* clear reset flags */
 	mreg_w(MCUSR, 0x0);
 
@@ -47,4 +47,4 @@ static int avr_watchdog_init(void){
 	return_errno(E_OK);
 }
 
-platform_init(0, avr_watchdog_init);
+platform_init(0, init);

@@ -13,12 +13,12 @@ static fs_node_t *devfs_root = 0x0;
 
 
 /* local/static prototypes */
-static int devfs_open(fs_node_t *start, char const *path, f_mode_t mode);
-static int devfs_close(fs_filed_t *fd);
-static size_t devfs_read(fs_filed_t *fd, void *buf, size_t n);
-static size_t devfs_write(fs_filed_t *fd, void *buf, size_t n);
-static int devfs_ioctl(fs_filed_t *fd, int request, void *data);
-static int devfs_fcntl(fs_filed_t *fd, int cmd, void *data);
+static int open(fs_node_t *start, char const *path, f_mode_t mode);
+static int close(fs_filed_t *fd);
+static size_t read(fs_filed_t *fd, void *buf, size_t n);
+static size_t write(fs_filed_t *fd, void *buf, size_t n);
+static int ioctl(fs_filed_t *fd, int request, void *data);
+static int fcntl(fs_filed_t *fd, int cmd, void *data);
 
 
 
@@ -85,13 +85,13 @@ int devfs_dev_release(int id){
 
 
 /* static functions */
-static int devfs_init(void){
-	devfs_ops.open = devfs_open;
-	devfs_ops.close = devfs_close;
-	devfs_ops.read = devfs_read;
-	devfs_ops.write = devfs_write;
-	devfs_ops.ioctl = devfs_ioctl;
-	devfs_ops.fcntl = devfs_fcntl;
+static int init(void){
+	devfs_ops.open = open;
+	devfs_ops.close = close;
+	devfs_ops.read = read;
+	devfs_ops.write = write;
+	devfs_ops.ioctl = ioctl;
+	devfs_ops.fcntl = fcntl;
 
 	devfs_root = rootfs_mkdir("/dev", fs_root.ops);
 
@@ -101,9 +101,9 @@ static int devfs_init(void){
 	return E_OK;
 }
 
-kernel_init(2, devfs_init);
+kernel_init(2, init);
 
-static int devfs_open(fs_node_t *start, char const *path, f_mode_t mode){
+static int open(fs_node_t *start, char const *path, f_mode_t mode){
 	fs_filed_t *fd;
 	devfs_dev_t *dev;
 
@@ -131,7 +131,7 @@ err:
 	return errno;
 }
 
-static int devfs_close(fs_filed_t *fd){
+static int close(fs_filed_t *fd){
 	devfs_dev_t *dev;
 
 
@@ -146,7 +146,7 @@ static int devfs_close(fs_filed_t *fd){
 	return 0;
 }
 
-static size_t devfs_read(fs_filed_t *fd, void *buf, size_t n){
+static size_t read(fs_filed_t *fd, void *buf, size_t n){
 	devfs_dev_t *dev;
 
 
@@ -157,7 +157,7 @@ static size_t devfs_read(fs_filed_t *fd, void *buf, size_t n){
 	return dev->ops.read(dev->id, fd, buf, n);
 }
 
-static size_t devfs_write(fs_filed_t *fd, void *buf, size_t n){
+static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	devfs_dev_t *dev;
 
 
@@ -168,7 +168,7 @@ static size_t devfs_write(fs_filed_t *fd, void *buf, size_t n){
 	return dev->ops.write(dev->id, fd, buf, n);
 }
 
-static int devfs_ioctl(fs_filed_t *fd, int request, void *data){
+static int ioctl(fs_filed_t *fd, int request, void *data){
 	devfs_dev_t *dev;
 
 
@@ -179,7 +179,7 @@ static int devfs_ioctl(fs_filed_t *fd, int request, void *data){
 	return dev->ops.ioctl(dev->id, fd, request, data);
 }
 
-static int devfs_fcntl(fs_filed_t *fd, int cmd, void *data){
+static int fcntl(fs_filed_t *fd, int cmd, void *data){
 	devfs_dev_t *dev;
 
 

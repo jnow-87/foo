@@ -32,10 +32,10 @@ void ufree(void *addr){
 
 
 /* local functions */
-static int umem_init(void){
+static int init(void){
 	process_mem = (void*)(CONFIG_KERNEL_PROC_BASE);
 
 	return memblock_init(process_mem, CONFIG_KERNEL_PROC_SIZE);
 }
 
-kernel_init(0, umem_init);
+kernel_init(0, init);

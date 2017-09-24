@@ -44,7 +44,7 @@ void avr_core_halt(void){
 
 
 /* local functions */
-static int avr_core_init(void){
+static int init(void){
 	/* set MCUCR[IVSEL], moving interrupt vectors to boot flash if required */
 #if CONFIG_KERNEL_TEXT_BASE == 0
 	mreg_bit_clr_sync(MCUCR, MCUCR_IVSEL, MCUCR_IVCE);
@@ -55,4 +55,4 @@ static int avr_core_init(void){
 	return_errno(E_OK);
 }
 
-core_init(0, avr_core_init);
+core_init(0, init);

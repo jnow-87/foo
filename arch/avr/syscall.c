@@ -20,7 +20,7 @@ typedef struct{
 
 /* local/static prototypes */
 #ifdef BUILD_KERNEL
-static int avr_sc_hdlr(int_num_t num);
+static int sc_hdlr(int_num_t num);
 #endif // BUILD_KERNEL
 
 
@@ -51,7 +51,7 @@ int avr_sc(sc_t num, void *param, size_t psize){
 
 /* local functions */
 #ifdef BUILD_KERNEL
-static int avr_sc_init(void){
+static int init(void){
 	/* enable interrupt used to trigger a syscall */
 	// enable configured pin change interrupt
 	mreg_w(PCICR, (0x1 << CONFIG_AVR_SC_PCICR_IE));
@@ -61,16 +61,16 @@ static int avr_sc_init(void){
 	mreg_w(CONFIG_AVR_SC_DDR, (0x1 << CONFIG_AVR_SC_PIN_BIT));
 
 	/* register interrupt handler */
-	int_hdlr_register(CONFIG_AVR_SC_INT, avr_sc_hdlr);
+	int_hdlr_register(CONFIG_AVR_SC_INT, sc_hdlr);
 
 	return E_OK;
 }
 
-driver_init(avr_sc_init);
+driver_init(init);
 #endif // BUILD_KERNEL
 
 #ifdef BUILD_KERNEL
-static int avr_sc_hdlr(int_num_t num){
+static int sc_hdlr(int_num_t num){
 	avr_sc_arg_t *arg;
 
 

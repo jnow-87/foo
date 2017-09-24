@@ -13,16 +13,16 @@ static ringbuf_t loop_buf;
 
 
 /* local/static prototypes */
-static int loop_open(int id, fs_filed_t *fd, f_mode_t mode);
-static int loop_close(int id);
-static int loop_read(int id, fs_filed_t *fd, void *buf, size_t n);
-static int loop_write(int id, fs_filed_t *fd, void *buf, size_t n);
-static int loop_ioctl(int id, fs_filed_t *fd, int request, void *data);
-static int loop_fcntl(int id, fs_filed_t *fd, int cmd, void *data);
+static int open(int id, fs_filed_t *fd, f_mode_t mode);
+static int close(int id, fs_filed_t *fd);
+static int read(int id, fs_filed_t *fd, void *buf, size_t n);
+static int write(int id, fs_filed_t *fd, void *buf, size_t n);
+static int ioctl(int id, fs_filed_t *fd, int request, void *data);
+static int fcntl(int id, fs_filed_t *fd, int cmd, void *data);
 
 
 /* local functions */
-static int loop_init(void){
+static int init(void){
 	char *b;
 	devfs_ops_t ops;
 
@@ -36,12 +36,12 @@ static int loop_init(void){
 	ringbuf_init(&loop_buf, b, CONFIG_LOOP_BUF_SIZE);
 
 	/* register device */
-	ops.open = loop_open;
-	ops.close = loop_close;
-	ops.read = loop_read;
-	ops.write = loop_write;
-	ops.ioctl = loop_ioctl;
-	ops.fcntl = loop_fcntl;
+	ops.open = open;
+	ops.close = close;
+	ops.read = read;
+	ops.write = write;
+	ops.ioctl = ioctl;
+	ops.fcntl = fcntl;
 
 	loop_dev_id = devfs_dev_register("loop", &ops);
 
@@ -56,26 +56,26 @@ err:
 	return errno;
 }
 
-driver_init(loop_init);
+driver_init(init);
 
-static int loop_open(int id, fs_filed_t *fd, f_mode_t mode){
+static int open(int id, fs_filed_t *fd, f_mode_t mode){
 	DEBUG("dummy callback for loop device\n");
 	return E_OK;
 }
 
-static int loop_close(int id){
+static int close(int id, fs_filed_t *fd){
 	DEBUG("dummy callback for loop device\n");
 	return E_OK;
 }
 
-static int loop_read(int id, fs_filed_t *fd, void *buf, size_t n){
+static int read(int id, fs_filed_t *fd, void *buf, size_t n){
 	n = ringbuf_read(&loop_buf, buf, n);
 	DEBUG("copy from loop buffer \"%*.*s\"\n", n, n, buf);
 
 	return n;
 }
 
-static int loop_write(int id, fs_filed_t *fd, void *buf, size_t n){
+static int write(int id, fs_filed_t *fd, void *buf, size_t n){
 	n = ringbuf_write(&loop_buf, buf, n);
 
 	DEBUG("copy to buffer \"%*.*s\"\n", n, n, buf);
@@ -83,12 +83,12 @@ static int loop_write(int id, fs_filed_t *fd, void *buf, size_t n){
 	return n;
 }
 
-static int loop_ioctl(int id, fs_filed_t *fd, int request, void *data){
+static int ioctl(int id, fs_filed_t *fd, int request, void *data){
 	DEBUG("dummy callback for loop device\n");
 	return E_OK;
 }
 
-static int loop_fcntl(int id, fs_filed_t *fd, int cmd, void *data){
+static int fcntl(int id, fs_filed_t *fd, int cmd, void *data){
 	DEBUG("dummy callback for loop device\n");
 	return E_OK;
 }
