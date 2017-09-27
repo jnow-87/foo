@@ -85,15 +85,17 @@ static int init(void){
 		if(this_t == 0)
 			goto_errno(err, E_NOMEM);
 
-		memset(this_t, 0x0, sizeof(thread_t));
-
 		this_t->tid = i;
 		this_t->state = CREATED;
 		this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
 		this_t->affinity = (0x1 << i);
-		this_t->stack = (void*)CONFIG_KERNEL_STACK_BASE;
-		this_t->stack += i * (CONFIG_KERNEL_STACK_SIZE / CONFIG_NCORES);
 		this_t->parent = this_p;
+
+		this_t->entry = 0x0;	// kernel threads are already running
+		this_t->ctx = 0x0;		// kernel thread context is set automatically once
+								// the thread is interrupted for the first time
+		this_t->stack = 0x0;	// stack pages are only relevant for user space,
+								// since the kernel has a separate memory management
 
 		list_add_tail(this_p->threads, this_t);
 		current_thread[i] = this_t;

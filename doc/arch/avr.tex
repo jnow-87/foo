@@ -18,3 +18,16 @@
 		Depending on the fuse bit configuration the kernel base address has to be set through\\\lstinline{CONFIG_KERNEL_TEXT_BASE}. \remark{It shall be noted that the application flash is address is 2-byte chucks, hence addresses listed in the manual need to be multiplied by two in order to get the byte address.}
 
 		The location of the interrupt vectors (except the reset vector) is controlled through \lstinline{MCUCR[IVSEL]}. They can either be placed at the start of the application section or the boot loader section. In the current implementation all interrupt vectors, including the reset vector, are mapped to the same location depending on \lstinline{CONFIG_KERNEL_TEXT_BASE}.
+
+	\subsection{Program Memory Specifics of \atmega controllers}
+		\subsubsection{Word vs. Byte Addressing}
+			The \avr program memory is addressed in 2 byte chunks, hence if an address needs to be set or read, it needs to be converted properly. For instance, if the return address of an interrupt shall be printed, the address needs to be multiplied by 2. Likewise, if a byte address shall be set, as thread entry point for instance, it needs to be divided by 2.
+
+		\subsubsection{Return Addresses}
+			Return addresses for calls and interrupts are stored on the stack using big endian even though the \atmega architecture as such uses the little endian format. That is, the high order 8 bits of the address are stored at lower address, while the low order 8 bits are stored at higher address, cf. \ref{fig:atmega_return_address} as an example.
+			\begin{figure}[h]
+				\centering	
+				\includegraphics[scale=.75]{arch/atmega_return_address}
+				\caption{Example how to place the return address 0x9000 in memory.}
+				\label{fig:atmega_return_address}
+			\end{figure}
