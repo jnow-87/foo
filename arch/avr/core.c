@@ -1,6 +1,9 @@
 #include <arch/arch.h>
 #include <kernel/init.h>
+#include <kernel/sched.h>
+#include <kernel/kprintf.h>
 #include <sys/errno.h>
+#include <sys/register.h>
 
 
 /* global functions */
@@ -31,7 +34,44 @@ void avr_core_sleep(void){
 	mreg_w(SMCR, 0x0);
 }
 
-void avr_core_halt(void){
+#ifdef BUILD_KERNEL
+void avr_core_panic(void){
+	thread_context_t *tc;
+	unsigned int i,
+				 int_vec,
+				 ret_addr;
+
+
+	/* dump registers */
+	tc = current_thread[PIR]->ctx;
+	int_vec = (((lo8(tc->int_vec) << 8) | hi8(tc->int_vec)) - INT_VEC_WORDS) * 2;
+	ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
+
+	kprintf(KMSG_ANY, "config and status registers\n"
+		 "%20.20s: %#2.2x\n"
+		 "%20.20s: %#2.2x\n"
+		 "%20.20s: %p\n"
+		 "%20.20s: %p\n"
+		 "%20.20s: %4.4p (has to be the reset vector address)\n"
+		 "%20.20s: %4.4p (not necessarily meaningful, since the reset vector should never be called)\n\n"
+		 ,
+		 "SREG", tc->sreg,
+		 "MCUSR", tc->mcusr,
+		 "SP", tc,
+		 "SP", tc + 1,
+		 "interrupt vector", int_vec,
+		 "interrupted at", ret_addr
+	);
+
+	kprintf(KMSG_ANY, "general purpose registers\n");
+
+	for(i=0; i<32; i++){
+		kprintf(KMSG_ANY, "\t%2.2u: %#2.2x", i, tc->gpr[i]);
+
+		if(i % 4 == 3)
+			kprintf(KMSG_ANY, "\n");
+	}
+
 	/* set sleep mode to power down */
 	mreg_w(SMCR, (0x1 << SMCR_SE) | (0x2 << SMCR_SM));
 
@@ -41,9 +81,11 @@ void avr_core_halt(void){
 	/* send core to sleep */
 	asm volatile("sleep");
 }
+#endif // BUILD_KERNEL
 
 
 /* local functions */
+#ifdef BUILD_KERNEL
 static int init(void){
 	/* set MCUCR[IVSEL], moving interrupt vectors to boot flash if required */
 #if CONFIG_KERNEL_TEXT_BASE == 0
@@ -56,3 +98,4 @@ static int init(void){
 }
 
 core_init(0, init);
+#endif // BUILD_KERNEL

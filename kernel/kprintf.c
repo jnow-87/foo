@@ -22,14 +22,17 @@ void kprintf(kmsg_t lvl, char const *format, ...){
 	va_list lst;
 
 
-	if((kopt.dbg_lvl & lvl) == 0)
-		return;
-
 	va_start(lst, format);
-	vfprintf(&kout, format, lst);
+	kvprintf(lvl, format, lst);
 	va_end(lst);
 }
 
+void kvprintf(kmsg_t lvl, char const *format, va_list lst){
+	if((kopt.dbg_lvl & lvl) == 0)
+		return;
+
+	vfprintf(&kout, format, lst);
+}
 
 /* local functions */
 static int init(void){

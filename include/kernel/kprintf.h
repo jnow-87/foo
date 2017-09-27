@@ -5,6 +5,7 @@
 #include <config/config.h>
 #include <arch/core.h>
 #include <sys/escape.h>
+#include <sys/stdarg.h>
 
 
 /* types */
@@ -76,6 +77,7 @@ typedef enum{
 #if CONFIG_KERNEL_MSG_FATAL || CONFIG_KERNEL_MSG_WARN || CONFIG_KERNEL_MSG_DEBUG || CONFIG_KERNEL_MSG_INFO || CONFIG_KERNEL_STAT
 
 void kprintf(kmsg_t lvl, char const *format, ...);
+void kvprintf(kmsg_t lvl, char const *format, va_list lst);
 
 #else
 

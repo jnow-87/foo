@@ -69,7 +69,7 @@ void kernel(void){
 
 	/* stop execution if any of the init calls failed */
 	if(errno != E_OK)
-		kernel_panic();
+		kernel_panic("error (%#x) during kernel init", errno);
 
 	/* kernel statistics */
 	kernel_stat();

@@ -5,6 +5,7 @@
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <kernel/sched.h>
+#include <kernel/panic.h>
 #include <sys/errno.h>
 #include <sys/register.h>
 
@@ -40,16 +41,12 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	num = ((void (*)(void))(lo8(tc->int_vec) | hi8(tc->int_vec)) - __isr_reset - INT_VEC_WORDS) / INT_VEC_WORDS;
 
 	// check interrupt number
-	if(num >= NINTERRUPTS){
-		FATAL("out of bound interrupt num %d\n", num);
-		core_halt();
-	}
+	if(num >= NINTERRUPTS)
+		kernel_panic("out of bound interrupt num %d\n", num);
 
 	// check handler
-	if(int_map[num] == 0x0){
-		FATAL("unhandled interrupt %d\n", num)
-		core_halt();
-	}
+	if(int_map[num] == 0x0)
+		kernel_panic("unhandled interrupt %d", num);
 
 	// call handler, saving errno
 	terrno = errno;
@@ -103,29 +100,7 @@ static int init(void){
 platform_init(0, init);
 
 static int avr_warm_reset_hdlr(int_num_t num){
-	thread_context_t *tc;
-	unsigned int int_vec,
-				 ret_addr;
-
-
-	tc = current_thread[PIR]->ctx;
-	int_vec = (((lo8(tc->int_vec) << 8) | hi8(tc->int_vec)) - INT_VEC_WORDS) * 2;
-	ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
-
-	FATAL("woops... execute reset handler without actual MCU reset\n");
-	INFO("register dump\n"
-		 "%20.20s: %#2.2x\n"
-		 "%20.20s: %#2.2x\n"
-		 "%20.20s: %4.4p (has to be reset vector address)\n"
-		 "%20.20s: %4.4p (not necessarily meaningfull, since the reset vector should never be called)\n"
-		 ,
-		 "SREG", tc->sreg,
-		 "MCUSR", tc->mcusr,
-		 "interrupt vector", int_vec,
-		 "interrupted at", ret_addr
-	);
-
-	core_halt();
+	kernel_panic("execute reset handler without actual MCU reset");
 
 	return E_OK;
 }
