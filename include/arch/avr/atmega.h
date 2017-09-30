@@ -27,6 +27,7 @@
 #include <arch/avr/syscall.h>
 #include <arch/avr/lib.h>
 #include <arch/types.h>
+#include <driver/avr_uart.h>
 #include <sys/types.h>
 
 #endif // __x86_64__

@@ -3,8 +3,9 @@
 
 
 /* types */
-typedef struct{
-	IOCTL_STATUS = 1,
+typedef enum{
+	IOCTL_CFGRD = 1,
+	IOCTL_CFGWR,
 } ioct_cmd_t;
 
 

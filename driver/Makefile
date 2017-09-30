@@ -1,5 +1,7 @@
 obj-y := loop/
 
+obj-$(CONFIG_DRIVER_AVR_UART) += avr_uart/
+
 
 ####
 # flags

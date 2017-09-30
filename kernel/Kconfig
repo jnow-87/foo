@@ -68,6 +68,7 @@ config DRIVER_DEBUG
 # {{{
 config KERNEL_UART
 	bool "Kernel uart"
+	select DRIVER_AVR_UART if AVR
 
 menu "Kernel uart parameter"
 	depends on KERNEL_UART
@@ -154,6 +155,16 @@ choice
 	config KERNEL_UART_PARITY_NONE
 		bool "None"
 endchoice
+
+menu "Hidden"
+	visible if 0
+
+	config KERNEL_UART_PARITY
+		int "Stop bits"
+		default 0	if KERNEL_UART_PARITY_NONE
+		default 1	if KERNEL_UART_PARITY_ODD
+		default 2	if KERNEL_UART_PARITY_EVEN
+endmenu
 
 # stop bits
 choice
