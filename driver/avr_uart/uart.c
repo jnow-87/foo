@@ -14,28 +14,57 @@
 #include <sys/register.h>
 
 
+/* macros */
+#if (CONFIG_AVR_NUART > 2)
+	#error "avr uart driver only supports up to 2 UARTS"
+#endif // CONFIG_AVR_NUART
+
+
 /* local/static prototypes */
 static int rx_hdlr(int_num_t num);
 
+static int open(int id, fs_filed_t *fd, f_mode_t mode);
 static int read(int id, fs_filed_t *fd, void *buf, size_t n);
 static int write(int id, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(int id, fs_filed_t *fd, int request, void *data);
 
-static int config(baudrate_t brate, stopb_t stopb, csize_t csize, parity_t parity);
-static int putsn(char const *s, size_t n);
+static int config(unsigned int uart, baudrate_t brate, stopb_t stopb, csize_t csize, parity_t parity);
+static int putsn(unsigned int uart, char const *s, size_t n);
 
 
 /* static variables */
-static int dev_id;
-static ringbuf_t rbuf;
-static uart_t cfg;
-static uint8_t rx_err;
+// devfs ids and ops
+static int dev_ids[CONFIG_AVR_NUART] = { 0 };
+static devfs_ops_t dev_ops = {
+	.open = open,
+	.close = 0x0,
+	.read = read,
+	.write = write,
+	.ioctl = ioctl,
+	.fcntl = 0x0
+};
+
+// configurations
+static uart_t cfg[CONFIG_AVR_NUART] = {{ 0 }};
+
+// receiver buffer
+static ringbuf_t rbuf[CONFIG_AVR_NUART] = {{ 0 }};
+static uint8_t rx_err[CONFIG_AVR_NUART] = { 0 };
+
+// registers
+static int_num_t const rx_int_num[] = { INT_USART0_RX, INT_USART1_RX };
+static uint8_t volatile * const ucsra[] = { (uint8_t*)UCSR0A, (uint8_t*)UCSR1A },
+						* const ucsrb[] = { (uint8_t*)UCSR0B, (uint8_t*)UCSR1B },
+						* const ucsrc[] = { (uint8_t*)UCSR0C, (uint8_t*)UCSR1C },
+						* const ubrrl[] = { (uint8_t*)UBRR0L, (uint8_t*)UBRR1L },
+						* const ubrrh[] = { (uint8_t*)UBRR0H, (uint8_t*)UBRR1H },
+						* const udr[] = { (uint8_t*)UDR0, (uint8_t*)UDR1 };
 
 
 /* global functions */
 char avr_putchar(char c){
-	while(!(mreg_r(UCSR0A) & (0x1 << UCSR0A_UDRE)));
-	mreg_w(UDR0, c);
+	while(!((*(ucsra[0])) & (0x1 << UCSR0A_UDRE)));
+	*(udr[0]) = c;
 
 	return c;
 }
@@ -45,8 +74,8 @@ int avr_puts(char const *s){
 		return_errno(E_INVAL);
 
 	for(; *s!=0; s++){
-		while(!(mreg_r(UCSR0A) & (0x1 << UCSR0A_UDRE)));
-		mreg_w(UDR0, *s);
+		while(!((*(ucsra[0])) & (0x1 << UCSR0A_UDRE)));
+		*(udr[0]) = *s;
 	}
 
 	return E_OK;
@@ -55,18 +84,24 @@ int avr_puts(char const *s){
 
 /* local functions */
 static int kuart_init(void){
-	return config(CONFIG_KERNEL_UART_BAUDRATE, CONFIG_KERNEL_UART_STOPBITS, CS_8, CONFIG_KERNEL_UART_PARITY);
+	unsigned int uart;
+
+
+	for(uart=0; uart<CONFIG_AVR_NUART; uart++)
+		config(uart, CONFIG_KERNEL_UART_BAUDRATE, CONFIG_KERNEL_UART_STOPBITS, CS_8, CONFIG_KERNEL_UART_PARITY);
+
+	return errno;
 }
 
 platform_init(0, kuart_init);
 
-static int init(void){
+static int _init(unsigned int uart){
 	void *b;
-	devfs_ops_t ops;
+	char name[] = "tty0";
 
 
 	/* register interrupt handler */
-	if(int_hdlr_register(INT_USART0_RX, rx_hdlr) != E_OK)
+	if(int_hdlr_register(rx_int_num[uart], rx_hdlr) != E_OK)
 		goto err_0;
 
 	/* allocate buffers */
@@ -75,19 +110,13 @@ static int init(void){
 	if(b == 0x0)
 		goto err_1;
 
-	ringbuf_init(&rbuf, b, CONFIG_AVR_UART_BSIZE);
+	ringbuf_init(rbuf + uart, b, CONFIG_AVR_UART_BSIZE);
 
 	/* register device */
-	ops.open = 0x0;
-	ops.close = 0x0;
-	ops.read = read;
-	ops.write = write;
-	ops.ioctl = ioctl;
-	ops.fcntl = 0x0;
+	name[3] = '0' + uart;
+	dev_ids[uart] = devfs_dev_register(name, &dev_ops);
 
-	dev_id = devfs_dev_register("tty0", &ops);
-
-	if(dev_id < 0)
+	if(dev_ids[uart] < 0)
 		goto err_2;
 
 	return E_OK;
@@ -97,91 +126,141 @@ err_2:
 	kfree(b);
 
 err_1:
-	int_hdlr_release(INT_USART0_RX);
+	int_hdlr_release(rx_int_num[uart]);
 
 err_0:
+	return errno;
+}
+
+static int init(void){
+	unsigned int i;
+
+
+	for(i=0; i<CONFIG_AVR_NUART; i++)
+		_init(i);
+
 	return errno;
 }
 
 driver_init(init);
 
 static int rx_hdlr(int_num_t num){
+	unsigned int uart;
 	uint8_t c,
 			err;
 
 
 	err = 0;
 
-	while((mreg_r(UCSR0A) & (0x1 << UCSR0A_RXC))){
-		err |= mreg_r(UCSR0A) & ((0x1 << UCSR0A_FE) | (0x1 << UCSR0A_DOR) | (0x1 << UCSR0A_UPE));
-		c = mreg_r(UDR0);
+	/* get uart number */
+	for(uart=0; uart<CONFIG_AVR_NUART; uart++){
+		if(rx_int_num[uart] == num)
+			break;
+	}
+
+	/* read data */
+	while((*(ucsra[uart]) & (0x1 << UCSR0A_RXC))){
+		err |= *(ucsra[uart]) & ((0x1 << UCSR0A_FE) | (0x1 << UCSR0A_DOR) | (0x1 << UCSR0A_UPE));
+		c = *(udr[uart]);
 
 		if(err)
 			continue;
 
-		if(ringbuf_write(&rbuf, &c, 1) != 1)
+		if(ringbuf_write(rbuf + uart, &c, 1) != 1)
 			err |= (0x1 << UCSR0A_RXC);	// use UCSR0A non-error flag to signal buffer overrun
 	}
 
+	/* update error */
 	if(err){
-		rx_err |= err;
+		rx_err[uart] |= err;
 
-		cfg.frame_err |= bits(err, UCSR0A_FE, 0x1);
-		cfg.data_overrun |= bits(err, UCSR0A_DOR, 0x1);
-		cfg.parity_err |= bits(err, UCSR0A_UPE, 0x1);
-		cfg.rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
+		cfg[uart].frame_err |= bits(err, UCSR0A_FE, 0x1);
+		cfg[uart].data_overrun |= bits(err, UCSR0A_DOR, 0x1);
+		cfg[uart].parity_err |= bits(err, UCSR0A_UPE, 0x1);
+		cfg[uart].rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
 	}
 
 	return E_OK;
 }
 
+static int open(int id, fs_filed_t *fd, f_mode_t mode){
+	unsigned int uart;
+
+
+	/* identify the uart that has been opened */
+	for(uart=0; uart<CONFIG_AVR_NUART; uart++){
+		if(dev_ids[uart] == id){
+			// abuse the file pointer to store the uart index
+			fd->fp = uart;
+
+			return E_OK;
+		}
+	}
+
+	return_errno(E_INVAL);
+}
+
 static int read(int id, fs_filed_t *fd, void *buf, size_t n){
-	if(rx_err){
+	unsigned int uart;
+
+
+	uart = fd->fp;
+
+	if(rx_err[uart]){
 		errno = E_IO;
-		rx_err = 0;
+		rx_err[uart] = 0;
 
 		return 0;
 	}
 
-	return ringbuf_read(&rbuf, buf, n);
+	return ringbuf_read(rbuf + uart, buf, n);
 }
 
 static int write(int id, fs_filed_t *fd, void *buf, size_t n){
-	if(putsn(buf, n) != E_OK)
+	unsigned int uart;
+
+
+	uart = fd->fp;
+
+	if(putsn(uart, buf, n) != E_OK)
 		return 0;
 	return n;
 }
 
 static int ioctl(int id, fs_filed_t *fd, int request, void *data){
+	unsigned int uart;
 	uart_t *c;
 
 
+	uart = fd->fp;
+
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, &cfg, sizeof(uart_t));
+		memcpy(data, cfg + uart, sizeof(uart_t));
 
 		// reset error flags
-		cfg.frame_err = 0;
-		cfg.data_overrun = 0;
-		cfg.parity_err = 0;
-		cfg.rx_queue_full = 0;
+		cfg[uart].frame_err = 0;
+		cfg[uart].data_overrun = 0;
+		cfg[uart].parity_err = 0;
+		cfg[uart].rx_queue_full = 0;
 
-		rx_err = 0;
+		rx_err[uart] = 0;
 
 		return E_OK;
 
 	case IOCTL_CFGWR:
 		c = (uart_t*)data;
-		return config(c->baud, c->stopb, c->csize, c->parity);
+		return config(uart, c->baud, c->stopb, c->csize, c->parity);
 
 	default:
 		return E_NOIMP;
 	}
 }
 
-static int config(baudrate_t brate, stopb_t stopb, csize_t csize, parity_t parity){
+static int config(unsigned int uart, baudrate_t brate, stopb_t stopb, csize_t csize, parity_t parity){
 	static uint8_t const parity_bits[] = { 0b00, 0b11, 0b10 };
 	static uint8_t const stopb_bits[] = { 0b0, 0b1 };
+	static uint8_t const prr_bits[] = { PRR0_PRUSART0, PRR0_PRUSART1 };
 	unsigned int br;
 
 
@@ -194,41 +273,38 @@ static int config(baudrate_t brate, stopb_t stopb, csize_t csize, parity_t parit
 		return_errno(E_INVAL);
 
 	/* save config */
-	cfg.baud = brate;
-	cfg.stopb = stopb;
-	cfg.csize = csize;
-	cfg.parity = parity;
+	cfg[uart].baud = brate;
+	cfg[uart].stopb = stopb;
+	cfg[uart].csize = csize;
+	cfg[uart].parity = parity;
 
 	/* enable uart */
-	mreg_w(PRR0, (mreg_r(PRR0) & (-1 ^ (0x1 << PRR0_PRUSART0))));
-	mreg_w(UCSR0A, 0x0 << UCSR0A_U2X);
-	mreg_w(UCSR0B,
-		(0x1 << UCSR0B_RXEN) |
-		(0x1 << UCSR0B_TXEN) |
-		(0x1 << UCSR0B_RXCIE)
-	);
+	mreg_w(PRR0, (mreg_r(PRR0) & (-1 ^ (0x1 << prr_bits[uart]))));
+
+	*(ucsra[uart]) = 0x0 << UCSR0A_U2X;
+	*(ucsrb[uart]) = (0x1 << UCSR0B_RXEN) |
+					 (0x1 << UCSR0B_TXEN) |
+					 (0x1 << UCSR0B_RXCIE);
 
 	/* set baudrate */
-	mreg_w(UBRR0H, (br >> 8));
-	mreg_w(UBRR0L, (br & 0xff));
+	*(ubrrh[uart]) = hi8(br);
+	*(ubrrl[uart]) = lo8(br);
 
 	/* set csize, parity, stop bits */
-	mreg_w(UCSR0C,
-		(csize << UCSR0C_UCSZ0) |
-		(parity_bits[parity] << UCSR0C_UPM0) |
-		(stopb_bits[stopb] << UCSR0C_USBS)
-	);
+	*(ucsrc[uart]) = (csize << UCSR0C_UCSZ0) |
+					 (parity_bits[parity] << UCSR0C_UPM0) |
+					 (stopb_bits[stopb] << UCSR0C_USBS);
 
 	return_errno(E_OK);
 }
 
-static int putsn(char const *s, size_t n){
+static int putsn(unsigned int uart, char const *s, size_t n){
 	if(s == 0)
 		return_errno(E_INVAL);
 
 	for(; n>0; n--, s++){
-		while(!(mreg_r(UCSR0A) & (0x1 << UCSR0A_UDRE)));
-		mreg_w(UDR0, *s);
+		while(!(*(ucsra[uart]) & (0x1 << UCSR0A_UDRE)));
+		*(udr[uart]) = *s;
 	}
 
 	return E_OK;

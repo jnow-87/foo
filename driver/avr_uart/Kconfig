@@ -3,5 +3,11 @@ config DRIVER_AVR_UART
 
 config AVR_UART_BSIZE
 	int "AVR uart buffer size"
-	default 16
 	depends on DRIVER_AVR_UART
+	default 16
+
+config AVR_NUART
+	int "Number of uarts"
+	depends on DRIVER_AVR_UART
+	range 1 2 if KERNEL_UART
+	range 0 2
