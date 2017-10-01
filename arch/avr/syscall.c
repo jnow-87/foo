@@ -42,6 +42,8 @@ int avr_sc(sc_t num, void *param, size_t psize){
 	mreg_w(GPIOR1, (uint8_t)(((unsigned int)(&arg)) >> 8));
 
 	/* trigger syscall */
+	asm volatile("sei");	// FIXME: from time to time interrupts are disabled
+							//		  for no known reason
 	mreg_w(CONFIG_AVR_SC_PIN, (0x1 << CONFIG_AVR_SC_PIN_BIT));
 
 	return E_OK;
