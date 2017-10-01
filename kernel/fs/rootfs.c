@@ -117,12 +117,7 @@ static int init(void){
 	fs_root.is_dir = true;
 	fs_root.parent = &fs_root;
 
-	fs_root.name = kmalloc(2);
-
-	if(fs_root.name == 0x0)
-		return_errno(E_NOMEM);
-
-	strncpy(fs_root.name, "/", 2);
+	fs_root.name = (char*)("/");
 
 	return E_OK;
 }

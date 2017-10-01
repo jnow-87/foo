@@ -71,6 +71,7 @@ static int init(void){
 
 	memset(this_p, 0x0, sizeof(process_t));
 
+	this_p->name = (char*)("kernel");
 	this_p->affinity = CONFIG_SCHED_AFFINITY_DEFAULT;
 	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;
 	this_p->cwd = &fs_root;
