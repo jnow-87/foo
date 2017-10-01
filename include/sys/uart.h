@@ -43,7 +43,12 @@ typedef struct{
 	stopb_t stopb;
 	parity_t parity;
 	csize_t csize;
-} uart_config_t;
+
+	bool data_overrun,
+		 parity_err,
+		 frame_err,
+		 rx_queue_full;
+} uart_t;
 
 
 #endif // SYS_UART_H

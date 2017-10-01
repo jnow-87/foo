@@ -11,9 +11,12 @@
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/string.h>
+#include <sys/register.h>
 
 
 /* local/static prototypes */
+static int rx_hdlr(int_num_t num);
+
 static int read(int id, fs_filed_t *fd, void *buf, size_t n);
 static int write(int id, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(int id, fs_filed_t *fd, int request, void *data);
@@ -24,7 +27,9 @@ static int putsn(char const *s, size_t n);
 
 /* static variables */
 static int dev_id;
-static uart_config_t cfg;
+static ringbuf_t rbuf;
+static uart_t cfg;
+static uint8_t rx_err;
 
 
 /* global functions */
@@ -56,10 +61,23 @@ static int kuart_init(void){
 platform_init(0, kuart_init);
 
 static int init(void){
+	void *b;
 	devfs_ops_t ops;
 
 
-/* register device */
+	/* register interrupt handler */
+	if(int_hdlr_register(INT_USART0_RX, rx_hdlr) != E_OK)
+		goto err_0;
+
+	/* allocate buffers */
+	b = kmalloc(CONFIG_AVR_UART_BSIZE);
+
+	if(b == 0x0)
+		goto err_1;
+
+	ringbuf_init(&rbuf, b, CONFIG_AVR_UART_BSIZE);
+
+	/* register device */
 	ops.open = 0x0;
 	ops.close = 0x0;
 	ops.read = read;
@@ -70,23 +88,62 @@ static int init(void){
 	dev_id = devfs_dev_register("tty0", &ops);
 
 	if(dev_id < 0)
-		return errno;
+		goto err_2;
 
 	return E_OK;
+
+
+err_2:
+	kfree(b);
+
+err_1:
+	int_hdlr_release(INT_USART0_RX);
+
+err_0:
+	return errno;
 }
 
 driver_init(init);
 
-static int read(int id, fs_filed_t *fd, void *buf, size_t n){
-	size_t i;
+static int rx_hdlr(int_num_t num){
+	uint8_t c,
+			err;
 
 
-	for(i=0; i<n; i++){
-		while(!(mreg_r(UCSR0A) & (0x1 << UCSR0A_RXC)));
-		((char*)buf)[i] = mreg_r(UDR0);
+	err = 0;
+
+	while((mreg_r(UCSR0A) & (0x1 << UCSR0A_RXC))){
+		err |= mreg_r(UCSR0A) & ((0x1 << UCSR0A_FE) | (0x1 << UCSR0A_DOR) | (0x1 << UCSR0A_UPE));
+		c = mreg_r(UDR0);
+
+		if(err)
+			continue;
+
+		if(ringbuf_write(&rbuf, &c, 1) != 1)
+			err |= (0x1 << UCSR0A_RXC);	// use UCSR0A non-error flag to signal buffer overrun
 	}
 
-	return n;
+	if(err){
+		rx_err |= err;
+
+		cfg.frame_err |= bits(err, UCSR0A_FE, 0x1);
+		cfg.data_overrun |= bits(err, UCSR0A_DOR, 0x1);
+		cfg.parity_err |= bits(err, UCSR0A_UPE, 0x1);
+		cfg.rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
+	}
+
+	return E_OK;
+}
+
+static int read(int id, fs_filed_t *fd, void *buf, size_t n){
+	if(rx_err){
+		errno = E_IO;
+		rx_err = 0;
+
+		return 0;
+	}
+
+	return ringbuf_read(&rbuf, buf, n);
 }
 
 static int write(int id, fs_filed_t *fd, void *buf, size_t n){
@@ -96,16 +153,25 @@ static int write(int id, fs_filed_t *fd, void *buf, size_t n){
 }
 
 static int ioctl(int id, fs_filed_t *fd, int request, void *data){
-	uart_config_t *c;
+	uart_t *c;
 
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, &cfg, sizeof(uart_config_t));
+		memcpy(data, &cfg, sizeof(uart_t));
+
+		// reset error flags
+		cfg.frame_err = 0;
+		cfg.data_overrun = 0;
+		cfg.parity_err = 0;
+		cfg.rx_queue_full = 0;
+
+		rx_err = 0;
+
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		c = (uart_config_t*)data;
+		c = (uart_t*)data;
 		return config(c->baud, c->stopb, c->csize, c->parity);
 
 	default:
@@ -139,7 +205,7 @@ static int config(baudrate_t brate, stopb_t stopb, csize_t csize, parity_t parit
 	mreg_w(UCSR0B,
 		(0x1 << UCSR0B_RXEN) |
 		(0x1 << UCSR0B_TXEN) |
-		(0x0 << UCSR0B_RXCIE)
+		(0x1 << UCSR0B_RXCIE)
 	);
 
 	/* set baudrate */
