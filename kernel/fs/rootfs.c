@@ -15,11 +15,11 @@
 
 
 /* global variables */
-fs_node_t fs_root;
+fs_node_t *fs_root = 0x0;
 
 
 /* local variables */
-static fs_ops_t rootfs_ops;
+static int rootfs_id;
 
 
 /* local/static prototypes */
@@ -37,7 +37,7 @@ static int file_seek(fs_filed_t *fd, seek_t *p);
 
 
 /* global functions */
-fs_node_t *rootfs_mkdir(char const *path, fs_ops_t *ops){
+fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 	int n;
 	fs_node_t *node;
 
@@ -47,7 +47,7 @@ fs_node_t *rootfs_mkdir(char const *path, fs_ops_t *ops){
 
 	DEBUG("register file system to \"%s\"\n", path);
 
-	node = &fs_root;
+	node = fs_root;
 
 	while(1){
 		n = fs_node_find(&node, &path);
@@ -55,16 +55,7 @@ fs_node_t *rootfs_mkdir(char const *path, fs_ops_t *ops){
 		switch(n){
 		case 0:
 			/* target node already exists */
-			// return an error if the target node is not a directory or contains childs
-			if(node->is_dir == false)
-				goto_errno(err, E_INVAL);
-
-			if(!list_empty(node->childs))
-				goto_errno(err, E_INUSE);
-
-			node->ops = ops;
-
-			return node;
+			goto_errno(err, E_INUSE);
 
 		case -1:
 		case -2:
@@ -73,12 +64,18 @@ fs_node_t *rootfs_mkdir(char const *path, fs_ops_t *ops){
 
 		default:
 			/* no matching node found, try to create it */
-			node = fs_node_alloc(node->parent, path, n, true, &rootfs_ops);
+			// if its the last part of path, create the target node with fs_id
+			// otherwise create an intermediate node in rootfs
+			if(path[n] == 0)	node = fs_node_alloc(node->parent, path, n, true, fs_id);
+			else				node = fs_node_alloc(node->parent, path, n, true, rootfs_id);
 
 			if(node == 0x0)
 				goto err;
 
 			path += n;
+
+			if(*path == 0)
+				return node;
 			break;
 		}
 	}
@@ -100,24 +97,32 @@ int rootfs_rmdir(fs_node_t *node){
 
 /* local functions */
 static int init(void){
+	fs_ops_t ops;
+	fs_node_t dummy;
+
+
 	/* register rootfs */
-	rootfs_ops.open = open;
-	rootfs_ops.close = close;
-	rootfs_ops.read = read;
-	rootfs_ops.write = write;
-	rootfs_ops.ioctl = 0x0;
-	rootfs_ops.fcntl = fcntl;
-	rootfs_ops.rmnode = rmnode;
-	rootfs_ops.chdir = chdir;
+	ops.open = open;
+	ops.close = close;
+	ops.read = read;
+	ops.write = write;
+	ops.ioctl = 0x0;
+	ops.fcntl = fcntl;
+	ops.rmnode = rmnode;
+	ops.chdir = chdir;
+
+	rootfs_id = fs_register(&ops);
+
+	if(rootfs_id < 0)
+		return errno;
 
 	/* init fs_root */
-	memset(&fs_root, 0x0, sizeof(fs_node_t));
+	fs_root = fs_node_alloc(&dummy, "/", 1, true, rootfs_id);
 
-	fs_root.ops = &rootfs_ops;
-	fs_root.is_dir = true;
-	fs_root.parent = &fs_root;
+	if(fs_root == 0x0)
+		return errno;
 
-	fs_root.name = (char*)("/");
+	fs_root->parent = fs_root;
 
 	return E_OK;
 }
@@ -172,7 +177,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 				return_errno(E_UNAVAIL);
 
 			// create node
-			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), start->ops);
+			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), rootfs_id);
 
 			if(start == 0x0)
 				return errno;

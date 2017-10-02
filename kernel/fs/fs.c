@@ -7,7 +7,40 @@
 #include <sys/string.h>
 
 
+/* static variables */
+static fs_t *fs_lst = 0x0;
+
+
 /* global functions */
+int fs_register(fs_ops_t *ops){
+	int id;
+	fs_t *fs;
+
+
+	id = 0;
+
+	if(!list_empty(fs_lst))
+		id = list_last(fs_lst)->id + 1;
+
+	if(id < 0)
+		return_errno(E_LIMIT);
+
+	if(ops == 0x0 || ops->open == 0x0)
+		return_errno(E_INVAL);
+
+	fs = kmalloc(sizeof(fs_t));
+
+	if(fs == 0x0)
+		return_errno(E_NOMEM);
+
+	fs->id = id;
+	fs->ops = *ops;
+
+	list_add_tail(fs_lst, fs);
+
+	return fs->id;
+}
+
 fs_filed_t *fs_fd_alloc(fs_node_t *node){
 	int id;
 	fs_filed_t *fd;
@@ -22,7 +55,7 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node){
 	if(!list_empty(this_p->fds))
 		id = list_last(this_p->fds)->id + 1;
 
-	if(id == (unsigned int)(-1))
+	if(id < 0)
 		goto_errno(err, E_LIMIT);
 
 	/* allocate file descriptor */
@@ -52,12 +85,18 @@ void fs_fd_free(fs_filed_t *fd){
 	kfree(fd);
 }
 
-fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, fs_ops_t *ops){
+fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id){
+	fs_t *fs;
 	fs_node_t *node;
 
 
-	/* check parameter */
-	if(ops == 0x0 || ops->open == 0x0)
+	/* identify file system */
+	list_for_each(fs_lst, fs){
+		if(fs->id == fs_id)
+			break;
+	}
+
+	if(fs == 0x0)
 		goto_errno(err_0, E_INVAL);
 
 	/* allocate node */
@@ -72,7 +111,7 @@ fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, b
 		goto_errno(err_1, E_NOMEM);
 
 	/* init node attributes */
-	node->ops = ops;
+	node->ops = &fs->ops;
 	node->ref_cnt = 0;
 	node->is_dir = is_dir;
 
@@ -94,7 +133,7 @@ err_1:
 	kfree(node);
 
 err_0:
-	return 0;
+	return 0x0;
 }
 
 int fs_node_free(fs_node_t *node){

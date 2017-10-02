@@ -8,7 +8,7 @@
 
 
 /* static variables */
-static fs_ops_t devfs_ops;
+static int devfs_id;
 static fs_node_t *devfs_root = 0x0;
 
 
@@ -23,58 +23,48 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data);
 
 
 /* global functions */
-int devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
-	static int id = 0;
+devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 	devfs_dev_t *dev;
 	fs_node_t *node;
 
 
 	DEBUG("register device \"%s\"\n", name);
 
-	if(id < 0)
-		return_errno(E_LIMIT);
-
 	dev = kmalloc(sizeof(devfs_dev_t));
 
 	if(dev == 0x0)
 		goto_errno(err_0, E_NOMEM);
 
-	node = fs_node_alloc(devfs_root, name, strlen(name), false, &devfs_ops);
+	node = fs_node_alloc(devfs_root, name, strlen(name), false, devfs_id);
 
 	if(node == 0x0)
 		goto err_1;
 
-	dev->id = id;
 	dev->ops = *ops;
 	dev->data = data;
 	node->data = dev;
 
-	++id;
-
-	return dev->id;
+	return dev;
 
 
 err_1:
 	kfree(dev);
 
 err_0:
-	return errno;
+	return 0x0;
 }
 
-int devfs_dev_release(int id){
+int devfs_dev_release(devfs_dev_t *dev){
 	fs_node_t *node;
-	devfs_dev_t *dev;
 
 
 	list_for_each(devfs_root->childs, node){
-		if(((devfs_dev_t*)(node->data))->id == id)
+		if(((devfs_dev_t*)(node->data)) == dev)
 			break;
 	}
 
 	if(node == 0x0)
 		return_errno(E_INVAL);
-
-	dev = (devfs_dev_t*)node->data;
 
 	if(fs_node_free(node) != E_OK)
 		return errno;
@@ -87,17 +77,29 @@ int devfs_dev_release(int id){
 
 /* static functions */
 static int init(void){
-	devfs_ops.open = open;
-	devfs_ops.close = close;
-	devfs_ops.read = read;
-	devfs_ops.write = write;
-	devfs_ops.ioctl = ioctl;
-	devfs_ops.fcntl = fcntl;
+	fs_ops_t ops;
 
-	devfs_root = rootfs_mkdir("/dev", fs_root.ops);
+
+	/* register file system */
+	ops.open = open;
+	ops.close = close;
+	ops.read = read;
+	ops.write = write;
+	ops.ioctl = ioctl;
+	ops.fcntl = fcntl;
+
+	devfs_id = fs_register(&ops);
+
+	if(devfs_id < 0)
+		return errno;
+
+	/* allocate root node */
+	devfs_root = rootfs_mkdir("/dev", devfs_id);
 
 	if(devfs_root == 0x0)
 		return errno;
+
+	devfs_root->ops = fs_root->ops;	// use rootfs callbacks to handle devfs root
 
 	return E_OK;
 }
