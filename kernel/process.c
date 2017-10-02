@@ -69,7 +69,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	/* init file system handles */
 	this_p->fds = 0x0;
 
-	this_p->cwd = &fs_root;
+	this_p->cwd = fs_root;
 
 	if(current_thread[PIR] != 0x0)
 		this_p->cwd = current_thread[PIR]->parent->cwd;

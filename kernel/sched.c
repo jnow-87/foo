@@ -74,7 +74,7 @@ static int init(void){
 	this_p->name = (char*)("kernel");
 	this_p->affinity = CONFIG_SCHED_AFFINITY_DEFAULT;
 	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;
-	this_p->cwd = &fs_root;
+	this_p->cwd = fs_root;
 
 	list_add_tail(process_table, this_p);
 

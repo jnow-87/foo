@@ -31,15 +31,7 @@ unsigned int uart_rx_err[CONFIG_NUM_UART] = { 0 };
 
 /* static variables */
 // devfs ids and ops
-static int dev_ids[CONFIG_NUM_UART] = { 0 };
-static devfs_ops_t dev_ops = {
-	.open = 0x0,
-	.close = 0x0,
-	.read = read,
-	.write = write,
-	.ioctl = ioctl,
-	.fcntl = 0x0
-};
+static devfs_dev_t *devs[CONFIG_NUM_UART] = { 0 };
 
 
 /* local functions */
@@ -63,6 +55,7 @@ platform_init(0, kuart_init);
 static int _init(unsigned int uart){
 	void *b;
 	char name[] = "ttyx";
+	devfs_ops_t ops;
 
 
 	/* allocate buffers */
@@ -74,10 +67,17 @@ static int _init(unsigned int uart){
 	ringbuf_init(uart_rx_buf + uart, b, CONFIG_UART_RX_BUFSIZE);
 
 	/* register device */
-	name[3] = '0' + uart;
-	dev_ids[uart] = devfs_dev_register(name, &dev_ops, (void*)uart);
+	ops.open = 0x0;
+	ops.close = 0x0;
+	ops.read = read;
+	ops.write = write;
+	ops.ioctl = ioctl;
+	ops.fcntl = 0x0;
 
-	if(dev_ids[uart] < 0)
+	name[3] = '0' + uart;
+	devs[uart] = devfs_dev_register(name, &ops, (void*)uart);
+
+	if(devs[uart] == 0x0)
 		goto err_1;
 
 	return E_OK;

@@ -125,6 +125,14 @@ typedef struct{
 	int (*chdir)(struct fs_node_t *start, char const *path);
 } fs_ops_t;
 
+typedef struct fs_t{
+	int id;
+	fs_ops_t ops;
+
+	struct fs_t *prev,
+				*next;
+} fs_t;
+
 // file system node types
 typedef struct fs_node_t{
 	char *name;
@@ -153,12 +161,15 @@ typedef struct fs_filed_t{
 
 
 /* prototypes */
+// file system operations
+int fs_register(fs_ops_t *ops);
+
 // file operations
 fs_filed_t *fs_fd_alloc(fs_node_t *node);
 void fs_fd_free(fs_filed_t *fd);
 
 // file node operations
-fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, fs_ops_t *ops);
+fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id);
 int fs_node_free(fs_node_t *node);
 int fs_node_find(fs_node_t **start, char const **path);
 

@@ -11,7 +11,7 @@ struct devfs_dev_t;
 
 typedef struct{
 	/**
-	 * \brief	Perform allocations required if the device pointed to by id is
+	 * \brief	Perform allocations required if the device pointed to by dev is
 	 * 			opened.
 	 *
 	 * \param	dev		pointer to the target device
@@ -94,14 +94,13 @@ typedef struct{
 } devfs_ops_t;
 
 typedef struct devfs_dev_t{
-	int id;
 	devfs_ops_t ops;
 	void *data;
 } devfs_dev_t;
 
 
 /* prototypes */
-int devfs_dev_register(char const *name, devfs_ops_t *ops, void *data);
-int devfs_dev_release(int id);
+devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data);
+int devfs_dev_release(devfs_dev_t *dev);
 
 #endif // KERNEL_DEVFS_H

@@ -52,7 +52,7 @@ static int open(void *_p){
 		goto err;
 
 	/* identify file system and call its open callback */
-	root = (path[0] == '/') ? (&fs_root) : current_thread[PIR]->parent->cwd;
+	root = (path[0] == '/') ? (fs_root) : current_thread[PIR]->parent->cwd;
 
 	if(root->ops->open == 0x0)
 		goto_errno(k_ok, E_NOIMP);
@@ -257,7 +257,7 @@ static int rmnode(void *_p){
 		goto err;
 
 	/* identify file system and call its rmnode callback */
-	root = (path[0] == '/') ? (&fs_root) : current_thread[PIR]->parent->cwd;
+	root = (path[0] == '/') ? (fs_root) : current_thread[PIR]->parent->cwd;
 
 	if(root->ops->rmnode == 0x0)
 		goto_errno(k_ok, E_NOIMP);
@@ -287,7 +287,7 @@ static int chdir(void *_p){
 		goto err;
 
 	/* identify file system and call its chdir callback */
-	root = (path[0] == '/') ? (&fs_root) : current_thread[PIR]->parent->cwd;
+	root = (path[0] == '/') ? (fs_root) : current_thread[PIR]->parent->cwd;
 
 	if(root->ops->chdir == 0x0)
 		goto_errno(k_ok, E_NOIMP);
