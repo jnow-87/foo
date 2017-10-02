@@ -121,7 +121,7 @@ static int init(void){
 	if(sched_queue_add(&queue_ready, this_p->threads) != E_OK)
 		goto err;
 
-	return_errno(E_OK);
+	return E_OK;
 
 
 err:
@@ -146,7 +146,7 @@ static int tick(int_num_t num){
 
 	// TODO check for next thread
 	// TODO switch thread or goto sleep
-	return_errno(E_OK);
+	return E_OK;
 }
 
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
@@ -161,7 +161,7 @@ static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	e->thread = this_t;
 	list_add_tail(*queue, e);
 
-	return_errno(E_OK);
+	return E_OK;
 
 
 err:

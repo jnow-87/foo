@@ -17,7 +17,7 @@ int memblock_init(memblock_t *pool, size_t len){
 	list_init_el(pool);
 	pool->len = len;
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
 void *memblock_alloc(memblock_t **pool, size_t n){

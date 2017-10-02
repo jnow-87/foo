@@ -39,7 +39,7 @@ static int init(void){
 	kout.putc = arch_cbs_kernel.putchar;
 	kout.puts = arch_cbs_kernel.puts;
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
 kernel_init(0, init);

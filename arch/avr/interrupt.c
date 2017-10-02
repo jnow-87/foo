@@ -65,7 +65,7 @@ int avr_int_enable(int_type_t mask){
 	if(mask)	asm volatile("sei");
 	else		asm volatile("cli");
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
 int_type_t avr_int_enabled(void){
@@ -82,12 +82,12 @@ int avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
 
 	int_map[num] = hdlr;
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
 int avr_int_hdlr_release(int_num_t num){
 	int_map[num] = 0x0;
-	return_errno(E_OK);
+	return E_OK;
 }
 
 

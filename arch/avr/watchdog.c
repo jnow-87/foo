@@ -44,7 +44,7 @@ static int init(void){
 #endif // CONFIG_AVR_WATCHDOG_PRESCALE
 	);
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
 platform_init(0, init);

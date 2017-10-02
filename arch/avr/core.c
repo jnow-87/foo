@@ -94,7 +94,7 @@ static int init(void){
 	mreg_bit_set_sync(MCUCR, MCUCR_IVSEL, MCUCR_IVCE);
 #endif // CONFIG_KERNEL_TEXT_BASE
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
 core_init(0, init);

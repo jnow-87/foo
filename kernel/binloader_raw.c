@@ -7,5 +7,5 @@
 int bin_load_raw(void *binary, process_t *this_p, void **entry){
 	*entry = binary;
 
-	return_errno(E_OK);
+	return E_OK;
 }
