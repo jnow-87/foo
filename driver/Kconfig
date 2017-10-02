@@ -1,5 +1,2 @@
 source driver/loop/Kconfig
-
-menu "Uart"
-	source driver/avr_uart/Kconfig
-endmenu
+source driver/uart/Kconfig

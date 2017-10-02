@@ -75,7 +75,7 @@ int_type_t avr_int_enabled(void){
 }
 
 int avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
-	if(int_map[num] != 0x0){
+	if(int_map[num] != 0x0 && int_map[num] != hdlr){
 		WARN("interrupt already registerd %u %#x\n", num, int_map[num]);
 		return_errno(E_INUSE);
 	}

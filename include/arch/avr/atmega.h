@@ -18,7 +18,6 @@
 #ifndef __x86_64__
 
 #include <arch/avr/core.h>
-#include <arch/avr/uart.h>
 #include <arch/avr/register.h>
 #include <arch/avr/interrupt.h>
 #include <arch/avr/timebase.h>
@@ -84,9 +83,9 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.thread_context_init = avr_thread_context_init,
 
 	/* terminal I/O */
-#ifdef CONFIG_DRIVER_AVR_UART
-	.putchar = avr_putchar,
-	.puts = avr_puts,
+#ifdef CONFIG_AVR_UART
+	.putchar = avr_uart_putchar,
+	.puts = avr_uart_puts,
 #else
 	.putchar = 0x0,
 	.puts = 0x0,

@@ -1,6 +1,7 @@
-obj-y := loop/
+obj-y :=
 
-obj-$(CONFIG_DRIVER_AVR_UART) += avr_uart/
+obj-$(CONFIG_DRIVER_LOOPBACK) += loop/
+obj-$(CONFIG_DRIVER_UART) += uart/
 
 
 ####

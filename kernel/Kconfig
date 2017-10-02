@@ -66,12 +66,11 @@ config DRIVER_DEBUG
 # uart parameter
 #
 # {{{
-config KERNEL_UART
+menuconfig KERNEL_UART
 	bool "Kernel uart"
-	select DRIVER_AVR_UART if AVR
+	select DRIVER_UART
 
-menu "Kernel uart parameter"
-	depends on KERNEL_UART
+if KERNEL_UART
 
 # baud rate
 choice
@@ -186,7 +185,7 @@ menu "Hidden"
 		default 1	if KERNEL_UART_STOPB_1
 		default 2	if KERNEL_UART_STOPB_2
 endmenu
-endmenu
+endif # KERNEL_UART
 # }}}
 
 #
