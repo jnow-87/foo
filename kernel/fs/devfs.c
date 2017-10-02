@@ -23,7 +23,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data);
 
 
 /* global functions */
-int devfs_dev_register(char const *name, devfs_ops_t *ops){
+int devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 	static int id = 0;
 	devfs_dev_t *dev;
 	fs_node_t *node;
@@ -46,6 +46,7 @@ int devfs_dev_register(char const *name, devfs_ops_t *ops){
 
 	dev->id = id;
 	dev->ops = *ops;
+	dev->data = data;
 	node->data = dev;
 
 	++id;
@@ -120,7 +121,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 	if(dev->ops.open == 0x0)
 		return fd->id;
 
-	if(dev->ops.open(dev->id, fd, mode) != E_OK)
+	if(dev->ops.open(dev, fd, mode) != E_OK)
 		goto err;
 
 	return fd->id;
@@ -138,7 +139,7 @@ static int close(fs_filed_t *fd){
 	dev = (devfs_dev_t*)fd->node->data;
 
 	if(dev->ops.close != 0x0){
-		if(dev->ops.close(dev->id, fd) != E_OK)
+		if(dev->ops.close(dev, fd) != E_OK)
 			return errno;
 	}
 
@@ -154,7 +155,7 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 
 	if(dev->ops.read == 0x0)
 		return_errno(E_NOIMP);
-	return dev->ops.read(dev->id, fd, buf, n);
+	return dev->ops.read(dev, fd, buf, n);
 }
 
 static size_t write(fs_filed_t *fd, void *buf, size_t n){
@@ -165,7 +166,7 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 
 	if(dev->ops.write == 0x0)
 		return_errno(E_NOIMP);
-	return dev->ops.write(dev->id, fd, buf, n);
+	return dev->ops.write(dev, fd, buf, n);
 }
 
 static int ioctl(fs_filed_t *fd, int request, void *data){
@@ -176,7 +177,7 @@ static int ioctl(fs_filed_t *fd, int request, void *data){
 
 	if(dev->ops.ioctl == 0x0)
 		return_errno(E_NOIMP);
-	return dev->ops.ioctl(dev->id, fd, request, data);
+	return dev->ops.ioctl(dev, fd, request, data);
 }
 
 static int fcntl(fs_filed_t *fd, int cmd, void *data){
@@ -187,5 +188,5 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 
 	if(dev->ops.fcntl == 0x0)
 		return_errno(E_NOIMP);
-	return dev->ops.fcntl(dev->id, fd, cmd, data);
+	return dev->ops.fcntl(dev, fd, cmd, data);
 }
