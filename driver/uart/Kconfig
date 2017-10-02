@@ -1,0 +1,22 @@
+menuconfig DRIVER_UART
+	bool "UART driver"
+
+if DRIVER_UART
+
+choice
+	prompt "UART implementation"
+
+	config AVR_UART
+		bool "AVR UART implementation"
+endchoice
+
+config UART_RX_BUFSIZE
+	int "Rx buffer size"
+	default 16
+
+config NUM_UART
+	int "Number of uarts"
+	range 1 16 if KERNEL_UART
+	range 0 16
+
+endif # DRIVER_UART

@@ -2,9 +2,6 @@ obj-y := start.o isr.o interrupt.o core.o watchdog.o thread.o syscall.o
 obj-nobuiltin-y := libsys.o
 
 
-obj-$(CONFIG_KERNEL_UART) += uart.o
-
-
 libsys-y := core_lib.o lib.o syscall_lib.o
 
 

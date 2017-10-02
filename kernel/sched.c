@@ -21,8 +21,8 @@ typedef struct sched_queue_t{
 
 
 /* local/static prototypes */
-static int sched_init(void);
-static int sched_tick(int_num_t num);
+static int init(void);
+static int tick(int_num_t num);
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
 
@@ -43,14 +43,14 @@ void sched_resched(void){
 
 
 /* local functions */
-static int sched_init(void){
+static int init(void){
 	unsigned int i;
 	process_t *this_p;
 	thread_t *this_t;
 
 
 	/* register scheduler interrupt */
-	if(int_hdlr_register(CONFIG_SCHED_INT, sched_tick) != E_OK)
+	if(int_hdlr_register(CONFIG_SCHED_INT, tick) != E_OK)
 		goto err;
 
 	/* allocate kernel stack */
@@ -71,6 +71,7 @@ static int sched_init(void){
 
 	memset(this_p, 0x0, sizeof(process_t));
 
+	this_p->name = (char*)("kernel");
 	this_p->affinity = CONFIG_SCHED_AFFINITY_DEFAULT;
 	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;
 	this_p->cwd = &fs_root;
@@ -85,15 +86,17 @@ static int sched_init(void){
 		if(this_t == 0)
 			goto_errno(err, E_NOMEM);
 
-		memset(this_t, 0x0, sizeof(thread_t));
-
 		this_t->tid = i;
 		this_t->state = CREATED;
 		this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
 		this_t->affinity = (0x1 << i);
-		this_t->stack = (void*)CONFIG_KERNEL_STACK_BASE;
-		this_t->stack += i * (CONFIG_KERNEL_STACK_SIZE / CONFIG_NCORES);
 		this_t->parent = this_p;
+
+		this_t->entry = 0x0;	// kernel threads are already running
+		this_t->ctx = 0x0;		// kernel thread context is set automatically once
+								// the thread is interrupted for the first time
+		this_t->stack = 0x0;	// stack pages are only relevant for user space,
+								// since the kernel has a separate memory management
 
 		list_add_tail(this_p->threads, this_t);
 		current_thread[i] = this_t;
@@ -118,7 +121,7 @@ static int sched_init(void){
 	if(sched_queue_add(&queue_ready, this_p->threads) != E_OK)
 		goto err;
 
-	return_errno(E_OK);
+	return E_OK;
 
 
 err:
@@ -128,9 +131,9 @@ err:
 	return_errno(errno);
 }
 
-kernel_init(2, sched_init);
+kernel_init(2, init);
 
-static int sched_tick(int_num_t num){
+static int tick(int_num_t num){
 	static sched_queue_t *e = 0;
 
 
@@ -143,7 +146,7 @@ static int sched_tick(int_num_t num){
 
 	// TODO check for next thread
 	// TODO switch thread or goto sleep
-	return_errno(E_OK);
+	return E_OK;
 }
 
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
@@ -158,7 +161,7 @@ static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	e->thread = this_t;
 	list_add_tail(*queue, e);
 
-	return_errno(E_OK);
+	return E_OK;
 
 
 err:

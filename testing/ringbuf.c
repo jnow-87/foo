@@ -89,3 +89,21 @@ static int tc_ringbuf_write(int log){
 }
 
 test_case(tc_ringbuf_write, "ringbuf_write");
+
+static int tc_ringbuf_full(int log){
+	int n;
+
+
+	n = 0;
+
+	INIT();
+
+	n += check_int(log, ringbuf_full(&ring), false);
+
+	WRITE("deadbeef01");
+	n += check_int(log, ringbuf_full(&ring), true);
+
+	return -n;
+}
+
+test_case(tc_ringbuf_full, "ringbuf_full");

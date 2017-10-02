@@ -60,5 +60,16 @@ int main(void){
 		}
 	}
 
+	/* check target architecture specifics */
+#ifdef CONFIG_AVR
+	// check init binary starting address
+	if(CONFIG_INIT_BINTYPE_RAW){
+		if(CONFIG_INIT_BINARY != CONFIG_APP_TEXT_BASE){
+			printf("\terror: (raw) init binary starting address does not match it's flash address\n\t%s (%#x)  != %s (%#x)\n", "CONFIG_INIT_BINARY", CONFIG_INIT_BINARY, "CONFIG_APP_TEXT_BASE", CONFIG_APP_TEXT_BASE);
+			return 1;
+		}
+	}
+#endif // CONFIG_AVR
+
 	return 0;
 }

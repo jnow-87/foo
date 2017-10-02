@@ -18,7 +18,6 @@
 #ifndef __x86_64__
 
 #include <arch/avr/core.h>
-#include <arch/avr/uart.h>
 #include <arch/avr/register.h>
 #include <arch/avr/interrupt.h>
 #include <arch/avr/timebase.h>
@@ -27,6 +26,7 @@
 #include <arch/avr/syscall.h>
 #include <arch/avr/lib.h>
 #include <arch/types.h>
+#include <driver/avr_uart.h>
 #include <sys/types.h>
 
 #endif // __x86_64__
@@ -58,6 +58,10 @@
 #ifdef BUILD_KERNEL
 
 static const arch_callbacks_kernel_t arch_cbs_kernel = {
+	/* core */
+	.core_panic = avr_core_panic,
+
+	/* virtual memory management */
 	.page_entry_write = 0x0,
 	.page_entry_inval_idx = 0x0,
 	.page_entry_inval_va = 0x0,
@@ -66,6 +70,7 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.copy_from_user = 0x0,
 	.copy_to_user = 0x0,
 
+	/* interrupts */
 	.int_enable = avr_int_enable,
 	.int_enabled = avr_int_enabled,
 	.int_hdlr_register = avr_int_hdlr_register,
@@ -74,11 +79,13 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 	.ipi_sleep = 0x0,
 	.ipi_wake = 0x0,
 
+	/* threading */
 	.thread_context_init = avr_thread_context_init,
 
-#ifdef CONFIG_KERNEL_UART
-	.putchar = avr_putchar,
-	.puts = avr_puts,
+	/* terminal I/O */
+#ifdef CONFIG_AVR_UART
+	.putchar = avr_uart_putchar,
+	.puts = avr_uart_puts,
 #else
 	.putchar = 0x0,
 	.puts = 0x0,
@@ -98,7 +105,6 @@ static const arch_callbacks_common_t arch_cbs_common = {
 	/* core */
 	.core_id = 0x0,
 	.core_sleep = avr_core_sleep,
-	.core_halt = avr_core_halt,
 
 	/* syscall */
 #ifdef BUILD_KERNEL

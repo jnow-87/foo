@@ -15,7 +15,7 @@ int open(char const *path, f_mode_t mode){
 	p.data_len = strlen(path) + 1;
 	p.mode = mode;
 
-	errno = sc(SC_OPEN, &p);
+	errno |= sc(SC_OPEN, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -29,7 +29,7 @@ int close(int fd){
 
 	p.fd = fd;
 
-	errno = sc(SC_CLOSE, &p);
+	errno |= sc(SC_CLOSE, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -46,7 +46,7 @@ int read(int fd, void *buf, size_t n){
 	p.data_len = n;
 	p.errno = E_OK;
 
-	errno = sc(SC_READ, &p);
+	errno |= sc(SC_READ, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -63,7 +63,7 @@ int write(int fd, void *buf, size_t n){
 	p.data_len = n;
 	p.errno = E_OK;
 
-	errno = sc(SC_WRITE, &p);
+	errno |= sc(SC_WRITE, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -81,7 +81,7 @@ int ioctl(int fd, int cmd, void *data, size_t data_len){
 	p.data_len = data_len;
 	p.errno = E_OK;
 
-	errno = sc(SC_IOCTL, &p);
+	errno |= sc(SC_IOCTL, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -99,7 +99,7 @@ int fcntl(int fd, int request, void *data, size_t data_len){
 	p.data_len = data_len;
 	p.errno = E_OK;
 
-	errno = sc(SC_FCNTL, &p);
+	errno |= sc(SC_FCNTL, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -115,7 +115,7 @@ int chdir(char const *path){
 	p.data_len = strlen(path) + 1;
 	p.errno = E_OK;
 
-	errno = sc(SC_CHDIR, &p);
+	errno |= sc(SC_CHDIR, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -131,7 +131,7 @@ int rmdir(char const *path){
 	p.data_len = strlen(path) + 1;
 	p.errno = E_OK;
 
-	errno = sc(SC_RMNODE, &p);
+	errno |= sc(SC_RMNODE, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)

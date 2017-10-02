@@ -2,9 +2,12 @@
 #include <arch/interrupt.h>
 #include <arch/core.h>
 #include <arch/io.h>
+#include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <kernel/sched.h>
+#include <kernel/panic.h>
 #include <sys/errno.h>
+#include <sys/register.h>
 
 
 /* external prototypes */
@@ -13,38 +16,37 @@ extern void __isr_reset(void);
 
 /* global variables */
 uint8_t inkernel_nest = 0;
-int_hdlr_t int_map[NINTERRUPTS] = { 0x0 };
+
+
+/* local/static prototypes */
+static int avr_warm_reset_hdlr(int_num_t num);
+
+
+/* static variables */
+static int_hdlr_t int_map[NINTERRUPTS] = { 0x0 };
 
 
 /* global functions */
 struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
-	uint8_t t;
 	int terrno;
 	int_num_t num;
 
 
-	/* save thread context when coming from a process */
+	/* save thread context if not interrupting the kernel */
 	if(inkernel_nest == 1)
 		current_thread[PIR]->ctx = tc;
 
 	/* call respective interrupt handler */
-	// swap bytes of interrupt vector address
-	t = (unsigned int)(tc->int_vec) >> 8;
-	tc->int_vec = (void*)((unsigned int)(tc->int_vec) << 8 | t);
-
 	// compute interrupt number
-	num = ((void (*)(void))tc->int_vec - __isr_reset - INT_VEC_WORDS) / INT_VEC_WORDS;
+	num = ((void (*)(void))(lo8(tc->int_vec) | hi8(tc->int_vec)) - __isr_reset - INT_VEC_WORDS) / INT_VEC_WORDS;
 
 	// check interrupt number
-	if(num >= NINTERRUPTS){
-		FATAL("out of bound interrupt num %d\n", num);
-		core_halt();
-	}
+	if(num >= NINTERRUPTS)
+		kernel_panic("out of bound interrupt num %d\n", num);
 
-	if(int_map[num] == 0x0){
-		FATAL("unhandled interrupt %d\n", num)
-		core_halt();
-	}
+	// check handler
+	if(int_map[num] == 0x0)
+		kernel_panic("unhandled interrupt %d", num);
 
 	// call handler, saving errno
 	terrno = errno;
@@ -63,7 +65,7 @@ int avr_int_enable(int_type_t mask){
 	if(mask)	asm volatile("sei");
 	else		asm volatile("cli");
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
 int_type_t avr_int_enabled(void){
@@ -73,17 +75,32 @@ int_type_t avr_int_enabled(void){
 }
 
 int avr_int_hdlr_register(int_num_t num, int_hdlr_t hdlr){
-	if(int_map[num] != 0x0){
+	if(int_map[num] != 0x0 && int_map[num] != hdlr){
 		WARN("interrupt already registerd %u %#x\n", num, int_map[num]);
 		return_errno(E_INUSE);
 	}
 
 	int_map[num] = hdlr;
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
 int avr_int_hdlr_release(int_num_t num){
 	int_map[num] = 0x0;
-	return_errno(E_OK);
+	return E_OK;
+}
+
+
+/* static functions */
+static int init(void){
+	int_map[0] = avr_warm_reset_hdlr;
+	return E_OK;
+}
+
+platform_init(0, init);
+
+static int avr_warm_reset_hdlr(int_num_t num){
+	kernel_panic("execute reset handler without actual MCU reset");
+
+	return E_OK;
 }

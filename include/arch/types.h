@@ -34,6 +34,9 @@ struct thread_t;
 #ifdef BUILD_KERNEL
 
 typedef struct{
+	/* core */
+	void (*core_panic)(void);
+
 	/* virtual memory management */
 	int (*page_entry_write)(page_t const *page);
 	int (*page_entry_inval_idx)(unsigned int idx, bool sync_cores);
@@ -73,7 +76,6 @@ typedef struct{
 	/* core */
 	int (*core_id)(void);
 	void (*core_sleep)(void);
-	void (*core_halt)(void);
 
 	/* syscall */
 	int (*sc)(sc_t num, void *param, size_t psize);

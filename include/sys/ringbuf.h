@@ -28,6 +28,7 @@ typedef struct{
 void ringbuf_init(ringbuf_t *buf, void *data, size_t n);
 size_t ringbuf_read(ringbuf_t *buf, void *data, size_t n);
 size_t ringbuf_write(ringbuf_t *buf, void *data, size_t n);
+bool ringbuf_full(ringbuf_t *buf);
 
 
 #endif // SYS_RINGBUF_H

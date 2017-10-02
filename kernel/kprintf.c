@@ -22,21 +22,24 @@ void kprintf(kmsg_t lvl, char const *format, ...){
 	va_list lst;
 
 
-	if((kopt.dbg_lvl & lvl) == 0)
-		return;
-
 	va_start(lst, format);
-	vfprintf(&kout, format, lst);
+	kvprintf(lvl, format, lst);
 	va_end(lst);
 }
 
+void kvprintf(kmsg_t lvl, char const *format, va_list lst){
+	if((kopt.dbg_lvl & lvl) == 0)
+		return;
+
+	vfprintf(&kout, format, lst);
+}
 
 /* local functions */
-static int kprintf_init(void){
+static int init(void){
 	kout.putc = arch_cbs_kernel.putchar;
 	kout.puts = arch_cbs_kernel.puts;
 
-	return_errno(E_OK);
+	return E_OK;
 }
 
-kernel_init(0, kprintf_init);
+kernel_init(0, init);

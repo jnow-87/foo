@@ -66,11 +66,11 @@ config DRIVER_DEBUG
 # uart parameter
 #
 # {{{
-config KERNEL_UART
+menuconfig KERNEL_UART
 	bool "Kernel uart"
+	select DRIVER_UART
 
-menu "Kernel uart parameter"
-	depends on KERNEL_UART
+if KERNEL_UART
 
 # baud rate
 choice
@@ -155,6 +155,16 @@ choice
 		bool "None"
 endchoice
 
+menu "Hidden"
+	visible if 0
+
+	config KERNEL_UART_PARITY
+		int "Stop bits"
+		default 0	if KERNEL_UART_PARITY_NONE
+		default 1	if KERNEL_UART_PARITY_ODD
+		default 2	if KERNEL_UART_PARITY_EVEN
+endmenu
+
 # stop bits
 choice
 	prompt "Stop bits"
@@ -175,7 +185,7 @@ menu "Hidden"
 		default 1	if KERNEL_UART_STOPB_1
 		default 2	if KERNEL_UART_STOPB_2
 endmenu
-endmenu
+endif # KERNEL_UART
 # }}}
 
 #

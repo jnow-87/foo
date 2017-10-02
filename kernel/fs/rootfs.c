@@ -23,13 +23,13 @@ static fs_ops_t rootfs_ops;
 
 
 /* local/static prototypes */
-static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode);
-static int rootfs_close(fs_filed_t *fd);
-static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n);
-static size_t rootfs_write(fs_filed_t *fd, void *buf, size_t n);
-static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data);
-static int rootfs_rmnode(fs_node_t *start, char const *path);
-static int rootfs_chdir(fs_node_t *start, char const *path);
+static int open(fs_node_t *start, char const *path, f_mode_t mode);
+static int close(fs_filed_t *fd);
+static size_t read(fs_filed_t *fd, void *buf, size_t n);
+static size_t write(fs_filed_t *fd, void *buf, size_t n);
+static int fcntl(fs_filed_t *fd, int cmd, void *data);
+static int rmnode(fs_node_t *start, char const *path);
+static int chdir(fs_node_t *start, char const *path);
 
 static rootfs_file_t *file_alloc(void);
 static void file_free(rootfs_file_t *file);
@@ -99,16 +99,16 @@ int rootfs_rmdir(fs_node_t *node){
 
 
 /* local functions */
-static int rootfs_init(void){
+static int init(void){
 	/* register rootfs */
-	rootfs_ops.open = rootfs_open;
-	rootfs_ops.close = rootfs_close;
-	rootfs_ops.read = rootfs_read;
-	rootfs_ops.write = rootfs_write;
+	rootfs_ops.open = open;
+	rootfs_ops.close = close;
+	rootfs_ops.read = read;
+	rootfs_ops.write = write;
 	rootfs_ops.ioctl = 0x0;
-	rootfs_ops.fcntl = rootfs_fcntl;
-	rootfs_ops.rmnode = rootfs_rmnode;
-	rootfs_ops.chdir = rootfs_chdir;
+	rootfs_ops.fcntl = fcntl;
+	rootfs_ops.rmnode = rmnode;
+	rootfs_ops.chdir = chdir;
 
 	/* init fs_root */
 	memset(&fs_root, 0x0, sizeof(fs_node_t));
@@ -117,19 +117,14 @@ static int rootfs_init(void){
 	fs_root.is_dir = true;
 	fs_root.parent = &fs_root;
 
-	fs_root.name = kmalloc(2);
-
-	if(fs_root.name == 0x0)
-		return_errno(E_NOMEM);
-
-	strncpy(fs_root.name, "/", 2);
+	fs_root.name = (char*)("/");
 
 	return E_OK;
 }
 
-kernel_init(1, rootfs_init);
+kernel_init(1, init);
 
-static int rootfs_open(fs_node_t *start, char const *path, f_mode_t mode){
+static int open(fs_node_t *start, char const *path, f_mode_t mode){
 	int n;
 	fs_filed_t *fd;
 
@@ -201,14 +196,14 @@ err:
 	return errno;
 }
 
-static int rootfs_close(fs_filed_t *fd){
+static int close(fs_filed_t *fd){
 	DEBUG("handle close for %d\n", fd->id);
 
 	fs_fd_free(fd);
 	return E_OK;
 }
 
-static size_t rootfs_read(fs_filed_t *fd, void *buf, size_t n){
+static size_t read(fs_filed_t *fd, void *buf, size_t n){
 	size_t m;
 	fs_node_t *child;
 	rootfs_file_t *file;
@@ -267,7 +262,7 @@ err:
 	return 0;
 }
 
-static size_t rootfs_write(fs_filed_t *fd, void *buf, size_t n){
+static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	size_t f_size;
 	void *data;
 	rootfs_file_t *file;
@@ -311,7 +306,7 @@ err:
 	return 0;
 }
 
-static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data){
+static int fcntl(fs_filed_t *fd, int cmd, void *data){
 	DEBUG("handle fcntl for %d\n", fd->id);
 
 	switch(cmd){
@@ -327,7 +322,7 @@ static int rootfs_fcntl(fs_filed_t *fd, int cmd, void *data){
 	}
 }
 
-static int rootfs_rmnode(fs_node_t *start, char const *path){
+static int rmnode(fs_node_t *start, char const *path){
 	if(*path == 0)
 		return_errno(E_INVAL);
 
@@ -358,7 +353,7 @@ static int rootfs_rmnode(fs_node_t *start, char const *path){
 	}
 }
 
-static int rootfs_chdir(fs_node_t *start, char const *path){
+static int chdir(fs_node_t *start, char const *path){
 	if(*path == 0)
 		return_errno(E_INVAL);
 

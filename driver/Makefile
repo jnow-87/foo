@@ -1,4 +1,7 @@
-obj-y := loop/
+obj-y :=
+
+obj-$(CONFIG_DRIVER_LOOPBACK) += loop/
+obj-$(CONFIG_DRIVER_UART) += uart/
 
 
 ####

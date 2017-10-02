@@ -11,6 +11,8 @@ __isr_##name: \
 
 /* external functions */
 .extern __start
+.extern avr_int_hdlr
+.extern avr_warm_reset_hdlr
 
 
 /* external variables */
@@ -21,7 +23,7 @@ __isr_##name: \
 /* interrupt vectors */
 .section .reset
 
-ISR(reset, __start)
+ISR(reset, __reset)
 ISR(int0, __isr_call)
 ISR(int1, __isr_call)
 ISR(int2, __isr_call)
@@ -57,8 +59,17 @@ ISR(timer3_comp_a, __isr_call)
 ISR(timer3_comp_b, __isr_call)
 ISR(timer3_ovfl, __isr_call)
 
-
+/* reset handler */
 .section .text
+.global __reset
+__reset:
+	/* check if an interrupt source is present if not,
+	 * the reset vector is triggered due to an error
+	 */
+	lds		r16, MCUSR
+	cpi		r16,0x0
+	brne	__start
+	jmp		__isr_call
 
 /* ISR */
 .global __isr_call
@@ -107,7 +118,8 @@ __isr_call:
 	lds		r24, SPL
 	lds		r25, SPH
 
-	// save last register
+	// push SREG
+	// thread_context pointer needs to be saved earlier due to post-decrement of push
 	push	r16
 
 	/* update stack pointer

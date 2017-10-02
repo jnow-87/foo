@@ -282,7 +282,8 @@ fig_svg: fig_cp $(pdfgraphics)
 
 .PHONY: fig_cp
 fig_cp:
-	@cp -ru $(graphicspath) $(build_tree)/doc
+	$(mkdir) $(build_tree)/doc
+	$(cp) -ru $(graphicspath) $(build_tree)/doc
 
 $(pdfgraphics): %.pdf : %.svg
 	inkscape -D -z -f $< --export-pdf=$@

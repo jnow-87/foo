@@ -49,6 +49,16 @@
 	.init_type = CONFIG_INIT_BINTYPE, \
 	.init_arg = CONFIG_INIT_ARGS, \
 	.dbg_lvl = CONFIG_KMSG_FATAL | CONFIG_KMSG_WARN | CONFIG_KMSG_INFO | CONFIG_KMSG_DEBUG | CONFIG_KMSG_STAT, \
+	.uart_cfg = { \
+		.baud = CONFIG_KERNEL_UART_BAUDRATE, \
+		.stopb = CONFIG_KERNEL_UART_STOPBITS, \
+		.csize = CS_8, \
+		.parity = CONFIG_KERNEL_UART_PARITY, \
+		.data_overrun = 0, \
+		.parity_err = 0, \
+		.frame_err = 0, \
+		.rx_queue_full = 0, \
+	}, \
 }
 
 
@@ -63,6 +73,8 @@ typedef struct{
 	char const init_arg[255];	// argument string for init
 
 	kmsg_t dbg_lvl;				// kernel debug level
+
+	uart_t uart_cfg;
 } kopt_t;
 
 

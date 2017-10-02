@@ -1,4 +1,9 @@
-menu "loopback device"
-	config LOOP_BUF_SIZE
-	int "Loop device buffer size"
-endmenu
+menuconfig DRIVER_LOOPBACK
+	bool "Loopback device"
+
+if DRIVER_LOOPBACK
+
+config LOOP_BUF_SIZE
+int "Loop device buffer size"
+
+endif # DRIVER_LOOPBACK
