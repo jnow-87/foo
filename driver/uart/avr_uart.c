@@ -18,7 +18,7 @@ static int rx_hdlr(int_num_t num);
 
 
 /* global varibales */
-uart_cbs_t uart_cbs = {
+uart_cbs_t const uart_cbs = {
 	.config = avr_uart_config,
 	.puts = avr_uart_putsn,
 };

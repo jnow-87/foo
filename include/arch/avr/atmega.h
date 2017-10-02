@@ -57,7 +57,7 @@
 // kernel callbacks
 #ifdef BUILD_KERNEL
 
-static const arch_callbacks_kernel_t arch_cbs_kernel = {
+static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	/* core */
 	.core_panic = avr_core_panic,
 
@@ -95,7 +95,7 @@ static const arch_callbacks_kernel_t arch_cbs_kernel = {
 #endif // BUILD_KERNEL
 
 // common callbacks
-static const arch_callbacks_common_t arch_cbs_common = {
+static arch_callbacks_common_t const arch_cbs_common = {
 	.timebase = 0x0,			/* TODO */
 	.timebase_to_time = 0x0,	/* TODO */
 
@@ -124,7 +124,7 @@ static const arch_callbacks_common_t arch_cbs_common = {
 };
 
 // architecture info
-static const arch_info_t arch_info = {
+static arch_info_t const arch_info = {
 	.core_clock_khz = CONFIG_CORE_CLOCK_HZ / 1000,
 	.timebase_clock_khz = 0x0,
 };
