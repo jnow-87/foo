@@ -7,8 +7,8 @@
 
 
 /* global functions */
-.global avr_lib_init
-avr_lib_init:
+.global avr_lib_crt0
+avr_lib_crt0:
 	/* load .data section */
 /*{{{*/
 	//	Z = __data_load_start
@@ -55,7 +55,7 @@ avr_lib_init:
 /*}}}*/
 
 	/* init .bss section */
-	/*{{{*/
+/*{{{*/
 	ldi		r30, lo8(__bss_start)
 	ldi		r31, hi8(__bss_start)
 	ldi		r16, hi8(__bss_end)

@@ -81,7 +81,7 @@ typedef struct{
 	int (*sc)(sc_t num, void *param, size_t psize);
 
 	/* libsys functionality */
-	int (*lib_init)(void);
+	int (*lib_crt0)(void);
 	int (*lib_main)(int argc, char **argv);
 } arch_callbacks_common_t;
 
