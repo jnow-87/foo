@@ -37,7 +37,7 @@ int close(int fd){
 	return 0;
 }
 
-int read(int fd, void *buf, size_t n){
+ssize_t read(int fd, void *buf, size_t n){
 	sc_fs_t p;
 
 
@@ -54,7 +54,7 @@ int read(int fd, void *buf, size_t n){
 	return p.data_len;
 }
 
-int write(int fd, void *buf, size_t n){
+ssize_t write(int fd, void *buf, size_t n){
 	sc_fs_t p;
 
 
@@ -137,24 +137,4 @@ int rmdir(char const *path){
 	if(errno != E_OK)
 		return -1;
 	return 0;
-}
-
-int fseek(int fd, int offset, whence_t whence){
-	seek_t p;
-
-
-	p.whence = whence;
-	p.offset = offset;
-
-	if(fcntl(fd, F_SEEK, &p, sizeof(seek_t)) != E_OK)
-		return -1;
-	return 0;
-}
-
-int ftell(int fd){
-	seek_t p;
-
-
-	fcntl(fd, F_TELL, &p, sizeof(seek_t));
-	return p.pos;
 }

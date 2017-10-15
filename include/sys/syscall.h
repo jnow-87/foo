@@ -3,6 +3,7 @@
 
 
 #include <sys/types.h>
+#include <sys/file.h>
 
 
 /* types */
@@ -28,6 +29,18 @@ typedef struct{
 
 	int errno;
 } sc_malloc_t;
+
+typedef struct{
+	int fd;
+
+	void *data;
+	size_t data_len;
+
+	int cmd;
+	f_mode_t mode;
+
+	int errno;
+} sc_fs_t;
 
 
 #endif // SYS_SYSCALL_H

@@ -11,15 +11,9 @@
 /* macros */
 #define test(log, ref, s, ...)({ \
 	char buf[20]; \
-	FILE f; \
+	FILE f = FILE_INITIALISER(0x0, buf, 20, 0x0); \
 	size_t len; \
 	\
-	\
-	f.buf = buf; \
-	f.pos = 0; \
-	f.putc = 0x0; \
-	f.puts = 0x0; \
-	f.state = F_OK; \
 	\
 	memset(buf, 'a', 20); \
 	len = fprintf(&f, s, ##__VA_ARGS__); \
@@ -27,14 +21,14 @@
 	if(len != strlen(ref)) \
 		tlog(log, "%s: length differ res(%d) != ref(%d)\n", s, len, strlen(ref)) \
 	\
-	f.buf[len] = 0; \
-	if(strcmp(ref, f.buf) == 0) \
-		tlog(log, "%s: res('%s') == ref('%s')\n", s, f.buf, ref) \
+	((char*)f.wbuf)[len] = 0; \
+	if(strcmp(ref, f.wbuf) == 0) \
+		tlog(log, "%s: res('%s') == ref('%s')\n", s, f.wbuf, ref) \
 	\
 	else \
-		tlog(log, "%s: res('%s') != ref('%s')\n", s, f.buf, ref) \
+		tlog(log, "%s: res('%s') != ref('%s')\n", s, f.wbuf, ref) \
 	\
-	(len == strlen(ref) && strcmp(ref, f.buf) == 0) ? 0 : 1; \
+	(len == strlen(ref) && strcmp(ref, f.wbuf) == 0) ? 0 : 1; \
 })
 
 

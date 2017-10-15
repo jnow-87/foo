@@ -2,35 +2,44 @@
 #define SYS_STDIO_H
 
 
+#include <sys/types.h>
 #include <sys/stdarg.h>
+#include <sys/errno.h>
+#include <sys/stream.h>
 
 
 /* macros */
-#define EOF		F_EOF
+#define EOF		E_END
+
+#define FILE_INITIALISER(read_buf, write_buf, buf_len, putchar){ \
+	.fd = 0, \
+	.rbuf = read_buf, \
+	.wbuf = write_buf, \
+	.ridx = 0, \
+	.dataidx = 0, \
+	.widx = 0, \
+	.blen = buf_len, \
+	.putc = putchar, \
+}
 
 
 /* types */
-typedef enum{
-	F_EIO = -2,
-	F_EOF = -1,
-	F_OK = 0,
-} fstate_t;
+typedef struct FILE{
+	int fd;
 
-typedef struct{
-	char *buf;
-	unsigned int pos;
+	void *rbuf,
+		 *wbuf;
 
-	fstate_t state;
+	size_t ridx,
+		   dataidx,
+		   widx,
+		   blen;
 
-	char (*putc)(char c);
-	int (*puts)(char const *s);
+	char (*putc)(char c, struct FILE *stream);
 } FILE;
 
 
 /* prototypes */
-char fputc(char c, FILE *stream);
-int fputs(char const *s, FILE *stream);
-
 int vfprintf(FILE *stream, char const *format, va_list lst);
 
 

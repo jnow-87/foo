@@ -8,3 +8,13 @@ menu stdlib
 		default 128
 endmenu
 # }}}
+
+# stdio
+#
+# {{{
+menu stdio
+	config FILE_BUF_SIZE
+		int "Buffer size for FILE structures"
+		default 16
+endmenu
+# }}}
