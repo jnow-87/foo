@@ -9,14 +9,14 @@
 
 
 /* local/static prototypes */
-static int open(void *param);
-static int close(void *param);
-static int read(void *param);
-static int write(void *param);
-static int ioctl(void *param);
-static int fcntl(void *param);
-static int rmnode(void *param);
-static int chdir(void *param);
+static int sc_hdlr_open(void *param);
+static int sc_hdlr_close(void *param);
+static int sc_hdlr_read(void *param);
+static int sc_hdlr_write(void *param);
+static int sc_hdlr_ioctl(void *param);
+static int sc_hdlr_fcntl(void *param);
+static int sc_hdlr_rmnode(void *param);
+static int sc_hdlr_chdir(void *param);
 
 
 /* local functions */
@@ -25,21 +25,21 @@ static int init(void){
 
 
 	e = E_OK;
-	e |= sc_register(SC_OPEN, open);
-	e |= sc_register(SC_CLOSE, close);
-	e |= sc_register(SC_READ, read);
-	e |= sc_register(SC_WRITE, write);
-	e |= sc_register(SC_IOCTL, ioctl);
-	e |= sc_register(SC_FCNTL, fcntl);
-	e |= sc_register(SC_RMNODE, rmnode);
-	e |= sc_register(SC_CHDIR, chdir);
+	e |= sc_register(SC_OPEN, sc_hdlr_open);
+	e |= sc_register(SC_CLOSE, sc_hdlr_close);
+	e |= sc_register(SC_READ, sc_hdlr_read);
+	e |= sc_register(SC_WRITE, sc_hdlr_write);
+	e |= sc_register(SC_IOCTL, sc_hdlr_ioctl);
+	e |= sc_register(SC_FCNTL, sc_hdlr_fcntl);
+	e |= sc_register(SC_RMNODE, sc_hdlr_rmnode);
+	e |= sc_register(SC_CHDIR, sc_hdlr_chdir);
 
 	return e;
 }
 
 kernel_init(0, init);
 
-static int open(void *_p){
+static int sc_hdlr_open(void *_p){
 	char path[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_node_t *root;
@@ -69,7 +69,7 @@ err:
 	return errno;
 }
 
-static int close(void *_p){
+static int sc_hdlr_close(void *_p){
 	sc_fs_t *p;
 	fs_filed_t *fd;
 
@@ -95,7 +95,7 @@ k_ok:
 	return E_OK;
 }
 
-static int read(void *_p){
+static int sc_hdlr_read(void *_p){
 	char buf[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
@@ -133,7 +133,7 @@ err:
 	return errno;
 }
 
-static int write(void *_p){
+static int sc_hdlr_write(void *_p){
 	char buf[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
@@ -167,7 +167,7 @@ err:
 	return errno;
 }
 
-static int ioctl(void *_p){
+static int sc_hdlr_ioctl(void *_p){
 	char data[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
@@ -206,7 +206,7 @@ err:
 	return errno;
 }
 
-static int fcntl(void *_p){
+static int sc_hdlr_fcntl(void *_p){
 	char data[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
@@ -244,7 +244,7 @@ err:
 	return errno;
 }
 
-static int rmnode(void *_p){
+static int sc_hdlr_rmnode(void *_p){
 	char path[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_node_t *root;
@@ -274,7 +274,7 @@ err:
 	return errno;
 }
 
-static int chdir(void *_p){
+static int sc_hdlr_chdir(void *_p){
 	char path[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_node_t *root;

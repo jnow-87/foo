@@ -8,21 +8,11 @@
 
 /* types */
 typedef enum{
-	F_CREATE = 0x1,
-	F_APPEND = 0x2
+	O_CREATE = 0x1,
+	O_APPEND = 0x2,
+	O_READ = 0x4,
+	O_WRITE = 0x8,
 } f_mode_t;
-
-typedef struct{
-	int fd;
-
-	void *data;
-	size_t data_len;
-
-	int cmd;
-	f_mode_t mode;
-
-	int errno;
-} sc_fs_t;
 
 
 #endif // SYS_FILE_H

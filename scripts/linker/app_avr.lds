@@ -25,6 +25,8 @@ SECTIONS {
 		*(.data .data.* .gnu.linkonce.d.*)
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
 		*(.rodata1)
+
+		INCLUDE libsys_init.lds
 	} > data_app AT>flash_app
 
 	__data_start = ADDR(.data);

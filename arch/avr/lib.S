@@ -7,8 +7,15 @@
 
 
 /* global functions */
-.global avr_lib_init
-avr_lib_init:
+.global avr_lib_crt0
+avr_lib_crt0:
+	push	r30
+	push	r31
+	push	r16
+	push	r28
+	push	r29
+	push	r1
+
 	/* load .data section */
 /*{{{*/
 	//	Z = __data_load_start
@@ -55,7 +62,7 @@ avr_lib_init:
 /*}}}*/
 
 	/* init .bss section */
-	/*{{{*/
+/*{{{*/
 	ldi		r30, lo8(__bss_start)
 	ldi		r31, hi8(__bss_start)
 	ldi		r16, hi8(__bss_end)
@@ -74,6 +81,18 @@ avr_lib_init:
 	brne	1b
 /*}}}*/
 
+	/* return 0 */
+	pop		r1
+	pop		r29
+	pop		r28
+	pop		r16
+	pop		r31
+	pop		r30
+
+	ldi		r24, 0
+	ldi		r25, 0
+
+	ret
 
 .global avr_lib_main
 avr_lib_main:

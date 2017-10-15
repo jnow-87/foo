@@ -146,4 +146,3 @@ static int rx_hdlr(int_num_t num){
 
 	return E_OK;
 }
-

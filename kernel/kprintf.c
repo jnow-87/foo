@@ -1,5 +1,4 @@
 #include <arch/io.h>
-#include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <kernel/opt.h>
 #include <sys/stream.h>
@@ -7,14 +6,12 @@
 #include <sys/errno.h>
 
 
+/* local/static prototypes */
+char kputc(char c, FILE *stream);
+
+
 /* static variables */
-FILE kout = {
-	.buf = 0,
-	.pos = 0,
-	.state = F_OK,
-	.putc = 0x0,
-	.puts = 0x0,
-};
+FILE kout = FILE_INITIALISER(0x0, 0x0, 0, kputc);
 
 
 /* global functions */
@@ -35,11 +32,6 @@ void kvprintf(kmsg_t lvl, char const *format, va_list lst){
 }
 
 /* local functions */
-static int init(void){
-	kout.putc = arch_cbs_kernel.putchar;
-	kout.puts = arch_cbs_kernel.puts;
-
-	return E_OK;
+char kputc(char c, FILE *stream){
+	return putchar(c);
 }
-
-kernel_init(0, init);

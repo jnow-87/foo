@@ -20,8 +20,5 @@ int fcntl(int fd, int request, void *data, size_t data_len);
 int chdir(char const *path);
 int rmdir(char const *path);
 
-int fseek(int fd, int offset, whence_t whence);
-int ftell(int fd);
-
 
 #endif // LIB_UNISTD_H

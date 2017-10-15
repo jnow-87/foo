@@ -31,11 +31,6 @@
 #define FLOATTYPE	double
 #endif // CONFIG_PRINT_* - FLOATTYPE
 
-#define FPUTC(c, stream, n){ \
-	fputc(c, stream); \
-	n++; \
-}
-
 
 /* types */
 typedef enum{
@@ -77,6 +72,7 @@ typedef enum{
 
 
 /* local/static prototypes */
+static size_t put_char(FILE *stream, char c);
 static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, int width, int prec);
 static size_t put_padding(FILE *stream, char pad, size_t n);
 static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv);
@@ -84,64 +80,6 @@ static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags);
 
 
 /* global functions */
-char fputc(char c, FILE *stream){
-	if(stream->putc == 0x0 && stream->buf == 0x0)
-		return F_EOF;
-
-	if(stream->state & F_EOF)
-		return F_EOF;
-
-	if(stream->putc){
-		if(stream->putc(c) != c)
-			goto err;
-		return c;
-	}
-	else if(stream->buf){
-		// FIXME size of the buffer is not checked
-		// 		 struct FILE is missing a buffer len
-		stream->buf[stream->pos++] = c;
-		return c;
-	}
-
-
-err:
-	stream->state = F_EOF;
-	return F_EOF;
-}
-
-int fputs(char const *s, FILE *stream){
-	size_t len;
-
-
-	if(stream->puts == 0x0 && stream->buf == 0x0)
-		return F_EOF;
-
-	if(stream->state & F_EOF)
-		return F_EOF;
-
-	if(stream->puts){
-		if(stream->puts(s) < 0)
-			goto err;
-		return 0;
-	}
-	else if(stream->buf){
-		// FIXME size of the buffer is not checked
-		// 		 struct FILE is missing a buffer len
-		len = strlen(s);
-
-		if(strncpy(stream->buf + stream->pos, s, len) < 0)
-			goto err;
-
-		stream->pos += len;
-		return len;
-	}
-
-
-err:
-	stream->state = F_EOF;
-	return F_EOF;
-}
-
 int vfprintf(FILE *stream, char const *format, va_list lst){
 	char const *fp;
 	int width,
@@ -191,7 +129,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 #endif // CONFIG_NOFLOAT
 
 
-	if((stream->putc == 0x0 || stream->puts == 0x0) && stream->buf == 0x0)
+	if(stream->putc == 0x0 && stream->wbuf == 0x0)
 		return 0;
 
 	n = 0;
@@ -199,8 +137,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 
 	while(*format){
 		if(*format != '%'){
-			FPUTC(*format++, stream, n);
-
+			n += put_char(stream, *format++);
 			continue;
 		}
 
@@ -218,7 +155,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 		while(1){
 			switch(*format++){
 			case '%':
-				FPUTC('%', stream, n);
+				n += put_char(stream, '%');
 				goto lcontinue;
 
 			case '-':
@@ -618,16 +555,28 @@ lcontinue:
 		continue;
 
 spec_err:
-		FPUTC('%', stream, n);
+		n += put_char(stream, '%');
 		format = fp;
 	}
 
-	return (stream->state & F_EOF ? F_EOF : n);
+	return n;
 }
 
 /* local functions */
+static size_t put_char(FILE *stream, char c){
+	if(stream->putc)
+		return (stream->putc(c, stream) == c) ? 1 : 0;
+
+	if(stream->wbuf == 0x0 || stream->widx == stream->blen)
+		return 0;
+
+	((char*)stream->wbuf)[stream->widx++] = c;
+	return 1;
+}
+
 static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, int width, int prec){
-	size_t n,
+	size_t i,
+		   n,
 		   n_sign,
 		   n_prefix;
 	char sign,
@@ -684,8 +633,8 @@ static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len,
 	n += put_padding(stream, sign, n_sign);
 
 	/* print prefix */
-	if(n_prefix)
-		n += fputs(prefix, stream);
+	for(i=0; i<n_prefix; i++)
+		n += put_char(stream, prefix[i]);
 
 	/* left-pad zeroes */
 	n += put_padding(stream, '0', prec - buf_len);
@@ -704,9 +653,12 @@ static size_t put_padding(FILE *stream, char pad, size_t n){
 	size_t i;
 
 
-	for(i=0; i<n; i++)
-		fputc(pad, stream);
-	return n;
+	for(i=0; i<n; i++){
+		if(put_char(stream, pad) == 0)
+			break;
+	}
+
+	return i;
 }
 
 static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv){
@@ -722,11 +674,13 @@ static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv){
 	}
 
 	for(i=0; i<n; i++){
-		fputc(*b, stream);
+		if(put_char(stream, *b) == 0)
+			break;
+
 		b += dir;
 	}
 
-	return n;
+	return i;
 }
 
 static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags){

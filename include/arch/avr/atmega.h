@@ -115,10 +115,10 @@ static arch_callbacks_common_t const arch_cbs_common = {
 
 	/* main entry */
 #ifdef BUILD_KERNEL
-	.lib_init = 0x0,
+	.lib_crt0 = 0x0,
 	.lib_main = 0x0,
 #else
-	.lib_init = avr_lib_init,
+	.lib_crt0 = avr_lib_crt0,
 	.lib_main = avr_lib_main,
 #endif // BUILD_KERNEL
 };

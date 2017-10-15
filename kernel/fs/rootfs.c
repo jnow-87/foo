@@ -150,7 +150,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 			if(fd == 0x0)
 				return errno;
 
-			if(start->is_dir == false && (mode & F_APPEND))
+			if(start->is_dir == false && (mode & O_APPEND))
 				fd->fp = ((rootfs_file_t*)(start->data))->data_used;
 
 			DEBUG("created file descriptor with id %d\n", fd->id);
@@ -173,7 +173,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 		default:
 			/* no matching node found, try to create it */
 			// error if node shall not be created
-			if((mode & F_CREATE) == 0)
+			if((mode & O_CREATE) == 0)
 				return_errno(E_UNAVAIL);
 
 			// create node

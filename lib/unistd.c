@@ -15,7 +15,7 @@ int open(char const *path, f_mode_t mode){
 	p.data_len = strlen(path) + 1;
 	p.mode = mode;
 
-	errno |= sc(SC_OPEN, &p);
+	sc(SC_OPEN, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -29,7 +29,7 @@ int close(int fd){
 
 	p.fd = fd;
 
-	errno |= sc(SC_CLOSE, &p);
+	sc(SC_CLOSE, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -37,7 +37,7 @@ int close(int fd){
 	return 0;
 }
 
-int read(int fd, void *buf, size_t n){
+ssize_t read(int fd, void *buf, size_t n){
 	sc_fs_t p;
 
 
@@ -46,7 +46,7 @@ int read(int fd, void *buf, size_t n){
 	p.data_len = n;
 	p.errno = E_OK;
 
-	errno |= sc(SC_READ, &p);
+	sc(SC_READ, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -54,7 +54,7 @@ int read(int fd, void *buf, size_t n){
 	return p.data_len;
 }
 
-int write(int fd, void *buf, size_t n){
+ssize_t write(int fd, void *buf, size_t n){
 	sc_fs_t p;
 
 
@@ -63,7 +63,7 @@ int write(int fd, void *buf, size_t n){
 	p.data_len = n;
 	p.errno = E_OK;
 
-	errno |= sc(SC_WRITE, &p);
+	sc(SC_WRITE, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -81,7 +81,7 @@ int ioctl(int fd, int cmd, void *data, size_t data_len){
 	p.data_len = data_len;
 	p.errno = E_OK;
 
-	errno |= sc(SC_IOCTL, &p);
+	sc(SC_IOCTL, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -99,7 +99,7 @@ int fcntl(int fd, int request, void *data, size_t data_len){
 	p.data_len = data_len;
 	p.errno = E_OK;
 
-	errno |= sc(SC_FCNTL, &p);
+	sc(SC_FCNTL, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -115,7 +115,7 @@ int chdir(char const *path){
 	p.data_len = strlen(path) + 1;
 	p.errno = E_OK;
 
-	errno |= sc(SC_CHDIR, &p);
+	sc(SC_CHDIR, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
@@ -131,30 +131,10 @@ int rmdir(char const *path){
 	p.data_len = strlen(path) + 1;
 	p.errno = E_OK;
 
-	errno |= sc(SC_RMNODE, &p);
+	sc(SC_RMNODE, &p);
 	errno |= p.errno;
 
 	if(errno != E_OK)
 		return -1;
 	return 0;
-}
-
-int fseek(int fd, int offset, whence_t whence){
-	seek_t p;
-
-
-	p.whence = whence;
-	p.offset = offset;
-
-	if(fcntl(fd, F_SEEK, &p, sizeof(seek_t)) != E_OK)
-		return -1;
-	return 0;
-}
-
-int ftell(int fd){
-	seek_t p;
-
-
-	fcntl(fd, F_TELL, &p, sizeof(seek_t));
-	return p.pos;
 }
