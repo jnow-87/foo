@@ -289,9 +289,64 @@ endmenu
 #
 # {{{
 menu "Thread and process settings"
-	config THREAD_STACK_SIZE
-		int "Thread stack size"
-		default 4096
+	if KERNEL_VIRT_MEM
+		choice
+			prompt "Thread stack size"
+
+			config THREAD_STACK_SIZE_4k
+				bool "4k"
+
+			config THREAD_STACK_SIZE_16k
+				bool "16k"
+
+			config THREAD_STACK_SIZE_64k
+				bool "64k"
+
+			config THREAD_STACK_SIZE_256k
+				bool "256k"
+
+			config THREAD_STACK_SIZE_1M
+				bool "1M"
+
+			config THREAD_STACK_SIZE_4M
+				bool "4M"
+
+			config THREAD_STACK_SIZE_16M
+				bool "16M"
+
+			config THREAD_STACK_SIZE_64M
+				bool "64M"
+
+			config THREAD_STACK_SIZE_256M
+				bool "256M"
+
+			config THREAD_STACK_SIZE_1G
+				bool "1G"
+		endchoice
+		
+		menu "Hidden"
+			visible if 0
+
+			config THREAD_STACK_SIZE
+				int "Thread stack size"
+				default 0	if THREAD_STACK_SIZE_4k
+				default 1	if THREAD_STACK_SIZE_16k
+				default 2	if THREAD_STACK_SIZE_64k
+				default 3	if THREAD_STACK_SIZE_256k
+				default 4	if THREAD_STACK_SIZE_1M
+				default 5	if THREAD_STACK_SIZE_4M
+				default 6	if THREAD_STACK_SIZE_16M
+				default 7	if THREAD_STACK_SIZE_64M
+				default 8	if THREAD_STACK_SIZE_256M
+				default 9	if THREAD_STACK_SIZE_1G
+		endmenu
+	endif # KERNEL_VIRT_MEM
+
+	if KERNEL_NO_VIRT_MEM
+		config THREAD_STACK_SIZE
+			int "Thread stack size"
+			default 4096
+	endif # KERNEL_NO_VIRT_MEM
 endmenu
 # }}}
 
