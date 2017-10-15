@@ -1,4 +1,4 @@
-obj-y := init.o unistd.o
+obj-y := init.o unistd.o stdlib.o
 
 
 ####

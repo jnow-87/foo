@@ -37,6 +37,15 @@ endmenu
 # }}}
 
 #
+# libsys
+#
+# {{{
+menu "Libsys"
+	source lib/Kconfig
+endmenu
+# }}}
+
+#
 # build system
 #
 # {{{

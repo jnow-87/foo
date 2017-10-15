@@ -1,0 +1,10 @@
+#
+# stdlib
+#
+# {{{
+menu stdlib
+	config MALLOC_MIN_SIZE
+		int "Minimum size to be used for malloc syscalls"
+		default 128
+endmenu
+# }}}

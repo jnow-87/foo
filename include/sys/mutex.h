@@ -27,6 +27,15 @@
 #define MUTEX_INITIALISER()			0
 #define NESTED_MUTEX_INITIALISER	0
 
+#define mutex_init(m)
+#define mutex_init_nested(m)
+#define mutex_lock(m)
+#define mutex_lock_nested(m)
+#define mutex_unlock(m)
+#define mutex_unlock_nested(m)
+#define mutex_trylock(m)
+#define mutex_trylock_nested(m)
+
 #endif // CONFIG_KERNEL_SMP
 
 
@@ -60,6 +69,8 @@ typedef char mutex_t __unused;
 
 
 /* prototypes */
+#ifdef CONFIG_KERNEL_SMP
+
 void mutex_init(mutex_t *m);
 void mutex_init_nested(mutex_t *m);
 
@@ -71,6 +82,8 @@ void mutex_unlock_nested(mutex_t *m);
 
 int mutex_trylock(mutex_t *m);
 int mutex_trylock_nested(mutex_t *m);
+
+#endif // CONFIG_KERNEL_SMP
 
 
 #endif // SYS_MUTEX_H
