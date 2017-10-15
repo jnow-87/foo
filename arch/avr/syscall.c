@@ -4,6 +4,7 @@
 #include <kernel/syscall.h>
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <sys/register.h>
 
 
 /* macros */
@@ -26,9 +27,7 @@ static int sc_hdlr(int_num_t num);
 
 /* global functions */
 #ifdef BUILD_LIBSYS
-avr_sc_arg_t sc_arg;
-
-int avr_sc(sc_t num, void *param, size_t psize){
+void avr_sc(sc_t num, void *param, size_t psize){
 	static volatile avr_sc_arg_t arg;
 
 
@@ -38,15 +37,13 @@ int avr_sc(sc_t num, void *param, size_t psize){
 	arg.psize = psize;
 
 	// copy address to GPIO registers 0/1
-	mreg_w(GPIOR0, (uint8_t)(((unsigned int)(&arg)) & 0xff));
-	mreg_w(GPIOR1, (uint8_t)(((unsigned int)(&arg)) >> 8));
+	mreg_w(GPIOR0, lo8(&arg));
+	mreg_w(GPIOR1, hi8(&arg));
 
 	/* trigger syscall */
 	asm volatile("sei");	// FIXME: from time to time interrupts are disabled
 							//		  for no known reason
 	mreg_w(CONFIG_AVR_SC_PIN, (0x1 << CONFIG_AVR_SC_PIN_BIT));
-
-	return E_OK;
 }
 #endif // BUILD_LIBSYS
 

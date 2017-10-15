@@ -78,7 +78,7 @@ typedef struct{
 	void (*core_sleep)(void);
 
 	/* syscall */
-	int (*sc)(sc_t num, void *param, size_t psize);
+	void (*sc)(sc_t num, void *param, size_t psize);
 
 	/* libsys functionality */
 	int (*lib_crt0)(void);
