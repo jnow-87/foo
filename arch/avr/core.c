@@ -10,21 +10,21 @@
 void avr_core_sleep(void){
 	/* set sleep mode */
 	mreg_w(SMCR, (0x1 << SMCR_SE) |
-#if defined(CONFIG_AVR_SLEEPMODE_IDLE)
+#if defined(CONFIG_SLEEPMODE_IDLE)
 		(0x0 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_ADCNR)
+#elif defined(CONFIG_SLEEPMODE_ADCNR)
 		(0x1 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_PWRDWN)
+#elif defined(CONFIG_SLEEPMODE_PWRDWN)
 		(0x2 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_PWRSAVE)
+#elif defined(CONFIG_SLEEPMODE_PWRSAVE)
 		(0x3 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_STANDBY)
+#elif defined(CONFIG_SLEEPMODE_STANDBY)
 		(0x6 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_EXTSTANDBY)
+#elif defined(CONFIG_SLEEPMODE_EXTSTANDBY)
 		(0x7 << SMCR_SM)
 #else
 	#error "invalid sleep mode, check kernel config"
-#endif // CONFIG_AVR_SLEEPMODE
+#endif // CONFIG_SLEEPMODE
 	);
 
 	/* send core to sleep */
@@ -52,8 +52,8 @@ void avr_core_panic(void){
 		 "%20.20s: %#2.2x\n"
 		 "%20.20s: %p\n"
 		 "%20.20s: %p\n"
-		 "%20.20s: %4.4p (has to be the reset vector address)\n"
-		 "%20.20s: %4.4p (not necessarily meaningful, since the reset vector should never be called)\n\n"
+		 "%20.20s: %4.4p\n"
+		 "%20.20s: %4.4p\n\n"
 		 ,
 		 "SREG", tc->sreg,
 		 "MCUSR", tc->mcusr,

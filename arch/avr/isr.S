@@ -3,16 +3,31 @@
 
 
 /* macros */
-#define ISR(name, tgt) \
-.global __isr_##name $ \
-__isr_##name: \
-	ICALL tgt
+.macro	vector num
+	.if (\num < INT_VECTORS)
+		.if (\num == CONFIG_SCHED_INT || \num == CONFIG_SC_INT)
+			.global	__vector_\num
+			ICALL	__isr_ctx
+
+		.elseif (\num == 0)
+			.global __vector_\num
+			jmp		__isr_reset
+
+		.else
+			.global	__vector_\num
+			.weak	__vector_\num
+			.set	__vector_\num , __isr_inval
+			jmp		__vector_\num
+		.endif
+	.endif
+.endm
 
 
 /* external functions */
 .extern __start
 .extern avr_int_hdlr
-.extern avr_warm_reset_hdlr
+.extern avr_int_warm_reset_hdlr
+.extern avr_int_inval_hdlr
 
 
 /* external variables */
@@ -23,57 +38,70 @@ __isr_##name: \
 /* interrupt vectors */
 .section .reset
 
-ISR(reset, __reset)
-ISR(int0, __isr_call)
-ISR(int1, __isr_call)
-ISR(int2, __isr_call)
-ISR(pcint0, __isr_call)
-ISR(pcint1, __isr_call)
-ISR(pcint2, __isr_call)
-ISR(pcint3, __isr_call)
-ISR(watchdog, __isr_call)
-ISR(timer2_comp_a, __isr_call)
-ISR(timer2_comp_b, __isr_call)
-ISR(timer2_ovfl, __isr_call)
-ISR(timer1_capture, __isr_call)
-ISR(timer1_comp_a, __isr_call)
-ISR(timer1_comp_b, __isr_call)
-ISR(timer1_ovfl, __isr_call)
-ISR(timer0_comp_a, __isr_call)
-ISR(timer0_comp_b, __isr_call)
-ISR(timer0_ovfl, __isr_call)
-ISR(spi_tx, __isr_call)
-ISR(usart0_rx, __isr_call)
-ISR(usart0_udre, __isr_call)
-ISR(usart0_tx, __isr_call)
-ISR(analog_comp, __isr_call)
-ISR(adc, __isr_call)
-ISR(eeprom_rdy, __isr_call)
-ISR(twi, __isr_call)
-ISR(spm_rdy, __isr_call)
-ISR(usart1_rx, __isr_call)
-ISR(usart1_udre, __isr_call)
-ISR(usart1_tx, __isr_call)
-ISR(timer3_capture, __isr_call)
-ISR(timer3_comp_a, __isr_call)
-ISR(timer3_comp_b, __isr_call)
-ISR(timer3_ovfl, __isr_call)
+.global int_vectors
+int_vectors:
+vector 0
+vector 1
+vector 2
+vector 3
+vector 4
+vector 5
+vector 6
+vector 7
+vector 8
+vector 9
+vector 10
+vector 11
+vector 12
+vector 13
+vector 14
+vector 15
+vector 16
+vector 17
+vector 18
+vector 19
+vector 20
+vector 21
+vector 22
+vector 23
+vector 24
+vector 25
+vector 26
+vector 27
+vector 28
+vector 29
+vector 30
+vector 31
+vector 32
+vector 33
+vector 34
+
 
 /* reset handler */
 .section .text
-.global __reset
-__reset:
+.global __isr_reset
+__isr_reset:
 	/* check if an interrupt source is present if not,
 	 * the reset vector is triggered due to an error
 	 */
 	lds		r16, MCUSR
 	cpi		r16,0x0
 	brne	__start
-	jmp		__isr_call
+	jmp		avr_int_warm_reset_hdlr
 
-/* ISR */
-.global __isr_call
-__isr_call:
+
+/* invalid interrupt handler
+ *	NOTE: using avr_int_inval_hdlr directly does not work, since
+ *		  somehow the .weak symbols are not redefined in this case
+ */
+.global __isr_inval
+__isr_inval:
+	jmp	avr_int_inval_hdlr
+
+
+/* ISR with context handling */
+.global __isr_ctx
+__isr_ctx:
 	/* save context */
 	push	r31
 	push	r30

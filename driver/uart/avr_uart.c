@@ -1,4 +1,5 @@
 #include <arch/interrupt.h>
+#include <arch/avr/interrupt.h>
 #include <arch/avr/register.h>
 #include <driver/uart.h>
 #include <driver/avr_uart.h>
@@ -14,7 +15,7 @@
 
 
 /* local/static prototypes */
-static int rx_hdlr(int_num_t num);
+static void rx_hdlr(uint8_t uart);
 
 
 /* global varibales */
@@ -25,7 +26,6 @@ uart_cbs_t const uart_cbs = {
 
 
 /* static variables */
-static int_num_t const rx_int_num[] = { INT_USART0_RX, INT_USART1_RX };
 static uint8_t volatile * const ucsra[] = { (uint8_t*)UCSR0A, (uint8_t*)UCSR1A },
 						* const ucsrb[] = { (uint8_t*)UCSR0B, (uint8_t*)UCSR1B },
 						* const ucsrc[] = { (uint8_t*)UCSR0C, (uint8_t*)UCSR1C },
@@ -50,10 +50,6 @@ int avr_uart_config(unsigned int uart, uart_t *cfg){
 
 	if(brate == 0)
 		return_errno(E_INVAL);
-
-	/* register interrupt handler */
-	if(int_hdlr_register(rx_int_num[uart], rx_hdlr) != E_OK)
-		return errno;
 
 	/* enable uart */
 	mreg_w(PRR0, (mreg_r(PRR0) & (-1 ^ (0x1 << prr_bits[uart]))));
@@ -107,20 +103,33 @@ int avr_uart_putsn(unsigned int uart, char const *s, size_t n){
 }
 
 
-/* static functions */
-static int rx_hdlr(int_num_t num){
-	unsigned int uart;
+/* local functions */
+#if (CONFIG_NUM_UART > 0)
+
+void uart0_rx_hdlr(void){
+	rx_hdlr(0);
+}
+
+avr_int(INT_USART0_RX, uart0_rx_hdlr);
+
+#endif // CONFIG_NUM_UART
+
+#if (CONFIG_NUM_UART > 1)
+
+void uart1_rx_hdlr(void){
+	rx_hdlr(1);
+}
+
+avr_int(INT_USART1_RX, uart1_rx_hdlr);
+
+#endif // CONFIG_NUM_UART
+
+static void rx_hdlr(uint8_t uart){
 	uint8_t c,
 			err;
 
 
 	err = 0;
-
-	/* get uart number */
-	for(uart=0; uart<CONFIG_NUM_UART; uart++){
-		if(rx_int_num[uart] == num)
-			break;
-	}
 
 	/* read data */
 	while((*(ucsra[uart]) & (0x1 << UCSR0A_RXC))){
@@ -143,6 +152,4 @@ static int rx_hdlr(int_num_t num){
 		uart_cfg[uart].parity_err |= bits(err, UCSR0A_UPE, 0x1);
 		uart_cfg[uart].rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
 	}
-
-	return E_OK;
 }

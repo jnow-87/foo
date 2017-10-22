@@ -73,8 +73,6 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	/* interrupts */
 	.int_enable = avr_int_enable,
 	.int_enabled = avr_int_enabled,
-	.int_hdlr_register = avr_int_hdlr_register,
-	.int_hdlr_release = avr_int_hdlr_release,
 
 	.ipi_sleep = 0x0,
 	.ipi_wake = 0x0,

@@ -12,6 +12,7 @@ extern process_t *process_table;
 
 
 /* prototypes */
+void sched_tick(void);
 void sched_resched(void);
 
 

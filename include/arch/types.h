@@ -49,8 +49,6 @@ typedef struct{
 	/* interrupts */
 	int (*int_enable)(int_type_t mask);
 	int_type_t (*int_enabled)(void);
-	int (*int_hdlr_register)(int_num_t num, int_hdlr_t hdlr);
-	int (*int_hdlr_release)(int_num_t num);
 
 	int (*ipi_sleep)(void);
 	int (*ipi_wake)(ipi_t type, unsigned int core, bool bcast);

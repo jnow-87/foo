@@ -22,7 +22,6 @@ typedef struct sched_queue_t{
 
 /* local/static prototypes */
 static int init(void);
-static int tick(int_num_t num);
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
 
@@ -38,6 +37,21 @@ static sched_queue_t *queue_ready = 0,
 
 
 /* global functions */
+void sched_tick(void){
+	static sched_queue_t *e = 0;
+
+
+	/* temporary simple thread select */
+	if(e == 0)
+		e = list_first(queue_ready);
+
+	current_thread[PIR] = e->thread;
+	e = e->next;
+
+	// TODO check for next thread
+	// TODO switch thread or goto sleep
+}
+
 void sched_resched(void){
 }
 
@@ -48,10 +62,6 @@ static int init(void){
 	process_t *this_p;
 	thread_t *this_t;
 
-
-	/* register scheduler interrupt */
-	if(int_hdlr_register(CONFIG_SCHED_INT, tick) != E_OK)
-		goto err;
 
 	/* allocate kernel stack */
 	for(i=0; i<CONFIG_NCORES; i++){
@@ -132,22 +142,6 @@ err:
 }
 
 kernel_init(2, init);
-
-static int tick(int_num_t num){
-	static sched_queue_t *e = 0;
-
-
-	/* temporary simple thread select */
-	if(e == 0)
-		e = list_first(queue_ready);
-
-	current_thread[PIR] = e->thread;
-	e = e->next;
-
-	// TODO check for next thread
-	// TODO switch thread or goto sleep
-	return E_OK;
-}
 
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	sched_queue_t *e;

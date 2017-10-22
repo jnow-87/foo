@@ -163,41 +163,52 @@ endmenu
 # scheduler
 #
 # {{{
-config SCHED_INT
-	string "Scheduler interrupt"
-	default ""
+choice
+	prompt "Scheduler interrupt"
+
+	config SCHED_INT_WATCHDOG
+		bool "WATCHDOG"
+endchoice
+
+menu "Hidden"
+	visible if 0
+
+	config SCHED_INT
+		string "Scheduler interrupt"
+		default "INT_WATCHDOG"	if	SCHED_INT_WATCHDOG
+endmenu
 
 choice
 	prompt "Watchdog prescaler"
 
-	config AVR_WATCHDOG_PRESCALE_2k
+	config WATCHDOG_PRESCALE_2k
 		bool "2k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_4k
+	config WATCHDOG_PRESCALE_4k
 		bool "4k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_8k
+	config WATCHDOG_PRESCALE_8k
 		bool "8k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_16k
+	config WATCHDOG_PRESCALE_16k
 		bool "16k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_32k
+	config WATCHDOG_PRESCALE_32k
 		bool "32k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_64k
+	config WATCHDOG_PRESCALE_64k
 		bool "64k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_128k
+	config WATCHDOG_PRESCALE_128k
 		bool "128k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_256k
+	config WATCHDOG_PRESCALE_256k
 		bool "256k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_512k
+	config WATCHDOG_PRESCALE_512k
 		bool "512k cycles"
 
-	config AVR_WATCHDOG_PRESCALE_1M
+	config WATCHDOG_PRESCALE_1M
 		bool "1M cycles"
 endchoice
 # }}}
@@ -210,120 +221,120 @@ menu "Syscall configuration"
 choice
 	prompt "Pin change interrupt"
 
-	config AVR_SC_PCINT0
+	config SC_PCINT0
 		bool "PCINT0"
 
-	config AVR_SC_PCINT1
+	config SC_PCINT1
 		bool "PCINT1"
 
-	config AVR_SC_PCINT2
+	config SC_PCINT2
 		bool "PCINT2"
 
-	config AVR_SC_PCINT3
+	config SC_PCINT3
 		bool "PCINT3"
 
-	config AVR_SC_PCINT4
+	config SC_PCINT4
 		bool "PCINT4"
 
-	config AVR_SC_PCINT5
+	config SC_PCINT5
 		bool "PCINT5"
 
-	config AVR_SC_PCINT6
+	config SC_PCINT6
 		bool "PCINT6"
 
-	config AVR_SC_PCINT7
+	config SC_PCINT7
 		bool "PCINT7"
 
-	config AVR_SC_PCINT8
+	config SC_PCINT8
 		bool "PCINT8"
 
-	config AVR_SC_PCINT9
+	config SC_PCINT9
 		bool "PCINT9"
 
-	config AVR_SC_PCINT10
+	config SC_PCINT10
 		bool "PCINT10"
 
-	config AVR_SC_PCINT11
+	config SC_PCINT11
 		bool "PCINT11"
 
-	config AVR_SC_PCINT12
+	config SC_PCINT12
 		bool "PCINT12"
 
-	config AVR_SC_PCINT13
+	config SC_PCINT13
 		bool "PCINT13"
 
-	config AVR_SC_PCINT14
+	config SC_PCINT14
 		bool "PCINT14"
 
-	config AVR_SC_PCINT15
+	config SC_PCINT15
 		bool "PCINT15"
 
-	config AVR_SC_PCINT16
+	config SC_PCINT16
 		bool "PCINT16"
 
-	config AVR_SC_PCINT17
+	config SC_PCINT17
 		bool "PCINT17"
 
-	config AVR_SC_PCINT18
+	config SC_PCINT18
 		bool "PCINT18"
 
-	config AVR_SC_PCINT19
+	config SC_PCINT19
 		bool "PCINT19"
 
-	config AVR_SC_PCINT20
+	config SC_PCINT20
 		bool "PCINT20"
 
-	config AVR_SC_PCINT21
+	config SC_PCINT21
 		bool "PCINT21"
 
-	config AVR_SC_PCINT22
+	config SC_PCINT22
 		bool "PCINT22"
 
-	config AVR_SC_PCINT23
+	config SC_PCINT23
 		bool "PCINT23"
 
-	config AVR_SC_PCINT24
+	config SC_PCINT24
 		bool "PCINT24"
 
-	config AVR_SC_PCINT25
+	config SC_PCINT25
 		bool "PCINT25"
 
-	config AVR_SC_PCINT26
+	config SC_PCINT26
 		bool "PCINT26"
 
-	config AVR_SC_PCINT27
+	config SC_PCINT27
 		bool "PCINT27"
 
-	config AVR_SC_PCINT28
+	config SC_PCINT28
 		bool "PCINT28"
 		
-	config AVR_SC_PCINT29
+	config SC_PCINT29
 		bool "PCINT29"
 
-	config AVR_SC_PCINT30
+	config SC_PCINT30
 		bool "PCINT30"
 
-	config AVR_SC_PCINT31
+	config SC_PCINT31
 		bool "PCINT31"
 endchoice
 
 choice
 	prompt "Associated DDR"
 
-	config AVR_SC_DDRA
+	config SC_DDRA
 		bool "DDRA"
 
-	config AVR_SC_DDRB
+	config SC_DDRB
 		bool "DDRB"
 
-	config AVR_SC_DDRC
+	config SC_DDRC
 		bool "DDRC"
 
-	config AVR_SC_DDRD
+	config SC_DDRD
 		bool "DDRD"
 endchoice
 
-config AVR_SC_PIN_BIT
+config SC_PIN_BIT
 	int "I/O port bit"
 	range 0 7
 endmenu
@@ -331,89 +342,89 @@ endmenu
 menu "Hidden"
 	visible if 0
 
-	config AVR_SC_DDR
+	config SC_DDR
 		string "SYSCALL_DDR"
 
-		default "DDRA" if AVR_SC_DDRA
-		default "DDRB" if AVR_SC_DDRB
-		default "DDRC" if AVR_SC_DDRC
-		default "DDRD" if AVR_SC_DDRD
+		default "DDRA" if SC_DDRA
+		default "DDRB" if SC_DDRB
+		default "DDRC" if SC_DDRC
+		default "DDRD" if SC_DDRD
 
-	config AVR_SC_PIN
+	config SC_PIN
 		string "SYSCALL_PIN"
 
-		default "PINA" if AVR_SC_DDRA
-		default "PINB" if AVR_SC_DDRB
-		default "PINC" if AVR_SC_DDRC
-		default "PIND" if AVR_SC_DDRD
+		default "PINA" if SC_DDRA
+		default "PINB" if SC_DDRB
+		default "PINC" if SC_DDRC
+		default "PIND" if SC_DDRD
 
-	config AVR_SC_PCINT
+	config SC_PCINT
 		int "Pin change interrupt"
 
-		default 0 if AVR_SC_PCINT0
-		default 1 if AVR_SC_PCINT1
-		default 2 if AVR_SC_PCINT2
-		default 3 if AVR_SC_PCINT3
-		default 4 if AVR_SC_PCINT4
-		default 5 if AVR_SC_PCINT5
-		default 6 if AVR_SC_PCINT6
-		default 7 if AVR_SC_PCINT7
-		default 8 if AVR_SC_PCINT8
-		default 9 if AVR_SC_PCINT9
-		default 10 if AVR_SC_PCINT10
-		default 11 if AVR_SC_PCINT11
-		default 12 if AVR_SC_PCINT12
-		default 13 if AVR_SC_PCINT13
-		default 14 if AVR_SC_PCINT14
-		default 15 if AVR_SC_PCINT15
-		default 16 if AVR_SC_PCINT16
-		default 17 if AVR_SC_PCINT17
-		default 18 if AVR_SC_PCINT18
-		default 19 if AVR_SC_PCINT19
-		default 20 if AVR_SC_PCINT20
-		default 21 if AVR_SC_PCINT21
-		default 22 if AVR_SC_PCINT22
-		default 23 if AVR_SC_PCINT23
-		default 24 if AVR_SC_PCINT24
-		default 25 if AVR_SC_PCINT25
-		default 26 if AVR_SC_PCINT26
-		default 27 if AVR_SC_PCINT27
-		default 28 if AVR_SC_PCINT28
-		default 29 if AVR_SC_PCINT29
-		default 30 if AVR_SC_PCINT30
-		default 31 if AVR_SC_PCINT31
+		default 0 if SC_PCINT0
+		default 1 if SC_PCINT1
+		default 2 if SC_PCINT2
+		default 3 if SC_PCINT3
+		default 4 if SC_PCINT4
+		default 5 if SC_PCINT5
+		default 6 if SC_PCINT6
+		default 7 if SC_PCINT7
+		default 8 if SC_PCINT8
+		default 9 if SC_PCINT9
+		default 10 if SC_PCINT10
+		default 11 if SC_PCINT11
+		default 12 if SC_PCINT12
+		default 13 if SC_PCINT13
+		default 14 if SC_PCINT14
+		default 15 if SC_PCINT15
+		default 16 if SC_PCINT16
+		default 17 if SC_PCINT17
+		default 18 if SC_PCINT18
+		default 19 if SC_PCINT19
+		default 20 if SC_PCINT20
+		default 21 if SC_PCINT21
+		default 22 if SC_PCINT22
+		default 23 if SC_PCINT23
+		default 24 if SC_PCINT24
+		default 25 if SC_PCINT25
+		default 26 if SC_PCINT26
+		default 27 if SC_PCINT27
+		default 28 if SC_PCINT28
+		default 29 if SC_PCINT29
+		default 30 if SC_PCINT30
+		default 31 if SC_PCINT31
 
-	config AVR_SC_PCMSK
+	config SC_PCMSK
 		string "PCMSK register"
 
-		default "PCMSK0" if AVR_SC_PCINT0 || AVR_SC_PCINT1 || AVR_SC_PCINT2 || AVR_SC_PCINT3 || AVR_SC_PCINT4 || AVR_SC_PCINT5 || AVR_SC_PCINT6 || AVR_SC_PCINT7
-		default "PCMSK1" if AVR_SC_PCINT8 || AVR_SC_PCINT9 || AVR_SC_PCINT10 || AVR_SC_PCINT11 || AVR_SC_PCINT12 || AVR_SC_PCINT13 || AVR_SC_PCINT14 || AVR_SC_PCINT15
-		default "PCMSK2" if AVR_SC_PCINT16 || AVR_SC_PCINT17 || AVR_SC_PCINT18 || AVR_SC_PCINT19 || AVR_SC_PCINT20 || AVR_SC_PCINT21 || AVR_SC_PCINT22 || AVR_SC_PCINT23
-		default "PCMSK3" if AVR_SC_PCINT24 || AVR_SC_PCINT25 || AVR_SC_PCINT26 || AVR_SC_PCINT27 || AVR_SC_PCINT28 || AVR_SC_PCINT29 || AVR_SC_PCINT30 || AVR_SC_PCINT31
+		default "PCMSK0" if SC_PCINT0 || SC_PCINT1 || SC_PCINT2 || SC_PCINT3 || SC_PCINT4 || SC_PCINT5 || SC_PCINT6 || SC_PCINT7
+		default "PCMSK1" if SC_PCINT8 || SC_PCINT9 || SC_PCINT10 || SC_PCINT11 || SC_PCINT12 || SC_PCINT13 || SC_PCINT14 || SC_PCINT15
+		default "PCMSK2" if SC_PCINT16 || SC_PCINT17 || SC_PCINT18 || SC_PCINT19 || SC_PCINT20 || SC_PCINT21 || SC_PCINT22 || SC_PCINT23
+		default "PCMSK3" if SC_PCINT24 || SC_PCINT25 || SC_PCINT26 || SC_PCINT27 || SC_PCINT28 || SC_PCINT29 || SC_PCINT30 || SC_PCINT31
 
-	config AVR_SC_PCICR_IE
+	config SC_PCICR_IE
 		int "PCICR interrupt enable bit"
 
-		default 0 if AVR_SC_PCINT0 || AVR_SC_PCINT1 || AVR_SC_PCINT2 || AVR_SC_PCINT3 || AVR_SC_PCINT4 || AVR_SC_PCINT5 || AVR_SC_PCINT6 || AVR_SC_PCINT7
-		default 1 if AVR_SC_PCINT8 || AVR_SC_PCINT9 || AVR_SC_PCINT10 || AVR_SC_PCINT11 || AVR_SC_PCINT12 || AVR_SC_PCINT13 || AVR_SC_PCINT14 || AVR_SC_PCINT15
-		default 2 if AVR_SC_PCINT16 || AVR_SC_PCINT17 || AVR_SC_PCINT18 || AVR_SC_PCINT19 || AVR_SC_PCINT20 || AVR_SC_PCINT21 || AVR_SC_PCINT22 || AVR_SC_PCINT23
-		default 3 if AVR_SC_PCINT24 || AVR_SC_PCINT25 || AVR_SC_PCINT26 || AVR_SC_PCINT27 || AVR_SC_PCINT28 || AVR_SC_PCINT29 || AVR_SC_PCINT30 || AVR_SC_PCINT31
+		default 0 if SC_PCINT0 || SC_PCINT1 || SC_PCINT2 || SC_PCINT3 || SC_PCINT4 || SC_PCINT5 || SC_PCINT6 || SC_PCINT7
+		default 1 if SC_PCINT8 || SC_PCINT9 || SC_PCINT10 || SC_PCINT11 || SC_PCINT12 || SC_PCINT13 || SC_PCINT14 || SC_PCINT15
+		default 2 if SC_PCINT16 || SC_PCINT17 || SC_PCINT18 || SC_PCINT19 || SC_PCINT20 || SC_PCINT21 || SC_PCINT22 || SC_PCINT23
+		default 3 if SC_PCINT24 || SC_PCINT25 || SC_PCINT26 || SC_PCINT27 || SC_PCINT28 || SC_PCINT29 || SC_PCINT30 || SC_PCINT31
 
-	config AVR_SC_PCIFR_FLAG
+	config SC_PCIFR_FLAG
 		int "PCIFR interrupt flag bit"
 
-		default 0 if AVR_SC_PCINT0 || AVR_SC_PCINT1 || AVR_SC_PCINT2 || AVR_SC_PCINT3 || AVR_SC_PCINT4 || AVR_SC_PCINT5 || AVR_SC_PCINT6 || AVR_SC_PCINT7
-		default 1 if AVR_SC_PCINT8 || AVR_SC_PCINT9 || AVR_SC_PCINT10 || AVR_SC_PCINT11 || AVR_SC_PCINT12 || AVR_SC_PCINT13 || AVR_SC_PCINT14 || AVR_SC_PCINT15
-		default 2 if AVR_SC_PCINT16 || AVR_SC_PCINT17 || AVR_SC_PCINT18 || AVR_SC_PCINT19 || AVR_SC_PCINT20 || AVR_SC_PCINT21 || AVR_SC_PCINT22 || AVR_SC_PCINT23
-		default 3 if AVR_SC_PCINT24 || AVR_SC_PCINT25 || AVR_SC_PCINT26 || AVR_SC_PCINT27 || AVR_SC_PCINT28 || AVR_SC_PCINT29 || AVR_SC_PCINT30 || AVR_SC_PCINT31
+		default 0 if SC_PCINT0 || SC_PCINT1 || SC_PCINT2 || SC_PCINT3 || SC_PCINT4 || SC_PCINT5 || SC_PCINT6 || SC_PCINT7
+		default 1 if SC_PCINT8 || SC_PCINT9 || SC_PCINT10 || SC_PCINT11 || SC_PCINT12 || SC_PCINT13 || SC_PCINT14 || SC_PCINT15
+		default 2 if SC_PCINT16 || SC_PCINT17 || SC_PCINT18 || SC_PCINT19 || SC_PCINT20 || SC_PCINT21 || SC_PCINT22 || SC_PCINT23
+		default 3 if SC_PCINT24 || SC_PCINT25 || SC_PCINT26 || SC_PCINT27 || SC_PCINT28 || SC_PCINT29 || SC_PCINT30 || SC_PCINT31
 
-	config AVR_SC_INT
+	config SC_INT
 		string "Syscall interrupt"
 
-		default "INT_PCINT0" if AVR_SC_PCINT0 || AVR_SC_PCINT1 || AVR_SC_PCINT2 || AVR_SC_PCINT3 || AVR_SC_PCINT4 || AVR_SC_PCINT5 || AVR_SC_PCINT6 || AVR_SC_PCINT7
-		default "INT_PCINT1" if AVR_SC_PCINT8 || AVR_SC_PCINT9 || AVR_SC_PCINT10 || AVR_SC_PCINT11 || AVR_SC_PCINT12 || AVR_SC_PCINT13 || AVR_SC_PCINT14 || AVR_SC_PCINT15
-		default "INT_PCINT2" if AVR_SC_PCINT16 || AVR_SC_PCINT17 || AVR_SC_PCINT18 || AVR_SC_PCINT19 || AVR_SC_PCINT20 || AVR_SC_PCINT21 || AVR_SC_PCINT22 || AVR_SC_PCINT23
-		default "INT_PCINT3" if AVR_SC_PCINT24 || AVR_SC_PCINT25 || AVR_SC_PCINT26 || AVR_SC_PCINT27 || AVR_SC_PCINT28 || AVR_SC_PCINT29 || AVR_SC_PCINT30 || AVR_SC_PCINT31
+		default "INT_PCINT0" if SC_PCINT0 || SC_PCINT1 || SC_PCINT2 || SC_PCINT3 || SC_PCINT4 || SC_PCINT5 || SC_PCINT6 || SC_PCINT7
+		default "INT_PCINT1" if SC_PCINT8 || SC_PCINT9 || SC_PCINT10 || SC_PCINT11 || SC_PCINT12 || SC_PCINT13 || SC_PCINT14 || SC_PCINT15
+		default "INT_PCINT2" if SC_PCINT16 || SC_PCINT17 || SC_PCINT18 || SC_PCINT19 || SC_PCINT20 || SC_PCINT21 || SC_PCINT22 || SC_PCINT23
+		default "INT_PCINT3" if SC_PCINT24 || SC_PCINT25 || SC_PCINT26 || SC_PCINT27 || SC_PCINT28 || SC_PCINT29 || SC_PCINT30 || SC_PCINT31
 endmenu
 # }}}
 
@@ -424,22 +435,22 @@ endmenu
 choice
 	prompt "Sleep mode"
 
-	config AVR_SLEEPMODE_IDLE
+	config SLEEPMODE_IDLE
 		bool "idle"
 
-	config AVR_SLEEPMODE_ADCNR
+	config SLEEPMODE_ADCNR
 		bool "adc noice reduction"
 
-	config AVR_SLEEPMODE_PWRDWN
+	config SLEEPMODE_PWRDWN
 		bool "power down"
 
-	config AVR_SLEEPMODE_PWRSAVE
+	config SLEEPMODE_PWRSAVE
 		bool "power save"
 
-	config AVR_SLEEPMODE_STANDBY
+	config SLEEPMODE_STANDBY
 		bool "standby"
 
-	config AVR_SLEEPMODE_EXTSTANDBY
+	config SLEEPMODE_EXTSTANDBY
 		bool "extended standby"
 endchoice
 # }}}

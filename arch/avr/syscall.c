@@ -8,7 +8,7 @@
 
 
 /* macros */
-#define PCMSK_BIT	(CONFIG_AVR_SC_PCINT % 8)
+#define PCMSK_BIT	(CONFIG_SC_PCINT % 8)
 
 
 /* types */
@@ -17,12 +17,6 @@ typedef struct{
 	void *param;
 	size_t psize;
 } avr_sc_arg_t;
-
-
-/* local/static prototypes */
-#ifdef BUILD_KERNEL
-static int sc_hdlr(int_num_t num);
-#endif // BUILD_KERNEL
 
 
 /* global functions */
@@ -43,38 +37,17 @@ void avr_sc(sc_t num, void *param, size_t psize){
 	/* trigger syscall */
 	asm volatile("sei");	// FIXME: from time to time interrupts are disabled
 							//		  for no known reason
-	mreg_w(CONFIG_AVR_SC_PIN, (0x1 << CONFIG_AVR_SC_PIN_BIT));
+	mreg_w(CONFIG_SC_PIN, (0x1 << CONFIG_SC_PIN_BIT));
 }
 #endif // BUILD_LIBSYS
 
-
-/* local functions */
 #ifdef BUILD_KERNEL
-static int init(void){
-	/* enable interrupt used to trigger a syscall */
-	// enable configured pin change interrupt
-	mreg_w(PCICR, (0x1 << CONFIG_AVR_SC_PCICR_IE));
-	mreg_w(CONFIG_AVR_SC_PCMSK, (0x1 << PCMSK_BIT));
-
-	// set respective pin data direction to output
-	mreg_w(CONFIG_AVR_SC_DDR, (0x1 << CONFIG_AVR_SC_PIN_BIT));
-
-	/* register interrupt handler */
-	int_hdlr_register(CONFIG_AVR_SC_INT, sc_hdlr);
-
-	return E_OK;
-}
-
-driver_init(init);
-#endif // BUILD_KERNEL
-
-#ifdef BUILD_KERNEL
-static int sc_hdlr(int_num_t num){
+int avr_sc_hdlr(void){
 	avr_sc_arg_t *arg;
 
 
 	/* reset interrupt flag */
-	mreg_w(PCIFR, (0x1 << CONFIG_AVR_SC_PCIFR_FLAG));
+	mreg_w(PCIFR, (0x1 << CONFIG_SC_PCIFR_FLAG));
 
 	/* acquire parameter */
 	// get address from GPIO registers 0/1
@@ -83,4 +56,22 @@ static int sc_hdlr(int_num_t num){
 	/* call kernel syscall handler */
 	return ksc_hdlr(arg->num, arg->param, arg->psize);
 }
+#endif // BUILD_KERNEL
+
+
+/* local functions */
+#ifdef BUILD_KERNEL
+static int init(void){
+	/* enable interrupt used to trigger a syscall */
+	// enable configured pin change interrupt
+	mreg_w(PCICR, (0x1 << CONFIG_SC_PCICR_IE));
+	mreg_w(CONFIG_SC_PCMSK, (0x1 << PCMSK_BIT));
+
+	// set respective pin data direction to output
+	mreg_w(CONFIG_SC_DDR, (0x1 << CONFIG_SC_PIN_BIT));
+
+	return E_OK;
+}
+
+driver_init(init);
 #endif // BUILD_KERNEL
