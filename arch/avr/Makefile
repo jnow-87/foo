@@ -1,4 +1,4 @@
-obj-y := start.o isr.o interrupt.o core.o watchdog.o thread.o syscall.o
+obj-y := start.o isr.o interrupt.o core.o sched.o thread.o syscall.o
 obj-nobuiltin-y := libsys.o
 
 
