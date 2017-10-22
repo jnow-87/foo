@@ -73,7 +73,7 @@ typedef enum{
 
 /* local/static prototypes */
 static size_t put_char(FILE *stream, char c);
-static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, int width, int prec);
+static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, size_t width, size_t prec);
 static size_t put_padding(FILE *stream, char pad, size_t n);
 static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv);
 static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags);
@@ -82,7 +82,7 @@ static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags);
 /* global functions */
 int vfprintf(FILE *stream, char const *format, va_list lst){
 	char const *fp;
-	int width,
+	size_t width,
 		prec;
 	size_t n,
 		   blen;
@@ -193,7 +193,7 @@ parse_width:
 				format++;
 			}
 			else if(*format == '*'){
-				width = (int)(va_arg(lst, int));
+				width = (unsigned int)(va_arg(lst, unsigned int));
 				format++;
 				break;
 			}
@@ -213,7 +213,7 @@ parse_width:
 					format++;
 				}
 				else if(*format == '*'){
-					prec = (int)(va_arg(lst, int));
+					prec = (unsigned int)(va_arg(lst, unsigned int));
 					format++;
 					break;
 				}
@@ -574,7 +574,7 @@ static size_t put_char(FILE *stream, char c){
 	return 1;
 }
 
-static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, int width, int prec){
+static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, size_t width, size_t prec){
 	size_t i,
 		   n,
 		   n_sign,

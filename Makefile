@@ -41,6 +41,9 @@ cflags := \
 	$(CONFIG_CFLAGS) \
 	$(cflags) \
 	-Wall \
+	-Wextra \
+	-Wshadow \
+	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-nostdinc \
 	-fno-builtin \
@@ -52,6 +55,9 @@ cxxflags := \
 	$(CONFIG_CXXFLAGS) \
 	$(cxxflags) \
 	-Wall \
+	-Wextra \
+	-Wshadow \
+	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-nostdinc \
 	-fno-builtin \
@@ -97,6 +103,9 @@ hostcflags := \
 	$(CONFIG_HOSTCFLAGS) \
 	$(hostcflags) \
 	-Wall \
+	-Wextra \
+	-Wshadow \
+	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-O2 \
 	-flto
@@ -106,6 +115,9 @@ hostcxxflags := \
 	$(CONFIG_HOSTCCCFLAGS) \
 	$(hostcxxflags) \
 	-Wall \
+	-Wextra \
+	-Wshadow \
+	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-O2 \
 	-flto
