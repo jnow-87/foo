@@ -279,8 +279,8 @@ graphicspath := doc/img
 svggraphics := $(shell find $(graphicspath) -name \*.svg)
 pdfgraphics := $(patsubst %.svg, $(build_tree)/%.pdf, $(svggraphics))
 
-
-documentation: fig_svg
+.PHONY: docu
+docu: fig_svg
 	@sed -i -e 's>OUTPUT_DIRECTORY[ \t]*=.*>OUTPUT_DIRECTORY=$(build_tree)/doc/>' $(doxygen_config)
 	@doxygen $(doxygen_config)
 	@cp -r doc/* $(build_tree)/doc/latex

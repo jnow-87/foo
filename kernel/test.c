@@ -2,7 +2,7 @@
 
 
 /* global functions */
-void kernel_test(){
+void ktest(){
 	if(!kopt.kernel_test)
 		return;
 }

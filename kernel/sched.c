@@ -27,16 +27,28 @@ static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
 /* global variables */
 void *kernel_stack[CONFIG_NCORES] = { 0 };
-thread_t *current_thread[CONFIG_NCORES];
 process_t *process_table = 0;
 
 
 /* static variables */
+static thread_t *current_thread[CONFIG_NCORES] = { 0x0 };
 static sched_queue_t *queue_ready = 0,
 					 *queue_waiting = 0;
 
 
 /* global functions */
+thread_t const *sched_running(void){
+	return current_thread[PIR];
+}
+
+void sched_ctx_enqueue(thread_context_t *ctx){
+	current_thread[PIR]->ctx = ctx;
+}
+
+thread_context_t *sched_ctx_dequeue(void){
+	return current_thread[PIR]->ctx;
+}
+
 void sched_tick(void){
 	static sched_queue_t *e = 0;
 
@@ -120,7 +132,7 @@ static int init(void){
 
 	/* create init process */
 	// create init processs
-	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, 0);
+	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, fs_root);
 
 	if(this_p == 0)
 		goto err;

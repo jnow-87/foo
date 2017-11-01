@@ -3,8 +3,8 @@
 
 
 /* prototypes */
-void kernel_lock(void);
-void kernel_unlock(void);
+void klock(void);
+void kunlock(void);
 
 
 #endif // KERNEL_LOCK_H

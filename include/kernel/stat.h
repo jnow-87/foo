@@ -7,9 +7,9 @@
 
 /* prototypes */
 #ifdef CONFIG_KERNEL_STAT
-void kernel_stat();
+void kstat();
 #else
-#define kernel_stat()
+#define kstat()
 #endif // CONFIG_KERNEL_STAT
 
 

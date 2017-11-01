@@ -41,13 +41,10 @@ int fs_register(fs_ops_t *ops){
 	return fs->id;
 }
 
-fs_filed_t *fs_fd_alloc(fs_node_t *node){
+fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p){
 	int id;
 	fs_filed_t *fd;
-	process_t *this_p;
 
-
-	this_p = current_thread[PIR]->parent;
 
 	/* acquire descriptor id */
 	id = 0;
@@ -78,8 +75,8 @@ err:
 	return 0x0;
 }
 
-void fs_fd_free(fs_filed_t *fd){
-	list_rm(current_thread[PIR]->parent->fds, fd);
+void fs_fd_free(fs_filed_t *fd, process_t *this_p){
+	list_rm(this_p->fds, fd);
 	fd->node->ref_cnt--;
 
 	kfree(fd);

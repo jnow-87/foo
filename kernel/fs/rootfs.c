@@ -23,13 +23,13 @@ static int rootfs_id;
 
 
 /* local/static prototypes */
-static int open(fs_node_t *start, char const *path, f_mode_t mode);
-static int close(fs_filed_t *fd);
+static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p);
+static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
 static int fcntl(fs_filed_t *fd, int cmd, void *data);
 static int rmnode(fs_node_t *start, char const *path);
-static int chdir(fs_node_t *start, char const *path);
+static int chdir(fs_node_t *start, char const *path, process_t *this_p);
 
 static rootfs_file_t *file_alloc(void);
 static void file_free(rootfs_file_t *file);
@@ -129,7 +129,7 @@ static int init(void){
 
 kernel_init(1, init);
 
-static int open(fs_node_t *start, char const *path, f_mode_t mode){
+static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p){
 	int n;
 	fs_filed_t *fd;
 
@@ -145,7 +145,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 		switch(n){
 		case 0:
 			/* target node found, so create file descriptor */
-			fd = fs_fd_alloc(start);
+			fd = fs_fd_alloc(start, this_p);
 
 			if(fd == 0x0)
 				return errno;
@@ -164,7 +164,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 
 			DEBUG("call subsequent file system\n");
 
-			return start->ops->open(start, path, mode);
+			return start->ops->open(start, path, mode, this_p);
 
 		case -1:
 			/* error occured */
@@ -201,10 +201,10 @@ err:
 	return errno;
 }
 
-static int close(fs_filed_t *fd){
+static int close(fs_filed_t *fd, process_t *this_p){
 	DEBUG("handle close for %d\n", fd->id);
 
-	fs_fd_free(fd);
+	fs_fd_free(fd, this_p);
 	return E_OK;
 }
 
@@ -358,14 +358,14 @@ static int rmnode(fs_node_t *start, char const *path){
 	}
 }
 
-static int chdir(fs_node_t *start, char const *path){
+static int chdir(fs_node_t *start, char const *path, process_t *this_p){
 	if(*path == 0)
 		return_errno(E_INVAL);
 
 	switch(fs_node_find(&start, &path)){
 	case 0:
 		/* target node found, set current process working directory */
-		current_thread[PIR]->parent->cwd = start;
+		this_p->cwd = start;
 		return E_OK;
 
 	case -2:
@@ -373,7 +373,7 @@ static int chdir(fs_node_t *start, char const *path){
 		if(start->ops->chdir == 0x0)
 			return_errno(E_NOIMP);
 
-		return start->ops->chdir(start, path);
+		return start->ops->chdir(start, path, this_p);
 
 	case -1:
 		return_errno(E_INVAL);

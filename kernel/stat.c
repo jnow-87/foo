@@ -2,7 +2,7 @@
 
 
 /* global functions */
-void kernel_stat(){
+void kstat(){
 	if(!kopt.kernel_stat)
 		return;
 }

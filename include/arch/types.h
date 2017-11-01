@@ -35,7 +35,7 @@ struct thread_t;
 
 typedef struct{
 	/* core */
-	void (*core_panic)(void);
+	void (*core_panic)(thread_context_t const *tc);
 
 	/* virtual memory management */
 	int (*page_entry_write)(page_t const *page);

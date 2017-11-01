@@ -27,7 +27,7 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 
 	/* save thread context if not interrupting the kernel */
 	if(inkernel_nest == 1)
-		current_thread[PIR]->ctx = tc;
+		sched_ctx_enqueue(tc);
 
 	/* call respective interrupt handler */
 	// compute interrupt number
@@ -55,15 +55,15 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	errno = terrno;
 
 	/* return context of active thread */
-	return current_thread[PIR]->ctx;
+	return sched_ctx_dequeue();
 }
 
 void avr_int_warm_reset_hdlr(void){
-	kernel_panic("execute reset handler without actual MCU reset");
+	kpanic(0x0, "execute reset handler without actual MCU reset");
 }
 
 void avr_int_inval_hdlr(void){
-	kernel_panic("unhandled interrupt");
+	kpanic(0x0, "unhandled interrupt");
 }
 
 int avr_int_enable(int_type_t mask){

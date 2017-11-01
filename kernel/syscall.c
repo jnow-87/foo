@@ -1,6 +1,8 @@
 #include <arch/mem.h>
+#include <arch/interrupt.h>
 #include <kernel/kprintf.h>
 #include <kernel/syscall.h>
+#include <kernel/sched.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/errno.h>
@@ -35,7 +37,10 @@ int sc_release(sc_t num){
 
 int ksc_hdlr(sc_t num, void *param, size_t psize){
 	void *kparam;
+	thread_t const *this_t;
 
+
+	this_t = sched_running();
 
 	DEBUG("handle syscall %d, data at: %#x with %u bytes\n", num, param, psize);
 
@@ -53,19 +58,19 @@ int ksc_hdlr(sc_t num, void *param, size_t psize){
 	if(kparam == 0x0)
 		return errno;
 
-	if(copy_from_user(kparam, param, psize, current_thread[PIR]->parent) != E_OK)
+	if(copy_from_user(kparam, param, psize, this_t->parent) != E_OK)
 		goto err;
 #else
 	kparam = param;
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* execute callback */
-	if(sc_map[num](kparam) != E_OK)
+	if(sc_map[num](kparam, this_t) != E_OK)
 		goto err;
 
 	/* copy result to user space */
 #ifdef CONFIG_KERNEL_VIRT_MEM
-	if(copy_to_user(param, kparam, psize, current_thread[PIR]->parent) != E_OK)
+	if(copy_to_user(param, kparam, psize, this_t->parent) != E_OK)
 		goto err;
 
 	kfree(kparam);

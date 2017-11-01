@@ -1,12 +1,13 @@
 #include <arch/interrupt.h>
 #include <arch/core.h>
 #include <kernel/kprintf.h>
+#include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <sys/stdarg.h>
 
 
 /* global functions */
-void _kernel_panic(char const *file, char const *func, unsigned int line, char const *format, ...){
+void kpanic_ext(thread_t const *this_t, char const *file, char const *func, unsigned int line, char const *format, ...){
 	va_list lst;
 
 
@@ -25,14 +26,15 @@ void _kernel_panic(char const *file, char const *func, unsigned int line, char c
 		"%20.20s: %s\n"
 		"%20.20s: %u\n\n"
 		,
-		"pid", (unsigned int)(current_thread[PIR]->parent->pid),
-		"tid", (unsigned int)(current_thread[PIR]->tid),
-		"process", current_thread[PIR]->parent->name,
+		"pid", (this_t == 0x0) ? 0 : (unsigned int)(this_t->parent->pid),
+		"tid", (this_t == 0x0) ? 0 : (unsigned int)(this_t->tid),
+		"process", (this_t == 0x0) ? "unknown" : this_t->parent->name,
 		"file", file,
 		"function", func,
 		"line", line);
 
 	va_end(lst);
 
-	core_panic();
+	if(this_t)
+		core_panic(this_t->ctx);
 }

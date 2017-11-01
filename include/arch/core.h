@@ -12,7 +12,7 @@
 #define core_sleep()	(arch_common_call(core_sleep, -E_NOIMP)())
 
 #ifdef BUILD_KERNEL
-#define core_panic()	(arch_kernel_call(core_panic, -E_NOIMP)())
+#define core_panic(ctx)	(arch_kernel_call(core_panic, -E_NOIMP)(ctx))
 #endif // BUILD_KERNEL
 
 

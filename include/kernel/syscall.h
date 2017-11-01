@@ -2,12 +2,13 @@
 #define KERNEL_SYSCALL_H
 
 
+#include <kernel/thread.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 
 
 /* types */
-typedef int (*sc_hdlr_t)(void *param);
+typedef int (*sc_hdlr_t)(void *param, thread_t const *this_t);
 
 
 /* prototypes */
