@@ -95,6 +95,7 @@ k_ok:
 	return E_OK;
 }
 
+#include <kernel/kprintf.h>
 static int sc_hdlr_read(void *_p, thread_t const *this_t){
 	char buf[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
@@ -107,12 +108,16 @@ static int sc_hdlr_read(void *_p, thread_t const *this_t){
 	/* get file descriptor */
 	fd = list_find(this_t->parent->fds, id, p->fd);
 
-	if(fd == 0x0)
+	if(fd == 0x0){
+		DEBUG("inval fd %d (%p) for %s %s\n", p->fd, fd, this_t->parent->name, this_t->parent->name);
 		goto_errno(k_ok, E_INVAL);
+	}
 
 	/* call read callback if implemented */
-	if(fd->node->ops->read == 0x0)
+	if(fd->node->ops->read == 0x0){
+		DEBUG("callback missing\n");
 		goto_errno(err, E_NOIMP);
+	}
 
 	p->data_len = fd->node->ops->read(fd, buf, p->data_len);
 
@@ -148,8 +153,10 @@ static int sc_hdlr_write(void *_p, thread_t const *this_t){
 	/* get file descriptor */
 	fd = list_find(this_t->parent->fds, id, p->fd);
 
-	if(fd == 0x0)
+	if(fd == 0x0){
+		DEBUG("inval fd %d for %s %s\n", p->fd, this_t->parent->name, this_t->parent->name);
 		goto_errno(k_ok, E_INVAL);
+	}
 
 	/* call write callback if implemented */
 	if(fd->node->ops->write == 0x0)

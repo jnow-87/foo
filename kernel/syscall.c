@@ -65,8 +65,12 @@ int ksc_hdlr(sc_t num, void *param, size_t psize){
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* execute callback */
+	int_enable(INT_ALL);
+
 	if(sc_map[num](kparam, this_t) != E_OK)
 		goto err;
+
+	int_enable(INT_NONE);
 
 	/* copy result to user space */
 #ifdef CONFIG_KERNEL_VIRT_MEM

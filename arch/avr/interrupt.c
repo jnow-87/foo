@@ -22,7 +22,6 @@ uint8_t inkernel_nest = 0;
 /* global functions */
 struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	int terrno;
-	uint8_t num;
 
 
 	/* save thread context if not interrupting the kernel */
@@ -31,25 +30,13 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 
 	/* call respective interrupt handler */
 	// compute interrupt number
-	num = ((void (*)(void))(lo8(tc->int_vec) | hi8(tc->int_vec)) - int_vectors - INT_VEC_WORDS) / 2;
 
 	// save errno
 	terrno = errno;
 	errno = E_OK;
 
 	// call handler
-	switch(num){
-	case CONFIG_SCHED_INT:
-		avr_sched_hdlr();
-		break;
-
-	case CONFIG_SC_INT:
-		avr_sc_hdlr();
-		break;
-
-	default:
-		kernel_panic("out of bound interrupt num %d\n", num);
-	};
+	avr_sc_hdlr();
 
 	// restore errno
 	errno = terrno;

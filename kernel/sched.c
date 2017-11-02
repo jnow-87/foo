@@ -125,10 +125,9 @@ static int init(void){
 	}
 
 	// add kernel threads to ready queue
-	list_for_each(this_p->threads, this_t){
-		if(sched_queue_add(&queue_ready, this_t) != E_OK)
-			goto err;
-	}
+	// XXX do not add kernel threads to the scheduler queues, ensuring
+	// 	   only init applications threads are active, cf. modification
+	// 	   to kernel/init.c
 
 	/* create init process */
 	// create init processs
@@ -142,6 +141,11 @@ static int init(void){
 	// add first thread to ready queue
 	if(sched_queue_add(&queue_ready, this_p->threads) != E_OK)
 		goto err;
+
+	// XXX ensure current_thread being set to the init application
+	// 	   this is required in order for the modification to kernel/init.c
+	// 	   to work properly on interrupts
+	current_thread[PIR] = this_p->threads;
 
 	return E_OK;
 

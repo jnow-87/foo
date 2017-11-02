@@ -37,6 +37,10 @@ kopt_t kopt = KOPT_INITIALISER;
 static void _do_init_call(init_call_t *base, init_call_t *end, char const *stage, bool p_err);
 
 
+#include <kernel/sched.h>
+#include <arch/arch.h>
+#include <sys/register.h>
+
 /* global functions */
 void kernel(void){
 	/* core local (stage: core 0) */
@@ -78,7 +82,20 @@ void kernel(void){
 	ktest();
 
 	/* enable interrupts */
+	// XXX setup stack pointer and return address to call/reti
+	//	   to the init application
+	mreg_w(SPL, lo8(sched_running()->ctx));
+	mreg_w(SPH, hi8(sched_running()->ctx));
 	int_enable(INT_ALL);
+
+	asm volatile(
+		"ldi	r17, 0x0\n"
+		"ldi	r18, 0x48\n"
+		"push	r17\n"
+		"push	r18\n"
+		"ret\n"
+	);
+
 
 	/* kernel thread */
 	while(1){

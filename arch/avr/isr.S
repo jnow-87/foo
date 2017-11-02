@@ -3,21 +3,33 @@
 
 
 /* macros */
+#define		ISR_USE_CALL	0
+
+
 .macro	vector num
 	.if (\num < INT_VECTORS)
-		.if (\num == CONFIG_SCHED_INT || \num == CONFIG_SC_INT)
+		.if (\num == CONFIG_SC_INT)
 			.global	__vector_\num
+#if ISR_USE_CALL == 0
+			jmp	__isr_ctx
+#else
 			ICALL	__isr_ctx
+#endif // ISR_USE_CALL
+
+		.elseif (\num == CONFIG_SCHED_INT)
+			.global	__vector_\num
+#if ISR_USE_CALL == 0
+			jmp	__isr_ctx_sched
+#else
+			ICALL	__isr_ctx_sched
+#endif // ISR_USE_CALL
 
 		.elseif (\num == 0)
 			.global __vector_\num
 			jmp		__isr_reset
 
 		.else
-			.global	__vector_\num
-			.weak	__vector_\num
-			.set	__vector_\num , __isr_inval
-			jmp		__vector_\num
+			jmp		__isr_inval
 		.endif
 	.endif
 .endm
@@ -79,6 +91,19 @@ vector 34
 
 /* reset handler */
 .section .text
+
+.global __isr_ctx_sched
+__isr_ctx_sched:
+#if ISR_USE_CALL != 0
+	// pop interrupt vector return address
+	pop		r1
+	pop		r1
+	clr		r1
+#endif // ISR_USE_CALL
+
+	reti
+
+
 .global __isr_reset
 __isr_reset:
 	/* check if an interrupt source is present if not,
@@ -251,8 +276,11 @@ __isr_ctx:
 	pop		r30
 	pop		r31
 
-	/* pop interrupt vector address */
-	pop		r0
-	pop		r0
+#if ISR_USE_CALL != 0
+	// pop interrupt vector return address
+	pop		r1
+	pop		r1
+	clr		r1
+#endif // ISR_USE_CALL
 
 	reti
