@@ -35,7 +35,7 @@ int sc_release(sc_t num){
 	return E_OK;
 }
 
-int ksc_hdlr(sc_t num, void *param, size_t psize){
+void ksc_hdlr(sc_t num, void *param, size_t psize){
 	void *kparam;
 	thread_t const *this_t;
 
@@ -45,44 +45,45 @@ int ksc_hdlr(sc_t num, void *param, size_t psize){
 	DEBUG("handle syscall %d, data at: %#x with %u bytes\n", num, param, psize);
 
 	/* check syscall */
-	if(num >= NSYSCALLS)
-		return_errno(E_INVAL);
-
-	if(sc_map[num] == 0x0)
-		return_errno(E_NOIMP);
+	if(num >= NSYSCALLS || sc_map[num] == 0x0)
+		goto err_0;
 
 	/* copy arguments to kernel space */
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	kparam = kmalloc(psize);
 
 	if(kparam == 0x0)
-		return errno;
+		goto err_0;
 
 	if(copy_from_user(kparam, param, psize, this_t->parent) != E_OK)
-		goto err;
+		goto err_1;
 #else
 	kparam = param;
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* execute callback */
+	int_enable(INT_ALL);
+
 	if(sc_map[num](kparam, this_t) != E_OK)
-		goto err;
+		goto err_1;
+
+	int_enable(INT_NONE);
 
 	/* copy result to user space */
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	if(copy_to_user(param, kparam, psize, this_t->parent) != E_OK)
-		goto err;
+		goto err_1;
 
 	kfree(kparam);
 #endif // CONFIG_KERNEL_VIRT_MEM
 
-	return E_OK;
+	return;
 
 
-err:
+err_1:
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	kfree(kparam);
 #endif // CONFIG_KERNEL_VIRT_MEM
 
-	return errno;
+err_0:
 }

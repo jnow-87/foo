@@ -43,7 +43,7 @@ void avr_sc(sc_t num, void *param, size_t psize){
 #endif // BUILD_LIBSYS
 
 #ifdef BUILD_KERNEL
-int avr_sc_hdlr(void){
+void avr_sc_hdlr(void){
 	avr_sc_arg_t *arg;
 
 
@@ -52,6 +52,6 @@ int avr_sc_hdlr(void){
 	arg = (avr_sc_arg_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
 
 	/* call kernel syscall handler */
-	return ksc_hdlr(arg->num, arg->param, arg->psize);
+	ksc_hdlr(arg->num, arg->param, arg->psize);
 }
 #endif // BUILD_KERNEL
