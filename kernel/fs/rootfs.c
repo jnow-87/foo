@@ -117,6 +117,8 @@ static int init(void){
 		return errno;
 
 	/* init fs_root */
+	memset(&dummy, 0x0, sizeof(dummy));
+
 	fs_root = fs_node_alloc(&dummy, "/", 1, true, rootfs_id);
 
 	if(fs_root == 0x0)
