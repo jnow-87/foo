@@ -86,4 +86,5 @@ err_1:
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 err_0:
+	return;
 }
