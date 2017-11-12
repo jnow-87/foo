@@ -38,13 +38,15 @@
 // interrupt handling
 #if defined(CONFIG_AVR_ATMEGA) || defined(CONFIG_AVR_XMEGA)
 
-#define ICALL				call
-#define INT_VEC_WORDS		2
+#define XCALL			call
+#define XJMP			jmp
+#define INT_VEC_SIZE	4
 
 #else
 
-#define ICALL				rcall
-#define INT_VEC_WORDS		1
+#define XCALL			rcall
+#define XJMP			rjmp
+#define INT_VEC_SIZE	2
 
 #endif
 

@@ -36,12 +36,10 @@ void avr_core_sleep(void){
 #ifdef BUILD_KERNEL
 void avr_core_panic(thread_context_t const *tc){
 	unsigned int i,
-				 int_vec,
 				 ret_addr;
 
 
 	/* dump registers */
-	int_vec = (((lo8(tc->int_vec) << 8) | hi8(tc->int_vec)) - INT_VEC_WORDS) * 2;
 	ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
 
 	kprintf(KMSG_ANY, "config and status registers\n"
@@ -49,12 +47,10 @@ void avr_core_panic(thread_context_t const *tc){
 		 "%20.20s: %#2.2x\n"
 		 "%20.20s: %p\n"
 		 "%20.20s: %4.4p\n"
-		 "%20.20s: %4.4p\n\n"
 		 ,
 		 "SREG", tc->sreg,
 		 "MCUSR", tc->mcusr,
 		 "SP", tc + 1,
-		 "interrupt vector", int_vec,
 		 "interrupted at", ret_addr
 	);
 

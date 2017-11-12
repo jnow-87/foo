@@ -4,20 +4,24 @@
 
 /* macros */
 .macro	vector num
-	.if (\num < INT_VECTORS)
-		.if (\num == CONFIG_SCHED_INT || \num == CONFIG_SC_INT)
-			.global	__vector_\num
-			ICALL	__isr_ctx
-
-		.elseif (\num == 0)
+	.if (\num < INT_VECTORS + 1)	// +1 for the pseude syscall interrupt
+		.if (\num == 0)
 			.global __vector_\num
-			jmp		__isr_reset
+			XJMP	__isr_reset
+
+		.elseif (\num == INT_VECTORS)
+			.global	__vector_\num
+			XJMP	__isr_syscall
+
+		.elseif (\num == CONFIG_SCHED_INT)
+			.global	__vector_\num
+			XJMP	__isr_sched
 
 		.else
 			.global	__vector_\num
 			.weak	__vector_\num
 			.set	__vector_\num , __isr_inval
-			jmp		__vector_\num
+			XJMP	__vector_\num
 		.endif
 	.endif
 .endm
@@ -32,6 +36,7 @@
 
 /* external variables */
 .extern inkernel_nest
+.extern int_num
 .extern kernel_stack
 
 
@@ -75,10 +80,11 @@ vector 31
 vector 32
 vector 33
 vector 34
+vector 35
 
 
-/* reset handler */
 .section .text
+/* reset handler */
 .global __isr_reset
 __isr_reset:
 	/* check if an interrupt source is present if not,
@@ -87,23 +93,37 @@ __isr_reset:
 	lds		r16, MCUSR
 	cpi		r16,0x0
 	brne	__start
-	jmp		avr_int_warm_reset_hdlr
+	XJMP	avr_int_warm_reset_hdlr
 
+/* syscall handler */
+.global __isr_syscall
+__isr_syscall:
+	push	r31
+	ldi		r31, INT_VECTORS
+	sts		int_num, r31
+	XJMP	__int_hdlr_call
 
-/* invalid interrupt handler
- *	NOTE: using avr_int_inval_hdlr directly does not work, since
- *		  somehow the .weak symbols are not redefined in this case
- */
+/* scheduler handler */
+.global __isr_sched
+__isr_sched:
+	push	r31
+	ldi		r31, CONFIG_SCHED_INT
+	sts		int_num, r31
+	XJMP	__int_hdlr_call
+
+/* invalid interrupt handler */
+// NOTE: using avr_int_inval_hdlr directly does not work, since
+//		 somehow the .weak symbols are not redefined in this case
 .global __isr_inval
 __isr_inval:
-	jmp	avr_int_inval_hdlr
+	XJMP	avr_int_inval_hdlr
 
 
 /* ISR with context handling */
-.global __isr_ctx
-__isr_ctx:
+.global __int_hdlr_call
+__int_hdlr_call:
 	/* save context */
-	push	r31
+	// NOTE: r31 is assumed being pushed by the calling routine
 	push	r30
 	push	r29
 	push	r28
@@ -190,7 +210,7 @@ __isr_ctx:
 	inc		r16
 	sts		inkernel_nest, r16
 
-	ICALL	avr_int_hdlr
+	XCALL	avr_int_hdlr
 
 	/* decrement inkernel_nest */
 	lds		r16, inkernel_nest
@@ -250,9 +270,5 @@ __isr_ctx:
 	pop		r29
 	pop		r30
 	pop		r31
-
-	/* pop interrupt vector address */
-	pop		r0
-	pop		r0
 
 	reti

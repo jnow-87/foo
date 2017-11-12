@@ -14,11 +14,9 @@ typedef struct thread_context_t{
 	uint8_t	sreg,			/**< status register */
 			mcusr,			/**< control register */
 			rampz;			/**< extended Z-pointer */
-
 	uint8_t gpr[32];		/**< general purpose registers */
 
-	void *int_vec,			/**< last triggered isr address */
-		 *ret_addr;			/**< thread return address on interrupt */
+	void *ret_addr;			/**< thread return address on interrupt */
 } thread_context_t;
 
 typedef uint8_t thread_id_t;

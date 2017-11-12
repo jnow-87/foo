@@ -96,5 +96,5 @@ avr_lib_crt0:
 
 .global avr_lib_main
 avr_lib_main:
-	ICALL main
-	ICALL exit
+	XCALL main
+	XCALL exit
