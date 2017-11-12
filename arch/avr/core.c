@@ -36,40 +36,45 @@ void avr_core_sleep(void){
 #ifdef BUILD_KERNEL
 void avr_core_panic(thread_context_t const *tc){
 	unsigned int i,
+				 j,
 				 ret_addr;
 
 
 	/* dump registers */
-	ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
+	if(tc != 0x0){
+		ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
 
-	kprintf(KMSG_ANY, "config and status registers\n"
-		 "%20.20s: %#2.2x\n"
-		 "%20.20s: %#2.2x\n"
-		 "%20.20s: %p\n"
-		 "%20.20s: %4.4p\n"
-		 ,
-		 "SREG", tc->sreg,
-		 "MCUSR", tc->mcusr,
-		 "SP", tc + 1,
-		 "interrupted at", ret_addr
-	);
+		kprintf(KMSG_ANY, "config and status registers\n"
+			 "%20.20s: %#2.2x\n"
+			 "%20.20s: %#2.2x\n"
+			 "%20.20s: %p\n"
+			 "%20.20s: %4.4p\n\n"
+			 ,
+			 "SREG", tc->sreg,
+			 "MCUSR", tc->mcusr,
+			 "SP", tc + 1,
+			 "interrupted at", ret_addr
+		);
 
-	kprintf(KMSG_ANY, "general purpose registers\n");
+		kprintf(KMSG_ANY, "general purpose registers\n");
 
-	for(i=0; i<32; i++){
-		kprintf(KMSG_ANY, "\t%2.2u: %#2.2x", i, tc->gpr[i]);
+		for(i=0; i<32; i++){
+			j = i / 4 + (i % 4) * 8;
+			kprintf(KMSG_ANY, "\t%2.2u: %#2.2x", j, tc->gpr[j]);
 
-		if(i % 4 == 3)
-			kprintf(KMSG_ANY, "\n");
+			if(i % 4 == 3)
+				kprintf(KMSG_ANY, "\n");
+		}
 	}
 
-	/* set sleep mode to power down */
+	/* halt core */
+	// set sleep mode to power down
 	mreg_w(SMCR, (0x1 << SMCR_SE) | (0x2 << SMCR_SM));
 
-	/* signal debugger */
+	// signal debugger
 	asm volatile("break");
 
-	/* send core to sleep */
+	// send core to sleep
 	asm volatile("sleep");
 }
 #endif // BUILD_KERNEL
