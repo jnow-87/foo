@@ -35,9 +35,7 @@
 
 
 /* external variables */
-.extern inkernel_nest
 .extern int_num
-.extern kernel_stack
 
 
 /* interrupt vectors */
@@ -161,68 +159,30 @@ __int_hdlr_call:
 	lds		r16, MCUSR
 	push	r16
 	lds		r16, SREG
+	push	r16
+
+	// push dummy to reserve space for next, prev members of thread_context_t
+#if (CONFIG_ADDR_WIDTH == 16)
+	push	r1
+	push	r1
+#endif
+
+	push	r1
 
 	/* avr_int_hdlr argument: stack pointer aka thread_context_t pointer */
 	lds		r24, SPL
 	lds		r25, SPH
 
-	// push SREG
+	// push last dummy byte for next, prev members of thread_context_t
 	// thread_context pointer needs to be saved earlier due to post-decrement of push
-	push	r16
-
-	/* update stack pointer
-	 *	if already in kernel (inkernel_nest != 0) do nothing
-	 *	else set stack pointer to initial kernel stack
-	 */
-	// check if already in kernel
-	lds		r16, inkernel_nest
-	cpi		r16, 0x0
-	brne	1f
-
-	// Z = kernel stack address
-	ldi		r30, lo8(kernel_stack)
-	ldi		r31, hi8(kernel_stack)
-
-	// RAMPZ = kernel_stack[16..23]
-#ifdef CONFIG_AVR_ISA_AVR51
-	ldi		r16, hh8(kernel_stack)
-	sts		RAMPZ, r16
-#endif
-
-#if CONFIG_NCORES > 1
-	// assuming a single core, thus kernel_stack[] contains a single entry
-	#error "handling of multiple cores is not implemented for AVR processors"
-#endif // CONFIG_NCORES
-
-	// load kernel stack from memory
-	ld		r17, Z+
-	ld		r18, Z
-	sts		SPL, r17
-	sts		SPH, r18
+	push	r1
 
 	/* ABI requirements */
 	// clear r1
 	clr		r1
 
 1:
-	/* increment inkernel_nest */
-	lds		r16, inkernel_nest
-	inc		r16
-	sts		inkernel_nest, r16
-
 	XCALL	avr_int_hdlr
-
-	/* decrement inkernel_nest */
-	lds		r16, inkernel_nest
-	dec		r16
-	sts		inkernel_nest, r16
-
-	/* restore stack pointer
-	 *	if leaving kernel (inkernel_nest == 0) restore stack pointer from thread context
-	 *	else do nothing
-	 */
-	cpi		r16, 0x0
-	brne	1f
 
 	// restore thread stack pointer from return value
 	sbiw	r24, 0x1	// decrement due to pre-increment of pop
@@ -230,6 +190,15 @@ __int_hdlr_call:
 	sts		SPH, r25
 
 1:
+	/* pop dummy bytes used to reserve space for next, prev members of thread_context_t */
+#if (CONFIG_ADDR_WIDTH == 16)
+	pop		r16
+	pop		r16
+#endif
+
+	pop		r16
+	pop		r16
+
 	/* restore context */
 	pop		r16
 	sts		SREG, r16

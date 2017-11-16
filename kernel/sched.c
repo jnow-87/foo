@@ -26,7 +26,6 @@ static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
 
 /* global variables */
-void *kernel_stack[CONFIG_NCORES] = { 0 };
 process_t *process_table = 0;
 
 
@@ -39,14 +38,6 @@ static sched_queue_t *queue_ready = 0,
 /* global functions */
 thread_t const *sched_running(void){
 	return current_thread[PIR];
-}
-
-void sched_ctx_enqueue(thread_context_t *ctx){
-	current_thread[PIR]->ctx = ctx;
-}
-
-thread_context_t *sched_ctx_dequeue(void){
-	return current_thread[PIR]->ctx;
 }
 
 void sched_tick(void){
@@ -74,16 +65,6 @@ static int init(void){
 	process_t *this_p;
 	thread_t *this_t;
 
-
-	/* allocate kernel stack */
-	for(i=0; i<CONFIG_NCORES; i++){
-		kernel_stack[i] = kmalloc(CONFIG_KERNEL_STACK_SIZE);
-
-		if(kernel_stack[i] == 0)
-			goto_errno(err, E_NOMEM);
-
-		kernel_stack[i] += CONFIG_KERNEL_STACK_SIZE - 1;
-	}
 
 	/* create kernel process */
 	this_p = kmalloc(sizeof(process_t));
@@ -115,7 +96,7 @@ static int init(void){
 		this_t->parent = this_p;
 
 		this_t->entry = 0x0;	// kernel threads are already running
-		this_t->ctx = 0x0;		// kernel thread context is set automatically once
+		this_t->ctx_lst = 0x0;	// kernel thread context is set automatically once
 								// the thread is interrupted for the first time
 		this_t->stack = 0x0;	// stack pages are only relevant for user space,
 								// since the kernel has a separate memory management

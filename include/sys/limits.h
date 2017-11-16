@@ -7,7 +7,7 @@
 
 /* macros */
 #ifndef BUILD_HOST
-#if CONFIG_ADDR_WIDTH
+#if CONFIG_REGISTER_WIDTH
 
 // signed types
 #define CHAR_BIT	8
@@ -32,7 +32,7 @@
 #define ULLONG_MAX	18446744073709551615
 #define SIZE_MAX	UINT_MAX
 
-#elif CONFIG_ADDR_WIDTH == 32 // CONFIG_ADDR_WIDTH
+#elif CONFIG_REGISTER_WIDTH == 32 // CONFIG_REGISTER_WIDTH
 
 // signed types
 #define CHAR_BIT	8
@@ -61,7 +61,7 @@
 
 #error "invalid address width in configuration"
 
-#endif // CONFIG_ADDR_WIDTH
+#endif // CONFIG_REGISTER_WIDTH
 
 #else // BUILD_HOST
 

@@ -6,6 +6,7 @@
 #include <arch/avr/sched.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
+#include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
 #include <sys/errno.h>
@@ -18,7 +19,6 @@ extern void int_vectors(void);
 
 /* global variables */
 uint8_t int_num = 0;
-uint8_t inkernel_nest = 0;
 
 
 /* global functions */
@@ -26,15 +26,13 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	int terrno;
 
 
-	/* save thread context if not interrupting the kernel */
-	if(inkernel_nest == 1)
-		sched_ctx_enqueue(tc);
+	/* save thread context of active thread*/
+	thread_context_enqueue((thread_t*)sched_running(), tc);
 
 	/* call respective interrupt handler */
 	// save errno
 	terrno = errno;
 	errno = E_OK;
-
 
 	// call handler
 	switch(int_num){
@@ -43,7 +41,6 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 		break;
 
 	case CONFIG_SCHED_INT:
-		if(inkernel_nest == 1)
 			avr_sched_hdlr();
 		break;
 
@@ -55,7 +52,7 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	errno = terrno;
 
 	/* return context of active thread */
-	return sched_ctx_dequeue();
+	return thread_context_dequeue((thread_t*)sched_running());
 }
 
 void avr_int_warm_reset_hdlr(void){

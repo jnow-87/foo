@@ -13,7 +13,7 @@ thread_context_t *avr_thread_context_init(thread_t *this_t, void *arg){
 
 
 	/* set thread context */
-	ctx = (thread_context_t*)(this_t->stack->phys_addr + CONFIG_THREAD_STACK_SIZE - sizeof(thread_context_t));
+	ctx = (thread_context_t*)(this_t->stack->phys_addr + CONFIG_KERNEL_STACK_SIZE - sizeof(thread_context_t));
 
 	/* init thread context */
 	memset(ctx, 0x0, sizeof(thread_context_t));

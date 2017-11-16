@@ -138,11 +138,11 @@ static int tc_vfprintf(int log){
 
 #if defined(CONFIG_PRINTF_LONG)
 	n += test(log,		"+0xffffffffffffff02",	"%+5.3p", (void*)-0xfe);
-#elif CONFIG_ADDR_WIDTH == 8
+#elif CONFIG_REGISTER_WIDTH == 8
 	n += test(log,		"+0xffffff02",			"%+5.3p", (void*)-0xfe);
 #else
 	#warning "unhandled condition for pointer size"
-#endif // CONFIG_ADDR_WIDTH
+#endif // CONFIG_REGISTER_WIDTH
 
 	/* f, F, e, E, g, G, a, A */
 

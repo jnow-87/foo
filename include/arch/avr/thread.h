@@ -11,6 +11,9 @@ struct thread_t;
 
 /* types */
 typedef struct thread_context_t{
+	struct thread_context_t *prev,
+							*next;
+
 	uint8_t	sreg,			/**< status register */
 			mcusr,			/**< control register */
 			rampz;			/**< extended Z-pointer */

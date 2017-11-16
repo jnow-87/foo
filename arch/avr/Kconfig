@@ -7,13 +7,15 @@ choice
 		
 	config ATMEGA1284P
 		bool "Atmega1284P"
-		select ADDR_WIDTH_8
+		select ADDR_WIDTH_16
+		select REGISTER_WIDTH_8
 		select AVR_ISA_AVR51
 		select AVR_ATMEGA
 
 	config ATMEGA88PA
 		bool "Atmega88PA"
-		select ADDR_WIDTH_8
+		select ADDR_WIDTH_16
+		select REGISTER_WIDTH_8
 		select AVR_ISA_AVR4
 		select AVR_ATMEGA
 endchoice
