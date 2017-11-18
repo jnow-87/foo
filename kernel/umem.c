@@ -2,11 +2,11 @@
 #include <arch/arch.h>
 #include <arch/core.h>
 #include <kernel/init.h>
-#include <kernel/kmutex.h>
 #include <kernel/syscall.h>
 #include <kernel/page.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
+#include <kernel/lock.h>
 #include <sys/types.h>
 #include <sys/list.h>
 #include <sys/memblock.h>
@@ -14,13 +14,12 @@
 
 
 /* local/static prototypes */
-static int sc_hdlr_malloc(void *p);
-static int sc_hdlr_free(void *p);
+static int sc_hdlr_malloc(void *p, thread_t const *this_t);
+static int sc_hdlr_free(void *p, thread_t const *this_t);
 
 
 /* static variables */
 static memblock_t *process_mem = 0x0;
-static kmutex_t umem_mutex = KMUTEX_INITIALISER();
 
 
 /* global functions */
@@ -28,17 +27,17 @@ void *umalloc(size_t n){
 	void *p;
 
 
-	kmutex_lock(&umem_mutex);
+	klock();
 	p = memblock_alloc(&process_mem, n);
-	kmutex_unlock(&umem_mutex);
+	kunlock();
 
 	return p;
 }
 
 void ufree(void *addr){
-	kmutex_lock(&umem_mutex);
+	klock();
 	memblock_free(&process_mem, addr);
-	kmutex_unlock(&umem_mutex);
+	kunlock();
 }
 
 
@@ -69,7 +68,7 @@ err_0:
 
 kernel_init(0, init);
 
-static int sc_hdlr_malloc(void *_p){
+static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
 	page_size_t psize;
 	sc_malloc_t *p;
 	page_t *page;
@@ -77,7 +76,7 @@ static int sc_hdlr_malloc(void *_p){
 
 
 	p = (sc_malloc_t*)_p;
-	this_p = current_thread[PIR]->parent;
+	this_p = this_t->parent;
 
 	/* adjust size to page boundary requirements */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -98,7 +97,9 @@ static int sc_hdlr_malloc(void *_p){
 	if(page == 0x0)
 		goto_errno(err, E_NOMEM);
 
+	klock();
 	list_add_tail(this_p->memory.pages, page);
+	kunlock();
 
 	/* prepare result */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -119,14 +120,16 @@ err:
 	return E_OK;
 }
 
-static int sc_hdlr_free(void *_p){
+static int sc_hdlr_free(void *_p, thread_t const *this_t){
 	process_t *this_p;
 	page_t *page;
 	sc_malloc_t *p;
 
 
+	klock();
+
 	p = (sc_malloc_t*)_p;
-	this_p = current_thread[PIR]->parent;
+	this_p = this_t->parent;
 
 	/* get page */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -136,13 +139,15 @@ static int sc_hdlr_free(void *_p){
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	if(page == 0x0)
-		kernel_panic("no page found to free\n");
+		kpanic(this_t, "no page found to free\n");
 
 	/* free page */
 	list_rm(this_p->memory.pages, page);
 	page_free(this_p, page);
 
 	p->errno = E_OK;
+
+	kunlock();
 
 	return E_OK;
 }

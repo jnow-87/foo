@@ -6,12 +6,14 @@
 #include <kernel/kmem.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
+#include <kernel/lock.h>
 #include <sys/file.h>
 #include <sys/fcntl.h>
 #include <sys/types.h>
 #include <sys/string.h>
 #include <sys/list.h>
 #include <sys/math.h>
+#include <sys/errno.h>
 
 
 /* global variables */
@@ -23,13 +25,13 @@ static int rootfs_id;
 
 
 /* local/static prototypes */
-static int open(fs_node_t *start, char const *path, f_mode_t mode);
-static int close(fs_filed_t *fd);
+static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p);
+static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
 static int fcntl(fs_filed_t *fd, int cmd, void *data);
 static int rmnode(fs_node_t *start, char const *path);
-static int chdir(fs_node_t *start, char const *path);
+static int chdir(fs_node_t *start, char const *path, process_t *this_p);
 
 static rootfs_file_t *file_alloc(void);
 static void file_free(rootfs_file_t *file);
@@ -46,6 +48,8 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 		goto_errno(err, E_INVAL);
 
 	DEBUG("register file system to \"%s\"\n", path);
+
+	klock();
 
 	node = fs_root;
 
@@ -74,24 +78,35 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 
 			path += n;
 
-			if(*path == 0)
+			if(*path == 0){
+				kunlock();
 				return node;
+			}
+
 			break;
 		}
 	}
 
 
 err:
+	kunlock();
 	return 0x0;
 }
 
 int rootfs_rmdir(fs_node_t *node){
+	klock();
+
 	if(!list_empty(node->childs) || node->data != 0x0)
-		return_errno(E_INUSE);
+		goto_errno(end, E_INUSE);
 
 	DEBUG("release file system from \"%s\"\n", node->name);
 
-	return fs_node_free(node);
+	goto_errno(end, fs_node_free(node));
+
+
+end:
+	kunlock();
+	return errno;
 }
 
 
@@ -117,6 +132,8 @@ static int init(void){
 		return errno;
 
 	/* init fs_root */
+	memset(&dummy, 0x0, sizeof(dummy));
+
 	fs_root = fs_node_alloc(&dummy, "/", 1, true, rootfs_id);
 
 	if(fs_root == 0x0)
@@ -129,7 +146,7 @@ static int init(void){
 
 kernel_init(1, init);
 
-static int open(fs_node_t *start, char const *path, f_mode_t mode){
+static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p){
 	int n;
 	fs_filed_t *fd;
 
@@ -145,7 +162,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 		switch(n){
 		case 0:
 			/* target node found, so create file descriptor */
-			fd = fs_fd_alloc(start);
+			fd = fs_fd_alloc(start, this_p);
 
 			if(fd == 0x0)
 				return errno;
@@ -164,7 +181,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 
 			DEBUG("call subsequent file system\n");
 
-			return start->ops->open(start, path, mode);
+			return start->ops->open(start, path, mode, this_p);
 
 		case -1:
 			/* error occured */
@@ -201,10 +218,10 @@ err:
 	return errno;
 }
 
-static int close(fs_filed_t *fd){
+static int close(fs_filed_t *fd, process_t *this_p){
 	DEBUG("handle close for %d\n", fd->id);
 
-	fs_fd_free(fd);
+	fs_fd_free(fd, this_p);
 	return E_OK;
 }
 
@@ -242,8 +259,6 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 
 		/* update file pointer */
 		fd->fp++;
-
-		return m;
 	}
 	else{
 		file = fd->node->data;
@@ -258,9 +273,9 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 
 		/* update file pointer */
 		fd->fp += m;
-
-		return m;
 	}
+
+	return m;
 
 
 err:
@@ -358,14 +373,14 @@ static int rmnode(fs_node_t *start, char const *path){
 	}
 }
 
-static int chdir(fs_node_t *start, char const *path){
+static int chdir(fs_node_t *start, char const *path, process_t *this_p){
 	if(*path == 0)
 		return_errno(E_INVAL);
 
 	switch(fs_node_find(&start, &path)){
 	case 0:
 		/* target node found, set current process working directory */
-		current_thread[PIR]->parent->cwd = start;
+		this_p->cwd = start;
 		return E_OK;
 
 	case -2:
@@ -373,7 +388,7 @@ static int chdir(fs_node_t *start, char const *path){
 		if(start->ops->chdir == 0x0)
 			return_errno(E_NOIMP);
 
-		return start->ops->chdir(start, path);
+		return start->ops->chdir(start, path, this_p);
 
 	case -1:
 		return_errno(E_INVAL);
@@ -430,6 +445,7 @@ static int file_seek(fs_filed_t *fd, seek_t *p){
 	if(p->whence == SEEK_SET)		whence = 0;
 	else if(p->whence == SEEK_CUR)	whence = fd->fp;
 	else if(p->whence == SEEK_END)	whence = file->data_used;
+	else							return E_NOIMP;
 
 	if(whence + p->offset > file->data_used)
 		goto_errno(k_ok, E_LIMIT);

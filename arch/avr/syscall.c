@@ -1,6 +1,6 @@
+#include <config/config.h>
 #include <arch/arch.h>
 #include <arch/interrupt.h>
-#include <kernel/init.h>
 #include <kernel/syscall.h>
 #include <sys/types.h>
 #include <sys/errno.h>
@@ -8,7 +8,9 @@
 
 
 /* macros */
-#define PCMSK_BIT	(CONFIG_AVR_SC_PCINT % 8)
+#define INT_VEC_SC		(CONFIG_KERNEL_TEXT_BASE + INT_VEC_SIZE * INT_VECTORS)
+#define STR(s)			#s
+#define SYSCALL(addr)	asm volatile("call " STR(addr));
 
 
 /* types */
@@ -17,12 +19,6 @@ typedef struct{
 	void *param;
 	size_t psize;
 } avr_sc_arg_t;
-
-
-/* local/static prototypes */
-#ifdef BUILD_KERNEL
-static int sc_hdlr(int_num_t num);
-#endif // BUILD_KERNEL
 
 
 /* global functions */
@@ -41,46 +37,21 @@ void avr_sc(sc_t num, void *param, size_t psize){
 	mreg_w(GPIOR1, hi8(&arg));
 
 	/* trigger syscall */
-	asm volatile("sei");	// FIXME: from time to time interrupts are disabled
-							//		  for no known reason
-	mreg_w(CONFIG_AVR_SC_PIN, (0x1 << CONFIG_AVR_SC_PIN_BIT));
+	asm volatile("cli");
+	SYSCALL(INT_VEC_SC);
 }
 #endif // BUILD_LIBSYS
 
-
-/* local functions */
 #ifdef BUILD_KERNEL
-static int init(void){
-	/* enable interrupt used to trigger a syscall */
-	// enable configured pin change interrupt
-	mreg_w(PCICR, (0x1 << CONFIG_AVR_SC_PCICR_IE));
-	mreg_w(CONFIG_AVR_SC_PCMSK, (0x1 << PCMSK_BIT));
-
-	// set respective pin data direction to output
-	mreg_w(CONFIG_AVR_SC_DDR, (0x1 << CONFIG_AVR_SC_PIN_BIT));
-
-	/* register interrupt handler */
-	int_hdlr_register(CONFIG_AVR_SC_INT, sc_hdlr);
-
-	return E_OK;
-}
-
-driver_init(init);
-#endif // BUILD_KERNEL
-
-#ifdef BUILD_KERNEL
-static int sc_hdlr(int_num_t num){
+void avr_sc_hdlr(void){
 	avr_sc_arg_t *arg;
 
-
-	/* reset interrupt flag */
-	mreg_w(PCIFR, (0x1 << CONFIG_AVR_SC_PCIFR_FLAG));
 
 	/* acquire parameter */
 	// get address from GPIO registers 0/1
 	arg = (avr_sc_arg_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
 
 	/* call kernel syscall handler */
-	return ksc_hdlr(arg->num, arg->param, arg->psize);
+	ksc_hdlr(arg->num, arg->param, arg->psize);
 }
 #endif // BUILD_KERNEL

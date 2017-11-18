@@ -6,11 +6,11 @@
 #include <sys/const.h>
 
 #ifdef CONFIG_ATMEGA1284P
-#include <arch/avr/atmega1284_register.h>
+#include <arch/avr/atmega1284.h>
 #endif // CONFIG_ATMEGA1284P
 
 #ifdef CONFIG_ATMEGA88PA
-#include <arch/avr/atmega88_register.h>
+#include <arch/avr/atmega88.h>
 #endif // CONFIG_ATMEGA88PA
 
 #ifndef ASM
@@ -24,6 +24,7 @@
 #include <arch/avr/thread.h>
 #include <arch/avr/process.h>
 #include <arch/avr/syscall.h>
+#include <arch/avr/atomic.h>
 #include <arch/avr/lib.h>
 #include <arch/types.h>
 #include <driver/avr_uart.h>
@@ -38,13 +39,15 @@
 // interrupt handling
 #if defined(CONFIG_AVR_ATMEGA) || defined(CONFIG_AVR_XMEGA)
 
-#define ICALL				call
-#define INT_VEC_WORDS		2
+#define XCALL			call
+#define XJMP			jmp
+#define INT_VEC_SIZE	4
 
 #else
 
-#define ICALL				rcall
-#define INT_VEC_WORDS		1
+#define XCALL			rcall
+#define XJMP			rjmp
+#define INT_VEC_SIZE	2
 
 #endif
 
@@ -73,8 +76,6 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	/* interrupts */
 	.int_enable = avr_int_enable,
 	.int_enabled = avr_int_enabled,
-	.int_hdlr_register = avr_int_hdlr_register,
-	.int_hdlr_release = avr_int_hdlr_release,
 
 	.ipi_sleep = 0x0,
 	.ipi_wake = 0x0,
@@ -100,7 +101,7 @@ static arch_callbacks_common_t const arch_cbs_common = {
 	.timebase_to_time = 0x0,	/* TODO */
 
 	/* atomics */
-	.cas = 0x0,
+	.cas = avr_cas,
 
 	/* core */
 	.core_id = 0x0,

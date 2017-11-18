@@ -18,7 +18,7 @@ int open(char const *path, f_mode_t mode){
 	sc(SC_OPEN, &p);
 	errno |= p.errno;
 
-	if(errno != E_OK)
+	if(p.errno != E_OK)
 		return -1;
 	return p.fd;
 }
@@ -32,7 +32,7 @@ int close(int fd){
 	sc(SC_CLOSE, &p);
 	errno |= p.errno;
 
-	if(errno != E_OK)
+	if(p.errno != E_OK)
 		return -1;
 	return 0;
 }
@@ -49,7 +49,7 @@ ssize_t read(int fd, void *buf, size_t n){
 	sc(SC_READ, &p);
 	errno |= p.errno;
 
-	if(errno != E_OK)
+	if(p.errno != E_OK)
 		return -1;
 	return p.data_len;
 }
@@ -66,7 +66,7 @@ ssize_t write(int fd, void *buf, size_t n){
 	sc(SC_WRITE, &p);
 	errno |= p.errno;
 
-	if(errno != E_OK)
+	if(p.errno != E_OK)
 		return -1;
 	return p.data_len;
 }
@@ -84,7 +84,7 @@ int ioctl(int fd, int cmd, void *data, size_t data_len){
 	sc(SC_IOCTL, &p);
 	errno |= p.errno;
 
-	if(errno != E_OK)
+	if(p.errno != E_OK)
 		return -1;
 	return 0;
 }
@@ -102,7 +102,7 @@ int fcntl(int fd, int request, void *data, size_t data_len){
 	sc(SC_FCNTL, &p);
 	errno |= p.errno;
 
-	if(errno != E_OK)
+	if(p.errno != E_OK)
 		return -1;
 	return 0;
 }
@@ -118,7 +118,7 @@ int chdir(char const *path){
 	sc(SC_CHDIR, &p);
 	errno |= p.errno;
 
-	if(errno != E_OK)
+	if(p.errno != E_OK)
 		return -1;
 	return 0;
 }
@@ -134,7 +134,7 @@ int rmdir(char const *path){
 	sc(SC_RMNODE, &p);
 	errno |= p.errno;
 
-	if(errno != E_OK)
+	if(p.errno != E_OK)
 		return -1;
 	return 0;
 }

@@ -23,13 +23,13 @@ typedef enum{
 
 // general print macros
 #ifdef CONFIG_KERNEL_MSG_FATAL
-#define	FATAL(fmt, ...)		cprintf(KMSG_FATAL, FG_RED "[FTL]" RESET_ATTR " %25.25s:%-20.20s    " FG_RED fmt RESET_ATTR, __FILE__, __FUNCTION__, ##__VA_ARGS__);
+#define	FATAL(fmt, ...)		cprintf(KMSG_FATAL, FG_RED "[FTL]" RESET_ATTR " %25.25s:%-20.20s    " FG_RED fmt RESET_ATTR, __FILE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define FATAL(fmt, ...)
 #endif // CONFIG_KERNEL_MSG_FATAL
 
 #ifdef CONFIG_KERNEL_MSG_WARN
-#define WARN(fmt, ...)		cprintf(KMSG_WARN, FG_YELLOW "[WRN]" RESET_ATTR " %25.25s:%-20.20s    " FG_YELLOW fmt RESET_ATTR, __FILE__, __FUNCTION__, ##__VA_ARGS__);
+#define WARN(fmt, ...)		cprintf(KMSG_WARN, FG_YELLOW "[WRN]" RESET_ATTR " %25.25s:%-20.20s    " FG_YELLOW fmt RESET_ATTR, __FILE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define WARN(fmt, ...)
 #endif // CONFIG_KERNEL_MSG_WARN
@@ -82,6 +82,7 @@ void kvprintf(kmsg_t lvl, char const *format, va_list lst);
 #else
 
 #define kprintf(lvl, fmt, ...)
+#define kvprintf(lvl, fmt, ...)
 
 #endif // CONFIG_KERNEL_MSG_*
 

@@ -35,7 +35,7 @@ struct thread_t;
 
 typedef struct{
 	/* core */
-	void (*core_panic)(void);
+	void (*core_panic)(thread_context_t const *tc);
 
 	/* virtual memory management */
 	int (*page_entry_write)(page_t const *page);
@@ -49,8 +49,6 @@ typedef struct{
 	/* interrupts */
 	int (*int_enable)(int_type_t mask);
 	int_type_t (*int_enabled)(void);
-	int (*int_hdlr_register)(int_num_t num, int_hdlr_t hdlr);
-	int (*int_hdlr_release)(int_num_t num);
 
 	int (*ipi_sleep)(void);
 	int (*ipi_wake)(ipi_t type, unsigned int core, bool bcast);

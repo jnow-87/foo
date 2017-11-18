@@ -1,8 +1,8 @@
-obj-y := start.o isr.o interrupt.o core.o watchdog.o thread.o syscall.o
+obj-y := start.o isr.o interrupt.o core.o sched.o thread.o syscall.o atomic.o
 obj-nobuiltin-y := libsys.o
 
 
-libsys-y := core_lib.o lib.o syscall_lib.o
+libsys-y := core_lib.o lib.o syscall_lib.o atomic.o
 
 
 # custom rules to generate separate objects files for src files that are reuired by kernel and libsys
@@ -35,6 +35,7 @@ ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u"
   cflags-$(CONFIG_AVR) := -fno-jump-tables
 endif
 
+cflags += -Wno-misspelled-isr
 archflags += -mmcu=$(CONFIG_AVR_MCU)
 ldflags += -m$(CONFIG_AVR_ISA) --discard-all
 

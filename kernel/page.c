@@ -3,6 +3,7 @@
 #include <kernel/page.h>
 #include <kernel/kmem.h>
 #include <kernel/umem.h>
+#include <kernel/lock.h>
 #include <sys/memblock.h>
 #include <sys/errno.h>
 
@@ -45,9 +46,9 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 
 	/* allocate virtual block */
 #ifdef CONFIG_KERNEL_VIRT_MEM
-	mutex_lock(&(this_p->memory.mtx));
+	klock();
 	page->virt_addr = memblock_alloc(&(this_p->memory.addr_space), size);
-	mutex_unlock(&(this_p->memory.mtx));
+	kunlock();
 
 	if(page->virt_addr == 0)
 		goto_errno(err_2, E_NOMEM);
@@ -71,9 +72,9 @@ err_0:
 void page_free(struct process_t *this_p, page_t *page){
 	/* free virtual block */
 #ifdef CONFIG_KERNEL_VIRT_MEM
-	mutex_lock(&(this_p->memory.mtx));
+	klock();
 	memblock_free(&(this_p->memory_space), page->virt_addr);
-	mutex_unlock(&(this_p->memory.mtx));
+	kunlock();
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* free physica block */

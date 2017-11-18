@@ -6,6 +6,7 @@
 #include <kernel/kmem.h>
 #include <kernel/rootfs.h>
 #include <kernel/binloader.h>
+#include <kernel/lock.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
@@ -17,6 +18,8 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	process_t *this_p;
 	thread_t *this_t;
 
+
+	klock();
 
 	/* allocate process structure */
 	this_p = kmalloc(sizeof(process_t));
@@ -54,10 +57,6 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	 */
 #endif // CONFIG_KERNEL_VIRT_MEM
 
-#ifdef CONFIG_KERNEL_SMP
-	mutex_init(&this_p->memory.mtx);
-#endif // CONFIG_KERNEL_SMP
-
 	/* init argument string */
 	this_p->args = kmalloc(strlen(args) + 1);
 
@@ -68,11 +67,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 
 	/* init file system handles */
 	this_p->fds = 0x0;
-
-	this_p->cwd = fs_root;
-
-	if(current_thread[PIR] != 0x0)
-		this_p->cwd = current_thread[PIR]->parent->cwd;
+	this_p->cwd = cwd;
 
 	/* load binary */
 	entry = 0x0;
@@ -89,6 +84,8 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	this_p->threads = 0x0;
 	list_add_tail(this_p->threads, this_t);
 
+	kunlock();
+
 	return this_p;
 
 
@@ -102,16 +99,18 @@ err_1:
 	kfree(this_p);
 
 err_0:
+	kunlock();
 	return 0;
 }
 
 void process_destroy(process_t *this_p){
-	thread_t *this_t,
-			 *cur_thread;
+	thread_t *this_t;
 	page_t *page;
 	fs_filed_t *fd;
 	fs_ops_t *ops;
 
+
+	klock();
 
 	/* destroy all threads */
 	list_for_each(this_p->threads, this_t){
@@ -120,19 +119,12 @@ void process_destroy(process_t *this_p){
 	}
 
 	/* clear file system handles */
-	// set current_thread, because subsequent calls rely on it and it might not
-	// be set to any of this process' threads
-	cur_thread = current_thread[PIR];
-	current_thread[PIR] = list_first(this_p->threads);
-
 	list_for_each(this_p->fds, fd){
 		ops = fd->node->ops;
 
-		if(ops->close != 0x0)	ops->close(fd);
-		else					fs_fd_free(fd);
+		if(ops->close != 0x0)	ops->close(fd, this_p);
+		else					fs_fd_free(fd, this_p);
 	}
-
-	current_thread[PIR] = cur_thread;
 
 	/* free arguments */
 	kfree(this_p->args);
@@ -146,4 +138,6 @@ void process_destroy(process_t *this_p){
 	/* free process */
 	kfree(this_p->name);
 	kfree(this_p);
+
+	kunlock();
 }

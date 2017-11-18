@@ -41,6 +41,9 @@ cflags := \
 	$(CONFIG_CFLAGS) \
 	$(cflags) \
 	-Wall \
+	-Wextra \
+	-Wshadow \
+	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-nostdinc \
 	-fno-builtin \
@@ -52,6 +55,9 @@ cxxflags := \
 	$(CONFIG_CXXFLAGS) \
 	$(cxxflags) \
 	-Wall \
+	-Wextra \
+	-Wshadow \
+	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-nostdinc \
 	-fno-builtin \
@@ -97,6 +103,9 @@ hostcflags := \
 	$(CONFIG_HOSTCFLAGS) \
 	$(hostcflags) \
 	-Wall \
+	-Wextra \
+	-Wshadow \
+	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-O2 \
 	-flto
@@ -106,6 +115,9 @@ hostcxxflags := \
 	$(CONFIG_HOSTCCCFLAGS) \
 	$(hostcxxflags) \
 	-Wall \
+	-Wextra \
+	-Wshadow \
+	-Wno-unused-parameter \
 	-Wno-unknown-pragmas \
 	-O2 \
 	-flto
@@ -159,7 +171,7 @@ gperfflags := \
 kernel := $(build_tree)/$(kernel_name)
 kernel_deps := kernel/obj.o arch/obj.o driver/obj.o sys/obj.o
 libsys := $(build_tree)/lib/$(lib_name)
-libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
+libsys_dep := lib/obj.o sys/libsys.o arch/libsys.o
 
 sysroot := sysroot
 recent := recent
@@ -267,8 +279,8 @@ graphicspath := doc/img
 svggraphics := $(shell find $(graphicspath) -name \*.svg)
 pdfgraphics := $(patsubst %.svg, $(build_tree)/%.pdf, $(svggraphics))
 
-
-documentation: fig_svg
+.PHONY: docu
+docu: fig_svg
 	@sed -i -e 's>OUTPUT_DIRECTORY[ \t]*=.*>OUTPUT_DIRECTORY=$(build_tree)/doc/>' $(doxygen_config)
 	@doxygen $(doxygen_config)
 	@cp -r doc/* $(build_tree)/doc/latex

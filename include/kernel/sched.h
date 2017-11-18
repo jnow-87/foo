@@ -7,11 +7,13 @@
 
 
 /* external variables */
-extern thread_t *current_thread[CONFIG_NCORES];
 extern process_t *process_table;
 
 
 /* prototypes */
+thread_t const *sched_running(void);
+
+void sched_tick(void);
 void sched_resched(void);
 
 

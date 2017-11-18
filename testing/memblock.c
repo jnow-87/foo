@@ -24,13 +24,13 @@
 
 
 /* static variables */
-static char blk[SIZE_EL0 + SIZE_EL1 + SIZE_EL2 + SIZE_EL3 + SIZE_EL4];
+static char el_blk[SIZE_EL0 + SIZE_EL1 + SIZE_EL2 + SIZE_EL3 + SIZE_EL4];
 
-static memblock_t *el0 = (memblock_t*)((void*)blk + 0x0),
-				  *el1 = (memblock_t*)((void*)blk + SIZE_EL0),
-				  *el2 = (memblock_t*)((void*)blk + SIZE_EL0 + SIZE_EL1),
-				  *el3 = (memblock_t*)((void*)blk + SIZE_EL0 + SIZE_EL1 + SIZE_EL2),
-				  *el4 = (memblock_t*)((void*)blk + SIZE_EL0 + SIZE_EL1 + SIZE_EL2 + SIZE_EL3);
+static memblock_t *el0 = (memblock_t*)((void*)el_blk + 0x0),
+				  *el1 = (memblock_t*)((void*)el_blk + SIZE_EL0),
+				  *el2 = (memblock_t*)((void*)el_blk + SIZE_EL0 + SIZE_EL1),
+				  *el3 = (memblock_t*)((void*)el_blk + SIZE_EL0 + SIZE_EL1 + SIZE_EL2),
+				  *el4 = (memblock_t*)((void*)el_blk + SIZE_EL0 + SIZE_EL1 + SIZE_EL2 + SIZE_EL3);
 
 
 /* local functions */

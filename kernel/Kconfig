@@ -216,13 +216,13 @@ config KERNEL_IMAGE_BASE
 config KERNEL_IMAGE_SIZE
 	int "Kernel image size"
 	default 0
-	
-config KERNEL_STACK_BASE
-	hex "Kernel stack base address"
+
+config KERNEL_INITRAMFS_BASE
+	hex "Init ram file system base address"
 	default 0x0
 
-config KERNEL_STACK_SIZE
-	int "Kernel stack size"
+config KERNEL_INITRAMFS_SIZE
+	int "Init ram file system size"
 	default 0
 
 config KERNEL_HEAP_BASE
@@ -241,13 +241,68 @@ config KERNEL_PROC_SIZE
 	int "Process heap size"
 	default 0
 
-config KERNEL_INITRAMFS_BASE
-	hex "Init ram file system base address"
+config KERNEL_STACK_BASE
+	hex "Kernel stack base address"
 	default 0x0
 
-config KERNEL_INITRAMFS_SIZE
-	int "Init ram file system size"
-	default 0
+if KERNEL_VIRT_MEM
+	choice
+		prompt "Kernel/Thread stack size"
+
+		config KERNEL_STACK_SIZE_4k
+			bool "4k"
+
+		config KERNEL_STACK_SIZE_16k
+			bool "16k"
+
+		config KERNEL_STACK_SIZE_64k
+			bool "64k"
+
+		config KERNEL_STACK_SIZE_256k
+			bool "256k"
+
+		config KERNEL_STACK_SIZE_1M
+			bool "1M"
+
+		config KERNEL_STACK_SIZE_4M
+			bool "4M"
+
+		config KERNEL_STACK_SIZE_16M
+			bool "16M"
+
+		config KERNEL_STACK_SIZE_64M
+			bool "64M"
+
+		config KERNEL_STACK_SIZE_256M
+			bool "256M"
+
+		config KERNEL_STACK_SIZE_1G
+			bool "1G"
+	endchoice
+	
+	menu "Hidden"
+		visible if 0
+
+		config KERNEL_STACK_SIZE
+			int "Thread stack size"
+			default 0	if KERNEL_STACK_SIZE_4k
+			default 1	if KERNEL_STACK_SIZE_16k
+			default 2	if KERNEL_STACK_SIZE_64k
+			default 3	if KERNEL_STACK_SIZE_256k
+			default 4	if KERNEL_STACK_SIZE_1M
+			default 5	if KERNEL_STACK_SIZE_4M
+			default 6	if KERNEL_STACK_SIZE_16M
+			default 7	if KERNEL_STACK_SIZE_64M
+			default 8	if KERNEL_STACK_SIZE_256M
+			default 9	if KERNEL_STACK_SIZE_1G
+	endmenu
+endif # KERNEL_VIRT_MEM
+
+if KERNEL_NO_VIRT_MEM
+	config KERNEL_STACK_SIZE
+		int "Thread stack size"
+		default 4096
+endif # KERNEL_NO_VIRT_MEM
 endmenu
 # }}}
 
@@ -281,72 +336,6 @@ menu "Init binary settings"
 			default 0	if INIT_BINTYPE_RAW
 			default 1	if INIT_BINARY_ELF
 	endmenu
-endmenu
-# }}}
-
-#
-# process and thread
-#
-# {{{
-menu "Thread and process settings"
-	if KERNEL_VIRT_MEM
-		choice
-			prompt "Thread stack size"
-
-			config THREAD_STACK_SIZE_4k
-				bool "4k"
-
-			config THREAD_STACK_SIZE_16k
-				bool "16k"
-
-			config THREAD_STACK_SIZE_64k
-				bool "64k"
-
-			config THREAD_STACK_SIZE_256k
-				bool "256k"
-
-			config THREAD_STACK_SIZE_1M
-				bool "1M"
-
-			config THREAD_STACK_SIZE_4M
-				bool "4M"
-
-			config THREAD_STACK_SIZE_16M
-				bool "16M"
-
-			config THREAD_STACK_SIZE_64M
-				bool "64M"
-
-			config THREAD_STACK_SIZE_256M
-				bool "256M"
-
-			config THREAD_STACK_SIZE_1G
-				bool "1G"
-		endchoice
-		
-		menu "Hidden"
-			visible if 0
-
-			config THREAD_STACK_SIZE
-				int "Thread stack size"
-				default 0	if THREAD_STACK_SIZE_4k
-				default 1	if THREAD_STACK_SIZE_16k
-				default 2	if THREAD_STACK_SIZE_64k
-				default 3	if THREAD_STACK_SIZE_256k
-				default 4	if THREAD_STACK_SIZE_1M
-				default 5	if THREAD_STACK_SIZE_4M
-				default 6	if THREAD_STACK_SIZE_16M
-				default 7	if THREAD_STACK_SIZE_64M
-				default 8	if THREAD_STACK_SIZE_256M
-				default 9	if THREAD_STACK_SIZE_1G
-		endmenu
-	endif # KERNEL_VIRT_MEM
-
-	if KERNEL_NO_VIRT_MEM
-		config THREAD_STACK_SIZE
-			int "Thread stack size"
-			default 4096
-	endif # KERNEL_NO_VIRT_MEM
 endmenu
 # }}}
 

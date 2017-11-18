@@ -7,7 +7,6 @@
 #include <kernel/binloader.h>
 #include <kernel/fs.h>
 #include <sys/memblock.h>
-#include <sys/mutex.h>
 
 
 /* macros */
@@ -26,10 +25,6 @@ typedef struct{
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	struct page_t *pages;		// list to manage allocated addresses in user memory (umalloc, ufree in umem.h)
-
-#ifdef CONFIG_KERNEL_SMP
-	mutex_t mtx;				// mutex to protect access
-#endif // CONFIG_KERNEL_SMP
 } process_mem_t;
 
 typedef struct process_t{

@@ -3,79 +3,125 @@
 
 
 /* macros */
-#define ISR(name, tgt) \
-.global __isr_##name $ \
-__isr_##name: \
-	ICALL tgt
+.macro	vector num
+	.if (\num < INT_VECTORS + 1)	// +1 for the pseude syscall interrupt
+		.if (\num == 0)
+			.global __vector_\num
+			XJMP	__isr_reset
+
+		.elseif (\num == INT_VECTORS)
+			.global	__vector_\num
+			XJMP	__isr_syscall
+
+		.elseif (\num == CONFIG_SCHED_INT)
+			.global	__vector_\num
+			XJMP	__isr_sched
+
+		.else
+			.global	__vector_\num
+			.weak	__vector_\num
+			.set	__vector_\num , __isr_inval
+			XJMP	__vector_\num
+		.endif
+	.endif
+.endm
 
 
 /* external functions */
 .extern __start
 .extern avr_int_hdlr
-.extern avr_warm_reset_hdlr
+.extern avr_int_warm_reset_hdlr
+.extern avr_int_inval_hdlr
 
 
 /* external variables */
-.extern inkernel_nest
-.extern kernel_stack
+.extern int_num
 
 
 /* interrupt vectors */
 .section .reset
 
-ISR(reset, __reset)
-ISR(int0, __isr_call)
-ISR(int1, __isr_call)
-ISR(int2, __isr_call)
-ISR(pcint0, __isr_call)
-ISR(pcint1, __isr_call)
-ISR(pcint2, __isr_call)
-ISR(pcint3, __isr_call)
-ISR(watchdog, __isr_call)
-ISR(timer2_comp_a, __isr_call)
-ISR(timer2_comp_b, __isr_call)
-ISR(timer2_ovfl, __isr_call)
-ISR(timer1_capture, __isr_call)
-ISR(timer1_comp_a, __isr_call)
-ISR(timer1_comp_b, __isr_call)
-ISR(timer1_ovfl, __isr_call)
-ISR(timer0_comp_a, __isr_call)
-ISR(timer0_comp_b, __isr_call)
-ISR(timer0_ovfl, __isr_call)
-ISR(spi_tx, __isr_call)
-ISR(usart0_rx, __isr_call)
-ISR(usart0_udre, __isr_call)
-ISR(usart0_tx, __isr_call)
-ISR(analog_comp, __isr_call)
-ISR(adc, __isr_call)
-ISR(eeprom_rdy, __isr_call)
-ISR(twi, __isr_call)
-ISR(spm_rdy, __isr_call)
-ISR(usart1_rx, __isr_call)
-ISR(usart1_udre, __isr_call)
-ISR(usart1_tx, __isr_call)
-ISR(timer3_capture, __isr_call)
-ISR(timer3_comp_a, __isr_call)
-ISR(timer3_comp_b, __isr_call)
-ISR(timer3_ovfl, __isr_call)
+.global int_vectors
+int_vectors:
+vector 0
+vector 1
+vector 2
+vector 3
+vector 4
+vector 5
+vector 6
+vector 7
+vector 8
+vector 9
+vector 10
+vector 11
+vector 12
+vector 13
+vector 14
+vector 15
+vector 16
+vector 17
+vector 18
+vector 19
+vector 20
+vector 21
+vector 22
+vector 23
+vector 24
+vector 25
+vector 26
+vector 27
+vector 28
+vector 29
+vector 30
+vector 31
+vector 32
+vector 33
+vector 34
+vector 35
 
-/* reset handler */
+
 .section .text
-.global __reset
-__reset:
+/* reset handler */
+.global __isr_reset
+__isr_reset:
 	/* check if an interrupt source is present if not,
 	 * the reset vector is triggered due to an error
 	 */
 	lds		r16, MCUSR
 	cpi		r16,0x0
 	brne	__start
-	jmp		__isr_call
+	XJMP	avr_int_warm_reset_hdlr
 
-/* ISR */
-.global __isr_call
-__isr_call:
-	/* save context */
+/* syscall handler */
+.global __isr_syscall
+__isr_syscall:
 	push	r31
+	ldi		r31, INT_VECTORS
+	sts		int_num, r31
+	XJMP	__int_hdlr_call
+
+/* scheduler handler */
+.global __isr_sched
+__isr_sched:
+	push	r31
+	ldi		r31, CONFIG_SCHED_INT
+	sts		int_num, r31
+	XJMP	__int_hdlr_call
+
+/* invalid interrupt handler */
+// NOTE: using avr_int_inval_hdlr directly does not work, since
+//		 somehow the .weak symbols are not redefined in this case
+.global __isr_inval
+__isr_inval:
+	XJMP	avr_int_inval_hdlr
+
+
+/* ISR with context handling */
+.global __int_hdlr_call
+__int_hdlr_call:
+	/* save context */
+	// NOTE: r31 is assumed being pushed by the calling routine
 	push	r30
 	push	r29
 	push	r28
@@ -113,68 +159,30 @@ __isr_call:
 	lds		r16, MCUSR
 	push	r16
 	lds		r16, SREG
+	push	r16
+
+	// push dummy to reserve space for next, prev members of thread_context_t
+#if (CONFIG_ADDR_WIDTH == 16)
+	push	r1
+	push	r1
+#endif
+
+	push	r1
 
 	/* avr_int_hdlr argument: stack pointer aka thread_context_t pointer */
 	lds		r24, SPL
 	lds		r25, SPH
 
-	// push SREG
+	// push last dummy byte for next, prev members of thread_context_t
 	// thread_context pointer needs to be saved earlier due to post-decrement of push
-	push	r16
-
-	/* update stack pointer
-	 *	if already in kernel (inkernel_nest != 0) do nothing
-	 *	else set stack pointer to initial kernel stack
-	 */
-	// check if already in kernel
-	lds		r16, inkernel_nest
-	cpi		r16, 0x0
-	brne	1f
-
-	// Z = kernel stack address
-	ldi		r30, lo8(kernel_stack)
-	ldi		r31, hi8(kernel_stack)
-
-	// RAMPZ = kernel_stack[16..23]
-#ifdef CONFIG_AVR_ISA_AVR51
-	ldi		r16, hh8(kernel_stack)
-	sts		RAMPZ, r16
-#endif
-
-#if CONFIG_NCORES > 1
-	// assuming a single core, thus kernel_stack[] contains a single entry
-	#error "handling of multiple cores is not implemented for AVR processors"
-#endif // CONFIG_NCORES
-
-	// load kernel stack from memory
-	ld		r17, Z+
-	ld		r18, Z
-	sts		SPL, r17
-	sts		SPH, r18
+	push	r1
 
 	/* ABI requirements */
 	// clear r1
 	clr		r1
 
 1:
-	/* increment inkernel_nest */
-	lds		r16, inkernel_nest
-	inc		r16
-	sts		inkernel_nest, r16
-
-	ICALL	avr_int_hdlr
-
-	/* decrement inkernel_nest */
-	lds		r16, inkernel_nest
-	dec		r16
-	sts		inkernel_nest, r16
-
-	/* restore stack pointer
-	 *	if leaving kernel (inkernel_nest == 0) restore stack pointer from thread context
-	 *	else do nothing
-	 */
-	cpi		r16, 0x0
-	brne	1f
+	XCALL	avr_int_hdlr
 
 	// restore thread stack pointer from return value
 	sbiw	r24, 0x1	// decrement due to pre-increment of pop
@@ -182,6 +190,15 @@ __isr_call:
 	sts		SPH, r25
 
 1:
+	/* pop dummy bytes used to reserve space for next, prev members of thread_context_t */
+#if (CONFIG_ADDR_WIDTH == 16)
+	pop		r16
+	pop		r16
+#endif
+
+	pop		r16
+	pop		r16
+
 	/* restore context */
 	pop		r16
 	sts		SREG, r16
@@ -222,9 +239,5 @@ __isr_call:
 	pop		r29
 	pop		r30
 	pop		r31
-
-	/* pop interrupt vector address */
-	pop		r0
-	pop		r0
 
 	reti

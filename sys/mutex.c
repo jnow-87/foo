@@ -1,111 +1,106 @@
 // TODO check implementation
-#include <config/config.h>
 #include <arch/atomic.h>
-#include <arch/core.h>
 #include <sys/mutex.h>
+#include <sys/errno.h>
 
 
 /* macros */
-#define LOCK_CLEAR		0xff00		// lock_id = 0xff, lock = 0
-#define LOCK_SET(pir)	(((pir) & 0xff) << 8 | 0x1)
+#if defined(BUILD_KERNEL)
 
+#include <arch/core.h>
+#define LOCK_ID	(PIR)
 
-/* static variables */
-#ifdef CONFIG_SYS_MUTEX_DEBUG
-mutex_t *mutex_debug_try[8] = { 0, 0, 0, 0, 0, 0, 0, 0 },
-		*mutex_debug_hold[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-#endif // CONFIG_SYS_MUTEX_DEBUG
+#elif defined(BUILD_LIBSYS)
+
+// TODO add threading references
+//#include <lib/TODO>
+#define LOCK_ID	(1)
+
+#else
+#error "invalid build flag"
+#endif // BUILD_KERNEL/LIBSYS
 
 
 /* global functions */
 void mutex_init(mutex_t *m){
 	m->nest_cnt = -1;
-	m->lock.lock_i = LOCK_CLEAR;
-	m->waiting = 0;
+	m->lock = LOCK_CLEAR;
+	m->lock_id = 0;
 }
 
 void mutex_init_nested(mutex_t *m){
 	m->nest_cnt = 0;
-	m->lock.lock_i = LOCK_CLEAR;
-	m->waiting = 0;
+	m->lock = LOCK_CLEAR;
+	m->lock_id = 0;
 }
 
 void mutex_lock(mutex_t *m){
-#ifdef CONFIG_SYS_MUTEX_DEBUG
-	mutex_debug_try[PIR] = m;
-#endif // CONFIG_SYS_MUTEX_DEBUG
-
-
 	while(1){
-		if(mutex_trylock(m) == 0){
-#ifdef CONFIG_SYS_MUTEX_DEBUG
-			mutex_debug_hold[PIR] = m;
-			mutex_debug_try[PIR] = 0;
-#endif // CONFIG_SYS_MUTEX_DEBUG
-			m->waiting &= !(m->waiting & (1 << PIR));
-
+		if(mutex_trylock(m) == 0)
 			break;
-		}
 
-		m->waiting |= (1 << PIR);
+		// TODO may suspend thread
 	}
 }
 
 int mutex_lock_nested(mutex_t *m){
 	if(m->nest_cnt == -1)
-		return -1;
-
-#ifdef CONFIG_SYS_MUTEX_DEBUG
-	mutex_debug_try[PIR] = m;
-#endif // CONFIG_SYS_MUTEX_DEBUG
+		goto_errno(err, E_INVAL);
 
 	while(1){
-		if(mutex_trylock_nested(m) == 0){
-			m->waiting &= !(m->waiting & (1 << PIR));
-
-#ifdef CONFIG_SYS_MUTEX_DEBUG
-			mutex_debug_hold[PIR] = m;
-			mutex_debug_try[PIR] = 0;
-#endif // CONFIG_SYS_MUTEX_DEBUG
-
+		if(mutex_trylock_nested(m) == 0)
 			break;
-		}
 
-		m->waiting |= (1 << PIR);
+		// TODO may suspend thread
 	}
 
 	return 0;
+
+
+err:
+	return -1;
 }
 
 int mutex_trylock(mutex_t *m){
-	return cas((int*)(&m->lock.lock_i), LOCK_CLEAR, LOCK_SET(PIR));
+	if(cas((int*)(&m->lock), LOCK_CLEAR, LOCK_SET) == 0){
+		m->lock_id = LOCK_ID;
+		return 0;
+	}
+
+	return 1;
 }
 
 int mutex_trylock_nested(mutex_t *m){
-	if(m->lock.lock_i == LOCK_SET(PIR)){
+	if(m->nest_cnt == -1)
+		goto_errno(err, E_INVAL);
+
+	if(m->lock == LOCK_SET && m->lock_id == LOCK_ID){
 		m->nest_cnt++;
 		return 0;
 	}
-	else if(m->lock.lock_i == LOCK_CLEAR)
-		return cas((int*)(&m->lock.lock_i), LOCK_CLEAR, LOCK_SET(PIR));
 
+	return mutex_trylock(m);
+
+
+err:
 	return -1;
 }
 
 void mutex_unlock(mutex_t *m){
-#ifdef CONFIG_SYS_MUTEX_DEBUG
-	mutex_debug_hold[PIR] = 0;
-#endif // CONFIG_SYS_MUTEX_DEBUG
-
-	m->lock.lock_i = LOCK_CLEAR;
+	m->lock_id = 0;
+	m->lock = LOCK_CLEAR;
 }
 
-void mutex_unlock_nested(mutex_t *m){
+int mutex_unlock_nested(mutex_t *m){
 	if(m->nest_cnt == -1)
-		return;
+		goto_errno(err, E_INVAL);
 
-	if(m->nest_cnt == 0)
-		mutex_unlock(m);
-	else
-		m->nest_cnt--;
+	if(m->nest_cnt == 0)	mutex_unlock(m);
+	else					m->nest_cnt--;
+
+	return 0;
+
+
+err:
+	return -1;
 }

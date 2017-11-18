@@ -1,6 +1,5 @@
-#include <arch/arch.h>
+#include <arch/thread.h>
 #include <kernel/init.h>
-#include <kernel/sched.h>
 #include <kernel/kprintf.h>
 #include <sys/errno.h>
 #include <sys/register.h>
@@ -10,21 +9,21 @@
 void avr_core_sleep(void){
 	/* set sleep mode */
 	mreg_w(SMCR, (0x1 << SMCR_SE) |
-#if defined(CONFIG_AVR_SLEEPMODE_IDLE)
+#if defined(CONFIG_SLEEPMODE_IDLE)
 		(0x0 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_ADCNR)
+#elif defined(CONFIG_SLEEPMODE_ADCNR)
 		(0x1 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_PWRDWN)
+#elif defined(CONFIG_SLEEPMODE_PWRDWN)
 		(0x2 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_PWRSAVE)
+#elif defined(CONFIG_SLEEPMODE_PWRSAVE)
 		(0x3 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_STANDBY)
+#elif defined(CONFIG_SLEEPMODE_STANDBY)
 		(0x6 << SMCR_SM)
-#elif defined(CONFIG_AVR_SLEEPMODE_EXTSTANDBY)
+#elif defined(CONFIG_SLEEPMODE_EXTSTANDBY)
 		(0x7 << SMCR_SM)
 #else
 	#error "invalid sleep mode, check kernel config"
-#endif // CONFIG_AVR_SLEEPMODE
+#endif // CONFIG_SLEEPMODE
 	);
 
 	/* send core to sleep */
@@ -35,50 +34,47 @@ void avr_core_sleep(void){
 }
 
 #ifdef BUILD_KERNEL
-void avr_core_panic(void){
-	thread_context_t *tc;
+void avr_core_panic(thread_context_t const *tc){
 	unsigned int i,
-				 int_vec,
+				 j,
 				 ret_addr;
 
 
 	/* dump registers */
-	tc = current_thread[PIR]->ctx;
-	int_vec = (((lo8(tc->int_vec) << 8) | hi8(tc->int_vec)) - INT_VEC_WORDS) * 2;
-	ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
+	if(tc != 0x0){
+		ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
 
-	kprintf(KMSG_ANY, "config and status registers\n"
-		 "%20.20s: %#2.2x\n"
-		 "%20.20s: %#2.2x\n"
-		 "%20.20s: %p\n"
-		 "%20.20s: %p\n"
-		 "%20.20s: %4.4p (has to be the reset vector address)\n"
-		 "%20.20s: %4.4p (not necessarily meaningful, since the reset vector should never be called)\n\n"
-		 ,
-		 "SREG", tc->sreg,
-		 "MCUSR", tc->mcusr,
-		 "SP", tc,
-		 "SP", tc + 1,
-		 "interrupt vector", int_vec,
-		 "interrupted at", ret_addr
-	);
+		kprintf(KMSG_ANY, "config and status registers\n"
+			 "%20.20s: %#2.2x\n"
+			 "%20.20s: %#2.2x\n"
+			 "%20.20s: %p\n"
+			 "%20.20s: %4.4p\n\n"
+			 ,
+			 "SREG", tc->sreg,
+			 "MCUSR", tc->mcusr,
+			 "SP", tc + 1,
+			 "interrupted at", ret_addr
+		);
 
-	kprintf(KMSG_ANY, "general purpose registers\n");
+		kprintf(KMSG_ANY, "general purpose registers\n");
 
-	for(i=0; i<32; i++){
-		kprintf(KMSG_ANY, "\t%2.2u: %#2.2x", i, tc->gpr[i]);
+		for(i=0; i<32; i++){
+			j = i / 4 + (i % 4) * 8;
+			kprintf(KMSG_ANY, "\t%2.2u: %#2.2x", j, tc->gpr[j]);
 
-		if(i % 4 == 3)
-			kprintf(KMSG_ANY, "\n");
+			if(i % 4 == 3)
+				kprintf(KMSG_ANY, "\n");
+		}
 	}
 
-	/* set sleep mode to power down */
+	/* halt core */
+	// set sleep mode to power down
 	mreg_w(SMCR, (0x1 << SMCR_SE) | (0x2 << SMCR_SM));
 
-	/* signal debugger */
+	// signal debugger
 	asm volatile("break");
 
-	/* send core to sleep */
+	// send core to sleep
 	asm volatile("sleep");
 }
 #endif // BUILD_KERNEL

@@ -69,13 +69,13 @@ void kernel(void){
 
 	/* stop execution if any of the init calls failed */
 	if(errno != E_OK)
-		kernel_panic("error (%#x) during kernel init", errno);
+		kpanic(0x0, "error (%#x) during kernel init", errno);
 
 	/* kernel statistics */
-	kernel_stat();
+	kstat();
 
 	/* kernel test */
-	kernel_test();
+	ktest();
 
 	/* enable interrupts */
 	int_enable(INT_ALL);

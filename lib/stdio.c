@@ -154,12 +154,12 @@ size_t fread(void *p, size_t size, FILE *stream){
 			stream->ridx = 0;
 		}
 		else{
-			n = read(stream->fd, p + rd, size - rd);
+			r = read(stream->fd, p + rd, size - rd);
 
-			if(n < 0)
+			if(r < 0)
 				goto err_0;
 
-			return rd + n;
+			return rd + r;
 		}
 	}
 

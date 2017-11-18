@@ -13,7 +13,7 @@ thread_context_t *avr_thread_context_init(thread_t *this_t, void *arg){
 
 
 	/* set thread context */
-	ctx = (thread_context_t*)(this_t->stack->phys_addr + CONFIG_THREAD_STACK_SIZE - sizeof(thread_context_t));
+	ctx = (thread_context_t*)(this_t->stack->phys_addr + CONFIG_KERNEL_STACK_SIZE - sizeof(thread_context_t));
 
 	/* init thread context */
 	memset(ctx, 0x0, sizeof(thread_context_t));
@@ -27,7 +27,8 @@ thread_context_t *avr_thread_context_init(thread_t *this_t, void *arg){
 	ctx->gpr[25] = hi8(arg);
 
 	/* init thread entry/return address */
-	ctx->ret_addr = (void*)(((lo8(this_t->entry) << 8) | hi8(this_t->entry)) / 2);
+	ctx->ret_addr = (void*)((unsigned int)this_t->entry / 2);
+	ctx->ret_addr = (void*)((lo8(ctx->ret_addr) << 8) | hi8(ctx->ret_addr));
 
 	return ctx;
 }

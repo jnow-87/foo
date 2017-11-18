@@ -7,9 +7,9 @@
 
 /* prototypes */
 #ifdef CONFIG_KERNEL_TEST
-void kernel_test();
+void ktest();
 #else
-#define kernel_test()
+#define ktest()
 #endif // CONFIG_KERNEL_TEST
 
 

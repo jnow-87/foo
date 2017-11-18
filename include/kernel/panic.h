@@ -2,13 +2,17 @@
 #define KERNEL_PANIC_H
 
 
+#include <kernel/thread.h>
+#include <sys/stdarg.h>
+
+
 /* macros */
-#define kernel_panic(format, ...) \
-	_kernel_panic(__FILE__, __FUNCTION__, __LINE__, format, ##__VA_ARGS__)
+#define kpanic(thread, format, ...) \
+	kpanic_ext(thread, __FILE__, __FUNCTION__, __LINE__, format, ##__VA_ARGS__)
 
 
 /* prototypes */
-void _kernel_panic(char const *file, char const *func, unsigned int line, char const *format, ...);
+void kpanic_ext(thread_t const *this_t, char const *file, char const *func, unsigned int line, char const *format, ...);
 
 
 #endif // KERNEL_PANIC_H

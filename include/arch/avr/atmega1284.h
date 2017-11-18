@@ -1,3 +1,7 @@
+#ifndef ARCH_ATMEGA1284_H
+#define ARCH_ATMEGA1284_H
+
+
 /**
  *	General Purpose Working Registes
  */
@@ -1547,3 +1551,47 @@
 // masks
 #define EEARH_ADDRH_MASK	0xf
 
+/**
+ *	Interrupt Vectors
+ */
+// number of interrupts
+#define INT_VECTORS			35
+
+// interrupt numbers
+#define INT_0				1
+#define INT_1				2
+#define INT_2				3
+#define INT_PCINT0			4
+#define INT_PCINT1			5
+#define INT_PCINT2			6
+#define INT_PCINT3			7
+#define INT_WATCHDOG		8
+#define INT_TIMER2_COMPA	9
+#define INT_TIMER2_COMPB	10
+#define INT_TIMER2_OVFL		11
+#define INT_TIMER1_CAPTURE	12
+#define INT_TIMER1_COMPA	13
+#define INT_TIMER1_COMPB	14
+#define INT_TIMER1_OVFL		15
+#define INT_TIMER0_COMPA	16
+#define INT_TIMER0_COMPB	17
+#define INT_TIMER0_OVFL		18
+#define INT_SPI_TX			19
+#define INT_USART0_RX		20
+#define INT_USART0_UDRE		21
+#define INT_USART0_TX		22
+#define INT_ACOMP			23
+#define INT_ADC				24
+#define INT_EEPROM_RDY		25
+#define INT_TWI				26
+#define INT_SPM_RDY			27
+#define INT_USART1_RX		28
+#define INT_USART1_UDRE		29
+#define INT_USART1_TX		30
+#define INT_TIMER3_CAPTURE	31
+#define INT_TIMER3_COMPA	32
+#define INT_TIMER3_COMPB	33
+#define INT_TIMER3_OVFL		34
+
+
+#endif // ARCH_ATMEGA1284_H

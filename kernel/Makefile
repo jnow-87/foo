@@ -1,6 +1,5 @@
-obj-y := init.o thread.o process.o sched.o panic.o kmem.o umem.o page.o binloader.o binloader_raw.o syscall.o fs/
+obj-y := init.o thread.o process.o sched.o panic.o kmem.o umem.o page.o binloader.o binloader_raw.o syscall.o lock.o fs/
 
-obj-$(CONFIG_KERNEL_SMP) += lock.o
 obj-$(CONFIG_KERNEL_STAT) += stat.o
 obj-$(CONFIG_KERNEL_TEST) += test.o
 

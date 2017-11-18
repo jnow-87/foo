@@ -4,6 +4,7 @@
 #include <kernel/devfs.h>
 #include <kernel/kmem.h>
 #include <kernel/kprintf.h>
+#include <kernel/lock.h>
 #include <sys/list.h>
 
 
@@ -13,8 +14,8 @@ static fs_node_t *devfs_root = 0x0;
 
 
 /* local/static prototypes */
-static int open(fs_node_t *start, char const *path, f_mode_t mode);
-static int close(fs_filed_t *fd);
+static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p);
+static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(fs_filed_t *fd, int request, void *data);
@@ -58,10 +59,14 @@ int devfs_dev_release(devfs_dev_t *dev){
 	fs_node_t *node;
 
 
+	klock();
+
 	list_for_each(devfs_root->childs, node){
 		if(((devfs_dev_t*)(node->data)) == dev)
 			break;
 	}
+
+	kunlock();
 
 	if(node == 0x0)
 		return_errno(E_INVAL);
@@ -106,14 +111,14 @@ static int init(void){
 
 kernel_init(2, init);
 
-static int open(fs_node_t *start, char const *path, f_mode_t mode){
+static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p){
 	fs_filed_t *fd;
 	devfs_dev_t *dev;
 
 
 	DEBUG("open device \"%s\"\n", start->name);
 
-	fd = fs_fd_alloc(start);
+	fd = fs_fd_alloc(start, this_p);
 
 	if(fd == 0x0)
 		return errno;
@@ -130,11 +135,11 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode){
 
 
 err:
-	fs_fd_free(fd);
+	fs_fd_free(fd, this_p);
 	return errno;
 }
 
-static int close(fs_filed_t *fd){
+static int close(fs_filed_t *fd, process_t *this_p){
 	devfs_dev_t *dev;
 
 
@@ -145,7 +150,7 @@ static int close(fs_filed_t *fd){
 			return errno;
 	}
 
-	fs_fd_free(fd);
+	fs_fd_free(fd, this_p);
 	return 0;
 }
 

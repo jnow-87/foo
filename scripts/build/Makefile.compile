@@ -104,12 +104,12 @@ endef
 ifeq ($(project_type),c)
 define compile_o_o
 	$(echo) [$(call upper_case,$(1))CC] $@
-	$($(1)cc) $($(1)cflags) -nostdlib -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $(filter %.o,$^) -o $@
+	$($(1)cc) $($(1)cflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $(filter %.o,$^) -o $@
 endef
 else
 define compile_o_o
 	$(echo) [$(call upper_case,$(1))CXX] $@
-	$($(1)cxx) $($(1)cxxflags) -nostdlib -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $(filter %.o,$^) -o $@
+	$($(1)cxx) $($(1)cxxflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $(filter %.o,$^) -o $@
 endef
 endif
 

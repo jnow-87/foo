@@ -17,7 +17,7 @@ typedef void					*addr_t;
 
 /* fixed-width types */
 #ifndef BUILD_HOST
-#if CONFIG_ADDR_WIDTH == 8
+#if CONFIG_REGISTER_WIDTH == 8
 
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
@@ -39,7 +39,7 @@ typedef uint16_t				ptrdiff_t;
 typedef int16_t					sptrdiff_t;
 #define PTRDIFF_T				unsigned int
 
-#elif CONFIG_ADDR_WIDTH == 32 // CONFIG_ADDR_WIDTH
+#elif CONFIG_REGISTER_WIDTH == 32 // CONFIG_REGISTER_WIDTH
 
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
@@ -62,11 +62,11 @@ typedef unsigned long long int	ptrdiff_t;
 typedef long long int			sptrdiff_t;
 #define PTRDIFF_T				unsigned long long int
 
-#else // CONFIG_ADDR_WIDTH
+#else // CONFIG_REGISTER_WIDTH
 
 #error "invalid address width in configuration"
 
-#endif // CONFIG_ADDR_WIDTH
+#endif // CONFIG_REGISTER_WIDTH
 
 #else // BUILD_HOST
 
