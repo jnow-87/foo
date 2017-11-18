@@ -4,6 +4,7 @@
 #include <kernel/sched.h>
 #include <kernel/syscall.h>
 #include <kernel/rootfs.h>
+#include <kernel/lock.h>
 #include <sys/file.h>
 #include <sys/list.h>
 
@@ -45,6 +46,8 @@ static int sc_hdlr_open(void *_p, thread_t const *this_t){
 	fs_node_t *root;
 
 
+	klock();
+
 	/* initials */
 	p = (sc_fs_t*)_p;
 
@@ -62,10 +65,14 @@ static int sc_hdlr_open(void *_p, thread_t const *this_t){
 
 k_ok:
 	p->errno = errno;
+	kunlock();
+
 	return E_OK;
 
 err:
 	p->errno = errno;
+	kunlock();
+
 	return errno;
 }
 
@@ -73,6 +80,8 @@ static int sc_hdlr_close(void *_p, thread_t const *this_t){
 	sc_fs_t *p;
 	fs_filed_t *fd;
 
+
+	klock();
 
 	/* initials */
 	p = (sc_fs_t*)_p;
@@ -92,6 +101,8 @@ static int sc_hdlr_close(void *_p, thread_t const *this_t){
 
 k_ok:
 	p->errno = errno;
+	kunlock();
+
 	return E_OK;
 }
 
@@ -100,6 +111,8 @@ static int sc_hdlr_read(void *_p, thread_t const *this_t){
 	sc_fs_t *p;
 	fs_filed_t *fd;
 
+
+	klock();
 
 	/* initials */
 	p = (sc_fs_t*)_p;
@@ -126,10 +139,14 @@ static int sc_hdlr_read(void *_p, thread_t const *this_t){
 
 k_ok:
 	p->errno = errno;
+	kunlock();
+
 	return E_OK;
 
 err:
 	p->errno = errno;
+	kunlock();
+
 	return errno;
 }
 
@@ -138,6 +155,8 @@ static int sc_hdlr_write(void *_p, thread_t const *this_t){
 	sc_fs_t *p;
 	fs_filed_t *fd;
 
+
+	klock();
 
 	/* initials */
 	p = (sc_fs_t*)_p;
@@ -160,10 +179,14 @@ static int sc_hdlr_write(void *_p, thread_t const *this_t){
 
 k_ok:
 	p->errno = errno;
+	kunlock();
+
 	return E_OK;
 
 err:
 	p->errno = errno;
+	kunlock();
+
 	return errno;
 }
 
@@ -172,6 +195,8 @@ static int sc_hdlr_ioctl(void *_p, thread_t const *this_t){
 	sc_fs_t *p;
 	fs_filed_t *fd;
 
+
+	klock();
 
 	/* initials */
 	p = (sc_fs_t*)_p;
@@ -198,11 +223,15 @@ static int sc_hdlr_ioctl(void *_p, thread_t const *this_t){
 
 k_ok:
 	p->errno = errno;
+	kunlock();
+
 	return E_OK;
 
 
 err:
 	p->errno = errno;
+	kunlock();
+
 	return errno;
 }
 
@@ -211,6 +240,8 @@ static int sc_hdlr_fcntl(void *_p, thread_t const *this_t){
 	sc_fs_t *p;
 	fs_filed_t *fd;
 
+
+	klock();
 
 	/* initials */
 	p = (sc_fs_t*)_p;
@@ -237,10 +268,14 @@ static int sc_hdlr_fcntl(void *_p, thread_t const *this_t){
 
 k_ok:
 	p->errno = errno;
+	kunlock();
+
 	return E_OK;
 
 err:
 	p->errno = errno;
+	kunlock();
+
 	return errno;
 }
 
@@ -249,6 +284,8 @@ static int sc_hdlr_rmnode(void *_p, thread_t const *this_t){
 	sc_fs_t *p;
 	fs_node_t *root;
 
+
+	klock();
 
 	/* initials */
 	p = (sc_fs_t*)_p;
@@ -267,10 +304,14 @@ static int sc_hdlr_rmnode(void *_p, thread_t const *this_t){
 
 k_ok:
 	p->errno = errno;
+	kunlock();
+
 	return E_OK;
 
 err:
 	p->errno = errno;
+	kunlock();
+
 	return errno;
 }
 
@@ -279,6 +320,8 @@ static int sc_hdlr_chdir(void *_p, thread_t const *this_t){
 	sc_fs_t *p;
 	fs_node_t *root;
 
+
+	klock();
 
 	/* initials */
 	p = (sc_fs_t*)_p;
@@ -297,9 +340,13 @@ static int sc_hdlr_chdir(void *_p, thread_t const *this_t){
 
 k_ok:
 	p->errno = errno;
+	kunlock();
+
 	return E_OK;
 
 err:
 	p->errno = errno;
+	kunlock();
+
 	return errno;
 }

@@ -4,6 +4,7 @@
 #include <kernel/devfs.h>
 #include <kernel/kmem.h>
 #include <kernel/kprintf.h>
+#include <kernel/lock.h>
 #include <sys/list.h>
 
 
@@ -58,10 +59,14 @@ int devfs_dev_release(devfs_dev_t *dev){
 	fs_node_t *node;
 
 
+	klock();
+
 	list_for_each(devfs_root->childs, node){
 		if(((devfs_dev_t*)(node->data)) == dev)
 			break;
 	}
+
+	kunlock();
 
 	if(node == 0x0)
 		return_errno(E_INVAL);

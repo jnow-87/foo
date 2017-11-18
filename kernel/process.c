@@ -6,6 +6,7 @@
 #include <kernel/kmem.h>
 #include <kernel/rootfs.h>
 #include <kernel/binloader.h>
+#include <kernel/lock.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
@@ -17,6 +18,8 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	process_t *this_p;
 	thread_t *this_t;
 
+
+	klock();
 
 	/* allocate process structure */
 	this_p = kmalloc(sizeof(process_t));
@@ -54,10 +57,6 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	 */
 #endif // CONFIG_KERNEL_VIRT_MEM
 
-#ifdef CONFIG_KERNEL_SMP
-	mutex_init(&this_p->memory.mtx);
-#endif // CONFIG_KERNEL_SMP
-
 	/* init argument string */
 	this_p->args = kmalloc(strlen(args) + 1);
 
@@ -85,6 +84,8 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	this_p->threads = 0x0;
 	list_add_tail(this_p->threads, this_t);
 
+	kunlock();
+
 	return this_p;
 
 
@@ -98,6 +99,7 @@ err_1:
 	kfree(this_p);
 
 err_0:
+	kunlock();
 	return 0;
 }
 
@@ -107,6 +109,8 @@ void process_destroy(process_t *this_p){
 	fs_filed_t *fd;
 	fs_ops_t *ops;
 
+
+	klock();
 
 	/* destroy all threads */
 	list_for_each(this_p->threads, this_t){
@@ -134,4 +138,6 @@ void process_destroy(process_t *this_p){
 	/* free process */
 	kfree(this_p->name);
 	kfree(this_p);
+
+	kunlock();
 }

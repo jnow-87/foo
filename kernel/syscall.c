@@ -3,6 +3,7 @@
 #include <kernel/kprintf.h>
 #include <kernel/syscall.h>
 #include <kernel/sched.h>
+#include <kernel/lock.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/errno.h>
@@ -14,23 +15,34 @@ sc_hdlr_t sc_map[NSYSCALLS] = { 0x0 };
 
 /* global functions */
 int sc_register(sc_t num, sc_hdlr_t hdlr){
+	klock();
+
 	if(num >= NSYSCALLS)
-		return_errno(E_INVAL);
+		goto_errno(err, E_INVAL);
 
 	if(sc_map[num] != 0x0)
-		return_errno(E_INUSE);
+		goto_errno(err, E_INUSE);
 
 	DEBUG("register handler for syscall %d to %#x\n", num, hdlr);
 	sc_map[num] = hdlr;
 
+	kunlock();
+
 	return E_OK;
+
+
+err:
+	kunlock();
+	return errno;
 }
 
 int sc_release(sc_t num){
 	if(num >= NSYSCALLS)
 		return_errno(E_INVAL);
 
+	klock();
 	sc_map[num] = 0x0;
+	kunlock();
 
 	return E_OK;
 }

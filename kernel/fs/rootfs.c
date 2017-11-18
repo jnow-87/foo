@@ -6,12 +6,14 @@
 #include <kernel/kmem.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
+#include <kernel/lock.h>
 #include <sys/file.h>
 #include <sys/fcntl.h>
 #include <sys/types.h>
 #include <sys/string.h>
 #include <sys/list.h>
 #include <sys/math.h>
+#include <sys/errno.h>
 
 
 /* global variables */
@@ -47,6 +49,8 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 
 	DEBUG("register file system to \"%s\"\n", path);
 
+	klock();
+
 	node = fs_root;
 
 	while(1){
@@ -74,24 +78,35 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 
 			path += n;
 
-			if(*path == 0)
+			if(*path == 0){
+				kunlock();
 				return node;
+			}
+
 			break;
 		}
 	}
 
 
 err:
+	kunlock();
 	return 0x0;
 }
 
 int rootfs_rmdir(fs_node_t *node){
+	klock();
+
 	if(!list_empty(node->childs) || node->data != 0x0)
-		return_errno(E_INUSE);
+		goto_errno(end, E_INUSE);
 
 	DEBUG("release file system from \"%s\"\n", node->name);
 
-	return fs_node_free(node);
+	goto_errno(end, fs_node_free(node));
+
+
+end:
+	kunlock();
+	return errno;
 }
 
 
@@ -244,8 +259,6 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 
 		/* update file pointer */
 		fd->fp++;
-
-		return m;
 	}
 	else{
 		file = fd->node->data;
@@ -260,9 +273,9 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 
 		/* update file pointer */
 		fd->fp += m;
-
-		return m;
 	}
+
+	return m;
 
 
 err:

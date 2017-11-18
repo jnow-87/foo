@@ -6,6 +6,7 @@
 #include <kernel/process.h>
 #include <kernel/kmem.h>
 #include <kernel/rootfs.h>
+#include <kernel/lock.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
@@ -145,8 +146,12 @@ static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	if(e == 0)
 		goto err;
 
+	klock();
+
 	e->thread = this_t;
 	list_add_tail(*queue, e);
+
+	kunlock();
 
 	return E_OK;
 

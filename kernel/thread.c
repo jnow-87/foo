@@ -3,6 +3,7 @@
 #include <kernel/thread.h>
 #include <kernel/kmem.h>
 #include <kernel/page.h>
+#include <kernel/lock.h>
 #include <sys/list.h>
 #include <sys/errno.h>
 
@@ -36,11 +37,14 @@ thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, 
 	if(this_t->stack == 0)
 		goto_errno(err_1, E_NOMEM);
 
+	klock();
 	list_add_tail(this_p->memory.pages, this_t->stack);
+	kunlock();
 
 	/* init thread context */
 	this_t->ctx_lst = 0x0;
-	list_add_tail(this_t->ctx_lst, thread_context_init(this_t, thread_arg));
+	thread_context_enqueue(this_t, thread_context_init(this_t, thread_arg));
+
 
 	if(this_t->ctx_lst == 0)
 		goto_errno(err_2, E_INVAL);
@@ -64,15 +68,19 @@ void thread_destroy(struct thread_t *this_t){
 }
 
 void thread_context_enqueue(thread_t *this_t, thread_context_t *ctx){
+	klock();
 	list_add_tail(this_t->ctx_lst, ctx);
+	kunlock();
 }
 
 thread_context_t *thread_context_dequeue(thread_t *this_t){
 	thread_context_t *ctx;
 
 
+	klock();
 	ctx = list_last(this_t->ctx_lst);
 	list_rm(this_t->ctx_lst, ctx);
+	kunlock();
 
 	return ctx;
 }
