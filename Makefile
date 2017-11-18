@@ -171,7 +171,7 @@ gperfflags := \
 kernel := $(build_tree)/$(kernel_name)
 kernel_deps := kernel/obj.o arch/obj.o driver/obj.o sys/obj.o
 libsys := $(build_tree)/lib/$(lib_name)
-libsys_dep := lib/obj.o sys/obj.o arch/libsys.o
+libsys_dep := lib/obj.o sys/libsys.o arch/libsys.o
 
 sysroot := sysroot
 recent := recent

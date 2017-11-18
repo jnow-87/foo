@@ -1,7 +1,7 @@
 #include <config/config.h>
 #include <arch/arch.h>
 #include <kernel/init.h>
-#include <kernel/kmutex.h>
+#include <kernel/lock.h>
 #include <sys/types.h>
 #include <sys/memblock.h>
 #include <sys/errno.h>
@@ -9,7 +9,6 @@
 
 /* static variables */
 static memblock_t *kernel_heap = 0x0;
-static kmutex_t kmem_mutex = KMUTEX_INITIALISER();
 
 
 /* global functions */
@@ -17,17 +16,17 @@ void *kmalloc(size_t n){
 	void *p;
 
 
-	kmutex_lock(&kmem_mutex);
+	klock();
 	p = memblock_alloc(&kernel_heap, n);
-	kmutex_unlock(&kmem_mutex);
+	kunlock();
 
 	return p;
 }
 
 void kfree(void *addr){
-	kmutex_lock(&kmem_mutex);
+	klock();
 	memblock_free(&kernel_heap, addr);
-	kmutex_unlock(&kmem_mutex);
+	kunlock();
 }
 
 

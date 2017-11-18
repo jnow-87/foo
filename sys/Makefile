@@ -1,7 +1,14 @@
 obj-y := errno.o string.o stream.o memblock.o ringbuf.o
+obj-nobuiltin-y := libsys.o
 hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o
 
 obj-$(CONFIG_KERNEL_SMP) += mutex.o
+
+libsys-y := errno.o string.o stream.o memblock.o ringbuf.o mutex_lib.o
+
+
+# custom rules to generate separate objects files for src files that are reuired by kernel and libsys
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree)/%.c,)
 
 
 ####

@@ -24,6 +24,7 @@
 #include <arch/avr/thread.h>
 #include <arch/avr/process.h>
 #include <arch/avr/syscall.h>
+#include <arch/avr/atomic.h>
 #include <arch/avr/lib.h>
 #include <arch/types.h>
 #include <driver/avr_uart.h>
@@ -100,7 +101,7 @@ static arch_callbacks_common_t const arch_cbs_common = {
 	.timebase_to_time = 0x0,	/* TODO */
 
 	/* atomics */
-	.cas = 0x0,
+	.cas = avr_cas,
 
 	/* core */
 	.core_id = 0x0,

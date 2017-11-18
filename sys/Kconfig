@@ -30,12 +30,3 @@ config PRINTF_LONGDOUBLE
 	bool "Enable support for printf 'L' (long double) specifier"
 	depends on !PRINTF_MINIMAL && !NOFLOAT
 # }}}
-
-#
-# mutex
-#
-# {{{
-config SYS_MUTEX_DEBUG
-	bool "Enable mutex debugging"
-	depends on KERNEL_SMP
-# }}}

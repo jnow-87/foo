@@ -1,8 +1,8 @@
-obj-y := start.o isr.o interrupt.o core.o sched.o thread.o syscall.o
+obj-y := start.o isr.o interrupt.o core.o sched.o thread.o syscall.o atomic.o
 obj-nobuiltin-y := libsys.o
 
 
-libsys-y := core_lib.o lib.o syscall_lib.o
+libsys-y := core_lib.o lib.o syscall_lib.o atomic.o
 
 
 # custom rules to generate separate objects files for src files that are reuired by kernel and libsys
