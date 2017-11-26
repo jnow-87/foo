@@ -80,7 +80,6 @@ typedef struct{
 
 	/* libsys functionality */
 	int (*lib_crt0)(void);
-	int (*lib_main)(int argc, char **argv);
 } arch_callbacks_common_t;
 
 typedef struct{

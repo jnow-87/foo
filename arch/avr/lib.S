@@ -1,11 +1,6 @@
 #include <arch/arch.h>
 
 
-/* external functions */
-.extern main
-.extern exit
-
-
 /* global functions */
 .global avr_lib_crt0
 avr_lib_crt0:
@@ -93,8 +88,3 @@ avr_lib_crt0:
 	ldi		r25, 0
 
 	ret
-
-.global avr_lib_main
-avr_lib_main:
-	XCALL main
-	XCALL exit
