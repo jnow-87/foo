@@ -12,9 +12,14 @@
 
 #elif defined(BUILD_LIBSYS)
 
-// TODO add threading references
-//#include <lib/TODO>
-#define LOCK_ID	(1)
+#include <lib/unistd.h>
+#define LOCK_ID	({ \
+	thread_info_t tinfo; \
+	\
+	\
+	(void)thread_info(&tinfo); \
+	tinfo.tid; \
+})
 
 #else
 #error "invalid build flag"

@@ -1,5 +1,6 @@
 #include <arch/syscall.h>
 #include <arch/thread.h>
+#include <lib/unistd.h>
 #include <sys/string.h>
 #include <sys/errno.h>
 #include <sys/syscall.h>
@@ -148,12 +149,26 @@ thread_id_t thread_create(int (*entry)(void *), void *arg){
 	p.entry = entry;
 	p.arg = arg;
 
-	sc(SC_THREADC, &p);
+	sc(SC_THREADCREATE, &p);
 	errno |= p.errno;
 
 	if(p.errno != E_OK)
 		return 0;
 	return p.tid;
+}
+
+int thread_info(thread_info_t *info){
+	sc_thread_t p;
+
+
+	sc(SC_THREADINFO, &p);
+	errno |= p.errno;
+
+	info->tid = p.tid;
+	info->priority = p.priority;
+	info->affinity = p.affinity;
+
+	return p.errno;
 }
 
 process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
@@ -167,10 +182,21 @@ process_id_t process_create(void *binary, bin_type_t bin_type, char const *name,
 	p.args = args;
 	p.args_len = strlen(args);
 
-	sc(SC_PROCESSC, &p);
+	sc(SC_PROCCREATE, &p);
 	errno |= p.errno;
 
 	if(p.errno != E_OK)
 		return 0;
 	return p.pid;
+}
+
+int process_info(process_info_t *info){
+	sc_process_t p;
+
+	sc(SC_PROCINFO, &p);
+	errno |= p.errno;
+
+	info->pid = p.pid;
+
+	return p.errno;
 }

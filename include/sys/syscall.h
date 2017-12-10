@@ -21,8 +21,10 @@ typedef enum{
 	SC_CHDIR,
 	SC_MALLOC,
 	SC_FREE,
-	SC_THREADC,
-	SC_PROCESSC,
+	SC_THREADCREATE,
+	SC_THREADINFO,
+	SC_PROCCREATE,
+	SC_PROCINFO,
 	NSYSCALLS
 } sc_t;
 
@@ -51,6 +53,9 @@ typedef struct{
 
 	int (*entry)(void *);
 	void *arg;
+
+	unsigned int affinity,
+				 priority;
 
 	int errno;
 } sc_thread_t;
