@@ -11,6 +11,7 @@
 /* global functions */
 thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, void *thread_arg){
 	thread_t *this_t;
+	void *proc_entry;
 
 
 	this_t = kmalloc(sizeof(thread_t));
@@ -42,9 +43,13 @@ thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, 
 	kunlock();
 
 	/* init thread context */
-	this_t->ctx_lst = 0x0;
-	thread_context_enqueue(this_t, thread_context_init(this_t, thread_arg));
+	proc_entry = entry;
 
+	if(tid != 0)
+		proc_entry = list_first(this_p->threads)->entry;
+
+	this_t->ctx_lst = 0x0;
+	thread_context_enqueue(this_t, thread_context_init(this_t, proc_entry, thread_arg));
 
 	if(this_t->ctx_lst == 0)
 		goto_errno(err_2, E_INVAL);

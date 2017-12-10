@@ -1,4 +1,5 @@
 #include <arch/syscall.h>
+#include <arch/thread.h>
 #include <sys/string.h>
 #include <sys/errno.h>
 #include <sys/syscall.h>
@@ -137,4 +138,19 @@ int rmdir(char const *path){
 	if(p.errno != E_OK)
 		return -1;
 	return 0;
+}
+
+thread_id_t thread_create(int (*entry)(void *), void *arg){
+	sc_thread_t p;
+
+
+	p.entry = entry;
+	p.arg = arg;
+
+	sc(SC_THREADC, &p);
+	errno |= p.errno;
+
+	if(p.errno != E_OK)
+		return 0;
+	return p.tid;
 }

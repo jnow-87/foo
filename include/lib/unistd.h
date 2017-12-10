@@ -2,12 +2,14 @@
 #define LIB_UNISTD_H
 
 
+#include <arch/thread.h>
 #include <sys/types.h>
 #include <sys/fcntl.h>
 #include <sys/file.h>
 
 
 /* prototypes */
+// file system
 int open(char const *path, f_mode_t mode);
 int close(int fd);
 
@@ -19,6 +21,9 @@ int fcntl(int fd, int request, void *data, size_t data_len);
 
 int chdir(char const *path);
 int rmdir(char const *path);
+
+// thread control
+thread_id_t thread_create(int (*entry)(void *), void *arg);
 
 
 #endif // LIB_UNISTD_H

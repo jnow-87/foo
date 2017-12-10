@@ -54,7 +54,7 @@ typedef struct{
 	int (*ipi_wake)(ipi_t type, unsigned int core, bool bcast);
 
 	/* threading */
-	thread_context_t * (*thread_context_init)(struct thread_t *this_t, void *thread_arg);
+	thread_context_t * (*thread_context_init)(struct thread_t *this_t, void *proc_entry, void *thread_arg);
 
 	/* terminal I/O */
 	char (*putchar)(char c);

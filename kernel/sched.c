@@ -4,9 +4,11 @@
 #include <kernel/opt.h>
 #include <kernel/sched.h>
 #include <kernel/process.h>
+#include <kernel/thread.h>
 #include <kernel/kmem.h>
 #include <kernel/rootfs.h>
 #include <kernel/lock.h>
+#include <kernel/syscall.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
@@ -23,6 +25,7 @@ typedef struct sched_queue_t{
 
 /* local/static prototypes */
 static int init(void);
+static int sc_hdlr_thread_create(void *p, thread_t const *this_t);
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
 
@@ -66,6 +69,9 @@ static int init(void){
 	process_t *this_p;
 	thread_t *this_t;
 
+
+	/* register syscalls */
+	sc_register(SC_THREADC, sc_hdlr_thread_create);
 
 	/* create kernel process */
 	this_p = kmalloc(sizeof(process_t));
@@ -136,6 +142,43 @@ err:
 }
 
 kernel_init(2, init);
+
+static int sc_hdlr_thread_create(void *_p, thread_t const *this_t){
+	sc_thread_t *p;
+	thread_t *new;
+	process_t *this_p;
+
+
+	p = (sc_thread_t*)_p;
+	this_p = this_t->parent;
+
+	DEBUG("create thread for \"%s\" at %p, arg %p\n", this_p->name, p->entry, p->arg);
+
+	new = thread_create(this_p, list_last(this_p->threads)->tid + 1, p->entry, p->arg);
+
+	if(new == 0x0)
+		goto end;
+
+	klock();
+
+	list_add_tail(this_p->threads, new);
+
+	if(sched_queue_add(&queue_ready, new) != E_OK)
+		goto err;
+
+	kunlock();
+
+	goto end;
+
+err:
+	thread_destroy(new);
+
+end:
+	p->errno = errno;
+	p->tid = (new == 0x0) ? 0 : new->tid;
+
+	return E_OK;
+}
 
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	sched_queue_t *e;

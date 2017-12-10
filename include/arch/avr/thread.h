@@ -26,7 +26,7 @@ typedef uint8_t thread_id_t;
 
 
 /* prototypes */
-thread_context_t *avr_thread_context_init(struct thread_t *this_t, void *thread_arg);
+thread_context_t *avr_thread_context_init(struct thread_t *this_t, void *proc_entry, void *thread_arg);
 
 
 #endif // AVR_THREAD_H
