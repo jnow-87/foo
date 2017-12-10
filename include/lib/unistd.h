@@ -3,6 +3,7 @@
 
 
 #include <arch/thread.h>
+#include <sys/binloader.h>
 #include <sys/types.h>
 #include <sys/fcntl.h>
 #include <sys/file.h>
@@ -24,6 +25,9 @@ int rmdir(char const *path);
 
 // thread control
 thread_id_t thread_create(int (*entry)(void *), void *arg);
+
+// process control
+process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args);
 
 
 #endif // LIB_UNISTD_H

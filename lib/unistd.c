@@ -3,6 +3,7 @@
 #include <sys/string.h>
 #include <sys/errno.h>
 #include <sys/syscall.h>
+#include <sys/binloader.h>
 #include <sys/fcntl.h>
 #include <sys/file.h>
 
@@ -153,4 +154,23 @@ thread_id_t thread_create(int (*entry)(void *), void *arg){
 	if(p.errno != E_OK)
 		return 0;
 	return p.tid;
+}
+
+process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
+	sc_process_t p;
+
+
+	p.binary = binary;
+	p.bin_type = bin_type;
+	p.name = name;
+	p.name_len = strlen(name);
+	p.args = args;
+	p.args_len = strlen(args);
+
+	sc(SC_PROCESSC, &p);
+	errno |= p.errno;
+
+	if(p.errno != E_OK)
+		return 0;
+	return p.pid;
 }

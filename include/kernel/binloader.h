@@ -3,19 +3,12 @@
 
 
 #include <kernel/process.h>
+#include <sys/binloader.h>
 #include <sys/errno.h>
 
 
 /* incomplete types */
 struct process_t;
-
-
-/* types */
-typedef enum{
-	BIN_RAW = 0x0,
-	BIN_ELF,
-	NBINLOADER
-} bin_type_t;
 
 
 /* prototypes */
