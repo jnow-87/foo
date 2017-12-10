@@ -2,6 +2,8 @@
 #define SYS_SYSCALL_H
 
 
+#include <arch/thread.h>
+#include <sys/binloader.h>
 #include <sys/types.h>
 #include <sys/file.h>
 
@@ -19,6 +21,10 @@ typedef enum{
 	SC_CHDIR,
 	SC_MALLOC,
 	SC_FREE,
+	SC_THREADCREATE,
+	SC_THREADINFO,
+	SC_PROCCREATE,
+	SC_PROCINFO,
 	NSYSCALLS
 } sc_t;
 
@@ -41,6 +47,32 @@ typedef struct{
 
 	int errno;
 } sc_fs_t;
+
+typedef struct{
+	thread_id_t tid;
+
+	int (*entry)(void *);
+	void *arg;
+
+	unsigned int affinity,
+				 priority;
+
+	int errno;
+} sc_thread_t;
+
+typedef struct{
+	process_id_t pid;
+
+	void *binary;
+	bin_type_t bin_type;
+
+	char const *name,
+			   *args;
+	size_t name_len,
+		   args_len;
+
+	int errno;
+} sc_process_t;
 
 
 #endif // SYS_SYSCALL_H

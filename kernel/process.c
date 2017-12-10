@@ -58,12 +58,14 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* init argument string */
-	this_p->args = kmalloc(strlen(args) + 1);
+	this_p->args = kmalloc(strlen(name) + 1 + strlen(args) + 1);
 
 	if(this_p->args == 0)
 		goto_errno(err_2, E_NOMEM);
 
-	strcpy(this_p->args, args);
+	strcpy(this_p->args, name);
+	strcpy(this_p->args + strlen(name), " ");
+	strcpy(this_p->args + strlen(name) + 1, args);
 
 	/* init file system handles */
 	this_p->fds = 0x0;
@@ -76,7 +78,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 		goto err_3;
 
 	/* create first thread */
-	this_t = thread_create(this_p, 0, entry, (void*)args);
+	this_t = thread_create(this_p, 0, entry, (void*)this_p->args);
 
 	if(this_t == 0)
 		goto err_3;

@@ -1,10 +1,12 @@
 #include <arch/lib.h>
 #include <lib/init.h>
+#include <lib/stdlib.h>
 #include <sys/compiler.h>
 
 
 /* prototypes */
-int _start(int argc, char **argv) __section(".app_start");
+int main();
+void _start(int (*entry)(void*), void *arg) __section(".app_start");
 
 
 /* extern variables */
@@ -12,21 +14,124 @@ extern init_call_t __lib_init_base[],
 				   __lib_init_end[];
 
 
+/* local/static prototypes */
+static int main_arg(int argc, char *args);
+static int args_split(char *args);
+
+
 /* global functions */
-int _start(int argc, char **argv){
+/**
+ * \brief	Program entry point. Based on the given entry point either the main function
+ * 			or a thread functions is called. If entry is set to _start the main function
+ * 			is called, otherwise the functions specified through entry is called.
+ * 			If the main functions is called program initialisations are performed.
+ *
+ * \param	entry	specify the target function
+ * 					if set to_start the main function is called
+ * 					otherwise the function specified through entry is called
+ *
+ * \param	arg		respective thread argument
+ * 					if entry is set to _start arg is assumed to contain the argument string
+ * 					otherwise arg is passed to the target function as is
+ */
+void _start(int (*entry)(void*), void *arg){
+	int argc;
 	init_call_t *p;
 
 
-	if(lib_crt0() != 0)
-		// TODO handle error through exit()
-		return -1;
+	/* call specified function */
+	if((void*)entry == (void*)_start){
+		// basic initialisation required for target
+		if(lib_crt0() != 0)
+			exit(-1);
 
-	for(p=__lib_init_base; p<__lib_init_end; p++){
-		(void)(*p)();
-		// TODO handle error through exit()
+		// lib initialisation callbacks
+		for(p=__lib_init_base; p<__lib_init_end; p++){
+			if((*p)() != 0)
+				exit(-2);
+		}
+
+		argc = args_split(arg);
+		exit(main_arg(argc, arg));
+	}
+	else{
+		exit((*entry)(arg));
+	}
+}
+
+
+/* local functions */
+static int main_arg(int argc, char *args){
+	char *argv[argc];
+	int i,
+		j;
+
+
+	/* assign argument strings */
+	j = 1;
+	argv[0] = args;
+
+	for(i=0; j<argc; i++){
+		if(args[i] == 0)
+			argv[j++] = args + i + 1;
 	}
 
-	return lib_main(argc, argv);
-	// TODO handle return through exit()
-	// check current target arch implementations
+	/* call */
+	return main(argc, argv);
+}
+
+/**
+ * \brief	Parse argument string args, identifying non-empty strings. Non-empty strings are character
+ * 			sequences that are separated by '\t' or ' ' and quoted character sequences. The function
+ * 			truncates all unquoted '\t' and ' ' and replaces them by a single 0.
+ *
+ * \post	args is a string containing multiple 0 characters used to separate sub-strings
+ *
+ * \param	args	string to be parsed
+ *
+ * \return	number of sub-strings in argc
+ */
+static int args_split(char *args){
+	unsigned int i, j;
+	int argc;
+	char c;
+
+
+
+	argc = 0;
+	j = 0;
+	c = ' ';
+
+	for(i=0; args[i]!=0; i++){
+		if((args[i] == '"' && c == '"')										// end of quoted section
+		|| ((args[i] == ' ' || args[i] == '\t') && c != '"' && c != ' ')	// end of string
+		){
+			args[j++] = 0;
+			argc++;
+
+			c = ' ';
+		}
+		else if(args[i] == '"'){											// start of quoted string
+			c = '"';
+		}
+		else if((args[i] != ' ' && args[i] != '\t') || c != ' '){			// inside string
+			// check for escaped \ and "
+			if(args[i] == '\\' && (args[i + 1] == '\\' || args[i + 1] == '"'))
+				i++;
+
+			args[j++] = args[i];
+
+			// update last character if
+			// not inside a quoted string
+			if(c != '"')
+				c = args[i];
+		}
+	}
+
+	if(j > 0 && args[j - 1] != 0){
+		args[j] = 0;
+		argc++;
+	}
+
+	return argc;
 }
