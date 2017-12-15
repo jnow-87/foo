@@ -1,5 +1,6 @@
 #include <config/config.h>
 #include <arch/interrupt.h>
+#include <arch/syscall.h>
 #include <arch/mem.h>
 #include <kernel/init.h>
 #include <kernel/opt.h>
@@ -31,6 +32,7 @@ static int sc_hdlr_thread_create(void *p, thread_t const *this_t);
 static int sc_hdlr_thread_info(void *p, thread_t const *this_t);
 static int sc_hdlr_process_create(void *p, thread_t const *this_t);
 static int sc_hdlr_process_info(void *p, thread_t const *this_t);
+static int sc_hdlr_sched_yield(void *p, thread_t const *this_t);
 
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
 
@@ -65,22 +67,35 @@ void sched_tick(void){
 	// TODO switch thread or goto sleep
 }
 
-void sched_resched(void){
+void sched_yield(void){
+	int p;
+
+
+	// actual thread switches are only performed in interrupt
+	// service routines as it is required for syscalls
+	sc(SC_SCHEDYIELD, &p);
 }
 
 
 /* local functions */
 static int init(void){
 	unsigned int i;
+	int r;
 	process_t *this_p;
 	thread_t *this_t;
 
 
 	/* register syscalls */
-	sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
-	sc_register(SC_THREADINFO, sc_hdlr_thread_info);
-	sc_register(SC_PROCCREATE, sc_hdlr_process_create);
-	sc_register(SC_PROCINFO, sc_hdlr_process_info);
+	r = 0;
+
+	r |= sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
+	r |= sc_register(SC_THREADINFO, sc_hdlr_thread_info);
+	r |= sc_register(SC_PROCCREATE, sc_hdlr_process_create);
+	r |= sc_register(SC_PROCINFO, sc_hdlr_process_info);
+	r |= sc_register(SC_SCHEDYIELD, sc_hdlr_sched_yield);
+
+	if(r != 0)
+		goto err;
 
 	/* create kernel process */
 	this_p = kmalloc(sizeof(process_t));
@@ -283,4 +298,9 @@ static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 
 err:
 	return_errno(E_NOMEM);
+}
+
+static int sc_hdlr_sched_yield(void *_p, thread_t const *this_t){
+	sched_tick();
+	return E_OK;
 }

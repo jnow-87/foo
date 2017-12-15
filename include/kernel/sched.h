@@ -14,7 +14,7 @@ extern process_t *process_table;
 thread_t const *sched_running(void);
 
 void sched_tick(void);
-void sched_resched(void);
+void sched_yield(void);
 
 
 #endif // KERNEL_SCHED_H

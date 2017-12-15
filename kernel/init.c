@@ -6,6 +6,7 @@
 #include <kernel/panic.h>
 #include <kernel/stat.h>
 #include <kernel/test.h>
+#include <kernel/sched.h>
 #include <sys/escape.h>
 #include <sys/errno.h>
 #include <version.h>
@@ -83,8 +84,8 @@ void kernel(void){
 	/* kernel thread */
 	while(1){
 		// TODO implement kernel thread processing
-		// TODO call sched_resched()
-		core_sleep();
+
+		sched_yield();
 	}
 }
 
