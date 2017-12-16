@@ -1,5 +1,6 @@
 #include <config/config.h>
 #include <arch/interrupt.h>
+#include <arch/syscall.h>
 #include <arch/mem.h>
 #include <kernel/init.h>
 #include <kernel/opt.h>
@@ -10,6 +11,7 @@
 #include <kernel/rootfs.h>
 #include <kernel/lock.h>
 #include <kernel/syscall.h>
+#include <kernel/panic.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
@@ -27,12 +29,19 @@ typedef struct sched_queue_t{
 /* local/static prototypes */
 static int init(void);
 
+static int sc_hdlr_exit(void *p, thread_t const *this_t);
+
 static int sc_hdlr_thread_create(void *p, thread_t const *this_t);
 static int sc_hdlr_thread_info(void *p, thread_t const *this_t);
+static int sc_hdlr_nice(void *p, thread_t const *this_t);
+
 static int sc_hdlr_process_create(void *p, thread_t const *this_t);
 static int sc_hdlr_process_info(void *p, thread_t const *this_t);
 
+static int sc_hdlr_sched_yield(void *p, thread_t const *this_t);
+
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
+static int sched_queue_rm(sched_queue_t **queue, thread_t const *this_t);
 
 
 /* global variables */
@@ -65,22 +74,37 @@ void sched_tick(void){
 	// TODO switch thread or goto sleep
 }
 
-void sched_resched(void){
+void sched_yield(void){
+	int p;
+
+
+	// actual thread switches are only performed in interrupt
+	// service routines as it is required for syscalls
+	sc(SC_SCHEDYIELD, &p);
 }
 
 
 /* local functions */
 static int init(void){
 	unsigned int i;
+	int r;
 	process_t *this_p;
 	thread_t *this_t;
 
 
 	/* register syscalls */
-	sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
-	sc_register(SC_THREADINFO, sc_hdlr_thread_info);
-	sc_register(SC_PROCCREATE, sc_hdlr_process_create);
-	sc_register(SC_PROCINFO, sc_hdlr_process_info);
+	r = 0;
+
+	r |= sc_register(SC_EXIT, sc_hdlr_exit);
+	r |= sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
+	r |= sc_register(SC_THREADINFO, sc_hdlr_thread_info);
+	r |= sc_register(SC_NICE, sc_hdlr_nice);
+	r |= sc_register(SC_PROCCREATE, sc_hdlr_process_create);
+	r |= sc_register(SC_PROCINFO, sc_hdlr_process_info);
+	r |= sc_register(SC_SCHEDYIELD, sc_hdlr_sched_yield);
+
+	if(r != 0)
+		goto err;
 
 	/* create kernel process */
 	this_p = kmalloc(sizeof(process_t));
@@ -152,6 +176,35 @@ err:
 
 kernel_init(2, init);
 
+static int sc_hdlr_exit(void *p, thread_t const *this_t){
+	process_t *this_p;
+
+
+	this_p = this_t->parent;
+
+	DEBUG("thread %s:%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
+
+	klock();
+
+	if(sched_queue_rm(&queue_ready, this_t) != E_OK)
+		kpanic(this_t, "unable to remove thread from sched queue (%d)\n", errno);
+
+	list_rm(this_p->threads, this_t);
+
+	kunlock();
+
+	thread_destroy((thread_t*)this_t);
+
+	if(list_empty(this_p->threads)){
+		list_rm(process_table, this_p);
+		process_destroy(this_p);
+	}
+
+	sched_tick();
+
+	return E_OK;
+}
+
 static int sc_hdlr_thread_create(void *_p, thread_t const *this_t){
 	sc_thread_t *p;
 	thread_t *new;
@@ -200,6 +253,20 @@ static int sc_hdlr_thread_info(void *_p, thread_t const *this_t){
 	p->tid = this_t->tid;
 	p->priority = this_t->priority;
 	p->affinity = this_t->affinity;
+	p->errno = E_OK;
+
+	return E_OK;
+}
+
+static int sc_hdlr_nice(void *_p, thread_t const *this_t){
+	sc_thread_t *p;
+
+
+	p = (sc_thread_t*)_p;
+
+	((thread_t*)this_t)->priority += p->priority;
+
+	p->priority = this_t->priority;
 	p->errno = E_OK;
 
 	return E_OK;
@@ -262,6 +329,11 @@ static int sc_hdlr_process_info(void *_p, thread_t const *this_t){
 	return E_OK;
 }
 
+static int sc_hdlr_sched_yield(void *_p, thread_t const *this_t){
+	sched_tick();
+	return E_OK;
+}
+
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	sched_queue_t *e;
 
@@ -283,4 +355,29 @@ static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 
 err:
 	return_errno(E_NOMEM);
+}
+
+static int sched_queue_rm(sched_queue_t **queue, thread_t const *this_t){
+	sched_queue_t *e;
+
+
+	klock();
+
+	e = list_find(*queue, thread, this_t);
+
+	if(e == 0x0)
+		goto_errno(err, E_INVAL);
+
+	list_rm(*queue, e);
+	kfree(e);
+
+	kunlock();
+
+	return E_OK;
+
+
+err:
+	kunlock();
+
+	return errno;
 }

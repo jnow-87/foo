@@ -1,5 +1,6 @@
 #include <sys/memblock.h>
 #include <sys/list.h>
+#include <sys/errno.h>
 #include <testing/testcase.h>
 
 
@@ -35,11 +36,13 @@ static memblock_t *el0 = (memblock_t*)((void*)el_blk + 0x0),
 
 /* local functions */
 static int tc_memblock_print(int log){
-	tlog(log, "el0 addr: %#x\n", el0);
-	tlog(log, "el1 addr: %#x\n", el1);
-	tlog(log, "el2 addr: %#x\n", el2);
-	tlog(log, "el3 addr: %#x\n", el3);
-	tlog(log, "el4 addr: %#x\n", el4);
+	INIT_EL();
+
+	tlog(log, "el0 addr: %#x, size: %u\n", el0, el0->len);
+	tlog(log, "el1 addr: %#x, size: %u\n", el1, el1->len);
+	tlog(log, "el2 addr: %#x, size: %u\n", el2, el2->len);
+	tlog(log, "el3 addr: %#x, size: %u\n", el3, el3->len);
+	tlog(log, "el4 addr: %#x, size: %u\n", el4, el4->len);
 
 	return 0;
 }
@@ -190,7 +193,7 @@ test_case(tc_memblock_alloc_perfect_fit, "memblock_alloc: perfect fit");
 
 /**
  * \brief	split fit
- * 			pool contains 3 elements, with the 2nd being lare enough to
+ * 			pool contains 3 elements, with the 2nd being large enough to
  * 			satisfy the request and create a new block for additional
  * 			allocations
  *
@@ -270,7 +273,7 @@ static int tc_memblock_free_head_nomerge(int log){
 	list_add_tail(pool, el2);
 
 	/* free */
-	memblock_free(&pool, (void*)el0 + sizeof(memblock_t));
+	n += check_int(log, memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), E_OK);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (linked at head of el2)
@@ -310,7 +313,7 @@ static int tc_memblock_free_head_merge(int log){
 	list_add_tail(pool, el2);
 
 	/* free */
-	memblock_free(&pool, (void*)el0 + sizeof(memblock_t));
+	n += check_int(log, memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), E_OK);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (len merged with el1)
@@ -350,7 +353,7 @@ static int tc_memblock_free_tail_nomerge(int log){
 	list_add_tail(pool, el0);
 
 	/* free */
-	memblock_free(&pool, (void*)el2 + sizeof(memblock_t));
+	n += check_int(log, memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), E_OK);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (el2 linked at back)
@@ -389,7 +392,7 @@ static int tc_memblock_free_tail_merge(int log){
 	list_add_tail(pool, el0);
 
 	/* free */
-	memblock_free(&pool, (void*)el1 + sizeof(memblock_t));
+	n += check_int(log, memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), E_OK);
 
 	/* expected pool: el0 */
 	// check el0 (len merged with el1)
@@ -424,7 +427,7 @@ static int tc_memblock_free_mid_nomerge(int log){
 	list_add_tail(pool, el4);
 
 	/* free */
-	memblock_free(&pool, (void*)el2 + sizeof(memblock_t));
+	n += check_int(log, memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), E_OK);
 
 	/* expected pool: el0 -> el2 -> el4 */
 	// check el0 (el2 linked at back)
@@ -469,7 +472,7 @@ static int tc_memblock_free_mid_frontmerge(int log){
 	list_add_tail(pool, el3);
 
 	/* free */
-	memblock_free(&pool, (void*)el1 + sizeof(memblock_t));
+	n += check_int(log, memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), E_OK);
 
 	/* expected pool: el0 -> el3 */
 	// check el0 (len merged with el1)
@@ -509,7 +512,7 @@ static int tc_memblock_free_mid_backmerge(int log){
 	list_add_tail(pool, el3);
 
 	/* free */
-	memblock_free(&pool, (void*)el2 + sizeof(memblock_t));
+	n += check_int(log, memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), E_OK);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (linked el2 at back)
@@ -548,7 +551,7 @@ static int tc_memblock_free_mid_merge(int log){
 	list_add_tail(pool, el2);
 
 	/* free */
-	memblock_free(&pool, (void*)el1 + sizeof(memblock_t));
+	n += check_int(log, memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), E_OK);
 
 	/* expected pool: el0 */
 	// check el0 (linked el2 at back)
@@ -596,7 +599,7 @@ int tc_memblock_cycle(int log){
 	n += check_ptr(log, pool, 0x0);
 
 	/* free blk2 */
-	memblock_free(&pool, blk2);
+	n += check_int(log, memblock_free(&pool, blk2), E_OK);
 
 	/* expected pool: 1 element */
 	n += check_ptr(log, pool, blk2 - sizeof(memblock_t));
@@ -605,7 +608,7 @@ int tc_memblock_cycle(int log){
 	n += check_ptr(log, pool->next, 0x0);
 
 	/* free blk0 */
-	memblock_free(&pool, blk0);
+	n += check_int(log, memblock_free(&pool, blk0), E_OK);
 
 	/* expected pool: 2 elements */
 	n += check_ptr(log, pool, blk0 - sizeof(memblock_t));
@@ -621,7 +624,7 @@ int tc_memblock_cycle(int log){
 	n += check_ptr(log, pool->next->next, 0x0);
 
 	/* free blk1 */
-	memblock_free(&pool, blk1);
+	n += check_int(log, memblock_free(&pool, blk1), E_OK);
 
 	/* expected pool: 1 element */
 	n += check_ptr(log, pool, blk0 - sizeof(memblock_t));
@@ -633,3 +636,32 @@ int tc_memblock_cycle(int log){
 }
 
 test_case(tc_memblock_cycle, "memblock: entire cycle alloc, free");
+
+
+/**
+ * \brief	double free
+ * 			a previously freed block is freed again
+  *
+ * \return	pool with 2 elements
+ */
+static int tc_memblock_double_free(int log){
+	unsigned int n;
+	memblock_t *pool;
+
+
+	n = 0;
+
+	/* prepare pool: empty */
+	pool = 0x0;
+	INIT_EL();
+
+	/* 1st free of el0 */
+	n += check_int(log, memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), E_OK);
+
+	/* 2nd free of el0 */
+	n += check_int(log, memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), -E_INVAL);
+
+	return -n;
+}
+
+test_case(tc_memblock_double_free, "memblock_free: double free");

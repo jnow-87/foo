@@ -2,6 +2,7 @@
 #include <arch/arch.h>
 #include <kernel/init.h>
 #include <kernel/lock.h>
+#include <kernel/panic.h>
 #include <sys/types.h>
 #include <sys/memblock.h>
 #include <sys/errno.h>
@@ -25,7 +26,10 @@ void *kmalloc(size_t n){
 
 void kfree(void *addr){
 	klock();
-	memblock_free(&kernel_heap, addr);
+
+	if(memblock_free(&kernel_heap, addr) < 0)
+		kpanic(0x0, "double free at %p\n", addr);
+
 	kunlock();
 }
 

@@ -171,6 +171,16 @@ int thread_info(thread_info_t *info){
 	return p.errno;
 }
 
+int nice(int inc){
+	sc_thread_t p;
+
+
+	p.priority = inc;
+	sc(SC_NICE, &p);
+
+	return (p.errno != E_OK) ? p.errno : p.priority;
+}
+
 process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
 	sc_process_t p;
 

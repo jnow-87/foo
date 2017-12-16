@@ -108,11 +108,7 @@ static arch_callbacks_common_t const arch_cbs_common = {
 	.core_sleep = avr_core_sleep,
 
 	/* syscall */
-#ifdef BUILD_KERNEL
-	.sc = 0x0,
-#else
 	.sc = avr_sc,
-#endif // BUILD_KERNEL
 
 	/* main entry */
 #ifdef BUILD_KERNEL

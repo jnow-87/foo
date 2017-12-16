@@ -30,8 +30,8 @@ typedef struct{
 typedef struct process_t{
 	process_id_t  pid;
 
-	unsigned int affinity,
-				 priority;
+	unsigned int affinity;
+	int priority;
 
 	char *name,
 		 *args;

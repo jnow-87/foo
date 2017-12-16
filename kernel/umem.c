@@ -36,7 +36,10 @@ void *umalloc(size_t n){
 
 void ufree(void *addr){
 	klock();
-	memblock_free(&process_mem, addr);
+
+	if(memblock_free(&process_mem, addr) < 0)
+		kpanic(0x0, "double free at %p\n", addr);
+
 	kunlock();
 }
 

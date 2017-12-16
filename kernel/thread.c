@@ -68,7 +68,13 @@ err_0:
 }
 
 void thread_destroy(struct thread_t *this_t){
-	page_free(this_t->parent, this_t->stack);
+	process_t *this_p;
+
+
+	this_p = this_t->parent;
+
+	list_rm(this_p->memory.pages, this_t->stack);
+	page_free(this_p, this_t->stack);
 	kfree(this_t);
 }
 
