@@ -11,6 +11,7 @@
 #include <kernel/rootfs.h>
 #include <kernel/lock.h>
 #include <kernel/syscall.h>
+#include <kernel/panic.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
@@ -28,6 +29,7 @@ typedef struct sched_queue_t{
 /* local/static prototypes */
 static int init(void);
 
+static int sc_hdlr_exit(void *p, thread_t const *this_t);
 static int sc_hdlr_thread_create(void *p, thread_t const *this_t);
 static int sc_hdlr_thread_info(void *p, thread_t const *this_t);
 static int sc_hdlr_process_create(void *p, thread_t const *this_t);
@@ -35,6 +37,7 @@ static int sc_hdlr_process_info(void *p, thread_t const *this_t);
 static int sc_hdlr_sched_yield(void *p, thread_t const *this_t);
 
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
+static int sched_queue_rm(sched_queue_t **queue, thread_t const *this_t);
 
 
 /* global variables */
@@ -88,6 +91,7 @@ static int init(void){
 	/* register syscalls */
 	r = 0;
 
+	r |= sc_register(SC_EXIT, sc_hdlr_exit);
 	r |= sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
 	r |= sc_register(SC_THREADINFO, sc_hdlr_thread_info);
 	r |= sc_register(SC_PROCCREATE, sc_hdlr_process_create);
@@ -166,6 +170,35 @@ err:
 }
 
 kernel_init(2, init);
+
+static int sc_hdlr_exit(void *p, thread_t const *this_t){
+	process_t *this_p;
+
+
+	this_p = this_t->parent;
+
+	DEBUG("thread %s:%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
+
+	klock();
+
+	if(sched_queue_rm(&queue_ready, this_t) != E_OK)
+		kpanic(this_t, "unable to remove thread from sched queue (%d)\n", errno);
+
+	list_rm(this_p->threads, this_t);
+
+	kunlock();
+
+	thread_destroy((thread_t*)this_t);
+
+	if(list_empty(this_p->threads)){
+		list_rm(process_table, this_p);
+		process_destroy(this_p);
+	}
+
+	sched_tick();
+
+	return E_OK;
+}
 
 static int sc_hdlr_thread_create(void *_p, thread_t const *this_t){
 	sc_thread_t *p;
@@ -277,6 +310,11 @@ static int sc_hdlr_process_info(void *_p, thread_t const *this_t){
 	return E_OK;
 }
 
+static int sc_hdlr_sched_yield(void *_p, thread_t const *this_t){
+	sched_tick();
+	return E_OK;
+}
+
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
 	sched_queue_t *e;
 
@@ -300,7 +338,27 @@ err:
 	return_errno(E_NOMEM);
 }
 
-static int sc_hdlr_sched_yield(void *_p, thread_t const *this_t){
-	sched_tick();
+static int sched_queue_rm(sched_queue_t **queue, thread_t const *this_t){
+	sched_queue_t *e;
+
+
+	klock();
+
+	e = list_find(*queue, thread, this_t);
+
+	if(e == 0x0)
+		goto_errno(err, E_INVAL);
+
+	list_rm(*queue, e);
+	kfree(e);
+
+	kunlock();
+
 	return E_OK;
+
+
+err:
+	kunlock();
+
+	return errno;
 }
