@@ -99,7 +99,8 @@ void free(void *p){
 		goto end;
 
 	/* free p */
-	memblock_free(&blk->mem, p);
+	if(memblock_free(&blk->mem, p) < 0)
+		goto end;
 
 	/* return block to the kernel if nothing is allocated on it */
 	if((void*)blk + sizeof(block_t) != blk->mem || list_first(blk->mem) != list_last(blk->mem))
