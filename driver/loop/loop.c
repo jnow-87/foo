@@ -53,7 +53,7 @@ static int init(void){
 
 err:
 	kfree(b);
-	return errno;
+	return -errno;
 }
 
 driver_init(init);

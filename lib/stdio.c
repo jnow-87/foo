@@ -349,7 +349,7 @@ static int init(void){
 	stdout = fopen("/dev/tty0", "w");
 	stderr = fopen("/dev/tty0", "w");
 
-	return errno;
+	return -errno;
 }
 
 lib_init(init);
