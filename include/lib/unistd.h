@@ -39,6 +39,7 @@ int rmdir(char const *path);
 // thread control
 thread_id_t thread_create(int (*entry)(void *), void *arg);
 int thread_info(thread_info_t *info);
+int nice(int inc);
 
 // process control
 process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args);

@@ -30,10 +30,14 @@ typedef struct sched_queue_t{
 static int init(void);
 
 static int sc_hdlr_exit(void *p, thread_t const *this_t);
+
 static int sc_hdlr_thread_create(void *p, thread_t const *this_t);
 static int sc_hdlr_thread_info(void *p, thread_t const *this_t);
+static int sc_hdlr_nice(void *p, thread_t const *this_t);
+
 static int sc_hdlr_process_create(void *p, thread_t const *this_t);
 static int sc_hdlr_process_info(void *p, thread_t const *this_t);
+
 static int sc_hdlr_sched_yield(void *p, thread_t const *this_t);
 
 static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
@@ -94,6 +98,7 @@ static int init(void){
 	r |= sc_register(SC_EXIT, sc_hdlr_exit);
 	r |= sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
 	r |= sc_register(SC_THREADINFO, sc_hdlr_thread_info);
+	r |= sc_register(SC_NICE, sc_hdlr_nice);
 	r |= sc_register(SC_PROCCREATE, sc_hdlr_process_create);
 	r |= sc_register(SC_PROCINFO, sc_hdlr_process_info);
 	r |= sc_register(SC_SCHEDYIELD, sc_hdlr_sched_yield);
@@ -248,6 +253,20 @@ static int sc_hdlr_thread_info(void *_p, thread_t const *this_t){
 	p->tid = this_t->tid;
 	p->priority = this_t->priority;
 	p->affinity = this_t->affinity;
+	p->errno = E_OK;
+
+	return E_OK;
+}
+
+static int sc_hdlr_nice(void *_p, thread_t const *this_t){
+	sc_thread_t *p;
+
+
+	p = (sc_thread_t*)_p;
+
+	((thread_t*)this_t)->priority += p->priority;
+
+	p->priority = this_t->priority;
 	p->errno = E_OK;
 
 	return E_OK;

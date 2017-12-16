@@ -24,6 +24,7 @@ typedef enum{
 	SC_EXIT,
 	SC_THREADCREATE,
 	SC_THREADINFO,
+	SC_NICE,
 	SC_PROCCREATE,
 	SC_PROCINFO,
 	SC_SCHEDYIELD,
@@ -56,8 +57,8 @@ typedef struct{
 	int (*entry)(void *);
 	void *arg;
 
-	unsigned int affinity,
-				 priority;
+	unsigned int affinity;
+	int priority;
 
 	int errno;
 } sc_thread_t;
