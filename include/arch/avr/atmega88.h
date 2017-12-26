@@ -2,6 +2,9 @@
 #define ARCH_ATMEGA88_H
 
 
+#include <sys/const.h>
+
+
 /**
  *	General Purpose Working Registes
  */
@@ -1294,6 +1297,12 @@
 #define INT_ACOMP			23
 #define INT_TWI				24
 #define INT_SPM_RDY			25
+
+
+/**
+ * watchdog frequency
+ */
+#define	WATCHDOG_HZ			_128k
 
 
 #endif // ARCH_ATMEGA88_H
