@@ -41,7 +41,7 @@ typedef enum{
 #endif // CONFIG_KERNEL_MSG_INFO
 
 #ifdef CONFIG_KERNEL_STAT
-#define STAT(fmt, ...)		kprintf(KMSG_STA, fmt, ##__VA_ARGS__)
+#define STAT(fmt, ...)		kprintf(KMSG_STAT, fmt, ##__VA_ARGS__)
 #else
 #define STAT(fmt, ...)
 #endif // CONFIG_KERNEL_STAT

@@ -21,6 +21,7 @@ SECTIONS {
 		*(.rodata1)
 
 		INCLUDE kernel_init.lds
+		INCLUDE kernel_stat.lds
 	} > data_kernel AT>flash_kernel
 
 	__data_start = ADDR(.data);
