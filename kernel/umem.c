@@ -66,7 +66,7 @@ err_1:
 	(void)sc_release(SC_MALLOC);
 
 err_0:
-	return errno;
+	return -errno;
 }
 
 kernel_init(0, init);

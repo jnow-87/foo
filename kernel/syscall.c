@@ -33,7 +33,7 @@ int sc_register(sc_t num, sc_hdlr_t hdlr){
 
 err:
 	kunlock();
-	return errno;
+	return -errno;
 }
 
 int sc_release(sc_t num){

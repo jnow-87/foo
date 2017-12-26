@@ -168,7 +168,7 @@ int thread_info(thread_info_t *info){
 	info->priority = p.priority;
 	info->affinity = p.affinity;
 
-	return p.errno;
+	return -p.errno;
 }
 
 int nice(int inc){
@@ -178,7 +178,7 @@ int nice(int inc){
 	p.priority = inc;
 	sc(SC_NICE, &p);
 
-	return (p.errno != E_OK) ? p.errno : p.priority;
+	return (p.errno != E_OK) ? -p.errno : p.priority;
 }
 
 process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
@@ -208,5 +208,5 @@ int process_info(process_info_t *info){
 
 	info->pid = p.pid;
 
-	return p.errno;
+	return -p.errno;
 }

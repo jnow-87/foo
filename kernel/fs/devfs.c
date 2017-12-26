@@ -72,7 +72,7 @@ int devfs_dev_release(devfs_dev_t *dev){
 		return_errno(E_INVAL);
 
 	if(fs_node_free(node) != E_OK)
-		return errno;
+		return -errno;
 
 	kfree(dev);
 
@@ -96,13 +96,13 @@ static int init(void){
 	devfs_id = fs_register(&ops);
 
 	if(devfs_id < 0)
-		return errno;
+		return -errno;
 
 	/* allocate root node */
 	devfs_root = rootfs_mkdir("/dev", devfs_id);
 
 	if(devfs_root == 0x0)
-		return errno;
+		return -errno;
 
 	devfs_root->ops = fs_root->ops;	// use rootfs callbacks to handle devfs root
 
@@ -121,7 +121,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 	fd = fs_fd_alloc(start, this_p);
 
 	if(fd == 0x0)
-		return errno;
+		return -errno;
 
 	dev = (devfs_dev_t*)start->data;
 
@@ -136,7 +136,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 err:
 	fs_fd_free(fd, this_p);
-	return errno;
+	return -errno;
 }
 
 static int close(fs_filed_t *fd, process_t *this_p){
@@ -147,7 +147,7 @@ static int close(fs_filed_t *fd, process_t *this_p){
 
 	if(dev->ops.close != 0x0){
 		if(dev->ops.close(dev, fd) != E_OK)
-			return errno;
+			return -errno;
 	}
 
 	fs_fd_free(fd, this_p);

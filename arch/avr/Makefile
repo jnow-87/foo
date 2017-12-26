@@ -1,8 +1,11 @@
 obj-y := start.o isr.o interrupt.o core.o sched.o thread.o syscall.o atomic.o
 obj-nobuiltin-y := libsys.o
 
+hostbin-y := avrconfig
+
 
 libsys-y := core_lib.o lib.o syscall_lib.o atomic.o
+avrconfig-y := avrconfig.o
 
 
 # custom rules to generate separate objects files for src files that are reuired by kernel and libsys
@@ -25,6 +28,19 @@ gen_avr_mem_linker_script: $(avr_mem_lds_create)
 
 
 ####
+## AVR config header
+####
+
+avrconfig := $(loc_build_tree)/avrconfig
+avr_config_header := $(dir $(config_header))avrconfig.h
+
+kernel: $(avr_config_header)
+
+$(avr_config_header): $(avrconfig)
+	$(QUTIL)$(avrconfig) $(avr_config_header) $(if $(QBUILD),,-v)
+
+
+####
 ## flags
 ####
 
@@ -38,6 +54,7 @@ endif
 cflags += -Wno-misspelled-isr
 archflags += -mmcu=$(CONFIG_AVR_MCU)
 ldflags += -m$(CONFIG_AVR_ISA) --discard-all
+hostcppflags-y += -I"include/"
 
 ## kernel flags
 ldlibs-kernel-arch := \

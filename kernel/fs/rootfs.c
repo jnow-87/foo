@@ -106,7 +106,7 @@ int rootfs_rmdir(fs_node_t *node){
 
 end:
 	kunlock();
-	return errno;
+	return -errno;
 }
 
 
@@ -129,7 +129,7 @@ static int init(void){
 	rootfs_id = fs_register(&ops);
 
 	if(rootfs_id < 0)
-		return errno;
+		return -errno;
 
 	/* init fs_root */
 	memset(&dummy, 0x0, sizeof(dummy));
@@ -137,7 +137,7 @@ static int init(void){
 	fs_root = fs_node_alloc(&dummy, "/", 1, true, rootfs_id);
 
 	if(fs_root == 0x0)
-		return errno;
+		return -errno;
 
 	fs_root->parent = fs_root;
 
@@ -165,7 +165,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 			fd = fs_fd_alloc(start, this_p);
 
 			if(fd == 0x0)
-				return errno;
+				return -errno;
 
 			if(start->is_dir == false && (mode & O_APPEND))
 				fd->fp = ((rootfs_file_t*)(start->data))->data_used;
@@ -197,7 +197,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), rootfs_id);
 
 			if(start == 0x0)
-				return errno;
+				return -errno;
 
 			// allocate file
 			if(start->is_dir == false){
@@ -215,7 +215,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 err:
 	fs_node_free(start);
-	return errno;
+	return -errno;
 }
 
 static int close(fs_filed_t *fd, process_t *this_p){
@@ -335,7 +335,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 
 	case F_TELL:
 		((seek_t*)data)->pos = fd->fp;
-		return errno;
+		return -errno;
 
 	default:
 		return_errno(E_INVAL);
@@ -445,7 +445,7 @@ static int file_seek(fs_filed_t *fd, seek_t *p){
 	if(p->whence == SEEK_SET)		whence = 0;
 	else if(p->whence == SEEK_CUR)	whence = fd->fp;
 	else if(p->whence == SEEK_END)	whence = file->data_used;
-	else							return E_NOIMP;
+	else							return -E_NOIMP;
 
 	if(whence + p->offset > file->data_used)
 		goto_errno(k_ok, E_LIMIT);

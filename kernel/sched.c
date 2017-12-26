@@ -379,5 +379,5 @@ static int sched_queue_rm(sched_queue_t **queue, thread_t const *this_t){
 err:
 	kunlock();
 
-	return errno;
+	return -errno;
 }

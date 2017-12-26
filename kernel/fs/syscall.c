@@ -73,7 +73,7 @@ err:
 	p->errno = errno;
 	kunlock();
 
-	return errno;
+	return -errno;
 }
 
 static int sc_hdlr_close(void *_p, thread_t const *this_t){
@@ -147,7 +147,7 @@ err:
 	p->errno = errno;
 	kunlock();
 
-	return errno;
+	return -errno;
 }
 
 static int sc_hdlr_write(void *_p, thread_t const *this_t){
@@ -187,7 +187,7 @@ err:
 	p->errno = errno;
 	kunlock();
 
-	return errno;
+	return -errno;
 }
 
 static int sc_hdlr_ioctl(void *_p, thread_t const *this_t){
@@ -232,7 +232,7 @@ err:
 	p->errno = errno;
 	kunlock();
 
-	return errno;
+	return -errno;
 }
 
 static int sc_hdlr_fcntl(void *_p, thread_t const *this_t){
@@ -276,7 +276,7 @@ err:
 	p->errno = errno;
 	kunlock();
 
-	return errno;
+	return -errno;
 }
 
 static int sc_hdlr_rmnode(void *_p, thread_t const *this_t){
@@ -312,7 +312,7 @@ err:
 	p->errno = errno;
 	kunlock();
 
-	return errno;
+	return -errno;
 }
 
 static int sc_hdlr_chdir(void *_p, thread_t const *this_t){
@@ -348,5 +348,5 @@ err:
 	p->errno = errno;
 	kunlock();
 
-	return errno;
+	return -errno;
 }

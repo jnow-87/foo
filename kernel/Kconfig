@@ -344,6 +344,12 @@ endmenu
 #
 # {{{
 menu "Scheduler settigns"
+	config SCHED_HZ
+		int "Scheduler frequency [Hz]"
+
+	config SCHED_ERR_MAX
+		int "Maximal scheduler error [%]"
+
 	config SCHED_PRIO_DEFAULT
 		int "Default process priority"
 		default 0

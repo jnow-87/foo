@@ -41,7 +41,7 @@ static int kuart_init(void){
 
 	for(uart=0; uart<CONFIG_NUM_UART; uart++){
 		if(uart_cbs.config(uart, &kopt.uart_cfg) != E_OK)
-			return errno;
+			return -errno;
 
 		/* save config */
 		uart_cfg[uart] = kopt.uart_cfg;
@@ -87,7 +87,7 @@ err_1:
 	kfree(b);
 
 err_0:
-	return errno;
+	return -errno;
 }
 
 static int init(void){
@@ -97,7 +97,7 @@ static int init(void){
 	for(i=0; i<CONFIG_NUM_UART; i++)
 		_init(i);
 
-	return errno;
+	return -errno;
 }
 
 driver_init(init);
@@ -151,12 +151,12 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 
 	case IOCTL_CFGWR:
 		if(uart_cbs.config(uart, (uart_t*)data) != E_OK)
-			return errno;
+			return -errno;
 
 		uart_cfg[uart] = *((uart_t*)data);
 		return E_OK;
 
 	default:
-		return E_NOIMP;
+		return -E_NOIMP;
 	}
 }

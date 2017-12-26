@@ -2,6 +2,9 @@
 #define ARCH_ATMEGA1284_H
 
 
+#include <sys/const.h>
+
+
 /**
  *	General Purpose Working Registes
  */
@@ -1592,6 +1595,12 @@
 #define INT_TIMER3_COMPA	32
 #define INT_TIMER3_COMPB	33
 #define INT_TIMER3_OVFL		34
+
+
+/**
+ * watchdog frequency
+ */
+#define	WATCHDOG_HZ			_128k
 
 
 #endif // ARCH_ATMEGA1284_H

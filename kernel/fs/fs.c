@@ -48,7 +48,7 @@ int fs_register(fs_ops_t *ops){
 
 err:
 	kunlock();
-	return errno;
+	return -errno;
 }
 
 fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p){
@@ -183,7 +183,7 @@ int fs_node_free(fs_node_t *node){
 
 err:
 	kunlock();
-	return errno;
+	return -errno;
 }
 
 /**
