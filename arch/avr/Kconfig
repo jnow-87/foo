@@ -179,40 +179,6 @@ menu "Hidden"
 		string "Scheduler interrupt"
 		default "INT_WATCHDOG"	if	SCHED_INT_WATCHDOG
 endmenu
-
-choice
-	prompt "Watchdog prescaler"
-
-	config WATCHDOG_PRESCALE_2k
-		bool "2k cycles"
-
-	config WATCHDOG_PRESCALE_4k
-		bool "4k cycles"
-
-	config WATCHDOG_PRESCALE_8k
-		bool "8k cycles"
-
-	config WATCHDOG_PRESCALE_16k
-		bool "16k cycles"
-
-	config WATCHDOG_PRESCALE_32k
-		bool "32k cycles"
-
-	config WATCHDOG_PRESCALE_64k
-		bool "64k cycles"
-
-	config WATCHDOG_PRESCALE_128k
-		bool "128k cycles"
-
-	config WATCHDOG_PRESCALE_256k
-		bool "256k cycles"
-
-	config WATCHDOG_PRESCALE_512k
-		bool "512k cycles"
-
-	config WATCHDOG_PRESCALE_1M
-		bool "1M cycles"
-endchoice
 # }}}
 
 #

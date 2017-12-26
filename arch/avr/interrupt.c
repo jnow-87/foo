@@ -41,7 +41,7 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 		break;
 
 	case CONFIG_SCHED_INT:
-			avr_sched_hdlr();
+		avr_sched_hdlr();
 		break;
 
 	default:
