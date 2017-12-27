@@ -18,7 +18,7 @@ void *kmalloc(size_t n){
 
 
 	klock();
-	p = memblock_alloc(&kernel_heap, n);
+	p = memblock_alloc(&kernel_heap, n, CONFIG_KMALLOC_ALIGN);
 	kunlock();
 
 	return p;

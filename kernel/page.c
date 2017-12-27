@@ -48,7 +48,7 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 	/* allocate virtual block */
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	klock();
-	page->virt_addr = memblock_alloc(&(this_p->memory.addr_space), size);
+	page->virt_addr = memblock_alloc(&(this_p->memory.addr_space), size, CONFIG_KMALLOC_ALIGN);
 	kunlock();
 
 	if(page->virt_addr == 0)

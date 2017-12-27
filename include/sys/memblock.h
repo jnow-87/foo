@@ -25,7 +25,7 @@ typedef struct memblock_t{
 
 /* prototypes */
 int memblock_init(memblock_t *pool, size_t len);
-void *memblock_alloc(memblock_t **pool, size_t n);
+void *memblock_alloc(memblock_t **pool, size_t n, size_t align);
 int memblock_free(memblock_t **pool, void *addr);
 
 

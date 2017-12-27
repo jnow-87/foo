@@ -11,7 +11,7 @@
 #define MAX(x, y)			((x) > (y) ? (x) : (y))
 
 // requires base to be power of 2
-#define ALIGNP2(x, base)	(((x) + (base - 1)) & (~((base) - 1)))
+#define ALIGNP2(x, base)	(((x) + ((base) - 1)) & (~((base) - 1)))
 
 
 /* prototypes */
