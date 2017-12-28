@@ -7,7 +7,7 @@ mconfig-y := zconf.tab.o mconf.o lxdialog/
 
 mconfig-hostldlibs := -lncurses
 mconfig-hostcppflags := -I"$(loc_src_tree)" -I"$(loc_build_tree)" -DYYDEBUG -DCURSES_LOC="<ncurses.h>"
-mconfig-hostcflags := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
+mconfig-hostcflags := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -Wno-missing-field-initializers -Wno-sign-compare -Wno-implicit-fallthrough -Wno-shadow
 mconfig-yaccflags := --name-prefix=zconf
 mconfig-lexflags := --prefix=zconf
 mconfig-gperfflags := -a -C -E -g -k '1,3,$$$$' -p -t
