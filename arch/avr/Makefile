@@ -22,8 +22,9 @@ avr_mem_lds := $(loc_build_tree)/avr_mem.lds
 kernel: gen_avr_mem_linker_script
 init: gen_avr_mem_linker_script
 
-.PHONY: gen_avr_mem_linker_script
-gen_avr_mem_linker_script: $(avr_mem_lds_create)
+gen_avr_mem_linker_script: $(avr_mem_lds)
+
+$(avr_mem_lds): check_configheader $(avr_mem_lds_create)
 	$(QBUILD)$(avr_mem_lds_create) $(config) $(avr_mem_lds)
 
 
@@ -32,12 +33,12 @@ gen_avr_mem_linker_script: $(avr_mem_lds_create)
 ####
 
 avrconfig := $(loc_build_tree)/avrconfig
-avr_config_header := $(dir $(config_header))avrconfig.h
+avrconfig_header := $(dir $(config_header))avrconfig.h
 
-kernel: $(avr_config_header)
+kernel: check_configheader $(avrconfig_header)
 
-$(avr_config_header): $(avrconfig)
-	$(QUTIL)$(avrconfig) $(avr_config_header) $(if $(QBUILD),,-v)
+$(avrconfig_header): check_configheader $(avrconfig)
+	$(QUTIL)$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v)
 
 
 ####

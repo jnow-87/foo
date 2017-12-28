@@ -190,7 +190,6 @@ sysroot_create := scripts/sysroot/create.sh
 ####
 
 # kernel target
-.PHONY: kernel
 kernel: cppflags += -DBUILD_KERNEL
 kernel: check_config check_configheader check_memlayout versionheader $(kernel)
 
@@ -201,12 +200,10 @@ $(kernel): $(addprefix $(build_tree)/, $(kernel_deps))
 	$(call compile_bin_o)
 
 # init target
-.PHONY: init
 init: cppflags += -DBUILD_INIT
 init: check_config check_configheader libsys $(init)
 
 # libsys targets
-.PHONY: libsys
 libsys: cppflags += -DBUILD_LIBSYS
 libsys: check_config check_configheader $(libsys)
 
@@ -289,7 +286,7 @@ docu: fig_svg
 	@make -C $(build_tree)/doc/latex
 	$(echo) "\n\ndocumentation generated at $(build_tree)/doc"
 
-.PHONY:	fig_svg
+.PHONY: fig_svg
 fig_svg: fig_cp $(pdfgraphics)
 
 .PHONY: fig_cp

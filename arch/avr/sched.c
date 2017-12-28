@@ -9,6 +9,10 @@
 #include <sys/const.h>
 
 
+/* macros */
+#define STRVAL(s) STR(s)
+
+
 /* global functions */
 void avr_sched_hdlr(void){
 	static size_t i = 0;
@@ -69,8 +73,8 @@ static int init(void){
 platform_init(0, init);
 
 static void stat(void){
-	STAT("scheduler ticks: %ums (%uHz)\n", 1000 / CONFIG_SCHED_HZ, CONFIG_SCHED_HZ);
-	STAT("scheduler error: %sms\n", AVRCONFIG_SCHED_ERROR_MS);
+	STAT("scheduler ticks: " STRVAL(CONFIG_SCHED_CYCLETIME_US) "us\n");
+	STAT("scheduler error: " STRVAL(AVRCONFIG_SCHED_ERROR_US) "us\n");
 }
 
 kernel_stat(stat);

@@ -348,8 +348,8 @@ endmenu
 #
 # {{{
 menu "Scheduler settigns"
-	config SCHED_HZ
-		int "Scheduler frequency [Hz]"
+	config SCHED_CYCLETIME_US
+		int "Scheduler cycle time [us]"
 
 	config SCHED_ERR_MAX
 		int "Maximal scheduler error [%]"
