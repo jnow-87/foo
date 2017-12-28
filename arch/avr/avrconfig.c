@@ -104,7 +104,7 @@ int config_watchdog(void){
 	err_min = FLT_MAX;
 
 	if(arg.verbose){
-		printf("\ntarget scheduler frequency: %uHz\n", CONFIG_SCHED_HZ);
+		printf("\ntarget scheduler cycle time: %.3fms\n", CONFIG_SCHED_CYCLETIME_US / 1000.0);
 		printf("max. timer error: %u%%\n", CONFIG_SCHED_ERR_MAX);
 		printf("watchdog base clock: %uHz\n", WATCHDOG_HZ);
 		printf("\n%9.9s %19.19s %6.6s %21.21s\n", "", "watchdog   ", "", "error    ");
@@ -115,13 +115,13 @@ int config_watchdog(void){
 	 * between scheduler and watchdog frequency */
 	for(ps=1048576; ps>=2048; ps/=2){
 		// number of watchdog ticks to trigger one scheduler tick
-		mul = (1.0 / CONFIG_SCHED_HZ) / ((float)ps / WATCHDOG_HZ);
+		mul = (CONFIG_SCHED_CYCLETIME_US / 1000000.0) / ((float)ps / WATCHDOG_HZ);
 
 		if(mul == 0)
 			mul = 1;
 
 		// absolute error for the current prescale value
-		err = (1.0 / CONFIG_SCHED_HZ) - (mul * (float)ps / WATCHDOG_HZ);
+		err = (CONFIG_SCHED_CYCLETIME_US / 1000000.0) - (mul * (float)ps / WATCHDOG_HZ);
 
 		// update result if error is lower
 		if(fabs(err) < err_min){
@@ -137,7 +137,7 @@ int config_watchdog(void){
 				(float)ps * 1000 / WATCHDOG_HZ,
 				mul,
 				err * 1000,
-				err * 100 * CONFIG_SCHED_HZ
+				err * 100 * (1000000.0 / CONFIG_SCHED_CYCLETIME_US)
 			);
 	}
 
@@ -145,7 +145,7 @@ int config_watchdog(void){
 		printf("\nselected prescale value: %u\n\n", ps_min);
 
 	/* check result */
-	err_per = err_min * 100 * CONFIG_SCHED_HZ;
+	err_per = err_min * 100 * (1000000.0 / CONFIG_SCHED_CYCLETIME_US);
 
 	if(fabs(err_per) > CONFIG_SCHED_ERR_MAX){
 		fprintf(stderr, "error: scheduler timer error higher than %u%%\n", CONFIG_SCHED_ERR_MAX);
@@ -155,7 +155,7 @@ int config_watchdog(void){
 	/* write config */
 	CONFIG_PRINT(WATCHDOG_PRESCALE, ps_min, "%u");
 	CONFIG_PRINT(SCHED_FACTOR, mul_min, "%u");
-	CONFIG_PRINT(SCHED_ERROR_MS, err_min * 1000, "\"%f\"");
+	CONFIG_PRINT(SCHED_ERROR_US, err_min * 1000000, "%.0f");
 
 	return 0;
 }
