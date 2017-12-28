@@ -6,7 +6,6 @@
 
 /* macros */
 #define MIN_BYTES_USABLE	4
-#define ALIGNMENT			4
 
 
 /* global functions */
@@ -20,7 +19,7 @@ int memblock_init(memblock_t *pool, size_t len){
 	return E_OK;
 }
 
-void *memblock_alloc(memblock_t **pool, size_t n){
+void *memblock_alloc(memblock_t **pool, size_t n, size_t align){
 	memblock_t *free,
 			   *blk;
 
@@ -28,7 +27,10 @@ void *memblock_alloc(memblock_t **pool, size_t n){
 	if(n == 0)
 		return 0x0;
 
-	n = ALIGNP2(n + sizeof(memblock_t), ALIGNMENT);
+	n += sizeof(memblock_t);
+
+	if(align)
+		n = ALIGNP2(n, align);
 
 	/* search for a free block */
 	list_for_each(*pool, blk){

@@ -303,6 +303,10 @@ if KERNEL_NO_VIRT_MEM
 		int "Thread stack size"
 		default 4096
 endif # KERNEL_NO_VIRT_MEM
+
+config KMALLOC_ALIGN
+	int "Alignment to be used for kernel level memory allocators (has to be a power of 2)"
+	default 4
 endmenu
 # }}}
 

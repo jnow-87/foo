@@ -35,14 +35,14 @@ void *malloc(size_t size){
 	/* try to allocate in any of the available blocks */
 	if(cur_block != 0x0){
 		// try allocation on last used block
-		p.p = memblock_alloc(&cur_block->mem, size);
+		p.p = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
 
 		if(p.p != 0x0)
 			goto done;
 
 		// try allocation on any of the available blocks
 		list_for_each(block_lst, cur_block){
-			p.p = memblock_alloc(&cur_block->mem, size);
+			p.p = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
 
 			if(p.p != 0x0)
 				goto done;
@@ -68,7 +68,7 @@ void *malloc(size_t size){
 	cur_block->mem = p.p + sizeof(block_t);
 	memblock_init(cur_block->mem, p.size);
 
-	p.p = memblock_alloc(&cur_block->mem, size);
+	p.p = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
 
 	if(p.p == 0x0)
 		goto err;

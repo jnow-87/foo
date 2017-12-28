@@ -28,7 +28,7 @@ void *umalloc(size_t n){
 
 
 	klock();
-	p = memblock_alloc(&process_mem, n);
+	p = memblock_alloc(&process_mem, n, CONFIG_KMALLOC_ALIGN);
 	kunlock();
 
 	return p;
