@@ -22,8 +22,9 @@ avr_mem_lds := $(loc_build_tree)/avr_mem.lds
 kernel: gen_avr_mem_linker_script
 init: gen_avr_mem_linker_script
 
-.PHONY: gen_avr_mem_linker_script
-gen_avr_mem_linker_script: $(avr_mem_lds_create)
+gen_avr_mem_linker_script: $(avr_mem_lds)
+
+$(avr_mem_lds): check_configheader $(avr_mem_lds_create)
 	$(QBUILD)$(avr_mem_lds_create) $(config) $(avr_mem_lds)
 
 
