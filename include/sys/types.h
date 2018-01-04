@@ -35,8 +35,7 @@ typedef int						ssize_t;
 typedef long long int			intmax_t;
 typedef unsigned long long int	uintmax_t;
 
-typedef uint16_t				ptrdiff_t;
-typedef int16_t					sptrdiff_t;
+typedef int16_t					ptrdiff_t;
 #define PTRDIFF_T				unsigned int
 
 #elif CONFIG_REGISTER_WIDTH == 32 // CONFIG_REGISTER_WIDTH
@@ -58,8 +57,7 @@ typedef long int				ssize_t;
 typedef long long int			intmax_t;
 typedef unsigned long long int	uintmax_t;
 
-typedef unsigned long long int	ptrdiff_t;
-typedef long long int			sptrdiff_t;
+typedef long long int			ptrdiff_t;
 #define PTRDIFF_T				unsigned long long int
 
 #else // CONFIG_REGISTER_WIDTH
@@ -74,7 +72,6 @@ typedef long long int			sptrdiff_t;
 #include <stddef.h>
 
 typedef long int				ssize_t;
-typedef ptrdiff_t				sptrdiff_t;
 #define PTRDIFF_T				unsigned long long int
 
 #endif // BUILD_HOST
