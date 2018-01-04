@@ -90,6 +90,34 @@ static int tc_ringbuf_write(int log){
 
 test_case(tc_ringbuf_write, "ringbuf_write");
 
+static int tc_ringbuf_empty(int log){
+	int n;
+
+
+	n = 0;
+
+	INIT();
+
+	/* initially empty */
+	n += check_int(log, ringbuf_empty(&ring), true);
+
+	/* non-empty */
+	WRITE("dead");
+	n += check_int(log, ringbuf_empty(&ring), false);
+
+	/* still not empty */
+	READ(3);
+	n += check_int(log, ringbuf_empty(&ring), false);
+
+	/* empty again */
+	READ(1);
+	n += check_int(log, ringbuf_empty(&ring), true);
+
+	return -n;
+}
+
+test_case(tc_ringbuf_empty, "ringbuf_empty");
+
 static int tc_ringbuf_full(int log){
 	int n;
 
