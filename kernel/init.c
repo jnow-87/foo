@@ -85,7 +85,7 @@ void kernel(void){
 	while(1){
 		// TODO implement kernel thread processing
 
-		sched_yield();
+		sched_yield(READY);
 	}
 }
 
