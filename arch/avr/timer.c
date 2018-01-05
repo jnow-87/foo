@@ -4,6 +4,7 @@
 #include <kernel/init.h>
 #include <kernel/stat.h>
 #include <kernel/sched.h>
+#include <kernel/timer.h>
 #include <kernel/kprintf.h>
 #include <sys/errno.h>
 #include <sys/const.h>
@@ -14,14 +15,21 @@
 
 
 /* global functions */
-void avr_sched_hdlr(void){
-	static size_t i = 0;
+void avr_timer_hdlr(void){
+	static size_t timer = 0,
+				  sched = 0;
 
 
-	i++;
+	timer++;
+	sched++;
 
-	if(i == AVRCONFIG_SCHED_FACTOR){
-		i = 0;
+	if(timer == AVRCONFIG_KTIMER_FACTOR){
+		timer = 0;
+		ktimer_tick();
+	}
+
+	if(sched == AVRCONFIG_SCHED_FACTOR){
+		sched = 0;
 		sched_tick();
 	}
 }
@@ -73,8 +81,10 @@ static int init(void){
 platform_init(0, init);
 
 static void stat(void){
-	STAT("scheduler ticks: " STRVAL(CONFIG_SCHED_CYCLETIME_US) "us\n");
+	STAT("scheduler cycle time: " STRVAL(CONFIG_SCHED_CYCLETIME_US) "us\n");
 	STAT("scheduler error: " STRVAL(AVRCONFIG_SCHED_ERROR_US) "us\n");
+	STAT("kernel time base: " STRVAL(CONFIG_KTIMER_CYCLETIME_US) "us\n");
+	STAT("kernel time base error: " STRVAL(AVRCONFIG_KTIMER_ERROR_US) "us\n");
 }
 
 kernel_stat(stat);

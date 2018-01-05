@@ -3,7 +3,7 @@
 #include <arch/interrupt.h>
 #include <arch/core.h>
 #include <arch/io.h>
-#include <arch/avr/sched.h>
+#include <arch/avr/timer.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <kernel/thread.h>
@@ -40,8 +40,8 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 		avr_sc_hdlr();
 		break;
 
-	case CONFIG_SCHED_INT:
-		avr_sched_hdlr();
+	case CONFIG_TIMER_INT:
+		avr_timer_hdlr();
 		break;
 
 	default:
