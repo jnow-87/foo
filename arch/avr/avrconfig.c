@@ -9,6 +9,7 @@
 
 
 /* macros */
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define CONFIG_PRINT(var, value, fmt) \
 	fprintf(arg.ofile, "#define AVRCONFIG_" #var " " fmt "\n", (value))
 
@@ -94,19 +95,23 @@ int arg_parse(int argc, char **argv){
 int config_watchdog(void){
 	unsigned int ps,
 				 ps_min,
-				 mul,
-				 mul_min;
+				 mul;
+	float tgt_cycle_time;
 	float err,
 		  err_min,
 		  err_per;
 
 
 	err_min = FLT_MAX;
+	tgt_cycle_time = MIN(CONFIG_SCHED_CYCLETIME_US, CONFIG_KTIMER_CYCLETIME_US);
 
 	if(arg.verbose){
 		printf("\ntarget scheduler cycle time: %.3fms\n", CONFIG_SCHED_CYCLETIME_US / 1000.0);
-		printf("max. timer error: %u%%\n", CONFIG_SCHED_ERR_MAX);
-		printf("watchdog base clock: %uHz\n", WATCHDOG_HZ);
+		printf("target kernel timer cycle time: %.3fms\n", CONFIG_KTIMER_CYCLETIME_US / 1000.0);
+		printf("target cycle: %.3fms\n", tgt_cycle_time / 1000.0);
+		printf("\nmax. scheduler timer error: %u%%\n", CONFIG_SCHED_ERR_MAX);
+		printf("max. kernel timer error: %u%%\n", CONFIG_KTIMER_ERR_MAX);
+		printf("\nwatchdog base clock: %uHz\n", WATCHDOG_HZ);
 		printf("\n%9.9s %19.19s %6.6s %21.21s\n", "", "watchdog   ", "", "error    ");
 		printf("%9.9s %9.9s %9.9s %6.6s %10.10s %10.10s\n", "prescale", "[Hz]", "[ms]", "factor", "[ms]", "%");
 	}
@@ -115,19 +120,18 @@ int config_watchdog(void){
 	 * between scheduler and watchdog frequency */
 	for(ps=1048576; ps>=2048; ps/=2){
 		// number of watchdog ticks to trigger one scheduler tick
-		mul = (CONFIG_SCHED_CYCLETIME_US / 1000000.0) / ((float)ps / WATCHDOG_HZ);
+		mul = (tgt_cycle_time / 1000000.0) / ((float)ps / WATCHDOG_HZ);
 
 		if(mul == 0)
 			mul = 1;
 
 		// absolute error for the current prescale value
-		err = (CONFIG_SCHED_CYCLETIME_US / 1000000.0) - (mul * (float)ps / WATCHDOG_HZ);
+		err = (tgt_cycle_time / 1000000.0) - (mul * (float)ps / WATCHDOG_HZ);
 
 		// update result if error is lower
 		if(fabs(err) < err_min){
 			ps_min = ps;
 			err_min = fabs(err);
-			mul_min = mul;
 		}
 
 		if(arg.verbose)
@@ -137,7 +141,7 @@ int config_watchdog(void){
 				(float)ps * 1000 / WATCHDOG_HZ,
 				mul,
 				err * 1000,
-				err * 100 * (1000000.0 / CONFIG_SCHED_CYCLETIME_US)
+				err * 100 * (1000000.0 / tgt_cycle_time)
 			);
 	}
 
@@ -152,10 +156,28 @@ int config_watchdog(void){
 		return -1;
 	}
 
+	err_per = err_min * 100 * (1000000.0 / CONFIG_KTIMER_CYCLETIME_US);
+
+	if(fabs(err_per) > CONFIG_KTIMER_ERR_MAX){
+		fprintf(stderr, "error: kernel timer error higher than %u%%\n", CONFIG_KTIMER_ERR_MAX);
+		return -1;
+	}
+
 	/* write config */
 	CONFIG_PRINT(WATCHDOG_PRESCALE, ps_min, "%u");
-	CONFIG_PRINT(SCHED_FACTOR, mul_min, "%u");
-	CONFIG_PRINT(SCHED_ERROR_US, err_min * 1000000, "%.0f");
+
+	mul = (CONFIG_SCHED_CYCLETIME_US / 1000000.0) / ((float)ps_min / WATCHDOG_HZ);
+	err = (CONFIG_SCHED_CYCLETIME_US / 1000000.0) - (mul * (float)ps_min / WATCHDOG_HZ);
+
+	CONFIG_PRINT(SCHED_FACTOR, mul, "%u");
+	CONFIG_PRINT(SCHED_ERROR_US, err * 1000000, "%.0f");
+
+	mul = (CONFIG_KTIMER_CYCLETIME_US / 1000000.0) / ((float)ps_min / WATCHDOG_HZ);
+	err = (CONFIG_KTIMER_CYCLETIME_US / 1000000.0) - (mul * (float)ps_min / WATCHDOG_HZ);
+
+	CONFIG_PRINT(KTIMER_FACTOR, mul, "%u");
+	CONFIG_PRINT(KTIMER_ERROR_US, err * 1000000, "%.0f");
+
 
 	return 0;
 }

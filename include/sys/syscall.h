@@ -28,6 +28,7 @@ typedef enum{
 	SC_PROCCREATE,
 	SC_PROCINFO,
 	SC_SCHEDYIELD,
+	SC_SLEEP,
 	NSYSCALLS
 } sc_t;
 
@@ -77,5 +78,11 @@ typedef struct{
 	int errno;
 } sc_process_t;
 
+typedef struct{
+	size_t us,
+		   ms;
+
+	int errno;
+} sc_sleep_t;
 
 #endif // SYS_SYSCALL_H

@@ -162,22 +162,22 @@ endmenu
 # }}}
 
 #
-# scheduler
+# scheduler/timer
 #
 # {{{
 choice
-	prompt "Scheduler interrupt"
+	prompt "Timer interrupt"
 
-	config SCHED_INT_WATCHDOG
+	config TIMER_INT_WATCHDOG
 		bool "WATCHDOG"
 endchoice
 
 menu "Hidden"
 	visible if 0
 
-	config SCHED_INT
-		string "Scheduler interrupt"
-		default "INT_WATCHDOG"	if	SCHED_INT_WATCHDOG
+	config TIMER_INT
+		string "Scheduler/timer interrupt"
+		default "INT_WATCHDOG"	if	TIMER_INT_WATCHDOG
 endmenu
 # }}}
 

@@ -16,8 +16,5 @@
 #define arch_common_call(p, err_ret) \
 	(arch_cbs_common.p == 0) ? (err_ret) : arch_cbs_common.p
 
-#define arch_info(c) \
-	arch_info.c
-
 
 #endif // ARCH_H

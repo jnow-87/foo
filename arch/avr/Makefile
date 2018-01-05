@@ -1,4 +1,4 @@
-obj-y := start.o isr.o interrupt.o core.o sched.o thread.o syscall.o atomic.o
+obj-y := start.o isr.o interrupt.o core.o timer.o thread.o syscall.o atomic.o
 obj-nobuiltin-y := libsys.o
 
 hostbin-y := avrconfig

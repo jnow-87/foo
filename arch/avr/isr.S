@@ -13,7 +13,7 @@
 			.global	__vector_\num
 			XJMP	__isr_syscall
 
-		.elseif (\num == CONFIG_SCHED_INT)
+		.elseif (\num == CONFIG_TIMER_INT)
 			.global	__vector_\num
 			XJMP	__isr_sched
 
@@ -105,7 +105,7 @@ __isr_syscall:
 .global __isr_sched
 __isr_sched:
 	push	r31
-	ldi		r31, CONFIG_SCHED_INT
+	ldi		r31, CONFIG_TIMER_INT
 	sts		int_num, r31
 	XJMP	__int_hdlr_call
 

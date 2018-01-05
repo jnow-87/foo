@@ -210,3 +210,15 @@ int process_info(process_info_t *info){
 
 	return -p.errno;
 }
+
+int sleep(size_t ms, size_t us){
+	sc_sleep_t p;
+
+
+	p.us = us;
+	p.ms = ms;
+	sc(SC_SLEEP, &p);
+	errno |= p.errno;
+
+	return -p.errno;
+}

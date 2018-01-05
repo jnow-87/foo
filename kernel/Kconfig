@@ -365,6 +365,20 @@ endmenu
 # }}}
 
 #
+# timer
+#
+# {{{
+menu "Timer settings"
+	config KTIMER_CYCLETIME_US
+		int "Kernel timer cycle time [us]"
+
+	config KTIMER_ERR_MAX
+		int "Maximal kernel timer error [%]"
+
+endmenu
+# }}}
+
+#
 # file system
 #
 # {{{
