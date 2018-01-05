@@ -40,47 +40,101 @@ static int sc_hdlr_process_info(void *p, thread_t const *this_t);
 
 static int sc_hdlr_sched_yield(void *p, thread_t const *this_t);
 
-static int sched_queue_add(sched_queue_t **queue, thread_t *this_t);
-static int sched_queue_rm(sched_queue_t **queue, thread_t const *this_t);
-
 
 /* global variables */
 process_t *process_table = 0;
 
 
 /* static variables */
-static thread_t *current_thread[CONFIG_NCORES] = { 0x0 };
-static sched_queue_t *queue_ready = 0,
-					 *queue_waiting = 0;
+static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
 
 
 /* global functions */
+int sched_enqueue(thread_t *this_t, thread_state_t queue){
+	sched_queue_t *e;
+
+
+	if(queue == CREATED)
+		return_errno(E_INVAL);
+
+	klock();
+
+	if(this_t->state == CREATED){
+		e = kmalloc(sizeof(sched_queue_t));
+
+		if(e == 0x0)
+			goto err;
+
+		e->thread = this_t;
+	}
+	else{
+		e = list_find(sched_queues[this_t->state], thread, this_t);
+
+		if(e == 0x0)
+			kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
+
+		list_rm(sched_queues[this_t->state], e);
+	}
+
+	list_add_tail(sched_queues[queue], e);
+	this_t->state = queue;
+
+	kunlock();
+
+	return E_OK;
+
+
+err:
+	kunlock();
+
+	return_errno(E_NOMEM);
+}
+
 thread_t const *sched_running(void){
-	return current_thread[PIR];
+	sched_queue_t *e;
+
+
+#ifdef CONFIG_KERNEL_SMP
+	list_for_each(sched_queues[RUNNING], e){
+		if(e->thread->affinity & (0x1 << PIR))
+			return e->thread;
+	}
+
+	e = 0x0;
+#else
+	e = list_first(sched_queues[RUNNING]);
+#endif // CONFIG_KERNEL_SMP
+
+	if(e == 0x0)
+		kpanic(0x0, "no running thread\n");
+
+	return e->thread;
 }
 
 void sched_tick(void){
-	static sched_queue_t *e = 0;
+	thread_t *t;
 
+
+	klock();
 
 	/* temporary simple thread select */
-	if(e == 0)
-		e = list_first(queue_ready);
+	t = (thread_t*)sched_running();
+	(void)sched_enqueue(t, READY);
 
-	current_thread[PIR] = e->thread;
-	e = e->next;
+	t = list_first(sched_queues[READY])->thread;
+
+	(void)sched_enqueue(t, RUNNING);
+
+	kunlock();
 
 	// TODO check for next thread
 	// TODO switch thread or goto sleep
 }
 
-void sched_yield(void){
-	int p;
-
-
+void sched_yield(thread_state_t target){
 	// actual thread switches are only performed in interrupt
 	// service routines as it is required for syscalls
-	sc(SC_SCHEDYIELD, &p);
+	sc(SC_SCHEDYIELD, &target);
 }
 
 
@@ -142,12 +196,11 @@ static int init(void){
 								// since the kernel has a separate memory management
 
 		list_add_tail(this_p->threads, this_t);
-		current_thread[i] = this_t;
 	}
 
 	// add kernel threads to ready queue
 	list_for_each(this_p->threads, this_t){
-		if(sched_queue_add(&queue_ready, this_t) != E_OK)
+		if(sched_enqueue(this_t, RUNNING) != E_OK)
 			goto err;
 	}
 
@@ -161,7 +214,7 @@ static int init(void){
 	list_add_tail(process_table, this_p);
 
 	// add first thread to ready queue
-	if(sched_queue_add(&queue_ready, this_p->threads) != E_OK)
+	if(sched_enqueue(this_p->threads, READY) != E_OK)
 		goto err;
 
 	return E_OK;
@@ -178,16 +231,24 @@ kernel_init(2, init);
 
 static int sc_hdlr_exit(void *p, thread_t const *this_t){
 	process_t *this_p;
+	sched_queue_t *e;
 
 
 	this_p = this_t->parent;
 
 	DEBUG("thread %s:%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
 
+	sched_tick();
+
 	klock();
 
-	if(sched_queue_rm(&queue_ready, this_t) != E_OK)
-		kpanic(this_t, "unable to remove thread from sched queue (%d)\n", errno);
+	e = list_find(sched_queues[this_t->state], thread, this_t);
+
+	if(e == 0x0)
+		kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
+
+	list_rm(sched_queues[this_t->state], e);
+	kfree(e);
 
 	list_rm(this_p->threads, this_t);
 
@@ -199,8 +260,6 @@ static int sc_hdlr_exit(void *p, thread_t const *this_t){
 		list_rm(process_table, this_p);
 		process_destroy(this_p);
 	}
-
-	sched_tick();
 
 	return E_OK;
 }
@@ -225,7 +284,7 @@ static int sc_hdlr_thread_create(void *_p, thread_t const *this_t){
 
 	list_add_tail(this_p->threads, new);
 
-	if(sched_queue_add(&queue_ready, new) != E_OK)
+	if(sched_enqueue(new, READY) != E_OK)
 		goto err;
 
 	kunlock();
@@ -298,7 +357,7 @@ static int sc_hdlr_process_create(void *_p, thread_t const *this_t){
 
 	list_add_tail(process_table, new);
 
-	if(sched_queue_add(&queue_ready, new->threads) != E_OK)
+	if(sched_enqueue(list_first(new->threads), READY) != E_OK)
 		goto err;
 
 	kunlock();
@@ -329,55 +388,18 @@ static int sc_hdlr_process_info(void *_p, thread_t const *this_t){
 	return E_OK;
 }
 
-static int sc_hdlr_sched_yield(void *_p, thread_t const *this_t){
+static int sc_hdlr_sched_yield(void *p, thread_t const *this_t){
+	thread_state_t target;
+
+
+	target = *((thread_state_t*)p);
+
 	sched_tick();
-	return E_OK;
-}
 
-static int sched_queue_add(sched_queue_t **queue, thread_t *this_t){
-	sched_queue_t *e;
-
-
-	e = kmalloc(sizeof(sched_queue_t));
-
-	if(e == 0)
-		goto err;
-
-	klock();
-
-	e->thread = this_t;
-	list_add_tail(*queue, e);
-
-	kunlock();
+	if(this_t->state != RUNNING){
+		if(sched_enqueue((thread_t*)this_t, target) != E_OK)
+			WARN("error moving thread %s:%u to qeueue %u\n", this_t->parent->name, this_t->tid, target);
+	}
 
 	return E_OK;
-
-
-err:
-	return_errno(E_NOMEM);
-}
-
-static int sched_queue_rm(sched_queue_t **queue, thread_t const *this_t){
-	sched_queue_t *e;
-
-
-	klock();
-
-	e = list_find(*queue, thread, this_t);
-
-	if(e == 0x0)
-		goto_errno(err, E_INVAL);
-
-	list_rm(*queue, e);
-	kfree(e);
-
-	kunlock();
-
-	return E_OK;
-
-
-err:
-	kunlock();
-
-	return -errno;
 }

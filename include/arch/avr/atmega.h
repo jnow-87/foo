@@ -27,8 +27,11 @@
 #include <arch/avr/atomic.h>
 #include <arch/avr/lib.h>
 #include <arch/types.h>
-#include <driver/avr_uart.h>
 #include <sys/types.h>
+
+#ifdef BUILD_KERNEL
+#include <driver/avr_uart.h>
+#endif // BUILD_KERNEL
 
 #endif // __x86_64__
 #endif // _x86_

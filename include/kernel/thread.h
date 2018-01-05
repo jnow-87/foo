@@ -4,6 +4,7 @@
 
 #include <arch/thread.h>
 #include <kernel/process.h>
+#include <sys/thread.h>
 #include <sys/errno.h>
 
 
@@ -17,14 +18,6 @@ struct page_t;
 
 
 /* types */
-typedef enum{
-	CREATED = 1,
-	READY,
-	WAITING,
-	RUNNING,
-	FINISHED
-} thread_state_t;
-
 typedef struct thread_t{
 	thread_id_t tid;
 

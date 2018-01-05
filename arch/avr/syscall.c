@@ -23,8 +23,11 @@ typedef struct{
 
 /* global functions */
 void avr_sc(sc_t num, void *param, size_t psize){
-	static volatile avr_sc_arg_t arg;
+	volatile avr_sc_arg_t arg;
 
+
+	/* clear interrupts */
+	asm volatile("cli");
 
 	/* prepare paramter */
 	arg.num = num;
@@ -36,7 +39,6 @@ void avr_sc(sc_t num, void *param, size_t psize){
 	mreg_w(GPIOR1, hi8(&arg));
 
 	/* trigger syscall */
-	asm volatile("cli");
 	SYSCALL(INT_VEC_SC);
 }
 

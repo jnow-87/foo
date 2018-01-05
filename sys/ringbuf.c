@@ -35,6 +35,10 @@ size_t ringbuf_write(ringbuf_t *buf, void *data, size_t n){
 	return i;
 }
 
+bool ringbuf_empty(ringbuf_t *buf){
+	return ((buf->rd + 1) % buf->size != buf->wr) ? false : true;
+}
+
 bool ringbuf_full(ringbuf_t *buf){
 	return buf->wr == buf->rd ? true : false;
 }

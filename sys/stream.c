@@ -18,7 +18,7 @@
 #define INTTYPE		ssize_t
 #define UINTTYPE	size_t
 #elif defined(CONFIG_PRINTF_PTRDIFF)
-#define INTTYPE		sptrdiff_t
+#define INTTYPE		ptrdiff_t
 #define UINTTYPE	ptrdiff_t
 #else
 #define INTTYPE		int
@@ -112,7 +112,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 #endif // CONFIG_PRINTF_SIZET
 
 #ifdef CONFIG_PRINTF_PTRDIFF
-		sptrdiff_t pd;
+		ptrdiff_t pd;
 #endif // CONFIG_PRINTF_PTRDIFF
 
 #ifdef FLOATTYPE
@@ -142,7 +142,6 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 		}
 
 		fp = ++format;
-
 
 		memset(&v, 0x0, sizeof(v));
 
