@@ -2,6 +2,9 @@
 #define SYS_UART_H
 
 
+#include <sys/types.h>
+
+
 /* types */
 typedef enum{
 	BR_2400 = 2400,
@@ -43,6 +46,8 @@ typedef struct{
 	stopb_t stopb;
 	parity_t parity;
 	csize_t csize;
+
+	bool blocking;
 
 	bool data_overrun,
 		 parity_err,

@@ -1,6 +1,7 @@
 #include <arch/interrupt.h>
 #include <arch/avr/interrupt.h>
 #include <arch/avr/register.h>
+#include <kernel/signal.h>
 #include <driver/uart.h>
 #include <driver/avr_uart.h>
 #include <sys/uart.h>
@@ -139,17 +140,19 @@ static void rx_hdlr(uint8_t uart){
 		if(err)
 			continue;
 
-		if(ringbuf_write(uart_rx_buf + uart, &c, 1) != 1)
+		if(ringbuf_write(&uarts[uart].rx_buf, &c, 1) != 1)
 			err |= (0x1 << UCSR0A_RXC);	// use UCSR0A non-error flag to signal buffer overrun
 	}
 
 	/* update error */
 	if(err){
-		uart_rx_err[uart] |= err;
+		uarts[uart].rx_err |= err;
 
-		uart_cfg[uart].frame_err |= bits(err, UCSR0A_FE, 0x1);
-		uart_cfg[uart].data_overrun |= bits(err, UCSR0A_DOR, 0x1);
-		uart_cfg[uart].parity_err |= bits(err, UCSR0A_UPE, 0x1);
-		uart_cfg[uart].rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
+		uarts[uart].cfg.frame_err |= bits(err, UCSR0A_FE, 0x1);
+		uarts[uart].cfg.data_overrun |= bits(err, UCSR0A_DOR, 0x1);
+		uarts[uart].cfg.parity_err |= bits(err, UCSR0A_UPE, 0x1);
+		uarts[uart].cfg.rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
 	}
+
+	ksignal_send(&uarts[uart].rx_rdy);
 }

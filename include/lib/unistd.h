@@ -5,7 +5,6 @@
 #include <arch/thread.h>
 #include <sys/binloader.h>
 #include <sys/types.h>
-#include <sys/fcntl.h>
 #include <sys/file.h>
 
 

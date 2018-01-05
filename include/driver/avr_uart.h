@@ -2,7 +2,6 @@
 #define DRIVER_AVR_UART_H
 
 
-#include <driver/uart.h>
 #include <sys/uart.h>
 
 

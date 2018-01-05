@@ -3,6 +3,8 @@
 #include <kernel/opt.h>
 #include <kernel/devfs.h>
 #include <kernel/kmem.h>
+#include <kernel/signal.h>
+#include <driver/uart.h>
 #include <sys/ringbuf.h>
 #include <sys/uart.h>
 #include <sys/errno.h>
@@ -21,12 +23,8 @@ extern uart_cbs_t uart_cbs;
 
 
 /* global variables */
-// configurations
-uart_t uart_cfg[CONFIG_NUM_UART] = {{ 0 }};
-
-// receiver buffer
-ringbuf_t uart_rx_buf[CONFIG_NUM_UART] = {{ 0 }};
-unsigned int uart_rx_err[CONFIG_NUM_UART] = { 0 };
+// uarts
+kuart_t uarts[CONFIG_NUM_UART] = { 0 };
 
 
 /* static variables */
@@ -36,15 +34,15 @@ static devfs_dev_t *devs[CONFIG_NUM_UART] = { 0 };
 
 /* local functions */
 static int kuart_init(void){
-	unsigned int uart;
+	unsigned int i;
 
 
-	for(uart=0; uart<CONFIG_NUM_UART; uart++){
-		if(uart_cbs.config(uart, &kopt.uart_cfg) != E_OK)
+	for(i=0; i<CONFIG_NUM_UART; i++){
+		if(uart_cbs.config(i, &kopt.uart_cfg) != E_OK)
 			return -errno;
 
 		/* save config */
-		uart_cfg[uart] = kopt.uart_cfg;
+		uarts[i].cfg = kopt.uart_cfg;
 	}
 
 	return E_OK;
@@ -58,13 +56,16 @@ static int _init(unsigned int uart){
 	devfs_ops_t ops;
 
 
-	/* allocate buffers */
+	/* init uart */
 	b = kmalloc(CONFIG_UART_RX_BUFSIZE);
 
 	if(b == 0x0)
 		goto err_0;
 
-	ringbuf_init(uart_rx_buf + uart, b, CONFIG_UART_RX_BUFSIZE);
+	ringbuf_init(&uarts[uart].rx_buf, b, CONFIG_UART_RX_BUFSIZE);
+
+	uarts[uart].rx_err = 0;
+	ksignal_init(&uarts[uart].rx_rdy);
 
 	/* register device */
 	ops.open = 0x0;
@@ -108,14 +109,17 @@ static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 	uart = (unsigned int)(dev->data);
 
-	if(uart_rx_err[uart]){
+	if(uarts[uart].rx_err){
 		errno = E_IO;
-		uart_rx_err[uart] = 0;
+		uarts[uart].rx_err = 0;
 
 		return 0;
 	}
 
-	return ringbuf_read(uart_rx_buf + uart, buf, n);
+	if(uarts[uart].cfg.blocking && ringbuf_empty(&uarts[uart].rx_buf))
+		ksignal_wait(&uarts[uart].rx_rdy);
+
+	return ringbuf_read(&uarts[uart].rx_buf, buf, n);
 }
 
 static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
@@ -137,15 +141,15 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, uart_cfg + uart, sizeof(uart_t));
+		memcpy(data, &uarts[uart].cfg, sizeof(uart_t));
 
 		// reset error flags
-		uart_cfg[uart].frame_err = 0;
-		uart_cfg[uart].data_overrun = 0;
-		uart_cfg[uart].parity_err = 0;
-		uart_cfg[uart].rx_queue_full = 0;
+		uarts[uart].cfg.frame_err = 0;
+		uarts[uart].cfg.data_overrun = 0;
+		uarts[uart].cfg.parity_err = 0;
+		uarts[uart].cfg.rx_queue_full = 0;
 
-		uart_rx_err[uart] = 0;
+		uarts[uart].rx_err = 0;
 
 		return E_OK;
 
@@ -153,7 +157,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 		if(uart_cbs.config(uart, (uart_t*)data) != E_OK)
 			return -errno;
 
-		uart_cfg[uart] = *((uart_t*)data);
+		uarts[uart].cfg = *((uart_t*)data);
 		return E_OK;
 
 	default:
