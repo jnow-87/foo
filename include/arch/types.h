@@ -35,6 +35,9 @@ struct thread_t;
 
 typedef struct{
 	/* core */
+	int (*core_id)(void);
+	void (*core_sleep)(void);
+
 	void (*core_panic)(thread_context_t const *tc);
 
 	/* virtual memory management */
@@ -71,21 +74,12 @@ typedef struct{
 	/* atomics */
 	int (*cas)(volatile int *v, int old, int new);
 
-	/* core */
-	int (*core_id)(void);
-	void (*core_sleep)(void);
-
 	/* syscall */
 	void (*sc)(sc_t num, void *param, size_t psize);
 
 	/* libsys functionality */
 	int (*lib_crt0)(void);
 } arch_callbacks_common_t;
-
-typedef struct{
-	uint16_t core_clock_khz;
-	uint16_t timebase_clock_khz;
-} arch_info_t;
 
 
 #endif

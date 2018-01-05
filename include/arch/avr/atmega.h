@@ -65,6 +65,8 @@
 
 static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	/* core */
+	.core_id = 0x0,
+	.core_sleep = avr_core_sleep,
 	.core_panic = avr_core_panic,
 
 	/* virtual memory management */
@@ -106,10 +108,6 @@ static arch_callbacks_common_t const arch_cbs_common = {
 	/* atomics */
 	.cas = avr_cas,
 
-	/* core */
-	.core_id = 0x0,
-	.core_sleep = avr_core_sleep,
-
 	/* syscall */
 	.sc = avr_sc,
 
@@ -119,12 +117,6 @@ static arch_callbacks_common_t const arch_cbs_common = {
 #else
 	.lib_crt0 = avr_lib_crt0,
 #endif // BUILD_KERNEL
-};
-
-// architecture info
-static arch_info_t const arch_info = {
-	.core_clock_khz = CONFIG_CORE_CLOCK_HZ / 1000,
-	.timebase_clock_khz = 0x0,
 };
 
 #endif // _x86_
