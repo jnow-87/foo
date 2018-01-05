@@ -8,6 +8,11 @@
 #include <sys/file.h>
 
 
+/* macros */
+#define msleep(ms)	sleep(ms, 0)
+#define usleep(us)	sleep(0, us)
+
+
 /* types */
 typedef struct{
 	process_id_t pid;
@@ -43,6 +48,9 @@ int nice(int inc);
 // process control
 process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args);
 int process_info(process_info_t *info);
+
+// sleep
+int sleep(size_t ms, size_t us);
 
 
 #endif // LIB_UNISTD_H
