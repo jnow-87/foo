@@ -223,6 +223,8 @@ ifeq ("$(use_config_sys)","y")
 
     fixdep := $(QBUILD)$(fixdep)
 
+-include $(config_header).d
+
 configtools: do_basic := y
 configtools: $(config_tools)
 

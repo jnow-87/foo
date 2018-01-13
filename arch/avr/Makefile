@@ -33,7 +33,7 @@ $(avr_mem_lds): check_configheader $(avr_mem_lds_create)
 avrconfig := $(loc_build_tree)/avrconfig/avrconfig
 avrconfig_header := $(dir $(config_header))avrconfig.h
 
-kernel: check_configheader $(avrconfig_header)
+kernel: $(avrconfig_header)
 
 $(avrconfig_header): check_configheader $(avrconfig)
 	$(QUTIL)$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v)
@@ -122,7 +122,7 @@ fuse:
 	$(CONFIG_AVR_FUSER) $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_TYPE) $(CONFIG_AVR_PROG_PORT)
 
 .PHONY: flash
-flash: kernel init sysroot
+flash: all
 	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(init)
 	sleep 3; $(CONFIG_AVR_PROG) -D -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(kernel)
 
