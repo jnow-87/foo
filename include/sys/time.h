@@ -2,9 +2,11 @@
 #define SYS_TIME_H
 
 
+#include <sys/types.h>
+
+
 /* macros */
-#define TIME_INITIALISER \
-	{ \
+#define TIME_INITIALISER{ \
 		.s = 0, \
 		.ms = 0, \
 		.us = 0 \
@@ -13,9 +15,9 @@
 
 /* types */
 typedef struct{
-	int s,
-		ms,
-		us;
+	uint32_t s;
+	size_t ms,
+		   us;
 } time_t;
 
 
