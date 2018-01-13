@@ -212,11 +212,12 @@ int process_info(process_info_t *info){
 }
 
 int sleep(size_t ms, size_t us){
-	sc_sleep_t p;
+	sc_time_t p;
 
 
-	p.us = us;
-	p.ms = ms;
+	p.time.us = us;
+	p.time.ms = ms;
+
 	sc(SC_SLEEP, &p);
 	errno |= p.errno;
 

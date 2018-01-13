@@ -81,5 +81,10 @@ typedef struct{
 	int (*lib_crt0)(void);
 } arch_callbacks_common_t;
 
+typedef struct{
+	int kernel_timer_err_us,
+		sched_timer_err_us;
+} arch_info_t;
+
 
 #endif

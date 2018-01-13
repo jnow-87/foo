@@ -4,6 +4,7 @@
 
 #include <arch/thread.h>
 #include <sys/binloader.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/file.h>
 
@@ -29,6 +30,7 @@ typedef enum{
 	SC_PROCINFO,
 	SC_SCHEDYIELD,
 	SC_SLEEP,
+	SC_TIME,
 	NSYSCALLS
 } sc_t;
 
@@ -79,10 +81,10 @@ typedef struct{
 } sc_process_t;
 
 typedef struct{
-	size_t us,
-		   ms;
+	time_t time;
 
 	int errno;
-} sc_sleep_t;
+} sc_time_t;
+
 
 #endif // SYS_SYSCALL_H
