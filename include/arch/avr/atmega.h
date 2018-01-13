@@ -17,6 +17,7 @@
 #ifndef _x86_
 #ifndef __x86_64__
 
+#include <config/avrconfig.h>
 #include <arch/avr/core.h>
 #include <arch/avr/register.h>
 #include <arch/avr/interrupt.h>
@@ -117,6 +118,12 @@ static arch_callbacks_common_t const arch_cbs_common = {
 #else
 	.lib_crt0 = avr_lib_crt0,
 #endif // BUILD_KERNEL
+};
+
+// architecture info
+static arch_info_t const arch_info = {
+	.kernel_timer_err_us = AVRCONFIG_KTIMER_ERROR_US,
+	.sched_timer_err_us = AVRCONFIG_SCHED_ERROR_US,
 };
 
 #endif // _x86_

@@ -7,6 +7,10 @@
 #include <sys/list.h>
 
 
+/* macros */
+#define CYCLE_TIME_US	((uint32_t)(CONFIG_KTIMER_CYCLETIME_US + arch_info(kernel_timer_err_us)))
+
+
 /* types */
 typedef struct timer_t{
 	size_t ticks;
@@ -21,7 +25,8 @@ typedef struct timer_t{
 static int sc_hdlr_sleep(void *p, thread_t const *this_t);
 static int sc_hdlr_time(void *p, thread_t const *this_t);
 
-static void time_convert(void);
+static size_t to_ticks(uint32_t us);
+static void time_carry(void);
 
 
 /* static variables */
@@ -36,10 +41,10 @@ void ktimer_tick(void){
 
 
 	/* increment time */
-	time_us += CONFIG_KTIMER_CYCLETIME_US;
+	time_us += CYCLE_TIME_US;
 
-	if(time_us + CONFIG_KTIMER_CYCLETIME_US < time_us)
-		time_convert();
+	if(time_us + CYCLE_TIME_US < time_us)
+		time_carry();
 
 	/* update timer */
 	list_for_each(timer_lst, t){
@@ -81,8 +86,8 @@ static int sc_hdlr_sleep(void *_p, thread_t const *this_t){
 	/* init timer */
 	ksignal_init(&t->sig);
 
-	if(p->time.us)		t->ticks = p->time.us / CONFIG_KTIMER_CYCLETIME_US;
-	else if(p->time.ms)	t->ticks = p->time.ms / (CONFIG_KTIMER_CYCLETIME_US / 1000);
+	if(p->time.us)		t->ticks = to_ticks(p->time.us);
+	else if(p->time.ms)	t->ticks = to_ticks((uint32_t)p->time.ms * 1000);
 	else				goto_errno(err_1, E_INVAL);
 
 	if(t->ticks == 0)
@@ -110,7 +115,7 @@ static int sc_hdlr_time(void *_p, thread_t const *this_t){
 
 	p = (sc_time_t*)_p;
 
-	time_convert();
+	time_carry();
 
 	p->time = time;
 	p->errno = E_OK;
@@ -118,7 +123,19 @@ static int sc_hdlr_time(void *_p, thread_t const *this_t){
 	return E_OK;
 }
 
-static void time_convert(void){
+static size_t to_ticks(uint32_t us){
+	size_t ticks;
+
+
+	ticks = us / CYCLE_TIME_US;
+
+	if(us - ticks * CYCLE_TIME_US > CYCLE_TIME_US / 10)
+		ticks++;
+
+	return ticks;
+}
+
+static void time_carry(void){
 	uint32_t x;
 
 
