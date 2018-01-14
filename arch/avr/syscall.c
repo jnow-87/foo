@@ -5,12 +5,12 @@
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/register.h>
+#include <sys/compiler.h>
 
 
 /* macros */
 #define INT_VEC_SC		(CONFIG_KERNEL_TEXT_BASE + INT_VEC_SIZE * INT_VECTORS)
-#define STR(s)			#s
-#define SYSCALL(addr)	asm volatile("call " STR(addr));
+#define SYSCALL(addr)	asm volatile("call " STRGIFY(addr));
 
 
 /* types */

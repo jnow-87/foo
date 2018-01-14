@@ -3,6 +3,7 @@
 #include <kernel/kprintf.h>
 #include <sys/errno.h>
 #include <sys/register.h>
+#include <sys/compiler.h>
 
 
 /* global functions */
@@ -22,7 +23,9 @@ void avr_core_sleep(void){
 #elif defined(CONFIG_SLEEPMODE_EXTSTANDBY)
 		(0x7 << SMCR_SM)
 #else
-	#error "invalid sleep mode, check kernel config"
+
+GCC_ERROR(invalid sleep mode - check kernel config)
+
 #endif // CONFIG_SLEEPMODE
 	);
 

@@ -1300,8 +1300,21 @@
 
 
 /**
- * watchdog frequency
+ * Device Configuration
  */
+#define UART_CNT			1
+#define TIMER_CNT			3
+#define PWM_CNT				6
+#define I2C_CNT				1
+#define SPI_CNT				2
+#define WATCHDOG_CNT		1
+#define ADC_CNT				6
+#define EEPROM_CNT			1
+
+#define FLASH_SIZE			_8k
+#define SRAM_SIZE			_1k
+#define EEPROM_SIZE			512
+
 #define	WATCHDOG_HZ			_128k
 
 

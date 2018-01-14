@@ -1,8 +1,19 @@
-#ifndef SYS_ATTRIBUTE_H
-#define SYS_ATTRIBUTE_H
+#ifndef SYS_COMPILER_H
+#define SYS_COMPILER_H
 
 
 /* macros */
+// stringify
+#define STRGIFY(s)		#s
+#define STR(s)			STRGIFY(s)
+
+// error and warnings
+#define GCC_ERROR(s)	_Pragma(STRGIFY(GCC error s))
+#define GCC_WARNING(s)	_Pragma(STRGIFY(GCC warning s))
+
+#define CPP_ERROR(s)	GCC_ERROR(STRGIFY(s))
+#define CPP_WARNING(s)	GCC_WARNING(STRGIFY(s))
+
 // suppress 'unused' compiler warning
 #define __used			__attribute__((used))
 
@@ -32,4 +43,4 @@
 #define __mode(m)		__attribute__((mode(m)))
 
 
-#endif // SYS_ATTRIBUTE_H
+#endif // SYS_COMPILER_H

@@ -2,6 +2,7 @@
 #include <arch/atomic.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
+#include <sys/compiler.h>
 
 
 /* macros */
@@ -22,7 +23,9 @@
 })
 
 #else
-#error "invalid build flag"
+
+GCC_ERROR(invalid build flag)
+
 #endif // BUILD_KERNEL/LIBSYS
 
 

@@ -11,10 +11,9 @@
 
 /* macros */
 #define INT_ALL ((int_type_t)(INT_GLOBAL))
-#define STR(s) #s
 #define avr_int(int_num, call) \
-	asm(".global __vector_" STR(int_num)); \
-	asm(".set __vector_" STR(int_num) ", " STR(call)); \
+	asm(".global __vector_" STRGIFY(int_num)); \
+	asm(".set __vector_" STRGIFY(int_num) ", " STRGIFY(call)); \
 	void call (void) __attribute__((signal));
 
 

@@ -3,6 +3,7 @@
 
 
 #include <config/config.h>
+#include <sys/compiler.h>
 
 
 /* macros */
@@ -62,7 +63,7 @@ typedef long long int			ptrdiff_t;
 
 #else // CONFIG_REGISTER_WIDTH
 
-#error "invalid address width in configuration"
+GCC_ERROR(invalid address width in configuration)
 
 #endif // CONFIG_REGISTER_WIDTH
 

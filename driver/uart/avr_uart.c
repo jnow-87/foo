@@ -7,12 +7,13 @@
 #include <sys/uart.h>
 #include <sys/errno.h>
 #include <sys/register.h>
+#include <sys/compiler.h>
 
 
-/* macros */
-#if (CONFIG_NUM_UART > 2)
-	#error "avr uart driver only supports up to 2 UARTS"
-#endif // CONFIG_NUM_UART
+
+#if (CONFIG_UART_CNT > UART_CNT)
+	CPP_ERROR(uart count violation - avr driver supports utmost UART_CNT uart(s))
+#endif // CONFIG_UART_CNT
 
 
 /* local/static prototypes */
@@ -105,7 +106,7 @@ int avr_uart_putsn(unsigned int uart, char const *s, size_t n){
 
 
 /* local functions */
-#if (CONFIG_NUM_UART > 0)
+#if (CONFIG_UART_CNT > 0)
 
 void uart0_rx_hdlr(void){
 	rx_hdlr(0);
@@ -113,9 +114,9 @@ void uart0_rx_hdlr(void){
 
 avr_int(INT_USART0_RX, uart0_rx_hdlr);
 
-#endif // CONFIG_NUM_UART
+#endif // CONFIG_UART_CNT
 
-#if (CONFIG_NUM_UART > 1)
+#if (CONFIG_UART_CNT > 1)
 
 void uart1_rx_hdlr(void){
 	rx_hdlr(1);
@@ -123,7 +124,7 @@ void uart1_rx_hdlr(void){
 
 avr_int(INT_USART1_RX, uart1_rx_hdlr);
 
-#endif // CONFIG_NUM_UART
+#endif // CONFIG_UART_CNT
 
 static void rx_hdlr(uint8_t uart){
 	uint8_t c,

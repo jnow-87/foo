@@ -3,6 +3,7 @@
 
 
 #include <config/config.h>
+#include <sys/compiler.h>
 
 
 /* macros */
@@ -59,7 +60,7 @@
 
 #else
 
-#error "invalid address width in configuration"
+GCC_ERROR(invalid address width in configuration)
 
 #endif // CONFIG_REGISTER_WIDTH
 

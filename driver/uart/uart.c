@@ -24,12 +24,12 @@ extern uart_cbs_t uart_cbs;
 
 /* global variables */
 // uarts
-kuart_t uarts[CONFIG_NUM_UART] = { 0 };
+kuart_t uarts[CONFIG_UART_CNT] = { 0 };
 
 
 /* static variables */
 // devfs ids and ops
-static devfs_dev_t *devs[CONFIG_NUM_UART] = { 0 };
+static devfs_dev_t *devs[CONFIG_UART_CNT] = { 0 };
 
 
 /* local functions */
@@ -37,7 +37,7 @@ static int kuart_init(void){
 	unsigned int i;
 
 
-	for(i=0; i<CONFIG_NUM_UART; i++){
+	for(i=0; i<CONFIG_UART_CNT; i++){
 		if(uart_cbs.config(i, &kopt.uart_cfg) != E_OK)
 			return -errno;
 
@@ -95,7 +95,7 @@ static int init(void){
 	unsigned int i;
 
 
-	for(i=0; i<CONFIG_NUM_UART; i++)
+	for(i=0; i<CONFIG_UART_CNT; i++)
 		_init(i);
 
 	return -errno;
