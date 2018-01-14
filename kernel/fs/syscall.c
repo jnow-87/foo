@@ -35,7 +35,7 @@ static int init(void){
 	e |= sc_register(SC_RMNODE, sc_hdlr_rmnode);
 	e |= sc_register(SC_CHDIR, sc_hdlr_chdir);
 
-	return e;
+	return -e;
 }
 
 kernel_init(0, init);
