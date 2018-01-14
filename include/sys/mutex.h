@@ -35,75 +35,16 @@ typedef struct{
 
 
 /* prototypes */
-/**
- * \brief	initialise a mutex
- *
- * \param	m	mutex to initialise
- */
 void mutex_init(mutex_t *m);
-
-/**
- * \brief	initialise a nestable mutex
- *
- * \param	m	mutex to initialise
- */
 void mutex_init_nested(mutex_t *m);
 
-/**
- * \brief	lock a mutex and will block until
- * 			the lock has been acquired
- *
- * \param	m	mutex to lock
- */
 void mutex_lock(mutex_t *m);
-
-/**
- * \brief	lock a nestable mutex block until
- * 			the lock has be acquired
- *
- * \param	m	mutex to lock
- *
- * \return	0	mutex has been locked
- * 			<0	mutex is not nestable
- */
 int mutex_lock_nested(mutex_t *m);
 
-/**
- * \brief	unlock a mutex
- *
- * \param	m	mutex to unlock
- */
 void mutex_unlock(mutex_t *m);
-
-/**
- * \brief	unlock a nestable mutex
- *
- * \param	m	mutex to unlock
- *
- * \return	0	mutex has been unlocked
- * 			<0	mutex is not nestable
- */
 int mutex_unlock_nested(mutex_t *m);
 
-/**
- * \brief	try to lock a mutex
- *
- * \param	m	mutex to lock
- *
- * \return	0	mutex has been locked
- * 			1	mutex could not be locked
- */
 int mutex_trylock(mutex_t *m);
-
-/**
- * \brief	try to lock a mutex
- *
- * \param	m	mutex to lock
- *
- * \return	0	mutex has been locked
- * 			1	mutex could not be locked
- * 			<0	mutex is not nestable
- */
 int mutex_trylock_nested(mutex_t *m);
 
 

@@ -6,7 +6,7 @@
 
 
 /* macros */
-#define TIME_INITIALISER{ \
+#define TIME_INITIALISER(){ \
 		.s = 0, \
 		.ms = 0, \
 		.us = 0 \

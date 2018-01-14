@@ -31,7 +31,7 @@ extern init_call_t __core_init0_base[],
 
 
 /* global variables */
-kopt_t kopt = KOPT_INITIALISER;
+kopt_t kopt = KOPT_INITIALISER();
 
 
 /* local/static prototypes */

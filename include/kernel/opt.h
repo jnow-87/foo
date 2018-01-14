@@ -42,7 +42,7 @@
 
 
 // kernel option initializer
-#define KOPT_INITIALISER { \
+#define KOPT_INITIALISER(){ \
 	.kernel_test = true, \
 	.kernel_stat = true, \
 	.init_bin = (void*)CONFIG_INIT_BINARY, \
