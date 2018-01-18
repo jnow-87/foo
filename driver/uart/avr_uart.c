@@ -53,6 +53,13 @@ int avr_uart_config(unsigned int uart, uart_t *cfg){
 	if(brate == 0)
 		return_errno(E_INVAL);
 
+	/* finish ongoing transmissions */
+	if(((*(ucsrb[uart])) & UCSR0B_TXEN))
+		while(!((*(ucsra[uart])) & (0x1 << UCSR0A_TXC)));
+
+	/* disable uart, triggering reset */
+	mreg_w(PRR0, mreg_r(PRR0) | (0x1 << prr_bits[uart]));
+
 	/* enable uart */
 	mreg_w(PRR0, (mreg_r(PRR0) & (-1 ^ (0x1 << prr_bits[uart]))));
 
@@ -74,8 +81,8 @@ int avr_uart_config(unsigned int uart, uart_t *cfg){
 }
 
 char avr_uart_putchar(char c){
-	while(!((*(ucsra[0])) & (0x1 << UCSR0A_UDRE)));
 	*(udr[0]) = c;
+	while(!((*(ucsra[0])) & (0x1 << UCSR0A_UDRE)));
 
 	return c;
 }
@@ -84,10 +91,8 @@ int avr_uart_puts(char const *s){
 	if(s == 0)
 		return_errno(E_INVAL);
 
-	for(; *s!=0; s++){
-		while(!((*(ucsra[0])) & (0x1 << UCSR0A_UDRE)));
-		*(udr[0]) = *s;
-	}
+	for(; *s!=0; s++)
+		avr_uart_putchar(*s);
 
 	return E_OK;
 }
@@ -97,8 +102,8 @@ int avr_uart_putsn(unsigned int uart, char const *s, size_t n){
 		return_errno(E_INVAL);
 
 	for(; n>0; n--, s++){
-		while(!(*(ucsra[uart]) & (0x1 << UCSR0A_UDRE)));
 		*(udr[uart]) = *s;
+		while(!(*(ucsra[uart]) & (0x1 << UCSR0A_UDRE)));
 	}
 
 	return E_OK;
