@@ -49,7 +49,6 @@ typedef enum{
 // debug print macros
 #if !defined(CONFIG_KERNEL_MSG_DEBUG) \
  || (defined(BUILD_KERNEL_SYSCALL) && !defined(CONFIG_KERNEL_SC_DEBUG)) \
- || (defined(BUILD_KERNEL_SMP) && !defined(CONFIG_KERNEL_SMP_DEBUG)) \
  || (defined(BUILD_KERNEL_FS) && !defined(CONFIG_KERNEL_FS_DEBUG)) \
  || (defined(BUILD_DRIVER) && !defined(CONFIG_DRIVER_DEBUG))
 #define DEBUG(fmt, ...)

@@ -9,10 +9,10 @@
 #include <kernel/thread.h>
 #include <kernel/kmem.h>
 #include <kernel/rootfs.h>
-#include <kernel/lock.h>
 #include <kernel/syscall.h>
 #include <kernel/panic.h>
 #include <sys/errno.h>
+#include <sys/mutex.h>
 #include <sys/list.h>
 #include <sys/string.h>
 
@@ -47,6 +47,7 @@ process_t *process_table = 0;
 
 /* static variables */
 static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
+static mutex_t sched_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -57,7 +58,7 @@ int sched_enqueue(thread_t *this_t, thread_state_t queue){
 	if(queue == CREATED)
 		return_errno(E_INVAL);
 
-	klock();
+	mutex_lock(&sched_mtx);
 
 	if(this_t->state == CREATED){
 		e = kmalloc(sizeof(sched_queue_t));
@@ -79,13 +80,13 @@ int sched_enqueue(thread_t *this_t, thread_state_t queue){
 	list_add_tail(sched_queues[queue], e);
 	this_t->state = queue;
 
-	kunlock();
+	mutex_unlock(&sched_mtx);
 
 	return E_OK;
 
 
 err:
-	kunlock();
+	mutex_unlock(&sched_mtx);
 
 	return_errno(E_NOMEM);
 }
@@ -115,7 +116,7 @@ void sched_tick(void){
 	thread_t *t;
 
 
-	klock();
+	mutex_lock(&sched_mtx);
 
 	/* temporary simple thread select */
 	t = (thread_t*)sched_running();
@@ -125,7 +126,7 @@ void sched_tick(void){
 
 	(void)sched_enqueue(t, RUNNING);
 
-	kunlock();
+	mutex_unlock(&sched_mtx);
 
 	// TODO check for next thread
 	// TODO switch thread or goto sleep
@@ -240,7 +241,7 @@ static int sc_hdlr_exit(void *p, thread_t const *this_t){
 
 	sched_tick();
 
-	klock();
+	mutex_lock(&sched_mtx);
 
 	e = list_find(sched_queues[this_t->state], thread, this_t);
 
@@ -252,7 +253,7 @@ static int sc_hdlr_exit(void *p, thread_t const *this_t){
 
 	list_rm(this_p->threads, this_t);
 
-	kunlock();
+	mutex_unlock(&sched_mtx);
 
 	thread_destroy((thread_t*)this_t);
 
@@ -280,19 +281,19 @@ static int sc_hdlr_thread_create(void *_p, thread_t const *this_t){
 	if(new == 0x0)
 		goto end;
 
-	klock();
+	mutex_lock(&sched_mtx);
 
 	list_add_tail(this_p->threads, new);
 
 	if(sched_enqueue(new, READY) != E_OK)
 		goto err;
 
-	kunlock();
+	mutex_unlock(&sched_mtx);
 
 	goto end;
 
 err:
-	kunlock();
+	mutex_unlock(&sched_mtx);
 	thread_destroy(new);
 	new = 0x0;
 
@@ -353,19 +354,19 @@ static int sc_hdlr_process_create(void *_p, thread_t const *this_t){
 	if(new == 0x0)
 		goto end;
 
-	klock();
+	mutex_lock(&sched_mtx);
 
 	list_add_tail(process_table, new);
 
 	if(sched_enqueue(list_first(new->threads), READY) != E_OK)
 		goto err;
 
-	kunlock();
+	mutex_unlock(&sched_mtx);
 
 	goto end;
 
 err:
-	kunlock();
+	mutex_unlock(&sched_mtx);
 	process_destroy(new);
 	new = 0x0;
 

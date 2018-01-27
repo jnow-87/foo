@@ -3,13 +3,13 @@
 #include <kernel/thread.h>
 #include <kernel/kmem.h>
 #include <kernel/page.h>
-#include <kernel/lock.h>
+#include <sys/mutex.h>
 #include <sys/list.h>
 #include <sys/errno.h>
 
 
 /* global functions */
-thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, void *thread_arg){
+thread_t *thread_create(struct process_t *this_p, tid_t tid, void *entry, void *thread_arg){
 	thread_t *this_t;
 	void *proc_entry;
 
@@ -20,7 +20,7 @@ thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, 
 		goto_errno(err_0, E_NOMEM);
 
 	/* set tid */
-	if(tid == THREAD_ID_MAX)
+	if(tid == TID_MAX)
 		goto_errno(err_1, E_LIMIT);
 
 	this_t->tid = tid;
@@ -38,9 +38,9 @@ thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, 
 	if(this_t->stack == 0)
 		goto_errno(err_1, E_NOMEM);
 
-	klock();
+	mutex_lock(&this_p->mtx);
 	list_add_tail(this_p->memory.pages, this_t->stack);
-	kunlock();
+	mutex_unlock(&this_p->mtx);
 
 	/* init thread context */
 	proc_entry = entry;
@@ -79,19 +79,15 @@ void thread_destroy(struct thread_t *this_t){
 }
 
 void thread_context_enqueue(thread_t *this_t, thread_context_t *ctx){
-	klock();
 	list_add_tail(this_t->ctx_lst, ctx);
-	kunlock();
 }
 
 thread_context_t *thread_context_dequeue(thread_t *this_t){
 	thread_context_t *ctx;
 
 
-	klock();
 	ctx = list_last(this_t->ctx_lst);
 	list_rm(this_t->ctx_lst, ctx);
-	kunlock();
 
 	return ctx;
 }

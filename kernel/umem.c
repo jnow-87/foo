@@ -6,10 +6,10 @@
 #include <kernel/page.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
-#include <kernel/lock.h>
 #include <sys/types.h>
 #include <sys/list.h>
 #include <sys/memblock.h>
+#include <sys/mutex.h>
 #include <sys/errno.h>
 
 
@@ -20,6 +20,7 @@ static int sc_hdlr_free(void *p, thread_t const *this_t);
 
 /* static variables */
 static memblock_t *process_mem = 0x0;
+static mutex_t umem_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -27,20 +28,20 @@ void *umalloc(size_t n){
 	void *p;
 
 
-	klock();
+	mutex_lock(&umem_mtx);
 	p = memblock_alloc(&process_mem, n, CONFIG_KMALLOC_ALIGN);
-	kunlock();
+	mutex_unlock(&umem_mtx);
 
 	return p;
 }
 
 void ufree(void *addr){
-	klock();
+	mutex_lock(&umem_mtx);
 
 	if(memblock_free(&process_mem, addr) < 0)
 		kpanic(0x0, "double free at %p\n", addr);
 
-	kunlock();
+	mutex_unlock(&umem_mtx);
 }
 
 
@@ -100,9 +101,9 @@ static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
 	if(page == 0x0)
 		goto_errno(err, E_NOMEM);
 
-	klock();
+	mutex_lock(&this_p->mtx);
 	list_add_tail(this_p->memory.pages, page);
-	kunlock();
+	mutex_unlock(&this_p->mtx);
 
 	/* prepare result */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -129,10 +130,10 @@ static int sc_hdlr_free(void *_p, thread_t const *this_t){
 	sc_malloc_t *p;
 
 
-	klock();
-
 	p = (sc_malloc_t*)_p;
 	this_p = this_t->parent;
+
+	mutex_lock(&this_p->mtx);
 
 	/* get page */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -150,7 +151,7 @@ static int sc_hdlr_free(void *_p, thread_t const *this_t){
 
 	p->errno = E_OK;
 
-	kunlock();
+	mutex_unlock(&this_p->mtx);
 
 	return E_OK;
 }

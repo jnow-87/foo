@@ -3,19 +3,20 @@
 #include <kernel/kprintf.h>
 #include <kernel/syscall.h>
 #include <kernel/sched.h>
-#include <kernel/lock.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <sys/mutex.h>
 #include <sys/errno.h>
 
 
 /* static variables */
-sc_hdlr_t sc_map[NSYSCALLS] = { 0x0 };
+static sc_hdlr_t sc_map[NSYSCALLS] = { 0x0 };
+static mutex_t sc_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
 int sc_register(sc_t num, sc_hdlr_t hdlr){
-	klock();
+	mutex_lock(&sc_mtx);
 
 	if(num >= NSYSCALLS)
 		goto_errno(err, E_INVAL);
@@ -23,16 +24,18 @@ int sc_register(sc_t num, sc_hdlr_t hdlr){
 	if(sc_map[num] != 0x0)
 		goto_errno(err, E_INUSE);
 
-	DEBUG("register handler for syscall %d to %#x\n", num, hdlr);
 	sc_map[num] = hdlr;
 
-	kunlock();
+	mutex_unlock(&sc_mtx);
+
+	DEBUG("registered handler for syscall %d to %#x\n", num, hdlr);
 
 	return E_OK;
 
 
 err:
-	kunlock();
+	mutex_unlock(&sc_mtx);
+
 	return -errno;
 }
 
@@ -40,9 +43,9 @@ int sc_release(sc_t num){
 	if(num >= NSYSCALLS)
 		return_errno(E_INVAL);
 
-	klock();
+	mutex_lock(&sc_mtx);
 	sc_map[num] = 0x0;
-	kunlock();
+	mutex_unlock(&sc_mtx);
 
 	return E_OK;
 }

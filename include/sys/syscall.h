@@ -2,8 +2,9 @@
 #define SYS_SYSCALL_H
 
 
-#include <arch/thread.h>
 #include <sys/binloader.h>
+#include <sys/process.h>
+#include <sys/thread.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -55,7 +56,7 @@ typedef struct{
 } sc_fs_t;
 
 typedef struct{
-	thread_id_t tid;
+	tid_t tid;
 
 	int (*entry)(void *);
 	void *arg;
@@ -67,7 +68,7 @@ typedef struct{
 } sc_thread_t;
 
 typedef struct{
-	process_id_t pid;
+	pid_t pid;
 
 	void *binary;
 	bin_type_t bin_type;

@@ -23,6 +23,9 @@
 		Each file system node stores a pointer to its callback functions to handle system calls. For callback interface documentation see \hyperref[structfs__ops__t]{fs\_ops\_t}. Most of the callbacks are optional, except for \lstinline{open()}.
 		In general all system calls create kernel space buffers and copy the system call parameter from user space. Only pointers provided through the system call parameters need to be copied by subsequent functions.
 
+		\subsubsection{Thread-safety}
+			Except \lstinline{fs_register()} none of the provided functions are thread-safe and calls to it need to be protected through \lstinline{fs_lock(), fs_unlock()}. The file system syscalls already acquire the respective lock and thus respective callbacks for particular file system implementations are not allowed to acquire the lock.
+
 	\subsection{Rootfs}
 		The actual root file system is implemented based on the kernel interface. The root file system provides implements the following aspects
 		\begin{enumerate}

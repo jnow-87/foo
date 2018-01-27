@@ -7,10 +7,8 @@
 #include <kernel/binloader.h>
 #include <kernel/fs.h>
 #include <sys/memblock.h>
-
-
-/* macros */
-#define PROCESS_ID_MAX	((process_id_t)(~0))
+#include <sys/process.h>
+#include <sys/mutex.h>
 
 
 /* incomplete types */
@@ -28,7 +26,7 @@ typedef struct{
 } process_mem_t;
 
 typedef struct process_t{
-	process_id_t  pid;
+	pid_t pid;
 
 	unsigned int affinity;
 	int priority;
@@ -41,6 +39,8 @@ typedef struct process_t{
 	struct thread_t *threads;
 	fs_filed_t *fds;
 	fs_node_t *cwd;
+
+	mutex_t mtx;
 
 	struct process_t *prev,
 					 *next;

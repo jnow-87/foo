@@ -561,6 +561,7 @@ spec_err:
 	return n;
 }
 
+
 /* local functions */
 static size_t put_char(FILE *stream, char c){
 	if(stream->putc)

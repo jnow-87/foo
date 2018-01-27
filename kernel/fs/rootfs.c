@@ -6,7 +6,6 @@
 #include <kernel/kmem.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
-#include <kernel/lock.h>
 #include <sys/file.h>
 #include <sys/fcntl.h>
 #include <sys/types.h>
@@ -49,7 +48,7 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 
 	DEBUG("register file system to \"%s\"\n", path);
 
-	klock();
+	fs_lock();
 
 	node = fs_root;
 
@@ -79,7 +78,8 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 			path += n;
 
 			if(*path == 0){
-				kunlock();
+				fs_unlock();
+
 				return node;
 			}
 
@@ -89,12 +89,13 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 
 
 err:
-	kunlock();
+	fs_unlock();
+
 	return 0x0;
 }
 
 int rootfs_rmdir(fs_node_t *node){
-	klock();
+	fs_lock();
 
 	if(!list_empty(node->childs) || node->data != 0x0)
 		goto_errno(end, E_INUSE);
@@ -105,7 +106,8 @@ int rootfs_rmdir(fs_node_t *node){
 
 
 end:
-	kunlock();
+	fs_unlock();
+
 	return -errno;
 }
 
@@ -134,7 +136,9 @@ static int init(void){
 	/* init fs_root */
 	memset(&dummy, 0x0, sizeof(dummy));
 
+	fs_lock();
 	fs_root = fs_node_alloc(&dummy, "/", 1, true, rootfs_id);
+	fs_unlock();
 
 	if(fs_root == 0x0)
 		return -errno;
@@ -215,13 +219,14 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 err:
 	fs_node_free(start);
+
 	return -errno;
 }
 
 static int close(fs_filed_t *fd, process_t *this_p){
 	DEBUG("handle close for %d\n", fd->id);
-
 	fs_fd_free(fd, this_p);
+
 	return E_OK;
 }
 

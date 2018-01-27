@@ -1,9 +1,13 @@
 #include <kernel/signal.h>
 #include <kernel/sched.h>
 #include <kernel/kmem.h>
-#include <kernel/lock.h>
 #include <sys/list.h>
+#include <sys/mutex.h>
 #include <sys/errno.h>
+
+
+/* static varaibles */
+static mutex_t sig_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -22,9 +26,9 @@ int ksignal_wait(ksignal_t *sig){
 
 	e->thread = sched_running();
 
-	klock();
+	mutex_lock(&sig_mtx);
 	list_add_tail(*sig, e);
-	kunlock();
+	mutex_unlock(&sig_mtx);
 
 	sched_yield(WAITING);
 
@@ -35,14 +39,14 @@ int ksignal_send(ksignal_t *sig){
 	ksignal_el_t *e;
 
 
-	klock();
+	mutex_lock(&sig_mtx);
 	e = list_first(*sig);
 
 	if(e == 0x0)
 		goto err_1;
 
 	list_rm(*sig, e);
-	kunlock();
+	mutex_unlock(&sig_mtx);
 
 	if(sched_enqueue((thread_t*)e->thread, READY) != E_OK)
 		goto err_0;
@@ -53,7 +57,7 @@ int ksignal_send(ksignal_t *sig){
 
 
 err_1:
-	kunlock();
+	mutex_unlock(&sig_mtx);
 
 err_0:
 	return -errno;
@@ -63,7 +67,7 @@ int ksignal_bcast(ksignal_t *sig){
 	ksignal_el_t *e;
 
 
-	klock();
+	mutex_lock(&sig_mtx);
 
 	list_for_each(*sig, e){
 		list_rm(*sig, e);
@@ -74,7 +78,7 @@ int ksignal_bcast(ksignal_t *sig){
 		kfree(e);
 	}
 
-	kunlock();
+	mutex_unlock(&sig_mtx);
 
 	return -errno;
 }

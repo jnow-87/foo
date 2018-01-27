@@ -1,10 +1,10 @@
 #include <arch/syscall.h>
-#include <arch/thread.h>
 #include <lib/unistd.h>
 #include <sys/string.h>
 #include <sys/errno.h>
 #include <sys/syscall.h>
 #include <sys/binloader.h>
+#include <sys/thread.h>
 #include <sys/fcntl.h>
 #include <sys/file.h>
 
@@ -142,7 +142,7 @@ int rmdir(char const *path){
 	return 0;
 }
 
-thread_id_t thread_create(int (*entry)(void *), void *arg){
+tid_t thread_create(int (*entry)(void *), void *arg){
 	sc_thread_t p;
 
 
@@ -181,7 +181,7 @@ int nice(int inc){
 	return (p.errno != E_OK) ? -p.errno : p.priority;
 }
 
-process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
+pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
 	sc_process_t p;
 
 

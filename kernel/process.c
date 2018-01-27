@@ -6,10 +6,10 @@
 #include <kernel/kmem.h>
 #include <kernel/rootfs.h>
 #include <kernel/binloader.h>
-#include <kernel/lock.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
+#include <sys/mutex.h>
 
 
 /* global functions */
@@ -18,8 +18,6 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	process_t *this_p;
 	thread_t *this_t;
 
-
-	klock();
 
 	/* allocate process structure */
 	this_p = kmalloc(sizeof(process_t));
@@ -30,11 +28,15 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	/* get pid */
 	this_p->pid = 0;
 
+	// TODO needs to be protected through mutex
 	if(!list_empty(process_table))
 		this_p->pid = list_last(process_table)->pid + 1;
 
-	if(this_p->pid == PROCESS_ID_MAX)
+	if(this_p->pid == PID_MAX)
 		goto_errno(err_1, E_LIMIT);
+
+	/* init mutex */
+	mutex_init(&this_p->mtx);
 
 	/* set process attributes */
 	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;
@@ -86,8 +88,6 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	this_p->threads = 0x0;
 	list_add_tail(this_p->threads, this_t);
 
-	kunlock();
-
 	return this_p;
 
 
@@ -101,7 +101,6 @@ err_1:
 	kfree(this_p);
 
 err_0:
-	kunlock();
 	return 0;
 }
 
@@ -111,8 +110,6 @@ void process_destroy(process_t *this_p){
 	fs_filed_t *fd;
 	fs_ops_t *ops;
 
-
-	klock();
 
 	/* destroy all threads */
 	list_for_each(this_p->threads, this_t){
@@ -124,8 +121,12 @@ void process_destroy(process_t *this_p){
 	list_for_each(this_p->fds, fd){
 		ops = fd->node->ops;
 
+		fs_lock();
+
 		if(ops->close != 0x0)	ops->close(fd, this_p);
 		else					fs_fd_free(fd, this_p);
+
+		fs_unlock();
 	}
 
 	/* free arguments */
@@ -140,6 +141,4 @@ void process_destroy(process_t *this_p){
 	/* free process */
 	kfree(this_p->name);
 	kfree(this_p);
-
-	kunlock();
 }
