@@ -20,8 +20,8 @@ typedef ksignal_el_t * ksignal_t;
 void ksignal_init(ksignal_t *sig);
 
 int ksignal_wait(ksignal_t *sig);
-int ksignal_send(ksignal_t *sig);
-int ksignal_bcast(ksignal_t *sig);
+void ksignal_send(ksignal_t *sig);
+void ksignal_bcast(ksignal_t *sig);
 
 
 #endif // KERNEL_SIGNAL_H

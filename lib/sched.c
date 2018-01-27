@@ -1,13 +1,11 @@
 #include <arch/syscall.h>
 #include <sys/syscall.h>
-#include <sys/thread.h>
 
 
 /* global functions */
 void sched_yield(void){
-	thread_state_t target;
+	char dummy;
 
 
-	target = READY;
-	sc(SC_SCHEDYIELD, &target);
+	sc(SC_SCHEDYIELD, &dummy);
 }

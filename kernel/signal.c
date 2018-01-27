@@ -27,43 +27,35 @@ int ksignal_wait(ksignal_t *sig){
 	e->thread = sched_running();
 
 	mutex_lock(&sig_mtx);
+
 	list_add_tail(*sig, e);
+	sched_pause();
+
 	mutex_unlock(&sig_mtx);
 
-	sched_yield(WAITING);
+	sched_yield();
 
 	return E_OK;
 }
 
-int ksignal_send(ksignal_t *sig){
+void ksignal_send(ksignal_t *sig){
 	ksignal_el_t *e;
 
 
 	mutex_lock(&sig_mtx);
+
 	e = list_first(*sig);
 
-	if(e == 0x0)
-		goto err_1;
+	if(e != 0x0){
+		list_rm(*sig, e);
+		sched_wake(e->thread);
+		kfree(e);
+	}
 
-	list_rm(*sig, e);
 	mutex_unlock(&sig_mtx);
-
-	if(sched_enqueue((thread_t*)e->thread, READY) != E_OK)
-		goto err_0;
-
-	kfree(e);
-
-	return E_OK;
-
-
-err_1:
-	mutex_unlock(&sig_mtx);
-
-err_0:
-	return -errno;
 }
 
-int ksignal_bcast(ksignal_t *sig){
+void ksignal_bcast(ksignal_t *sig){
 	ksignal_el_t *e;
 
 
@@ -71,14 +63,9 @@ int ksignal_bcast(ksignal_t *sig){
 
 	list_for_each(*sig, e){
 		list_rm(*sig, e);
-
-		if(sched_enqueue((thread_t*)e->thread, READY) != E_OK)
-			break;
-
+		sched_wake(e->thread);
 		kfree(e);
 	}
 
 	mutex_unlock(&sig_mtx);
-
-	return -errno;
 }

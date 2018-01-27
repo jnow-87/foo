@@ -40,6 +40,8 @@ static int sc_hdlr_process_info(void *p, thread_t const *this_t);
 
 static int sc_hdlr_sched_yield(void *p, thread_t const *this_t);
 
+static void transition(thread_t *this_t, thread_state_t queue);
+
 
 /* global variables */
 process_t *process_table = 0;
@@ -47,95 +49,65 @@ process_t *process_table = 0;
 
 /* static variables */
 static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
+static thread_t *running[CONFIG_NCORES] = { 0x0 };
 static mutex_t sched_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-int sched_enqueue(thread_t *this_t, thread_state_t queue){
-	sched_queue_t *e;
+void sched_tick(void){
+	thread_t *this_t;
 
-
-	if(queue == CREATED)
-		return_errno(E_INVAL);
 
 	mutex_lock(&sched_mtx);
 
-	if(this_t->state == CREATED){
-		e = kmalloc(sizeof(sched_queue_t));
+	// NOTE The running thread might already transitioned to a different
+	//		state, e.g. through the kernel signal mechanism
+	if(running[PIR]->state == RUNNING)
+		transition((thread_t*)running[PIR], READY);
 
-		if(e == 0x0)
-			goto err;
+	this_t = list_first(sched_queues[READY])->thread;
 
-		e->thread = this_t;
-	}
-	else{
-		e = list_find(sched_queues[this_t->state], thread, this_t);
+	if(this_t == 0x0)
+		kpanic(0x0, "no ready thread\n");
 
-		if(e == 0x0)
-			kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
-
-		list_rm(sched_queues[this_t->state], e);
-	}
-
-	list_add_tail(sched_queues[queue], e);
-	this_t->state = queue;
+	transition(this_t, RUNNING);
+	running[PIR] = this_t;
 
 	mutex_unlock(&sched_mtx);
 
-	return E_OK;
-
-
-err:
-	mutex_unlock(&sched_mtx);
-
-	return_errno(E_NOMEM);
+	// TODO if the thread is not actually switched and the only ready thread
+	// 		is a kernel thread suspend the core
 }
 
 thread_t const *sched_running(void){
-	sched_queue_t *e;
-
-
-#ifdef CONFIG_KERNEL_SMP
-	list_for_each(sched_queues[RUNNING], e){
-		if(e->thread->affinity & (0x1 << PIR))
-			return e->thread;
-	}
-
-	e = 0x0;
-#else
-	e = list_first(sched_queues[RUNNING]);
-#endif // CONFIG_KERNEL_SMP
-
-	if(e == 0x0)
+	if(running[PIR] == 0x0)
 		kpanic(0x0, "no running thread\n");
 
-	return e->thread;
+	return running[PIR];
 }
 
-void sched_tick(void){
-	thread_t *t;
+void sched_yield(void){
+	char dummy;
 
 
-	mutex_lock(&sched_mtx);
+	if(int_enabled() != INT_NONE)
+		kpanic(sched_running(), "interrupts are disabled, syscall not allowed\n");
 
-	/* temporary simple thread select */
-	t = (thread_t*)sched_running();
-	(void)sched_enqueue(t, READY);
-
-	t = list_first(sched_queues[READY])->thread;
-
-	(void)sched_enqueue(t, RUNNING);
-
-	mutex_unlock(&sched_mtx);
-
-	// TODO check for next thread
-	// TODO switch thread or goto sleep
-}
-
-void sched_yield(thread_state_t target){
 	// actual thread switches are only performed in interrupt
 	// service routines as it is required for syscalls
-	sc(SC_SCHEDYIELD, &target);
+	sc(SC_SCHEDYIELD, &dummy);
+}
+
+void sched_pause(void){
+	mutex_lock(&sched_mtx);
+	transition((thread_t*)sched_running(), WAITING);
+	mutex_unlock(&sched_mtx);
+}
+
+void sched_wake(thread_t const *this_t){
+	mutex_lock(&sched_mtx);
+	transition((thread_t*)this_t, READY);
+	mutex_unlock(&sched_mtx);
 }
 
 
@@ -199,10 +171,12 @@ static int init(void){
 		list_add_tail(this_p->threads, this_t);
 	}
 
-	// add kernel threads to ready queue
+	// add kernel threads to running queue
 	list_for_each(this_p->threads, this_t){
-		if(sched_enqueue(this_t, RUNNING) != E_OK)
-			goto err;
+		transition(this_t, READY);
+		transition(this_t, RUNNING);
+
+		running[PIR] = this_t;
 	}
 
 	/* create init process */
@@ -215,15 +189,14 @@ static int init(void){
 	list_add_tail(process_table, this_p);
 
 	// add first thread to ready queue
-	if(sched_enqueue(this_p->threads, READY) != E_OK)
-		goto err;
+	transition(this_p->threads, READY);
 
 	return E_OK;
 
 
 err:
-	/* XXX: cleanup in case of an error is not required, since the kernel will stop
-	 * anyways if any of the init calls fails
+	/* NOTE cleanup in case of an error is not required, since the
+	 * 		kernel will stop anyways if any of the init calls fails
 	 */
 	return_errno(errno);
 }
@@ -251,16 +224,22 @@ static int sc_hdlr_exit(void *p, thread_t const *this_t){
 	list_rm(sched_queues[this_t->state], e);
 	kfree(e);
 
-	list_rm(this_p->threads, this_t);
-
 	mutex_unlock(&sched_mtx);
 
+	mutex_lock(&this_p->mtx);
+	list_rm(this_p->threads, this_t);
+	mutex_unlock(&this_p->mtx);
+
 	thread_destroy((thread_t*)this_t);
+
+	mutex_lock(&sched_mtx);
 
 	if(list_empty(this_p->threads)){
 		list_rm(process_table, this_p);
 		process_destroy(this_p);
 	}
+
+	mutex_unlock(&sched_mtx);
 
 	return E_OK;
 }
@@ -284,18 +263,10 @@ static int sc_hdlr_thread_create(void *_p, thread_t const *this_t){
 	mutex_lock(&sched_mtx);
 
 	list_add_tail(this_p->threads, new);
-
-	if(sched_enqueue(new, READY) != E_OK)
-		goto err;
+	transition(new, READY);
 
 	mutex_unlock(&sched_mtx);
 
-	goto end;
-
-err:
-	mutex_unlock(&sched_mtx);
-	thread_destroy(new);
-	new = 0x0;
 
 end:
 	p->errno = errno;
@@ -336,20 +307,23 @@ static int sc_hdlr_process_create(void *_p, thread_t const *this_t){
 	sc_process_t *p = (sc_process_t*)_p;
 	char name[p->name_len + 1];
 	char args[p->args_len + 1];
-	process_t *new;
+	process_t *this_p,
+			  *new;
 
 
 	/* process arguments */
-	if(copy_from_user(name, p->name, p->name_len + 1, this_t->parent) != E_OK)
+	this_p = sched_running()->parent;
+
+	if(copy_from_user(name, p->name, p->name_len + 1, this_p) != E_OK)
 		goto end;
 
-	if(copy_from_user(args, p->args, p->args_len + 1, this_t->parent) != E_OK)
+	if(copy_from_user(args, p->args, p->args_len + 1, this_p) != E_OK)
 		goto end;
 
 	/* create process */
 	DEBUG("create process \"%s\" with args \"%s\"\n", name, args);
 
-	new = process_create(p->binary, p->bin_type, p->name, p->args, this_t->parent->cwd);
+	new = process_create(p->binary, p->bin_type, p->name, p->args, this_p->cwd);
 
 	if(new == 0x0)
 		goto end;
@@ -357,18 +331,10 @@ static int sc_hdlr_process_create(void *_p, thread_t const *this_t){
 	mutex_lock(&sched_mtx);
 
 	list_add_tail(process_table, new);
-
-	if(sched_enqueue(list_first(new->threads), READY) != E_OK)
-		goto err;
+	transition(list_first(new->threads), READY);
 
 	mutex_unlock(&sched_mtx);
 
-	goto end;
-
-err:
-	mutex_unlock(&sched_mtx);
-	process_destroy(new);
-	new = 0x0;
 
 end:
 	p->errno = errno;
@@ -379,28 +345,79 @@ end:
 
 static int sc_hdlr_process_info(void *_p, thread_t const *this_t){
 	sc_process_t *p;
+	process_t *this_p;
 
 
 	p = (sc_process_t*)_p;
+	this_p = sched_running()->parent;
 
-	p->pid = this_t->parent->pid;
+	p->pid = this_p->pid;
 	p->errno = E_OK;
 
 	return E_OK;
 }
 
 static int sc_hdlr_sched_yield(void *p, thread_t const *this_t){
-	thread_state_t target;
-
-
-	target = *((thread_state_t*)p);
-
 	sched_tick();
+	return E_OK;
+}
 
-	if(this_t->state != RUNNING){
-		if(sched_enqueue((thread_t*)this_t, target) != E_OK)
-			WARN("error moving thread %s:%u to qeueue %u\n", this_t->parent->name, this_t->tid, target);
+
+/**
+ * \brief
+ *
+ *                         kill
+ *            WAITING ----------------\
+ *             |   A                  |
+ *             |   | sig wait         |
+ *    sig_wake |   |                  |
+ *             |   |           exit   |
+ *             |  RUNNING ------------|
+ *             |  |A                  |
+ *             |  || sched            |
+ *             |  ||                  |
+ *             V  V|       kill       V
+ * CREATED --> READY --------------> DEAD
+ *
+ * TODO kill is not yet implemented
+ *
+ * \pre	calls to transition are protected through sched_mtx
+ */
+static void transition(thread_t *this_t, thread_state_t queue){
+	thread_state_t s;
+	sched_queue_t *e;
+
+
+	/* check for invalid state transition */
+	s = this_t->state;
+
+	if((queue == CREATED)
+	|| (queue == READY && s == DEAD)
+	|| (queue == RUNNING && s != READY)
+	|| (queue == WAITING && s != RUNNING)
+	|| (queue == DEAD && s == CREATED)
+	){
+		kpanic(this_t, "invalid scheduler transition %u -> %u\n", s, queue);
 	}
 
-	return E_OK;
+	/* perform transition */
+	if(this_t->state == CREATED){
+		e = kmalloc(sizeof(sched_queue_t));
+
+		if(e == 0x0)
+			kpanic(this_t, "out of memory\n");
+
+		e->thread = this_t;
+	}
+	else{
+		e = list_find(sched_queues[this_t->state], thread, this_t);
+
+		if(e == 0x0)
+			kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
+
+		list_rm(sched_queues[this_t->state], e);
+	}
+
+	list_add_tail(sched_queues[queue], e);
+	this_t->state = queue;
 }
