@@ -1,50 +1,5 @@
 \chapter{Kernel\label{chap:kernel}}
-\section{Kernel Init}
-\todo{describe kernel init mechanism}
-
-\section{Scheduler}
-\todo{describe scheduler functioning}
-
-\section{Kernel Locking}
-\todo{describe kernel locking mechanism}
-
-\section{File System}
-	\subsection{Kernel File System Interface}
-		The kernel implements a generic file system interface which is intended to provide
-		\begin{enumerate}
-			\item system call handlers for file system operations \hyperref[kernel_2fs_2syscall_8c]{kernel/fs/syscall.c}
-			\item a generic file system interface \hyperref[fs_8h]{include/kernel/fs.h} defining
-				\begin{itemize}
-					\item a node type \hyperref[structfs__node__t]{fs\_node\_t} and functions to insert, remove and search for those nodes
-					\item a file descriptor \hyperref[structfs__filed__t]{fs\_filed\_t} and functions to allocate and free them
-				\end{itemize}
-		\end{enumerate}
-
-		Each file system node stores a pointer to its callback functions to handle system calls. For callback interface documentation see \hyperref[structfs__ops__t]{fs\_ops\_t}. Most of the callbacks are optional, except for \lstinline{open()}.
-		In general all system calls create kernel space buffers and copy the system call parameter from user space. Only pointers provided through the system call parameters need to be copied by subsequent functions.
-
-		\subsubsection{Thread-safety}
-			Except \lstinline{fs_register()} none of the provided functions are thread-safe and calls to it need to be protected through \lstinline{fs_lock(), fs_unlock()}. The file system syscalls already acquire the respective lock and thus respective callbacks for particular file system implementations are not allowed to acquire the lock.
-
-	\subsection{Rootfs}
-		The actual root file system is implemented based on the kernel interface. The root file system provides implements the following aspects
-		\begin{enumerate}
-			\item it provides the file system root
-			\item methods to add and remove directories in the tree of the root file system
-			\item callbacks for all file system system calls
-			\item basic volatile ram files
-		\end{enumerate}
-
-		The ability to register new directories is intended to be used by further file systems to allocate their root directories. It is the responsibility of the child file system to register the correct callback pointer to its root directory. Allowing for the following possibilities:
-		\begin{enumerate}
-			\item Use the callbacks defined by rootfs\\
-				That is, in the easiest case rootfs shall handle all system calls up to the child's root directory. In this case, the child file system has to use the kernel file system interface to allocate and release nodes, otherwise the nodes might not be inserted to the file system tree correctly.
-				In case of the open callback, the child file system will receive a pointer to the desired target node already, i.e. it has not to check it's root directory.
-
-			\item Implement all desired callbacks by themself\\
-				 If the child file system does not use the rootfs callbacks, it has to implement all desired callbacks by themself.
-				 In case of the open callback, the child file system will receive a pointer to it's root directory, i.e. it still has to search for the target node.
-		\end{enumerate}
-		
-	\subsection{Devfs}
-		Devfs is designed as interface between device drivers and user space. As such it provides an interface to device drivers to register new devices and callbacks per device, cf. \hyperref[structdevfs__dev__t]{devfs\_dev\_t}.
+	\input{kernel/init}
+	\input{kernel/sched}
+	\input{kernel/locking}
+	\input{kernel/filesystem}
