@@ -24,42 +24,7 @@ endmenu
 # kprintf
 #
 # {{{
-config KERNEL_EARLY_PRINT
-	bool "Print error on failed kernel init calls"
-	select KERNEL_UART
 
-config KERNEL_MSG_FATAL
-	bool "Print kernel FATAL messages"
-	select KERNEL_UART
-
-config KERNEL_MSG_WARN
-	bool "Print kernel WARNING messages"
-	select KERNEL_UART
-
-config KERNEL_MSG_INFO
-	bool "Print kernel INFO messages"
-	select KERNEL_UART
-
-config KERNEL_MSG_DEBUG
-	bool "Print kernel DEBUG messages"
-	select KERNEL_UART
-
-config KERNEL_SC_DEBUG
-	bool "Enable syscall debug messages"
-	depends on KERNEL_MSG_DEBUG
-
-config KERNEL_SMP_DEBUG
-	bool "Enable multi-threading debug messages"
-	depends on KERNEL_MSG_DEBUG
-	depends on KERNEL_SMP
-
-config KERNEL_FS_DEBUG
-	bool "Enable file system debug messages"
-	depends on KERNEL_MSG_DEBUG
-
-config DRIVER_DEBUG
-	bool "Enable driver debug messages"
-	depends on KERNEL_MSG_DEBUG
 # }}}
 
 #
@@ -71,6 +36,35 @@ menuconfig KERNEL_UART
 	select DRIVER_UART
 
 if KERNEL_UART
+
+menu "kprintf"
+	config KERNEL_EARLY_PRINT
+		bool "Print error on failed kernel init calls"
+
+	config KERNEL_MSG_FATAL
+		bool "Print kernel FATAL messages"
+
+	config KERNEL_MSG_WARN
+		bool "Print kernel WARNING messages"
+
+	config KERNEL_MSG_INFO
+		bool "Print kernel INFO messages"
+
+	config KERNEL_MSG_DEBUG
+		bool "Print kernel DEBUG messages"
+
+	config KERNEL_SC_DEBUG
+		bool "Enable syscall debug messages"
+		depends on KERNEL_MSG_DEBUG
+
+	config KERNEL_FS_DEBUG
+		bool "Enable file system debug messages"
+		depends on KERNEL_MSG_DEBUG
+
+	config DRIVER_DEBUG
+		bool "Enable driver debug messages"
+		depends on KERNEL_MSG_DEBUG
+endmenu
 
 # baud rate
 choice
@@ -374,7 +368,6 @@ menu "Timer settings"
 
 	config KTIMER_ERR_MAX
 		int "Maximal kernel timer error [%]"
-
 endmenu
 # }}}
 

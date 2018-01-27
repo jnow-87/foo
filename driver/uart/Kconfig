@@ -1,13 +1,13 @@
 menuconfig DRIVER_UART
-	bool "UART driver"
+	bool "Uart driver"
 
 if DRIVER_UART
 
 choice
-	prompt "UART implementation"
+	prompt "Implementation"
 
 	config AVR_UART
-		bool "AVR UART implementation"
+		bool "AVR uart"
 endchoice
 
 config UART_RX_BUFSIZE
@@ -16,7 +16,6 @@ config UART_RX_BUFSIZE
 
 config UART_CNT
 	int "Number of uarts"
-	range 1 16 if KERNEL_UART
-	range 0 16
+	range 1 16
 
 endif # DRIVER_UART
