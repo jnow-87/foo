@@ -9,6 +9,7 @@
 #include <sys/errno.h>
 #include <sys/math.h>
 #include <sys/limits.h>
+#include <sys/mutex.h>
 
 
 /* local/static prototypes */
@@ -91,6 +92,9 @@ FILE *fdopen(int fd, char const *mode){
 			goto_errno(err_1, E_NOMEM);
 	}
 
+	mutex_init(&file->rd_mtx);
+	mutex_init(&file->wr_mtx);
+
 	return file;
 
 
@@ -132,6 +136,8 @@ size_t fread(void *p, size_t size, FILE *stream){
 
 	rd = 0;
 
+	mutex_lock(&stream->rd_mtx);
+
 	while(1){
 		/* copy data from stream read buffer */
 		n = MIN(stream->dataidx - stream->ridx, size - rd);
@@ -141,14 +147,14 @@ size_t fread(void *p, size_t size, FILE *stream){
 		rd += n;
 
 		if(size - rd == 0)
-			return rd;
+			break;
 
 		/* read data from file system */
 		if(size - rd < stream->blen){
 			r = read(stream->fd, stream->rbuf, stream->blen);
 
 			if(r <= 0)
-				goto err_1;
+				goto err_2;
 
 			stream->dataidx = r;
 			stream->ridx = 0;
@@ -157,19 +163,26 @@ size_t fread(void *p, size_t size, FILE *stream){
 			r = read(stream->fd, p + rd, size - rd);
 
 			if(r < 0)
-				goto err_0;
+				goto err_1;
 
-			return rd + r;
+			rd += r;
+			break;
 		}
 	}
 
+	mutex_unlock(&stream->rd_mtx);
 
-err_1:
+	return rd;
+
+
+err_2:
 	stream->dataidx = 0;
 	stream->ridx = 0;
 
-err_0:
+err_1:
+	mutex_unlock(&stream->rd_mtx);
 
+err_0:
 	return 0;
 }
 
@@ -181,8 +194,10 @@ size_t fwrite(void const *p, size_t size, FILE *stream){
 	if(stream->wbuf == 0x0)
 		goto_errno(err, E_INVAL);
 
-	/* copy data to stream write buffer */
+	mutex_lock(&stream->wr_mtx);
+
 	if(size < stream->blen - stream->widx){
+		/* copy data to stream write buffer */
 		memcpy(stream->wbuf + stream->widx, p, size);
 		stream->widx += size;
 
@@ -192,23 +207,27 @@ size_t fwrite(void const *p, size_t size, FILE *stream){
 					goto err;
 			}
 		}
+	}
+	else{
+		/* write data to file system */
+		if(fflush(stream) != 0)
+			goto err;
 
-		return size;
+		r = write(stream->fd, (void*)p, size);
+		size = r;
+
+		if(r < 0)
+			goto err;
 	}
 
-	/* write data to file system */
-	if(fflush(stream) != 0)
-		goto err;
+	mutex_unlock(&stream->wr_mtx);
 
-	r = write(stream->fd, (void*)p, size);
-
-	if(r < 0)
-		goto err;
-
-	return r;
+	return size;
 
 
 err:
+	mutex_lock(&stream->wr_mtx);
+
 	return 0;
 }
 
@@ -348,6 +367,9 @@ static int init(void){
 	stdin = fopen("/dev/tty0", "r");
 	stdout = fopen("/dev/tty0", "w");
 	stderr = fopen("/dev/tty0", "w");
+
+	mutex_lock(&stdin->rd_mtx);
+	mutex_unlock(&stdin->rd_mtx);
 
 	return -errno;
 }

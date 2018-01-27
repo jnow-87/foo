@@ -22,7 +22,7 @@ typedef struct block_t{
 static block_t *block_lst = 0x0;
 static block_t *cur_block = 0x0;
 
-static mutex_t stdlib_mtx = MUTEX_INITIALISER();
+static mutex_t mem_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -30,7 +30,7 @@ void *malloc(size_t size){
 	sc_malloc_t p;
 
 
-	mutex_lock(&stdlib_mtx);
+	mutex_lock(&mem_mtx);
 
 	/* try to allocate in any of the available blocks */
 	if(cur_block != 0x0){
@@ -74,12 +74,12 @@ void *malloc(size_t size){
 		goto err;
 
 done:
-	mutex_unlock(&stdlib_mtx);
+	mutex_unlock(&mem_mtx);
 	return p.p;
 
 
 err:
-	mutex_unlock(&stdlib_mtx);
+	mutex_unlock(&mem_mtx);
 	return 0x0;
 }
 
@@ -88,7 +88,7 @@ void free(void *p){
 	sc_malloc_t _p;
 
 
-	mutex_lock(&stdlib_mtx);
+	mutex_lock(&mem_mtx);
 
 	/* identify block associated to p */
 	list_for_each(block_lst, blk){
@@ -114,7 +114,7 @@ void free(void *p){
 	errno |= _p.errno;
 
 end:
-	mutex_unlock(&stdlib_mtx);
+	mutex_unlock(&mem_mtx);
 }
 
 void exit(int status){
