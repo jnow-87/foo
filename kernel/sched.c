@@ -55,9 +55,11 @@ static mutex_t sched_mtx = MUTEX_INITIALISER();
 
 /* global functions */
 void sched_tick(void){
+	int_type_t imask;
 	thread_t *this_t;
 
 
+	imask = int_enable(INT_NONE);
 	mutex_lock(&sched_mtx);
 
 	// NOTE The running thread might already transitioned to a different
@@ -74,6 +76,7 @@ void sched_tick(void){
 	running[PIR] = this_t;
 
 	mutex_unlock(&sched_mtx);
+	int_enable(imask);
 
 	// TODO if the thread is not actually switched and the only ready thread
 	// 		is a kernel thread suspend the core
@@ -90,7 +93,7 @@ void sched_yield(void){
 	char dummy;
 
 
-	if(int_enabled() != INT_NONE)
+	if(int_enabled() == INT_NONE)
 		kpanic(sched_running(), "interrupts are disabled, syscall not allowed\n");
 
 	// actual thread switches are only performed in interrupt
@@ -99,15 +102,25 @@ void sched_yield(void){
 }
 
 void sched_pause(void){
+	int_type_t imask;
+
+
+	imask = int_enable(INT_NONE);
 	mutex_lock(&sched_mtx);
 	transition((thread_t*)sched_running(), WAITING);
 	mutex_unlock(&sched_mtx);
+	int_enable(imask);
 }
 
 void sched_wake(thread_t const *this_t){
+	int_type_t imask;
+
+
+	imask = int_enable(INT_NONE);
 	mutex_lock(&sched_mtx);
 	transition((thread_t*)this_t, READY);
 	mutex_unlock(&sched_mtx);
+	int_enable(imask);
 }
 
 

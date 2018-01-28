@@ -1,3 +1,4 @@
+#include <arch/interrupt.h>
 #include <kernel/signal.h>
 #include <kernel/sched.h>
 #include <kernel/kmem.h>
@@ -16,6 +17,7 @@ void ksignal_init(ksignal_t *sig){
 }
 
 int ksignal_wait(ksignal_t *sig){
+	int_type_t imask;
 	ksignal_el_t *e;
 
 
@@ -26,12 +28,14 @@ int ksignal_wait(ksignal_t *sig){
 
 	e->thread = sched_running();
 
+	imask = int_enable(INT_NONE);
 	mutex_lock(&sig_mtx);
 
 	list_add_tail(*sig, e);
 	sched_pause();
 
 	mutex_unlock(&sig_mtx);
+	int_enable(imask);
 
 	sched_yield();
 
@@ -39,9 +43,11 @@ int ksignal_wait(ksignal_t *sig){
 }
 
 void ksignal_send(ksignal_t *sig){
+	int_type_t imask;
 	ksignal_el_t *e;
 
 
+	imask = int_enable(INT_NONE);
 	mutex_lock(&sig_mtx);
 
 	e = list_first(*sig);
@@ -53,12 +59,15 @@ void ksignal_send(ksignal_t *sig){
 	}
 
 	mutex_unlock(&sig_mtx);
+	int_enable(imask);
 }
 
 void ksignal_bcast(ksignal_t *sig){
+	int_type_t imask;
 	ksignal_el_t *e;
 
 
+	imask = int_enable(INT_NONE);
 	mutex_lock(&sig_mtx);
 
 	list_for_each(*sig, e){
@@ -68,4 +77,5 @@ void ksignal_bcast(ksignal_t *sig){
 	}
 
 	mutex_unlock(&sig_mtx);
+	int_enable(imask);
 }
