@@ -29,16 +29,16 @@ typedef struct sched_queue_t{
 /* local/static prototypes */
 static int init(void);
 
-static int sc_hdlr_exit(void *p, thread_t const *this_t);
+static int sc_hdlr_exit(void *p);
 
-static int sc_hdlr_thread_create(void *p, thread_t const *this_t);
-static int sc_hdlr_thread_info(void *p, thread_t const *this_t);
-static int sc_hdlr_nice(void *p, thread_t const *this_t);
+static int sc_hdlr_thread_create(void *p);
+static int sc_hdlr_thread_info(void *p);
+static int sc_hdlr_nice(void *p);
 
-static int sc_hdlr_process_create(void *p, thread_t const *this_t);
-static int sc_hdlr_process_info(void *p, thread_t const *this_t);
+static int sc_hdlr_process_create(void *p);
+static int sc_hdlr_process_info(void *p);
 
-static int sc_hdlr_sched_yield(void *p, thread_t const *this_t);
+static int sc_hdlr_sched_yield(void *p);
 
 static void transition(thread_t *this_t, thread_state_t queue);
 
@@ -216,11 +216,13 @@ err:
 
 kernel_init(2, init);
 
-static int sc_hdlr_exit(void *p, thread_t const *this_t){
+static int sc_hdlr_exit(void *p){
 	process_t *this_p;
+	thread_t const *this_t;
 	sched_queue_t *e;
 
 
+	this_t = sched_running();
 	this_p = this_t->parent;
 
 	DEBUG("thread %s:%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
@@ -257,14 +259,14 @@ static int sc_hdlr_exit(void *p, thread_t const *this_t){
 	return E_OK;
 }
 
-static int sc_hdlr_thread_create(void *_p, thread_t const *this_t){
+static int sc_hdlr_thread_create(void *_p){
 	sc_thread_t *p;
 	thread_t *new;
 	process_t *this_p;
 
 
 	p = (sc_thread_t*)_p;
-	this_p = this_t->parent;
+	this_p = sched_running()->parent;
 
 	DEBUG("create thread for \"%s\" at %p, arg %p\n", this_p->name, p->entry, p->arg);
 
@@ -288,11 +290,13 @@ end:
 	return E_OK;
 }
 
-static int sc_hdlr_thread_info(void *_p, thread_t const *this_t){
+static int sc_hdlr_thread_info(void *_p){
 	sc_thread_t *p;
+	thread_t const *this_t;
 
 
 	p = (sc_thread_t*)_p;
+	this_t = sched_running();
 
 	p->tid = this_t->tid;
 	p->priority = this_t->priority;
@@ -302,11 +306,13 @@ static int sc_hdlr_thread_info(void *_p, thread_t const *this_t){
 	return E_OK;
 }
 
-static int sc_hdlr_nice(void *_p, thread_t const *this_t){
+static int sc_hdlr_nice(void *_p){
 	sc_thread_t *p;
+	thread_t const *this_t;
 
 
 	p = (sc_thread_t*)_p;
+	this_t = sched_running();
 
 	((thread_t*)this_t)->priority += p->priority;
 
@@ -316,7 +322,7 @@ static int sc_hdlr_nice(void *_p, thread_t const *this_t){
 	return E_OK;
 }
 
-static int sc_hdlr_process_create(void *_p, thread_t const *this_t){
+static int sc_hdlr_process_create(void *_p){
 	sc_process_t *p = (sc_process_t*)_p;
 	char name[p->name_len + 1];
 	char args[p->args_len + 1];
@@ -356,7 +362,7 @@ end:
 	return E_OK;
 }
 
-static int sc_hdlr_process_info(void *_p, thread_t const *this_t){
+static int sc_hdlr_process_info(void *_p){
 	sc_process_t *p;
 	process_t *this_p;
 
@@ -370,11 +376,10 @@ static int sc_hdlr_process_info(void *_p, thread_t const *this_t){
 	return E_OK;
 }
 
-static int sc_hdlr_sched_yield(void *p, thread_t const *this_t){
+static int sc_hdlr_sched_yield(void *p){
 	sched_tick();
 	return E_OK;
 }
-
 
 /**
  * \brief

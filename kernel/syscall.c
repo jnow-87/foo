@@ -52,12 +52,15 @@ int sc_release(sc_t num){
 
 void ksc_hdlr(sc_t num, void *param, size_t psize){
 	void *kparam;
+#if defined(CONFIG_KERNEL_VIRT_MEM) || defined(CONFIG_KERNEL_SC_DEBUG)
 	thread_t const *this_t;
 
 
 	this_t = sched_running();
+#endif // CONFIG_KERNEL_VIRT_MEM
 
-	DEBUG("handle syscall %d, data at: %#x with %u bytes\n", num, param, psize);
+
+	DEBUG("syscall %d on %s:%u\n", num, this_t->parent->name, this_t->tid);
 
 	/* check syscall */
 	if(num >= NSYSCALLS || sc_map[num] == 0x0)
@@ -79,7 +82,7 @@ void ksc_hdlr(sc_t num, void *param, size_t psize){
 	/* execute callback */
 	int_enable(INT_ALL);
 
-	if(sc_map[num](kparam, this_t) != E_OK)
+	if(sc_map[num](kparam) != E_OK)
 		goto err_1;
 
 	int_enable(INT_NONE);

@@ -14,8 +14,8 @@
 
 
 /* local/static prototypes */
-static int sc_hdlr_malloc(void *p, thread_t const *this_t);
-static int sc_hdlr_free(void *p, thread_t const *this_t);
+static int sc_hdlr_malloc(void *p);
+static int sc_hdlr_free(void *p);
 
 
 /* static variables */
@@ -72,7 +72,7 @@ err_0:
 
 kernel_init(0, init);
 
-static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
+static int sc_hdlr_malloc(void *_p){
 	page_size_t psize;
 	sc_malloc_t *p;
 	page_t *page;
@@ -80,7 +80,7 @@ static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
 
 
 	p = (sc_malloc_t*)_p;
-	this_p = this_t->parent;
+	this_p = sched_running()->parent;
 
 	/* adjust size to page boundary requirements */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -124,13 +124,15 @@ err:
 	return E_OK;
 }
 
-static int sc_hdlr_free(void *_p, thread_t const *this_t){
+static int sc_hdlr_free(void *_p){
 	process_t *this_p;
+	thread_t const *this_t;
 	page_t *page;
 	sc_malloc_t *p;
 
 
 	p = (sc_malloc_t*)_p;
+	this_t = sched_running();
 	this_p = this_t->parent;
 
 	mutex_lock(&this_p->mtx);

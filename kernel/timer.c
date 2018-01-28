@@ -22,8 +22,8 @@ typedef struct timer_t{
 
 
 /* local/static prototypes */
-static int sc_hdlr_sleep(void *p, thread_t const *this_t);
-static int sc_hdlr_time(void *p, thread_t const *this_t);
+static int sc_hdlr_sleep(void *p);
+static int sc_hdlr_time(void *p);
 
 static size_t to_ticks(uint32_t us);
 static void time_carry(void);
@@ -70,7 +70,7 @@ static int init(void){
 
 kernel_init(0, init);
 
-static int sc_hdlr_sleep(void *_p, thread_t const *this_t){
+static int sc_hdlr_sleep(void *_p){
 	timer_t *t;
 	sc_time_t *p;
 
@@ -109,7 +109,7 @@ err_0:
 	return E_OK;
 }
 
-static int sc_hdlr_time(void *_p, thread_t const *this_t){
+static int sc_hdlr_time(void *_p){
 	sc_time_t *p;
 
 

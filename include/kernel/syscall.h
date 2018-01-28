@@ -8,7 +8,7 @@
 
 
 /* types */
-typedef int (*sc_hdlr_t)(void *param, thread_t const *this_t);
+typedef int (*sc_hdlr_t)(void *param);
 
 
 /* prototypes */
