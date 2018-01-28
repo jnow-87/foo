@@ -17,7 +17,7 @@ thread_t const *sched_running(void);
 
 void sched_yield(void);
 void sched_pause(void);
-void sched_wake(thread_t const *this_t);
+void sched_wake(thread_t *this_t);
 
 
 #endif // KERNEL_SCHED_H

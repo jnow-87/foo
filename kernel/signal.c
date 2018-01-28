@@ -54,7 +54,7 @@ void ksignal_send(ksignal_t *sig){
 
 	if(e != 0x0){
 		list_rm(*sig, e);
-		sched_wake(e->thread);
+		sched_wake((thread_t*)e->thread);
 		kfree(e);
 	}
 
@@ -72,7 +72,7 @@ void ksignal_bcast(ksignal_t *sig){
 
 	list_for_each(*sig, e){
 		list_rm(*sig, e);
-		sched_wake(e->thread);
+		sched_wake((thread_t*)e->thread);
 		kfree(e);
 	}
 

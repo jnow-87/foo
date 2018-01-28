@@ -65,7 +65,7 @@ void sched_tick(void){
 	// NOTE The running thread might already transitioned to a different
 	//		state, e.g. through the kernel signal mechanism
 	if(running[PIR]->state == RUNNING)
-		transition((thread_t*)running[PIR], READY);
+		transition(running[PIR], READY);
 
 	this_t = list_first(sched_queues[READY])->thread;
 
@@ -112,13 +112,13 @@ void sched_pause(void){
 	int_enable(imask);
 }
 
-void sched_wake(thread_t const *this_t){
+void sched_wake(thread_t *this_t){
 	int_type_t imask;
 
 
 	imask = int_enable(INT_NONE);
 	mutex_lock(&sched_mtx);
-	transition((thread_t*)this_t, READY);
+	transition(this_t, READY);
 	mutex_unlock(&sched_mtx);
 	int_enable(imask);
 }
