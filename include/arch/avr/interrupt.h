@@ -25,7 +25,7 @@ typedef enum int_type_t{
 
 
 /* prototypes */
-int avr_int_enable(int_type_t mask);
+int_type_t avr_int_enable(int_type_t mask);
 int_type_t avr_int_enabled(void);
 
 

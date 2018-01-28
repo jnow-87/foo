@@ -63,11 +63,16 @@ void avr_int_inval_hdlr(void){
 	kpanic(0x0, "unhandled interrupt");
 }
 
-int avr_int_enable(int_type_t mask){
+int_type_t avr_int_enable(int_type_t mask){
+	int_type_t s;
+
+
+	s = (mreg_r(SREG) & (0x1 << SREG_I)) ? INT_GLOBAL : INT_NONE;
+
 	if(mask)	asm volatile("sei");
 	else		asm volatile("cli");
 
-	return E_OK;
+	return s;
 }
 
 int_type_t avr_int_enabled(void){

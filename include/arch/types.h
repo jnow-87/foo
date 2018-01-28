@@ -50,7 +50,7 @@ typedef struct{
 	int (*copy_to_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
 
 	/* interrupts */
-	int (*int_enable)(int_type_t mask);
+	int_type_t (*int_enable)(int_type_t mask);
 	int_type_t (*int_enabled)(void);
 
 	int (*ipi_sleep)(void);
