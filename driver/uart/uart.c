@@ -161,6 +161,6 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 		return E_OK;
 
 	default:
-		return -E_NOIMP;
+		return_errno(E_NOIMP);
 	}
 }

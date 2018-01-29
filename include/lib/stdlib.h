@@ -9,7 +9,7 @@
 void exit(int status);
 
 void *malloc(size_t size);
-void free(void *p);
+void free(void *addr);
 
 
 #endif // LIB_STDLIB_H

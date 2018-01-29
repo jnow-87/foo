@@ -2,4 +2,4 @@
 
 
 /* global variables */
-int errno = E_OK;
+errno_t errno = E_OK;

@@ -27,6 +27,7 @@ static mutex_t mem_mtx = MUTEX_INITIALISER();
 
 /* global functions */
 void *malloc(size_t size){
+	void *addr;
 	sc_malloc_t p;
 
 
@@ -35,17 +36,17 @@ void *malloc(size_t size){
 	/* try to allocate in any of the available blocks */
 	if(cur_block != 0x0){
 		// try allocation on last used block
-		p.p = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
+		addr = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
 
-		if(p.p != 0x0)
-			goto done;
+		if(addr != 0x0)
+			goto clean;
 
 		// try allocation on any of the available blocks
 		list_for_each(block_lst, cur_block){
-			p.p = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
+			addr = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
 
-			if(p.p != 0x0)
-				goto done;
+			if(addr != 0x0)
+				goto clean;
 		}
 	}
 
@@ -55,68 +56,63 @@ void *malloc(size_t size){
 	p.size = MAX(CONFIG_MALLOC_MIN_SIZE, p.size);
 
 	// syscall
-	sc(SC_MALLOC, &p);
-	errno |= p.errno;
+	addr = 0x0;
 
-	if(p.errno)
-		goto err;
+	if(sc(SC_MALLOC, &p) != E_OK)
+		goto clean;
 
 	// update block_lst
-	cur_block = p.p;
+	addr = p.p;
+
+	cur_block = addr;
 	list_add_tail(block_lst, cur_block);
 
-	cur_block->mem = p.p + sizeof(block_t);
+	cur_block->mem = addr + sizeof(block_t);
 	memblock_init(cur_block->mem, p.size);
 
-	p.p = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
+	addr = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
 
-	if(p.p == 0x0)
-		goto err;
 
-done:
+clean:
 	mutex_unlock(&mem_mtx);
-	return p.p;
 
-
-err:
-	mutex_unlock(&mem_mtx);
-	return 0x0;
+	return addr;
 }
 
-void free(void *p){
+void free(void *addr){
 	block_t *blk;
-	sc_malloc_t _p;
+	sc_malloc_t p;
 
 
 	mutex_lock(&mem_mtx);
 
-	/* identify block associated to p */
+	/* identify block associated to addr */
 	list_for_each(block_lst, blk){
-		if((void*)blk <= p && (void*)blk->mem + blk->mem->len > p)
+		if((void*)blk <= addr && (void*)blk->mem + blk->mem->len > addr)
 			break;
 	}
 
 	if(blk == 0x0)
-		goto end;
+		goto clean;
 
-	/* free p */
-	if(memblock_free(&blk->mem, p) < 0)
-		goto end;
+	/* free addr */
+	if(memblock_free(&blk->mem, addr) < 0)
+		goto clean;
 
 	/* return block to the kernel if nothing is allocated on it */
 	if((void*)blk + sizeof(block_t) != blk->mem || list_first(blk->mem) != list_last(blk->mem))
-		goto end;
+		goto clean;
 
 	list_rm(block_lst, blk);
 
-	_p.p = blk;
-	sc(SC_FREE, &_p);
-	errno |= _p.errno;
+	p.p = blk;
+	(void)sc(SC_FREE, &p);
 
-end:
+
+clean:
 	mutex_unlock(&mem_mtx);
 }
 
 void exit(int status){
-	sc(SC_EXIT, &status);
+	(void)sc(SC_EXIT, &status);
 }

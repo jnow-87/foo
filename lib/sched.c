@@ -7,5 +7,5 @@ void sched_yield(void){
 	char dummy;
 
 
-	sc(SC_SCHEDYIELD, &dummy);
+	(void)sc(SC_SCHEDYIELD, &dummy);
 }

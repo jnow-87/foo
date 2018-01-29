@@ -21,20 +21,21 @@ static int sc_hdlr_chdir(void *param);
 
 /* local functions */
 static int init(void){
-	errno_t e;
+	int r;
 
 
-	e = E_OK;
-	e |= sc_register(SC_OPEN, sc_hdlr_open);
-	e |= sc_register(SC_CLOSE, sc_hdlr_close);
-	e |= sc_register(SC_READ, sc_hdlr_read);
-	e |= sc_register(SC_WRITE, sc_hdlr_write);
-	e |= sc_register(SC_IOCTL, sc_hdlr_ioctl);
-	e |= sc_register(SC_FCNTL, sc_hdlr_fcntl);
-	e |= sc_register(SC_RMNODE, sc_hdlr_rmnode);
-	e |= sc_register(SC_CHDIR, sc_hdlr_chdir);
+	r = E_OK;
 
-	return -e;
+	r |= sc_register(SC_OPEN, sc_hdlr_open);
+	r |= sc_register(SC_CLOSE, sc_hdlr_close);
+	r |= sc_register(SC_READ, sc_hdlr_read);
+	r |= sc_register(SC_WRITE, sc_hdlr_write);
+	r |= sc_register(SC_IOCTL, sc_hdlr_ioctl);
+	r |= sc_register(SC_FCNTL, sc_hdlr_fcntl);
+	r |= sc_register(SC_RMNODE, sc_hdlr_rmnode);
+	r |= sc_register(SC_CHDIR, sc_hdlr_chdir);
+
+	return r;
 }
 
 kernel_init(1, init);
@@ -51,8 +52,7 @@ static int sc_hdlr_open(void *_p){
 	/* initials */
 	p = (sc_fs_t*)_p;
 
-	if(copy_from_user(path, p->data, p->data_len, this_p) != E_OK)
-		goto err;
+	copy_from_user(path, p->data, p->data_len, this_p);
 
 	/* identify file system and call its open callback */
 	mutex_lock(&this_p->mtx);
@@ -60,22 +60,13 @@ static int sc_hdlr_open(void *_p){
 	mutex_unlock(&this_p->mtx);
 
 	if(root->ops->open == 0x0)
-		goto_errno(k_ok, E_NOIMP);
+		return_errno(E_NOIMP);
 
 	fs_lock();
 	p->fd = root->ops->open(root, path, p->mode, this_p);
 	fs_unlock();
 
-
-k_ok:
-	p->errno = errno;
-
 	return E_OK;
-
-err:
-	p->errno = errno;
-
-	return -errno;
 }
 
 static int sc_hdlr_close(void *_p){
@@ -95,19 +86,15 @@ static int sc_hdlr_close(void *_p){
 	mutex_unlock(&this_p->mtx);
 
 	if(fd == 0x0)
-		goto_errno(k_ok, E_INVAL);
+		return_errno(E_INVAL);
 
 	/* call close callback if implemented */
 	if(fd->node->ops->close == 0x0)
-		goto_errno(k_ok, E_NOIMP);
+		return_errno(E_NOIMP);
 
 	fs_lock();
 	(void)fd->node->ops->close(fd, this_p);
 	fs_unlock();
-
-
-k_ok:
-	p->errno = errno;
 
 	return E_OK;
 }
@@ -130,31 +117,19 @@ static int sc_hdlr_read(void *_p){
 	mutex_unlock(&this_p->mtx);
 
 	if(fd == 0x0)
-		goto_errno(k_ok, E_INVAL);
+		return_errno(E_INVAL);
 
 	/* call read callback if implemented */
 	if(fd->node->ops->read == 0x0)
-		goto_errno(err, E_NOIMP);
+		return_errno(E_NOIMP);
 
 	mutex_lock(&fd->node->rd_mtx);
 	p->data_len = fd->node->ops->read(fd, buf, p->data_len);
 	mutex_unlock(&fd->node->rd_mtx);
 
-	if(errno != E_OK)
-		goto k_ok;
-
 	/* update user space */
-	if(copy_to_user(p->data, buf, p->data_len, this_p) != E_OK)
-		goto err;
-
-
-k_ok:
-	p->errno = errno;
-
-	return E_OK;
-
-err:
-	p->errno = errno;
+	if(errno == E_OK)
+		copy_to_user(p->data, buf, p->data_len, this_p);
 
 	return -errno;
 }
@@ -171,8 +146,7 @@ static int sc_hdlr_write(void *_p){
 	/* initials */
 	p = (sc_fs_t*)_p;
 
-	if(copy_from_user(buf, p->data, p->data_len, this_p) != E_OK)
-		goto err;
+	copy_from_user(buf, p->data, p->data_len, this_p);
 
 	/* get file descriptor */
 	mutex_lock(&this_p->mtx);
@@ -180,24 +154,15 @@ static int sc_hdlr_write(void *_p){
 	mutex_unlock(&this_p->mtx);
 
 	if(fd == 0x0)
-		goto_errno(k_ok, E_INVAL);
+		return_errno(E_INVAL);
 
 	/* call write callback if implemented */
 	if(fd->node->ops->write == 0x0)
-		goto_errno(k_ok, E_NOIMP);
+		return_errno(E_NOIMP);
 
 	mutex_lock(&fd->node->wr_mtx);
 	p->data_len = fd->node->ops->write(fd, buf, p->data_len);
 	mutex_unlock(&fd->node->wr_mtx);
-
-
-k_ok:
-	p->errno = errno;
-
-	return E_OK;
-
-err:
-	p->errno = errno;
 
 	return -errno;
 }
@@ -214,8 +179,7 @@ static int sc_hdlr_ioctl(void *_p){
 	/* initials */
 	p = (sc_fs_t*)_p;
 
-	if(copy_from_user(data, p->data, p->data_len, this_p) != E_OK)
-		goto err;
+	copy_from_user(data, p->data, p->data_len, this_p);
 
 	/* get file descriptor */
 	mutex_lock(&this_p->mtx);
@@ -223,11 +187,11 @@ static int sc_hdlr_ioctl(void *_p){
 	mutex_unlock(&this_p->mtx);
 
 	if(fd == 0x0)
-		goto_errno(k_ok, E_INVAL);
+		return_errno(E_INVAL);
 
 	/* call ioctl callback if implemented */
 	if(fd->node->ops->ioctl == 0x0)
-		goto_errno(k_ok, E_NOIMP);
+		return_errno(E_NOIMP);
 
 	mutex_lock(&fd->node->wr_mtx);
 	mutex_lock(&fd->node->rd_mtx);
@@ -238,18 +202,8 @@ static int sc_hdlr_ioctl(void *_p){
 	mutex_unlock(&fd->node->wr_mtx);
 
 	/* update user space */
-	if(copy_to_user(p->data, data, p->data_len, this_p) != E_OK)
-		goto err;
-
-
-k_ok:
-	p->errno = errno;
-
-	return E_OK;
-
-
-err:
-	p->errno = errno;
+	if(errno == E_OK)
+		copy_to_user(p->data, data, p->data_len, this_p);
 
 	return -errno;
 }
@@ -266,8 +220,7 @@ static int sc_hdlr_fcntl(void *_p){
 	/* initials */
 	p = (sc_fs_t*)_p;
 
-	if(copy_from_user(data, p->data, p->data_len, this_p) != E_OK)
-		goto err;
+	copy_from_user(data, p->data, p->data_len, this_p);
 
 	/* get file descriptor */
 	mutex_lock(&this_p->mtx);
@@ -275,11 +228,11 @@ static int sc_hdlr_fcntl(void *_p){
 	mutex_unlock(&this_p->mtx);
 
 	if(fd == 0x0)
-		goto_errno(k_ok, E_INVAL);
+		return_errno(E_INVAL);
 
 	/* call fcntl callback if implemented */
 	if(fd->node->ops->fcntl == 0x0)
-		goto_errno(k_ok, E_NOIMP);
+		return_errno(E_NOIMP);
 
 	mutex_lock(&fd->node->wr_mtx);
 	mutex_lock(&fd->node->rd_mtx);
@@ -290,17 +243,8 @@ static int sc_hdlr_fcntl(void *_p){
 	mutex_unlock(&fd->node->wr_mtx);
 
 	/* update user space */
-	if(copy_to_user(p->data, data, p->data_len, this_p) != E_OK)
-		goto err;
-
-
-k_ok:
-	p->errno = errno;
-
-	return E_OK;
-
-err:
-	p->errno = errno;
+	if(errno == E_OK)
+		copy_to_user(p->data, data, p->data_len, this_p);
 
 	return -errno;
 }
@@ -317,8 +261,7 @@ static int sc_hdlr_rmnode(void *_p){
 	/* initials */
 	p = (sc_fs_t*)_p;
 
-	if(copy_from_user(path, p->data, p->data_len, this_p) != E_OK)
-		goto err;
+	copy_from_user(path, p->data, p->data_len, this_p);
 
 	/* identify file system and call its rmnode callback */
 	mutex_lock(&this_p->mtx);
@@ -326,20 +269,11 @@ static int sc_hdlr_rmnode(void *_p){
 	mutex_unlock(&this_p->mtx);
 
 	if(root->ops->rmnode == 0x0)
-		goto_errno(k_ok, E_NOIMP);
+		return_errno(E_NOIMP);
 
 	fs_lock();
 	(void)root->ops->rmnode(root, path);
 	fs_unlock();
-
-
-k_ok:
-	p->errno = errno;
-
-	return E_OK;
-
-err:
-	p->errno = errno;
 
 	return -errno;
 }
@@ -356,8 +290,7 @@ static int sc_hdlr_chdir(void *_p){
 	/* initials */
 	p = (sc_fs_t*)_p;
 
-	if(copy_from_user(path, p->data, p->data_len, this_p) != E_OK)
-		goto err;
+	copy_from_user(path, p->data, p->data_len, this_p);
 
 	/* identify file system and call its chdir callback */
 	mutex_lock(&this_p->mtx);
@@ -365,20 +298,11 @@ static int sc_hdlr_chdir(void *_p){
 	root = (path[0] == '/') ? (fs_root) : this_p->cwd;
 
 	if(root->ops->chdir == 0x0)
-		goto_errno(k_ok, E_NOIMP);
+		return_errno(E_NOIMP);
 
 	(void)root->ops->chdir(root, path, this_p);
 
-
-k_ok:
 	mutex_unlock(&this_p->mtx);
-	p->errno = errno;
-
-	return E_OK;
-
-err:
-	mutex_unlock(&this_p->mtx);
-	p->errno = errno;
 
 	return -errno;
 }

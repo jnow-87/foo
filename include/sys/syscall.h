@@ -11,7 +11,7 @@
 
 
 /* types */
-// syscalls
+// syscall common
 typedef enum{
 	SC_OPEN,
 	SC_CLOSE,
@@ -35,12 +35,19 @@ typedef enum{
 	NSYSCALLS
 } sc_t;
 
-// syscall arguments
 typedef struct{
-	void *p;
+	sc_t num;
+
+	void *param;
 	size_t size;
 
 	int errno;
+} sc_arg_t;
+
+// syscall specific arguments
+typedef struct{
+	void *p;
+	size_t size;
 } sc_malloc_t;
 
 typedef struct{
@@ -51,8 +58,6 @@ typedef struct{
 
 	int cmd;
 	f_mode_t mode;
-
-	int errno;
 } sc_fs_t;
 
 typedef struct{
@@ -63,8 +68,6 @@ typedef struct{
 
 	unsigned int affinity;
 	int priority;
-
-	int errno;
 } sc_thread_t;
 
 typedef struct{
@@ -77,14 +80,10 @@ typedef struct{
 			   *args;
 	size_t name_len,
 		   args_len;
-
-	int errno;
 } sc_process_t;
 
 typedef struct{
 	time_t time;
-
-	int errno;
 } sc_time_t;
 
 

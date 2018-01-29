@@ -450,7 +450,7 @@ static int file_seek(fs_filed_t *fd, seek_t *p){
 	if(p->whence == SEEK_SET)		whence = 0;
 	else if(p->whence == SEEK_CUR)	whence = fd->fp;
 	else if(p->whence == SEEK_END)	whence = file->data_used;
-	else							return -E_NOIMP;
+	else							return_errno(E_NOIMP);
 
 	if(whence + p->offset > file->data_used)
 		goto_errno(k_ok, E_LIMIT);

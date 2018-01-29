@@ -98,7 +98,7 @@ void sched_yield(void){
 
 	// actual thread switches are only performed in interrupt
 	// service routines as it is required for syscalls
-	sc(SC_SCHEDYIELD, &dummy);
+	(void)sc(SC_SCHEDYIELD, &dummy);
 }
 
 void sched_pause(void){
@@ -133,7 +133,7 @@ static int init(void){
 
 
 	/* register syscalls */
-	r = 0;
+	r = E_OK;
 
 	r |= sc_register(SC_EXIT, sc_hdlr_exit);
 	r |= sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
@@ -211,7 +211,7 @@ err:
 	/* NOTE cleanup in case of an error is not required, since the
 	 * 		kernel will stop anyways if any of the init calls fails
 	 */
-	return_errno(errno);
+	return -errno;
 }
 
 kernel_init(2, init);
@@ -268,12 +268,14 @@ static int sc_hdlr_thread_create(void *_p){
 	p = (sc_thread_t*)_p;
 	this_p = sched_running()->parent;
 
+	p->tid = 0;
+
 	DEBUG("create thread for \"%s\" at %p, arg %p\n", this_p->name, p->entry, p->arg);
 
 	new = thread_create(this_p, list_last(this_p->threads)->tid + 1, p->entry, p->arg);
 
 	if(new == 0x0)
-		goto end;
+		return -errno;
 
 	mutex_lock(&sched_mtx);
 
@@ -282,10 +284,7 @@ static int sc_hdlr_thread_create(void *_p){
 
 	mutex_unlock(&sched_mtx);
 
-
-end:
-	p->errno = errno;
-	p->tid = (new == 0x0) ? 0 : new->tid;
+	p->tid = new->tid;
 
 	return E_OK;
 }
@@ -301,7 +300,6 @@ static int sc_hdlr_thread_info(void *_p){
 	p->tid = this_t->tid;
 	p->priority = this_t->priority;
 	p->affinity = this_t->affinity;
-	p->errno = E_OK;
 
 	return E_OK;
 }
@@ -317,7 +315,6 @@ static int sc_hdlr_nice(void *_p){
 	((thread_t*)this_t)->priority += p->priority;
 
 	p->priority = this_t->priority;
-	p->errno = E_OK;
 
 	return E_OK;
 }
@@ -330,14 +327,13 @@ static int sc_hdlr_process_create(void *_p){
 			  *new;
 
 
+	p->pid = 0;
+
 	/* process arguments */
 	this_p = sched_running()->parent;
 
-	if(copy_from_user(name, p->name, p->name_len + 1, this_p) != E_OK)
-		goto end;
-
-	if(copy_from_user(args, p->args, p->args_len + 1, this_p) != E_OK)
-		goto end;
+	copy_from_user(name, p->name, p->name_len + 1, this_p);
+	copy_from_user(args, p->args, p->args_len + 1, this_p);
 
 	/* create process */
 	DEBUG("create process \"%s\" with args \"%s\"\n", name, args);
@@ -345,7 +341,7 @@ static int sc_hdlr_process_create(void *_p){
 	new = process_create(p->binary, p->bin_type, p->name, p->args, this_p->cwd);
 
 	if(new == 0x0)
-		goto end;
+		return -errno;
 
 	mutex_lock(&sched_mtx);
 
@@ -354,10 +350,7 @@ static int sc_hdlr_process_create(void *_p){
 
 	mutex_unlock(&sched_mtx);
 
-
-end:
-	p->errno = errno;
-	p->pid = (new == 0x0) ? 0 : new->pid;
+	p->pid = new->pid;
 
 	return E_OK;
 }
@@ -371,7 +364,6 @@ static int sc_hdlr_process_info(void *_p){
 	this_p = sched_running()->parent;
 
 	p->pid = this_p->pid;
-	p->errno = E_OK;
 
 	return E_OK;
 }

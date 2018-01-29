@@ -58,40 +58,41 @@ void ktimer_tick(void){
 
 /* local functions */
 static int init(void){
-	int e;
+	int r;
 
 
-	e = 0;
-	e |= sc_register(SC_SLEEP, sc_hdlr_sleep);
-	e |= sc_register(SC_TIME, sc_hdlr_time);
+	r = E_OK;
 
-	return -e;
+	r |= sc_register(SC_SLEEP, sc_hdlr_sleep);
+	r |= sc_register(SC_TIME, sc_hdlr_time);
+
+	return r;
 }
 
 kernel_init(0, init);
 
 static int sc_hdlr_sleep(void *_p){
 	timer_t *t;
-	sc_time_t *p;
+	time_t *p;
 
 
-	p = (sc_time_t*)_p;
+	p = (time_t*)_p;
 
 	/* allocate timer */
 	t = kmalloc(sizeof(timer_t));
 
 	if(t == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		return_errno(E_NOMEM);
 
 	/* init timer */
 	ksignal_init(&t->sig);
 
-	if(p->time.us)		t->ticks = to_ticks(p->time.us);
-	else if(p->time.ms)	t->ticks = to_ticks((uint32_t)p->time.ms * 1000);
-	else				goto_errno(err_1, E_INVAL);
+	if(p->us)		t->ticks = to_ticks(p->us);
+	else if(p->ms)	t->ticks = to_ticks((uint32_t)p->ms * 1000);
+	else			goto_errno(clean, E_INVAL);
 
 	if(t->ticks == 0)
-		goto_errno(err_1, E_LIMIT);
+		goto_errno(clean, E_LIMIT);
 
 	list_add_tail(timer_lst, t);
 
@@ -101,24 +102,21 @@ static int sc_hdlr_sleep(void *_p){
 	/* cleanup */
 	list_rm(timer_lst, t);
 
-err_1:
+
+clean:
 	kfree(t);
 
-err_0:
-	p->errno = errno;
-	return E_OK;
+	return -errno;
 }
 
 static int sc_hdlr_time(void *_p){
-	sc_time_t *p;
+	time_t *p;
 
 
-	p = (sc_time_t*)_p;
+	p = (time_t*)_p;
 
 	time_carry();
-
-	p->time = time;
-	p->errno = E_OK;
+	*p = time;
 
 	return E_OK;
 }

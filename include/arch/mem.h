@@ -14,10 +14,10 @@
 #define page_entry_inval_va(va, sync)		(arch_kernel_call(page_entry_inval_va, E_OK)(va, sync))
 #define page_entry_search(p, r)				(arch_kernel_call(page_entry_search, E_OK)(p, r))
 #define copy_from_user(tgt, src, size, p) \
-	(arch_cbs_kernel.copy_from_user != 0x0 ? arch_cbs_kernel.copy_from_user(tgt, src, size, p) : (memcpy(tgt, src, size), E_OK))
+	(arch_cbs_kernel.copy_from_user != 0x0 ? arch_cbs_kernel.copy_from_user(tgt, src, size, p) : (void)memcpy(tgt, src, size))
 
 #define copy_to_user(tgt, src, size, p)	\
-	(arch_cbs_kernel.copy_to_user != 0x0 ? arch_cbs_kernel.copy_to_user(tgt, src, size, p) : (memcpy(tgt, src, size), E_OK))
+	(arch_cbs_kernel.copy_to_user != 0x0 ? arch_cbs_kernel.copy_to_user(tgt, src, size, p) : (void)memcpy(tgt, src, size))
 
 
 #endif // ARCH_MEM_H

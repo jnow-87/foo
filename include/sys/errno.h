@@ -22,7 +22,7 @@ typedef enum{
 
 
 /* external variables */
-extern int errno;
+extern errno_t errno;
 
 
 #endif // SYS_ERRNO_H
