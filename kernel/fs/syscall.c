@@ -38,7 +38,7 @@ static int init(void){
 	return r;
 }
 
-kernel_init(1, init);
+kernel_init(0, init);
 
 static int sc_hdlr_open(void *_p){
 	char path[((sc_fs_t*)(_p))->data_len];

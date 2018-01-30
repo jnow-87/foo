@@ -96,5 +96,5 @@ static int init(void){
 	return E_OK;
 }
 
-core_init(0, init);
+core_init(init);
 #endif // BUILD_KERNEL

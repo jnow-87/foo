@@ -21,3 +21,4 @@ endif
 
 ## debug messages
 syscall-cppflags := -DBUILD_KERNEL_SYSCALL
+init-cppflags := -DBUILD_KERNEL_INIT
