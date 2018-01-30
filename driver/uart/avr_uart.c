@@ -113,7 +113,7 @@ int avr_uart_putsn(unsigned int uart, char const *s, size_t n){
 /* local functions */
 #if (CONFIG_UART_CNT > 0)
 
-void uart0_rx_hdlr(void){
+static void uart0_rx_hdlr(void){
 	rx_hdlr(0);
 }
 
@@ -123,7 +123,7 @@ avr_int(INT_USART0_RX, uart0_rx_hdlr);
 
 #if (CONFIG_UART_CNT > 1)
 
-void uart1_rx_hdlr(void){
+static void uart1_rx_hdlr(void){
 	rx_hdlr(1);
 }
 

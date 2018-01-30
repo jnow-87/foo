@@ -23,14 +23,14 @@ uint8_t int_num = 0;
 
 /* global functions */
 struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
-	int terrno;
+	errno_t terrno;
 
 
 	/* save thread context of active thread*/
 	thread_context_enqueue((thread_t*)sched_running(), tc);
 
 	/* call respective interrupt handler */
-	// save errno
+	// save and reset errno
 	terrno = errno;
 	errno = E_OK;
 
