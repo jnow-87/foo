@@ -49,27 +49,44 @@ typedef enum{
 	LEN_CHAR = 1,
 	LEN_SHORT,
 	LEN_INT,
-#ifdef  CONFIG_PRINTF_LONG
 	LEN_LONG,
+	LEN_LONGLONG,
+	LEN_SIZET,
+	LEN_PTRDIFF,
+	LEN_INTMAX,
+} len_t;
+
+typedef union{
+	INTTYPE ref;
+	char c;
+	short int s;
+	int i;
+	void *p;
+
+#ifdef CONFIG_PRINTF_LONG
+	long int l;
 #endif // CONFIG_PRINTF_LONG
 
 #ifdef CONFIG_PRINTF_LONGLONG
-	LEN_LONGLONG,
+	long long int ll;
 #endif // CONFIG_PRINTF_LONGLONG
 
+#ifdef CONFIG_PRINTF_INTMAX
+	intmax_t im;
+#endif // CONFIG_PRINTF_INTMAX
+
 #ifdef CONFIG_PRINTF_SIZET
-	LEN_SIZET,
+	ssize_t st;
 #endif // CONFIG_PRINTF_SIZET
 
 #ifdef CONFIG_PRINTF_PTRDIFF
-	LEN_PTRDIFF,
+	ptrdiff_t pd;
 #endif // CONFIG_PRINTF_PTRDIFF
 
-#ifdef CONFIG_PRINTF_INTMAX
-	LEN_INTMAX,
-#endif // CONFIG_PRINTF_INTMAX
-} len_t;
-
+#ifdef FLOATTYPE
+	FLOATTYPE d;
+#endif // FLOATTYPE
+} value_t;
 
 /* local/static prototypes */
 static size_t put_char(FILE *stream, char c);
@@ -88,37 +105,8 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 		   blen;
 	len_t len;
 	fflag_t flags;
-	union{
-		INTTYPE ref;
-		char c;
-		short int s;
-		int i;
-		void *p;
+	value_t v;
 
-#ifdef CONFIG_PRINTF_LONG
-		long int l;
-#endif // CONFIG_PRINTF_LONG
-
-#ifdef CONFIG_PRINTF_LONGLONG
-		long long int ll;
-#endif // CONFIG_PRINTF_LONGLONG
-
-#ifdef CONFIG_PRINTF_INTMAX
-		intmax_t im;
-#endif // CONFIG_PRINTF_INTMAX
-
-#ifdef CONFIG_PRINTF_SIZET
-		ssize_t st;
-#endif // CONFIG_PRINTF_SIZET
-
-#ifdef CONFIG_PRINTF_PTRDIFF
-		ptrdiff_t pd;
-#endif // CONFIG_PRINTF_PTRDIFF
-
-#ifdef FLOATTYPE
-		FLOATTYPE d;
-#endif // FLOATTYPE
-	} v;
 
 #ifdef CONFIG_NOFLOAT
 	char buf[23];
@@ -234,54 +222,30 @@ parse_width:
 			break;
 
 		case 'L':
-#ifdef CONFIG_PRINTF_LONGLONG
 			len = LEN_LONGLONG;
 			break;
-#else
-			goto spec_err;
-#endif // CONFIG_PRINTF_LONGLONG
 
 		case 'l':
-#ifdef CONFIG_PRINTF_LONG
 			len = LEN_LONG;
 
 			if(*format == 'l'){
-#ifdef CONFIG_PRINTF_LONGLONG
 				len = LEN_LONGLONG;
 				format++;
-#else
-				goto spec_err;
-#endif // CONFIG_PRINTF_LONGLONG
 			}
 
 			break;
-#else
-			goto spec_err;
-#endif // CONFIG_PRINTF_LONG
 
 		case 'j':
-#ifdef CONFIG_PRINTF_INTMAX
 			len = LEN_INTMAX;
 			break;
-#else
-			goto spec_err;
-#endif // CONFIG_PRINTF_INTMAX
 
 		case 'z':
-#ifdef CONFIG_PRINTF_SIZET
 			len = LEN_SIZET;
 			break;
-#else
-			goto spec_err;
-#endif // CONFIG_PRINTF_SIZET
 
 		case 't':
-#ifdef CONFIG_PRINTF_PTRDIFF
 			len = LEN_PTRDIFF;
 			break;
-#else
-			goto spec_err;
-#endif // CONFIG_PRINTF_PTRDIFF
 
 		default:
 			--format;
@@ -313,34 +277,49 @@ parse_width:
 				v.i = va_arg(lst, int);
 				break;
 
-#ifdef CONFIG_PRINTF_LONG
 			case LEN_LONG:
+#ifdef CONFIG_PRINTF_LONG
 				v.l = va_arg(lst, long int);
 				break;
+#else
+				(void)va_arg(lst, long int);
+				goto spec_err;
 #endif // CONFIG_PRINTF_LONG
 
-#ifdef CONFIG_PRINTF_LONGLONG
 			case LEN_LONGLONG:
+#ifdef CONFIG_PRINTF_LONGLONG
 				v.ll = va_arg(lst, long long int);
 				break;
+#else
+				(void)va_arg(lst, long long int);
+				goto spec_err;
 #endif // CONFIG_PRINTF_LONGLONG
 
-#ifdef CONFIG_PRINTF_SIZET
 			case LEN_SIZET:
+#ifdef CONFIG_PRINTF_SIZET
 				v.st = va_arg(lst, size_t);
 				break;
+#else
+				(void)va_arg(lst, size_t);
+				goto spec_err;
 #endif // CONFIG_PRINTF_SIZET
 
-#ifdef CONFIG_PRINTF_PTRDIFF
 			case LEN_PTRDIFF:
+#ifdef CONFIG_PRINTF_PTRDIFF
 				v.pd = va_arg(lst, PTRDIFF_T);
 				break;
+#else
+				(void)va_arg(lst, PTRDIFF_T);
+				goto spec_err;
 #endif // CONFIG_PRINTF_PTRDIFF
 
-#ifdef CONFIG_PRINTF_INTMAX
 			case LEN_INTMAX:
+#ifdef CONFIG_PRINTF_INTMAX
 				v.im = va_arg(lst, intmax_t);
 				break;
+#else
+				(void)va_arg(lst, intmax_t);
+				goto spec_err;
 #endif // CONFIG_PRINTF_INTMAX
 			}
 
@@ -361,8 +340,8 @@ parse_width:
 
 				break;
 
-#ifdef CONFIG_PRINTF_LONG
 			case LEN_LONG:
+#ifdef CONFIG_PRINTF_LONG
 				v.l = va_arg(lst, long int);
 
 				if(v.l < 0){
@@ -371,10 +350,13 @@ parse_width:
 				}
 
 				break;
+#else
+				(void)va_arg(lst, long int);
+				goto spec_err;
 #endif // CONFIG_PRINTF_LONG
 
-#ifdef CONFIG_PRINTF_LONGLONG
 			case LEN_LONGLONG:
+#ifdef CONFIG_PRINTF_LONGLONG
 				v.ll = va_arg(lst, long long int);
 
 				if(v.ll < 0){
@@ -383,10 +365,13 @@ parse_width:
 				}
 
 				break;
+#else
+				(void)va_arg(lst, long long int);
+				goto spec_err;
 #endif // CONFIG_PRINTF_LONGLONG
 
-#ifdef CONFIG_PRINTF_SIZET
 			case LEN_SIZET:
+#ifdef CONFIG_PRINTF_SIZET
 				v.st = va_arg(lst, size_t);
 
 				if(v.st < 0){
@@ -395,10 +380,13 @@ parse_width:
 				}
 
 				break;
+#else
+				(void)va_arg(lst, size_t);
+				goto spec_err;
 #endif // CONFIG_PRINTF_SIZET
 
-#ifdef CONFIG_PRINTF_PTRDIFF
 			case LEN_PTRDIFF:
+#ifdef CONFIG_PRINTF_PTRDIFF
 				v.pd = va_arg(lst, PTRDIFF_T);
 
 				if(v.pd < 0){
@@ -407,10 +395,13 @@ parse_width:
 				}
 
 				break;
+#else
+				(void)va_arg(lst, PTRDIFF_T);
+				goto spec_err;
 #endif // CONFIG_PRINTF_PTRDIFF
 
-#ifdef CONFIG_PRINTF_INTMAX
 			case LEN_INTMAX:
+#ifdef CONFIG_PRINTF_INTMAX
 				v.im = va_arg(lst, intmax_t);
 
 				if(v.im < 0){
@@ -419,6 +410,9 @@ parse_width:
 				}
 
 				break;
+#else
+				(void)va_arg(lst, intmax_t);
+				goto spec_err;
 #endif // CONFIG_PRINTF_INTMAX
 			}
 
@@ -432,6 +426,15 @@ parse_width:
 		case 'G': // fall through
 		case 'a': // fall through
 		case 'A':
+			switch(len){
+			case LEN_LONGLONG:
+				(void)va_arg(lst, long double);
+				break;
+
+			default:
+				(void)va_arg(lst, double);
+			}
+
 			goto spec_err;
 
 		case 'c':
@@ -526,6 +529,9 @@ parse_width:
 				*((intmax_t*)v.p) = n;
 				break;
 #endif // CONFIG_PRINTF_INTMAX
+
+			default:
+				break;
 			}
 		}
 		else if(*format == 's'){

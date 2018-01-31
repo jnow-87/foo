@@ -9,26 +9,32 @@
 
 
 /* macros */
+#define BUF_SIZE	64
+#define DUMMY_SPEC	" %s"
+#define DUMMY_VALUE	"bar"
+#define DUMMY_STR	" bar"
+
 #define test(log, ref, s, ...)({ \
-	char buf[20]; \
-	FILE f = FILE_INITIALISER(0x0, buf, 20, 0x0); \
+	char buf[BUF_SIZE]; \
+	FILE f = FILE_INITIALISER(0x0, buf, BUF_SIZE, 0x0); \
 	size_t len; \
+	char const ref_ext[] = ref DUMMY_STR; \
 	\
 	\
-	memset(buf, 'a', 20); \
-	len = fprintf(&f, s, ##__VA_ARGS__); \
+	memset(buf, 'a', BUF_SIZE); \
+	len = fprintf(&f, s DUMMY_SPEC, ##__VA_ARGS__, DUMMY_VALUE); \
 	\
-	if(len != strlen(ref)) \
-		tlog(log, "%s: length differ res(%d) != ref(%d)\n", s, len, strlen(ref)) \
+	if(len != strlen(ref_ext)) \
+		tlog(log, "%s: length differ res(%d) != ref(%d)\n", s, len, strlen(ref_ext)) \
 	\
 	((char*)f.wbuf)[len] = 0; \
-	if(strcmp(ref, f.wbuf) == 0) \
-		tlog(log, "%s: res('%s') == ref('%s')\n", s, f.wbuf, ref) \
+	if(strcmp(ref_ext, f.wbuf) == 0) \
+		tlog(log, "%s: res('%s') == ref('%s')\n", s, f.wbuf, ref_ext) \
 	\
 	else \
-		tlog(log, "%s: res('%s') != ref('%s')\n", s, f.wbuf, ref) \
+		tlog(log, "%s: res('%s') != ref('%s')\n", s, f.wbuf, ref_ext) \
 	\
-	(len == strlen(ref) && strcmp(ref, f.wbuf) == 0) ? 0 : 1; \
+	(len == strlen(ref_ext) && strcmp(ref_ext, f.wbuf) == 0) ? 0 : 1; \
 })
 
 
@@ -49,7 +55,7 @@ static int tc_vfprintf(int log){
 	n += test(log,		"foo",					"foo");
 
 	/* *-width and *-precision */
-	n += test(log,		"  010",					"%*.*d", 5, 3, 10);
+	n += test(log,		"  010",				"%*.*d", 5, 3, 10);
 
 	/* % */
 	n += test(log,		"%",					"%%");
