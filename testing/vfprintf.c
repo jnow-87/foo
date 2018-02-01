@@ -9,7 +9,7 @@
 
 
 /* macros */
-#define BUF_SIZE	64
+#define BUF_SIZE	512
 #define DUMMY_SPEC	" %s"
 #define DUMMY_VALUE	"bar"
 #define DUMMY_STR	" bar"
@@ -45,7 +45,7 @@ static size_t fprintf(FILE *f, char const *format, ...);
 /* local functions */
 static int tc_vfprintf(int log){
 	unsigned int n;
-	int tmp;
+	char tmp[3];
 
 
 	n = 0;
@@ -61,8 +61,15 @@ static int tc_vfprintf(int log){
 	n += test(log,		"%",					"%%");
 
 	/* n */
-	n += test(log,		"123foo   10456",		"123%s%5d%n456", "foo", 10, &tmp);
-	n += test(log,		"11",					"%d", tmp);
+	n += test(log,		"123foo   10456",		"123%s%5d%hhn456", "foo", 10, tmp + 1);
+	n += test(log,		"11",					"%hhd", tmp[1]);
+
+	// test is not allowed to write more than defined size to tmp (char in this case)
+	memset(tmp, 0x0, 3);
+
+	// this test is intended to fail, it only prepares tmp for the next one
+	test(log,			"intended to fail",		"%280s%hhn", "foo", tmp + 1);
+	n += test(log,		"0 24 0",				"%hhd %hhd %hhd", tmp[0], tmp[1], tmp[2]);
 
 	/* c */
 	n += test(log,		"d",					"%c", 'd');

@@ -88,11 +88,22 @@ typedef union{
 #endif // FLOATTYPE
 } value_t;
 
+
 /* local/static prototypes */
+static size_t parse_flags(char const *format, fflag_t *flags);
+static size_t parse_num(char const *format, va_list lst, size_t *num);
+static size_t parse_len(char const *format, len_t *len);
+
+static int get_spec(char const *format, va_list lst, len_t len, fflag_t *flags, value_t *v);
+static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, value_t *v);
+
 static size_t put_char(FILE *stream, char c);
 static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, size_t width, size_t prec);
 static size_t put_padding(FILE *stream, char pad, size_t n);
 static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv);
+static void put_len(len_t len, value_t *v, size_t n);
+
+static size_t convert(char const *format, fflag_t flags, value_t *v, char *buf);
 static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags);
 
 
@@ -100,14 +111,12 @@ static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags);
 int vfprintf(FILE *stream, char const *format, va_list lst){
 	char const *fp;
 	size_t width,
-		prec;
+		   prec;
 	size_t n,
 		   blen;
 	len_t len;
 	fflag_t flags;
 	value_t v;
-
-
 #ifdef CONFIG_NOFLOAT
 	char buf[23];
 #else
@@ -125,7 +134,15 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 
 	while(*format){
 		if(*format != '%'){
-			n += put_char(stream, *format++);
+			n += put_char(stream, *format);
+			format++;
+
+			continue;
+		}
+		else if(*format == '%' && *(format + 1) == '%'){
+			n += put_char(stream, '%');
+			format += 2;
+
 			continue;
 		}
 
@@ -133,406 +150,34 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 
 		memset(&v, 0x0, sizeof(v));
 
-		width = 0;
-		prec = 0;
-		flags = FFL_NONE;
-		len = LEN_INT;
-
 		/* parse flags */
-		while(1){
-			switch(*format++){
-			case '%':
-				n += put_char(stream, '%');
-				goto lcontinue;
-
-			case '-':
-				flags |= FFL_LEFTALIGN;
-				break;
-
-			case '+':
-				flags |= FFL_FORCESIGN;
-				break;
-
-			case ' ':
-				flags |= FFL_SIGNBLANK;
-				break;
-
-			case '0':
-				flags |= FFL_LEFTPADZERO;
-				break;
-
-			case '#':
-				flags |= FFL_PREFIX;
-				break;
-
-			default:
-				--format;
-				goto parse_width;
-			}
-		}
+		format += parse_flags(format, &flags);
 
 		/* parse width */
-parse_width:
-		while(1){
-			if(*format >= '0' && *format <= '9'){
-				width *= 10;
-				width += *format - '0';
-				format++;
-			}
-			else if(*format == '*'){
-				width = (unsigned int)(va_arg(lst, unsigned int));
-				format++;
-				break;
-			}
-			else
-				break;
-		}
+		format += parse_num(format, lst, &width);
 
 		/* parse precision */
+		prec = 0;
+
 		if(*format == '.'){
 			format++;
 			flags |= FFL_PRECISION;
 
-			while(1){
-				if(*format >= '0' && *format <= '9'){
-					prec *= 10;
-					prec += *format - '0';
-					format++;
-				}
-				else if(*format == '*'){
-					prec = (unsigned int)(va_arg(lst, unsigned int));
-					format++;
-					break;
-				}
-				else
-					break;
-			}
+			format += parse_num(format, lst, &prec);
 		}
 
 		/* parse length */
-		switch(*format++){
-		case 'h':
-			len = LEN_SHORT;
-
-			if(*format == 'h'){
-				len = LEN_CHAR;
-				format++;
-			}
-
-			break;
-
-		case 'L':
-			len = LEN_LONGLONG;
-			break;
-
-		case 'l':
-			len = LEN_LONG;
-
-			if(*format == 'l'){
-				len = LEN_LONGLONG;
-				format++;
-			}
-
-			break;
-
-		case 'j':
-			len = LEN_INTMAX;
-			break;
-
-		case 'z':
-			len = LEN_SIZET;
-			break;
-
-		case 't':
-			len = LEN_PTRDIFF;
-			break;
-
-		default:
-			--format;
-			break;
-		}
+		format += parse_len(format, &len);
 
 		/* parse specifier */
-		switch(*format){
-		case 'X':
-			flags |= FFL_UPPERCASE;
-			// fall through
-
-		case 'x': // fall through
-		case 'u': // fall through
-		case 'o':
-			// ignore +-flag for unsigned specifier
-			flags &= -1 ^ FFL_FORCESIGN;
-
-			switch(len){
-			case LEN_CHAR:
-				v.c = va_arg(lst, int);
-				break;
-
-			case LEN_SHORT:
-				v.s = va_arg(lst, int);
-				break;
-
-			case LEN_INT:
-				v.i = va_arg(lst, int);
-				break;
-
-			case LEN_LONG:
-#ifdef CONFIG_PRINTF_LONG
-				v.l = va_arg(lst, long int);
-				break;
-#else
-				(void)va_arg(lst, long int);
-				goto spec_err;
-#endif // CONFIG_PRINTF_LONG
-
-			case LEN_LONGLONG:
-#ifdef CONFIG_PRINTF_LONGLONG
-				v.ll = va_arg(lst, long long int);
-				break;
-#else
-				(void)va_arg(lst, long long int);
-				goto spec_err;
-#endif // CONFIG_PRINTF_LONGLONG
-
-			case LEN_SIZET:
-#ifdef CONFIG_PRINTF_SIZET
-				v.st = va_arg(lst, size_t);
-				break;
-#else
-				(void)va_arg(lst, size_t);
-				goto spec_err;
-#endif // CONFIG_PRINTF_SIZET
-
-			case LEN_PTRDIFF:
-#ifdef CONFIG_PRINTF_PTRDIFF
-				v.pd = va_arg(lst, PTRDIFF_T);
-				break;
-#else
-				(void)va_arg(lst, PTRDIFF_T);
-				goto spec_err;
-#endif // CONFIG_PRINTF_PTRDIFF
-
-			case LEN_INTMAX:
-#ifdef CONFIG_PRINTF_INTMAX
-				v.im = va_arg(lst, intmax_t);
-				break;
-#else
-				(void)va_arg(lst, intmax_t);
-				goto spec_err;
-#endif // CONFIG_PRINTF_INTMAX
-			}
-
-			break;
-
-		case 'd': // fall through
-		case 'i': // fall through
-			switch(len){
-			case LEN_CHAR:	// fall through
-			case LEN_SHORT:	// fall through
-			case LEN_INT:
-				v.i = va_arg(lst, int);
-
-				if(v.i < 0){
-					flags |= FFL_SIGNED;
-					v.i *= -1;
-				}
-
-				break;
-
-			case LEN_LONG:
-#ifdef CONFIG_PRINTF_LONG
-				v.l = va_arg(lst, long int);
-
-				if(v.l < 0){
-					flags |= FFL_SIGNED;
-					v.l *= -1;
-				}
-
-				break;
-#else
-				(void)va_arg(lst, long int);
-				goto spec_err;
-#endif // CONFIG_PRINTF_LONG
-
-			case LEN_LONGLONG:
-#ifdef CONFIG_PRINTF_LONGLONG
-				v.ll = va_arg(lst, long long int);
-
-				if(v.ll < 0){
-					flags |= FFL_SIGNED;
-					v.ll *= -1;
-				}
-
-				break;
-#else
-				(void)va_arg(lst, long long int);
-				goto spec_err;
-#endif // CONFIG_PRINTF_LONGLONG
-
-			case LEN_SIZET:
-#ifdef CONFIG_PRINTF_SIZET
-				v.st = va_arg(lst, size_t);
-
-				if(v.st < 0){
-					flags |= FFL_SIGNED;
-					v.st *= -1;
-				}
-
-				break;
-#else
-				(void)va_arg(lst, size_t);
-				goto spec_err;
-#endif // CONFIG_PRINTF_SIZET
-
-			case LEN_PTRDIFF:
-#ifdef CONFIG_PRINTF_PTRDIFF
-				v.pd = va_arg(lst, PTRDIFF_T);
-
-				if(v.pd < 0){
-					flags |= FFL_SIGNED;
-					v.pd *= -1;
-				}
-
-				break;
-#else
-				(void)va_arg(lst, PTRDIFF_T);
-				goto spec_err;
-#endif // CONFIG_PRINTF_PTRDIFF
-
-			case LEN_INTMAX:
-#ifdef CONFIG_PRINTF_INTMAX
-				v.im = va_arg(lst, intmax_t);
-
-				if(v.im < 0){
-					flags |= FFL_SIGNED;
-					v.im *= -1;
-				}
-
-				break;
-#else
-				(void)va_arg(lst, intmax_t);
-				goto spec_err;
-#endif // CONFIG_PRINTF_INTMAX
-			}
-
-			break;
-
-		case 'f': // fall through
-		case 'F': // fall through
-		case 'e': // fall through
-		case 'E': // fall through
-		case 'g': // fall through
-		case 'G': // fall through
-		case 'a': // fall through
-		case 'A':
-			switch(len){
-			case LEN_LONGLONG:
-				(void)va_arg(lst, long double);
-				break;
-
-			default:
-				(void)va_arg(lst, double);
-			}
-
+		if(get_spec(format, lst, len, &flags, &v) < 0)
 			goto spec_err;
 
-		case 'c':
-			v.i = va_arg(lst, int);
-			break;
-
-		case 'p':
-			flags |= FFL_PREFIX;
-			// fall through
-
-		case 's': // fall through
-		case 'n':
-			v.p = va_arg(lst, void*);
-			break;
-		}
-
-		switch(*format){
-		case 'X': // fall through
-		case 'x':
-		case 'p':
-			blen = utoa_inv(v.ref, buf, 16, flags);
-			break;
-
-		case 'o':
-			blen = utoa_inv(v.ref, buf, 8, flags);
-			break;
-
-		case 'i': // fall through
-		case 'd': // fall through
-		case 'u':
-			blen = utoa_inv(v.ref, buf, 10, flags);
-			break;
-
-		case 'f': // fall through
-		case 'F': // fall through
-		case 'e': // fall through
-		case 'E': // fall through
-		case 'g': // fall through
-		case 'G': // fall through
-		case 'a': // fall through
-		case 'A':
-			/* TODO */
-			break;
-
-		case 'c':
-			blen = 1;
-			buf[0] = v.c;
-			break;
-		}
+		blen = convert(format, flags, &v, buf);
 
 		/* output specifier */
 		if(*format == 'n'){
-			switch(len){
-			case LEN_CHAR:
-				*((char*)v.p) = n;
-				break;
-
-			case LEN_SHORT:
-				*((short int*)v.p) = n;
-				break;
-
-			case LEN_INT:
-				*((int*)v.p) = n;
-				break;
-
-#ifdef CONFIG_PRINTF_LONG
-			case LEN_LONG:
-				*((long int*)v.p) = n;
-				break;
-#endif // CONFIG_PRINTF_LONG
-
-#ifdef CONFIG_PRINTF_LONGLONG
-			case LEN_LONGLONG:
-				*((long long int*)v.p) = n;
-				break;
-#endif // CONFIG_PRINTF_LONGLONG
-
-#ifdef CONFIG_PRINTF_SIZET
-			case LEN_SIZET:
-				*((size_t*)v.p) = n;
-				break;
-#endif // CONFIG_PRINTF_SIZET
-
-#ifdef CONFIG_PRINTF_PTRDIFF
-			case LEN_PTRDIFF:
-				*((ptrdiff_t*)v.p) = n;
-				break;
-#endif // CONFIG_PRINTF_PTRDIFF
-
-#ifdef CONFIG_PRINTF_INTMAX
-			case LEN_INTMAX:
-				*((intmax_t*)v.p) = n;
-				break;
-#endif // CONFIG_PRINTF_INTMAX
-
-			default:
-				break;
-			}
+			put_len(len, &v, n);
 		}
 		else if(*format == 's'){
 			blen = strlen(v.p);
@@ -555,9 +200,8 @@ parse_width:
 		}
 
 		format++;
-
-lcontinue:
 		continue;
+
 
 spec_err:
 		n += put_char(stream, '%');
@@ -569,6 +213,253 @@ spec_err:
 
 
 /* local functions */
+static size_t parse_flags(char const *format, fflag_t *flags){
+	size_t i;
+
+
+	i = 0;
+	*flags = FFL_NONE;
+
+	while(1){
+		switch(format[i]){
+		case '-':
+			*flags |= FFL_LEFTALIGN;
+			break;
+
+		case '+':
+			*flags |= FFL_FORCESIGN;
+			break;
+
+		case ' ':
+			*flags |= FFL_SIGNBLANK;
+			break;
+
+		case '0':
+			*flags |= FFL_LEFTPADZERO;
+			break;
+
+		case '#':
+			*flags |= FFL_PREFIX;
+			break;
+
+		default:
+			return i;
+		}
+
+		i++;
+	}
+}
+
+static size_t parse_num(char const *format, va_list lst, size_t *num){
+	size_t i;
+
+
+	i = 0;
+	*num = 0;
+
+	while(1){
+		if(format[i] >= '0' && format[i] <= '9'){
+			*num *= 10;
+			*num += format[i] - '0';
+		}
+		else if(format[i] == '*'){
+			*num = (unsigned int)(va_arg(lst, unsigned int));
+			return i + 1;
+		}
+		else
+			return i;
+
+		i++;
+	}
+}
+
+static size_t parse_len(char const *format, len_t *len){
+	switch(*format++){
+	case 'h':
+		*len = LEN_SHORT;
+
+		if(*format == 'h'){
+			*len = LEN_CHAR;
+			return 2;
+		}
+
+		break;
+
+	case 'L':
+		*len = LEN_LONGLONG;
+		break;
+
+	case 'l':
+		*len = LEN_LONG;
+
+		if(*format == 'l'){
+			*len = LEN_LONGLONG;
+			return 2;
+		}
+
+		break;
+
+	case 'j':
+		*len = LEN_INTMAX;
+		break;
+
+	case 'z':
+		*len = LEN_SIZET;
+		break;
+
+	case 't':
+		*len = LEN_PTRDIFF;
+		break;
+
+	default:
+		*len = LEN_INT;
+		return 0;
+	}
+
+	return 1;
+}
+
+static int get_spec(char const *format, va_list lst, len_t len, fflag_t *flags, value_t *v){
+	switch(*format){
+	case 'X':
+		*flags |= FFL_UPPERCASE;
+		// fall through
+
+	case 'x': // fall through
+	case 'u': // fall through
+	case 'o':
+		// ignore +-flag for unsigned specifier
+		*flags &= -1 ^ FFL_FORCESIGN;
+
+		return get_arg(lst, len, false, flags, v);
+
+	case 'd': // fall through
+	case 'i': // fall through
+		return get_arg(lst, len, true, flags, v);
+
+	case 'f': // fall through
+	case 'F': // fall through
+	case 'e': // fall through
+	case 'E': // fall through
+	case 'g': // fall through
+	case 'G': // fall through
+	case 'a': // fall through
+	case 'A':
+		switch(len){
+		case LEN_LONGLONG:
+			(void)va_arg(lst, long double);
+			break;
+
+		default:
+			(void)va_arg(lst, double);
+		}
+
+		return -1;
+
+	case 'c':
+		v->i = va_arg(lst, int);
+		break;
+
+	case 'p':
+		*flags |= FFL_PREFIX;
+		// fall through
+
+	case 's': // fall through
+	case 'n':
+		v->p = va_arg(lst, void*);
+		break;
+	}
+
+	return 0;
+}
+
+static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, value_t *v){
+	switch(len){
+	case LEN_CHAR:
+	case LEN_SHORT:
+	case LEN_INT:
+		v->i = va_arg(lst, int);
+
+		if(check_sign && v->i < 0){
+			*flags |= FFL_SIGNED;
+			v->i *= -1;
+		}
+		break;
+
+	case LEN_LONG:
+#ifdef CONFIG_PRINTF_LONG
+		v->l = va_arg(lst, long int);
+
+		if(check_sign && v->l < 0){
+			*flags |= FFL_SIGNED;
+			v->l *= -1;
+		}
+		break;
+#else
+		(void)va_arg(lst, long int);
+		return -1;
+#endif // CONFIG_PRINTF_LONG
+
+	case LEN_LONGLONG:
+#ifdef CONFIG_PRINTF_LONGLONG
+		v->ll = va_arg(lst, long long int);
+
+		if(check_sign && v->ll < 0){
+			*flags |= FFL_SIGNED;
+			v->ll *= -1;
+		}
+		break;
+#else
+		(void)va_arg(lst, long long int);
+		return -1;
+#endif // CONFIG_PRINTF_LONGLONG
+
+	case LEN_SIZET:
+#ifdef CONFIG_PRINTF_SIZET
+		v->st = va_arg(lst, size_t);
+
+		if(check_sign && v->st < 0){
+			*flags |= FFL_SIGNED;
+			v->st *= -1;
+		}
+		break;
+#else
+		(void)va_arg(lst, size_t);
+		return -1;
+#endif // CONFIG_PRINTF_SIZET
+
+	case LEN_PTRDIFF:
+#ifdef CONFIG_PRINTF_PTRDIFF
+		v->pd = va_arg(lst, PTRDIFF_T);
+
+		if(check_sign && v->pd < 0){
+			*flags |= FFL_SIGNED;
+			v->pd *= -1;
+		}
+		break;
+#else
+		(void)va_arg(lst, PTRDIFF_T);
+		return -1;
+#endif // CONFIG_PRINTF_PTRDIFF
+
+	case LEN_INTMAX:
+#ifdef CONFIG_PRINTF_INTMAX
+		v->im = va_arg(lst, intmax_t);
+
+		if(check_sign && v->im < 0){
+			*flags |= FFL_SIGNED;
+			v->im *= -1;
+		}
+		break;
+#else
+		(void)va_arg(lst, intmax_t);
+		return -1;
+#endif // CONFIG_PRINTF_INTMAX
+	}
+
+	return 0;
+}
+
 static size_t put_char(FILE *stream, char c){
 	if(stream->putc)
 		return (stream->putc(c, stream) == c) ? 1 : 0;
@@ -687,6 +578,89 @@ static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv){
 	}
 
 	return i;
+}
+
+static void put_len(len_t len, value_t *v, size_t n){
+	switch(len){
+	case LEN_CHAR:
+		*((char*)v->p) = n;
+		break;
+
+	case LEN_SHORT:
+		*((short int*)v->p) = n;
+		break;
+
+	case LEN_INT:
+		*((int*)v->p) = n;
+		break;
+
+#ifdef CONFIG_PRINTF_LONG
+	case LEN_LONG:
+		*((long int*)v->p) = n;
+		break;
+#endif // CONFIG_PRINTF_LONG
+
+#ifdef CONFIG_PRINTF_LONGLONG
+	case LEN_LONGLONG:
+		*((long long int*)v->p) = n;
+		break;
+#endif // CONFIG_PRINTF_LONGLONG
+
+#ifdef CONFIG_PRINTF_SIZET
+	case LEN_SIZET:
+		*((size_t*)v->p) = n;
+		break;
+#endif // CONFIG_PRINTF_SIZET
+
+#ifdef CONFIG_PRINTF_PTRDIFF
+	case LEN_PTRDIFF:
+		*((ptrdiff_t*)v->p) = n;
+		break;
+#endif // CONFIG_PRINTF_PTRDIFF
+
+#ifdef CONFIG_PRINTF_INTMAX
+	case LEN_INTMAX:
+		*((intmax_t*)v->p) = n;
+		break;
+#endif // CONFIG_PRINTF_INTMAX
+
+	default:
+		break;
+	}
+}
+
+static size_t convert(char const *format, fflag_t flags, value_t *v, char *buf){
+	switch(*format){
+	case 'X': // fall through
+	case 'x':
+	case 'p':
+		return utoa_inv(v->ref, buf, 16, flags);
+
+	case 'o':
+		return utoa_inv(v->ref, buf, 8, flags);
+
+	case 'i': // fall through
+	case 'd': // fall through
+	case 'u':
+		return utoa_inv(v->ref, buf, 10, flags);
+
+	case 'f': // fall through
+	case 'F': // fall through
+	case 'e': // fall through
+	case 'E': // fall through
+	case 'g': // fall through
+	case 'G': // fall through
+	case 'a': // fall through
+	case 'A':
+		/* TODO */
+		return 0;
+
+	case 'c':
+		buf[0] = v->c;
+		return 1;
+	}
+
+	return 0;
 }
 
 static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags){
