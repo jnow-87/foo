@@ -36,7 +36,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 		goto_errno(err_1, E_LIMIT);
 
 	/* init mutex */
-	mutex_init(&this_p->mtx);
+	mutex_init(&this_p->mtx, 0);
 
 	/* set process attributes */
 	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;

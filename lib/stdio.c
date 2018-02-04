@@ -92,8 +92,8 @@ FILE *fdopen(int fd, char const *mode){
 			goto_errno(err_1, E_NOMEM);
 	}
 
-	mutex_init(&file->rd_mtx);
-	mutex_init(&file->wr_mtx);
+	mutex_init(&file->rd_mtx, 0);
+	mutex_init(&file->wr_mtx, 0);
 
 	return file;
 
@@ -367,9 +367,6 @@ static int init(void){
 	stdin = fopen("/dev/tty0", "r");
 	stdout = fopen("/dev/tty0", "w");
 	stderr = fopen("/dev/tty0", "w");
-
-	mutex_lock(&stdin->rd_mtx);
-	mutex_unlock(&stdin->rd_mtx);
 
 	return -errno;
 }

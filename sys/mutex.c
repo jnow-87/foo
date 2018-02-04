@@ -49,17 +49,8 @@
  *
  * \param	m	mutex to initialise
  */
-void mutex_init(mutex_t *m){
-	m->nest_cnt = -1;
-	m->lock = LOCK_CLEAR;
-}
-
-/**
- * \brief	initialise a nestable mutex
- *
- * \param	m	mutex to initialise
- */
-void mutex_init_nested(mutex_t *m){
+void mutex_init(mutex_t *m, mutex_attr_t attr){
+	m->attr = attr;
 	m->nest_cnt = 0;
 	m->lock = LOCK_CLEAR;
 }
@@ -80,75 +71,39 @@ void mutex_lock(mutex_t *m){
 }
 
 /**
- * \brief	lock a nestable mutex block until
- * 			the lock has be acquired
- *
- * \param	m	mutex to lock
- *
- * \return	0	mutex has been locked
- * 			<0	mutex is not nestable
- */
-int mutex_lock_nested(mutex_t *m){
-	if(m->nest_cnt == -1)
-		goto_errno(err, E_INVAL);
-
-	while(1){
-		if(mutex_trylock_nested(m) == 0)
-			break;
-
-		// TODO may suspend thread
-	}
-
-	return 0;
-
-
-err:
-	return -1;
-}
-
-/**
  * \brief	try to lock a mutex
  *
  * \param	m	mutex to lock
  *
  * \return	0	mutex has been locked
- * 			1	mutex could not be locked
+ * 			-1	mutex could not be locked
+ * 			-2	nest count limit reached
  */
 int mutex_trylock(mutex_t *m){
-	if(cas(&m->lock, LOCK_CLEAR, LOCK_SET) == 0)
-		return 0;
-	return 1;
-}
-
-/**
- * \brief	try to lock a mutex
- *
- * \param	m	mutex to lock
- *
- * \return	0	mutex has been locked
- * 			1	mutex could not be locked
- * 			<0	mutex is not nestable
- */
-int mutex_trylock_nested(mutex_t *m){
-	lock_id_t id = LOCK_ID;
+	lock_id_t id = { 0 };
 
 
-	if(m->nest_cnt == -1)
-		goto_errno(err, E_INVAL);
+	if(m->attr & MTX_NESTED){
+		id = LOCK_ID;
 
-	if(m->lock == LOCK_SET && LOCK_ID_EQ(m->lock_id, id)){
-		m->nest_cnt++;
+		if(m->lock == LOCK_SET && LOCK_ID_EQ(m->lock_id, id)){
+			m->nest_cnt++;
+
+			// overflow detection
+			if(m->nest_cnt == 0)
+				return -2;
+
+			return 0;
+		}
+	}
+
+	if(cas(&m->lock, LOCK_CLEAR, LOCK_SET) == 0){
+		if(m->attr & MTX_NESTED)
+			m->lock_id = id;
+
 		return 0;
 	}
 
-	if(mutex_trylock(m) == 0){
-		m->lock_id = id;
-		return 0;
-	}
-
-	return 1;
-
-err:
 	return -1;
 }
 
@@ -158,27 +113,6 @@ err:
  * \param	m	mutex to unlock
  */
 void mutex_unlock(mutex_t *m){
-	m->lock = LOCK_CLEAR;
-}
-
-/**
- * \brief	unlock a nestable mutex
- *
- * \param	m	mutex to unlock
- *
- * \return	0	mutex has been unlocked
- * 			<0	mutex is not nestable
- */
-int mutex_unlock_nested(mutex_t *m){
-	if(m->nest_cnt == -1)
-		goto_errno(err, E_INVAL);
-
-	if(m->nest_cnt == 0)	mutex_unlock(m);
+	if(m->nest_cnt == 0)	m->lock = LOCK_CLEAR;
 	else					m->nest_cnt--;
-
-	return 0;
-
-
-err:
-	return -1;
 }
