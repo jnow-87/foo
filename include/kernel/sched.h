@@ -6,10 +6,6 @@
 #include <kernel/thread.h>
 
 
-/* external variables */
-extern process_t *process_table;
-
-
 /* prototypes */
 void sched_tick(void);
 

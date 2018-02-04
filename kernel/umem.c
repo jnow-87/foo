@@ -97,10 +97,6 @@ static int sc_hdlr_malloc(void *_p){
 	if(page == 0x0)
 		return_errno(E_NOMEM);
 
-	mutex_lock(&this_p->mtx);
-	list_add_tail(this_p->memory.pages, page);
-	mutex_unlock(&this_p->mtx);
-
 	/* prepare result */
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	p->p = page->virt_addr;
@@ -137,7 +133,6 @@ static int sc_hdlr_free(void *_p){
 		kpanic(this_t, "no page found to free\n");
 
 	/* free page */
-	list_rm(this_p->memory.pages, page);
 	page_free(this_p, page);
 
 	mutex_unlock(&this_p->mtx);

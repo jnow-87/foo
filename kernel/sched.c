@@ -43,10 +43,6 @@ static int sc_hdlr_sched_yield(void *p);
 static void transition(thread_t *this_t, thread_state_t queue);
 
 
-/* global variables */
-process_t *process_table = 0;
-
-
 /* static variables */
 static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
 static thread_t *running[CONFIG_NCORES] = { 0x0 };
@@ -153,13 +149,7 @@ static int init(void){
 		goto_errno(err, E_NOMEM);
 
 	memset(this_p, 0x0, sizeof(process_t));
-
 	this_p->name = (char*)("kernel");
-	this_p->affinity = CONFIG_SCHED_AFFINITY_DEFAULT;
-	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;
-	this_p->cwd = fs_root;
-
-	list_add_tail(process_table, this_p);
 
 	/* create kernel thread */
 	// allocate one thread per core
@@ -199,8 +189,6 @@ static int init(void){
 	if(this_p == 0)
 		goto err;
 
-	list_add_tail(process_table, this_p);
-
 	// add first thread to ready queue
 	transition(this_p->threads, READY);
 
@@ -227,8 +215,10 @@ static int sc_hdlr_exit(void *p){
 
 	DEBUG("thread %s:%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
 
+	/* ensure thread is no longer the running one */
 	sched_tick();
 
+	/* remove thread scheduler queue entry */
 	mutex_lock(&sched_mtx);
 
 	e = list_find(sched_queues[this_t->state], thread, this_t);
@@ -241,20 +231,12 @@ static int sc_hdlr_exit(void *p){
 
 	mutex_unlock(&sched_mtx);
 
-	mutex_lock(&this_p->mtx);
-	list_rm(this_p->threads, this_t);
-	mutex_unlock(&this_p->mtx);
-
+	/* destroy thread */
 	thread_destroy((thread_t*)this_t);
 
-	mutex_lock(&sched_mtx);
-
-	if(list_empty(this_p->threads)){
-		list_rm(process_table, this_p);
+	/* destroy process */
+	if(list_empty_safe(this_p->threads, &this_p->mtx))
 		process_destroy(this_p);
-	}
-
-	mutex_unlock(&sched_mtx);
 
 	return E_OK;
 }
@@ -272,16 +254,15 @@ static int sc_hdlr_thread_create(void *_p){
 
 	DEBUG("create thread for \"%s\" at %p, arg %p\n", this_p->name, p->entry, p->arg);
 
+	mutex_lock(&this_p->mtx);
 	new = thread_create(this_p, list_last(this_p->threads)->tid + 1, p->entry, p->arg);
+	mutex_unlock(&this_p->mtx);
 
 	if(new == 0x0)
 		return -errno;
 
 	mutex_lock(&sched_mtx);
-
-	list_add_tail(this_p->threads, new);
 	transition(new, READY);
-
 	mutex_unlock(&sched_mtx);
 
 	p->tid = new->tid;
@@ -344,10 +325,7 @@ static int sc_hdlr_process_create(void *_p){
 		return -errno;
 
 	mutex_lock(&sched_mtx);
-
-	list_add_tail(process_table, new);
 	transition(list_first(new->threads), READY);
-
 	mutex_unlock(&sched_mtx);
 
 	p->pid = new->pid;

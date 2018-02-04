@@ -12,6 +12,11 @@
 #include <sys/mutex.h>
 
 
+/* static variables */
+static process_t *process_table = 0;
+static mutex_t ptable_mtx = MUTEX_INITIALISER();
+
+
 /* global functions */
 process_t *process_create(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd){
 	void *entry;
@@ -28,15 +33,18 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	/* get pid */
 	this_p->pid = 0;
 
-	// TODO needs to be protected through mutex
+	mutex_lock(&ptable_mtx);
+
 	if(!list_empty(process_table))
 		this_p->pid = list_last(process_table)->pid + 1;
+
+	mutex_unlock(&ptable_mtx);
 
 	if(this_p->pid == PID_MAX)
 		goto_errno(err_1, E_LIMIT);
 
 	/* init mutex */
-	mutex_init(&this_p->mtx, 0);
+	mutex_init(&this_p->mtx, MTX_NESTED);
 
 	/* set process attributes */
 	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;
@@ -80,13 +88,14 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 		goto err_3;
 
 	/* create first thread */
+	this_p->threads = 0x0;
 	this_t = thread_create(this_p, 0, entry, (void*)this_p->args);
 
 	if(this_t == 0)
 		goto err_3;
 
-	this_p->threads = 0x0;
-	list_add_tail(this_p->threads, this_t);
+	/* update process table */
+	list_add_tail_safe(process_table, this_p, &ptable_mtx);
 
 	return this_p;
 
@@ -111,11 +120,11 @@ void process_destroy(process_t *this_p){
 	fs_ops_t *ops;
 
 
+	list_rm_safe(process_table, this_p, &ptable_mtx);
+
 	/* destroy all threads */
-	list_for_each(this_p->threads, this_t){
-		list_rm(this_p->threads, this_t);
+	list_for_each(this_p->threads, this_t)
 		thread_destroy(this_t);
-	}
 
 	/* clear file system handles */
 	list_for_each(this_p->fds, fd){
@@ -133,10 +142,8 @@ void process_destroy(process_t *this_p){
 	kfree(this_p->args);
 
 	/* free process memory */
-	list_for_each(this_p->memory.pages, page){
-		list_rm(this_p->memory.pages, page);
+	list_for_each(this_p->memory.pages, page)
 		page_free(this_p, page);
-	}
 
 	/* free process */
 	kfree(this_p->name);

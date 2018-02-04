@@ -7,6 +7,7 @@
 #include <sys/memblock.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
+#include <sys/list.h>
 
 
 /* global functions */
@@ -55,6 +56,9 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 		goto_errno(err_2, E_NOMEM);
 #endif // CONFIG_KERNEL_VIRT_MEM
 
+	/* update process page list */
+	list_add_tail_safe(this_p->memory.pages, page, &this_p->mtx);
+
 	return page;
 
 
@@ -71,15 +75,17 @@ err_0:
 }
 
 void page_free(struct process_t *this_p, page_t *page){
-	/* free virtual block */
-#ifdef CONFIG_KERNEL_VIRT_MEM
 	mutex_lock(&this_p->mtx);
 
+	list_rm(this_p->memory.pages, page);
+
+	/* free virtual block */
+#ifdef CONFIG_KERNEL_VIRT_MEM
 	if(memblock_free(&(this_p->memory_space), page->virt_addr) < 0)
 		kpanic(0x0, "double free at %p\n", page->virt_addr);
+#endif // CONFIG_KERNEL_VIRT_MEM
 
 	mutex_unlock(&this_p->mtx);
-#endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* free physica block */
 	ufree(page->phys_addr);

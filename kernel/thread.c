@@ -38,10 +38,6 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, void *entry, void *
 	if(this_t->stack == 0)
 		goto_errno(err_1, E_NOMEM);
 
-	mutex_lock(&this_p->mtx);
-	list_add_tail(this_p->memory.pages, this_t->stack);
-	mutex_unlock(&this_p->mtx);
-
 	/* init thread context */
 	proc_entry = entry;
 
@@ -53,6 +49,8 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, void *entry, void *
 
 	if(this_t->ctx_lst == 0)
 		goto_errno(err_2, E_INVAL);
+
+	list_add_tail_safe(this_p->threads, this_t, &this_p->mtx);
 
 	return this_t;
 
@@ -73,7 +71,8 @@ void thread_destroy(struct thread_t *this_t){
 
 	this_p = this_t->parent;
 
-	list_rm(this_p->memory.pages, this_t->stack);
+	list_rm_safe(this_p->threads, this_t, &this_p->mtx);
+
 	page_free(this_p, this_t->stack);
 	kfree(this_t);
 }
