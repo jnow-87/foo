@@ -100,10 +100,7 @@ err:
 }
 
 void fs_fd_free(fs_filed_t *fd, process_t *this_p){
-	mutex_lock(&this_p->mtx);
-	list_rm(this_p->fds, fd);
-	mutex_unlock(&this_p->mtx);
-
+	list_rm_safe(this_p->fds, fd, &this_p->mtx);
 	fd->node->ref_cnt--;
 
 	kfree(fd);
@@ -144,8 +141,8 @@ fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, b
 
 	node->data = 0x0;
 
-	mutex_init(&node->rd_mtx);
-	mutex_init(&node->wr_mtx);
+	mutex_init(&node->rd_mtx, 0);
+	mutex_init(&node->wr_mtx, 0);
 
 	/* add node to file system */
 	node->parent = parent;

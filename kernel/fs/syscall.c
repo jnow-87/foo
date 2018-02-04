@@ -81,9 +81,7 @@ static int sc_hdlr_close(void *_p){
 	p = (sc_fs_t*)_p;
 
 	/* get file descriptor */
-	mutex_lock(&this_p->mtx);
-	fd = list_find(this_p->fds, id, p->fd);
-	mutex_unlock(&this_p->mtx);
+	fd = list_find_safe(this_p->fds, id, p->fd, &this_p->mtx);
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -112,9 +110,7 @@ static int sc_hdlr_read(void *_p){
 	p = (sc_fs_t*)_p;
 
 	/* get file descriptor */
-	mutex_lock(&this_p->mtx);
-	fd = list_find(this_p->fds, id, p->fd);
-	mutex_unlock(&this_p->mtx);
+	fd = list_find_safe(this_p->fds, id, p->fd, &this_p->mtx);
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -149,9 +145,7 @@ static int sc_hdlr_write(void *_p){
 	copy_from_user(buf, p->data, p->data_len, this_p);
 
 	/* get file descriptor */
-	mutex_lock(&this_p->mtx);
-	fd = list_find(this_p->fds, id, p->fd);
-	mutex_unlock(&this_p->mtx);
+	fd = list_find_safe(this_p->fds, id, p->fd, &this_p->mtx);
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -182,9 +176,7 @@ static int sc_hdlr_ioctl(void *_p){
 	copy_from_user(data, p->data, p->data_len, this_p);
 
 	/* get file descriptor */
-	mutex_lock(&this_p->mtx);
-	fd = list_find(this_p->fds, id, p->fd);
-	mutex_unlock(&this_p->mtx);
+	fd = list_find_safe(this_p->fds, id, p->fd, &this_p->mtx);
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -223,9 +215,7 @@ static int sc_hdlr_fcntl(void *_p){
 	copy_from_user(data, p->data, p->data_len, this_p);
 
 	/* get file descriptor */
-	mutex_lock(&this_p->mtx);
-	fd = list_find(this_p->fds, id, p->fd);
-	mutex_unlock(&this_p->mtx);
+	fd = list_find_safe(this_p->fds, id, p->fd, &this_p->mtx);
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
