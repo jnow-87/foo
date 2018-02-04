@@ -4,6 +4,7 @@
 
 #include <sys/file.h>
 #include <sys/types.h>
+#include <sys/mutex.h>
 
 
 /* incomplete types */
@@ -147,6 +148,9 @@ typedef struct fs_node_t{
 	unsigned int ref_cnt;
 	bool is_dir;
 
+	mutex_t rd_mtx,
+			wr_mtx;
+
 	struct fs_node_t *childs,
 					 *parent;
 
@@ -168,6 +172,9 @@ typedef struct fs_filed_t{
 /* prototypes */
 // file system operations
 int fs_register(fs_ops_t *ops);
+
+void fs_lock(void);
+void fs_unlock(void);
 
 // file operations
 fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p);

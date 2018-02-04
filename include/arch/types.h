@@ -46,11 +46,11 @@ typedef struct{
 	int (*page_entry_inval_va)(void *virt_addr, bool sync_cores);
 	int (*page_entry_search)(page_t const *param, page_t *result);
 
-	int (*copy_from_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
-	int (*copy_to_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
+	void (*copy_from_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
+	void (*copy_to_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
 
 	/* interrupts */
-	int (*int_enable)(int_type_t mask);
+	int_type_t (*int_enable)(int_type_t mask);
 	int_type_t (*int_enabled)(void);
 
 	int (*ipi_sleep)(void);
@@ -75,7 +75,7 @@ typedef struct{
 	int (*cas)(volatile int *v, int old, int new);
 
 	/* syscall */
-	void (*sc)(sc_t num, void *param, size_t psize);
+	int (*sc)(sc_t num, void *param, size_t psize);
 
 	/* libsys functionality */
 	int (*lib_crt0)(void);

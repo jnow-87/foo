@@ -1,9 +1,6 @@
 __core_init0_base = .;
 *(.core_init_stage0)
 
-__core_init1_base = .;
-*(.core_init_stage1)
-
 __platform_init0_base = .;
 *(.platform_init_stage0)
 

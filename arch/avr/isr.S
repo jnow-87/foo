@@ -110,8 +110,8 @@ __isr_sched:
 	XJMP	__int_hdlr_call
 
 /* invalid interrupt handler */
-// NOTE: using avr_int_inval_hdlr directly does not work, since
-//		 somehow the .weak symbols are not redefined in this case
+// NOTE using avr_int_inval_hdlr directly does not work, since
+//		somehow the .weak symbols are not redefined in this case
 .global __isr_inval
 __isr_inval:
 	XJMP	avr_int_inval_hdlr
@@ -121,7 +121,7 @@ __isr_inval:
 .global __int_hdlr_call
 __int_hdlr_call:
 	/* save context */
-	// NOTE: r31 is assumed being pushed by the calling routine
+	// NOTE r31 is assumed being pushed by the calling routine
 	push	r30
 	push	r29
 	push	r28

@@ -6,16 +6,14 @@
 #include <kernel/thread.h>
 
 
-/* external variables */
-extern process_t *process_table;
-
-
 /* prototypes */
-int sched_enqueue(thread_t *this_t, thread_state_t queue);
+void sched_tick(void);
+
 thread_t const *sched_running(void);
 
-void sched_tick(void);
-void sched_yield(thread_state_t target);
+void sched_yield(void);
+void sched_pause(void);
+void sched_wake(thread_t *this_t);
 
 
 #endif // KERNEL_SCHED_H

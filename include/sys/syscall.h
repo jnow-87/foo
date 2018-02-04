@@ -2,15 +2,16 @@
 #define SYS_SYSCALL_H
 
 
-#include <arch/thread.h>
 #include <sys/binloader.h>
+#include <sys/process.h>
+#include <sys/thread.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/file.h>
 
 
 /* types */
-// syscalls
+// syscall common
 typedef enum{
 	SC_OPEN,
 	SC_CLOSE,
@@ -34,12 +35,19 @@ typedef enum{
 	NSYSCALLS
 } sc_t;
 
-// syscall arguments
 typedef struct{
-	void *p;
+	sc_t num;
+
+	void *param;
 	size_t size;
 
 	int errno;
+} sc_arg_t;
+
+// syscall specific arguments
+typedef struct{
+	void *p;
+	size_t size;
 } sc_malloc_t;
 
 typedef struct{
@@ -50,24 +58,20 @@ typedef struct{
 
 	int cmd;
 	f_mode_t mode;
-
-	int errno;
 } sc_fs_t;
 
 typedef struct{
-	thread_id_t tid;
+	tid_t tid;
 
 	int (*entry)(void *);
 	void *arg;
 
 	unsigned int affinity;
 	int priority;
-
-	int errno;
 } sc_thread_t;
 
 typedef struct{
-	process_id_t pid;
+	pid_t pid;
 
 	void *binary;
 	bin_type_t bin_type;
@@ -76,14 +80,10 @@ typedef struct{
 			   *args;
 	size_t name_len,
 		   args_len;
-
-	int errno;
 } sc_process_t;
 
 typedef struct{
 	time_t time;
-
-	int errno;
 } sc_time_t;
 
 

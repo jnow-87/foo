@@ -2,14 +2,15 @@
 #include <kernel/fs.h>
 #include <kernel/kmem.h>
 #include <kernel/sched.h>
-#include <kernel/lock.h>
 #include <sys/errno.h>
 #include <sys/list.h>
+#include <sys/mutex.h>
 #include <sys/string.h>
 
 
 /* static variables */
 static fs_t *fs_lst = 0x0;
+static mutex_t fs_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -20,7 +21,7 @@ int fs_register(fs_ops_t *ops){
 
 	id = 0;
 
-	klock();
+	fs_lock();
 
 	if(!list_empty(fs_lst))
 		id = list_last(fs_lst)->id + 1;
@@ -41,14 +42,22 @@ int fs_register(fs_ops_t *ops){
 
 	list_add_tail(fs_lst, fs);
 
-	kunlock();
+	fs_unlock();
 
 	return fs->id;
 
 
 err:
-	kunlock();
+	fs_unlock();
 	return -errno;
+}
+
+void fs_lock(void){
+	mutex_lock(&fs_mtx);
+}
+
+void fs_unlock(void){
+	mutex_unlock(&fs_mtx);
 }
 
 fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p){
@@ -56,7 +65,7 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p){
 	fs_filed_t *fd;
 
 
-	klock();
+	mutex_lock(&this_p->mtx);
 
 	/* acquire descriptor id */
 	id = 0;
@@ -80,33 +89,27 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p){
 	list_add_tail(this_p->fds, fd);
 	node->ref_cnt++;
 
-	kunlock();
+	mutex_unlock(&this_p->mtx);
 
 	return fd;
 
 
 err:
-	kunlock();
+	mutex_unlock(&this_p->mtx);
 	return 0x0;
 }
 
 void fs_fd_free(fs_filed_t *fd, process_t *this_p){
-	klock();
-
-	list_rm(this_p->fds, fd);
+	list_rm_safe(this_p->fds, fd, &this_p->mtx);
 	fd->node->ref_cnt--;
 
 	kfree(fd);
-
-	kunlock();
 }
 
 fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id){
 	fs_t *fs;
 	fs_node_t *node;
 
-
-	klock();
 
 	/* identify file system */
 	list_for_each(fs_lst, fs){
@@ -138,13 +141,14 @@ fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, b
 
 	node->data = 0x0;
 
+	mutex_init(&node->rd_mtx, 0);
+	mutex_init(&node->wr_mtx, 0);
+
 	/* add node to file system */
 	node->parent = parent;
 	node->childs = 0x0;
 
 	list_add_tail(parent->childs, node);
-
-	kunlock();
 
 	return node;
 
@@ -153,15 +157,12 @@ err_1:
 	kfree(node);
 
 err_0:
-	kunlock();
 	return 0x0;
 }
 
 int fs_node_free(fs_node_t *node){
 	fs_node_t *child;
 
-
-	klock();
 
 	if(node->ref_cnt > 0)
 		goto_errno(err, E_INUSE);
@@ -176,13 +177,10 @@ int fs_node_free(fs_node_t *node){
 	kfree(node->name);
 	kfree(node);
 
-	kunlock();
-
 	return E_OK;
 
 
 err:
-	kunlock();
 	return -errno;
 }
 
@@ -225,13 +223,9 @@ int fs_node_find(fs_node_t **start, char const **path){
 		while((*path)[n] != '/' && (*path)[n] != 0)
 			++n;
 
-		klock();
-
 		if(strcmp(*path, ".") == 0)			child = *start;
 		else if(strcmp(*path, "..") == 0)	child = (*start)->parent;
 		else								child = list_find_strn((*start)->childs, name, *path, n);
-
-		kunlock();
 
 		/* no matching child found */
 		if(child == 0x0)

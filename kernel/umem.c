@@ -6,20 +6,21 @@
 #include <kernel/page.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
-#include <kernel/lock.h>
 #include <sys/types.h>
 #include <sys/list.h>
 #include <sys/memblock.h>
+#include <sys/mutex.h>
 #include <sys/errno.h>
 
 
 /* local/static prototypes */
-static int sc_hdlr_malloc(void *p, thread_t const *this_t);
-static int sc_hdlr_free(void *p, thread_t const *this_t);
+static int sc_hdlr_malloc(void *p);
+static int sc_hdlr_free(void *p);
 
 
 /* static variables */
 static memblock_t *process_mem = 0x0;
+static mutex_t umem_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -27,51 +28,47 @@ void *umalloc(size_t n){
 	void *p;
 
 
-	klock();
+	mutex_lock(&umem_mtx);
 	p = memblock_alloc(&process_mem, n, CONFIG_KMALLOC_ALIGN);
-	kunlock();
+	mutex_unlock(&umem_mtx);
 
 	return p;
 }
 
 void ufree(void *addr){
-	klock();
+	mutex_lock(&umem_mtx);
 
 	if(memblock_free(&process_mem, addr) < 0)
 		kpanic(0x0, "double free at %p\n", addr);
 
-	kunlock();
+	mutex_unlock(&umem_mtx);
 }
 
 
 /* local functions */
 static int init(void){
+	int r;
+
+
+	r = E_OK;
+
 	/* init memory area */
 	process_mem = (void*)(CONFIG_KERNEL_PROC_BASE);
 
 	if(memblock_init(process_mem, CONFIG_KERNEL_PROC_SIZE) < 0)
-		goto err_0;
+		r |= errno;
 
 	/* register syscalls */
-	if(sc_register(SC_MALLOC, sc_hdlr_malloc) < 0)
-		goto err_0;
 
-	if(sc_register(SC_FREE, sc_hdlr_free) < 0)
-		goto err_1;
+	r |= sc_register(SC_MALLOC, sc_hdlr_malloc);
+	r |= sc_register(SC_FREE, sc_hdlr_free);
 
-	return E_OK;
-
-
-err_1:
-	(void)sc_release(SC_MALLOC);
-
-err_0:
-	return -errno;
+	return r;
 }
 
 kernel_init(0, init);
 
-static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
+static int sc_hdlr_malloc(void *_p){
 	page_size_t psize;
 	sc_malloc_t *p;
 	page_t *page;
@@ -79,7 +76,7 @@ static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
 
 
 	p = (sc_malloc_t*)_p;
-	this_p = this_t->parent;
+	this_p = sched_running()->parent;
 
 	/* adjust size to page boundary requirements */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -89,7 +86,7 @@ static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
 	}
 
 	if(psize > PAGESIZE_MAX)
-		goto_errno(err, E_LIMIT);
+		return_errno(E_LIMIT);
 #else // CONFIG_KERNEL_VIRT_MEM
 	psize = p->size;
 #endif // CONFIG_KERNEL_VIRT_MEM
@@ -98,11 +95,7 @@ static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
 	page = page_alloc(this_p, psize);
 
 	if(page == 0x0)
-		goto_errno(err, E_NOMEM);
-
-	klock();
-	list_add_tail(this_p->memory.pages, page);
-	kunlock();
+		return_errno(E_NOMEM);
 
 	/* prepare result */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -113,26 +106,21 @@ static int sc_hdlr_malloc(void *_p, thread_t const *this_t){
 	p->size = psize;
 #endif // CONFIG_KERNEL_VIRT_MEM
 
-	p->errno = E_OK;
-
-	return E_OK;
-
-
-err:
-	p->errno = errno;
 	return E_OK;
 }
 
-static int sc_hdlr_free(void *_p, thread_t const *this_t){
+static int sc_hdlr_free(void *_p){
 	process_t *this_p;
+	thread_t const *this_t;
 	page_t *page;
 	sc_malloc_t *p;
 
 
-	klock();
-
 	p = (sc_malloc_t*)_p;
+	this_t = sched_running();
 	this_p = this_t->parent;
+
+	mutex_lock(&this_p->mtx);
 
 	/* get page */
 #ifdef CONFIG_KERNEL_VIRT_MEM
@@ -145,12 +133,9 @@ static int sc_hdlr_free(void *_p, thread_t const *this_t){
 		kpanic(this_t, "no page found to free\n");
 
 	/* free page */
-	list_rm(this_p->memory.pages, page);
 	page_free(this_p, page);
 
-	p->errno = E_OK;
-
-	kunlock();
+	mutex_unlock(&this_p->mtx);
 
 	return E_OK;
 }

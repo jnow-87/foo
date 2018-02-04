@@ -3,6 +3,7 @@
 
 
 #include <sys/string.h>
+#include <sys/mutex.h>
 
 /**
  * \brief	macros to handle a double-linked list
@@ -16,6 +17,19 @@
  * head->prev points to the last element of the list, while the list
  * is delimited by 0 with head->prev->next = 0
  */
+
+
+/**
+ * \brief	execute expr in a critical section protected by mutex mtx
+ *
+ * \param	mtx		mutex to use for protecting the section
+ * \param	expr	expression to protect
+ */
+#define LOCK_SECTION(mtx, expr){ \
+	mutex_lock(mtx); \
+	expr; \
+	mutex_unlock(mtx); \
+}
 
 /**
  * \brief	initialize the head of a list
@@ -52,6 +66,18 @@
 }
 
 /**
+ * \brief	thread-safe variant of list_add_head()
+ *
+ * \param	head	cf. list_add_head()
+ * \param	el		cf. list_add_head()
+ * \param	mtx		mutex to lock
+ *
+ * \return	none
+ */
+#define list_add_head_safe(head, el, mtx) \
+	LOCK_SECTION(mxt, list_add_head(head, el))
+
+/**
  * \brief	add an element at the end of the list
  *
  * \param	head	pointer to list head
@@ -76,6 +102,18 @@
 }
 
 /**
+ * \brief	thread-safe variant of list_add_tail()
+ *
+ * \param	head	cf. list_add_tail()
+ * \param	el		cf. list_add_tail()
+ * \param	mtx		mutex to lock
+ *
+ * \return	none
+ */
+#define list_add_tail_safe(head, el, mtx) \
+	LOCK_SECTION(mtx, list_add_tail((head), (el)))
+
+/**
  * \brief	add an element between the two given elements
  *
  * \param	el		pointer to element to insert
@@ -95,6 +133,19 @@
 	_front->next = _el; \
 	_back->prev = _el; \
 }
+
+/**
+ * \brief	thread-safe variant of list_add_in()
+ *
+ * \param	el		cf. list_add_in()
+ * \param	front	cf. list_add_in()
+ * \param	back	cf. list_add_in()
+ * \param	mtx		mutex to lock
+ *
+ * \return	none
+ */
+#define list_add_in_safe(el, front, back, mtx) \
+	LOCK_SECTION(mtx, list_add_in(el, front, back))
 
 /**
  * \brief	remove an element and insert a new one at its location
@@ -127,22 +178,45 @@
 }
 
 /**
+ * \brief	thread-safe variant of list_replace()
+ *
+ * \param	head	cf. list_replace()
+ * \param	old		cf. list_replace()
+ * \param	new		cf. list_replace()
+ * \param	mtx		mutex to lock
+ *
+ * \return	none
+ */
+#define list_replace_safe(head, old, new, mtx) \
+	LOCK_SECTION(mtx, list_replace(head, old, new))
+
+/**
  * \brief	remove element from list
  *
  * \param	head	pointer to list head
- * \param	entry	pointer to element that shall
+ * \param	el		pointer to element that shall
  * 					be removed
  *
- * \return new head (head is updated of entry == head)
+ * \return	none
  */
-#define list_rm(head, entry){ \
-	if((entry) != (head))	(entry)->prev->next = (entry)->next; \
+#define list_rm(head, el){ \
+	if((el) != (head))		(el)->prev->next = (el)->next; \
 	\
-	if((entry)->next != 0)		(entry)->next->prev = (entry)->prev; \
-	else						(head)->prev = (entry)->prev; \
+	if((el)->next != 0)		(el)->next->prev = (el)->prev; \
+	else					(head)->prev = (el)->prev; \
 	\
-	if((entry) == (head))		(head) = (entry)->next; \
+	if((el) == (head))		(head) = (el)->next; \
 }
+
+/**
+ * \brief	thread-safe variant of lst_rm()
+ *
+ * \param	head	cf. list_rm()
+ * \param	el	cf. list_rm()
+ * \param	mtx		mutex to lock
+ */
+#define list_rm_safe(head, el, mtx) \
+	LOCK_SECTION(mtx, list_rm(head, el))
 
 /**
  * \brief	get the first list element
@@ -155,6 +229,20 @@
 #define list_first(head) (head)
 
 /**
+ * \brief	thread-safe variant of list_first()
+ *
+ * \param	head	cf. list_first()
+ * \param	mtx		mutex to lock
+ *
+ * \return	cf. list_first()
+ */
+#define list_first_safe(head, mtx)({ \
+	typeof(head) r; \
+	LOCK_SECTION(mtx, r = list_first(head)); \
+	r; \
+})
+
+/**
  * \brief	get the last list element
  *
  * \param	head	pointer to list head
@@ -163,6 +251,20 @@
  * 			0 if list is empty
  */
 #define list_last(head) ((head) ? (head)->prev : 0)
+
+/**
+ * \brief	thread-safe variant of list_last()
+ *
+ * \param	head	cf. list_last()
+ * \param	mtx		mutex to lock
+ *
+ * \return	cf. list_last()
+ */
+#define list_last_safe(head, mtx)({ \
+	typeof(head) r; \
+	LOCK_SECTION(mtx, r = list_last(head)); \
+	r; \
+})
 
 /**
  * \brief	find an element in the list by key
@@ -184,6 +286,22 @@
 	} \
 \
 	(_head == 0 || _head->member != value) ? 0 : _head; \
+})
+
+/**
+ * \brief	thread-safe variant of list_find()
+ *
+ * \param	head	cf. list_find()
+ * \param	member	cf. list_find()
+ * \param	value	cf. list_find()
+ * \param	mtx		mutex to lock
+ *
+ * \return	cf. list_find()
+ */
+#define list_find_safe(head, member, value, mtx)({ \
+	typeof(head) r; \
+	LOCK_SECTION(mtx, r = list_find(head, member, value)); \
+	r; \
 })
 
 /**
@@ -209,6 +327,22 @@
 })
 
 /**
+ * \brief	thread-safe variant of list_find_str()
+ *
+ * \param	head	cf. list_find_str()
+ * \param	member	cf. list_find_str()
+ * \param	str		cf. list_find_str()
+ * \param	mtx		mutex to lock
+ *
+ * \return	cf. list_find_str()
+ */
+#define list_find_str_safe(head, member, str, mtx)({ \
+	typeof(head) r; \
+	LOCK_SECTION(mtx, r = list_find_str(head, member, str)); \
+	r; \
+})
+
+/**
  * \brief	same as list_find_str but use strncmp
  */
 #define list_find_strn(head, member, str, n) ({ \
@@ -223,6 +357,23 @@
 })
 
 /**
+ * \brief	thread-safe variant of list_find_strn()
+ *
+ * \param	head	cf. list_find_strn()
+ * \param	member	cf. list_find_strn()
+ * \param	str		cf. list_find_strn()
+ * \param	n		cf. list_find_strn()
+ * \param	mtx		mutex to lock
+ *
+ * \return	cf. list_find_strn()
+ */
+#define list_find_strn_safe(head, member, str, n, mtx)({ \
+	typeof(head) r; \
+	LOCK_SECTION(mtx, r = list_find_strn(head, member, str, n)); \
+	r; \
+})
+
+/**
  * \brief	check wether a list is empty
  *
  * \param	head	pointer to list head
@@ -233,15 +384,29 @@
 #define list_empty(head) (((head) == 0) ? true : false)
 
 /**
+ * \brief	thread-safe variant of list_empty()
+ *
+ * \param	head	cf. list_empty()
+ * \param	mtx		mutex to lock
+ *
+ * \return	cf. list_empty()
+ */
+#define list_empty_safe(head, mtx)({ \
+	int r; \
+	LOCK_SECTION(mtx, r = list_empty(head)); \
+	r; \
+})
+
+/**
  * \brief	iterator macro to loop over
  * 			all list elements
  *
  * \param	head	pointer to list head
- * \param	entry	pointer that holds the current element
+ * \param	el	pointer that holds the current element
  *
- * \return none
+ * \return	none
  */
-#define list_for_each(head, entry) entry=(head); for(typeof(head) next=((head) == 0 ? 0 : (head)->next); (entry)!=0; (entry)=(next), next=(next == 0 ? 0 : next->next))
+#define list_for_each(head, el) el=(head); for(typeof(head) next=((head) == 0 ? 0 : (head)->next); (el)!=0; (el)=(next), next=(next == 0 ? 0 : next->next))
 
 
 #endif // SYS_LIST_H

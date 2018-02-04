@@ -4,7 +4,6 @@
 #include <kernel/devfs.h>
 #include <kernel/kmem.h>
 #include <kernel/kprintf.h>
-#include <kernel/lock.h>
 #include <sys/list.h>
 
 
@@ -36,7 +35,9 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 	if(dev == 0x0)
 		goto_errno(err_0, E_NOMEM);
 
+	fs_lock();
 	node = fs_node_alloc(devfs_root, name, strlen(name), false, devfs_id);
+	fs_unlock();
 
 	if(node == 0x0)
 		goto err_1;
@@ -59,24 +60,30 @@ int devfs_dev_release(devfs_dev_t *dev){
 	fs_node_t *node;
 
 
-	klock();
+	fs_lock();
 
 	list_for_each(devfs_root->childs, node){
 		if(((devfs_dev_t*)(node->data)) == dev)
 			break;
 	}
 
-	kunlock();
-
 	if(node == 0x0)
-		return_errno(E_INVAL);
+		goto_errno(err, E_INVAL);
 
 	if(fs_node_free(node) != E_OK)
-		return -errno;
+		goto err;
+
+	fs_unlock();
 
 	kfree(dev);
 
 	return E_OK;
+
+
+err:
+	fs_unlock();
+
+	return -errno;
 }
 
 
@@ -136,6 +143,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 err:
 	fs_fd_free(fd, this_p);
+
 	return -errno;
 }
 
@@ -151,6 +159,7 @@ static int close(fs_filed_t *fd, process_t *this_p){
 	}
 
 	fs_fd_free(fd, this_p);
+
 	return 0;
 }
 
@@ -162,6 +171,7 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 
 	if(dev->ops.read == 0x0)
 		return_errno(E_NOIMP);
+
 	return dev->ops.read(dev, fd, buf, n);
 }
 
@@ -173,6 +183,7 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 
 	if(dev->ops.write == 0x0)
 		return_errno(E_NOIMP);
+
 	return dev->ops.write(dev, fd, buf, n);
 }
 
@@ -184,6 +195,7 @@ static int ioctl(fs_filed_t *fd, int request, void *data){
 
 	if(dev->ops.ioctl == 0x0)
 		return_errno(E_NOIMP);
+
 	return dev->ops.ioctl(dev, fd, request, data);
 }
 
@@ -195,5 +207,6 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 
 	if(dev->ops.fcntl == 0x0)
 		return_errno(E_NOIMP);
+
 	return dev->ops.fcntl(dev, fd, cmd, data);
 }

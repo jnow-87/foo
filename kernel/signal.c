@@ -1,9 +1,14 @@
+#include <arch/interrupt.h>
 #include <kernel/signal.h>
 #include <kernel/sched.h>
 #include <kernel/kmem.h>
-#include <kernel/lock.h>
 #include <sys/list.h>
+#include <sys/mutex.h>
 #include <sys/errno.h>
+
+
+/* static varaibles */
+static mutex_t sig_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -12,6 +17,7 @@ void ksignal_init(ksignal_t *sig){
 }
 
 int ksignal_wait(ksignal_t *sig){
+	int_type_t imask;
 	ksignal_el_t *e;
 
 
@@ -22,59 +28,54 @@ int ksignal_wait(ksignal_t *sig){
 
 	e->thread = sched_running();
 
-	klock();
-	list_add_tail(*sig, e);
-	kunlock();
+	imask = int_enable(INT_NONE);
+	mutex_lock(&sig_mtx);
 
-	sched_yield(WAITING);
+	list_add_tail(*sig, e);
+	sched_pause();
+
+	mutex_unlock(&sig_mtx);
+	int_enable(imask);
+
+	sched_yield();
 
 	return E_OK;
 }
 
-int ksignal_send(ksignal_t *sig){
+void ksignal_send(ksignal_t *sig){
+	int_type_t imask;
 	ksignal_el_t *e;
 
 
-	klock();
+	imask = int_enable(INT_NONE);
+	mutex_lock(&sig_mtx);
+
 	e = list_first(*sig);
 
-	if(e == 0x0)
-		goto err_1;
-
-	list_rm(*sig, e);
-	kunlock();
-
-	if(sched_enqueue((thread_t*)e->thread, READY) != E_OK)
-		goto err_0;
-
-	kfree(e);
-
-	return E_OK;
-
-
-err_1:
-	kunlock();
-
-err_0:
-	return -errno;
-}
-
-int ksignal_bcast(ksignal_t *sig){
-	ksignal_el_t *e;
-
-
-	klock();
-
-	list_for_each(*sig, e){
+	if(e != 0x0){
 		list_rm(*sig, e);
-
-		if(sched_enqueue((thread_t*)e->thread, READY) != E_OK)
-			break;
-
+		sched_wake((thread_t*)e->thread);
 		kfree(e);
 	}
 
-	kunlock();
+	mutex_unlock(&sig_mtx);
+	int_enable(imask);
+}
 
-	return -errno;
+void ksignal_bcast(ksignal_t *sig){
+	int_type_t imask;
+	ksignal_el_t *e;
+
+
+	imask = int_enable(INT_NONE);
+	mutex_lock(&sig_mtx);
+
+	list_for_each(*sig, e){
+		list_rm(*sig, e);
+		sched_wake((thread_t*)e->thread);
+		kfree(e);
+	}
+
+	mutex_unlock(&sig_mtx);
+	int_enable(imask);
 }

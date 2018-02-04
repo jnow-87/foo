@@ -7,7 +7,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-#include <errno.h>
 
 
 /* external variables */

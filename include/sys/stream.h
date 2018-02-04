@@ -6,6 +6,7 @@
 #include <sys/stdarg.h>
 #include <sys/errno.h>
 #include <sys/stream.h>
+#include <sys/mutex.h>
 
 
 /* macros */
@@ -19,6 +20,8 @@
 	.dataidx = 0, \
 	.widx = 0, \
 	.blen = buf_len, \
+	.rd_mtx = MUTEX_INITIALISER(), \
+	.wr_mtx = MUTEX_INITIALISER(), \
 	.putc = putchar, \
 }
 
@@ -34,6 +37,9 @@ typedef struct FILE{
 		   dataidx,
 		   widx,
 		   blen;
+
+	mutex_t rd_mtx,
+			wr_mtx;
 
 	char (*putc)(char c, struct FILE *stream);
 } FILE;

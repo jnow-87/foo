@@ -1,10 +1,9 @@
 #include <arch/syscall.h>
-#include <arch/thread.h>
 #include <lib/unistd.h>
 #include <sys/string.h>
-#include <sys/errno.h>
 #include <sys/syscall.h>
 #include <sys/binloader.h>
+#include <sys/thread.h>
 #include <sys/fcntl.h>
 #include <sys/file.h>
 
@@ -18,10 +17,7 @@ int open(char const *path, f_mode_t mode){
 	p.data_len = strlen(path) + 1;
 	p.mode = mode;
 
-	sc(SC_OPEN, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_OPEN, &p) != E_OK)
 		return -1;
 	return p.fd;
 }
@@ -32,10 +28,7 @@ int close(int fd){
 
 	p.fd = fd;
 
-	sc(SC_CLOSE, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_CLOSE, &p) != E_OK)
 		return -1;
 	return 0;
 }
@@ -47,12 +40,8 @@ ssize_t read(int fd, void *buf, size_t n){
 	p.fd = fd;
 	p.data = buf;
 	p.data_len = n;
-	p.errno = E_OK;
 
-	sc(SC_READ, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_READ, &p) != E_OK)
 		return -1;
 	return p.data_len;
 }
@@ -64,12 +53,8 @@ ssize_t write(int fd, void *buf, size_t n){
 	p.fd = fd;
 	p.data = buf;
 	p.data_len = n;
-	p.errno = E_OK;
 
-	sc(SC_WRITE, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_WRITE, &p) != E_OK)
 		return -1;
 	return p.data_len;
 }
@@ -82,12 +67,8 @@ int ioctl(int fd, int cmd, void *data, size_t data_len){
 	p.cmd = cmd;
 	p.data = data;
 	p.data_len = data_len;
-	p.errno = E_OK;
 
-	sc(SC_IOCTL, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_IOCTL, &p) != E_OK)
 		return -1;
 	return 0;
 }
@@ -100,12 +81,8 @@ int fcntl(int fd, int request, void *data, size_t data_len){
 	p.cmd = request;
 	p.data = data;
 	p.data_len = data_len;
-	p.errno = E_OK;
 
-	sc(SC_FCNTL, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_FCNTL, &p) != E_OK)
 		return -1;
 	return 0;
 }
@@ -116,12 +93,8 @@ int chdir(char const *path){
 
 	p.data = (void*)path;
 	p.data_len = strlen(path) + 1;
-	p.errno = E_OK;
 
-	sc(SC_CHDIR, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_CHDIR, &p) != E_OK)
 		return -1;
 	return 0;
 }
@@ -132,56 +105,52 @@ int rmdir(char const *path){
 
 	p.data = (void*)path;
 	p.data_len = strlen(path) + 1;
-	p.errno = E_OK;
 
-	sc(SC_RMNODE, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_RMNODE, &p) != E_OK)
 		return -1;
 	return 0;
 }
 
-thread_id_t thread_create(int (*entry)(void *), void *arg){
+tid_t thread_create(int (*entry)(void *), void *arg){
 	sc_thread_t p;
 
 
 	p.entry = entry;
 	p.arg = arg;
 
-	sc(SC_THREADCREATE, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_THREADCREATE, &p) != E_OK)
 		return 0;
 	return p.tid;
 }
 
 int thread_info(thread_info_t *info){
+	int r;
 	sc_thread_t p;
 
 
-	sc(SC_THREADINFO, &p);
-	errno |= p.errno;
+	r = sc(SC_THREADINFO, &p);
 
 	info->tid = p.tid;
 	info->priority = p.priority;
 	info->affinity = p.affinity;
 
-	return -p.errno;
+	return r;
 }
 
 int nice(int inc){
+	int r;
 	sc_thread_t p;
 
 
 	p.priority = inc;
-	sc(SC_NICE, &p);
+	r = sc(SC_NICE, &p);
 
-	return (p.errno != E_OK) ? -p.errno : p.priority;
+	if(r != E_OK)
+		return r;
+	return p.priority;
 }
 
-process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
+pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
 	sc_process_t p;
 
 
@@ -192,23 +161,21 @@ process_id_t process_create(void *binary, bin_type_t bin_type, char const *name,
 	p.args = args;
 	p.args_len = strlen(args);
 
-	sc(SC_PROCCREATE, &p);
-	errno |= p.errno;
-
-	if(p.errno != E_OK)
+	if(sc(SC_PROCCREATE, &p) != E_OK)
 		return 0;
 	return p.pid;
 }
 
 int process_info(process_info_t *info){
+	int r;
 	sc_process_t p;
 
-	sc(SC_PROCINFO, &p);
-	errno |= p.errno;
+
+	r = sc(SC_PROCINFO, &p);
 
 	info->pid = p.pid;
 
-	return -p.errno;
+	return r;
 }
 
 int sleep(size_t ms, size_t us){
@@ -218,8 +185,5 @@ int sleep(size_t ms, size_t us){
 	p.time.us = us;
 	p.time.ms = ms;
 
-	sc(SC_SLEEP, &p);
-	errno |= p.errno;
-
-	return -p.errno;
+	return sc(SC_SLEEP, &p);
 }

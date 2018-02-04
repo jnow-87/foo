@@ -24,7 +24,7 @@ typedef struct{
 
 
 /* external variables */
-extern kuart_t uarts[CONFIG_NUM_UART];
+extern kuart_t uarts[CONFIG_UART_CNT];
 
 
 #endif // DRIVER_UART_H

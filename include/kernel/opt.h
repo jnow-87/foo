@@ -42,7 +42,7 @@
 
 
 // kernel option initializer
-#define KOPT_INITIALISER { \
+#define KOPT_INITIALISER(){ \
 	.kernel_test = true, \
 	.kernel_stat = true, \
 	.init_bin = (void*)CONFIG_INIT_BINARY, \
@@ -54,7 +54,7 @@
 		.stopb = CONFIG_KERNEL_UART_STOPBITS, \
 		.csize = CS_8, \
 		.parity = CONFIG_KERNEL_UART_PARITY, \
-		.blocking = 0, \
+		.blocking = 1, \
 		.data_overrun = 0, \
 		.parity_err = 0, \
 		.frame_err = 0, \

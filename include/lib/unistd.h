@@ -15,11 +15,11 @@
 
 /* types */
 typedef struct{
-	process_id_t pid;
+	pid_t pid;
 } process_info_t;
 
 typedef struct{
-	thread_id_t tid;
+	tid_t tid;
 
 	unsigned int priority,
 				 affinity;
@@ -41,12 +41,12 @@ int chdir(char const *path);
 int rmdir(char const *path);
 
 // thread control
-thread_id_t thread_create(int (*entry)(void *), void *arg);
+tid_t thread_create(int (*entry)(void *), void *arg);
 int thread_info(thread_info_t *info);
 int nice(int inc);
 
 // process control
-process_id_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args);
+pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args);
 int process_info(process_info_t *info);
 
 // sleep

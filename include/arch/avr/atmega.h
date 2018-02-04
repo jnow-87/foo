@@ -23,7 +23,6 @@
 #include <arch/avr/interrupt.h>
 #include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
-#include <arch/avr/process.h>
 #include <arch/avr/syscall.h>
 #include <arch/avr/atomic.h>
 #include <arch/avr/lib.h>

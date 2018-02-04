@@ -8,10 +8,6 @@
 #include <sys/errno.h>
 
 
-/* macros */
-#define THREAD_ID_MAX	((thread_id_t)(~0))
-
-
 /* incomplete types */
 struct process_t;
 struct page_t;
@@ -19,7 +15,7 @@ struct page_t;
 
 /* types */
 typedef struct thread_t{
-	thread_id_t tid;
+	tid_t tid;
 
 	unsigned int affinity,
 				 priority;
@@ -37,7 +33,7 @@ typedef struct thread_t{
 
 
 /* prototypes */
-thread_t *thread_create(struct process_t *this_p, thread_id_t tid, void *entry, void *thread_arg);
+thread_t *thread_create(struct process_t *this_p, tid_t tid, void *entry, void *thread_arg);
 void thread_destroy(struct thread_t *this_t);
 void thread_context_enqueue(thread_t *this_t, thread_context_t *ctx);
 thread_context_t *thread_context_dequeue(thread_t *this_t);
