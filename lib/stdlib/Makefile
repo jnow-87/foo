@@ -1,1 +1,1 @@
-obj-y := exit.o mem.o
+obj-y := exit.o memory.o

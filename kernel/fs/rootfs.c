@@ -1,9 +1,8 @@
 #include <arch/core.h>
-#include <arch/mem.h>
 #include <kernel/init.h>
 #include <kernel/fs.h>
 #include <kernel/rootfs.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
 #include <sys/file.h>

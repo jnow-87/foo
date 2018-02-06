@@ -14,8 +14,8 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree
 ## linker script: memory layout
 ####
 
-avr_mem_lds_create := scripts/linker/avr_mem_lds_create.sh
-avr_mem_lds := $(loc_build_tree)/avr_mem.lds
+avr_mem_lds_create := scripts/linker/avr_memory_lds_create.sh
+avr_mem_lds := $(loc_build_tree)/avr_memory.lds
 
 kernel: gen_avr_mem_linker_script
 init: gen_avr_mem_linker_script

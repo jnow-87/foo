@@ -1,4 +1,4 @@
-#include <arch/mem.h>
+#include <arch/memory.h>
 #include <arch/interrupt.h>
 #include <kernel/kprintf.h>
 #include <kernel/syscall.h>

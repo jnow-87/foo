@@ -1,7 +1,7 @@
 #include <kernel/init.h>
 #include <kernel/devfs.h>
 #include <kernel/kprintf.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <sys/errno.h>
 #include <sys/string.h>
 #include <sys/ringbuf.h>

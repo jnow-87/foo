@@ -8,7 +8,7 @@
 #include <arch/interrupt.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>
-#include <kernel/page.h>
+#include <kernel/memory.h>
 #include <kernel/ipi.h>
 
 #endif // BUILD_KERNEL

@@ -22,7 +22,7 @@ typedef struct{
 	memblock_t *addr_space;		// memblock struct to manage processes virtual memory space
 #endif // CONFIG_KERNEL_VIRT_MEM
 
-	struct page_t *pages;		// list to manage allocated addresses in user memory (umalloc, ufree in umem.h)
+	struct page_t *pages;		// list to manage allocated addresses in user memory (umalloc, ufree in memory.h)
 } process_mem_t;
 
 typedef struct process_t{

@@ -1,4 +1,4 @@
-obj-y := init.o thread.o process.o sched.o panic.o kmem.o umem.o page.o binloader.o binloader_raw.o syscall.o signal.o timer.o fs/
+obj-y := init.o panic.o syscall.o signal.o timer.o sched/ fs/ memory/ binloader/
 
 obj-$(CONFIG_KERNEL_STAT) += stat.o
 obj-$(CONFIG_KERNEL_TEST) += test.o

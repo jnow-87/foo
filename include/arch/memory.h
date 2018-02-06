@@ -3,7 +3,7 @@
 
 
 #include <arch/arch.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <sys/errno.h>
 #include <sys/string.h>
 

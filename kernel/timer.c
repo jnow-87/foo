@@ -1,6 +1,6 @@
 #include <config/config.h>
 #include <kernel/init.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <kernel/syscall.h>
 #include <kernel/signal.h>
 #include <sys/types.h>

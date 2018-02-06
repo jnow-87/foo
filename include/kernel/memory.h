@@ -1,9 +1,9 @@
-#ifndef KERNEL_PAGE_H
-#define KERNEL_PAGE_H
+#ifndef KERNEL_MEM_H
+#define KERNEL_MEM_H
 
 
 #include <config/config.h>
-#include <kernel/process.h>
+#include <sys/types.h>
 
 
 /* macros */
@@ -88,8 +88,21 @@ typedef struct page_t{
 
 
 /* prototypes */
+void *kmalloc(size_t n);
+void kfree(void *addr);
+
+void *umalloc(size_t n);
+void ufree(void *addr);
+
 page_t *page_alloc(struct process_t *this_p, page_size_t psize);
 void page_free(struct process_t *this_p, page_t *page);
 
+#ifdef CONFIG_KERNEL_VIRT_MEM
 
-#endif // KERNEL_PAGE_H
+void *addr_virt_to_phys(void *va);
+void *addr_phys_to_virt(void *pa);
+
+#endif // CONFIG_KERNEL_VIRT_MEM
+
+
+#endif // KERNEL_MEM_H
