@@ -1,4 +1,4 @@
-obj-y := init.o unistd.o stdlib.o stdio.o sched.o time.o
+obj-y := init.o sched.o time.o stdlib/ stdio/ unistd/
 
 
 ####

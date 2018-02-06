@@ -21,11 +21,228 @@ endmenu
 # }}}
 
 #
-# kprintf
+# kernel memory layout
 #
 # {{{
+menu "Memory configuration"
+config KERNEL_IMAGE_BASE
+	hex "Kernel image base address"
+	default 0x0
 
+config KERNEL_IMAGE_SIZE
+	int "Kernel image size"
+	default 0
+
+config KERNEL_INITRAMFS_BASE
+	hex "Init ram file system base address"
+	default 0x0
+
+config KERNEL_INITRAMFS_SIZE
+	int "Init ram file system size"
+	default 0
+
+config KERNEL_HEAP_BASE
+	hex "Kernel heap base address"
+	default 0x0
+
+config KERNEL_HEAP_SIZE
+	int "Kernel heap size"
+	default 0
+
+config KERNEL_PROC_BASE
+	hex "Process heap base address"
+	default 0x0
+
+config KERNEL_PROC_SIZE
+	int "Process heap size"
+	default 0
+
+config KERNEL_STACK_BASE
+	hex "Kernel stack base address"
+	default 0x0
+
+if KERNEL_VIRT_MEM
+	choice
+		prompt "Kernel/Thread stack size"
+
+		config KERNEL_STACK_SIZE_4k
+			bool "4k"
+
+		config KERNEL_STACK_SIZE_16k
+			bool "16k"
+
+		config KERNEL_STACK_SIZE_64k
+			bool "64k"
+
+		config KERNEL_STACK_SIZE_256k
+			bool "256k"
+
+		config KERNEL_STACK_SIZE_1M
+			bool "1M"
+
+		config KERNEL_STACK_SIZE_4M
+			bool "4M"
+
+		config KERNEL_STACK_SIZE_16M
+			bool "16M"
+
+		config KERNEL_STACK_SIZE_64M
+			bool "64M"
+
+		config KERNEL_STACK_SIZE_256M
+			bool "256M"
+
+		config KERNEL_STACK_SIZE_1G
+			bool "1G"
+	endchoice
+	
+	menu "Hidden"
+		visible if 0
+
+		config KERNEL_STACK_SIZE
+			int "Thread stack size"
+			default 0	if KERNEL_STACK_SIZE_4k
+			default 1	if KERNEL_STACK_SIZE_16k
+			default 2	if KERNEL_STACK_SIZE_64k
+			default 3	if KERNEL_STACK_SIZE_256k
+			default 4	if KERNEL_STACK_SIZE_1M
+			default 5	if KERNEL_STACK_SIZE_4M
+			default 6	if KERNEL_STACK_SIZE_16M
+			default 7	if KERNEL_STACK_SIZE_64M
+			default 8	if KERNEL_STACK_SIZE_256M
+			default 9	if KERNEL_STACK_SIZE_1G
+	endmenu
+endif # KERNEL_VIRT_MEM
+
+if KERNEL_NO_VIRT_MEM
+	config KERNEL_STACK_SIZE
+		int "Thread stack size"
+		default 4096
+endif # KERNEL_NO_VIRT_MEM
+
+config KMALLOC_ALIGN
+	int "Alignment to be used for kernel level memory allocators (has to be a power of 2)"
+	default 4
+endmenu
 # }}}
+
+#
+# system calls
+#
+# {{{
+menu "System calls"
+	config SC_FILESYSTEM
+		bool "File system"
+		default y
+		help
+			This includes open, close, read, write, ioctl, fcntl, rmnode and chdir
+
+	config SC_DYNMEM
+		bool "Dynamic memory"
+		default y
+		help
+			This includes malloc and free
+
+	config SC_SCHED
+		bool "Scheduler"
+		default y
+		help
+			This includes sched_yield
+
+	config SC_TIME
+		bool "Time"
+		default y
+		help
+			This includes sleep and time
+
+	config SC_PROCESS
+		bool "Process control"
+		default y
+		help
+			This includes process_create and process_info
+
+	config SC_THREAD
+		bool "Thread control"
+		default y
+		help
+			This includes thread_create, thread_info and nice
+endmenu
+# }}}
+
+#
+# init binary
+#
+# {{{
+menu "Init binary settings"
+	config INIT_BINARY
+		hex "Adress of the init binary"
+
+	choice
+		prompt "Init binary type"
+
+		config INIT_BINTYPE_RAW
+			bool "INIT_BINARY points to the init entry address"
+
+		config INIT_BINARY_ELF
+			bool "INIT_BINARY points to an ELF file"
+	endchoice
+
+	config INIT_ARGS
+		qstring "Init argument string"
+		default ""
+
+	menu "Hidden"
+		visible if 0
+
+		config INIT_BINTYPE
+			int "Init binary type"
+			default 0	if INIT_BINTYPE_RAW
+			default 1	if INIT_BINARY_ELF
+	endmenu
+endmenu
+# }}}
+
+#
+# scheduler
+#
+# {{{
+menu "Scheduler settigns"
+	config SCHED_CYCLETIME_US
+		int "Scheduler cycle time [us]"
+
+	config SCHED_ERR_MAX
+		int "Maximal scheduler error [%]"
+
+	config SCHED_PRIO_DEFAULT
+		int "Default process priority"
+		default 0
+
+	config SCHED_AFFINITY_DEFAULT
+		hex "Default process affinity"
+		default 0x1
+endmenu
+# }}}
+
+#
+# timer
+#
+# {{{
+menu "Timer settings"
+	config KTIMER_CYCLETIME_US
+		int "Kernel timer cycle time [us]"
+
+	config KTIMER_ERR_MAX
+		int "Maximal kernel timer error [%]"
+endmenu
+# }}}
+
+#
+# file system
+#
+# {{{
+menu "File system"
+	source "kernel/fs/Kconfig"
+endmenu
 
 #
 # uart parameter
@@ -197,184 +414,3 @@ config KERNEL_TEST
 config KERNEL_STAT
 	bool "Execute 'kernel_stat()' on boot"
 # }}}
-
-#
-# kernel memory layout
-#
-# {{{
-menu "Memory configuration"
-config KERNEL_IMAGE_BASE
-	hex "Kernel image base address"
-	default 0x0
-
-config KERNEL_IMAGE_SIZE
-	int "Kernel image size"
-	default 0
-
-config KERNEL_INITRAMFS_BASE
-	hex "Init ram file system base address"
-	default 0x0
-
-config KERNEL_INITRAMFS_SIZE
-	int "Init ram file system size"
-	default 0
-
-config KERNEL_HEAP_BASE
-	hex "Kernel heap base address"
-	default 0x0
-
-config KERNEL_HEAP_SIZE
-	int "Kernel heap size"
-	default 0
-
-config KERNEL_PROC_BASE
-	hex "Process heap base address"
-	default 0x0
-
-config KERNEL_PROC_SIZE
-	int "Process heap size"
-	default 0
-
-config KERNEL_STACK_BASE
-	hex "Kernel stack base address"
-	default 0x0
-
-if KERNEL_VIRT_MEM
-	choice
-		prompt "Kernel/Thread stack size"
-
-		config KERNEL_STACK_SIZE_4k
-			bool "4k"
-
-		config KERNEL_STACK_SIZE_16k
-			bool "16k"
-
-		config KERNEL_STACK_SIZE_64k
-			bool "64k"
-
-		config KERNEL_STACK_SIZE_256k
-			bool "256k"
-
-		config KERNEL_STACK_SIZE_1M
-			bool "1M"
-
-		config KERNEL_STACK_SIZE_4M
-			bool "4M"
-
-		config KERNEL_STACK_SIZE_16M
-			bool "16M"
-
-		config KERNEL_STACK_SIZE_64M
-			bool "64M"
-
-		config KERNEL_STACK_SIZE_256M
-			bool "256M"
-
-		config KERNEL_STACK_SIZE_1G
-			bool "1G"
-	endchoice
-	
-	menu "Hidden"
-		visible if 0
-
-		config KERNEL_STACK_SIZE
-			int "Thread stack size"
-			default 0	if KERNEL_STACK_SIZE_4k
-			default 1	if KERNEL_STACK_SIZE_16k
-			default 2	if KERNEL_STACK_SIZE_64k
-			default 3	if KERNEL_STACK_SIZE_256k
-			default 4	if KERNEL_STACK_SIZE_1M
-			default 5	if KERNEL_STACK_SIZE_4M
-			default 6	if KERNEL_STACK_SIZE_16M
-			default 7	if KERNEL_STACK_SIZE_64M
-			default 8	if KERNEL_STACK_SIZE_256M
-			default 9	if KERNEL_STACK_SIZE_1G
-	endmenu
-endif # KERNEL_VIRT_MEM
-
-if KERNEL_NO_VIRT_MEM
-	config KERNEL_STACK_SIZE
-		int "Thread stack size"
-		default 4096
-endif # KERNEL_NO_VIRT_MEM
-
-config KMALLOC_ALIGN
-	int "Alignment to be used for kernel level memory allocators (has to be a power of 2)"
-	default 4
-endmenu
-# }}}
-
-#
-# init binary
-#
-# {{{
-menu "Init binary settings"
-	config INIT_BINARY
-		hex "Adress of the init binary"
-
-	choice
-		prompt "Init binary type"
-
-		config INIT_BINTYPE_RAW
-			bool "INIT_BINARY points to the init entry address"
-
-		config INIT_BINARY_ELF
-			bool "INIT_BINARY points to an ELF file"
-	endchoice
-
-	config INIT_ARGS
-		qstring "Init argument string"
-		default ""
-
-	menu "Hidden"
-		visible if 0
-
-		config INIT_BINTYPE
-			int "Init binary type"
-			default 0	if INIT_BINTYPE_RAW
-			default 1	if INIT_BINARY_ELF
-	endmenu
-endmenu
-# }}}
-
-#
-# scheduler
-#
-# {{{
-menu "Scheduler settigns"
-	config SCHED_CYCLETIME_US
-		int "Scheduler cycle time [us]"
-
-	config SCHED_ERR_MAX
-		int "Maximal scheduler error [%]"
-
-	config SCHED_PRIO_DEFAULT
-		int "Default process priority"
-		default 0
-
-	config SCHED_AFFINITY_DEFAULT
-		hex "Default process affinity"
-		default 0x1
-endmenu
-# }}}
-
-#
-# timer
-#
-# {{{
-menu "Timer settings"
-	config KTIMER_CYCLETIME_US
-		int "Kernel timer cycle time [us]"
-
-	config KTIMER_ERR_MAX
-		int "Maximal kernel timer error [%]"
-endmenu
-# }}}
-
-#
-# file system
-#
-# {{{
-menu "File system"
-	source "kernel/fs/Kconfig"
-endmenu

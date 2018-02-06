@@ -8,7 +8,6 @@
 #include <sys/file.h>
 #include <sys/errno.h>
 #include <sys/math.h>
-#include <sys/limits.h>
 #include <sys/mutex.h>
 
 
@@ -322,43 +321,8 @@ int fprintf(FILE *stream, char const *format, ...){
 
 }
 
-int sprintf(char *s, char const *format, ...){
-	int i;
-	va_list lst;
-
-
-	va_start(lst, format);
-	i = vsprintf(s, format, lst);
-	va_end(lst);
-
-	return i;
-}
-
-int snprintf(char *s, size_t n, char const *format, ...){
-	int i;
-	va_list lst;
-
-
-	va_start(lst, format);
-	i = vsnprintf(s, n, format, lst);
-	va_end(lst);
-
-	return i;
-}
-
 int vprintf(char const *format, va_list lst){
 	return vfprintf(stdout, format, lst);
-}
-
-int vsprintf(char *s, char const *format, va_list lst){
-	return vsnprintf(s, SIZE_MAX, format, lst);
-}
-
-int vsnprintf(char *s, size_t n, char const *format, va_list lst){
-	FILE fp = FILE_INITIALISER(0x0, s, n, 0x0);
-
-
-	return vfprintf(&fp, format, lst);
 }
 
 
