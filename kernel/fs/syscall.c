@@ -258,11 +258,11 @@ static int sc_hdlr_rmnode(void *_p){
 	root = (path[0] == '/') ? (fs_root) : this_p->cwd;
 	mutex_unlock(&this_p->mtx);
 
-	if(root->ops->rmnode == 0x0)
+	if(root->ops->node_rm == 0x0)
 		return_errno(E_NOIMP);
 
 	fs_lock();
-	(void)root->ops->rmnode(root, path);
+	(void)root->ops->node_rm(root, path);
 	fs_unlock();
 
 	return -errno;
@@ -282,17 +282,29 @@ static int sc_hdlr_chdir(void *_p){
 
 	copy_from_user(path, p->data, p->data_len, this_p);
 
-	/* identify file system and call its chdir callback */
+	/* identify file system and call its findnode callback */
+	fs_lock();
 	mutex_lock(&this_p->mtx);
 
 	root = (path[0] == '/') ? (fs_root) : this_p->cwd;
 
-	if(root->ops->chdir == 0x0)
-		return_errno(E_NOIMP);
+	if(root->ops->node_find == 0x0)
+		goto_errno(end, E_NOIMP);
 
-	(void)root->ops->chdir(root, path, this_p);
+	root = root->ops->node_find(root, path);
 
+	if(root == 0x0)
+		goto end;
+
+	// update current working directory
+	this_p->cwd->ref_cnt--;
+	this_p->cwd = root;
+	root->ref_cnt++;
+
+
+end:
 	mutex_unlock(&this_p->mtx);
+	fs_unlock();
 
 	return -errno;
 }

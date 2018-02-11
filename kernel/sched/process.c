@@ -78,6 +78,8 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	this_p->fds = 0x0;
 	this_p->cwd = cwd;
 
+	cwd->ref_cnt++;
+
 	/* load binary */
 	entry = 0x0;
 
