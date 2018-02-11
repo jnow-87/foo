@@ -1,5 +1,6 @@
-menu "Rootfs"
-	config ROOTFS_INIT_FILE_SIZE
-		int "Initial file size of rootfs files"
-		default 512
-endmenu
+config ROOTFS_INIT_FILE_SIZE
+	int "Initial file size of rootfs files"
+	default 512
+
+config KERNEL_DEVFS
+	bool "Device file system support"

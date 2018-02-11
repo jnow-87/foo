@@ -1,3 +1,4 @@
+#include <config/config.h>
 #include <arch/thread.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
@@ -38,12 +39,15 @@ GCC_ERROR(invalid sleep mode - check kernel config)
 
 #ifdef BUILD_KERNEL
 void avr_core_panic(thread_context_t const *tc){
+#ifdef CONFIG_KERNEL_PRINTF
 	unsigned int i,
 				 j,
 				 ret_addr;
+#endif // CONFIG_KERNEL_PRINTF
 
 
 	/* dump registers */
+#ifdef CONFIG_KERNEL_PRINTF
 	if(tc != 0x0){
 		ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
 
@@ -69,6 +73,7 @@ void avr_core_panic(thread_context_t const *tc){
 				kprintf(KMSG_ANY, "\n");
 		}
 	}
+#endif // CONFIG_KERNEL_PRINTF
 
 	/* halt core */
 	// set sleep mode to power down

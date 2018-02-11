@@ -1,0 +1,13 @@
+config SCHED_CYCLETIME_US
+	int "Scheduler cycle time [us]"
+
+config SCHED_ERR_MAX
+	int "Maximal scheduler error [%]"
+
+config SCHED_PRIO_DEFAULT
+	int "Default process priority"
+	default 0
+
+config SCHED_AFFINITY_DEFAULT
+	hex "Default process affinity"
+	default 0x1

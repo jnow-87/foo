@@ -1,9 +1,9 @@
 menuconfig DRIVER_LOOPBACK
 	bool "Loopback device"
+	select KERNEL_DEVFS
+	select SYS_RINGBUFFER
 
 if DRIVER_LOOPBACK
-
-config LOOP_BUF_SIZE
-int "Loop device buffer size"
-
+	config LOOP_BUF_SIZE
+		int "Loop device buffer size"
 endif # DRIVER_LOOPBACK

@@ -1,8 +1,18 @@
-obj-y := errno.o string.o stream.o memblock.o ringbuf.o mutex.o
-obj-nobuiltin-y := libsys.o
+obj-y := errno.o string.o memblock.o mutex.o
+
+obj-$(CONFIG_KERNEL_PRINTF) += stream.o
+obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
+
 hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o
 
-libsys-y := errno.o string.o stream_lib.o memblock.o ringbuf.o mutex_lib.o
+obj-nobuiltin-y := libsys.o
+
+
+libsys-y := errno.o string.o
+
+libsys-$(CONFIG_SC_DYNMEM) += memblock.o
+libsys-$(CONFIG_LIB_MUTEX) += mutex_lib.o
+libsys-$(CONFIG_LIB_STREAM) += stream_lib.o
 
 
 # custom rules to generate separate objects files for src files that are reuired by kernel and libsys
