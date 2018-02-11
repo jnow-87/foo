@@ -36,7 +36,9 @@ avrconfig_header := $(dir $(config_header))avrconfig.h
 kernel: $(avrconfig_header)
 
 $(avrconfig_header): check_configheader $(avrconfig)
-	$(QUTIL)$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v)
+	$(QUTIL)$(avrconfig) $(avrconfig_header).tmp $(if $(QBUILD),,-v)
+	$(QUTIL)diff $(avrconfig_header) $(avrconfig_header).tmp 1>/dev/null 2>&1; \
+	[ $$? -eq 0 ] || cp $(avrconfig_header).tmp $(avrconfig_header)
 
 
 ####
