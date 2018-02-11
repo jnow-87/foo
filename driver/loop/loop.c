@@ -8,8 +8,7 @@
 
 
 /* local variables */
-static devfs_dev_t *dev;
-static ringbuf_t buf;
+static ringbuf_t dev_buf;
 
 
 /* local/static prototypes */
@@ -33,7 +32,7 @@ static int init(void){
 	if(b == 0x0)
 		return_errno(E_NOMEM);
 
-	ringbuf_init(&buf, b, CONFIG_LOOP_BUF_SIZE);
+	ringbuf_init(&dev_buf, b, CONFIG_LOOP_BUF_SIZE);
 
 	/* register device */
 	ops.open = open;
@@ -43,9 +42,7 @@ static int init(void){
 	ops.ioctl = ioctl;
 	ops.fcntl = fcntl;
 
-	dev = devfs_dev_register("loop", &ops, 0);
-
-	if(dev == 0x0)
+	if(devfs_dev_register("loop", &ops, 0) == 0x0)
 		goto err;
 
 	return E_OK;
@@ -69,14 +66,14 @@ static int close(devfs_dev_t *dev, fs_filed_t *fd){
 }
 
 static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	n = ringbuf_read(&buf, buf, n);
+	n = ringbuf_read(&dev_buf, buf, n);
 	DEBUG("copy from loop buffer \"%*.*s\"\n", n, n, buf);
 
 	return n;
 }
 
 static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	n = ringbuf_write(&buf, buf, n);
+	n = ringbuf_write(&dev_buf, buf, n);
 
 	DEBUG("copy to buffer \"%*.*s\"\n", n, n, buf);
 
