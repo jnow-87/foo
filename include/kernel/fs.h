@@ -115,20 +115,18 @@ typedef struct{
 	 * \return	E_OK if the target node has been removed. On error a value smaller
 	 * 			than 0 is returned and errno is set appropriately.
 	 */
-	int (*rmnode)(struct fs_node_t *start, char const *path);
+	int (*node_rm)(struct fs_node_t *start, char const *path);
 
 	/**
-	 * \brief	Change the working diretory of this_p to the node specified through
-	 * 			start and path.
+	 * \brief	Return the node specified through start and path.
 	 *
 	 * \param	start	root node to start the search for the target node
 	 * \param	path	path to the target node
-	 * \param	this_p	process that the file descriptor is allocated to
 	 *
-	 * \return	E_OK if the target node has been removed. On error a value smaller
-	 * 			than 0 is returned and errno is set appropriately.
+	 * \return	pointer to the target node on success. On error 0x0 is returned and
+	 * 			errnor is set appropriately.
 	 */
-	int (*chdir)(struct fs_node_t *start, char const *path, struct process_t *this_p);
+	struct fs_node_t *(*node_find)(struct fs_node_t *start, char const *path);
 } fs_ops_t;
 
 typedef struct fs_t{

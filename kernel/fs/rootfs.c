@@ -28,8 +28,8 @@ static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
 static int fcntl(fs_filed_t *fd, int cmd, void *data);
-static int rmnode(fs_node_t *start, char const *path);
-static int chdir(fs_node_t *start, char const *path, process_t *this_p);
+static int node_rm(fs_node_t *start, char const *path);
+static fs_node_t *node_find(fs_node_t *start, char const *path);
 
 static rootfs_file_t *file_alloc(void);
 static void file_free(rootfs_file_t *file);
@@ -124,8 +124,8 @@ static int init(void){
 	ops.write = write;
 	ops.ioctl = 0x0;
 	ops.fcntl = fcntl;
-	ops.rmnode = rmnode;
-	ops.chdir = chdir;
+	ops.node_rm = node_rm;
+	ops.node_find = node_find;
 
 	rootfs_id = fs_register(&ops);
 
@@ -346,7 +346,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 	}
 }
 
-static int rmnode(fs_node_t *start, char const *path){
+static int node_rm(fs_node_t *start, char const *path){
 	if(*path == 0)
 		return_errno(E_INVAL);
 
@@ -362,10 +362,10 @@ static int rmnode(fs_node_t *start, char const *path){
 
 	case -2:
 		/* file system boundary reached, hence call subsequent file system handler */
-		if(start->ops->rmnode == 0x0)
+		if(start->ops->node_rm == 0x0)
 			return_errno(E_NOIMP);
 
-		return start->ops->rmnode(start, path);
+		return start->ops->node_rm(start, path);
 
 	case -1:
 		/* part of path is not a directory */
@@ -377,29 +377,32 @@ static int rmnode(fs_node_t *start, char const *path){
 	}
 }
 
-static int chdir(fs_node_t *start, char const *path, process_t *this_p){
+static fs_node_t *node_find(fs_node_t *start, char const *path){
 	if(*path == 0)
-		return_errno(E_INVAL);
+		goto_errno(err, E_INVAL);
 
 	switch(fs_node_find(&start, &path)){
 	case 0:
 		/* target node found, set current process working directory */
-		this_p->cwd = start;
-		return E_OK;
+		return start;
 
 	case -2:
 		/* file system boundary reached, hence call subsequent file system handler */
-		if(start->ops->chdir == 0x0)
-			return_errno(E_NOIMP);
+		if(start->ops->node_find == 0x0)
+			goto_errno(err, E_NOIMP);
 
-		return start->ops->chdir(start, path, this_p);
+		return start->ops->node_find(start, path);
 
 	case -1:
-		return_errno(E_INVAL);
+		goto_errno(err, E_INVAL);
 
 	default:
-		return_errno(E_UNAVAIL);
+		goto_errno(err, E_UNAVAIL);
 	}
+
+
+err:
+	return 0x0;
 }
 
 static rootfs_file_t *file_alloc(void){
