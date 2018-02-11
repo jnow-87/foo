@@ -36,7 +36,7 @@ typedef enum{
 #endif // CONFIG_KERNEL_MSG_WARN
 
 #ifdef CONFIG_KERNEL_MSG_INFO
-#define INFO(fmt, ...)		cprintf(KMSG_INFO, "[INF] "fmt, ##__VA_ARGS__)
+#define INFO(fmt, ...)		cprintf(KMSG_INFO, fmt, ##__VA_ARGS__)
 #else
 #define INFO(fmt, ...)		{}
 #endif // CONFIG_KERNEL_MSG_INFO
@@ -59,21 +59,17 @@ typedef enum{
 #endif
 
 // kprintf
-#if CONFIG_KERNEL_MSG_FATAL || CONFIG_KERNEL_MSG_WARN || CONFIG_KERNEL_MSG_DEBUG || CONFIG_KERNEL_MSG_INFO || CONFIG_KERNEL_STAT
+#if CONFIG_KERNEL_PRINTF
 #ifdef CONFIG_KERNEL_SMP
-
 #define cprintf(lvl, fmt, ...)	kprintf(lvl, "[%u] " fmt, PIR, ##__VA_ARGS__)
-
 #else
-
 #define cprintf(lvl, fmt, ...) 	kprintf(lvl, fmt, ##__VA_ARGS__)
-
 #endif // CONFIG_KERNEL_SMP
-#endif // CONFIG_KERNEL_MSG_*
+#endif // CONFIG_KERNEL_PRINTF
 
 
 /* protoypes */
-#if CONFIG_KERNEL_MSG_FATAL || CONFIG_KERNEL_MSG_WARN || CONFIG_KERNEL_MSG_DEBUG || CONFIG_KERNEL_MSG_INFO || CONFIG_KERNEL_STAT
+#if CONFIG_KERNEL_PRINTF
 
 void kprintf(kmsg_t lvl, char const *format, ...);
 void kvprintf(kmsg_t lvl, char const *format, va_list lst);
@@ -83,7 +79,7 @@ void kvprintf(kmsg_t lvl, char const *format, va_list lst);
 #define kprintf(lvl, fmt, ...)	{}
 #define kvprintf(lvl, fmt, ...)	{}
 
-#endif // CONFIG_KERNEL_MSG_*
+#endif // CONFIG_KERNEL_PRINTF
 
 
 #endif // KERNEL_PRINTF_H

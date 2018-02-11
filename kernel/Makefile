@@ -1,11 +1,11 @@
-obj-y := init.o thread.o process.o sched.o panic.o kmem.o umem.o page.o binloader.o binloader_raw.o syscall.o signal.o timer.o fs/
+obj-y := init.o panic.o sched/ fs/ memory/ binloader/
 
+obj-$(CONFIG_KERNEL_SYSCALL) += syscall.o
+obj-$(CONFIG_KERNEL_TIMER) += timer.o
+obj-$(CONFIG_KERNEL_SIGNAL) += signal.o
 obj-$(CONFIG_KERNEL_STAT) += stat.o
 obj-$(CONFIG_KERNEL_TEST) += test.o
-
-
-config_kprintf := $(findstring y,$(CONFIG_KERNEL_MSG_FATAL) $(CONFIG_KERNEL_MSG_WARN) $(CONFIG_KERNEL_MSG_DEBUG) $(CONFIG_KERNEL_MSG_INFO) $(CONFIG_KERNEL_STAT))
-obj-$(config_kprintf) += kprintf.o
+obj-$(CONFIG_KERNEL_PRINTF) += kprintf.o
 
 
 ####

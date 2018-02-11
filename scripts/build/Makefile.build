@@ -244,7 +244,7 @@ $(foreach tgt,$(loc_all_tgt), \
 
 # local flags for ./obj.o and ./obj.host.o
 $(foreach type,$(obj_types), \
-	$(if $(loc_single_$(type)) $(loc_comp_$(type)) $(loc_dir_$($(type))), \
+	$(if $(loc_single_$(type))$(loc_comp_$(type))$(loc_dir_$($(type))), \
 		$(foreach flag,$(all_flags), \
 			$(call gen_rule_loc_flags,obj$(findstring .host,.$(type)).o,$(flag),$(loc_build_tree)/) \
 		) \
@@ -358,9 +358,23 @@ $(call gen_rule_basic,    compile_o_c,          $(loc_build_tree)/%.o,          
 $(call pdebug1)
 $(call pdebug1,generate obj.o rules)
 
-# obj.o, obj.host.o
-$(if $(loc_single_hostobj) $(loc_comp_hostobj) $(loc_dir_hostobj), $(call gen_rule_basic,    compile_o_o,    $(loc_build_tree)/obj.host.o,    $(loc_dir_hostobj) $(addprefix $(loc_build_tree)/,$(loc_single_hostobj) $(loc_comp_hostobj)),    host    ))
-$(if $(loc_single_obj) $(loc_comp_obj) $(loc_dir_obj),             $(call gen_rule_basic,    compile_o_o,    $(loc_build_tree)/obj.o,         $(loc_dir_obj) $(addprefix $(loc_build_tree)/,$(loc_single_obj) $(loc_comp_obj)),                        ))
+# obj.o
+# 	in case no target objects are specified, generate a dummy obj.o
+# 	the dummy is required to avoid invoking Makefiles to report and
+# 	due to missing obj.o
+$(if $(loc_single_obj)$(loc_comp_obj)$(loc_dir_obj), \
+	$(call gen_rule_basic, compile_o_o,     $(loc_build_tree)/obj.o, $(loc_dir_obj) $(addprefix $(loc_build_tree)/,$(loc_single_obj) $(loc_comp_obj))), \
+	$(call gen_rule_basic, compile_o_empty, $(loc_build_tree)/obj.o,) \
+)
+
+# obj.host.o
+# 	in case no target objects are specified, generate a dummy obj.host.o
+# 	the dummy is required to avoid invoking Makefiles to report and	due
+# 	to missing obj.host.o
+$(if $(loc_single_hostobj)$(loc_comp_hostobj)$(loc_dir_hostobj), \
+	$(call gen_rule_basic, compile_o_o,     $(loc_build_tree)/obj.host.o, $(loc_dir_hostobj) $(addprefix $(loc_build_tree)/,$(loc_single_hostobj) $(loc_comp_hostobj)), host), \
+	$(call gen_rule_basic, compile_o_empty, $(loc_build_tree)/obj.host.o, , host) \
+)
 
 # .o -> bin (corresponding pattern rules (<dir>/%: %.o) do not work, since '%:' matches everything)
 # .o -> lib (corresponding pattern rules (<dir>/%.a: %.o) do not work since its not possible to differentiate between target and host libs)

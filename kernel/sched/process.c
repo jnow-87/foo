@@ -1,14 +1,11 @@
 #include <config/config.h>
-#include <arch/core.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>
-#include <kernel/sched.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <kernel/rootfs.h>
 #include <kernel/binloader.h>
 #include <sys/errno.h>
 #include <sys/list.h>
-#include <sys/string.h>
 #include <sys/mutex.h>
 
 

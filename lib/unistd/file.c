@@ -1,9 +1,7 @@
 #include <arch/syscall.h>
+#include <sys/syscall.h>
 #include <lib/unistd.h>
 #include <sys/string.h>
-#include <sys/syscall.h>
-#include <sys/binloader.h>
-#include <sys/thread.h>
 #include <sys/fcntl.h>
 #include <sys/file.h>
 
@@ -109,81 +107,4 @@ int rmdir(char const *path){
 	if(sc(SC_RMNODE, &p) != E_OK)
 		return -1;
 	return 0;
-}
-
-tid_t thread_create(int (*entry)(void *), void *arg){
-	sc_thread_t p;
-
-
-	p.entry = entry;
-	p.arg = arg;
-
-	if(sc(SC_THREADCREATE, &p) != E_OK)
-		return 0;
-	return p.tid;
-}
-
-int thread_info(thread_info_t *info){
-	int r;
-	sc_thread_t p;
-
-
-	r = sc(SC_THREADINFO, &p);
-
-	info->tid = p.tid;
-	info->priority = p.priority;
-	info->affinity = p.affinity;
-
-	return r;
-}
-
-int nice(int inc){
-	int r;
-	sc_thread_t p;
-
-
-	p.priority = inc;
-	r = sc(SC_NICE, &p);
-
-	if(r != E_OK)
-		return r;
-	return p.priority;
-}
-
-pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
-	sc_process_t p;
-
-
-	p.binary = binary;
-	p.bin_type = bin_type;
-	p.name = name;
-	p.name_len = strlen(name);
-	p.args = args;
-	p.args_len = strlen(args);
-
-	if(sc(SC_PROCCREATE, &p) != E_OK)
-		return 0;
-	return p.pid;
-}
-
-int process_info(process_info_t *info){
-	int r;
-	sc_process_t p;
-
-
-	r = sc(SC_PROCINFO, &p);
-
-	info->pid = p.pid;
-
-	return r;
-}
-
-int sleep(size_t ms, size_t us){
-	sc_time_t p;
-
-
-	p.time.us = us;
-	p.time.ms = ms;
-
-	return sc(SC_SLEEP, &p);
 }

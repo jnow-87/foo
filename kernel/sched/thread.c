@@ -1,9 +1,7 @@
 #include <config/config.h>
 #include <arch/thread.h>
 #include <kernel/thread.h>
-#include <kernel/kmem.h>
-#include <kernel/page.h>
-#include <sys/mutex.h>
+#include <kernel/memory.h>
 #include <sys/list.h>
 #include <sys/errno.h>
 

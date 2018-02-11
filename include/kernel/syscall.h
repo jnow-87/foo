@@ -2,9 +2,18 @@
 #define KERNEL_SYSCALL_H
 
 
+#include <config/config.h>
 #include <kernel/thread.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
+
+
+/* macors */
+#ifndef CONFIG_KERNEL_SYSCALL
+
+#define ksc_hdlr(num, param, psize)	E_OK
+
+#endif // CONFIG_KERNEL_SYSCALL
 
 
 /* types */
@@ -25,7 +34,11 @@ typedef int (*sc_hdlr_t)(void *param);
 int sc_register(sc_t num, sc_hdlr_t hdlr);
 int sc_release(sc_t num);
 
+#ifdef CONFIG_KERNEL_SYSCALL
+
 int ksc_hdlr(sc_t num, void *param, size_t psize);
+
+#endif // CONFIG_KERNEL_SYSCALL
 
 
 #endif // KERNEL_SYSCALL_H

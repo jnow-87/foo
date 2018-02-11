@@ -2,7 +2,7 @@
 #include <kernel/init.h>
 #include <kernel/opt.h>
 #include <kernel/devfs.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <kernel/signal.h>
 #include <driver/uart.h>
 #include <sys/ringbuf.h>

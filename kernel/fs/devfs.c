@@ -2,7 +2,7 @@
 #include <kernel/fs.h>
 #include <kernel/rootfs.h>
 #include <kernel/devfs.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <kernel/kprintf.h>
 #include <sys/list.h>
 

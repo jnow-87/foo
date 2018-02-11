@@ -106,11 +106,28 @@ define compile_o_o
 	$(echo) [$(call upper_case,$(1))CC] $@
 	$($(1)cc) $($(1)cflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $(filter %.o,$^) -o $@
 endef
+
+define compile_o_empty
+	$(echo) [$(call upper_case,$(1))CC] $@
+	$(shell [ ! -e $@.c ] && (mkdir -p $$(dirname $@); touch $@.c))
+	$($(1)cc) $($(1)cflags) $($(1)cppflags) $($(1)archflags) -c $@.c -o $@.tmp.o
+	$($(1)cc) $($(1)cflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $@.tmp.o -o $@
+endef
+
 else
+
 define compile_o_o
 	$(echo) [$(call upper_case,$(1))CXX] $@
 	$($(1)cxx) $($(1)cxxflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $(filter %.o,$^) -o $@
 endef
+
+define compile_o_empty
+	$(echo) [$(call upper_case,$(1))CXX] $@
+	$(shell [ ! -e $@.cc ] && (mkdir -p $$(dirname $@); touch $@.cc))
+	$($(1)cxx) $($(1)cxxflags) $($(1)cflags) $($(1)cppflags) $($(1)archflags) -c $@.cc -o $@.tmp.o
+	$($(1)cxx) $($(1)cxxflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))) $@.tmp.o -o $@
+endef
+
 endif
 
 define compile_lib_o

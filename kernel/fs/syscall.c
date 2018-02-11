@@ -1,5 +1,5 @@
 #include <arch/core.h>
-#include <arch/mem.h>
+#include <arch/memory.h>
 #include <kernel/init.h>
 #include <kernel/sched.h>
 #include <kernel/syscall.h>

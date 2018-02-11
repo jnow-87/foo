@@ -6,7 +6,6 @@
 #include <sys/memblock.h>
 #include <sys/math.h>
 #include <sys/mutex.h>
-#include <sys/syscall.h>
 
 
 /* types */
@@ -111,8 +110,4 @@ void free(void *addr){
 
 clean:
 	mutex_unlock(&mem_mtx);
-}
-
-void exit(int status){
-	(void)sc(SC_EXIT, &status);
 }

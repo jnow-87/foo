@@ -1,48 +1,16 @@
 #include <config/config.h>
-#include <arch/arch.h>
-#include <arch/core.h>
 #include <kernel/init.h>
 #include <kernel/syscall.h>
-#include <kernel/page.h>
+#include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
-#include <sys/types.h>
-#include <sys/list.h>
-#include <sys/memblock.h>
 #include <sys/mutex.h>
-#include <sys/errno.h>
+#include <sys/list.h>
 
 
 /* local/static prototypes */
 static int sc_hdlr_malloc(void *p);
 static int sc_hdlr_free(void *p);
-
-
-/* static variables */
-static memblock_t *process_mem = 0x0;
-static mutex_t umem_mtx = MUTEX_INITIALISER();
-
-
-/* global functions */
-void *umalloc(size_t n){
-	void *p;
-
-
-	mutex_lock(&umem_mtx);
-	p = memblock_alloc(&process_mem, n, CONFIG_KMALLOC_ALIGN);
-	mutex_unlock(&umem_mtx);
-
-	return p;
-}
-
-void ufree(void *addr){
-	mutex_lock(&umem_mtx);
-
-	if(memblock_free(&process_mem, addr) < 0)
-		kpanic(0x0, "double free at %p\n", addr);
-
-	mutex_unlock(&umem_mtx);
-}
 
 
 /* local functions */
@@ -51,14 +19,6 @@ static int init(void){
 
 
 	r = E_OK;
-
-	/* init memory area */
-	process_mem = (void*)(CONFIG_KERNEL_PROC_BASE);
-
-	if(memblock_init(process_mem, CONFIG_KERNEL_PROC_SIZE) < 0)
-		r |= errno;
-
-	/* register syscalls */
 
 	r |= sc_register(SC_MALLOC, sc_hdlr_malloc);
 	r |= sc_register(SC_FREE, sc_hdlr_free);

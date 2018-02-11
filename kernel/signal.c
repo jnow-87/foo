@@ -1,7 +1,7 @@
 #include <arch/interrupt.h>
 #include <kernel/signal.h>
 #include <kernel/sched.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <sys/list.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>

@@ -1,0 +1,13 @@
+config LIB_PRINTF
+	bool "printf"
+	select LIB_STREAM
+	select SC_FILESYSTEM
+
+config LIB_STREAM
+	bool "[v]s*printf"
+	default y
+
+config FILE_BUF_SIZE
+	int "Buffer size for FILE structures"
+	depends on SC_FILESYSTEM
+	default 16

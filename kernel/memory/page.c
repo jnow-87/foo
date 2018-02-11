@@ -1,8 +1,6 @@
 #include <config/config.h>
 #include <kernel/process.h>
-#include <kernel/page.h>
-#include <kernel/kmem.h>
-#include <kernel/umem.h>
+#include <kernel/memory.h>
 #include <kernel/panic.h>
 #include <sys/memblock.h>
 #include <sys/mutex.h>

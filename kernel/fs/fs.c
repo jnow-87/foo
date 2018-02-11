@@ -1,6 +1,6 @@
 #include <arch/core.h>
 #include <kernel/fs.h>
-#include <kernel/kmem.h>
+#include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <sys/errno.h>
 #include <sys/list.h>

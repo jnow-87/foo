@@ -32,10 +32,8 @@ int file_map(const char *filename, int *_fd, void **_map, unsigned int *_size){
 		goto err;
 	}
 
-	if(st.st_size == 0){
-		fprintf(stderr,"fixdep: %s is empty\n", filename);
+	if(st.st_size == 0)
 		goto err;
-	}
 
 	map = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 

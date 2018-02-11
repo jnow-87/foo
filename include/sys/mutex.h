@@ -2,6 +2,7 @@
 #define SYS_MUTEX_H
 
 
+#include <config/config.h>
 #include <sys/compiler.h>
 #include <sys/process.h>
 #include <sys/thread.h>
@@ -20,6 +21,15 @@
 
 #define MUTEX_INITIALISER()			_MUTEX_INITIALISER(MTX_NONE)
 #define NESTED_MUTEX_INITIALISER()	_MUTEX_INITIALISER(MTX_NESTED)
+
+#if defined(BUILD_LIBSYS) && !defined(CONFIG_LIB_MUTEX)
+
+#define mutex_init(m, attr)		CALL_DISABLED(mutex_init, CONFIG_LIB_MUTEX)
+#define mutex_lock(m)			CALL_DISABLED(mutex_lock, CONFIG_LIB_MUTEX)
+#define mutex_trylock(m)		CALL_DISABLED(mutex_trylock, CONFIG_LIB_MUTEX)
+#define mutex_unlock(m)			CALL_DISABLED(mutex_unlock, CONFIG_LIB_MUTEX)
+
+#endif // CONFIG_LIB_MUTEX
 
 
 /* types */
@@ -58,10 +68,14 @@ typedef struct{
 
 
 /* prototypes */
+#if !(defined(BUILD_LIBSYS) && !defined(CONFIG_LIB_MUTEX))
+
 void mutex_init(mutex_t *m, mutex_attr_t attr);
 void mutex_lock(mutex_t *m);
 int mutex_trylock(mutex_t *m);
 void mutex_unlock(mutex_t *m);
+
+#endif // CONFIG_LIB_MUTEX
 
 
 #endif // SYS_MUTEX_H

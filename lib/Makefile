@@ -1,4 +1,7 @@
-obj-y := init.o unistd.o stdlib.o stdio.o sched.o time.o
+obj-y := init.o unistd/ stdlib/ stdio/
+
+obj-$(CONFIG_SC_TIME) += time.o
+obj-$(CONFIG_SC_SCHED) += sched.o
 
 
 ####
