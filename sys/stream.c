@@ -126,7 +126,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 #endif // CONFIG_NOFLOAT
 
 
-	if(stream->putc == 0x0 && stream->wbuf == 0x0)
+	if(stream == 0x0 || (stream->putc == 0x0 && stream->wbuf == 0x0))
 		return 0;
 
 	n = 0;
