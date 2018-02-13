@@ -106,7 +106,7 @@ void fs_fd_free(fs_filed_t *fd, process_t *this_p){
 	kfree(fd);
 }
 
-fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id){
+fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id){
 	fs_t *fs;
 	fs_node_t *node;
 
@@ -160,7 +160,7 @@ err_0:
 	return 0x0;
 }
 
-int fs_node_free(fs_node_t *node){
+int fs_node_destroy(fs_node_t *node){
 	fs_node_t *child;
 
 
@@ -168,7 +168,7 @@ int fs_node_free(fs_node_t *node){
 		goto_errno(err, E_INUSE);
 
 	list_for_each(node->childs, child){
-		if(fs_node_free(child) != E_OK)
+		if(fs_node_destroy(child) != E_OK)
 			goto err;
 	}
 

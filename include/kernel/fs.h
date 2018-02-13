@@ -179,8 +179,8 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p);
 void fs_fd_free(fs_filed_t *fd, struct process_t *this_p);
 
 // file node operations
-fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id);
-int fs_node_free(fs_node_t *node);
+fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id);
+int fs_node_destroy(fs_node_t *node);
 int fs_node_find(fs_node_t **start, char const **path);
 
 
