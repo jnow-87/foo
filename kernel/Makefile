@@ -1,4 +1,4 @@
-obj-y := init.o panic.o sched/ fs/ memory/ binloader/
+obj-y := init.o kernel.o panic.o task.o sched/ fs/ memory/ binloader/
 
 obj-$(CONFIG_KERNEL_SYSCALL) += syscall.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o

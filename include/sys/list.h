@@ -75,7 +75,7 @@
  * \return	none
  */
 #define list_add_head_safe(head, el, mtx) \
-	LOCK_SECTION(mxt, list_add_head(head, el))
+	LOCK_SECTION(mtx, list_add_head(head, el))
 
 /**
  * \brief	add an element at the end of the list
