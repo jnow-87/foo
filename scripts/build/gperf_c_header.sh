@@ -31,7 +31,7 @@ const_tables=
 if [ "$(grep %struct-type ${gperffile})" == "" ];then
 	lookup_return=char
 else
-	lookup_return=$(grep -oe 'struct [^;]\+' ${gperffile})
+	lookup_return=$(grep -oe '^struct [^;]\+' ${gperffile})
 fi
 
 #
