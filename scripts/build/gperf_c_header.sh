@@ -50,7 +50,7 @@ grep -e '#include' ${cfile} >> ${header}
 printf "\n\n" >> ${header}
 
 # add prototype for lookup-function
-printf "%s %s *%s(register const char *str, register unsigned int len);\n" "${const_tables}" "${lookup_return}" "${lookup_name}" >> ${header}
+printf "%s %s *%s(register const char *str, register size_t len);\n" "${const_tables}" "${lookup_return}" "${lookup_name}" >> ${header}
 
 # print footer
 printf "\n\n#endif // %s" "${macro}" >> ${header}
