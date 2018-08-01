@@ -21,6 +21,10 @@ extern void int_vectors(void);
 uint8_t int_num = 0;
 
 
+/* local/static prototypes */
+static void avr_int_iovfl_hdlr(struct thread_context_t *tc);
+
+
 /* global functions */
 struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	errno_t terrno;
@@ -36,11 +40,15 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 
 	// call handler
 	switch(int_num){
-	case INT_VECTORS:
+	case INT_VECTORS:		// syscall
 		avr_sc_hdlr();
 		break;
 
-	case CONFIG_TIMER_INT:
+	case INT_VECTORS + 1:	// instruction overflow
+		avr_int_iovfl_hdlr(tc);
+		break;
+
+	case CONFIG_TIMER_INT:	// scheduler
 		avr_timer_hdlr();
 		break;
 
@@ -79,4 +87,14 @@ int_type_t avr_int_enabled(void){
 	if(mreg_r(SREG) & (0x1 << SREG_I))
 		return INT_GLOBAL;
 	return INT_NONE;
+}
+
+
+/* local functions */
+static void avr_int_iovfl_hdlr(struct thread_context_t *tc){
+	unsigned int ret_addr;
+
+
+	ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
+	kpanic(sched_running(), "instruction memory overflow at 0x%x", ret_addr);
 }

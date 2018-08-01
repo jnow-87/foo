@@ -1,0 +1,1 @@
+hostobj-y := config/ linker/

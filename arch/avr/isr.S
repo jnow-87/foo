@@ -4,20 +4,24 @@
 
 /* macros */
 .macro	vector num
-	.if (\num < INT_VECTORS + 1)	// +1 for the pseude syscall interrupt
-		.if (\num == 0)
+	.if (\num < INT_VECTORS + 2)				// +2 for the pseude interrupts (syscall, instruction overflow)
+		.if (\num == 0)							// reset
 			.global __vector_\num
 			XJMP	__isr_reset
 
-		.elseif (\num == INT_VECTORS)
+		.elseif (\num == INT_VECTORS)			// syscall
 			.global	__vector_\num
 			XJMP	__isr_syscall
 
-		.elseif (\num == CONFIG_TIMER_INT)
+		.elseif (\num == INT_VECTORS + 1)		// instruction overflow
+			.global	__vector_\num
+			XJMP	__isr_iovfl
+
+		.elseif (\num == CONFIG_TIMER_INT)		// scheduler
 			.global	__vector_\num
 			XJMP	__isr_sched
 
-		.else
+		.else									// hardware interrupt
 			.global	__vector_\num
 			.weak	__vector_\num
 			.set	__vector_\num , __isr_inval
@@ -79,6 +83,7 @@ vector 32
 vector 33
 vector 34
 vector 35
+vector 36
 
 
 .section .text
@@ -106,6 +111,13 @@ __isr_syscall:
 __isr_sched:
 	push	r31
 	ldi		r31, CONFIG_TIMER_INT
+	sts		int_num, r31
+	XJMP	__int_hdlr_call
+
+/* instruction overflow handler */
+__isr_iovfl:
+	push	r31
+	ldi		r31, INT_VECTORS + 1
 	sts		int_num, r31
 	XJMP	__int_hdlr_call
 
