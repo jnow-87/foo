@@ -172,7 +172,7 @@ endef
 #
 # $(call set_default,<var>,<value>)
 define set_default
-	$(if $(subst command line,,$(origin $(1))), \
+	$(if $(subst environment,,$(subst command line,,$(origin $(1)))), \
 		$(if $(CONFIG_$(1)), \
 			$(eval $(1) := $(CONFIG_$(1))) \
 			, \
