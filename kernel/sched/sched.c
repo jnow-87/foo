@@ -34,8 +34,9 @@ void sched_tick(void){
 	imask = int_enable(INT_NONE);
 	mutex_lock(&sched_mtx);
 
-	// NOTE The running thread might already transitioned to a different
-	//		state, e.g. through the kernel signal mechanism
+	// NOTE The running thread might have already transitioned to a
+	// 		different state, e.g. through the kernel signal mechanism
+	// 		or a kill
 	if(running[PIR]->state == RUNNING)
 		sched_transition(running[PIR], READY);
 
