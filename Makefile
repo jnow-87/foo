@@ -234,12 +234,12 @@ check_memlayout: check_configheader $(memlayout_check)
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)
-cflags += -g
-cxxflags += -g
-asflags += -g
-hostcflags += -g
-hostcxxflags += -g
-hostasflags += -g
+  cflags += -g
+  cxxflags += -g
+  asflags += -g
+  hostcflags += -g
+  hostcxxflags += -g
+  hostasflags += -g
 endif
 
 all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)

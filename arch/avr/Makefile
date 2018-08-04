@@ -67,7 +67,11 @@ ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u"
 endif
 
 archflags += -mmcu=$(CONFIG_AVR_MCU)
-ldflags += -m$(CONFIG_AVR_ISA) --discard-all
+ldflags += -m$(CONFIG_AVR_ISA)
+
+ifeq ($(CONFIG_BUILD_RELEASE),y)
+  ldflags += --discard-all
+endif
 
 ## kernel flags
 ldlibs-kernel-arch := \
