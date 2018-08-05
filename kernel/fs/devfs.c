@@ -21,7 +21,6 @@ static int ioctl(fs_filed_t *fd, int request, void *data);
 static int fcntl(fs_filed_t *fd, int cmd, void *data);
 
 
-
 /* global functions */
 devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 	devfs_dev_t *dev;
@@ -44,6 +43,7 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 
 	dev->ops = *ops;
 	dev->data = data;
+	dev->node = node;
 	node->data = dev;
 
 	return dev;
@@ -99,6 +99,8 @@ static int init(void){
 	ops.write = write;
 	ops.ioctl = ioctl;
 	ops.fcntl = fcntl;
+	ops.node_find = 0x0;
+	ops.node_rm = 0x0;
 
 	devfs_id = fs_register(&ops);
 
@@ -125,7 +127,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 	DEBUG("open device \"%s\"\n", start->name);
 
-	fd = fs_fd_alloc(start, this_p);
+	fd = fs_fd_alloc(start, this_p, mode);
 
 	if(fd == 0x0)
 		return -errno;

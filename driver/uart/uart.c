@@ -3,7 +3,6 @@
 #include <kernel/opt.h>
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
-#include <kernel/signal.h>
 #include <driver/uart.h>
 #include <sys/ringbuf.h>
 #include <sys/uart.h>
@@ -65,7 +64,6 @@ static int _init(unsigned int uart){
 	ringbuf_init(&uarts[uart].rx_buf, b, CONFIG_UART_RX_BUFSIZE);
 
 	uarts[uart].rx_err = 0;
-	ksignal_init(&uarts[uart].rx_rdy);
 
 	/* register device */
 	ops.open = 0x0;
@@ -77,6 +75,7 @@ static int _init(unsigned int uart){
 
 	name[3] = '0' + uart;
 	devs[uart] = devfs_dev_register(name, &ops, (void*)uart);
+	uarts[uart].rx_rdy = &devs[uart]->node->rd_sig;
 
 	if(devs[uart] == 0x0)
 		goto err_1;
@@ -115,9 +114,6 @@ static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 		return 0;
 	}
-
-	if(uarts[uart].cfg.blocking && ringbuf_empty(&uarts[uart].rx_buf))
-		ksignal_wait(&uarts[uart].rx_rdy);
 
 	return ringbuf_read(&uarts[uart].rx_buf, buf, n);
 }

@@ -4,8 +4,10 @@
 
 /* types */
 typedef enum{
-	F_SEEK = 1,
-	F_TELL,
+	F_SEEK = 1,		// implementation required on lowest callback level
+	F_TELL,			// implementation required on lowest callback level
+	F_MODE_GET,		// implemented at highest callback level
+	F_MODE_SET,		// implemented at highest callback level
 } fcntl_cmd_t;
 
 typedef enum{

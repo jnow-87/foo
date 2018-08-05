@@ -160,5 +160,5 @@ static void rx_hdlr(uint8_t uart){
 		uarts[uart].cfg.rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
 	}
 
-	ksignal_send(&uarts[uart].rx_rdy);
+	ksignal_send(uarts[uart].rx_rdy);
 }

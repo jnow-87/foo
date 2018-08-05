@@ -2,6 +2,7 @@
 #define KERNEL_FS_H
 
 
+#include <kernel/signal.h>
 #include <sys/file.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
@@ -148,6 +149,7 @@ typedef struct fs_node_t{
 
 	mutex_t rd_mtx,
 			wr_mtx;
+	ksignal_t rd_sig;
 
 	struct fs_node_t *childs,
 					 *parent;
@@ -159,8 +161,13 @@ typedef struct fs_node_t{
 // file descriptor types
 typedef struct fs_filed_t{
 	int id;
+
 	size_t fp;
 	fs_node_t *node;
+	f_mode_t mode;
+	size_t outstanding;
+
+	mutex_t mtx;
 
 	struct fs_filed_t *prev,
 					  *next;
@@ -175,8 +182,10 @@ void fs_lock(void);
 void fs_unlock(void);
 
 // file operations
-fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p);
+fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p, f_mode_t mode);
 void fs_fd_free(fs_filed_t *fd, struct process_t *this_p);
+fs_filed_t *fs_fd_acquire(int id, struct process_t *this_p);
+void fs_fd_release(fs_filed_t *fd);
 
 // file node operations
 fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id);

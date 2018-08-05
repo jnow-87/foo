@@ -2,7 +2,8 @@
 #define KERNEL_SIGNAL_H
 
 
-#include <kernel/thread.h>
+/* incomplete types */
+struct kthread_t;
 
 
 /* types */

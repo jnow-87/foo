@@ -2,6 +2,7 @@
 #include <kernel/fs.h>
 #include <kernel/memory.h>
 #include <kernel/sched.h>
+#include <kernel/signal.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/mutex.h>
@@ -29,7 +30,7 @@ int fs_register(fs_ops_t *ops){
 	if(id < 0)
 		goto_errno(err, E_LIMIT);
 
-	if(ops == 0x0 || ops->open == 0x0)
+	if(ops == 0x0 || ops->open == 0x0 || ops->close == 0x0)
 		goto_errno(err, E_INVAL);
 
 	fs = kmalloc(sizeof(fs_t));
@@ -60,7 +61,7 @@ void fs_unlock(void){
 	mutex_unlock(&fs_mtx);
 }
 
-fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p){
+fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
 	int id;
 	fs_filed_t *fd;
 
@@ -85,6 +86,9 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p){
 	fd->id = id;
 	fd->node = node;
 	fd->fp = 0;
+	fd->mode = mode;
+	fd->outstanding = 0;
+	mutex_init(&fd->mtx, 0);
 
 	list_add_tail(this_p->fds, fd);
 	node->ref_cnt++;
@@ -104,6 +108,26 @@ void fs_fd_free(fs_filed_t *fd, process_t *this_p){
 	fd->node->ref_cnt--;
 
 	kfree(fd);
+}
+
+fs_filed_t *fs_fd_acquire(int id, struct process_t *this_p){
+	fs_filed_t *fd;
+
+
+	mutex_lock(&this_p->mtx);
+
+	fd = list_find(this_p->fds, id, id);
+
+	if(fd != 0x0)
+		mutex_lock(&fd->mtx);
+
+	mutex_unlock(&this_p->mtx);
+
+	return fd;
+}
+
+void fs_fd_release(fs_filed_t *fd){
+	mutex_unlock(&fd->mtx);
 }
 
 fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id){
@@ -143,6 +167,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 
 	mutex_init(&node->rd_mtx, 0);
 	mutex_init(&node->wr_mtx, 0);
+	ksignal_init(&node->rd_sig);
 
 	/* add node to file system */
 	node->parent = parent;

@@ -165,7 +165,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 		switch(n){
 		case 0:
 			/* target node found, so create file descriptor */
-			fd = fs_fd_alloc(start, this_p);
+			fd = fs_fd_alloc(start, this_p, mode);
 
 			if(fd == 0x0)
 				return -errno;

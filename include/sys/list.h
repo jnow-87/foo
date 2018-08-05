@@ -237,9 +237,9 @@
  * \return	cf. list_first()
  */
 #define list_first_safe(head, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_first(head)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_first(head)); \
+	_el; \
 })
 
 /**
@@ -261,9 +261,9 @@
  * \return	cf. list_last()
  */
 #define list_last_safe(head, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_last(head)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_last(head)); \
+	_el; \
 })
 
 /**
@@ -299,9 +299,9 @@
  * \return	cf. list_find()
  */
 #define list_find_safe(head, member, value, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_find(head, member, value)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_find(head, member, value)); \
+	_el; \
 })
 
 /**
@@ -337,9 +337,9 @@
  * \return	cf. list_find_str()
  */
 #define list_find_str_safe(head, member, str, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_find_str(head, member, str)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_find_str(head, member, str)); \
+	_el; \
 })
 
 /**
@@ -368,9 +368,9 @@
  * \return	cf. list_find_strn()
  */
 #define list_find_strn_safe(head, member, str, n, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_find_strn(head, member, str, n)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_find_strn(head, member, str, n)); \
+	_el; \
 })
 
 /**
@@ -392,9 +392,9 @@
  * \return	cf. list_empty()
  */
 #define list_empty_safe(head, mtx)({ \
-	int r; \
-	LOCK_SECTION(mtx, r = list_empty(head)); \
-	r; \
+	int _r; \
+	LOCK_SECTION(mtx, _r = list_empty(head)); \
+	_r; \
 })
 
 /**

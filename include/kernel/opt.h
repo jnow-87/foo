@@ -54,7 +54,6 @@
 		.stopb = CONFIG_KERNEL_UART_STOPBITS, \
 		.csize = CS_8, \
 		.parity = CONFIG_KERNEL_UART_PARITY, \
-		.blocking = 1, \
 		.data_overrun = 0, \
 		.parity_err = 0, \
 		.frame_err = 0, \
