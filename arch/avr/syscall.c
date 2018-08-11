@@ -48,6 +48,7 @@ void avr_sc_hdlr(void){
 	arg = (sc_arg_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
 
 	/* call kernel syscall handler */
-	arg->errno = ksc_hdlr(arg->num, arg->param, arg->size);
+	(void)ksc_hdlr(arg->num, arg->param, arg->size);
+	arg->errno = errno;
 }
 #endif // BUILD_KERNEL
