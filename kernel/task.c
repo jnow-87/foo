@@ -29,11 +29,14 @@ static mutex_t task_mtx = MUTEX_INITIALISER();
  * 						If 0x0 is passed the task is assumed to have no dependencies
  * 						to other tasks
  *
+ * \param	recurring	recurring tasks spawn a new task immediately after the current
+ * 						instance has been processed
+ *
  * \return	0 on success
  * 			<0 on error, with errno being set appropriately
  * 				E_NOMEM		not enough memory to allocate the task
  */
-int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queue){
+int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queue, bool recurring){
 	ktask_t *task;
 
 
@@ -46,7 +49,7 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queu
 	task->hdlr = hdlr;
 	task->queue = queue;
 	task->queue_next = 0x0;
-	task->ready = true;
+	task->flags = TASK_READY | (recurring ? TASK_RECURRING : 0);
 	memcpy(task->data, data, size);
 
 	/* enqueue task */
@@ -54,12 +57,13 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queu
 
 	// add to local task queue
 	if(queue != 0x0){
+		// TODO replace by common single-linked list implementation
 		if(queue->head == 0x0){
 			queue->head = task;
 			queue->tail = task;
 		}
 		else{
-			task->ready = false;
+			task->flags &= ~TASK_READY;
 			queue->tail->queue_next = task;
 			queue->tail = task;
 		}
@@ -80,11 +84,17 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queu
  * \param	task	the task to complete
  */
 void ktask_complete(ktask_t *task){
+	ktask_queue_t *queue;
+	bool queue_valid;
+
+
 	mutex_lock(&task_mtx);
+
+	queue_valid = (task->queue && list_contains(queues, task->queue));
 
 	/* update local task queue */
 	// check if the task's queue is still valid or has been destroyed
-	if(task->queue && list_contains(queues, task->queue)){
+	if(queue_valid){
 		// remove task from local queue
 		task->queue->head = task->queue_next;
 
@@ -93,11 +103,27 @@ void ktask_complete(ktask_t *task){
 
 		// activate next task in queue
 		if(task->queue_next)
-			task->queue_next->ready = true;
+			task->queue_next->flags |= TASK_READY;
 	}
 
-	/* free task */
-	kfree(task);
+	/* re-enqueue recurring tasks and delete non-recurring ones */
+	if((task->flags & TASK_RECURRING) && (task->queue == 0x0 || queue_valid)){
+		list_add_tail(tasks, task);
+
+		queue = task->queue;
+
+		// TODO replace by common single-linked list implementation
+		if(queue->head == 0x0){
+			queue->head = task;
+			queue->tail = task;
+		}
+		else{
+			queue->tail->queue_next = task;
+			queue->tail = task;
+		}
+	}
+	else
+		kfree(task);
 
 	mutex_unlock(&task_mtx);
 }
@@ -117,7 +143,7 @@ ktask_t *ktask_next(void){
 	task = list_first(tasks);
 
 	/* search for ready task */
-	while(task && !task->ready)
+	while(task && !(task->flags & TASK_READY))
 		task = task->next;
 
 	/* remove task from global queues

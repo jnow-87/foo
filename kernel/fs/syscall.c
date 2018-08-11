@@ -414,7 +414,7 @@ static void task_create(task_hdlr_t op, sc_fs_t *sc_p, fs_filed_t *fd, process_t
 	memcpy(&tp.sc_param, sc_p, sizeof(sc_fs_t));
 
 	/* create task */
-	ktask_create(task_hdlr, &tp, sizeof(task_param_t), fd->tasks);
+	ktask_create(task_hdlr, &tp, sizeof(task_param_t), fd->tasks, false);
 }
 
 static void task_hdlr(void *_p){

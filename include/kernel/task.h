@@ -10,6 +10,11 @@ struct ktask_queue_t;
 
 
 /* types */
+typedef enum{
+	TASK_RECURRING = 0x1,
+	TASK_READY = 0x2,
+} ktask_flag_t;
+
 typedef void (*ktask_hdlr_t)(void *p);
 
 typedef struct ktask_t{
@@ -19,7 +24,7 @@ typedef struct ktask_t{
 	struct ktask_queue_t *queue;
 	struct ktask_t *queue_next;
 
-	bool ready;
+	ktask_flag_t flags;
 
 	ktask_hdlr_t hdlr;
 	char data[];
@@ -35,7 +40,7 @@ typedef struct ktask_queue_t{
 
 
 /* prototypes */
-int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queue);
+int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queue, bool recurring);
 void ktask_complete(ktask_t *task);
 ktask_t *ktask_next(void);
 
