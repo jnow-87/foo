@@ -44,7 +44,7 @@ SECTIONS {
 		*(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 		*(.scommon)
 		*(COMMON)
-	} > data_app AT>data_app
+	} > data_app
 
 	__bss_start = ADDR(.bss);
 	__bss_end = __bss_start + SIZEOF(.bss);

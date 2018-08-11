@@ -37,8 +37,8 @@ $(lds_plugin_app_file): check_configheader $(lds_plugin_script)
 ## combined dependencies
 avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
 
-kernel_deps: avr_lds
-init_deps: avr_lds
+kernel_deps: avr_lds $(lds_memory_file)
+init_deps: avr_lds $(lds_memory_file)
 
 ####
 ## AVR config header

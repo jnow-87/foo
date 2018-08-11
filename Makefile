@@ -192,7 +192,7 @@ sysroot_create := scripts/sysroot/create.sh
 # kernel targets
 kernel: cppflags += -DBUILD_KERNEL
 kernel: check_config check_configheader check_memlayout versionheader $(kernel)
-kernel_deps:
+kernel_deps: scripts/linker/kernel_$(CONFIG_ARCH).lds
 
 $(kernel): ldlibs += $(ldlibs-kernel-arch)
 $(kernel): ldlibs += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
@@ -203,8 +203,9 @@ $(kernel): kernel_deps $(addprefix $(build_tree)/, $(kernel_objs))
 # init targets
 init: cppflags += -DBUILD_INIT
 init: check_config check_configheader libsys $(init)
-init_deps:
+init_deps: scripts/linker/app_$(CONFIG_ARCH).lds
 
+$(init): ldlibs += -Lscripts/linker -Tapp_$(CONFIG_ARCH).lds
 $(init): init_deps
 
 # libsys targets
@@ -212,7 +213,7 @@ libsys: cppflags += -DBUILD_LIBSYS
 libsys: check_config check_configheader $(libsys)
 libsys_deps:
 
-$(libsys): ldlibs += -Lscripts/linker -Tlibsys_$(CONFIG_ARCH).lds
+$(libsys):
 $(libsys): libsys_deps $(addprefix $(build_tree)/, $(libsys_objs))
 	$(call compile_lib_o)
 
