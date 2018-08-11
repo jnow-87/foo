@@ -8,6 +8,7 @@ typedef enum{
 	F_TELL,			// implementation required on lowest callback level
 	F_MODE_GET,		// implemented at highest callback level
 	F_MODE_SET,		// implemented at highest callback level
+	F_SYNC,			// implemented at highest callback level
 } fcntl_cmd_t;
 
 typedef enum{

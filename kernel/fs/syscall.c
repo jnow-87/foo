@@ -36,7 +36,7 @@ static int sc_hdlr_chdir(void *param);
 
 // actual operations
 static void write(sc_fs_t *p, fs_filed_t *fd, process_t *this_p);
-static int fcntl(fs_filed_t *fd, int cmd, void *data);
+static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p);
 
 // kernel task handling
 static void task_create(task_hdlr_t op, sc_fs_t *sc_p, fs_filed_t *fd, process_t *this_p);
@@ -265,7 +265,7 @@ static int sc_hdlr_fcntl(void *_p){
 	mutex_lock(&fd->node->wr_mtx);
 	mutex_lock(&fd->node->rd_mtx);
 
-	if(fcntl(fd, p->cmd, data) != E_OK){
+	if(fcntl(fd, p->cmd, data, this_p) != E_OK){
 		if(fd->node->ops->fcntl != 0x0)		(void)fd->node->ops->fcntl(fd, p->cmd, data);
 		else								errno |= E_NOIMP;
 	}
@@ -368,7 +368,7 @@ static void write(sc_fs_t *p, fs_filed_t *fd, process_t *this_p){
 	mutex_unlock(&fd->node->wr_mtx);
 }
 
-static int fcntl(fs_filed_t *fd, int cmd, void *data){
+static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p){
 	f_mode_t *mode;
 
 
@@ -382,6 +382,18 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 
 	case F_MODE_SET:
 		fd->mode = *mode;
+		break;
+
+	case F_SYNC:
+		mutex_unlock(&fd->node->rd_mtx);
+		mutex_unlock(&fd->node->wr_mtx);
+		fs_fd_release(fd);
+
+		ktask_queue_flush(fd->tasks);
+
+		fs_fd_acquire(fd->id, this_p);
+		mutex_lock(&fd->node->wr_mtx);
+		mutex_lock(&fd->node->rd_mtx);
 		break;
 
 	default:
