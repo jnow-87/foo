@@ -3,6 +3,7 @@
 
 
 #include <kernel/signal.h>
+#include <kernel/task.h>
 #include <sys/file.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
@@ -165,9 +166,10 @@ typedef struct fs_filed_t{
 	size_t fp;
 	fs_node_t *node;
 	f_mode_t mode;
-	size_t outstanding;
 
 	mutex_t mtx;
+
+	ktask_queue_t *tasks;
 
 	struct fs_filed_t *prev,
 					  *next;

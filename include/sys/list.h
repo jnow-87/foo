@@ -212,7 +212,7 @@
  * \brief	thread-safe variant of lst_rm()
  *
  * \param	head	cf. list_rm()
- * \param	el	cf. list_rm()
+ * \param	el		cf. list_rm()
  * \param	mtx		mutex to lock
  */
 #define list_rm_safe(head, el, mtx) \
@@ -264,6 +264,40 @@
 	typeof(head) _el; \
 	LOCK_SECTION(mtx, _el = list_last(head)); \
 	_el; \
+})
+
+/**
+ * \brief	check if the given element is part of the list
+ *
+ * \param	head	pointer to list head
+ * \param	el		the element to be checked
+ *
+ * \return	true if the element is part of the list
+ * 			false otherwise
+ */
+#define list_contains(head, el) ({ \
+	typeof(head) _head = (head); \
+\
+	for(;_head!=0; _head=_head->next){ \
+		if(_head == (el)) \
+			break; \
+	} \
+\
+	(_head == (el)); \
+})
+
+/**
+ * \brief	check if the given element is part of the list
+ *
+ * \param	head	cf. list_contains()
+ * \param	el		cf. list_contains()
+ *
+ * \return	cf. list_contains()
+ */
+#define list_contains_safe(head, el, mtx) ({ \
+	bool _r; \
+	LOCK_SECTION(mtx, _r = list_contains(head, el)); \
+	_r; \
 })
 
 /**

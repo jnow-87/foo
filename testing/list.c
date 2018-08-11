@@ -234,7 +234,6 @@ static int tc_list_replace(int log){
 
 test_case(tc_list_replace, "list_replace");
 
-
 static int tc_list_rm(int log){
 	unsigned int n;
 	list_t *head;
@@ -274,6 +273,26 @@ static int tc_list_rm(int log){
 
 test_case(tc_list_rm, "list_rm");
 
+static int tc_list_contains(int log){
+	unsigned int n;
+	list_t *head;
+
+
+	n = 0;
+	head = 0;
+	INIT_EL();
+
+	list_add_tail(head, &el0);
+	list_add_tail(head, &el1);
+	list_add_tail(head, &el2);
+
+	n += check_int(log, list_contains(head, &el1), true);
+	n += check_int(log, list_contains(head, &el3), false);
+
+	return -n;
+}
+
+test_case(tc_list_contains, "list_contains");
 
 static int tc_list_find(int log){
 	unsigned int n;

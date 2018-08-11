@@ -35,7 +35,6 @@ static int sc_hdlr_rmnode(void *param);
 static int sc_hdlr_chdir(void *param);
 
 // actual operations
-static void close(sc_fs_t *p, fs_filed_t *fd, process_t *this_p);
 static void write(sc_fs_t *p, fs_filed_t *fd, process_t *this_p);
 static int fcntl(fs_filed_t *fd, int cmd, void *data);
 
@@ -110,15 +109,19 @@ static int sc_hdlr_close(void *_p){
 		return_errno(E_INVAL);
 
 	/* handle close */
-	if(fd->mode & O_NONBLOCK){
-		task_create(close, p, fd, this_p);
-		fs_fd_release(fd);
-	}
-	else{
-		close(p, fd, this_p);
-		// NOTE fs_fd_release must not be called here,
-		//		since close deletes the decriptor
-	}
+	fs_fd_release(fd);
+
+	// wait for outstanding tasks to finish
+	ktask_queue_flush(fd->tasks);
+
+	fd = fs_fd_acquire(p->fd, this_p);
+
+	fs_lock();
+	(void)fd->node->ops->close(fd, this_p);
+	fs_unlock();
+
+	// NOTE fs_fd_release must not be called, since
+	// 		close has already deleted the decriptor
 
 	return E_OK;
 }
@@ -349,20 +352,6 @@ end:
 	return -errno;
 }
 
-static void close(sc_fs_t *p, fs_filed_t *fd, process_t *this_p){
-	/* wait for outstanding operations to finish */
-	while(fd->outstanding){
-		fs_fd_release(fd);
-		sched_yield();
-		fs_fd_acquire(p->fd, this_p);
-	}
-
-	/* handle close */
-	fs_lock();
-	(void)fd->node->ops->close(fd, this_p);
-	fs_unlock();
-}
-
 static void write(sc_fs_t *p, fs_filed_t *fd, process_t *this_p){
 	char buf[p->data_len];
 
@@ -412,11 +401,8 @@ static void task_create(task_hdlr_t op, sc_fs_t *sc_p, fs_filed_t *fd, process_t
 	tp.op = op;
 	memcpy(&tp.sc_param, sc_p, sizeof(sc_fs_t));
 
-	/* signal outstanding operations */
-	fd->outstanding++;
-
 	/* create task */
-	ktask_create(task_hdlr, &tp, sizeof(task_param_t));
+	ktask_create(task_hdlr, &tp, sizeof(task_param_t), fd->tasks);
 }
 
 static void task_hdlr(void *_p){
@@ -432,12 +418,7 @@ static void task_hdlr(void *_p){
 		return;
 
 	/* handle operation */
-	// pre-decrement in order for close() not to wait on itselft
-	fd->outstanding--;
 	p->op(&p->sc_param, fd, p->this_p);
 
-	// descriptor must not be released for close, hence it has
-	// already been deleted through the call
-	if(p->op != close)
-		fs_fd_release(fd);
+	fs_fd_release(fd);
 }

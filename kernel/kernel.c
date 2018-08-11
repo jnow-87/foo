@@ -54,6 +54,6 @@ static void ktask(void){
 			return;
 
 		task->hdlr(task->data);
-		ktask_destroy(task);
+		ktask_complete(task);
 	}
 }
