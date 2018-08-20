@@ -13,7 +13,7 @@ int memblock_init(memblock_t *pool, size_t len){
 	if(pool == 0)
 		return_errno(E_INVAL);
 
-	list_init_el(pool);
+	list_init(pool);
 	pool->len = len;
 
 	return E_OK;

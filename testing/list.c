@@ -13,23 +13,33 @@
 
 
 /* types */
-typedef struct list_t{
+typedef struct tlist_t{
+	struct tlist_t *prev,
+				   *next;
+
 	int el;
-	char s[5];
-	struct list_t *prev,
-				  *next;
-} list_t;
+	char const *s_ptr;
+	char s_arr[5];
+} tlist_t;
 
 
 /* static variables */
-static list_t el0 = { .el = 0, .s = "0" },
-			  el1 = { .el = 1, .s = "1" },
-			  el2 = { .el = 2, .s = "2" },
-			  el3 = { .el = 3, .s = "3xx" };
+static char const el_names[][5] = {
+	"0",
+	"1",
+	"2",
+	"3xx",
+};
+
+static tlist_t el0 = { .el = 0, .s_ptr = el_names[0], .s_arr = "0" },
+			   el1 = { .el = 1, .s_ptr = el_names[1], .s_arr = "1" },
+			   el2 = { .el = 2, .s_ptr = el_names[2], .s_arr = "2" },
+			   el3 = { .el = 3, .s_ptr = el_names[3], .s_arr = "3xx" };
 
 
 /* local functions */
 static int tc_list_print(int log){
+	tlog(log, "list element addresses\n");
 	tlog(log, "el0 addr: %#x\n", &el0);
 	tlog(log, "el1 addr: %#x\n", &el1);
 	tlog(log, "el2 addr: %#x\n", &el2);
@@ -38,18 +48,18 @@ static int tc_list_print(int log){
 	return 0;
 }
 
-test_case(tc_list_print, "list macros: addresses");
+test_case(tc_list_print, "list_print");
 
-static int tc_list_init_el(int log){
+
+static int tc_list_init(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
-
 	head = &el0;
 
-	list_init_el(head);
+	list_init(head);
 
 	n += check_ptr(log, head->prev, head);
 	n += check_ptr(log, head->next, 0);
@@ -57,12 +67,12 @@ static int tc_list_init_el(int log){
 	return -n;
 }
 
-test_case(tc_list_init_el, "list_init_el");
+test_case(tc_list_init, "list_init");
 
 
 static int tc_list_empty(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -83,7 +93,7 @@ test_case(tc_list_empty, "list_empty");
 
 static int tc_list_first_last(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -103,7 +113,7 @@ test_case(tc_list_first_last, "list_first/last");
 
 static int tc_list_add_head(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -127,7 +137,7 @@ test_case(tc_list_add_head, "list_add_head");
 
 static int tc_list_add_tail(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -151,7 +161,7 @@ test_case(tc_list_add_tail, "list_add_tail");
 
 static int tc_list_add_in(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -175,7 +185,7 @@ test_case(tc_list_add_in, "list_add_in");
 
 static int tc_list_replace(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -234,9 +244,10 @@ static int tc_list_replace(int log){
 
 test_case(tc_list_replace, "list_replace");
 
+
 static int tc_list_rm(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -273,9 +284,10 @@ static int tc_list_rm(int log){
 
 test_case(tc_list_rm, "list_rm");
 
+
 static int tc_list_contains(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -294,9 +306,10 @@ static int tc_list_contains(int log){
 
 test_case(tc_list_contains, "list_contains");
 
+
 static int tc_list_find(int log){
 	unsigned int n;
-	list_t *head;
+	tlist_t *head;
 
 
 	n = 0;
@@ -313,15 +326,25 @@ static int tc_list_find(int log){
 	n += check_ptr(log, list_find(head, el, 0), &el0);
 	n += check_ptr(log, list_find(head, el, 1), &el1);
 
-	/* list_find_str() */
-	n += check_ptr(log, list_find_str(head, s, "2"), &el2);
-	n += check_ptr(log, list_find_str(head, s, "0"), &el0);
-	n += check_ptr(log, list_find_str(head, s, "3"), 0);
+	/* list_find_str() with pointer target */
+	n += check_ptr(log, list_find_str(head, s_ptr, "2"), &el2);
+	n += check_ptr(log, list_find_str(head, s_ptr, "0"), &el0);
+	n += check_ptr(log, list_find_str(head, s_ptr, "3"), 0);
 
-	/* list_find_strn() */
-	n += check_ptr(log, list_find_strn(head, s, "2", 1), &el2);
-	n += check_ptr(log, list_find_strn(head, s, "0", 1), &el0);
-	n += check_ptr(log, list_find_strn(head, s, "3", 1), &el3);
+	/* list_find_strn() with pointer target */
+	n += check_ptr(log, list_find_strn(head, s_ptr, "2", 1), &el2);
+	n += check_ptr(log, list_find_strn(head, s_ptr, "0", 1), &el0);
+	n += check_ptr(log, list_find_strn(head, s_ptr, "3", 1), &el3);
+
+	/* list_find_str() with array target */
+	n += check_ptr(log, list_find_str(head, s_arr, "2"), &el2);
+	n += check_ptr(log, list_find_str(head, s_arr, "0"), &el0);
+	n += check_ptr(log, list_find_str(head, s_arr, "3"), 0);
+
+	/* list_find_strn() with array target */
+	n += check_ptr(log, list_find_strn(head, s_arr, "2", 1), &el2);
+	n += check_ptr(log, list_find_strn(head, s_arr, "0", 1), &el0);
+	n += check_ptr(log, list_find_strn(head, s_arr, "3", 1), &el3);
 
 	return -n;
 }
@@ -331,7 +354,7 @@ test_case(tc_list_find, "list_find");
 
 static int tc_list_for_each(int log){
 	unsigned int n;
-	list_t *head,
+	tlist_t *head,
 		   *el;
 
 

@@ -7,10 +7,10 @@
 
 /* types */
 typedef struct sched_queue_t{
-	thread_t *thread;
-
 	struct sched_queue_t *prev,
 						 *next;
+
+	thread_t *thread;
 } sched_queue_t;
 
 

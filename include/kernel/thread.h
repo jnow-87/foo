@@ -15,6 +15,9 @@ struct page_t;
 
 /* types */
 typedef struct thread_t{
+	struct thread_t *prev,
+					*next;
+
 	tid_t tid;
 
 	unsigned int affinity,
@@ -26,9 +29,6 @@ typedef struct thread_t{
 	thread_context_t *ctx_lst;
 
 	struct process_t *parent;
-
-	struct thread_t *prev,
-					*next;
 } thread_t;
 
 

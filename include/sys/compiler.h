@@ -44,5 +44,9 @@
 // 	DF	float, as wide as a DI mode integer, usually 64 bits
 #define __mode(m)		__attribute__((mode(m)))
 
+// offsetof
+#define offsetofvar(var, member)	((size_t)(&(((typeof((var))*)(0))->member)))
+#define offsetof(type, member)		((size_t)(&(((type*)(0))->member)))
+
 
 #endif // SYS_COMPILER_H

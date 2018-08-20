@@ -26,6 +26,9 @@ typedef struct{
 } process_mem_t;
 
 typedef struct process_t{
+	struct process_t *prev,
+					 *next;
+
 	pid_t pid;
 
 	unsigned int affinity;
@@ -41,9 +44,6 @@ typedef struct process_t{
 	fs_node_t *cwd;
 
 	mutex_t mtx;
-
-	struct process_t *prev,
-					 *next;
 } process_t;
 
 

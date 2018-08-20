@@ -31,11 +31,11 @@ typedef struct ktask_t{
 } ktask_t;
 
 typedef struct ktask_queue_t{
-	ktask_t * volatile head,
-			* volatile tail;
-
 	struct ktask_queue_t *prev,
 						 *next;
+
+	ktask_t * volatile head,
+			* volatile tail;
 } ktask_queue_t;
 
 

@@ -60,6 +60,10 @@ typedef size_t page_size_t;
 #endif // CONFIG_KERNEL_NO_VIRT_MEM
 
 typedef struct page_t{
+	/* list handling */
+	struct page_t *prev,
+				  *next;
+
 	/* mapping */
 	void *phys_addr;							// physical address
 
@@ -80,10 +84,6 @@ typedef struct page_t{
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	unsigned int idx;							// index in page table/TLB
 #endif // CONFIG_KERNEL_VIRT_MEM
-
-	/* list handling */
-	struct page_t *prev,
-				  *next;
 } page_t;
 
 

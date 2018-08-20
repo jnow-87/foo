@@ -132,15 +132,18 @@ typedef struct{
 } fs_ops_t;
 
 typedef struct fs_t{
-	int id;
-	fs_ops_t ops;
-
 	struct fs_t *prev,
 				*next;
+
+	int id;
+	fs_ops_t ops;
 } fs_t;
 
 // file system node types
 typedef struct fs_node_t{
+	struct fs_node_t *prev,
+					 *next;
+
 	char *name;
 	fs_ops_t *ops;
 
@@ -154,13 +157,13 @@ typedef struct fs_node_t{
 
 	struct fs_node_t *childs,
 					 *parent;
-
-	struct fs_node_t *prev,
-					 *next;
 } fs_node_t;
 
 // file descriptor types
 typedef struct fs_filed_t{
+	struct fs_filed_t *prev,
+					  *next;
+
 	int id;
 
 	size_t fp;
@@ -170,9 +173,6 @@ typedef struct fs_filed_t{
 	mutex_t mtx;
 
 	ktask_queue_t *tasks;
-
-	struct fs_filed_t *prev,
-					  *next;
 } fs_filed_t;
 
 

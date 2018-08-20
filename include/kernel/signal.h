@@ -8,10 +8,10 @@ struct kthread_t;
 
 /* types */
 typedef struct ksignal_el_t{
-	struct thread_t const *thread;
-
 	struct ksignal_el_t *prev,
 					   *next;
+
+	struct thread_t const *thread;
 } ksignal_el_t;
 
 typedef ksignal_el_t * ksignal_t;

@@ -22,6 +22,12 @@
 #define MUTEX_INITIALISER()			_MUTEX_INITIALISER(MTX_NONE)
 #define NESTED_MUTEX_INITIALISER()	_MUTEX_INITIALISER(MTX_NESTED)
 
+#define LOCK_SECTION(mtx, expr){ \
+	mutex_lock(mtx); \
+	expr; \
+	mutex_unlock(mtx); \
+}
+
 #if defined(BUILD_LIBSYS) && !defined(CONFIG_LIB_MUTEX)
 
 #define mutex_init(m, attr)		CALL_DISABLED(mutex_init, CONFIG_LIB_MUTEX)

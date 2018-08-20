@@ -8,6 +8,9 @@
 
 /* types */
 typedef struct memblock_t{
+	struct memblock_t *prev,
+					  *next;
+
 	/**
 	 * \brief	type to represent a block of memory
 	 * 				- its starting address equals the address of the
@@ -17,9 +20,6 @@ typedef struct memblock_t{
 	 */
 
 	size_t len;
-
-	struct memblock_t *prev,
-					  *next;
 } memblock_t;
 
 
