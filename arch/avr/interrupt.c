@@ -6,10 +6,10 @@
 #include <arch/avr/timer.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
-#include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
 #include <sys/errno.h>
+#include <sys/stack.h>
 #include <sys/register.h>
 
 
@@ -31,7 +31,7 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 
 
 	/* save thread context of active thread*/
-	thread_context_enqueue((thread_t*)sched_running(), tc);
+	stack_push(sched_running()->ctx, tc);
 
 	/* call respective interrupt handler */
 	// save and reset errno
@@ -60,7 +60,7 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	errno = terrno;
 
 	/* return context of active thread */
-	return thread_context_dequeue((thread_t*)sched_running());
+	return stack_pop(((thread_t*)sched_running())->ctx);
 }
 
 void avr_int_warm_reset_hdlr(void){

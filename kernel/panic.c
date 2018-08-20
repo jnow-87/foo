@@ -36,5 +36,5 @@ void kpanic_ext(thread_t const *this_t, char const *file, char const *func, unsi
 
 	va_end(lst);
 
-	core_panic((this_t == 0x0 || this_t->ctx_lst == 0x0) ? 0x0 : list_last(this_t->ctx_lst));
+	core_panic((this_t == 0x0 || this_t->ctx == 0x0) ? 0x0 : list_first(this_t->ctx));
 }

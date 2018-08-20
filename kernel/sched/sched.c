@@ -187,7 +187,7 @@ static int init(void){
 		this_t->parent = this_p;
 
 		this_t->entry = 0x0;	// kernel threads are already running
-		this_t->ctx_lst = 0x0;	// kernel thread context is set automatically once
+		this_t->ctx = 0x0;		// kernel thread context is set automatically once
 								// the thread is interrupted for the first time
 		this_t->stack = 0x0;	// stack pages are only relevant for user space,
 								// since the kernel has a separate memory management

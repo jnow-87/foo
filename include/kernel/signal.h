@@ -7,14 +7,16 @@ struct kthread_t;
 
 
 /* types */
-typedef struct ksignal_el_t{
-	struct ksignal_el_t *prev,
-					   *next;
+typedef struct ksignal_queue_t{
+	struct ksignal_queue_t *next;
 
 	struct thread_t const *thread;
-} ksignal_el_t;
+} ksignal_queue_t;
 
-typedef ksignal_el_t * ksignal_t;
+typedef struct{
+	ksignal_queue_t *head,
+					*tail;
+} ksignal_t;
 
 
 /* prototypes */

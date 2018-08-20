@@ -5,6 +5,7 @@
 #include <sys/mutex.h>
 #include <sys/types.h>
 #include <sys/list.h>
+#include <sys/list1.h>
 
 
 /* static variables */
@@ -57,16 +58,10 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queu
 
 	// add to local task queue
 	if(queue != 0x0){
-		// TODO replace by common single-linked list implementation
-		if(queue->head == 0x0){
-			queue->head = task;
-			queue->tail = task;
-		}
-		else{
+		if(!list_empty(queue->head))
 			task->flags &= ~TASK_READY;
-			queue->tail->queue_next = task;
-			queue->tail = task;
-		}
+
+		__list1_add_tail(queue->head, queue->tail, task, queue_next);
 	}
 
 	// add to global task queue
@@ -90,16 +85,14 @@ void ktask_complete(ktask_t *task){
 
 	mutex_lock(&task_mtx);
 
-	queue_valid = (task->queue && list_contains(queues, task->queue));
+	queue = task->queue;
+	queue_valid = (queue && list_contains(queues, queue));
 
 	/* update local task queue */
 	// check if the task's queue is still valid or has been destroyed
 	if(queue_valid){
 		// remove task from local queue
-		task->queue->head = task->queue_next;
-
-		if(task->queue_next == 0x0)
-			task->queue->tail = 0x0;
+		__list1_rm_head(queue->head, queue->tail, queue_next);
 
 		// activate next task in queue
 		if(task->queue_next)
@@ -109,18 +102,7 @@ void ktask_complete(ktask_t *task){
 	/* re-enqueue recurring tasks and delete non-recurring ones */
 	if((task->flags & TASK_RECURRING) && (task->queue == 0x0 || queue_valid)){
 		list_add_tail(tasks, task);
-
-		queue = task->queue;
-
-		// TODO replace by common single-linked list implementation
-		if(queue->head == 0x0){
-			queue->head = task;
-			queue->tail = task;
-		}
-		else{
-			queue->tail->queue_next = task;
-			queue->tail = task;
-		}
+		__list1_add_tail(queue->head, queue->tail, task, queue_next);
 	}
 	else
 		kfree(task);
@@ -200,8 +182,10 @@ void ktask_queue_destroy(ktask_queue_t *queue){
 
 	/* destroy outstanding tasks */
 	while(queue->head){
-		task = queue->head;
-		queue->head = task->queue_next;
+		task = list_first(queue->head);
+
+		if(task)
+			__list1_rm_head(queue->head, queue->tail, queue_next);
 
 		// only delete tasks that are still in the global
 		// task list, since all other tasks are currently

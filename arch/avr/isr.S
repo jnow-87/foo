@@ -132,7 +132,7 @@ __isr_inval:
 /* ISR with context handling */
 .global __int_hdlr_call
 __int_hdlr_call:
-	/* save context */
+	/* save registers */
 	// NOTE r31 is assumed being pushed by the calling routine
 	push	r30
 	push	r29
@@ -173,15 +173,13 @@ __int_hdlr_call:
 	lds		r16, SREG
 	push	r16
 
-	// push dummy to reserve space for next, prev members of thread_context_t
+	/* reserve space for thread_context_t::next and prepare interrupt hander arguments */
+	// push dummy to reserve space for next member of thread_context_t
 #if (CONFIG_ADDR_WIDTH == 16)
-	push	r1
 	push	r1
 #endif
 
-	push	r1
-
-	/* avr_int_hdlr argument: stack pointer aka thread_context_t pointer */
+	// avr_int_hdlr argument: stack pointer aka thread_context_t pointer
 	lds		r24, SPL
 	lds		r25, SPH
 
@@ -202,16 +200,14 @@ __int_hdlr_call:
 	sts		SPH, r25
 
 1:
-	/* pop dummy bytes used to reserve space for next, prev members of thread_context_t */
+	/* pop dummy bytes used to reserve space for next member of thread_context_t */
 #if (CONFIG_ADDR_WIDTH == 16)
-	pop		r16
 	pop		r16
 #endif
 
 	pop		r16
-	pop		r16
 
-	/* restore context */
+	/* restore regsiters */
 	pop		r16
 	sts		SREG, r16
 	pop		r16

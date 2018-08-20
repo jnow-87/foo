@@ -10,9 +10,10 @@ struct thread_t;
 
 
 /* types */
+// NOTE when changing thread_context_t also check if modifications
+// 		to the interrupt service routine are required
 typedef struct thread_context_t{
-	struct thread_context_t *prev,
-							*next;
+	struct thread_context_t *next;
 
 	uint8_t	sreg,			/**< status register */
 			mcusr,			/**< control register */

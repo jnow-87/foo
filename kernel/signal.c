@@ -2,7 +2,7 @@
 #include <kernel/signal.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
-#include <sys/list.h>
+#include <sys/queue.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
 
@@ -13,15 +13,16 @@ static mutex_t sig_mtx = MUTEX_INITIALISER();
 
 /* global functions */
 void ksignal_init(ksignal_t *sig){
-	*sig = 0x0;
+	sig->head = 0x0;
+	sig->tail = 0x0;
 }
 
 int ksignal_wait(ksignal_t *sig){
 	int_type_t imask;
-	ksignal_el_t *e;
+	ksignal_queue_t *e;
 
 
-	e = kmalloc(sizeof(ksignal_el_t));
+	e = kmalloc(sizeof(ksignal_queue_t));
 
 	if(e == 0x0)
 		return_errno(E_NOMEM);
@@ -31,7 +32,7 @@ int ksignal_wait(ksignal_t *sig){
 	imask = int_enable(INT_NONE);
 	mutex_lock(&sig_mtx);
 
-	list_add_tail(*sig, e);
+	queue_enqueue(sig->head, sig->tail, e);
 	sched_pause();
 
 	mutex_unlock(&sig_mtx);
@@ -44,16 +45,15 @@ int ksignal_wait(ksignal_t *sig){
 
 void ksignal_send(ksignal_t *sig){
 	int_type_t imask;
-	ksignal_el_t *e;
+	ksignal_queue_t *e;
 
 
 	imask = int_enable(INT_NONE);
 	mutex_lock(&sig_mtx);
 
-	e = list_first(*sig);
+	e = queue_dequeue(sig->head, sig->tail);
 
 	if(e != 0x0){
-		list_rm(*sig, e);
 		sched_wake((thread_t*)e->thread);
 		kfree(e);
 	}
@@ -64,14 +64,18 @@ void ksignal_send(ksignal_t *sig){
 
 void ksignal_bcast(ksignal_t *sig){
 	int_type_t imask;
-	ksignal_el_t *e;
+	ksignal_queue_t *e;
 
 
 	imask = int_enable(INT_NONE);
 	mutex_lock(&sig_mtx);
 
-	list_for_each(*sig, e){
-		list_rm(*sig, e);
+	while(1){
+		e = queue_dequeue(sig->head, sig->tail);
+
+		if(e == 0x0)
+			break;
+
 		sched_wake((thread_t*)e->thread);
 		kfree(e);
 	}
