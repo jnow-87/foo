@@ -51,7 +51,9 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queu
 	task->queue = queue;
 	task->queue_next = 0x0;
 	task->flags = TASK_READY | (recurring ? TASK_RECURRING : 0);
-	memcpy(task->data, data, size);
+
+	if(data && size)
+		memcpy(task->data, data, size);
 
 	/* enqueue task */
 	mutex_lock(&task_mtx);
