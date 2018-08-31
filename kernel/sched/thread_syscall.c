@@ -3,10 +3,10 @@
 #include <kernel/kprintf.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
+#include <kernel/csection.h>
 #include <sys/errno.h>
 #include <sys/syscall.h>
 #include <sys/list.h>
-#include <sys/mutex.h>
 #include "sched.h"
 
 
@@ -55,9 +55,9 @@ static int sc_hdlr_thread_create(void *_p){
 	if(new == 0x0)
 		return -errno;
 
-	mutex_lock(&sched_mtx);
+	csection_lock(&sched_lock);
 	sched_transition(new, READY);
-	mutex_unlock(&sched_mtx);
+	csection_unlock(&sched_lock);
 
 	p->tid = new->tid;
 
@@ -109,7 +109,7 @@ static int sc_hdlr_exit(void *p){
 	sched_tick();
 
 	/* remove thread scheduler queue entry */
-	mutex_lock(&sched_mtx);
+	csection_lock(&sched_lock);
 
 	e = list_find(sched_queues[this_t->state], thread, this_t);
 
@@ -119,7 +119,7 @@ static int sc_hdlr_exit(void *p){
 	list_rm(sched_queues[this_t->state], e);
 	kfree(e);
 
-	mutex_unlock(&sched_mtx);
+	csection_unlock(&sched_lock);
 
 	/* destroy thread */
 	thread_destroy((thread_t*)this_t);

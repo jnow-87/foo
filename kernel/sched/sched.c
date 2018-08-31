@@ -10,15 +10,15 @@
 #include <kernel/rootfs.h>
 #include <kernel/syscall.h>
 #include <kernel/panic.h>
+#include <kernel/csection.h>
 #include <sys/errno.h>
-#include <sys/mutex.h>
 #include <sys/list.h>
 #include "sched.h"
 
 
 /* global variables */
 sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
-mutex_t sched_mtx = MUTEX_INITIALISER();
+csection_lock_t sched_lock = CSECTION_INITIALISER();
 
 
 /* static variables */
@@ -27,12 +27,10 @@ static thread_t *running[CONFIG_NCORES] = { 0x0 };
 
 /* global functions */
 void sched_tick(void){
-	int_type_t imask;
 	thread_t *this_t;
 
 
-	imask = int_enable(INT_NONE);
-	mutex_lock(&sched_mtx);
+	csection_lock(&sched_lock);
 
 	// NOTE The running thread might have already transitioned to a
 	// 		different state, e.g. through the kernel signal mechanism
@@ -48,8 +46,7 @@ void sched_tick(void){
 	sched_transition(this_t, RUNNING);
 	running[PIR] = this_t;
 
-	mutex_unlock(&sched_mtx);
-	int_enable(imask);
+	csection_unlock(&sched_lock);
 
 	// TODO if the thread is not actually switched and the only ready thread
 	// 		is a kernel thread suspend the core
@@ -75,25 +72,15 @@ void sched_yield(void){
 }
 
 void sched_pause(void){
-	int_type_t imask;
-
-
-	imask = int_enable(INT_NONE);
-	mutex_lock(&sched_mtx);
+	csection_lock(&sched_lock);
 	sched_transition((thread_t*)sched_running(), WAITING);
-	mutex_unlock(&sched_mtx);
-	int_enable(imask);
+	csection_unlock(&sched_lock);
 }
 
 void sched_wake(thread_t *this_t){
-	int_type_t imask;
-
-
-	imask = int_enable(INT_NONE);
-	mutex_lock(&sched_mtx);
+	csection_lock(&sched_lock);
 	sched_transition(this_t, READY);
-	mutex_unlock(&sched_mtx);
-	int_enable(imask);
+	csection_unlock(&sched_lock);
 }
 
 /**
@@ -114,7 +101,7 @@ void sched_wake(thread_t *this_t){
  *
  * TODO kill is not yet implemented
  *
- * \pre	calls to sched_transition are protected through sched_mtx
+ * \pre	calls to sched_transition are protected through sched_lock
  */
 void sched_transition(thread_t *this_t, thread_state_t queue){
 	thread_state_t s;
@@ -166,7 +153,7 @@ static int init(void){
 	/* create kernel process */
 	this_p = kmalloc(sizeof(process_t));
 
-	if(this_p == 0)
+	if(this_p == 0x0)
 		goto_errno(err, E_NOMEM);
 
 	memset(this_p, 0x0, sizeof(process_t));
@@ -177,7 +164,7 @@ static int init(void){
 	for(i=0; i<CONFIG_NCORES; i++){
 		this_t = kmalloc(sizeof(thread_t));
 
-		if(this_t == 0)
+		if(this_t == 0x0)
 			goto_errno(err, E_NOMEM);
 
 		this_t->tid = i;
@@ -207,7 +194,7 @@ static int init(void){
 	// create init processs
 	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, fs_root);
 
-	if(this_p == 0)
+	if(this_p == 0x0)
 		goto err;
 
 	// add first thread to ready queue

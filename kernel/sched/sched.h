@@ -2,7 +2,7 @@
 #define LOC_KERNEL_SCHED_H
 
 
-#include <sys/mutex.h>
+#include <kernel/csection.h>
 
 
 /* types */
@@ -15,7 +15,7 @@ typedef struct sched_queue_t{
 
 
 /* external variables */
-extern mutex_t sched_mtx;
+extern csection_lock_t sched_lock;
 extern sched_queue_t *sched_queues[NTHREADSTATES];
 
 

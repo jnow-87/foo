@@ -4,6 +4,7 @@
 #include <kernel/syscall.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
+#include <kernel/csection.h>
 #include <sys/syscall.h>
 #include <sys/list.h>
 #include "sched.h"
@@ -54,9 +55,9 @@ static int sc_hdlr_process_create(void *_p){
 	if(new == 0x0)
 		return -errno;
 
-	mutex_lock(&sched_mtx);
+	csection_lock(&sched_lock);
 	sched_transition(list_first(new->threads), READY);
-	mutex_unlock(&sched_mtx);
+	csection_unlock(&sched_lock);
 
 	p->pid = new->pid;
 

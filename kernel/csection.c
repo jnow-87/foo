@@ -1,0 +1,15 @@
+#include <arch/interrupt.h>
+#include <kernel/csection.h>
+#include <sys/mutex.h>
+
+
+/* global functions */
+void csection_lock(csection_lock_t *l){
+	l->imask = int_enable(INT_NONE);
+	mutex_lock(&l->mtx);
+}
+
+void csection_unlock(csection_lock_t *l){
+	mutex_unlock(&l->mtx);
+	int_enable(l->imask);
+}

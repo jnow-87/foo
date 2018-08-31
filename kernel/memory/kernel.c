@@ -3,6 +3,7 @@
 #include <arch/interrupt.h>
 #include <kernel/init.h>
 #include <kernel/panic.h>
+#include <kernel/csection.h>
 #include <sys/types.h>
 #include <sys/memblock.h>
 #include <sys/mutex.h>
@@ -11,36 +12,28 @@
 
 /* static variables */
 static memblock_t *kernel_heap = 0x0;
-static mutex_t kmem_mtx = MUTEX_INITIALISER();
+static csection_lock_t kmem_lock = CSECTION_INITIALISER();
 
 
 /* global functions */
 void *kmalloc(size_t n){
 	void *p;
-	int_type_t imask;
 
 
-	imask = int_enable(INT_NONE);
-	mutex_lock(&kmem_mtx);
+	csection_lock(&kmem_lock);
 	p = memblock_alloc(&kernel_heap, n, CONFIG_KMALLOC_ALIGN);
-	mutex_unlock(&kmem_mtx);
-	int_enable(imask);
+	csection_unlock(&kmem_lock);
 
 	return p;
 }
 
 void kfree(void *addr){
-	int_type_t imask;
-
-
-	imask = int_enable(INT_NONE);
-	mutex_lock(&kmem_mtx);
+	csection_lock(&kmem_lock);
 
 	if(memblock_free(&kernel_heap, addr) < 0)
 		kpanic(0x0, "double free at %p\n", addr);
 
-	mutex_unlock(&kmem_mtx);
-	int_enable(imask);
+	csection_unlock(&kmem_lock);
 }
 
 

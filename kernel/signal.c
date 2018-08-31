@@ -2,13 +2,13 @@
 #include <kernel/signal.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
+#include <kernel/csection.h>
 #include <sys/queue.h>
-#include <sys/mutex.h>
 #include <sys/errno.h>
 
 
 /* static varaibles */
-static mutex_t sig_mtx = MUTEX_INITIALISER();
+static csection_lock_t sig_lock = CSECTION_INITIALISER();
 
 
 /* global functions */
@@ -18,7 +18,6 @@ void ksignal_init(ksignal_t *sig){
 }
 
 int ksignal_wait(ksignal_t *sig){
-	int_type_t imask;
 	ksignal_queue_t *e;
 
 
@@ -29,14 +28,12 @@ int ksignal_wait(ksignal_t *sig){
 
 	e->thread = sched_running();
 
-	imask = int_enable(INT_NONE);
-	mutex_lock(&sig_mtx);
+	csection_lock(&sig_lock);
 
 	queue_enqueue(sig->head, sig->tail, e);
 	sched_pause();
 
-	mutex_unlock(&sig_mtx);
-	int_enable(imask);
+	csection_unlock(&sig_lock);
 
 	sched_yield();
 
@@ -44,12 +41,10 @@ int ksignal_wait(ksignal_t *sig){
 }
 
 void ksignal_send(ksignal_t *sig){
-	int_type_t imask;
 	ksignal_queue_t *e;
 
 
-	imask = int_enable(INT_NONE);
-	mutex_lock(&sig_mtx);
+	csection_lock(&sig_lock);
 
 	e = queue_dequeue(sig->head, sig->tail);
 
@@ -58,17 +53,14 @@ void ksignal_send(ksignal_t *sig){
 		kfree(e);
 	}
 
-	mutex_unlock(&sig_mtx);
-	int_enable(imask);
+	csection_unlock(&sig_lock);
 }
 
 void ksignal_bcast(ksignal_t *sig){
-	int_type_t imask;
 	ksignal_queue_t *e;
 
 
-	imask = int_enable(INT_NONE);
-	mutex_lock(&sig_mtx);
+	csection_lock(&sig_lock);
 
 	while(1){
 		e = queue_dequeue(sig->head, sig->tail);
@@ -80,6 +72,5 @@ void ksignal_bcast(ksignal_t *sig){
 		kfree(e);
 	}
 
-	mutex_unlock(&sig_mtx);
-	int_enable(imask);
+	csection_unlock(&sig_lock);
 }
