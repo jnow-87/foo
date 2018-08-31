@@ -10,11 +10,15 @@
 #include <kernel/rootfs.h>
 #include <kernel/syscall.h>
 #include <kernel/panic.h>
+#include <kernel/task.h>
 #include <kernel/csection.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include "sched.h"
 
+
+/* local/static prototypes */
+static void task_cleanup(void *p);
 
 /* global variables */
 sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
@@ -200,6 +204,10 @@ static int init(void){
 	// add first thread to ready queue
 	sched_transition(this_p->threads, READY);
 
+	/* create cleanup task */
+	if(ktask_create(task_cleanup, 0x0, 0, 0x0, true) != 0)
+		goto err;
+
 	return E_OK;
 
 
@@ -211,3 +219,46 @@ err:
 }
 
 kernel_init(2, init);
+
+/**
+ * \brief	recurring task used to cleanup terminated threads
+ * 			and processes
+ */
+static void task_cleanup(void *p){
+	sched_queue_t *e;
+	process_t *this_p;
+	thread_t *this_t;
+
+
+	/* NOTE	use while rather than list_for_each to keep the critical
+	 * 		section as short as possible, reducing the time of disabled
+	 * 		interrupts
+	 */
+	while(1){
+		/* remove thread scheduler queue entry */
+		csection_lock(&sched_lock);
+
+		e = list_first(sched_queues[DEAD]);
+
+		if(e == 0x0)
+			break;
+
+		this_t = e->thread;
+		this_p = this_t->parent;
+
+		list_rm(sched_queues[this_t->state], e);
+		kfree(e);
+
+		csection_unlock(&sched_lock);
+
+		/* destroy thread and potentially parent process */
+		DEBUG("destroy thread %s.%d\n", this_p->name, this_t->tid);
+
+		thread_destroy(this_t);
+
+		if(list_empty_safe(this_p->threads, &this_p->mtx))
+			process_destroy(this_p);
+	}
+
+	csection_unlock(&sched_lock);
+}

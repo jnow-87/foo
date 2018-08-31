@@ -97,36 +97,16 @@ static int sc_hdlr_nice(void *_p){
 static int sc_hdlr_exit(void *p){
 	process_t *this_p;
 	thread_t const *this_t;
-	sched_queue_t *e;
 
 
 	this_t = sched_running();
 	this_p = this_t->parent;
 
-	DEBUG("thread %s:%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
+	DEBUG("thread %s.%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
 
 	/* ensure thread is no longer the running one */
 	sched_tick();
-
-	/* remove thread scheduler queue entry */
-	csection_lock(&sched_lock);
-
-	e = list_find(sched_queues[this_t->state], thread, this_t);
-
-	if(e == 0x0)
-		kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
-
-	list_rm(sched_queues[this_t->state], e);
-	kfree(e);
-
-	csection_unlock(&sched_lock);
-
-	/* destroy thread */
-	thread_destroy((thread_t*)this_t);
-
-	/* destroy process */
-	if(list_empty_safe(this_p->threads, &this_p->mtx))
-		process_destroy(this_p);
+	sched_transition((thread_t*)this_t, DEAD);
 
 	return E_OK;
 }
