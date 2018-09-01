@@ -40,21 +40,21 @@
 #endif // CONFIG_SC_FILESYSTEM
 
 // process control
-#ifndef CONFIG_SC_PROCESS
+#ifndef CONFIG_SC_SCHED
 
-#define process_create(binary, bin_type, name, args)	CALL_DISABLED(process_create, CONFIG_SC_PROCESS)
-#define process_info(info)								CALL_DISABLED(process_info, CONFIG_SC_PROCESS)
+#define process_create(binary, bin_type, name, args)	CALL_DISABLED(process_create, CONFIG_SC_SCHED)
+#define process_info(info)								CALL_DISABLED(process_info, CONFIG_SC_SCHED)
 
-#endif // CONFIG_SC_PROCESS
+#endif // CONFIG_SC_SCHED
 
 // thread control
-#ifndef CONFIG_SC_THREAD
+#ifndef CONFIG_SC_SCHED
 
-#define thread_create(enry, arg)	CALL_DISABLED(thread_create, CONFIG_SC_THREAD)
-#define thread_info(info)			CALL_DISABLED(thread_info, CONFIG_SC_THREAD)
-#define nice(inc)					CALL_DISABLED(nice, CONFIG_SC_THREAD)
+#define thread_create(enry, arg)	CALL_DISABLED(thread_create, CONFIG_SC_SCHED)
+#define thread_info(info)			CALL_DISABLED(thread_info, CONFIG_SC_SCHED)
+#define nice(inc)					CALL_DISABLED(nice, CONFIG_SC_SCHED)
 
-#endif // CONFIG_SC_THREAD
+#endif // CONFIG_SC_SCHED
 
 
 /* types */
@@ -89,21 +89,21 @@ int rmdir(char const *path);
 #endif // CONFIG_SC_FILESYSTEM
 
 // process control
-#ifdef CONFIG_SC_PROCESS
+#ifdef CONFIG_SC_SCHED
 
 pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args);
 int process_info(process_info_t *info);
 
-#endif // CONFIG_SC_PROCESS
+#endif // CONFIG_SC_SCHED
 
 // thread control
-#ifdef CONFIG_SC_THREAD
+#ifdef CONFIG_SC_SCHED
 
 tid_t thread_create(int (*entry)(void *), void *arg);
 int thread_info(thread_info_t *info);
 int nice(int inc);
 
-#endif // CONFIG_SC_THREAD
+#endif // CONFIG_SC_SCHED
 
 // sleep
 #ifdef CONFIG_SC_TIME

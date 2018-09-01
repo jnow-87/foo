@@ -17,8 +17,18 @@
 #include "sched.h"
 
 
+/* types */
+typedef struct sched_queue_t{
+	struct sched_queue_t *prev,
+						 *next;
+
+	thread_t *thread;
+} sched_queue_t;
+
+
 /* local/static prototypes */
 static void task_cleanup(void *p);
+
 
 /* global variables */
 sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };

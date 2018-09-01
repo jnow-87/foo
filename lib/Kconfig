@@ -11,6 +11,6 @@ menu "Hidden"
 
 	config LIB_MUTEX
 		bool "Mutex"
-		select SC_THREAD
+		select SC_SCHED		# mutex requires thread_info()
 		default n
 endmenu
