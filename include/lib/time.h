@@ -7,18 +7,14 @@
 #include <sys/time.h>
 
 
-/* macros */
+/* prototypes */
+int time(time_t *t);
+
+
+/* disabled-call macros */
 #ifndef CONFIG_SC_TIME
 
 #define time(t)	CALL_DISABLED(time, CONFIG_SC_TIME)
-
-#endif // CONFIG_SC_TIME
-
-
-/* prototypes */
-#ifdef CONFIG_SC_TIME
-
-int time(time_t *t);
 
 #endif // CONFIG_SC_TIME
 

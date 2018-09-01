@@ -9,7 +9,41 @@
 #include <sys/fcntl.h>
 
 
-/* macros */
+/* global variables */
+extern FILE *stdin,
+			*stdout,
+			*stderr;
+
+
+/* prototypes */
+FILE *fopen(char const *path, char const *mode);
+FILE *fdopen(int fd, char const *mode);
+int fclose(FILE *stream);
+
+size_t fread(void *p, size_t size, FILE *stream);
+size_t fwrite(void const *p, size_t size, FILE *stream);
+
+int fgetc(FILE *stream);
+char *fgets(char *s, int size, FILE *stream);
+
+char fputc(char c, FILE *stream);
+int fputs(char const *s, FILE *stream);
+
+int fflush(FILE *stream);
+int fseek(FILE *stream, int offset, whence_t whence);
+int ftell(FILE *stream);
+
+int printf(char const *format, ...);
+int fprintf(FILE *stream, char const *format, ...);
+int vprintf(char const *format, va_list lst);
+
+int sprintf(char *s, char const *format, ...);
+int snprintf(char *s, size_t n, char const *format, ...);
+int vsprintf(char *s, char const *format, va_list lst);
+int vsnprintf(char *s, size_t n, char const *format, va_list lst);
+
+
+/* disabled-call macros */
 #ifndef CONFIG_SC_FILESYSTEM
 
 #define fopen(path, mode)				(FILE*)CALL_DISABLED(fopen, CONFIG_SC_FILESYSTEM)
@@ -38,53 +72,6 @@
 #define vprintf(format, lst)			CALL_DISABLED(vprintf, CONFIG_LIB_PRINTF)
 
 #endif // CONFIG_LIB_PRINTF
-
-
-/* global variables */
-#ifdef CONFIG_SC_FILESYSTEM
-
-extern FILE *stdin,
-			*stdout,
-			*stderr;
-
-#endif // CONFIG_SC_FILESYSTEM
-
-
-/* prototypes */
-#ifdef CONFIG_SC_FILESYSTEM
-
-FILE *fopen(char const *path, char const *mode);
-FILE *fdopen(int fd, char const *mode);
-int fclose(FILE *stream);
-
-size_t fread(void *p, size_t size, FILE *stream);
-size_t fwrite(void const *p, size_t size, FILE *stream);
-
-int fgetc(FILE *stream);
-char *fgets(char *s, int size, FILE *stream);
-
-char fputc(char c, FILE *stream);
-int fputs(char const *s, FILE *stream);
-
-int fflush(FILE *stream);
-int fseek(FILE *stream, int offset, whence_t whence);
-int ftell(FILE *stream);
-
-#endif // CONFIG_SC_FILESYSTEM
-
-#ifdef CONFIG_LIB_PRINTF
-
-int printf(char const *format, ...);
-int fprintf(FILE *stream, char const *format, ...);
-int vprintf(char const *format, va_list lst);
-
-#endif // CONFIG_LIB_PRINTF
-
-
-int sprintf(char *s, char const *format, ...);
-int snprintf(char *s, size_t n, char const *format, ...);
-int vsprintf(char *s, char const *format, va_list lst);
-int vsnprintf(char *s, size_t n, char const *format, va_list lst);
 
 
 #endif // LIB_STDIO_H
