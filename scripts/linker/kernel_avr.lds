@@ -13,7 +13,6 @@ SECTIONS {
 		*(.trampolines)
 	} > flash_kernel
 
-
 	/* data */
 	.data : {
 		*(.data .data.* .gnu.linkonce.d.*)
@@ -29,7 +28,6 @@ SECTIONS {
 	__data_load_start = LOADADDR(.data);
 	__data_load_end = __data_load_start + SIZEOF(.data);
 
-
 	/* bss */
 	.bss : {
 		*(.dynbss)
@@ -41,17 +39,18 @@ SECTIONS {
 		*(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 		*(.scommon)
 		*(COMMON)
-	} > data_kernel AT>data_kernel
+	} > data_kernel
 
 	__bss_start = ADDR(.bss);
 	__bss_end = __bss_start + SIZEOF(.bss);
 
+	/* plugin */
+	INCLUDE avr_plugin_kernel.lds
 
 	/* discard sections */
 	/DISCARD/ : {
 		*(.init4)	/* libgcc .data initialisation not needed */
 	}
-
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */

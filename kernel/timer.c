@@ -13,11 +13,11 @@
 
 /* types */
 typedef struct timer_t{
-	size_t ticks;
-	ksignal_t sig;
-
 	struct timer_t *prev,
 				   *next;
+
+	size_t ticks;
+	ksignal_t sig;
 } timer_t;
 
 

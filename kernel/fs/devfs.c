@@ -21,7 +21,6 @@ static int ioctl(fs_filed_t *fd, int request, void *data);
 static int fcntl(fs_filed_t *fd, int cmd, void *data);
 
 
-
 /* global functions */
 devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 	devfs_dev_t *dev;
@@ -36,7 +35,7 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 		goto_errno(err_0, E_NOMEM);
 
 	fs_lock();
-	node = fs_node_alloc(devfs_root, name, strlen(name), false, devfs_id);
+	node = fs_node_create(devfs_root, name, strlen(name), false, devfs_id);
 	fs_unlock();
 
 	if(node == 0x0)
@@ -44,6 +43,7 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 
 	dev->ops = *ops;
 	dev->data = data;
+	dev->node = node;
 	node->data = dev;
 
 	return dev;
@@ -70,7 +70,7 @@ int devfs_dev_release(devfs_dev_t *dev){
 	if(node == 0x0)
 		goto_errno(err, E_INVAL);
 
-	if(fs_node_free(node) != E_OK)
+	if(fs_node_destroy(node) != E_OK)
 		goto err;
 
 	fs_unlock();
@@ -99,6 +99,8 @@ static int init(void){
 	ops.write = write;
 	ops.ioctl = ioctl;
 	ops.fcntl = fcntl;
+	ops.node_find = 0x0;
+	ops.node_rm = 0x0;
 
 	devfs_id = fs_register(&ops);
 
@@ -125,7 +127,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 	DEBUG("open device \"%s\"\n", start->name);
 
-	fd = fs_fd_alloc(start, this_p);
+	fd = fs_fd_alloc(start, this_p, mode);
 
 	if(fd == 0x0)
 		return -errno;

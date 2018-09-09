@@ -68,8 +68,8 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 			/* no matching node found, try to create it */
 			// if its the last part of path, create the target node with fs_id
 			// otherwise create an intermediate node in rootfs
-			if(path[n] == 0)	node = fs_node_alloc(node->parent, path, n, true, fs_id);
-			else				node = fs_node_alloc(node->parent, path, n, true, rootfs_id);
+			if(path[n] == 0)	node = fs_node_create(node->parent, path, n, true, fs_id);
+			else				node = fs_node_create(node->parent, path, n, true, rootfs_id);
 
 			if(node == 0x0)
 				goto err;
@@ -101,7 +101,7 @@ int rootfs_rmdir(fs_node_t *node){
 
 	DEBUG("release file system from \"%s\"\n", node->name);
 
-	goto_errno(end, fs_node_free(node));
+	goto_errno(end, fs_node_destroy(node));
 
 
 end:
@@ -136,7 +136,7 @@ static int init(void){
 	memset(&dummy, 0x0, sizeof(dummy));
 
 	fs_lock();
-	fs_root = fs_node_alloc(&dummy, "/", 1, true, rootfs_id);
+	fs_root = fs_node_create(&dummy, "/", 1, true, rootfs_id);
 	fs_unlock();
 
 	if(fs_root == 0x0)
@@ -165,7 +165,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 		switch(n){
 		case 0:
 			/* target node found, so create file descriptor */
-			fd = fs_fd_alloc(start, this_p);
+			fd = fs_fd_alloc(start, this_p, mode);
 
 			if(fd == 0x0)
 				return -errno;
@@ -197,7 +197,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 				return_errno(E_UNAVAIL);
 
 			// create node
-			start = fs_node_alloc(start, path, n, (path[n] == '/' ? true : false), rootfs_id);
+			start = fs_node_create(start, path, n, (path[n] == '/' ? true : false), rootfs_id);
 
 			if(start == 0x0)
 				return -errno;
@@ -217,7 +217,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 
 err:
-	fs_node_free(start);
+	fs_node_destroy(start);
 
 	return -errno;
 }
@@ -358,7 +358,7 @@ static int node_rm(fs_node_t *start, char const *path){
 		if(start->data)
 			file_free(start->data);
 
-		return fs_node_free(start);
+		return fs_node_destroy(start);
 
 	case -2:
 		/* file system boundary reached, hence call subsequent file system handler */

@@ -2,18 +2,21 @@
 #define KERNEL_SIGNAL_H
 
 
-#include <kernel/thread.h>
+/* incomplete types */
+struct kthread_t;
 
 
 /* types */
-typedef struct ksignal_el_t{
+typedef struct ksignal_queue_t{
+	struct ksignal_queue_t *next;
+
 	struct thread_t const *thread;
+} ksignal_queue_t;
 
-	struct ksignal_el_t *prev,
-					   *next;
-} ksignal_el_t;
-
-typedef ksignal_el_t * ksignal_t;
+typedef struct{
+	ksignal_queue_t *head,
+					*tail;
+} ksignal_t;
 
 
 /* prototypes */

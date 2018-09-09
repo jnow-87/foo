@@ -2,6 +2,8 @@
 #define KERNEL_FS_H
 
 
+#include <kernel/signal.h>
+#include <kernel/task.h>
 #include <sys/file.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
@@ -130,15 +132,18 @@ typedef struct{
 } fs_ops_t;
 
 typedef struct fs_t{
-	int id;
-	fs_ops_t ops;
-
 	struct fs_t *prev,
 				*next;
+
+	int id;
+	fs_ops_t ops;
 } fs_t;
 
 // file system node types
 typedef struct fs_node_t{
+	struct fs_node_t *prev,
+					 *next;
+
 	char *name;
 	fs_ops_t *ops;
 
@@ -148,22 +153,26 @@ typedef struct fs_node_t{
 
 	mutex_t rd_mtx,
 			wr_mtx;
+	ksignal_t rd_sig;
 
 	struct fs_node_t *childs,
 					 *parent;
-
-	struct fs_node_t *prev,
-					 *next;
 } fs_node_t;
 
 // file descriptor types
 typedef struct fs_filed_t{
-	int id;
-	size_t fp;
-	fs_node_t *node;
-
 	struct fs_filed_t *prev,
 					  *next;
+
+	int id;
+
+	size_t fp;
+	fs_node_t *node;
+	f_mode_t mode;
+
+	mutex_t mtx;
+
+	ktask_queue_t *tasks;
 } fs_filed_t;
 
 
@@ -175,12 +184,14 @@ void fs_lock(void);
 void fs_unlock(void);
 
 // file operations
-fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p);
+fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p, f_mode_t mode);
 void fs_fd_free(fs_filed_t *fd, struct process_t *this_p);
+fs_filed_t *fs_fd_acquire(int id, struct process_t *this_p);
+void fs_fd_release(fs_filed_t *fd);
 
 // file node operations
-fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id);
-int fs_node_free(fs_node_t *node);
+fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id);
+int fs_node_destroy(fs_node_t *node);
 int fs_node_find(fs_node_t **start, char const **path);
 
 

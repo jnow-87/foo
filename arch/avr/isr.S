@@ -4,20 +4,24 @@
 
 /* macros */
 .macro	vector num
-	.if (\num < INT_VECTORS + 1)	// +1 for the pseude syscall interrupt
-		.if (\num == 0)
+	.if (\num < INT_VECTORS + 2)				// +2 for the pseude interrupts (syscall, instruction overflow)
+		.if (\num == 0)							// reset
 			.global __vector_\num
 			XJMP	__isr_reset
 
-		.elseif (\num == INT_VECTORS)
+		.elseif (\num == INT_VECTORS)			// syscall
 			.global	__vector_\num
 			XJMP	__isr_syscall
 
-		.elseif (\num == CONFIG_TIMER_INT)
+		.elseif (\num == INT_VECTORS + 1)		// instruction overflow
+			.global	__vector_\num
+			XJMP	__isr_iovfl
+
+		.elseif (\num == CONFIG_TIMER_INT)		// scheduler
 			.global	__vector_\num
 			XJMP	__isr_sched
 
-		.else
+		.else									// hardware interrupt
 			.global	__vector_\num
 			.weak	__vector_\num
 			.set	__vector_\num , __isr_inval
@@ -79,6 +83,7 @@ vector 32
 vector 33
 vector 34
 vector 35
+vector 36
 
 
 .section .text
@@ -109,6 +114,13 @@ __isr_sched:
 	sts		int_num, r31
 	XJMP	__int_hdlr_call
 
+/* instruction overflow handler */
+__isr_iovfl:
+	push	r31
+	ldi		r31, INT_VECTORS + 1
+	sts		int_num, r31
+	XJMP	__int_hdlr_call
+
 /* invalid interrupt handler */
 // NOTE using avr_int_inval_hdlr directly does not work, since
 //		somehow the .weak symbols are not redefined in this case
@@ -120,7 +132,7 @@ __isr_inval:
 /* ISR with context handling */
 .global __int_hdlr_call
 __int_hdlr_call:
-	/* save context */
+	/* save registers */
 	// NOTE r31 is assumed being pushed by the calling routine
 	push	r30
 	push	r29
@@ -161,15 +173,13 @@ __int_hdlr_call:
 	lds		r16, SREG
 	push	r16
 
-	// push dummy to reserve space for next, prev members of thread_context_t
+	/* reserve space for thread_context_t::next and prepare interrupt hander arguments */
+	// push dummy to reserve space for next member of thread_context_t
 #if (CONFIG_ADDR_WIDTH == 16)
-	push	r1
 	push	r1
 #endif
 
-	push	r1
-
-	/* avr_int_hdlr argument: stack pointer aka thread_context_t pointer */
+	// avr_int_hdlr argument: stack pointer aka thread_context_t pointer
 	lds		r24, SPL
 	lds		r25, SPH
 
@@ -190,16 +200,14 @@ __int_hdlr_call:
 	sts		SPH, r25
 
 1:
-	/* pop dummy bytes used to reserve space for next, prev members of thread_context_t */
+	/* pop dummy bytes used to reserve space for next member of thread_context_t */
 #if (CONFIG_ADDR_WIDTH == 16)
-	pop		r16
 	pop		r16
 #endif
 
 	pop		r16
-	pop		r16
 
-	/* restore context */
+	/* restore regsiters */
 	pop		r16
 	sts		SREG, r16
 	pop		r16

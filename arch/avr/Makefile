@@ -1,6 +1,5 @@
 obj-y := start.o isr.o interrupt.o core.o timer.o thread.o syscall.o atomic.o
 obj-nobuiltin-y := libsys.o
-hostobj-y := avrconfig/
 
 
 libsys-y := core_lib.o lib.o syscall_lib.o atomic.o
@@ -11,34 +10,50 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree
 
 
 ####
-## linker script: memory layout
+## linker scripts
 ####
 
-avr_mem_lds_create := scripts/linker/avr_memory_lds_create.sh
-avr_mem_lds := $(loc_build_tree)/avr_memory.lds
+## memory layout
+lds_memory_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_memory
+lds_memory_file := $(loc_build_tree)/avr_memory.lds
 
-kernel: gen_avr_mem_linker_script
-init: gen_avr_mem_linker_script
+$(lds_memory_file): $(lds_memory_script)
+	$(mkdir) $(dir $(lds_memory_file))
+	$(QBUILD)$(lds_memory_script) $(lds_memory_file)
 
-gen_avr_mem_linker_script: $(avr_mem_lds)
+## plugin
+lds_plugin_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_plugin
+lds_plugin_kernel_file := $(loc_build_tree)/avr_plugin_kernel.lds
+lds_plugin_app_file := $(loc_build_tree)/avr_plugin_app.lds
 
-$(avr_mem_lds): check_configheader $(avr_mem_lds_create)
-	$(QBUILD)$(avr_mem_lds_create) $(config) $(avr_mem_lds)
+$(lds_plugin_kernel_file): $(lds_plugin_script)
+	$(mkdir) $(dir $(lds_plugin_kernel_file))
+	$(QBUILD)$(lds_plugin_script) $(lds_plugin_kernel_file) kernel
 
+$(lds_plugin_app_file): $(lds_plugin_script)
+	$(mkdir) $(dir $(lds_plugin_app_file))
+	$(QBUILD)$(lds_plugin_script) $(lds_plugin_app_file) app
+
+## combined dependencies
+avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
+
+kernel_deps: avr_lds
+init_deps: avr_lds
 
 ####
 ## AVR config header
 ####
 
-avrconfig := $(loc_build_tree)/avrconfig/avrconfig
+avrconfig := $(build_tree)/scripts/arch/avr/config/avrconfig
 avrconfig_header := $(dir $(config_header))avrconfig.h
 
-kernel: $(avrconfig_header)
+kernel_deps: $(avrconfig_header)
+init_deps: $(avrconfig_header)
+libsys_deps: $(avrconfig_header)
+prepare_deps: $(avrconfig_header)
 
-$(avrconfig_header): check_configheader $(avrconfig)
-	$(QUTIL)$(avrconfig) $(avrconfig_header).tmp $(if $(QBUILD),,-v)
-	$(QUTIL)diff $(avrconfig_header) $(avrconfig_header).tmp 1>/dev/null 2>&1; \
-	[ $$? -eq 0 ] || cp $(avrconfig_header).tmp $(avrconfig_header)
+$(avrconfig_header): $(avrconfig)
+	$(QUTIL)$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v)
 
 
 ####
@@ -53,18 +68,24 @@ ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u"
 endif
 
 archflags += -mmcu=$(CONFIG_AVR_MCU)
-ldflags += -m$(CONFIG_AVR_ISA) --discard-all
+ldflags += -m$(CONFIG_AVR_ISA)
+
+ifeq ($(CONFIG_BUILD_RELEASE),y)
+  ldflags += --discard-all
+endif
 
 ## kernel flags
 ldlibs-kernel-arch := \
-	-T$(avr_mem_lds) \
+	-L$(loc_build_tree) \
+	-T$(lds_memory_file) \
 	-Wl,--section-start=.text=$(CONFIG_KERNEL_TEXT_BASE) \
 	-Wl,--section-start=.data=$(CONFIG_KERNEL_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/$(basename $(kernel_name)).map,--cref
 
 ## init application flags
 ldlibs-app-arch := \
-	-T$(avr_mem_lds) \
+	-L$(loc_build_tree) \
+	-T$(lds_memory_file) \
 	-Wl,--section-start=.text=$(CONFIG_APP_TEXT_BASE) \
 	-Wl,--section-start=.data=$(CONFIG_APP_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/init/init.map,--cref

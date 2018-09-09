@@ -15,7 +15,7 @@
 #define EOF		E_END
 
 #define FILE_INITIALISER(read_buf, write_buf, buf_len, putchar){ \
-	.fd = 0, \
+	.fileno = 0, \
 	.rbuf = read_buf, \
 	.wbuf = write_buf, \
 	.ridx = 0, \
@@ -42,7 +42,7 @@
 
 /* types */
 typedef struct FILE{
-	int fd;
+	int fileno;
 
 	void *rbuf,
 		 *wbuf;

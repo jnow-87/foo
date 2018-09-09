@@ -12,6 +12,7 @@ typedef enum{
 	O_APPEND = 0x2,
 	O_READ = 0x4,
 	O_WRITE = 0x8,
+	O_NONBLOCK = 0x10,
 } f_mode_t;
 
 

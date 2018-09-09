@@ -1,7 +1,7 @@
 hostbin-y := main
 
 
-main-y := main.o string.o vfprintf.o list.o memblock.o ringbuf.o sys/
+main-y := main.o string.o vfprintf.o list.o queue.o stack.o memblock.o ringbuf.o sys/
 
 main-hostcppflags += -I$(src_tree) -I$(src_tree)/include -I/usr/include
 main-hostcflags += -fno-builtin
@@ -10,5 +10,5 @@ main-hostldlibs += -T$(loc_src_tree)/default.lds -T$(loc_src_tree)/testcase.lds
 
 # testing rules
 .PHONY: test
-test: check_config check_configheader $(loc_build_tree)/main
+test: check_config $(loc_build_tree)/main
 	$(loc_build_tree)/main $(loc_build_tree)/result.log

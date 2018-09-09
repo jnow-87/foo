@@ -19,7 +19,6 @@ SECTIONS {
 		*(.trampolines)
 	} > flash_app
 
-
 	/* data */
 	.data : {
 		*(.data .data.* .gnu.linkonce.d.*)
@@ -45,17 +44,18 @@ SECTIONS {
 		*(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 		*(.scommon)
 		*(COMMON)
-	} > data_app AT>data_app
+	} > data_app
 
 	__bss_start = ADDR(.bss);
 	__bss_end = __bss_start + SIZEOF(.bss);
 
+	/* plugin */
+	INCLUDE avr_plugin_app.lds
 
 	/* discard sections */
 	/DISCARD/ : {
 		*(.init4)	/* libgcc .data initialisation not needed */
 	}
-
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */

@@ -39,7 +39,7 @@ menu "System calls"
 		select LIB_MUTEX
 		default y
 		help
-			This includes open, close, read, write, ioctl, fcntl, rmnode and chdir
+			File system syscalls such as open, close, read, write.
 
 	config SC_DYNMEM
 		bool "Dynamic memory"
@@ -47,14 +47,14 @@ menu "System calls"
 		select LIB_MUTEX
 		default y
 		help
-			This includes malloc and free
+			This includes malloc and free.
 
 	config SC_SCHED
-		bool "Scheduler"
+		bool "Scheduler, process and thread control"
 		select KERNEL_SYSCALL
 		default y
 		help
-			This includes sched_yield
+			Syscalls for process and thread creation and control as well as scheduler calls.
 
 	config SC_TIME
 		bool "Time"
@@ -63,21 +63,7 @@ menu "System calls"
 		select KERNEL_SIGNAL
 		default y
 		help
-			This includes sleep and time
-
-	config SC_PROCESS
-		bool "Process control"
-		select KERNEL_SYSCALL
-		default y
-		help
-			This includes process_create and process_info
-
-	config SC_THREAD
-		bool "Thread control"
-		select KERNEL_SYSCALL
-		default y
-		help
-			This includes thread_create, thread_info and nice
+			Timer syscalls, such as sleep and time.
 
 	menu "Hidden"
 		visible if 0

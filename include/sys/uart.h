@@ -47,8 +47,6 @@ typedef struct{
 	parity_t parity;
 	csize_t csize;
 
-	bool blocking;
-
 	bool data_overrun,
 		 parity_err,
 		 frame_err,

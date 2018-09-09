@@ -1,0 +1,6 @@
+\section{Tasks}
+Kernel tasks are a means to postpone operations that are not required to be finished immediately. Instead kernel tasks are executed by the kernel idle threads.
+
+All tasks are handled through a single, global tasks list. The kernel threads dequeue tasks from this list and process them. In the simplest form a task does not have any dependencies to other tasks, hence the global task list might be traversed in an arbitrary order. In case a task has dependencies to other tasks, like operations on file descriptors, so called task dependency queues can be used. All tasks within the same dependency queue are processed in order, that is the next task in the queue is only processed once the preceding one has finished.
+
+Internally all tasks are still handled through the global task list. However, if a certain task is blocked due to dependencies the next none-blocked task in the global list is processed.

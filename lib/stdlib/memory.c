@@ -10,10 +10,10 @@
 
 /* types */
 typedef struct block_t{
-	memblock_t *mem;
-
 	struct block_t *prev,
 				   *next;
+
+	memblock_t *mem;
 } block_t;
 
 

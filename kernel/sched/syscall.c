@@ -1,16 +1,22 @@
+#include <arch/core.h>
+#include <arch/memory.h>
 #include <kernel/init.h>
 #include <kernel/syscall.h>
-#include <kernel/kprintf.h>
 #include <kernel/sched.h>
-#include <kernel/panic.h>
+#include <kernel/kprintf.h>
+#include <kernel/csection.h>
 #include <sys/errno.h>
 #include <sys/syscall.h>
 #include <sys/list.h>
-#include <sys/mutex.h>
 #include "sched.h"
 
 
-/* local/static prototypes */
+/* static/local prototypes */
+static int sc_hdlr_sched_yield(void *p);
+
+static int sc_hdlr_process_create(void *p);
+static int sc_hdlr_process_info(void *p);
+
 static int sc_hdlr_thread_create(void *p);
 static int sc_hdlr_thread_info(void *p);
 static int sc_hdlr_nice(void *p);
@@ -25,6 +31,11 @@ static int init(void){
 	/* register syscalls */
 	r = E_OK;
 
+	r |= sc_register(SC_SCHEDYIELD, sc_hdlr_sched_yield);
+
+	r |= sc_register(SC_PROCCREATE, sc_hdlr_process_create);
+	r |= sc_register(SC_PROCINFO, sc_hdlr_process_info);
+
 	r |= sc_register(SC_EXIT, sc_hdlr_exit);
 	r |= sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
 	r |= sc_register(SC_THREADINFO, sc_hdlr_thread_info);
@@ -34,6 +45,57 @@ static int init(void){
 }
 
 kernel_init(2, init);
+
+static int sc_hdlr_sched_yield(void *p){
+	sched_tick();
+	return E_OK;
+}
+
+static int sc_hdlr_process_create(void *_p){
+	sc_process_t *p = (sc_process_t*)_p;
+	char name[p->name_len + 1];
+	char args[p->args_len + 1];
+	process_t *this_p,
+			  *new;
+
+
+	p->pid = 0;
+
+	/* process arguments */
+	this_p = sched_running()->parent;
+
+	copy_from_user(name, p->name, p->name_len + 1, this_p);
+	copy_from_user(args, p->args, p->args_len + 1, this_p);
+
+	/* create process */
+	DEBUG("create process \"%s\" with args \"%s\"\n", name, args);
+
+	new = process_create(p->binary, p->bin_type, p->name, p->args, this_p->cwd);
+
+	if(new == 0x0)
+		return -errno;
+
+	csection_lock(&sched_lock);
+	sched_transition(list_first(new->threads), READY);
+	csection_unlock(&sched_lock);
+
+	p->pid = new->pid;
+
+	return E_OK;
+}
+
+static int sc_hdlr_process_info(void *_p){
+	sc_process_t *p;
+	process_t *this_p;
+
+
+	p = (sc_process_t*)_p;
+	this_p = sched_running()->parent;
+
+	p->pid = this_p->pid;
+
+	return E_OK;
+}
 
 static int sc_hdlr_thread_create(void *_p){
 	sc_thread_t *p;
@@ -55,9 +117,9 @@ static int sc_hdlr_thread_create(void *_p){
 	if(new == 0x0)
 		return -errno;
 
-	mutex_lock(&sched_mtx);
+	csection_lock(&sched_lock);
 	sched_transition(new, READY);
-	mutex_unlock(&sched_mtx);
+	csection_unlock(&sched_lock);
 
 	p->tid = new->tid;
 
@@ -97,36 +159,16 @@ static int sc_hdlr_nice(void *_p){
 static int sc_hdlr_exit(void *p){
 	process_t *this_p;
 	thread_t const *this_t;
-	sched_queue_t *e;
 
 
 	this_t = sched_running();
 	this_p = this_t->parent;
 
-	DEBUG("thread %s:%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
+	DEBUG("thread %s.%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
 
 	/* ensure thread is no longer the running one */
 	sched_tick();
-
-	/* remove thread scheduler queue entry */
-	mutex_lock(&sched_mtx);
-
-	e = list_find(sched_queues[this_t->state], thread, this_t);
-
-	if(e == 0x0)
-		kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
-
-	list_rm(sched_queues[this_t->state], e);
-	kfree(e);
-
-	mutex_unlock(&sched_mtx);
-
-	/* destroy thread */
-	thread_destroy((thread_t*)this_t);
-
-	/* destroy process */
-	if(list_empty_safe(this_p->threads, &this_p->mtx))
-		process_destroy(this_p);
+	sched_transition((thread_t*)this_t, DEAD);
 
 	return E_OK;
 }

@@ -18,7 +18,7 @@ githooks_tree := .githooks
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := arch kernel driver lib sys init testing scripts/memlayout
+src_dirs := arch kernel driver lib sys init testing scripts/memlayout scripts/arch
 
 kernel_name := kimg.elf
 lib_name := libsys.a
@@ -169,9 +169,9 @@ gperfflags := \
 ####
 
 kernel := $(build_tree)/$(kernel_name)
-kernel_deps := kernel/obj.o arch/obj.o driver/obj.o sys/obj.o
+kernel_objs := kernel/obj.o arch/obj.o driver/obj.o sys/obj.o
 libsys := $(build_tree)/lib/$(lib_name)
-libsys_dep := lib/obj.o sys/libsys.o arch/libsys.o
+libsys_objs := lib/obj.o sys/libsys.o arch/libsys.o
 
 sysroot := sysroot
 recent := recent
@@ -189,30 +189,35 @@ sysroot_create := scripts/sysroot/create.sh
 ## build
 ####
 
-# kernel target
+# kernel targets
 kernel: cppflags += -DBUILD_KERNEL
-kernel: check_config check_configheader check_memlayout versionheader $(kernel)
+kernel: check_config check_memlayout versionheader $(kernel)
+kernel_deps: scripts/linker/kernel_$(CONFIG_ARCH).lds
 
 $(kernel): ldlibs += $(ldlibs-kernel-arch)
 $(kernel): ldlibs += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
 $(kernel): ldlibs += -lgcc
-$(kernel): $(addprefix $(build_tree)/, $(kernel_deps))
+$(kernel): kernel_deps $(addprefix $(build_tree)/, $(kernel_objs))
 	$(call compile_bin_o)
 
-# init target
+# init targets
 init: cppflags += -DBUILD_INIT
-init: check_config check_configheader libsys $(init)
+init: check_config libsys $(init)
+init_deps: scripts/linker/app_$(CONFIG_ARCH).lds
+
+$(init): ldlibs += -Lscripts/linker -Tapp_$(CONFIG_ARCH).lds
+$(init): init_deps
 
 # libsys targets
 libsys: cppflags += -DBUILD_LIBSYS
-libsys: check_config check_configheader $(libsys)
+libsys: check_config $(libsys)
+libsys_deps:
 
-$(libsys): ldlibs += -Lscripts/linker -Tlibsys_$(CONFIG_ARCH).lds
-$(libsys): $(addprefix $(build_tree)/, $(libsys_dep))
+$(libsys):
+$(libsys): libsys_deps $(addprefix $(build_tree)/, $(libsys_objs))
 	$(call compile_lib_o)
 
-# sysroot target
-.PHONY: sysroot
+# sysroot targets
 sysroot: kernel libsys init
 	$(rm) $(recent)
 	$(sym_link) $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
@@ -220,24 +225,24 @@ sysroot: kernel libsys init
 
 # memlayout
 .PHONY: memlayout
-memlayout: check_configheader $(memlayout)
+memlayout: $(memlayout)
 	$(QUTIL)$(memlayout)
 
 .PHONY: check_memlayout
-check_memlayout: check_configheader $(memlayout_check)
+check_memlayout: $(memlayout_check)
 	$(QUTIL)$(memlayout_check)
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)
-cflags += -g
-cxxflags += -g
-asflags += -g
-hostcflags += -g
-hostcxxflags += -g
-hostasflags += -g
+  cflags += -g
+  cxxflags += -g
+  asflags += -g
+  hostcflags += -g
+  hostcxxflags += -g
+  hostasflags += -g
 endif
 
-all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)
+all: sysroot $(lib) $(hostlib) $(bin) $(hostbin)
 
 ####
 ## cleanup

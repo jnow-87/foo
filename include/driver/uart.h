@@ -17,7 +17,7 @@ typedef struct{
 typedef struct{
 	uart_t cfg;
 
-	ksignal_t rx_rdy;
+	ksignal_t *rx_rdy;
 	ringbuf_t rx_buf;
 	unsigned int rx_err;
 } kuart_t;

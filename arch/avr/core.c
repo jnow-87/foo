@@ -73,6 +73,8 @@ void avr_core_panic(thread_context_t const *tc){
 				kprintf(KMSG_ANY, "\n");
 		}
 	}
+	else
+		kprintf(KMSG_ANY, "unknown thread context\n");
 #endif // CONFIG_KERNEL_PRINTF
 
 	/* halt core */

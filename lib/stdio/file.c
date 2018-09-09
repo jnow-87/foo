@@ -71,7 +71,7 @@ FILE *fdopen(int fd, char const *mode){
 
 	memset(file, 0x0, sizeof(FILE));
 
-	file->fd = fd;
+	file->fileno = fd;
 	file->blen = CONFIG_FILE_BUF_SIZE;
 
 	if(fmode & O_READ){
@@ -110,7 +110,7 @@ int fclose(FILE *stream){
 	if(fflush(stream) != 0)
 		goto err;
 
-	if(close(stream->fd) != E_OK)
+	if(close(stream->fileno) != E_OK)
 		goto err;
 
 	free(stream->rbuf);
@@ -150,7 +150,7 @@ size_t fread(void *p, size_t size, FILE *stream){
 
 		/* read data from file system */
 		if(size - rd < stream->blen){
-			r = read(stream->fd, stream->rbuf, stream->blen);
+			r = read(stream->fileno, stream->rbuf, stream->blen);
 
 			if(r <= 0)
 				goto err_2;
@@ -159,7 +159,7 @@ size_t fread(void *p, size_t size, FILE *stream){
 			stream->ridx = 0;
 		}
 		else{
-			r = read(stream->fd, p + rd, size - rd);
+			r = read(stream->fileno, p + rd, size - rd);
 
 			if(r < 0)
 				goto err_1;
@@ -212,7 +212,7 @@ size_t fwrite(void const *p, size_t size, FILE *stream){
 		if(fflush(stream) != 0)
 			goto err;
 
-		r = write(stream->fd, (void*)p, size);
+		r = write(stream->fileno, (void*)p, size);
 		size = r;
 
 		if(r < 0)
@@ -260,7 +260,7 @@ int fputs(char const *s, FILE *stream){
 
 int fflush(FILE *stream){
 	if(stream->widx > 0){
-		if(write(stream->fd, stream->wbuf, stream->widx) < 0)
+		if(write(stream->fileno, stream->wbuf, stream->widx) < 0)
 			return EOF;
 
 		stream->widx = 0;
@@ -279,7 +279,7 @@ int fseek(FILE *stream, int offset, whence_t whence){
 	p.whence = whence;
 	p.offset = offset;
 
-	if(fcntl(stream->fd, F_SEEK, &p, sizeof(seek_t)) != E_OK)
+	if(fcntl(stream->fileno, F_SEEK, &p, sizeof(seek_t)) != E_OK)
 		return -1;
 
 	return 0;
@@ -292,7 +292,7 @@ int ftell(FILE *stream){
 	if(fflush(stream) != 0)
 		return -1;
 
-	fcntl(stream->fd, F_TELL, &p, sizeof(seek_t));
+	fcntl(stream->fileno, F_TELL, &p, sizeof(seek_t));
 	return p.pos;
 }
 

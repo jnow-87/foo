@@ -14,7 +14,7 @@ typedef struct{
 	 * \brief	Perform allocations required if the device pointed to by dev is
 	 * 			opened.
 	 *
-	 * \param	dev		pointer to the target device
+	 * \param	dev		target device
 	 * \param	fd		readily allocated file descriptor that might be augmented with
 	 * 					further data
 	 * \param	mode	mode to consider when opening the device
@@ -27,7 +27,7 @@ typedef struct{
 	/**
 	 * \brief	Revoke allocations performed by the respective open() call.
 	 *
-	 * \param	dev		pointer to the target device
+	 * \param	dev		target device
 	 * \param	fd		Target file descriptor. The descriptor must not be released by
 	 * 					this callback.
 	 *
@@ -39,7 +39,7 @@ typedef struct{
 	/**
 	 * \brief	Read utmost n bytes from the target device and copy them to buf.
 	 *
-	 * \param	dev		pointer to the target device
+	 * \param	dev		target device
 	 * \param	fd		target file descriptor
 	 * \param	buf		buffer to copy to (kernel space)
 	 * \param	n		maximum number of bytes to copy
@@ -52,7 +52,7 @@ typedef struct{
 	/**
 	 * \brief	Write utmost n bytes to the target device.
 	 *
-	 * \param	dev		pointer to the target device
+	 * \param	dev		the target device
 	 * \param	fd		target file descriptor
 	 * \param	buf		buffer to copy from (kernel space)
 	 * \param	n		maximum number of bytes to copy
@@ -65,12 +65,12 @@ typedef struct{
 	/**
 	 * \brief	Perform the given device manipulation defined by request.
 	 *
-	 * \param	dev		pointer to the target device
+	 * \param	dev			the target device
 	 * \param	fd			target file descriptor
 	 * \param	request		Operation to perform. Behaviour depends on the individual
 	 * 						file system implementation.
-	 * \param	data		pointer to additional data that might be required to
-	 * 						perform the request (kernel memory)
+	 * \param	data		additional data that might be required to perform the
+	 * 						request (kernel memory)
 	 *
 	 * \return	E_OK on succes. If an error occured a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
@@ -80,12 +80,12 @@ typedef struct{
 	/**
 	 * \brief	Perform the requested command on the given file descriptor fd.
 	 *
-	 * \param	dev		pointer to the target device
+	 * \param	dev			target device
 	 * \param	fd			target file descriptor
 	 * \param	request		Command to perform. Behaviour depends on the individual
 	 * 						file system implementation.
-	 * \param	data		pointer to additional data that might be required to
-	 * 						perform the request (kernel memory)
+	 * \param	data		additional data that might be required to perform the
+	 * 						request (kernel memory)
 	 *
 	 * \return	E_OK on succes. If an error occured a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
@@ -95,6 +95,7 @@ typedef struct{
 
 typedef struct devfs_dev_t{
 	devfs_ops_t ops;
+	fs_node_t *node;
 	void *data;
 } devfs_dev_t;
 
@@ -102,5 +103,6 @@ typedef struct devfs_dev_t{
 /* prototypes */
 devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data);
 int devfs_dev_release(devfs_dev_t *dev);
+
 
 #endif // KERNEL_DEVFS_H

@@ -1,412 +1,199 @@
+/**
+ * \brief	set of to interface the double-linked list implementation
+ * 			including checks for type compatibility to ensure the memory
+ * 			layout of list1_t and list2_t match the actual datatypes that
+ * 			are used as list elements
+ */
 #ifndef SYS_LIST_H
 #define SYS_LIST_H
 
 
+#include <sys/compiler.h>
 #include <sys/string.h>
-#include <sys/mutex.h>
+
+
+/* macros */
+// type compatibility
+/**
+ * \brief	check if the next pointer of the given variable has the same offset
+ * 			as the next pointer within list1_t
+ */
+#define LIST_TYPE_COMPAT(var) \
+	_Static_assert(offsetof(list1_t, next) == offsetofvar(var, next), \
+		#var " cannot be used as list, since the offset of the next pointer does not match list_t");
 
 /**
- * \brief	macros to handle a double-linked list
- * 			they can be used with any structure that
- * 			contains a next and prev pointer with
- * 			type of the struct
- *
- * this version of the list macros uses the head element as functional
- * part of the list, i.e. it also stores data. therefor, the list head
- * is required to be a pointer
- * head->prev points to the last element of the list, while the list
- * is delimited by 0 with head->prev->next = 0
+ * \brief	check if the next and prev pointer of the given variable have the
+ * 			same offset as the next and prev pointer within list2_t
  */
+#define LIST_TYPE_COMPAT2(var) \
+	_Static_assert(offsetof(list2_t, prev) == offsetofvar(var, prev), \
+		#var " cannot be used as list, since the offset of the prev pointer does not match list2_t"); \
+	_Static_assert(offsetof(list2_t, next) == offsetofvar(var, next), \
+		#var " cannot be used as list, since the offset of the next pointer does not match list2_t");
 
 
-/**
- * \brief	execute expr in a critical section protected by mutex mtx
- *
- * \param	mtx		mutex to use for protecting the section
- * \param	expr	expression to protect
- */
-#define LOCK_SECTION(mtx, expr){ \
-	mutex_lock(mtx); \
-	expr; \
-	mutex_unlock(mtx); \
+// list interface
+#define list_init(head){ \
+	LIST_TYPE_COMPAT2(*head); \
+	_list2_init((list2_t*)head); \
 }
 
-/**
- * \brief	initialize the head of a list
- *
- * \param	el	pointer to list element
- *
- * \return	none
- */
-#define list_init_el(el){ \
-	if((el) != 0){ \
-		(el)->prev = (el); \
-		(el)->next = 0; \
-	} \
-}
-
-/**
- * \brief	add an element at head of the list
- *
- * \param	head	pointer to list head
- * \param	el		pointer to element to insert
- *
- * \return	none
- */
 #define list_add_head(head, el){ \
-	typeof(el) _el = (el); \
-	\
-	\
-	_el->next = (head); \
-	_el->prev = ((head) == 0 ? _el : (head)->prev); \
-	if((head) != 0) \
-		(head)->prev = _el; \
-	\
-	(head) = _el; \
+	LIST_TYPE_COMPAT2(*head); \
+	LIST_TYPE_COMPAT2(*el); \
+	_list2_add_head((list2_t**)(&(head)), (list2_t*)(el)); \
 }
 
-/**
- * \brief	thread-safe variant of list_add_head()
- *
- * \param	head	cf. list_add_head()
- * \param	el		cf. list_add_head()
- * \param	mtx		mutex to lock
- *
- * \return	none
- */
 #define list_add_head_safe(head, el, mtx) \
-	LOCK_SECTION(mxt, list_add_head(head, el))
+	LOCK_SECTION(mtx, list_add_head(head, el))
 
-/**
- * \brief	add an element at the end of the list
- *
- * \param	head	pointer to list head
- * \param	el		pointer to element to insert
- *
- * \return	none
- */
 #define list_add_tail(head, el){ \
-	typeof(el) _el = (el); \
-	\
-	\
-	_el->next = 0; \
-	if((head) == 0){ \
-		(head) = _el; \
-		_el->prev = _el; \
-	} \
-	else{ \
-		_el->prev = (head)->prev; \
-		(head)->prev->next = _el; \
-		(head)->prev = _el; \
-	} \
+	LIST_TYPE_COMPAT2(*head); \
+	LIST_TYPE_COMPAT2(*el); \
+	_list2_add_tail((list2_t**)(&(head)), (list2_t*)(el)); \
 }
 
-/**
- * \brief	thread-safe variant of list_add_tail()
- *
- * \param	head	cf. list_add_tail()
- * \param	el		cf. list_add_tail()
- * \param	mtx		mutex to lock
- *
- * \return	none
- */
 #define list_add_tail_safe(head, el, mtx) \
 	LOCK_SECTION(mtx, list_add_tail((head), (el)))
 
-/**
- * \brief	add an element between the two given elements
- *
- * \param	el		pointer to element to insert
- * \param	front	pointer to element that is in front of el
- * \param	back	pointer to element that is after el
- *
- * \return	none
- */
 #define list_add_in(el, front, back){ \
-	typeof(el) _el = el; \
-	typeof(el) _front = front; \
-	typeof(el) _back = back; \
-	\
-	\
-	_el->prev = front; \
-	_el->next = back; \
-	_front->next = _el; \
-	_back->prev = _el; \
+	LIST_TYPE_COMPAT2(*el); \
+	LIST_TYPE_COMPAT2(*front); \
+	LIST_TYPE_COMPAT2(*back); \
+	_list2_add_in((list2_t*)(el), (list2_t*)(front), (list2_t*)(back)); \
 }
 
-/**
- * \brief	thread-safe variant of list_add_in()
- *
- * \param	el		cf. list_add_in()
- * \param	front	cf. list_add_in()
- * \param	back	cf. list_add_in()
- * \param	mtx		mutex to lock
- *
- * \return	none
- */
 #define list_add_in_safe(el, front, back, mtx) \
 	LOCK_SECTION(mtx, list_add_in(el, front, back))
 
-/**
- * \brief	remove an element and insert a new one at its location
- *
- * \param	head	pointer to list head
- * \param	old		element to replace
- * \param	new		element to insert
- *
- * \return	none
- */
 #define list_replace(head, old, new){ \
-	typeof(new) _new = (new); \
-	\
-	\
-	if((head) == 0){ \
-		(head) = _new; \
-		_new->prev = _new; \
-		_new->next = 0; \
-	} \
-	else{ \
-		_new->prev = ((head)->next == 0) ? _new : (old)->prev; \
-		_new->next = (old)->next; \
-		\
-		if((old)->next)		(old)->next->prev = _new; \
-		else				(head)->prev = _new; \
-		\
-		if((old) != (head))	(old)->prev->next = _new; \
-		else				(head) = _new; \
-	} \
+	LIST_TYPE_COMPAT2(*head); \
+	LIST_TYPE_COMPAT2(*old); \
+	LIST_TYPE_COMPAT2(*new); \
+	_list2_replace((list2_t**)(&(head)), (list2_t*)(old), (list2_t*)(new)); \
 }
 
-/**
- * \brief	thread-safe variant of list_replace()
- *
- * \param	head	cf. list_replace()
- * \param	old		cf. list_replace()
- * \param	new		cf. list_replace()
- * \param	mtx		mutex to lock
- *
- * \return	none
- */
 #define list_replace_safe(head, old, new, mtx) \
 	LOCK_SECTION(mtx, list_replace(head, old, new))
 
-/**
- * \brief	remove element from list
- *
- * \param	head	pointer to list head
- * \param	el		pointer to element that shall
- * 					be removed
- *
- * \return	none
- */
 #define list_rm(head, el){ \
-	if((el) != (head))		(el)->prev->next = (el)->next; \
-	\
-	if((el)->next != 0)		(el)->next->prev = (el)->prev; \
-	else					(head)->prev = (el)->prev; \
-	\
-	if((el) == (head))		(head) = (el)->next; \
+	LIST_TYPE_COMPAT2(*head); \
+	LIST_TYPE_COMPAT2(*el); \
+	_list2_rm((list2_t**)(&(head)), (list2_t*)(el)); \
 }
 
-/**
- * \brief	thread-safe variant of lst_rm()
- *
- * \param	head	cf. list_rm()
- * \param	el	cf. list_rm()
- * \param	mtx		mutex to lock
- */
 #define list_rm_safe(head, el, mtx) \
 	LOCK_SECTION(mtx, list_rm(head, el))
 
-/**
- * \brief	get the first list element
- *
- * \param	head	pointer to list head
- *
- * \return	pointer to the first list element
- * 			0 if list is empty
- */
 #define list_first(head) (head)
 
-/**
- * \brief	thread-safe variant of list_first()
- *
- * \param	head	cf. list_first()
- * \param	mtx		mutex to lock
- *
- * \return	cf. list_first()
- */
 #define list_first_safe(head, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_first(head)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_first(head)); \
+	_el; \
 })
 
-/**
- * \brief	get the last list element
- *
- * \param	head	pointer to list head
- *
- * \return	pointer to the last list element
- * 			0 if list is empty
- */
-#define list_last(head) ((head) ? (head)->prev : 0)
+#define list_last(head) __list_last(head, prev)
 
-/**
- * \brief	thread-safe variant of list_last()
- *
- * \param	head	cf. list_last()
- * \param	mtx		mutex to lock
- *
- * \return	cf. list_last()
- */
+#define __list_last(head, prev_name) ((head) ? (head)->prev_name : 0)
+
 #define list_last_safe(head, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_last(head)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_last(head)); \
+	_el; \
 })
 
-/**
- * \brief	find an element in the list by key
- *
- * \param	head	pointer to list head
- * \param	member	name of the member that shall be used
- * 					to identify the element
- * \param	value	value the member shall match
- *
- * \return	pointer to list element
- * 			0 if no valid element found
- */
-#define list_find(head, member, value) ({ \
-	typeof(head) _head = (head); \
-\
-	for(;_head!=0; _head=_head->next){ \
-		if(_head->member == value) \
-			break; \
-	} \
-\
-	(_head == 0 || _head->member != value) ? 0 : _head; \
+#define list_contains(head, el)({ \
+	LIST_TYPE_COMPAT2(*head); \
+	LIST_TYPE_COMPAT2(*el); \
+	_list2_contains((list2_t*)(head), (list2_t*)(el)); \
 })
 
-/**
- * \brief	thread-safe variant of list_find()
- *
- * \param	head	cf. list_find()
- * \param	member	cf. list_find()
- * \param	value	cf. list_find()
- * \param	mtx		mutex to lock
- *
- * \return	cf. list_find()
- */
+#define list_contains_safe(head, el, mtx)({ \
+	bool _r; \
+	LOCK_SECTION(mtx, _r = list_contains(head, el)); \
+	_r; \
+})
+
+#define list_find(head, member, value)({ \
+	LIST_TYPE_COMPAT2(*head); \
+	typeof(value) _value = value; \
+	(typeof(head))_list2_find((list2_t*)(head), offsetofvar(*(head), member), (void*)(&(_value)), sizeof(value)); \
+})
+
 #define list_find_safe(head, member, value, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_find(head, member, value)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_find(head, member, value)); \
+	_el; \
 })
 
-/**
- * \brief	find an element in the list by key (key is a string)
- *
- * \param	head	pointer to list head
- * \param	member	name of the member that shall be used
- * 					to identify the element
- * \param	str		the string to compare with the member
- *
- * \return	pointer to list element
- * 			0 if no valid element found
- */
-#define list_find_str(head, member, str) ({ \
-	typeof(head) _head = (head); \
-\
-	for(;_head!=0; _head=_head->next){ \
-		if(strcmp(_head->member, (str)) == 0) \
-			break; \
-	} \
-\
-	(_head == 0 || strcmp(_head->member, str) != 0) ? 0: _head; \
+#define list_find_str(head, member, str)({ \
+	LIST_TYPE_COMPAT2(*head); \
+	list_find_strn(head, member, str, 0); \
 })
 
-/**
- * \brief	thread-safe variant of list_find_str()
- *
- * \param	head	cf. list_find_str()
- * \param	member	cf. list_find_str()
- * \param	str		cf. list_find_str()
- * \param	mtx		mutex to lock
- *
- * \return	cf. list_find_str()
- */
 #define list_find_str_safe(head, member, str, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_find_str(head, member, str)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_find_str(head, member, str)); \
+	_el; \
 })
 
-/**
- * \brief	same as list_find_str but use strncmp
- */
-#define list_find_strn(head, member, str, n) ({ \
-	typeof(head) _head = (head); \
-\
-	for(;_head!=0; _head=_head->next){ \
-		if(strncmp(_head->member, (str), (n)) == 0) \
-			break; \
-	} \
-\
-	(_head == 0 || strncmp(_head->member, (str), (n)) != 0) ? 0 : _head; \
+#define list_find_strn(head, member, str, n)({ \
+	LIST_TYPE_COMPAT2(*head); \
+	(typeof(head))_list2_find_str((list2_t*)(head), offsetofvar(*(head), member), str, n, ((void*)((head)->member) == (void*)(&((head)->member)) ? true : false)); \
 })
 
-/**
- * \brief	thread-safe variant of list_find_strn()
- *
- * \param	head	cf. list_find_strn()
- * \param	member	cf. list_find_strn()
- * \param	str		cf. list_find_strn()
- * \param	n		cf. list_find_strn()
- * \param	mtx		mutex to lock
- *
- * \return	cf. list_find_strn()
- */
 #define list_find_strn_safe(head, member, str, n, mtx)({ \
-	typeof(head) r; \
-	LOCK_SECTION(mtx, r = list_find_strn(head, member, str, n)); \
-	r; \
+	typeof(head) _el; \
+	LOCK_SECTION(mtx, _el = list_find_strn(head, member, str, n)); \
+	_el; \
 })
 
-/**
- * \brief	check wether a list is empty
- *
- * \param	head	pointer to list head
- *
- * \return	true	list is empty
- * 			false	list is not empty
- */
 #define list_empty(head) (((head) == 0) ? true : false)
 
-/**
- * \brief	thread-safe variant of list_empty()
- *
- * \param	head	cf. list_empty()
- * \param	mtx		mutex to lock
- *
- * \return	cf. list_empty()
- */
 #define list_empty_safe(head, mtx)({ \
-	int r; \
-	LOCK_SECTION(mtx, r = list_empty(head)); \
-	r; \
+	int _r; \
+	LOCK_SECTION(mtx, _r = list_empty(head)); \
+	_r; \
 })
 
-/**
- * \brief	iterator macro to loop over
- * 			all list elements
- *
- * \param	head	pointer to list head
- * \param	el	pointer that holds the current element
- *
- * \return	none
- */
-#define list_for_each(head, el) el=(head); for(typeof(head) next=((head) == 0 ? 0 : (head)->next); (el)!=0; (el)=(next), next=(next == 0 ? 0 : next->next))
+#define list_for_each(head, el) \
+	__list_for_each(head, el, next)
+
+#define __list_for_each(head, el, next_name) \
+	el=(head); \
+	for(typeof(head) next=((head) == 0 ? 0 : (head)->next_name); (el)!=0; (el)=(next_name), next=(next == 0 ? 0 : next->next_name))
+
+
+/* types */
+typedef struct list1_t{
+	struct list1_t *next;
+} list1_t;
+
+typedef struct list2_t{
+	struct list2_t *prev,
+				   *next;
+} list2_t;
+
+
+/* prototypes */
+// single-linked list
+void _list1_init(list1_t *head, list1_t **tail);
+void _list1_add_head(list1_t **head, list1_t **tail, list1_t *el);
+void _list1_add_tail(list1_t **head, list1_t **tail, list1_t *el);
+void _list1_rm_head(list1_t **head, list1_t **tail);
+
+// double-linked list
+void _list2_init(list2_t *head);
+void _list2_add_head(list2_t **head, list2_t *el);
+void _list2_add_tail(list2_t **head, list2_t *el);
+void _list2_add_in(list2_t *el, list2_t *front, list2_t *back);
+void _list2_replace(list2_t **head, list2_t *old, list2_t *new);
+void _list2_rm(list2_t **head, list2_t *el);
+bool _list2_contains(list2_t *head, list2_t *el);
+list2_t *_list2_find(list2_t *head, size_t mem_offset, void const *ref, size_t size);
+list2_t *_list2_find_str(list2_t *head, size_t mem_offset, char const *ref, size_t size, bool is_array);
 
 
 #endif // SYS_LIST_H
