@@ -37,7 +37,7 @@ define compile_i_c
 		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
 		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
-		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
+		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
 	)
 endef
 
@@ -48,7 +48,7 @@ define compile_i_cxx
 		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
 		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
-		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
+		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
 	)
 endef
 
@@ -59,7 +59,7 @@ define compile_s_c
 		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
 		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
-		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
+		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
 	)
 endef
 
@@ -70,7 +70,7 @@ define compile_s_cxx
 		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
 		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
-		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
+		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
 	)
 endef
 
@@ -86,7 +86,7 @@ define compile_o_c
 		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
 		$($(1)cc) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
-		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
+		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
 	)
 endef
 
@@ -97,7 +97,7 @@ define compile_o_cxx
 		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d -MP -MT $@ $<
 		,
 		$($(1)cxx) $($(1)cppflags) $($(1)archflags) -MM -MF $@.d.tmp -MP -MT $@ $<
-		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header)) 1> $@.d
+		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
 	)
 endef
 

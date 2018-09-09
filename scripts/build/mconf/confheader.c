@@ -15,7 +15,6 @@
 
 /* local prototypes */
 static int conf_write_confheader(const char *path);
-static int conf_write_autoconfig_dep(const char *path, char const *conf_header);
 
 
 /* global functions */
@@ -43,21 +42,15 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
-	/* create config headers */
-	if(conf_write_confheader(argv[2])){
-		fprintf(stderr, "error creating config headers\n");
-		return 1;
-	}
-
-	/* create configuration header dependency file */
-	if(conf_write_autoconfig_dep(argv[2], argv[3])){
-		fprintf(stderr, "error creating config header dependency file\n");
-		return 1;
-	}
-
-	/* create configuration header */
+	/* create config header */
 	if(conf_write_autoconf(argv[3])){
-		fprintf(stderr, "error writing config header\n");
+		fprintf(stderr, "error writing config header \"%s\"\n", strerror(errno));
+		return 1;
+	}
+
+	/* create header per CONFIG-option */
+	if(conf_write_confheader(argv[2])){
+		fprintf(stderr, "error creating config headers \"%s\"\n", strerror(errno));
 		return 1;
 	}
 
@@ -158,44 +151,4 @@ err_1:
 
 err_0:
 	return -1;
-}
-
-static int conf_write_autoconfig_dep(const char *path, char const *conf_header){
-	char depfile[strlen(conf_header) + 3],
-		 c;
-	char *s;
-	struct symbol *sym;
-	FILE *fp;
-	int i;
-
-
-	// depfile = conf_header.d
-	strcpy(depfile, conf_header);
-	strcpy(depfile + strlen(conf_header), ".d");
-
-	fp = fopen(depfile, "w");
-
-	if(fp == 0)
-		return -1;
-
-	for_all_symbols(i, sym){
-		if(sym->name == 0 || sym->type == S_UNKNOWN || sym->type  == S_OTHER)
-			continue;
-
-		fprintf(fp, "%s/", path);
-
-		s = sym->name;
-		while((c = *s++)){
-			c = tolower(c);
-			fputc((c == '_') ? '/' : c, fp);
-		}
-
-		fprintf(fp, ".h: %s\n", conf_header);
-	}
-
-	fclose(fp);
-
-	printf("configuration header dependency file written to %s\n", depfile);
-
-	return 0;
 }

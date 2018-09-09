@@ -1,5 +1,25 @@
+######################################
+###   first stage 'make prepare'   ### 
+######################################
+
+# invoke 'make prepare_deps' if it has not been done already
+ifneq ($(PREPARE_DONE),13)
+  r := $(shell PREPARE_DONE=13 $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) prepare_deps 1>&2; r=$$?; if [ "$$(echo $(MFLAGS) | grep 'q')" != "" ]; then echo 0; else echo $$r; fi)
+
+  # stop in case of an error during 'make prepare_deps'
+  ifneq ($(r),0)
+    $(error error while executing prepare_deps sub-make)
+  endif
+endif
+
+
+#######################################
+###   second stage 'make targets'   ###
+#######################################
+
 include $(scripts_dir)/Makefile.helper
 include $(scripts_dir)/Makefile.compile
+
 
 ###############################
 ###   verbosity and debug   ###
@@ -148,6 +168,7 @@ sym_link := $(QUTIL)ln -s
 all: check_user_tools check_build_tools check_config dotclang versionheader
 
 ifneq ("$(githooks_tree)","")
+# ensure githook links exists
 .PHONY: githooks
 .SILENT: githooks
 githooks:
@@ -162,12 +183,18 @@ githooks:
 	ln -frs $(githooks_tree)/pre-commit .git/hooks/pre-commit
 	ln -frs $(githooks_tree)/post-commit .git/hooks/post-commit
 
+# check coding style
 .PHONY: check_coding_style
 check_coding_style:
 	$(QBUILD) ${githooks_tree}/pre-commit $(shell find -type f | grep -v -e '\./\.git/' -e '\./build/')
 
 all: githooks
 endif
+
+# dummy target used to build targets that are not always
+# listed as dependencies, e.g. generated header files
+prepare_deps:
+	@:
 
 # check if all build tools are available
 check_build_tools_error := "please make sure that $${id} or CONFIG_$${id} is initialised correctly, current value is \"$${val}\""
@@ -207,6 +234,9 @@ ifneq ($(shell test -e $(config) && echo $(config)),$(config))
 	$(call error,$(config) does not exist, please run $$make menuconfig or $$make defconfig_<target> first)
 endif
 
+# include dependency files
+include $(shell find $(build_tree)/ -name \*.d 2>/dev/null)
+
 # config system targets
 ifeq ("$(use_config_sys)","y")
   ifneq ("$(config_ftype)","")
@@ -223,21 +253,18 @@ ifeq ("$(use_config_sys)","y")
 
     fixdep := $(QBUILD)$(fixdep)
 
--include $(config_header).d
-
 configtools: do_basic := y
 configtools: $(config_tools)
 
-check_configheader: $(config_header)
-
 $(config_header): $(config) configtools
-	$(QBUILD) KCONFIG_CONFIG=$(config) $(confheader) $(config_ftype) $(dir $(config_header)) $(config_header) 
+	$(mkdir) $(dir $(config_header))
+	$(QBUILD) KCONFIG_CONFIG=$(config) $(confheader) $(config_ftype) $(dir $(config_header))fixdep $(config_header)
 
 .PHONY: menuconfig
 menuconfig: check_build_tools configtools
 	$(QBUILD) KCONFIG_CONFIG=$(config) $(mconfig) $(config_ftype)
 
-all: configtools check_configheader
+prepare_deps: $(config_header)
   endif
 else
   do_basic := y
@@ -263,9 +290,6 @@ endif
 .PHONY: dotclang
 dotclang:
 	$(echo) $(cppflags) $(hostcppflags) | grep -o -e "-I[ \t]*[a-zA-Z0-9_/\.]*" > .clang
-
-# include dependency files
-include $(shell find $(build_tree)/ -name \*.d 2>/dev/null)
 
 # help for the build system
 help-buildsys:

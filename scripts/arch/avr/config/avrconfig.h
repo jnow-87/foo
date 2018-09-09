@@ -7,12 +7,11 @@
 
 /* macros */
 #define CONFIG_PRINT(var, value, fmt) \
-	fprintf(arg.ofile, "#define AVRCONFIG_" #var " " fmt "\n", (value))
+	fprintf(tmp_file, "#define AVRCONFIG_" #var " " fmt "\n", (value))
 
 
 /* types */
 typedef struct{
-	FILE *ofile;
 	char *ofile_name;
 	int verbose;
 } arg_t;
@@ -20,6 +19,7 @@ typedef struct{
 
 /* external variables */
 extern arg_t arg;
+extern FILE *tmp_file;
 
 
 #endif // AVRCONFIG_H

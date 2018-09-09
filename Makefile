@@ -191,7 +191,7 @@ sysroot_create := scripts/sysroot/create.sh
 
 # kernel targets
 kernel: cppflags += -DBUILD_KERNEL
-kernel: check_config check_configheader check_memlayout versionheader $(kernel)
+kernel: check_config check_memlayout versionheader $(kernel)
 kernel_deps: scripts/linker/kernel_$(CONFIG_ARCH).lds
 
 $(kernel): ldlibs += $(ldlibs-kernel-arch)
@@ -202,7 +202,7 @@ $(kernel): kernel_deps $(addprefix $(build_tree)/, $(kernel_objs))
 
 # init targets
 init: cppflags += -DBUILD_INIT
-init: check_config check_configheader libsys $(init)
+init: check_config libsys $(init)
 init_deps: scripts/linker/app_$(CONFIG_ARCH).lds
 
 $(init): ldlibs += -Lscripts/linker -Tapp_$(CONFIG_ARCH).lds
@@ -210,7 +210,7 @@ $(init): init_deps
 
 # libsys targets
 libsys: cppflags += -DBUILD_LIBSYS
-libsys: check_config check_configheader $(libsys)
+libsys: check_config $(libsys)
 libsys_deps:
 
 $(libsys):
@@ -218,7 +218,6 @@ $(libsys): libsys_deps $(addprefix $(build_tree)/, $(libsys_objs))
 	$(call compile_lib_o)
 
 # sysroot targets
-.PHONY: sysroot
 sysroot: kernel libsys init
 	$(rm) $(recent)
 	$(sym_link) $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
@@ -226,11 +225,11 @@ sysroot: kernel libsys init
 
 # memlayout
 .PHONY: memlayout
-memlayout: check_configheader $(memlayout)
+memlayout: $(memlayout)
 	$(QUTIL)$(memlayout)
 
 .PHONY: check_memlayout
-check_memlayout: check_configheader $(memlayout_check)
+check_memlayout: $(memlayout_check)
 	$(QUTIL)$(memlayout_check)
 
 .PHONY: all
@@ -243,7 +242,7 @@ ifeq ($(CONFIG_BUILD_DEBUG),y)
   hostasflags += -g
 endif
 
-all: kernel libsys sysroot $(lib) $(hostlib) $(bin) $(hostbin)
+all: sysroot $(lib) $(hostlib) $(bin) $(hostbin)
 
 ####
 ## cleanup

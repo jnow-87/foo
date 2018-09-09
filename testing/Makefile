@@ -10,5 +10,5 @@ main-hostldlibs += -T$(loc_src_tree)/default.lds -T$(loc_src_tree)/testcase.lds
 
 # testing rules
 .PHONY: test
-test: check_config check_configheader $(loc_build_tree)/main
+test: check_config $(loc_build_tree)/main
 	$(loc_build_tree)/main $(loc_build_tree)/result.log

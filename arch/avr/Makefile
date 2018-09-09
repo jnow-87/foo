@@ -17,7 +17,7 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree
 lds_memory_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_memory
 lds_memory_file := $(loc_build_tree)/avr_memory.lds
 
-$(lds_memory_file): check_configheader $(lds_memory_script)
+$(lds_memory_file): $(lds_memory_script)
 	$(mkdir) $(dir $(lds_memory_file))
 	$(QBUILD)$(lds_memory_script) $(lds_memory_file)
 
@@ -26,19 +26,19 @@ lds_plugin_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_plugin
 lds_plugin_kernel_file := $(loc_build_tree)/avr_plugin_kernel.lds
 lds_plugin_app_file := $(loc_build_tree)/avr_plugin_app.lds
 
-$(lds_plugin_kernel_file): check_configheader $(lds_plugin_script)
+$(lds_plugin_kernel_file): $(lds_plugin_script)
 	$(mkdir) $(dir $(lds_plugin_kernel_file))
 	$(QBUILD)$(lds_plugin_script) $(lds_plugin_kernel_file) kernel
 
-$(lds_plugin_app_file): check_configheader $(lds_plugin_script)
+$(lds_plugin_app_file): $(lds_plugin_script)
 	$(mkdir) $(dir $(lds_plugin_app_file))
 	$(QBUILD)$(lds_plugin_script) $(lds_plugin_app_file) app
 
 ## combined dependencies
 avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
 
-kernel_deps: avr_lds $(lds_memory_file)
-init_deps: avr_lds $(lds_memory_file)
+kernel_deps: avr_lds
+init_deps: avr_lds
 
 ####
 ## AVR config header
@@ -48,11 +48,12 @@ avrconfig := $(build_tree)/scripts/arch/avr/config/avrconfig
 avrconfig_header := $(dir $(config_header))avrconfig.h
 
 kernel_deps: $(avrconfig_header)
+init_deps: $(avrconfig_header)
+libsys_deps: $(avrconfig_header)
+prepare_deps: $(avrconfig_header)
 
-$(avrconfig_header): check_configheader $(avrconfig)
-	$(QUTIL)$(avrconfig) $(avrconfig_header).tmp $(if $(QBUILD),,-v)
-	$(QUTIL)diff $(avrconfig_header) $(avrconfig_header).tmp 1>/dev/null 2>&1; \
-	[ $$? -eq 0 ] || cp $(avrconfig_header).tmp $(avrconfig_header)
+$(avrconfig_header): $(avrconfig)
+	$(QUTIL)$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v)
 
 
 ####
