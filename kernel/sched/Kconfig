@@ -1,8 +1,22 @@
+choice
+	prompt "Scheduler type"
+
+	config SCHED_PREEMPTIVE
+		bool "preemptive"
+
+	config SCHED_COOPERATIVE
+		bool "cooperative"
+endchoice
+
 config SCHED_CYCLETIME_US
 	int "Scheduler cycle time [us]"
+	depends on SCHED_PREEMPTIVE
+	default 500000
 
 config SCHED_ERR_MAX
 	int "Maximal scheduler error [%]"
+	depends on SCHED_PREEMPTIVE
+	default 5
 
 config SCHED_PRIO_DEFAULT
 	int "Default process priority"

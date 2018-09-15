@@ -20,6 +20,7 @@ typedef struct{
 
 
 /* prototypes */
+void csection_init(csection_lock_t *l);
 void csection_lock(csection_lock_t *l);
 void csection_unlock(csection_lock_t *l);
 

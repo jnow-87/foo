@@ -31,7 +31,7 @@ int ksignal_wait(ksignal_t *sig){
 	csection_lock(&sig_lock);
 
 	queue_enqueue(sig->head, sig->tail, e);
-	sched_pause();
+	sched_thread_pause((thread_t*)e->thread);
 
 	csection_unlock(&sig_lock);
 
@@ -49,7 +49,7 @@ void ksignal_send(ksignal_t *sig){
 	e = queue_dequeue(sig->head, sig->tail);
 
 	if(e != 0x0){
-		sched_wake((thread_t*)e->thread);
+		sched_thread_wake((thread_t*)e->thread);
 		kfree(e);
 	}
 
@@ -68,7 +68,7 @@ void ksignal_bcast(ksignal_t *sig){
 		if(e == 0x0)
 			break;
 
-		sched_wake((thread_t*)e->thread);
+		sched_thread_wake((thread_t*)e->thread);
 		kfree(e);
 	}
 

@@ -4,6 +4,11 @@
 
 
 /* global functions */
+void csection_init(csection_lock_t *l){
+	mutex_init(&l->mtx, 0);
+	l->imask = 0;
+}
+
 void csection_lock(csection_lock_t *l){
 	l->imask = int_enable(INT_NONE);
 	mutex_lock(&l->mtx);

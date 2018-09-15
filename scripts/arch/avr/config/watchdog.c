@@ -8,6 +8,22 @@
 /* macros */
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+// ensure CONFIG-variables have viable values
+#if (!defined(CONFIG_SCHED_CYCLETIME_US) && !defined(CONFIG_KTIMER_CYCLETIME_US))
+	#define CONFIG_SCHED_CYCLETIME_US	(2048 * 1000000.0 / WATCHDOG_HZ)
+	#define CONFIG_SCHED_ERR_MAX		0
+	#define CONFIG_KTIMER_CYCLETIME_US	CONFIG_SCHED_CYCLETIME_US
+	#define CONFIG_KTIMER_ERR_MAX		0
+
+#elif (!defined(CONFIG_SCHED_CYCLETIME_US))
+	#define CONFIG_SCHED_CYCLETIME_US	CONFIG_KTIMER_CYCLETIME_US
+	#define CONFIG_SCHED_ERR_MAX		CONFIG_KTIMER_ERR_MAX
+
+#elif (!defined(CONFIG_KTIMER_CYCLETIME_US))
+	#define CONFIG_KTIMER_CYCLETIME_US	CONFIG_SCHED_CYCLETIME_US
+	#define CONFIG_KTIMER_ERR_MAX		CONFIG_SCHED_ERR_MAX
+#endif
+
 
 /* local/static prototypes */
 static unsigned int cycle_time_multiple(float cycle_time_us, float prescale);

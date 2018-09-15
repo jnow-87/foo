@@ -44,15 +44,25 @@ void kernel(void){
 
 /* local functions */
 static void ktask(void){
-	ktask_t *task;
+	ktask_t *task,
+			*rec_task;
 
+
+	rec_task = 0x0;
 
 	while(1){
 		task = ktask_next();
 
-		if(task == 0x0)
+		/* remember first recurring task */
+		if((task->flags & TASK_RECURRING) && rec_task == 0x0)
+			rec_task = task;
+
+		/* break */
+		// ensure recurring tasks are only executed once in this loop
+		if(task == 0x0 || task == rec_task)
 			return;
 
+		/* execute task */
 		task->hdlr(task->data);
 		ktask_complete(task);
 	}

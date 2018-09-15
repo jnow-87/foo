@@ -6,14 +6,23 @@
 #include <kernel/thread.h>
 
 
-/* prototypes */
-void sched_tick(void);
+/* macros */
+#ifdef CONFIG_SCHED_PREEMPTIVE
+#define sched_tick()	sched_trigger()
+#else
+#define sched_tick()
+#endif // CONFIG_SCHED_PREEMPTIVE
 
+
+
+/* prototypes */
+void sched_yield(void);
+void sched_trigger(void);
 thread_t const *sched_running(void);
 
-void sched_yield(void);
-void sched_pause(void);
-void sched_wake(thread_t *this_t);
+void sched_thread_pause(thread_t *this_t);
+void sched_thread_wake(thread_t *this_t);
+void sched_thread_bury(thread_t *this_t);
 
 
 #endif // KERNEL_SCHED_H

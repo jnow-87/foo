@@ -16,6 +16,9 @@
 
 #include "lkc.h"
 
+static void conf_error(const char *fmt, ...)
+	__attribute__ ((format (printf, 1, 2)));
+
 static void conf_warning(const char *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
 
@@ -23,9 +26,20 @@ static void conf_message(const char *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
 
 static const char *conf_filename;
-static int conf_lineno, conf_warnings, conf_unsaved;
+static int conf_lineno, conf_errors, conf_warnings, conf_unsaved;
 
 const char conf_defname[] = "arch/$ARCH/defconfig";
+
+static void conf_error(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	fprintf(stderr, "%s:%d:error: ", conf_filename, conf_lineno);
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
+	va_end(ap);
+	conf_errors++;
+}
 
 static void conf_warning(const char *fmt, ...)
 {
@@ -133,7 +147,7 @@ static int conf_set_sym_val(struct symbol *sym, int def, int def_flags, char *p)
 			sym->flags |= def_flags;
 			break;
 		}
-		conf_warning("symbol value '%s' invalid for %s", p, sym->name);
+		conf_error("symbol value '%s' invalid for %s", p, sym->name);
 		return 1;
 	case S_OTHER:
 		if (*p != '"') {
@@ -154,7 +168,7 @@ static int conf_set_sym_val(struct symbol *sym, int def, int def_flags, char *p)
 			memmove(p2, p2 + 1, strlen(p2));
 		}
 		if (!p2) {
-			conf_warning("invalid string found");
+			conf_error("invalid string found");
 			return 1;
 		}
 		/* fall through */
@@ -166,7 +180,7 @@ static int conf_set_sym_val(struct symbol *sym, int def, int def_flags, char *p)
 			sym->def[def].val = strdup(p);
 			sym->flags |= def_flags;
 		} else {
-			conf_warning("symbol value '%s' invalid for %s", p, sym->name);
+			conf_error("symbol value '%s' invalid for %s", p, sym->name);
 			return 1;
 		}
 		break;
@@ -275,6 +289,7 @@ int conf_read_simple(const char *name, int def)
 load:
 	conf_filename = name;
 	conf_lineno = 0;
+	conf_errors = 0;
 	conf_warnings = 0;
 	conf_unsaved = 0;
 
@@ -359,7 +374,7 @@ load:
 				conf_warning("override: reassigning to symbol %s", sym->name);
 			}
 			if (conf_set_sym_val(sym, def, def_flags, p))
-				continue;
+				return 1;
 		} else {
 			if (line[0] != '\r' && line[0] != '\n')
 				conf_warning("unexpected data");
@@ -456,7 +471,7 @@ int conf_read(const char *name)
 		}
 	}
 
-	sym_add_change_count(conf_warnings || conf_unsaved);
+	sym_add_change_count(conf_errors || conf_warnings || conf_unsaved);
 
 	return 0;
 }
