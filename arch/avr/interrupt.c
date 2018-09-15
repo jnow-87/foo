@@ -48,9 +48,11 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 		avr_int_iovfl_hdlr(tc);
 		break;
 
+#if (defined(CONFIG_SCHED_PREEMPTIVE) || defined(CONFIG_KERNEL_TIMER))
 	case CONFIG_TIMER_INT:	// scheduler
 		avr_timer_hdlr();
 		break;
+#endif // CONFIG_SCHED_PREEMPTIVE || CONFIG_KERNEL_TIMER
 
 	default:
 		kpanic(sched_running(), "out of bound interrupt num %u\n", (unsigned int)int_num);

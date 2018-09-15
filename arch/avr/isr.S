@@ -17,9 +17,11 @@
 			.global	__vector_\num
 			XJMP	__isr_iovfl
 
+#if (defined(CONFIG_SCHED_PREEMPTIVE) || defined(CONFIG_KERNEL_TIMER))
 		.elseif (\num == CONFIG_TIMER_INT)		// scheduler
 			.global	__vector_\num
 			XJMP	__isr_sched
+#endif // CONFIG_SCHED_PREEMPTIVE || CONFIG_KERNEL_TIMER
 
 		.else									// hardware interrupt
 			.global	__vector_\num
@@ -106,13 +108,15 @@ __isr_syscall:
 	sts		int_num, r31
 	XJMP	__int_hdlr_call
 
-/* scheduler handler */
+/* scheduler/timer handler */
+#if (defined(CONFIG_SCHED_PREEMPTIVE) || defined(CONFIG_KERNEL_TIMER))
 .global __isr_sched
 __isr_sched:
 	push	r31
 	ldi		r31, CONFIG_TIMER_INT
 	sts		int_num, r31
 	XJMP	__int_hdlr_call
+#endif // CONFIG_SCHED_PREEMPTIVE || CONFIG_KERNEL_TIMER
 
 /* instruction overflow handler */
 __isr_iovfl:

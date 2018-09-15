@@ -1,6 +1,10 @@
-obj-y := start.o isr.o interrupt.o core.o timer.o thread.o syscall.o atomic.o
-obj-nobuiltin-y := libsys.o
+obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
 
+obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
+obj-$(CONFIG_KERNEL_TIMER) += timer.o
+
+
+obj-nobuiltin-y := libsys.o
 
 libsys-y := core_lib.o lib.o syscall_lib.o atomic.o
 

@@ -131,7 +131,7 @@ endmenu
 #
 # {{{
 menu "Timer settings"
-	visible if KERNEL_TIMER
+	depends on KERNEL_TIMER
 
 	config KTIMER_CYCLETIME_US
 		int "Kernel timer cycle time [us]"

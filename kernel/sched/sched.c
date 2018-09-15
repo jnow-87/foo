@@ -14,7 +14,6 @@
 #include <kernel/csection.h>
 #include <sys/errno.h>
 #include <sys/list.h>
-#include "sched.h"
 
 
 /* types */
@@ -27,6 +26,8 @@ typedef struct sched_queue_t{
 
 
 /* local/static prototypes */
+static void sched_transition(thread_t *this_t, thread_state_t queue);
+static void sched_transition_safe(thread_t *this_t, thread_state_t queue);
 static void task_cleanup(void *p);
 
 
@@ -40,7 +41,19 @@ static thread_t *running[CONFIG_NCORES] = { 0x0 };
 
 
 /* global functions */
-void sched_tick(void){
+void sched_yield(void){
+	char dummy;
+
+
+	if(int_enabled() == INT_NONE)
+		kpanic(sched_running(), "interrupts are disabled, syscall not allowed\n");
+
+	// actual thread switches are only performed in interrupt
+	// service routines as it is required for syscalls
+	(void)sc(SC_SCHEDYIELD, &dummy);
+}
+
+void sched_trigger(void){
 	thread_t *this_t;
 
 
@@ -73,87 +86,16 @@ thread_t const *sched_running(void){
 	return running[PIR];
 }
 
-void sched_yield(void){
-	char dummy;
-
-
-	if(int_enabled() == INT_NONE)
-		kpanic(sched_running(), "interrupts are disabled, syscall not allowed\n");
-
-	// actual thread switches are only performed in interrupt
-	// service routines as it is required for syscalls
-	(void)sc(SC_SCHEDYIELD, &dummy);
+void sched_thread_pause(thread_t *this_t){
+	sched_transition_safe(this_t, WAITING);
 }
 
-void sched_pause(void){
-	csection_lock(&sched_lock);
-	sched_transition((thread_t*)sched_running(), WAITING);
-	csection_unlock(&sched_lock);
+void sched_thread_wake(thread_t *this_t){
+	sched_transition_safe(this_t, READY);
 }
 
-void sched_wake(thread_t *this_t){
-	csection_lock(&sched_lock);
-	sched_transition(this_t, READY);
-	csection_unlock(&sched_lock);
-}
-
-/**
- * \brief
- *
- *                         kill
- *            WAITING ----------------\
- *             |   A                  |
- *             |   | sig wait         |
- *    sig_wake |   |                  |
- *             |   |           exit   |
- *             |  RUNNING ------------|
- *             |  |A                  |
- *             |  || sched            |
- *             |  ||                  |
- *             V  V|       kill       V
- * CREATED --> READY --------------> DEAD
- *
- * TODO kill is not yet implemented
- *
- * \pre	calls to sched_transition are protected through sched_lock
- */
-void sched_transition(thread_t *this_t, thread_state_t queue){
-	thread_state_t s;
-	sched_queue_t *e;
-
-
-	/* check for invalid state transition */
-	s = this_t->state;
-
-	if((queue == CREATED)
-	|| (queue == READY && s == DEAD)
-	|| (queue == RUNNING && s != READY)
-	|| (queue == WAITING && s != RUNNING)
-	|| (queue == DEAD && s == CREATED)
-	){
-		kpanic(this_t, "invalid scheduler transition %u -> %u\n", s, queue);
-	}
-
-	/* perform transition */
-	if(this_t->state == CREATED){
-		e = kmalloc(sizeof(sched_queue_t));
-
-		if(e == 0x0)
-			kpanic(this_t, "out of memory\n");
-
-		e->thread = this_t;
-	}
-	else{
-		e = list_find(sched_queues[this_t->state], thread, this_t);
-
-		if(e == 0x0)
-			kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
-
-		list_rm(sched_queues[this_t->state], e);
-	}
-
-	list_add_tail(sched_queues[queue], e);
-	this_t->state = queue;
+void sched_thread_bury(thread_t *this_t){
+	sched_transition_safe(this_t, DEAD);
 }
 
 
@@ -229,6 +171,71 @@ err:
 }
 
 kernel_init(2, init);
+
+/**
+ * \brief
+ *
+ *                         kill
+ *            WAITING ----------------\
+ *             |   A                  |
+ *             |   | sig wait         |
+ *    sig_wake |   |                  |
+ *             |   |           exit   |
+ *             |  RUNNING ------------|
+ *             |  |A                  |
+ *             |  || sched            |
+ *             |  ||                  |
+ *             V  V|       kill       V
+ * CREATED --> READY --------------> DEAD
+ *
+ * TODO kill is not yet implemented
+ *
+ * \pre	calls to sched_transition are protected through sched_lock
+ */
+static void sched_transition(thread_t *this_t, thread_state_t queue){
+	thread_state_t s;
+	sched_queue_t *e;
+
+
+	/* check for invalid state transition */
+	s = this_t->state;
+
+	if((queue == CREATED)
+	|| (queue == READY && s == DEAD)
+	|| (queue == RUNNING && s != READY)
+	|| (queue == WAITING && s != RUNNING)
+	|| (queue == DEAD && s == CREATED)
+	){
+		kpanic(this_t, "invalid scheduler transition %u -> %u\n", s, queue);
+	}
+
+	/* perform transition */
+	if(this_t->state == CREATED){
+		e = kmalloc(sizeof(sched_queue_t));
+
+		if(e == 0x0)
+			kpanic(this_t, "out of memory\n");
+
+		e->thread = this_t;
+	}
+	else{
+		e = list_find(sched_queues[this_t->state], thread, this_t);
+
+		if(e == 0x0)
+			kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
+
+		list_rm(sched_queues[this_t->state], e);
+	}
+
+	list_add_tail(sched_queues[queue], e);
+	this_t->state = queue;
+}
+
+static void sched_transition_safe(thread_t *this_t, thread_state_t queue){
+	csection_lock(&sched_lock);
+	sched_transition(this_t, queue);
+	csection_unlock(&sched_lock);
+}
 
 /**
  * \brief	recurring task used to cleanup terminated threads

@@ -8,7 +8,6 @@
 #include <sys/errno.h>
 #include <sys/syscall.h>
 #include <sys/list.h>
-#include "sched.h"
 
 
 /* static/local prototypes */
@@ -47,7 +46,7 @@ static int init(void){
 kernel_init(2, init);
 
 static int sc_hdlr_sched_yield(void *p){
-	sched_tick();
+	sched_trigger();
 	return E_OK;
 }
 
@@ -75,9 +74,7 @@ static int sc_hdlr_process_create(void *_p){
 	if(new == 0x0)
 		return -errno;
 
-	csection_lock(&sched_lock);
-	sched_transition(list_first(new->threads), READY);
-	csection_unlock(&sched_lock);
+	sched_thread_wake(list_first(new->threads));
 
 	p->pid = new->pid;
 
@@ -117,9 +114,7 @@ static int sc_hdlr_thread_create(void *_p){
 	if(new == 0x0)
 		return -errno;
 
-	csection_lock(&sched_lock);
-	sched_transition(new, READY);
-	csection_unlock(&sched_lock);
+	sched_thread_wake(new);
 
 	p->tid = new->tid;
 
@@ -167,8 +162,8 @@ static int sc_hdlr_exit(void *p){
 	DEBUG("thread %s.%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
 
 	/* ensure thread is no longer the running one */
-	sched_tick();
-	sched_transition((thread_t*)this_t, DEAD);
+	sched_trigger();
+	sched_thread_bury((thread_t*)this_t);
 
 	return E_OK;
 }
