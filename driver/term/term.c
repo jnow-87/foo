@@ -88,17 +88,28 @@ void term_release(term_t *term){
 
 /* local functions */
 static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+	int r;
 	term_t *term;
 
 
 	term = (term_t*)dev->data;
 
+	/* read */
 	if(term->rx_err){
 		errno = E_IO;
 		return 0;
 	}
 
-	return ringbuf_read(&term->rx_buf, buf, n);
+	r = ringbuf_read(&term->rx_buf, buf, n);
+
+	/* handle terminal flags */
+	// handle TF_ECHO
+	if(r > 0 && (term->cfg.flags & TF_ECHO)){
+		if(term->ops.puts(term, buf, r) != E_OK)
+			return 0;
+	}
+
+	return r;
 }
 
 static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){

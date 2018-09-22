@@ -42,6 +42,10 @@ typedef enum{
 } term_csize_t;
 
 typedef enum{
+	TF_ECHO = 0x1,
+} term_flags_t;
+
+typedef enum{
 	TE_NONE = 0x0,
 	TE_DATA_OVERRUN = 0x1,
 	TE_PARITY = 0x2,
@@ -54,6 +58,7 @@ typedef struct{
 	term_stopb_t stopb;
 	term_parity_t parity;
 	term_csize_t csize;
+	term_flags_t flags;
 } term_cfg_t;
 
 
