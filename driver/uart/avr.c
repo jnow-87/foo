@@ -83,7 +83,6 @@ platform_init(0, kuart_init);
 static int init(void){
 	unsigned int i;
 	char suffix[] = "x";
-	term_t *term;
 	term_ops_t ops;
 
 
@@ -101,7 +100,7 @@ static int init(void){
 
 		// NOTE default configuration has already been
 		// 		applied through kuart_init()
-		term->cfg = kopt.term_cfg;
+		terms[i]->cfg = kopt.term_cfg;
 	}
 
 	return E_OK;
