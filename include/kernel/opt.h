@@ -53,12 +53,8 @@
 	.term_cfg = { \
 		.baud = CONFIG_KERNEL_UART_BAUDRATE, \
 		.stopb = CONFIG_KERNEL_UART_STOPBITS, \
-		.csize = CS_8, \
+		.csize = TCS_8, \
 		.parity = CONFIG_KERNEL_UART_PARITY, \
-		.data_overrun = 0, \
-		.parity_err = 0, \
-		.frame_err = 0, \
-		.rx_queue_full = 0, \
 	}, \
 }
 

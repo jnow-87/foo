@@ -21,14 +21,13 @@ typedef struct{
 
 typedef struct term_t{
 	term_cfg_t cfg;
-	term_ops_t ops;
+	term_err_t rx_err;
 
 	ringbuf_t rx_buf;
 	ksignal_t *rx_rdy;
-	unsigned int rx_err;
 
 	void *data;
-
+	term_ops_t ops;
 	devfs_dev_t *dev;
 } term_t;
 

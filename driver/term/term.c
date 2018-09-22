@@ -61,7 +61,7 @@ term_t *term_register(char const *suffix, term_ops_t *ops, void *data){
 	term->dev = dev;
 
 	term->rx_rdy = &dev->node->rd_sig;
-	term->rx_err = 0;
+	term->rx_err = TE_NONE;
 
 	ringbuf_init(&term->rx_buf, rx_buf, CONFIG_TERM_RXBUF_SIZE);
 
@@ -95,8 +95,6 @@ static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 	if(term->rx_err){
 		errno = E_IO;
-		term->rx_err = 0;
-
 		return 0;
 	}
 
@@ -123,15 +121,6 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 	switch(request){
 	case IOCTL_CFGRD:
 		memcpy(data, &term->cfg, sizeof(term_cfg_t));
-
-		// reset error flags
-		term->cfg.frame_err = 0;
-		term->cfg.data_overrun = 0;
-		term->cfg.parity_err = 0;
-		term->cfg.rx_queue_full = 0;
-
-		term->rx_err = 0;
-
 		return E_OK;
 
 	case IOCTL_CFGWR:
@@ -139,6 +128,14 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 			return -errno;
 
 		term->cfg = *((term_cfg_t*)data);
+		return E_OK;
+
+	case IOCTL_STATUS:
+		memcpy(data, &term->rx_err, sizeof(term_err_t));
+
+		// reset error flags
+		term->rx_err = TE_NONE;
+
 		return E_OK;
 
 	default:

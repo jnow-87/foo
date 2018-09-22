@@ -220,12 +220,11 @@ static void rx_hdlr(uint8_t uart){
 
 	/* update error */
 	if(err){
-		terms[uart]->rx_err |= err;
-
-		terms[uart]->cfg.frame_err |= bits(err, UCSR0A_FE, 0x1);
-		terms[uart]->cfg.data_overrun |= bits(err, UCSR0A_DOR, 0x1);
-		terms[uart]->cfg.parity_err |= bits(err, UCSR0A_UPE, 0x1);
-		terms[uart]->cfg.rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
+		terms[uart]->rx_err |= (bits(err, UCSR0A_FE, 0x1) ? TE_FRAME : 0)
+							|  (bits(err, UCSR0A_DOR, 0x1) ? TE_DATA_OVERRUN : 0)
+							|  (bits(err, UCSR0A_UPE, 0x1) ? TE_PARITY : 0)
+							|  (bits(err, UCSR0A_RXC, 0x1) ? TE_RX_FULL : 0)
+							;
 	}
 
 	ksignal_send(terms[uart]->rx_rdy);
