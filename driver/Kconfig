@@ -1,2 +1,3 @@
 source driver/loop/Kconfig
+source driver/term/Kconfig
 source driver/uart/Kconfig

@@ -1,5 +1,5 @@
-#ifndef SYS_UART_H
-#define SYS_UART_H
+#ifndef SYS_TERM_H
+#define SYS_TERM_H
 
 
 #include <sys/types.h>
@@ -51,7 +51,7 @@ typedef struct{
 		 parity_err,
 		 frame_err,
 		 rx_queue_full;
-} uart_t;
+} term_cfg_t;
 
 
-#endif // SYS_UART_H
+#endif // SYS_TERM_H

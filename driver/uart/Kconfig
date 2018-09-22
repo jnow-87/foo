@@ -1,22 +1,9 @@
-menuconfig DRIVER_UART
-	bool "Uart driver"
-	select KERNEL_DEVFS
-	select KERNEL_SIGNAL
-	select SYS_RINGBUFFER
+menuconfig AVR_UART
+	bool "AVR uart"
+	select DRIVER_TERM
 
-if DRIVER_UART
-	choice
-		prompt "Implementation"
-
-		config AVR_UART
-			bool "AVR uart"
-	endchoice
-
-	config UART_RX_BUFSIZE
-		int "Rx buffer size"
-		default 16
-
-	config UART_CNT
+if AVR_UART
+	config AVR_UART_CNT
 		int "Number of uarts"
 		range 1 16
-endif # DRIVER_UART
+endif # AVR_UART

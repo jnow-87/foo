@@ -6,9 +6,11 @@
 #include <sys/file.h>
 
 
-/* types */
+/* incomplete types */
 struct devfs_dev_t;
 
+
+/* types */
 typedef struct{
 	/**
 	 * \brief	Perform allocations required if the device pointed to by dev is

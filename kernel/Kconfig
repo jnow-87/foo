@@ -165,7 +165,7 @@ endmenu
 # {{{
 menuconfig KERNEL_UART
 	bool "Kernel uart"
-	select DRIVER_UART
+	select DRIVER_TERM
 
 if KERNEL_UART
 	menu "kprintf"
