@@ -57,6 +57,7 @@ libsys_deps: $(avrconfig_header)
 prepare_deps: $(avrconfig_header)
 
 $(avrconfig_header): $(avrconfig)
+	$(mkdir) $(dir $(avrconfig_header))
 	$(QUTIL)$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v)
 
 

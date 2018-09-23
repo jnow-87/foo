@@ -4,11 +4,18 @@
 
 # invoke 'make prepare_deps' if it has not been done already
 ifneq ($(PREPARE_DONE),13)
-  r := $(shell PREPARE_DONE=13 $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) prepare_deps 1>&2; r=$$?; if [ "$$(echo $(MFLAGS) | grep 'q')" != "" ]; then echo 0; else echo $$r; fi)
+  # prevent prepare_deps if the 'clean' target is called
+  ifneq ($(findstring clean,$(MAKECMDGOALS))$(subst clean,,$(MAKECMDGOALS)),clean)
+    ifeq ($(findstring clean,$(MAKECMDGOALS)),clean)
+      $(error Mixing clean with other targets is not supported by the build system)
+    endif
 
-  # stop in case of an error during 'make prepare_deps'
-  ifneq ($(r),0)
-    $(error error while executing prepare_deps sub-make)
+    r := $(shell PREPARE_DONE=13 $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) prepare_deps 1>&2; r=$$?; if [ "$$(echo $(MFLAGS) | grep 'q')" != "" ]; then echo 0; else echo $$r; fi)
+
+    # stop in case of an error during 'make prepare_deps'
+    ifneq ($(r),0)
+      $(error error while executing prepare_deps sub-make)
+    endif
   endif
 endif
 
