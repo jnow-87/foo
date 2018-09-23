@@ -13,9 +13,11 @@
 			.global	__vector_\num
 			XJMP	__isr_syscall
 
+#if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
 		.elseif (\num == INT_VECTORS + 1)		// instruction overflow
 			.global	__vector_\num
 			XJMP	__isr_iovfl
+#endif // CONFIG_BUILD_DEBUG && CONFIG_IOVERFLOW_DET
 
 #if (defined(CONFIG_SCHED_PREEMPTIVE) || defined(CONFIG_KERNEL_TIMER))
 		.elseif (\num == CONFIG_TIMER_INT)		// scheduler
@@ -119,11 +121,13 @@ __isr_sched:
 #endif // CONFIG_SCHED_PREEMPTIVE || CONFIG_KERNEL_TIMER
 
 /* instruction overflow handler */
+#if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
 __isr_iovfl:
 	push	r31
 	ldi		r31, INT_VECTORS + 1
 	sts		int_num, r31
 	XJMP	__int_hdlr_call
+#endif // CONFIG_BUILD_DEBUG && CONFIG_IOVERFLOW_DET
 
 /* invalid interrupt handler */
 // NOTE using avr_int_inval_hdlr directly does not work, since

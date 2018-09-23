@@ -2,6 +2,7 @@ obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
 
 obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o
+obj-$(CONFIG_IOVERFLOW_DET) += iovfl.o
 
 
 obj-nobuiltin-y := libsys.o

@@ -4,6 +4,7 @@
 #include <arch/core.h>
 #include <arch/io.h>
 #include <arch/avr/timer.h>
+#include <arch/avr/iovfl.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <kernel/sched.h>
@@ -19,10 +20,6 @@ extern void int_vectors(void);
 
 /* global variables */
 uint8_t int_num = 0;
-
-
-/* local/static prototypes */
-static void avr_int_iovfl_hdlr(struct thread_context_t *tc);
 
 
 /* global functions */
@@ -44,9 +41,11 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 		avr_sc_hdlr();
 		break;
 
+#if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
 	case INT_VECTORS + 1:	// instruction overflow
-		avr_int_iovfl_hdlr(tc);
+		avr_iovfl_hdlr(tc);
 		break;
+#endif // CONFIG_BUILD_DEBUG && CONFIG_IOVERFLOW_DET
 
 #if (defined(CONFIG_SCHED_PREEMPTIVE) || defined(CONFIG_KERNEL_TIMER))
 	case CONFIG_TIMER_INT:	// scheduler
@@ -89,14 +88,4 @@ int_type_t avr_int_enabled(void){
 	if(mreg_r(SREG) & (0x1 << SREG_I))
 		return INT_GLOBAL;
 	return INT_NONE;
-}
-
-
-/* local functions */
-static void avr_int_iovfl_hdlr(struct thread_context_t *tc){
-	unsigned int ret_addr;
-
-
-	ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
-	kpanic(sched_running(), "instruction memory overflow at 0x%x", ret_addr);
 }
