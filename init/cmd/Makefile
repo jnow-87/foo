@@ -10,5 +10,9 @@ obj-y := cmd.o $(cmds-y)
 hostobj-y := cmd.o $(cmds-y)
 
 
+$(loc_build_tree)/help.o: $(build_tree)/init/cmd/cmd.hash.h
+$(loc_build_tree)/help.host./o: $(build_tree)/init/cmd/cmd.hash.h
+
+
 cmd-cflags += -Wno-missing-field-initializers
 cmd-hostcflags += -Wno-missing-field-initializers
