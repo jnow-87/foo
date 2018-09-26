@@ -15,42 +15,57 @@ if [[ "${suffix}" != "c" ]];then
 	exit 1
 fi
 
-#
-# get data
-#
-
-# get name lookup function
-lookup_name=$(grep lookup-function-name ${gperffile} | cut -d ' ' -f 3)
-[ "${lookup_name}" == "" ] && lookup_name=in_word_set
-
-# check if lookup tables are const
-const_tables=
-[ "$(grep %readonly-tables ${gperffile})" == "" ] || const_tables=const
-
-# get return type of lookup function
-if [ "$(grep %struct-type ${gperffile})" == "" ];then
-	lookup_return=char
-else
-	lookup_return=$(grep -oe '^struct [^;]\+' ${gperffile})
-fi
 
 #
-# write header file
+#	generate header file based on gperf c output
+#		header will contain lookup function prototype
+#		as well as macros associated with the hash table
 #
 
 # generate macro based on header file
 macro=$(basename ${header} | tr a-z. A-Z_)
 
-# print header
+# print file header
 printf "#ifndef %s\n" "${macro}" > ${header}
 printf "#define %s\n\n\n" "${macro}" >> ${header}
 
-# extract included header files
+# included header files
 grep -e '#include' ${cfile} >> ${header}
 printf "\n\n" >> ${header}
 
-# add prototype for lookup-function
-printf "%s %s *%s(register const char *str, register size_t len);\n" "${const_tables}" "${lookup_return}" "${lookup_name}" >> ${header}
+# wordlist macros
+printf "/* macros */\n" >> ${header}
+grep -e '#define' ${cfile} >> ${header}
+printf "\n\n" >> ${header}
+
+# wordlist declaration
+wordlist_name=$(grep word-array-name ${gperffile} | cut -d ' ' -f 3)
+[ "${wordlist_name}" == "" ] && wordlist_name=wordlist
+
+wordlist_decl=$(sed -ne "s/static \(.*${wordlist_name}.*\[\]\).*/\1/p" ${cfile})
+
+printf "/* global variables */\n" >> ${header}
+printf "extern %s;\n" "${wordlist_decl}" >> ${header}
+printf "\n\n" >> ${header}
+
+# lookup function prototype
+lookup_name=$(grep lookup-function-name ${gperffile} | cut -d ' ' -f 3)
+[ "${lookup_name}" == "" ] && lookup_name=in_word_set
+
+lookup_line=$(grep -ne "${lookup_name}" ${cfile} | cut -d ':' -f 1)
+lookup_ret_type=$(sed -ne "$(expr ${lookup_line} - 1)p" ${cfile})
+
+printf "/* prototypes */\n" >> ${header}
+printf "%s %s(register const char *str, register size_t len);\n" "${lookup_ret_type}" "${lookup_name}" >> ${header}
+printf "\n\n" >> ${header}
 
 # print footer
-printf "\n\n#endif // %s" "${macro}" >> ${header}
+printf "#endif // %s" "${macro}" >> ${header}
+
+
+#
+#	modify c source file
+#		make worldlist a global variable (remove 'static' keyword)
+#
+
+sed -i "s/static\(.*${wordlist_name}.*\)/\1/" ${cfile}
