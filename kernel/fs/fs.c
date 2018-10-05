@@ -321,13 +321,15 @@ int fs_node_find(fs_node_t **start, char const **path){
 		else								child = list_find_strn((*start)->childs, name, *path, n);
 
 		/* no matching child found */
-		if(child == 0x0)
+		if(child == 0x0											/* no match at all */
+		|| (child->name[n] != '/' && child->name[n] != '\0'))	/* child name and path[0..n] are of different length */
 			return n;
 
+		/* update arguments */
 		*start = child;
 		*path += n;
 
-		/* skip '/' */
+		// skip '/'
 		while(**path == '/' && **path != 0)
 			++(*path);
 
