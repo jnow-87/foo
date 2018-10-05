@@ -22,6 +22,7 @@ static int strsplit(char *line, int *_argc, char ***_argv);
 int main(int argc, char **argv){
 	char line[32];
 	size_t len;
+	term_err_t terr;
 
 #ifndef BUILD_HOST
 	term_cfg_t tc;
@@ -43,8 +44,11 @@ int main(int argc, char **argv){
 		len = readline(line, 32);
 
 		if(len == 0){
-			if(errno)
-				printf("readline error: %d\n", errno);
+			if(errno){
+				ioctl(0, IOCTL_STATUS, &terr, sizeof(term_err_t));
+				printf("readline error: errno %#x, term error %#x\n", errno, terr);
+				errno = E_OK;
+			}
 
 			continue;
 		}
