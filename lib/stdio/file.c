@@ -106,6 +106,10 @@ err_0:
 	return 0x0;
 }
 
+int fileno(FILE *stream){
+	return (stream == 0x0 ? -E_INVAL : stream->fileno);
+}
+
 int fclose(FILE *stream){
 	if(stream == 0x0)
 		goto err;
