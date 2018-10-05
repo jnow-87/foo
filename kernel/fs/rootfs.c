@@ -157,8 +157,6 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 	if(*path == 0)
 		return_errno(E_INVAL);
 
-	DEBUG("handle open for \"%s\"\n", path);
-
 	while(1){
 		n = fs_node_find(&start, &path);
 
@@ -172,8 +170,6 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 			if(start->is_dir == false && (mode & O_APPEND))
 				fd->fp = ((rootfs_file_t*)(start->data))->data_used;
-
-			DEBUG("created file descriptor with id %d\n", fd->id);
 
 			return fd->id;
 
@@ -223,7 +219,6 @@ err:
 }
 
 static int close(fs_filed_t *fd, process_t *this_p){
-	DEBUG("handle close for %d\n", fd->id);
 	fs_fd_free(fd, this_p);
 
 	return E_OK;
@@ -234,8 +229,6 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 	fs_node_t *child;
 	rootfs_file_t *file;
 
-
-	DEBUG("handle read for %d from fp %u, %u bytes\n", fd->id, fd->fp, n);
 
 	if(fd->node->is_dir){
 		m = 0;
@@ -292,8 +285,6 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	rootfs_file_t *file;
 
 
-	DEBUG("handle write for %d to fp %u, %u bytes\n", fd->id, fd->fp, n);
-
 	/* write to a directory is not defined */
 	if(fd->node->is_dir)
 		goto_errno(err, E_INVAL);
@@ -331,8 +322,6 @@ err:
 }
 
 static int fcntl(fs_filed_t *fd, int cmd, void *data){
-	DEBUG("handle fcntl for %d\n", fd->id);
-
 	switch(cmd){
 	case F_SEEK:
 		return file_seek(fd, data);
@@ -349,8 +338,6 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 static int node_rm(fs_node_t *start, char const *path){
 	if(*path == 0)
 		return_errno(E_INVAL);
-
-	DEBUG("remove file system node \"%s\"\n", path);
 
 	switch(fs_node_find(&start, &path)){
 	case 0:

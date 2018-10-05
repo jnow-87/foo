@@ -125,8 +125,6 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 	devfs_dev_t *dev;
 
 
-	DEBUG("open device \"%s\"\n", start->name);
-
 	fd = fs_fd_alloc(start, this_p, mode);
 
 	if(fd == 0x0)

@@ -160,55 +160,23 @@ endmenu
 # }}}
 
 #
-# uart parameter
+# miscellaneous features
+#
+# {{{
+config KERNEL_SIGNAL
+	bool "ksignal support"
+	default y
+# }}}
+
+#
+# kernel uart
 #
 # {{{
 menuconfig KERNEL_UART
-	bool "Kernel uart"
+	bool "Uart settings"
 	select DRIVER_TERM
 
 if KERNEL_UART
-	menu "kprintf"
-		config KERNEL_EARLY_PRINT
-			bool "Print error on failed kernel init calls"
-			select KERNEL_PRINTF
-
-		config KERNEL_MSG_FATAL
-			bool "Print kernel FATAL messages"
-			select KERNEL_PRINTF
-
-		config KERNEL_MSG_WARN
-			bool "Print kernel WARNING messages"
-			select KERNEL_PRINTF
-
-		config KERNEL_MSG_INFO
-			bool "Print kernel INFO messages"
-			select KERNEL_PRINTF
-
-		config KERNEL_MSG_DEBUG
-			bool "Print kernel DEBUG messages"
-			select KERNEL_PRINTF
-
-		config KERNEL_SC_DEBUG
-			bool "Enable syscall debug messages"
-			depends on KERNEL_MSG_DEBUG
-
-		config KERNEL_FS_DEBUG
-			bool "Enable file system debug messages"
-			depends on KERNEL_MSG_DEBUG
-
-		config DRIVER_DEBUG
-			bool "Enable driver debug messages"
-			depends on KERNEL_MSG_DEBUG
-
-		menu "Hidden"
-			visible if 0
-
-			config KERNEL_PRINTF
-				bool "Kernel printf"
-		endmenu
-	endmenu
-
 	# baud rate
 	choice
 		prompt "Uart baud rate"
@@ -322,17 +290,65 @@ endmenu
 # }}}
 
 #
-# miscellaneous^ features
+# test and debug
 #
 # {{{
-config KERNEL_SIGNAL
-	bool "ksignal support"
-	default y
+menuconfig KERNEL_DEBUG
+	bool "Test and debug"
+	select KERNEL_UART
 
-config KERNEL_TEST
-	bool "Execute 'kernel_test()' on boot"
+if KERNEL_DEBUG
+	menu "Debug messages"
+		config KERNEL_EARLY_PRINT
+			bool "Print error on failed kernel init calls"
+			select KERNEL_PRINTF
 
-config KERNEL_STAT
-	bool "Execute 'kernel_stat()' on boot"
-	select KERNEL_PRINTF
+		config KERNEL_MSG_FATAL
+			bool "Print kernel FATAL messages"
+			select KERNEL_PRINTF
+
+		config KERNEL_MSG_WARN
+			bool "Print kernel WARNING messages"
+			select KERNEL_PRINTF
+
+		config KERNEL_MSG_INFO
+			bool "Print kernel INFO messages"
+			select KERNEL_PRINTF
+
+		config KERNEL_MSG_DEBUG
+			bool "Print kernel DEBUG messages"
+			select KERNEL_PRINTF
+
+		config KERNEL_SC_DEBUG
+			bool "Enable syscall debug messages"
+			depends on KERNEL_MSG_DEBUG
+
+		config KERNEL_FS_DEBUG
+			bool "Enable file system debug messages"
+			depends on KERNEL_MSG_DEBUG
+
+		config KERNEL_FS_DEBUG_RDWR
+			bool "Enable file system debug essages for read/write operations"
+			depends on KERNEL_MSG_DEBUG
+			depends on KERNEL_FS_DEBUG
+
+		config DRIVER_DEBUG
+			bool "Enable driver debug messages"
+			depends on KERNEL_MSG_DEBUG
+
+		menu "Hidden"
+			visible if 0
+
+			config KERNEL_PRINTF
+				bool "Kernel printf"
+		endmenu
+	endmenu
+
+	config KERNEL_TEST
+		bool "Execute 'kernel_test()' on boot"
+
+	config KERNEL_STAT
+		bool "Execute 'kernel_stat()' on boot"
+		select KERNEL_PRINTF
+endif
 # }}}
