@@ -107,6 +107,9 @@ err_0:
 }
 
 int fclose(FILE *stream){
+	if(stream == 0x0)
+		goto err;
+
 	if(fflush(stream) != 0)
 		goto err;
 
@@ -130,7 +133,7 @@ size_t fread(void *p, size_t size, FILE *stream){
 	ssize_t r;
 
 
-	if(stream->rbuf == 0x0)
+	if(stream == 0x0 || stream->rbuf == 0x0)
 		goto_errno(err_0, E_INVAL);
 
 	rd = 0;
@@ -190,7 +193,7 @@ size_t fwrite(void const *p, size_t size, FILE *stream){
 	ssize_t r;
 
 
-	if(stream->wbuf == 0x0)
+	if(stream == 0x0 || stream->wbuf == 0x0)
 		goto_errno(err, E_INVAL);
 
 	mutex_lock(&stream->wr_mtx);
@@ -259,6 +262,9 @@ int fputs(char const *s, FILE *stream){
 }
 
 int fflush(FILE *stream){
+	if(stream == 0x0)
+		return EOF;
+
 	if(stream->widx > 0){
 		if(write(stream->fileno, stream->wbuf, stream->widx) < 0)
 			return EOF;
