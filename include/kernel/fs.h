@@ -185,6 +185,7 @@ void fs_unlock(void);
 
 // file operations
 fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p, f_mode_t mode);
+int fs_fd_dup(fs_filed_t *fd, int id, struct process_t *this_p);
 void fs_fd_free(fs_filed_t *fd, struct process_t *this_p);
 fs_filed_t *fs_fd_acquire(int id, struct process_t *this_p);
 void fs_fd_release(fs_filed_t *fd);

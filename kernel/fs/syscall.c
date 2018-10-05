@@ -26,6 +26,7 @@ typedef struct{
 /* local/static prototypes */
 // syscall handler
 static int sc_hdlr_open(void *param);
+static int sc_hdlr_dup(void *param);
 static int sc_hdlr_close(void *param);
 static int sc_hdlr_read(void *param);
 static int sc_hdlr_write(void *param);
@@ -51,6 +52,7 @@ static int init(void){
 	r = E_OK;
 
 	r |= sc_register(SC_OPEN, sc_hdlr_open);
+	r |= sc_register(SC_DUP, sc_hdlr_dup);
 	r |= sc_register(SC_CLOSE, sc_hdlr_close);
 	r |= sc_register(SC_READ, sc_hdlr_read);
 	r |= sc_register(SC_WRITE, sc_hdlr_write);
@@ -89,6 +91,42 @@ static int sc_hdlr_open(void *_p){
 	fs_lock();
 	p->fd = root->ops->open(root, path, p->mode, this_p);
 	fs_unlock();
+
+	return E_OK;
+}
+
+static int sc_hdlr_dup(void *_p){
+	sc_fs_t *p;
+	fs_filed_t *old_fd;
+	process_t *this_p;
+
+
+	p = (sc_fs_t*)_p;
+	this_p = sched_running()->parent;
+
+	/* check for old fd */
+	old_fd = fs_fd_acquire((int)p->data, this_p);
+
+	if(old_fd == 0x0)
+		return_errno(E_INVAL);
+
+	/* close the desired fd if one is given */
+	if(p->fd >= 0)
+		sc_hdlr_close(_p);
+
+	// E_INVAL is expected in case the desired fd
+	// was not open before
+	if(errno & (~E_INVAL))
+		return -errno;
+
+	errno = E_OK;
+
+	/* duplicate old fd */
+	fs_lock();
+	p->fd = fs_fd_dup(old_fd, p->fd, this_p);
+	fs_unlock();
+
+	fs_fd_release(old_fd);
 
 	return E_OK;
 }

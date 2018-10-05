@@ -14,6 +14,7 @@
 // syscall common
 typedef enum{
 	SC_OPEN,
+	SC_DUP,
 	SC_CLOSE,
 	SC_READ,
 	SC_WRITE,

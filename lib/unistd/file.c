@@ -20,6 +20,22 @@ int open(char const *path, f_mode_t mode){
 	return p.fd;
 }
 
+int dup(int old_fd){
+	return dup2(old_fd, -1);
+}
+
+int dup2(int old_fd, int new_fd){
+	sc_fs_t p;
+
+
+	p.fd = new_fd;
+	p.data = (void*)old_fd;
+
+	if(sc(SC_DUP, &p) != E_OK)
+		return -1;
+	return p.fd;
+}
+
 int close(int fd){
 	sc_fs_t p;
 

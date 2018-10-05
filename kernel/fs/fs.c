@@ -110,6 +110,65 @@ err_0:
 	return 0x0;
 }
 
+int fs_fd_dup(fs_filed_t *old_fd, int id, struct process_t *this_p){
+	fs_filed_t *fd,
+			   *e;
+
+
+	mutex_lock(&this_p->mtx);
+
+	/* acquire descriptor id if no valid is given */
+	if(id < 0){
+		if(!list_empty(this_p->fds))
+			id = list_last(this_p->fds)->id + 1;
+
+		if(id < 0)
+			goto_errno(err_0, E_LIMIT);
+	}
+
+	/* allocate file descriptor */
+	fd = kmalloc(sizeof(fs_filed_t));
+
+	if(fd == 0x0)
+		goto_errno(err_0, E_NOMEM);
+
+	fd->tasks = ktask_queue_create();
+
+	if(fd->tasks == 0x0)
+		goto err_1;
+
+	fd->id = id;
+	fd->node = old_fd->node;
+	fd->fp = old_fd->fp;
+	fd->mode = old_fd->mode;
+	mutex_init(&fd->mtx, 0);
+
+	fd->node->ref_cnt++;
+
+	// add fd to process (sorted)
+	list_for_each(this_p->fds, e){
+		if(e->id > id){
+			list_add_in(fd, e->prev, e);
+			break;
+		}
+	}
+
+	if(e == 0x0)
+		list_add_tail(this_p->fds, fd);
+
+	mutex_unlock(&this_p->mtx);
+
+	return id;
+
+
+err_1:
+	kfree(fd);
+
+err_0:
+	mutex_unlock(&this_p->mtx);
+	return -errno;
+}
+
 void fs_fd_free(fs_filed_t *fd, process_t *this_p){
 	ktask_queue_destroy(fd->tasks);
 

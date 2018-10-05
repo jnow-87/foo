@@ -32,6 +32,8 @@ typedef struct{
 /* prototypes */
 // file system
 int open(char const *path, f_mode_t mode);
+int dup(int old_fd);
+int dup2(int old_fd, int new_fd);
 int close(int fd);
 
 int read(int fd, void *buf, size_t n);
