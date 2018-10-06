@@ -5,7 +5,6 @@
 #include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
-#include <sys/file.h>
 #include <sys/fcntl.h>
 #include <sys/types.h>
 #include <sys/string.h>
@@ -189,7 +188,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 		default:
 			/* no matching node found, try to create it */
 			// error if node shall not be created
-			if((mode & O_CREATE) == 0)
+			if((mode & O_CREAT) == 0)
 				return_errno(E_UNAVAIL);
 
 			// create node

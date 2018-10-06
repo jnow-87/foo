@@ -3,7 +3,7 @@
 
 
 #include <kernel/fs.h>
-#include <sys/file.h>
+#include <sys/fcntl.h>
 
 
 /* incomplete types */

@@ -3,7 +3,6 @@
 #include <lib/unistd.h>
 #include <sys/string.h>
 #include <sys/fcntl.h>
-#include <sys/file.h>
 
 
 /* global functions */

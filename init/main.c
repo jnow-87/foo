@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
+#include <sys/fcntl.h>
 #include <cmd/cmd.hash.h>
 
 #ifndef BUILD_HOST
@@ -24,7 +25,6 @@ static int redirect_revert(FILE *fp, int fd_revert);
 int main(int argc, char **argv){
 	char line[32];
 	size_t len;
-	term_err_t terr;
 
 #ifndef BUILD_HOST
 	term_cfg_t tc;
@@ -45,15 +45,8 @@ int main(int argc, char **argv){
 
 		len = readline(line, 32);
 
-		if(len == 0){
-			if(errno){
-				ioctl(0, IOCTL_STATUS, &terr, sizeof(term_err_t));
-				printf("readline error: errno %#x, term error %#x\n", errno, terr);
-				errno = E_OK;
-			}
-
+		if(len == 0)
 			continue;
-		}
 
 		cmd_exec(line, len);
 	}
@@ -120,12 +113,16 @@ end_0:
 static size_t readline(char *line, size_t n){
 	size_t i;
 
+#ifndef BUILD_HOST
+	term_err_t terr;
+#endif // BUILD_HOST
+
 
 	i = 0;
 
 	while(i < n){
 		if(read(0, line + i, 1) != 1)
-			return 0;
+			goto err;
 
 		if(line[i] == '\r')
 			continue;
@@ -136,6 +133,21 @@ static size_t readline(char *line, size_t n){
 		}
 
 		i++;
+	}
+
+
+err:
+#ifndef BUILD_HOST
+	if(errno & E_IO){
+		ioctl(0, IOCTL_STATUS, &terr, sizeof(term_err_t));
+		printf("readline I/O error: errno %#x, term error %#x\n", errno, terr);
+		errno = 0;
+	}
+#endif // BUILD_HOST
+
+	if(errno){
+		printf("readline error: errno %#x\n", errno);
+		errno = 0;
 	}
 
 	return 0;
@@ -345,7 +357,11 @@ static int redirect_init(FILE *fp, char *file){
 	if(fd_dup < 0)
 		goto err_0;
 
-	fd_redir = open(file, O_WRITE | O_CREATE);
+#ifdef BUILD_HOST
+	fd_redir = open(file, O_WRONLY | O_CREAT, 0664);
+#else
+	fd_redir = open(file, O_WRONLY | O_CREAT);
+#endif // BUILD_HOST
 
 	if(fd_redir < 0)
 		goto err_1;

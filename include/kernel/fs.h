@@ -4,7 +4,7 @@
 
 #include <kernel/signal.h>
 #include <kernel/task.h>
-#include <sys/file.h>
+#include <sys/fcntl.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
 

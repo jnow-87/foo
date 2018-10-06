@@ -7,7 +7,7 @@
 #include <sys/compiler.h>
 #include <sys/binloader.h>
 #include <sys/types.h>
-#include <sys/file.h>
+#include <sys/fcntl.h>
 
 
 /* macros */

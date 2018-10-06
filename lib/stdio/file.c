@@ -5,7 +5,7 @@
 #include <lib/stdio.h>
 #include <sys/stream.h>
 #include <sys/string.h>
-#include <sys/file.h>
+#include <sys/fcntl.h>
 #include <sys/errno.h>
 #include <sys/math.h>
 #include <sys/mutex.h>
@@ -74,7 +74,7 @@ FILE *fdopen(int fd, char const *mode){
 	file->fileno = fd;
 	file->blen = CONFIG_FILE_BUF_SIZE;
 
-	if(fmode & O_READ){
+	if(fmode & O_RDONLY){
 		file->rbuf = malloc(CONFIG_FILE_BUF_SIZE);
 		file->ridx = 0;
 		file->dataidx = 0;
@@ -83,7 +83,7 @@ FILE *fdopen(int fd, char const *mode){
 			goto_errno(err_1, E_NOMEM);
 	}
 
-	if(fmode & O_WRITE){
+	if(fmode & O_WRONLY){
 		file->wbuf = malloc(CONFIG_FILE_BUF_SIZE);
 		file->putc = fputc;
 
@@ -356,19 +356,19 @@ static f_mode_t mode_parse(char const *mode){
 	while(*mode){
 		switch(*mode){
 		case 'r':
-			fmode |= O_READ;
+			fmode |= O_RDONLY;
 			break;
 
 		case 'w':
-			fmode |= O_WRITE | O_CREATE;
+			fmode |= O_WRONLY | O_CREAT;
 			break;
 
 		case 'a':
-			fmode |= O_APPEND | O_CREATE;
+			fmode |= O_APPEND | O_CREAT;
 			break;
 
 		case '+':
-			fmode |= O_READ | O_WRITE;
+			fmode |= O_RDWR;
 			break;
 		}
 
