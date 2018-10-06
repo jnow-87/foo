@@ -316,13 +316,21 @@ int fs_node_find(fs_node_t **start, char const **path){
 		while((*path)[n] != '/' && (*path)[n] != 0)
 			++n;
 
-		if(strcmp(*path, ".") == 0)			child = *start;
-		else if(strcmp(*path, "..") == 0)	child = (*start)->parent;
-		else								child = list_find_strn((*start)->childs, name, *path, n);
+		if(strcmp(*path, ".") == 0){
+			child = *start;
+		}
+		else if(strcmp(*path, "..") == 0){
+			child = (*start)->parent;
+		}
+		else{
+			list_for_each((*start)->childs, child){
+				if(strncmp(child->name, *path, n) == 0 && (child->name[n] == '/' || child->name[n] == '\0'))
+					break;
+			}
+		}
 
 		/* no matching child found */
-		if(child == 0x0											/* no match at all */
-		|| (child->name[n] != '/' && child->name[n] != '\0'))	/* child name and path[0..n] are of different length */
+		if(child == 0x0)
 			return n;
 
 		/* update arguments */
