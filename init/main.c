@@ -16,6 +16,8 @@
 static void cmd_exec(char *line, size_t len);
 static size_t readline(char *line, size_t n);
 static int strsplit(char *line, int *_argc, char ***_argv);
+static int redirect_init(FILE *fp, char *file);
+static int redirect_revert(FILE *fp, int fd_revert);
 
 
 /* global functions */
@@ -62,27 +64,57 @@ int main(int argc, char **argv){
 
 /* local functions */
 static void cmd_exec(char *line, size_t len){
-	cmd_t const *cmd;
+	int i;
 	int argc;
 	char **argv;
+	int stdout_dup;
+	cmd_t const *cmd;
 
 
+	/* process command line */
 	if(strsplit(line, &argc, &argv)){
 		printf("error parsing line\n");
-		return;
+		goto end_0;
 	}
 
 	cmd = cmd_lookup(argv[0], strlen(argv[0]));
 
 	if(cmd == 0x0){
 		printf("%s: command not found\n", argv[0]);
-		return;
+		goto end_1;
 	}
 
-	if(cmd->exec == 0x0)	printf("%s: command disabled through config\n", argv[0]);
-	else					(void)cmd->exec(argc, argv);
+	/* check for output redirection */
+	stdout_dup = -1;
 
+	for(i=0; i<argc; i++){
+		if(argv[i][0] == '>' && ++i < argc){
+			stdout_dup = redirect_init(stdout, argv[i]);
+
+			if(stdout_dup < 0){
+				printf("redirecting output to %s failed, errno %#x\n", argv[i], errno);
+				goto end_1;
+			}
+		}
+	}
+
+	/* execute command */
+	if(cmd->exec == 0x0)	printf("%s: command disabled through config\n", argv[0]);
+	else					(void)cmd->exec((stdout_dup != -1 ? argc - 2 : argc), argv);
+
+	/* revert output redirection */
+	if(stdout_dup != -1){
+		if(redirect_revert(stdout, stdout_dup))
+			printf("reverting output redirection failed, errno %#x\n", errno);
+	}
+
+end_1:
+	for(i=0; i<argc; i++)
+		free(argv[i]);
 	free(argv);
+
+end_0:
+	return;
 }
 
 static size_t readline(char *line, size_t n){
@@ -298,4 +330,46 @@ static int strsplit(char *line, int *_argc, char ***_argv){
 	*_argc = argc;
 
 	return 0;
+}
+
+static int redirect_init(FILE *fp, char *file){
+	int fd_dup,
+		fd_redir;
+
+
+	if(fflush(fp) != 0)
+		goto err_0;
+
+	fd_dup = dup(fileno(fp));
+
+	if(fd_dup < 0)
+		goto err_0;
+
+	fd_redir = open(file, O_WRITE | O_CREATE);
+
+	if(fd_redir < 0)
+		goto err_1;
+
+	if(dup2(fd_redir, fileno(fp)) != fileno(fp))
+		goto err_2;
+
+	(void)close(fd_redir);
+
+	return fd_dup;
+
+
+err_2:
+	close(fd_redir);
+
+err_1:
+	close(fd_dup);
+
+err_0:
+	return -1;
+}
+
+static int redirect_revert(FILE *fp, int fd_revert){
+	if(dup2(fd_revert, fileno(fp)) != fileno(fp))
+		return -1;
+	return close(fd_revert);
 }
