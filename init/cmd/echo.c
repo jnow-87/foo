@@ -3,6 +3,15 @@
 
 /* global functions */
 int echo(int argc, char **argv){
-	printf("echo dummy\n");
+	int i;
+
+
+	for(i=1; i<argc; i++){
+		fputs(argv[i], stdout);
+		fputc(' ', stdout);
+	}
+
+	fputc('\n', stdout);
+
 	return 0;
 }
