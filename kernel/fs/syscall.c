@@ -7,7 +7,6 @@
 #include <kernel/task.h>
 #include <kernel/signal.h>
 #include <kernel/kprintf.h>
-#include <sys/file.h>
 #include <sys/fcntl.h>
 #include <sys/list.h>
 
@@ -124,7 +123,8 @@ static int sc_hdlr_dup(void *_p){
 
 	DEBUG("sc dup: oldfd %d%s, newfd %d\n", old_id, (old_fd == 0x0 ? " (invalid)" : ""), p->fd);
 
-	if(old_fd == 0x0)
+	// exit if oldfd does not exist or old and new fd are the same
+	if(old_fd == 0x0 || old_fd->id == p->fd)
 		return_errno(E_INVAL);
 
 	/* close the desired fd if one is given */
