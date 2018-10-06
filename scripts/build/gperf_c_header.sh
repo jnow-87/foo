@@ -17,6 +17,15 @@ fi
 
 
 #
+# check if the wordlist has global scope, otherwise it cannot
+# be accessed in other source files
+#
+if [ "$(grep 'global-table' ${gperffile})" == "" ];then
+	exit 0
+fi
+
+
+#
 #	generate header file based on gperf c output
 #		header will contain lookup function prototype
 #		as well as macros associated with the hash table
@@ -52,7 +61,7 @@ printf "\n\n" >> ${header}
 lookup_name=$(grep lookup-function-name ${gperffile} | cut -d ' ' -f 3)
 [ "${lookup_name}" == "" ] && lookup_name=in_word_set
 
-lookup_line=$(grep -ne "${lookup_name}" ${cfile} | cut -d ':' -f 1)
+lookup_line=$(grep -ne "${lookup_name}" ${cfile} | cut -d ':' -f 1 | tail -n1)
 lookup_ret_type=$(sed -ne "$(expr ${lookup_line} - 1)p" ${cfile})
 
 printf "/* prototypes */\n" >> ${header}
