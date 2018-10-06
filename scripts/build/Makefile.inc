@@ -247,7 +247,7 @@ check_user_tools:
 .PHONY: check_config
 check_config:
 ifneq ($(shell test -e $(config) && echo $(config)),$(config))
-	$(call error,$(config) does not exist, please run $$make menuconfig or $$make defconfig_<target> first)
+	$(call error,$(config) does not exist, please run $$make menuconfig or $$make defconfig-<target> first)
 endif
 
 # include dependency files
@@ -298,7 +298,7 @@ ifneq ("$(config_tree)","")
 config_files = $(notdir $(wildcard $(config_tree)/*))
 
 $(foreach cfg, $(config_files), \
-	$(call gen_rule_basic,cmd_defconfig,defconfig_$(cfg),$(config_tree)/$(cfg)) \
+	$(call gen_rule_basic,cmd_defconfig,defconfig-$(cfg),$(config_tree)/$(cfg)) \
 )
 endif
 
@@ -321,7 +321,7 @@ help-buildsys:
 	$(printf) "         %25s\t%s\n" "config" "name of the project configuration, e.g. .config, only required if 'use_config_sys' is set to 'y'"
 	$(printf) "\n"
 	$(printf) "     \033[1moptional variables\033[0m\n"
-	$(printf) "         %25s\t%s\n" "config_tree" "directory containing project configurations, used with 'defconfig_*' targets"
+	$(printf) "         %25s\t%s\n" "config_tree" "directory containing project configurations, used with 'defconfig-*' targets"
 	$(printf) "         %25s\t%s\n" "githooks_tree" "directory containing git hooks"
 	$(printf) "         %25s\t%s\n" "tool_deps" "list of space-separated tools that are required to properly execute the project"
 	$(printf) "\n\n"
@@ -395,7 +395,7 @@ help-buildsys:
 	$(printf) "         %25s\t%s\n" "<path>/<target>.S" "build assembly target file"
 	$(printf) "\n"
 	$(printf) "         %25s\t%s\n" "menuconfig" "graphical configuration"
-	$(printf) "         %25s\t%s\n" "defconfig_*" "apply default configuration, requires the 'config_tree' variable"
+	$(printf) "         %25s\t%s\n" "defconfig-*" "apply default configuration, requires the 'config_tree' variable"
 	$(printf) "\n"
 	$(printf) "         %25s\t%s\n" "check_build_tools" "test if all build tools are available"
 	$(printf) "         %25s\t%s\n" "check_user_tools" "test if all externally required tools, define in 'tool_deps', are available"
