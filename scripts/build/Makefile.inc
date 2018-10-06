@@ -4,9 +4,18 @@
 
 # invoke 'make prepare_deps' if it has not been done already
 ifneq ($(PREPARE_DONE),13)
-  # prevent prepare_deps if the 'clean' target is called
-  ifneq ($(findstring clean,$(MAKECMDGOALS))$(subst clean,,$(MAKECMDGOALS)),clean)
-    ifeq ($(findstring clean,$(MAKECMDGOALS)),clean)
+  # ensure MAKECMDGOALS is not empty, otherwise the following checks would not work
+  # and prepare_deps would not be executed if no target is specified
+  ifeq ($(MAKECMDGOALS),)
+    MAKECMDGOALS := all
+  endif
+
+  # prevent prepare_deps if either of the following targets is called
+  # 	%clean%
+  # 	%defconfig%
+  ifneq ($(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS)))),)
+    # check if clean targets are mixed with other targets that require prepare_deps
+    ifneq ($(filter clean%,$(MAKECMDGOALS))$(filter %clean,$(MAKECMDGOALS)),)
       $(error Mixing clean with other targets is not supported by the build system)
     endif
 
