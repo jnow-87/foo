@@ -1,5 +1,6 @@
 #include <sys/errno.h>
 #include <stdio.h>
+#include <string.h>
 
 
 /* global functions */
@@ -16,7 +17,7 @@ int cat(int argc, char **argv){
 	fp = fopen(argv[1], "r");
 
 	if(fp == 0x0){
-		printf("open \"%s\" failed, errno %#x\n", argv[1], errno);
+		printf("open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
 		return -1;
 	}
 
@@ -28,6 +29,11 @@ int cat(int argc, char **argv){
 
 		fputc((char)c, stdout);
 	}
+
+	if(errno)
+		printf("error %s\n", strerror(errno));
+
+	fclose(fp);
 
 	return 0;
 }
