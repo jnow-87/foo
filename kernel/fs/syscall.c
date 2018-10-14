@@ -425,6 +425,9 @@ static int sc_hdlr_chdir(void *_p){
 	if(root == 0x0)
 		goto end;
 
+	if(root->type != FT_DIR)
+		goto_errno(end, E_INVAL);
+
 	// update current working directory
 	this_p->cwd->ref_cnt--;
 	this_p->cwd = root;
@@ -435,7 +438,7 @@ end:
 	mutex_unlock(&this_p->mtx);
 	fs_unlock();
 
-	DEBUG("new cwd \"%s\", errno %#x\n", this_p->cwd, errno);
+	DEBUG("new cwd \"%s\", errno %#x\n", this_p->cwd->name, errno);
 
 	return -errno;
 }
