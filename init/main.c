@@ -92,6 +92,8 @@ static void cmd_exec(char *line, size_t len){
 	}
 
 	/* execute command */
+	errno = 0;
+
 	if(cmd->exec == 0x0)	printf("%s: command disabled through config\n", argv[0]);
 	else					(void)cmd->exec((stdout_dup != -1 ? argc - 2 : argc), argv);
 

@@ -227,6 +227,9 @@ static int sc_hdlr_read(void *_p){
 
 	DEBUGRDWR("read %d bytes, errno %#x\n", r, errno);
 
+	// avoid communicating enf of resource to user space
+	errno &= ~E_END;
+
 	/* update user space */
 	if(errno == E_OK)
 		copy_to_user(p->data, buf, p->data_len, this_p);
