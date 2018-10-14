@@ -14,6 +14,12 @@ menu "Commands"
 	config INIT_CAT
 	bool cat
 
+	config INIT_MKDIR
+	bool mkdir
+
+	config INIT_RM
+	bool rm
+
 	config INIT_TEST
 	bool test
 endmenu

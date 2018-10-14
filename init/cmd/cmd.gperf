@@ -31,5 +31,7 @@ cd,			cd
 ls,			ls
 echo,		echo
 cat,		cat
+mkdir,		makedir
+rm,			rm
 test,		test
 %%

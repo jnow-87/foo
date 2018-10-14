@@ -43,6 +43,18 @@ int cat(int argc, char **argv);
 #define cat		0x0
 #endif // CONFIG_INIT_CAT
 
+#ifdef CONFIG_INIT_MKDIR
+int makedir(int argc, char **argv);
+#else
+#define makedir	0x0
+#endif // CONFIG_INIT_MKDIR
+
+#ifdef CONFIG_INIT_RM
+int rm(int argc, char **argv);
+#else
+#define rm	0x0
+#endif // CONFIG_INIT_RM
+
 #ifdef CONFIG_INIT_TEST
 int test(int argc, char **argv);
 #else
