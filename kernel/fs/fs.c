@@ -1,3 +1,4 @@
+#include <config/config.h>
 #include <arch/core.h>
 #include <kernel/fs.h>
 #include <kernel/memory.h>
@@ -5,6 +6,7 @@
 #include <kernel/signal.h>
 #include <sys/errno.h>
 #include <sys/list.h>
+#include <sys/dirent.h>
 #include <sys/mutex.h>
 #include <sys/string.h>
 
@@ -198,10 +200,13 @@ void fs_fd_release(fs_filed_t *fd){
 	mutex_unlock(&fd->mtx);
 }
 
-fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id){
+fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *data, int fs_id){
 	fs_t *fs;
 	fs_node_t *node;
 
+
+	if(name_len + 1 > CONFIG_FILE_NAME_LEN)
+		goto_errno(err_0, E_LIMIT);
 
 	/* identify file system */
 	list_for_each(fs_lst, fs){
@@ -213,41 +218,45 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 		goto_errno(err_0, E_INVAL);
 
 	/* allocate node */
-	node = kmalloc(sizeof(fs_node_t));
+	node = kmalloc(sizeof(fs_node_t) + name_len + 1);
 
 	if(node == 0x0)
 		goto_errno(err_0, E_NOMEM);
 
-	node->name = kmalloc(name_len + 1);
-
-	if(node->name == 0x0)
-		goto_errno(err_1, E_NOMEM);
-
 	/* init node attributes */
+	node->fs_id = fs_id;
 	node->ops = &fs->ops;
 	node->ref_cnt = 0;
-	node->is_dir = is_dir;
+	node->type = type;
 
 	strncpy(node->name, name, name_len);
 	node->name[name_len] = 0;
 
-	node->data = 0x0;
+	node->parent = parent;
+	node->childs = 0x0;
+	node->data = data;
 
 	mutex_init(&node->rd_mtx, 0);
 	mutex_init(&node->wr_mtx, 0);
 	ksignal_init(&node->rd_sig);
 
 	/* add node to file system */
-	node->parent = parent;
-	node->childs = 0x0;
-
 	list_add_tail(parent->childs, node);
+
+	/* add '.' and '..' nodes for directories */
+	if(type == FT_DIR){
+		if(fs_node_create(node, ".", 1, FT_LNK, node, fs_id) == 0x0)
+			goto err_1;
+
+		if(fs_node_create(node, "..", 2, FT_LNK, parent, parent->fs_id) == 0x0)
+			goto err_1;
+	}
 
 	return node;
 
 
 err_1:
-	kfree(node);
+	fs_node_destroy(node);
 
 err_0:
 	return 0x0;
@@ -267,7 +276,6 @@ int fs_node_destroy(fs_node_t *node){
 
 	list_rm(node->parent->childs, node);
 
-	kfree(node->name);
 	kfree(node);
 
 	return E_OK;
@@ -307,7 +315,7 @@ int fs_node_find(fs_node_t **start, char const **path){
 			return 0;
 
 		/* return if start is no directory */
-		if((*start)->is_dir == false)
+		if((*start)->type != FT_DIR)
 			return -1;
 
 		/* descent directory hierarchy */
@@ -316,17 +324,9 @@ int fs_node_find(fs_node_t **start, char const **path){
 		while((*path)[n] != '/' && (*path)[n] != 0)
 			++n;
 
-		if(strcmp(*path, ".") == 0){
-			child = *start;
-		}
-		else if(strcmp(*path, "..") == 0){
-			child = (*start)->parent;
-		}
-		else{
-			list_for_each((*start)->childs, child){
-				if(strncmp(child->name, *path, n) == 0 && (child->name[n] == '/' || child->name[n] == '\0'))
-					break;
-			}
+		list_for_each((*start)->childs, child){
+			if(strncmp(child->name, *path, n) == 0 && (child->name[n] == '/' || child->name[n] == '\0'))
+				break;
 		}
 
 		/* no matching child found */
@@ -334,15 +334,18 @@ int fs_node_find(fs_node_t **start, char const **path){
 			return n;
 
 		/* update arguments */
-		*start = child;
 		*path += n;
+		*start = child;
+
+		if(child->type == FT_LNK)
+			*start = child->data;
 
 		// skip '/'
 		while(**path == '/' && **path != 0)
 			++(*path);
 
-		/* child uses different callbacks */
-		if(child->parent->ops != child->ops)
+		/* next iteration uses different callbacks */
+		if(child->parent->ops != (*start)->ops)
 			return -2;
 	}
 }

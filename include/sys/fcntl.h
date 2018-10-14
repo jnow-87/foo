@@ -2,6 +2,9 @@
 #define SYS_FCNTL_H
 
 
+#include <sys/types.h>
+
+
 /* types */
 typedef enum{
 	F_SEEK = 1,		// implementation required on lowest callback level

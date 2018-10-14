@@ -10,6 +10,11 @@ int open(char const *path, f_mode_t mode){
 	sc_fs_t p;
 
 
+	if(path == 0x0 || *path == 0){
+		errno = E_INVAL;
+		return -1;
+	}
+
 	p.data = (void*)path;
 	p.data_len = strlen(path) + 1;
 	p.mode = mode;
