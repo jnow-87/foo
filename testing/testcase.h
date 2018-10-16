@@ -18,7 +18,7 @@ int dprintf(int fd, char const *format, ...);
 /* macros */
 #define test_case(_hdlr, _desc) \
 	static char const test_case_desc_##_hdlr[]  __used = _desc; \
-	static test_case_t test_case_##_hdlr __section(".test_cases") __used = { .hdlr = _hdlr, .desc = test_case_desc_##_hdlr, }
+	static test_case_t test_case_##_hdlr __section("testcases") __used = { .hdlr = _hdlr, .desc = test_case_desc_##_hdlr, }
 
 #define tlog(log, fmt, ...)	dprintf(log, fmt, ##__VA_ARGS__);
 
