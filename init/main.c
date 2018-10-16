@@ -1,3 +1,4 @@
+#include <config/config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -7,7 +8,12 @@
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/term.h>
-#include <cmd/cmd.hash.h>
+#include <sys/list.h>
+#include <cmd/cmd.h>
+
+
+/* macros */
+#define MAX_LINE_LEN	80
 
 
 /* static/local prototypes */
@@ -18,17 +24,37 @@ static int redirect_init(FILE *fp, char *file);
 static int redirect_revert(FILE *fp, int fd_revert);
 
 
+/* external variables */
+extern cmd_t __cmds_start[],
+			 __cmds_end[];
+
+
+/* static variables */
+static cmd_t *cmd_lst = 0x0;
+
+
 /* global functions */
 int main(int argc, char **argv){
 	char line[32];
 	size_t len;
 	term_cfg_t tc;
+	cmd_t *cmd;
 
 
 	/* enable terminal echo */
 	ioctl(0, IOCTL_CFGRD, &tc, sizeof(term_cfg_t));
 	tc.flags |= TF_ECHO;
 	ioctl(0, IOCTL_CFGWR, &tc, sizeof(term_cfg_t));
+
+	/* init command list */
+	for(cmd=__cmds_start; cmd!=__cmds_end; cmd++){
+		if(cmd->exec == 0x0){
+			printf("Null pointer command callback for \"%s\", ignoring command\n", cmd->name);
+			continue;
+		}
+
+		list_add_tail(cmd_lst, cmd);
+	}
 
 	/* command loop */
 	while(1){
@@ -53,7 +79,7 @@ static void cmd_exec(char *line, size_t len){
 	int argc;
 	char **argv;
 	int stdout_dup;
-	cmd_t const *cmd;
+	cmd_t *cmd;
 
 
 	/* process command line */
@@ -62,7 +88,7 @@ static void cmd_exec(char *line, size_t len){
 		goto end_0;
 	}
 
-	cmd = cmd_lookup(argv[0], strlen(argv[0]));
+	cmd = list_find_str(cmd_lst, name, argv[0]);
 
 	if(cmd == 0x0){
 		printf("%s: command not found\n", argv[0]);
@@ -85,9 +111,7 @@ static void cmd_exec(char *line, size_t len){
 
 	/* execute command */
 	errno = 0;
-
-	if(cmd->exec == 0x0)	printf("%s: command disabled through config\n", argv[0]);
-	else					(void)cmd->exec((stdout_dup != -1 ? argc - 2 : argc), argv);
+	(void)cmd->exec((stdout_dup != -1 ? argc - 2 : argc), argv);
 
 	/* revert output redirection */
 	if(stdout_dup != -1){
@@ -374,3 +398,36 @@ static int redirect_revert(FILE *fp, int fd_revert){
 		return -1;
 	return close(fd_revert);
 }
+
+#ifdef CONFIG_INIT_HELP
+static int help(int argc, char **argv){
+	size_t line_len,
+		   len;
+	cmd_t *cmd;
+
+
+
+	line_len = 0;
+
+	list_for_each(cmd_lst, cmd){
+		if(cmd->name != 0 && cmd->name[0] != '\0' && cmd->exec != 0x0){
+			len = strlen(cmd->name) + 1;
+
+			if(line_len + len > MAX_LINE_LEN){
+				printf("\n");
+				line_len = 0;
+			}
+
+			line_len += len;
+
+			printf("%s\t", cmd->name);
+		}
+	}
+
+	printf("\n");
+
+	return 0;
+}
+
+command("help", help);
+#endif // CONFIG_INIT_HELP

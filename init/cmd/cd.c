@@ -2,10 +2,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <cmd/cmd.h>
 
 
-/* global functions */
-int cd(int argc, char **argv){
+/* local functions */
+static int exec(int argc, char **argv){
 	char *path;
 
 
@@ -21,3 +22,5 @@ int cd(int argc, char **argv){
 
 	return 0;
 }
+
+command("cd", exec);

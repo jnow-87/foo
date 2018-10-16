@@ -1,10 +1,11 @@
 #include <sys/errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <cmd/cmd.h>
 
 
-/* global functions */
-int cat(int argc, char **argv){
+/* local functions */
+static int exec(int argc, char **argv){
 	int c;
 	FILE *fp;
 
@@ -37,3 +38,5 @@ int cat(int argc, char **argv){
 
 	return 0;
 }
+
+command("cat", exec);

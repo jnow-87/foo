@@ -2,10 +2,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <cmd/cmd.h>
 
 
-/* global functions */
-int makedir(int argc, char **argv){
+/* local functions */
+static int exec(int argc, char **argv){
 	if(argc < 2){
 		printf("usage: %s <directory>\n", argv[0]);
 		return -1;
@@ -18,3 +19,5 @@ int makedir(int argc, char **argv){
 
 	return 0;
 }
+
+command("mkdir", exec);

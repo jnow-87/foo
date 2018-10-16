@@ -2,10 +2,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <cmd/cmd.h>
 
 
-/* global functions */
-int rm(int argc, char **argv){
+/* local functions */
+static int exec(int argc, char **argv){
 	if(argc < 2){
 		printf("usage: %s <file>\n", argv[0]);
 		return -1;
@@ -18,3 +19,5 @@ int rm(int argc, char **argv){
 
 	return 0;
 }
+
+command("rm", exec);

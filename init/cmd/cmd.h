@@ -2,64 +2,23 @@
 #define INIT_CMD_H
 
 
-#include <config/config.h>
+#include <sys/compiler.h>
+
+
+/* macros */
+#define command(_name, _exec) \
+	static char const cmd_name_##_exec[]  __used = _name; \
+	static cmd_t cmd_##_exec __section(".commands") __used = { .name = cmd_name_##_exec, .exec = _exec }
 
 
 /* types */
 typedef struct cmd_t{
+	struct cmd_t *prev,
+				 *next;
+
 	char const *name;
 	int (*exec)(int argc, char **argv);
 } cmd_t;
-
-
-/* prototypes */
-#ifdef CONFIG_INIT_HELP
-int help(int argc, char **argv);
-#else
-#define help	0x0
-#endif // CONFIG_INIT_HELP
-
-#ifdef CONFIG_INIT_CD
-int cd(int argc, char **argv);
-#else
-#define cd		0x0
-#endif // CONFIG_INIT_CD
-
-#ifdef CONFIG_INIT_LS
-int ls(int argc, char **argv);
-#else
-#define ls		0x0
-#endif // CONFIG_INIT_LS
-
-#ifdef CONFIG_INIT_ECHO
-int echo(int argc, char **argv);
-#else
-#define echo	0x0
-#endif // CONFIG_INIT_ECHO
-
-#ifdef CONFIG_INIT_CAT
-int cat(int argc, char **argv);
-#else
-#define cat		0x0
-#endif // CONFIG_INIT_CAT
-
-#ifdef CONFIG_INIT_MKDIR
-int makedir(int argc, char **argv);
-#else
-#define makedir	0x0
-#endif // CONFIG_INIT_MKDIR
-
-#ifdef CONFIG_INIT_RM
-int rm(int argc, char **argv);
-#else
-#define rm	0x0
-#endif // CONFIG_INIT_RM
-
-#ifdef CONFIG_INIT_TEST
-int test(int argc, char **argv);
-#else
-#define test	0x0
-#endif // CONFIG_INIT_TEST
 
 
 #endif // INIT_CMD_H

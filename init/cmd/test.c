@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <cmd/cmd.h>
 
 
-/* global functions */
-int test(int argc, char **argv){
+/* local functions */
+static int exec(int argc, char **argv){
 	printf("test dummy\n");
 	return 0;
 }
+
+command("test", exec);

@@ -1,8 +1,9 @@
 #include <stdio.h>
+#include <cmd/cmd.h>
 
 
-/* global functions */
-int echo(int argc, char **argv){
+/* local functions */
+static int exec(int argc, char **argv){
 	int i;
 
 
@@ -15,3 +16,5 @@ int echo(int argc, char **argv){
 
 	return 0;
 }
+
+command("echo", exec);

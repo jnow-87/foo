@@ -4,11 +4,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <cmd/cmd.h>
 
 
 
-/* global functions */
-int ls(int argc, char **argv){
+/* local functions */
+static int exec(int argc, char **argv){
 	int dir;
 	char *path;
 	dir_ent_t entry;
@@ -41,3 +42,5 @@ int ls(int argc, char **argv){
 
 	return 0;
 }
+
+command("ls", exec);
