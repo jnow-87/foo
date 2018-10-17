@@ -26,21 +26,21 @@ $(lds_memory_file): $(lds_memory_script)
 	$(mkdir) $(dir $(lds_memory_file))
 	$(QBUILD)$(lds_memory_script) $(lds_memory_file)
 
-## plugin
-lds_plugin_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_plugin
-lds_plugin_kernel_file := $(loc_build_tree)/avr_plugin_kernel.lds
-lds_plugin_app_file := $(loc_build_tree)/avr_plugin_app.lds
+## ioverflow
+lds_ioverflow_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_ioverflow
+lds_ioverflow_kernel_file := $(loc_build_tree)/avr_ioverflow_kernel.lds
+lds_ioverflow_app_file := $(loc_build_tree)/avr_ioverflow_app.lds
 
-$(lds_plugin_kernel_file): $(lds_plugin_script)
-	$(mkdir) $(dir $(lds_plugin_kernel_file))
-	$(QBUILD)$(lds_plugin_script) $(lds_plugin_kernel_file) kernel
+$(lds_ioverflow_kernel_file): $(lds_ioverflow_script)
+	$(mkdir) $(dir $(lds_ioverflow_kernel_file))
+	$(QBUILD)$(lds_ioverflow_script) $(lds_ioverflow_kernel_file) kernel
 
-$(lds_plugin_app_file): $(lds_plugin_script)
-	$(mkdir) $(dir $(lds_plugin_app_file))
-	$(QBUILD)$(lds_plugin_script) $(lds_plugin_app_file) app
+$(lds_ioverflow_app_file): $(lds_ioverflow_script)
+	$(mkdir) $(dir $(lds_ioverflow_app_file))
+	$(QBUILD)$(lds_ioverflow_script) $(lds_ioverflow_app_file) app
 
 ## combined dependencies
-avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
+avr_lds: $(lds_memory_file) $(lds_ioverflow_kernel_file) $(lds_ioverflow_app_file)
 
 kernel_deps: avr_lds
 init_deps: avr_lds
@@ -84,6 +84,7 @@ endif
 ldlibs-kernel-arch := \
 	-L$(loc_build_tree) \
 	-T$(lds_memory_file) \
+	-T$(lds_ioverflow_kernel_file) \
 	-Wl,--section-start=.text=$(CONFIG_KERNEL_TEXT_BASE) \
 	-Wl,--section-start=.data=$(CONFIG_KERNEL_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/$(basename $(kernel_name)).map,--cref
@@ -92,6 +93,7 @@ ldlibs-kernel-arch := \
 ldlibs-app-arch := \
 	-L$(loc_build_tree) \
 	-T$(lds_memory_file) \
+	-T$(lds_ioverflow_app_file) \
 	-Wl,--section-start=.text=$(CONFIG_APP_TEXT_BASE) \
 	-Wl,--section-start=.data=$(CONFIG_APP_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/init/init.map,--cref

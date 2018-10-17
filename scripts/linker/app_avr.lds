@@ -49,9 +49,6 @@ SECTIONS {
 	__bss_start = ADDR(.bss);
 	__bss_end = __bss_start + SIZEOF(.bss);
 
-	/* plugin */
-	INCLUDE avr_plugin_app.lds
-
 	/* discard sections */
 	/DISCARD/ : {
 		*(.init4)	/* libgcc .data initialisation not needed */

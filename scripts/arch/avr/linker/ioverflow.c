@@ -10,15 +10,19 @@
 #include <arpa/inet.h>
 
 
-/* local/static prototypes */
-static void plugin_ioverflow_det(FILE *ofile, char *bin_type);
-
-
 /* global functions */
 int main(int argc, char **argv){
 	char *ofile_name;
 	char *bin_type;
 	FILE *ofile;
+#ifdef CONFIG_IOVERFLOW_DET
+	char c;
+	union{
+		unsigned int i;
+		char c[4];
+	} filler;
+#endif // CONFIG_IOVERFLOW_DET
+
 
 	/* check arguments */
 	if(argc < 3){
@@ -40,6 +44,7 @@ int main(int argc, char **argv){
 	printf("generating avr %s plugin linker script \"%s\"\n", bin_type, ofile_name);
 
 	/* generate output file */
+	// open file
 	ofile = fopen(ofile_name, "w");
 
 	if(ofile == 0){
@@ -47,28 +52,8 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
-#if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
-	plugin_ioverflow_det(ofile, bin_type);
-#endif
-
-	fclose(ofile);
-
-	return 0;
-}
-
-
-/* local functions */
-/**
- * \brief	flash fill: fills unsused flash areas with jumps to an overflow handler
- */
-static void plugin_ioverflow_det(FILE *ofile, char *bin_type){
-	char c;
-	union{
-		unsigned int i;
-		char c[4];
-	} filler;
-
-
+	// flash fill: fills unsused flash areas with jumps to an overflow handler
+#ifdef CONFIG_IOVERFLOW_DET
 	filler.i = 0x940e0000
 			 | ((CONFIG_KERNEL_TEXT_BASE + (INT_VECTORS + 1) * INT_VEC_SIZE) / 2);
 
@@ -81,13 +66,23 @@ static void plugin_ioverflow_det(FILE *ofile, char *bin_type){
 	filler.c[3] = filler.c[2];
 	filler.c[2] = c;
 
-	fprintf(ofile, ".fill : {\n");
-	fprintf(ofile, "\t. = ALIGN(2);\n");
-	fprintf(ofile, "\tFILL(0x%.2hhx%.2hhx%.2hhx%.2hhx);\n", filler.c[0], filler.c[1], filler.c[2], filler.c[3]);
-	fprintf(ofile, "\t. = ORIGIN(flash_%s) + LENGTH(flash_%s) - 4;\n", bin_type, bin_type);
-	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[0]);
-	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[1]);
-	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[2]);
-	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[3]);
-	fprintf(ofile, "} > flash_%s\n", bin_type);
+	fprintf(ofile, "SECTIONS {\n");
+	fprintf(ofile, "\t.fill : {\n");
+	fprintf(ofile, "\t\t. = ALIGN(2);\n");
+	fprintf(ofile, "\t\tFILL(0x%.2hhx%.2hhx%.2hhx%.2hhx);\n", filler.c[0], filler.c[1], filler.c[2], filler.c[3]);
+	fprintf(ofile, "\t\t. = ORIGIN(flash_%s) + LENGTH(flash_%s) - 4;\n", bin_type, bin_type);
+	fprintf(ofile, "\t\tBYTE(0x%.2hhx);\n", filler.c[0]);
+	fprintf(ofile, "\t\tBYTE(0x%.2hhx);\n", filler.c[1]);
+	fprintf(ofile, "\t\tBYTE(0x%.2hhx);\n", filler.c[2]);
+	fprintf(ofile, "\t\tBYTE(0x%.2hhx);\n", filler.c[3]);
+	fprintf(ofile, "\t} > flash_%s\n", bin_type);
+	fprintf(ofile, "}\n");
+
+	fprintf(ofile, "\nINSERT AFTER .bss;\n");
+#endif // CONFIG_IOVERFLOW_DET
+
+	// close file
+	fclose(ofile);
+
+	return 0;
 }
