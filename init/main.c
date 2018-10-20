@@ -80,7 +80,13 @@ static void cmd_exec(char *line, size_t len){
 	char **argv;
 	int stdout_dup;
 	cmd_t *cmd;
+	term_cfg_t cfg;
+	f_mode_t mode;
 
+
+	/* backup stdin config */
+	ioctl(0, IOCTL_CFGRD, &cfg, sizeof(term_cfg_t));
+	fcntl(0, F_MODE_GET, &mode, sizeof(f_mode_t));
 
 	/* process command line */
 	if(strsplit(line, &argc, &argv)){
@@ -125,6 +131,10 @@ end_1:
 	free(argv);
 
 end_0:
+	/* restore stdin config */
+	ioctl(0, IOCTL_CFGWR, &cfg, sizeof(term_cfg_t));
+	fcntl(0, F_MODE_SET, &mode, sizeof(f_mode_t));
+
 	return;
 }
 
