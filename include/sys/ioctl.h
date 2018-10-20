@@ -6,6 +6,7 @@
 typedef enum{
 	IOCTL_CFGRD = 1,
 	IOCTL_CFGWR,
+	IOCTL_STATUS,
 } ioct_cmd_t;
 
 

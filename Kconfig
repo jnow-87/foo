@@ -46,6 +46,15 @@ endmenu
 # }}}
 
 #
+# init
+#
+# {{{
+menu "Init"
+	source init/Kconfig
+endmenu
+# }}}
+
+#
 # build system
 #
 # {{{

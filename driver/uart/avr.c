@@ -1,30 +1,27 @@
 #include <arch/interrupt.h>
 #include <arch/avr/interrupt.h>
 #include <arch/avr/register.h>
+#include <kernel/opt.h>
 #include <kernel/signal.h>
-#include <driver/uart.h>
-#include <driver/avr_uart.h>
-#include <sys/uart.h>
+#include <kernel/init.h>
+#include <driver/term.h>
+#include <sys/term.h>
 #include <sys/errno.h>
 #include <sys/register.h>
 #include <sys/compiler.h>
+#include <sys/mutex.h>
 
 
 
-#if (CONFIG_UART_CNT > UART_CNT)
-	CPP_ERROR(uart count violation - avr driver supports utmost UART_CNT uart(s))
-#endif // CONFIG_UART_CNT
+#if (CONFIG_AVR_UART_CNT > UART_CNT)
+	CPP_ERROR(uart count violation - avr target device supports utmost UART_CNT uart(s))
+#endif // CONFIG_AVR_UART_CNT
 
 
 /* local/static prototypes */
+static int config(term_t *term, term_cfg_t *cfg);
+static int putsn(term_t *term, char const *s, size_t n);
 static void rx_hdlr(uint8_t uart);
-
-
-/* global varibales */
-uart_cbs_t const uart_cbs = {
-	.config = avr_uart_config,
-	.puts = avr_uart_putsn,
-};
 
 
 /* static variables */
@@ -35,15 +32,91 @@ static uint8_t volatile * const ucsra[] = { (uint8_t*)UCSR0A, (uint8_t*)UCSR1A }
 						* const ubrrh[] = { (uint8_t*)UBRR0H, (uint8_t*)UBRR1H },
 						* const udr[] = { (uint8_t*)UDR0, (uint8_t*)UDR1 };
 
+static term_t *terms[CONFIG_AVR_UART_CNT];
+static mutex_t wr_mtx[CONFIG_AVR_UART_CNT];
 
 
 /* global functions */
-int avr_uart_config(unsigned int uart, uart_t *cfg){
+char avr_uart_putchar(char c){
+	mutex_lock(wr_mtx);
+
+	while(!((*(ucsra[0])) & (0x1 << UCSR0A_UDRE)));
+	*(udr[0]) = c;
+
+	mutex_unlock(wr_mtx);
+
+	return c;
+}
+
+int avr_uart_puts(char const *s){
+	if(s == 0)
+		return_errno(E_INVAL);
+
+	for(; *s!=0; s++)
+		avr_uart_putchar(*s);
+
+	return E_OK;
+}
+
+
+/* local functions */
+static int kuart_init(void){
+	unsigned int i;
+	term_t term;
+
+
+	/* apply kernel uart config */
+	for(i=0; i<CONFIG_AVR_UART_CNT; i++){
+		term.data = (void*)i;
+
+		if(config(&term, &kopt.term_cfg) != E_OK)
+			return -errno;
+
+		mutex_init(wr_mtx + i, MTX_NONE);
+	}
+
+	return E_OK;
+}
+
+platform_init(0, kuart_init);
+
+static int init(void){
+	unsigned int i;
+	char suffix[] = "x";
+	term_ops_t ops;
+
+
+	ops.config = config;
+	ops.puts = putsn;
+
+	/* register terminal devices */
+	for(i=0; i<CONFIG_AVR_UART_CNT; i++){
+		suffix[0] = '0' + i;
+
+		terms[i] = term_register(suffix, &ops, (void*)i);
+
+		if(terms[i] == 0x0)
+			return -errno;
+
+		// NOTE default configuration has already been
+		// 		applied through kuart_init()
+		terms[i]->cfg = kopt.term_cfg;
+	}
+
+	return E_OK;
+}
+
+driver_init(init);
+
+static int config(term_t *term, term_cfg_t *cfg){
 	static uint8_t const parity_bits[] = { 0b00, 0b11, 0b10 };
 	static uint8_t const stopb_bits[] = { 0b0, 0b1 };
 	static uint8_t const prr_bits[] = { PRR0_PRUSART0, PRR0_PRUSART1 };
 	unsigned int brate;
+	unsigned int uart;
 
+
+	uart = (unsigned int)term->data;
 
 	if(cfg->baud > 115200)
 		return_errno(E_LIMIT);
@@ -54,8 +127,11 @@ int avr_uart_config(unsigned int uart, uart_t *cfg){
 		return_errno(E_INVAL);
 
 	/* finish ongoing transmissions */
-	if(((*(ucsrb[uart])) & UCSR0B_TXEN))
+	if(((*(ucsrb[uart])) & UCSR0B_TXEN)){
+		mutex_lock(wr_mtx + uart);
 		while(!((*(ucsra[uart])) & (0x1 << UCSR0A_TXC)));
+		mutex_unlock(wr_mtx + uart);
+	}
 
 	/* disable uart, triggering reset */
 	mreg_w(PRR0, mreg_r(PRR0) | (0x1 << prr_bits[uart]));
@@ -80,38 +156,29 @@ int avr_uart_config(unsigned int uart, uart_t *cfg){
 	return E_OK;
 }
 
-char avr_uart_putchar(char c){
-	*(udr[0]) = c;
-	while(!((*(ucsra[0])) & (0x1 << UCSR0A_UDRE)));
+static int putsn(term_t *term, char const *s, size_t n){
+	unsigned int uart;
 
-	return c;
-}
 
-int avr_uart_puts(char const *s){
+	uart = (unsigned int)term->data;
+
+
 	if(s == 0)
 		return_errno(E_INVAL);
 
-	for(; *s!=0; s++)
-		avr_uart_putchar(*s);
-
-	return E_OK;
-}
-
-int avr_uart_putsn(unsigned int uart, char const *s, size_t n){
-	if(s == 0)
-		return_errno(E_INVAL);
+	mutex_lock(wr_mtx + uart);
 
 	for(; n>0; n--, s++){
-		*(udr[uart]) = *s;
 		while(!(*(ucsra[uart]) & (0x1 << UCSR0A_UDRE)));
+		*(udr[uart]) = *s;
 	}
+
+	mutex_unlock(wr_mtx + uart);
 
 	return E_OK;
 }
 
-
-/* local functions */
-#if (CONFIG_UART_CNT > 0)
+#if (CONFIG_AVR_UART_CNT > 0)
 
 static void uart0_rx_hdlr(void){
 	rx_hdlr(0);
@@ -119,9 +186,9 @@ static void uart0_rx_hdlr(void){
 
 avr_int(INT_USART0_RX, uart0_rx_hdlr);
 
-#endif // CONFIG_UART_CNT
+#endif // CONFIG_AVR_UART_CNT
 
-#if (CONFIG_UART_CNT > 1)
+#if (CONFIG_AVR_UART_CNT > 1)
 
 static void uart1_rx_hdlr(void){
 	rx_hdlr(1);
@@ -129,7 +196,7 @@ static void uart1_rx_hdlr(void){
 
 avr_int(INT_USART1_RX, uart1_rx_hdlr);
 
-#endif // CONFIG_UART_CNT
+#endif // CONFIG_AVR_UART_CNT
 
 static void rx_hdlr(uint8_t uart){
 	uint8_t c,
@@ -146,19 +213,18 @@ static void rx_hdlr(uint8_t uart){
 		if(err)
 			continue;
 
-		if(ringbuf_write(&uarts[uart].rx_buf, &c, 1) != 1)
+		if(ringbuf_write(&terms[uart]->rx_buf, &c, 1) != 1)
 			err |= (0x1 << UCSR0A_RXC);	// use UCSR0A non-error flag to signal buffer overrun
 	}
 
 	/* update error */
 	if(err){
-		uarts[uart].rx_err |= err;
-
-		uarts[uart].cfg.frame_err |= bits(err, UCSR0A_FE, 0x1);
-		uarts[uart].cfg.data_overrun |= bits(err, UCSR0A_DOR, 0x1);
-		uarts[uart].cfg.parity_err |= bits(err, UCSR0A_UPE, 0x1);
-		uarts[uart].cfg.rx_queue_full |= bits(err, UCSR0A_RXC, 0x1);
+		terms[uart]->rx_err |= (bits(err, UCSR0A_FE, 0x1) ? TE_FRAME : 0)
+							|  (bits(err, UCSR0A_DOR, 0x1) ? TE_DATA_OVERRUN : 0)
+							|  (bits(err, UCSR0A_UPE, 0x1) ? TE_PARITY : 0)
+							|  (bits(err, UCSR0A_RXC, 0x1) ? TE_RX_FULL : 0)
+							;
 	}
 
-	ksignal_send(uarts[uart].rx_rdy);
+	ksignal_send(terms[uart]->rx_rdy);
 }

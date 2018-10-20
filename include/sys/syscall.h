@@ -7,13 +7,14 @@
 #include <sys/thread.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/file.h>
+#include <sys/fcntl.h>
 
 
 /* types */
 // syscall common
 typedef enum{
 	SC_OPEN,
+	SC_DUP,
 	SC_CLOSE,
 	SC_READ,
 	SC_WRITE,

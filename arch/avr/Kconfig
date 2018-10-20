@@ -207,3 +207,17 @@ choice
 		bool "extended standby"
 endchoice
 # }}}
+
+#
+# debug
+#
+# {{{
+menu Debugging
+	config IOVERFLOW_DET
+		bool "Instruction overflow detection"
+		default n
+		help
+			Trigger an exception if instructions are executed from unused
+			parts of the flash memory.
+endmenu
+# }}}

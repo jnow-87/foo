@@ -4,7 +4,8 @@
 
 #include <kernel/signal.h>
 #include <kernel/task.h>
-#include <sys/file.h>
+#include <sys/fcntl.h>
+#include <sys/dirent.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
 
@@ -144,12 +145,12 @@ typedef struct fs_node_t{
 	struct fs_node_t *prev,
 					 *next;
 
-	char *name;
+	int fs_id;
 	fs_ops_t *ops;
 
 	void *data;
 	unsigned int ref_cnt;
-	bool is_dir;
+	file_type_t type;
 
 	mutex_t rd_mtx,
 			wr_mtx;
@@ -157,6 +158,8 @@ typedef struct fs_node_t{
 
 	struct fs_node_t *childs,
 					 *parent;
+
+	char name[];
 } fs_node_t;
 
 // file descriptor types
@@ -185,12 +188,13 @@ void fs_unlock(void);
 
 // file operations
 fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p, f_mode_t mode);
+int fs_fd_dup(fs_filed_t *fd, int id, struct process_t *this_p);
 void fs_fd_free(fs_filed_t *fd, struct process_t *this_p);
 fs_filed_t *fs_fd_acquire(int id, struct process_t *this_p);
 void fs_fd_release(fs_filed_t *fd);
 
 // file node operations
-fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, bool is_dir, int fs_id);
+fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *data, int fs_id);
 int fs_node_destroy(fs_node_t *node);
 int fs_node_find(fs_node_t **start, char const **path);
 

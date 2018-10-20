@@ -5,13 +5,13 @@
 #include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
-#include <sys/file.h>
 #include <sys/fcntl.h>
 #include <sys/types.h>
 #include <sys/string.h>
 #include <sys/list.h>
 #include <sys/math.h>
 #include <sys/errno.h>
+#include <sys/dirent.h>
 
 
 /* global variables */
@@ -68,8 +68,8 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 			/* no matching node found, try to create it */
 			// if its the last part of path, create the target node with fs_id
 			// otherwise create an intermediate node in rootfs
-			if(path[n] == 0)	node = fs_node_create(node->parent, path, n, true, fs_id);
-			else				node = fs_node_create(node->parent, path, n, true, rootfs_id);
+			if(path[n] == 0)	node = fs_node_create(node->parent, path, n, FT_DIR, 0x0, fs_id);
+			else				node = fs_node_create(node->parent, path, n, FT_DIR, 0x0, rootfs_id);
 
 			if(node == 0x0)
 				goto err;
@@ -136,7 +136,8 @@ static int init(void){
 	memset(&dummy, 0x0, sizeof(dummy));
 
 	fs_lock();
-	fs_root = fs_node_create(&dummy, "/", 1, true, rootfs_id);
+	fs_root = fs_node_create(&dummy, "/", 1, FT_DIR, 0x0, rootfs_id);
+	fs_node_destroy(fs_root->childs->next);		// remove the ".." child
 	fs_unlock();
 
 	if(fs_root == 0x0)
@@ -152,12 +153,9 @@ kernel_init(1, init);
 static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p){
 	int n;
 	fs_filed_t *fd;
+	rootfs_file_t *file;
+	file_type_t type;
 
-
-	if(*path == 0)
-		return_errno(E_INVAL);
-
-	DEBUG("handle open for \"%s\"\n", path);
 
 	while(1){
 		n = fs_node_find(&start, &path);
@@ -170,10 +168,8 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 			if(fd == 0x0)
 				return -errno;
 
-			if(start->is_dir == false && (mode & O_APPEND))
+			if(start->type == FT_REG && (mode & O_APPEND))
 				fd->fp = ((rootfs_file_t*)(start->data))->data_used;
-
-			DEBUG("created file descriptor with id %d\n", fd->id);
 
 			return fd->id;
 
@@ -191,24 +187,28 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 			return_errno(E_INVAL);
 
 		default:
+			type = (path[n] == '/') ? FT_DIR : FT_REG;
+
 			/* no matching node found, try to create it */
 			// error if node shall not be created
-			if((mode & O_CREATE) == 0)
+			if((mode & O_CREAT) == 0)
 				return_errno(E_UNAVAIL);
 
+			// allocate file
+			file = 0x0;
+
+			if(type == FT_REG){
+				file = file_alloc();
+
+				if(file == 0x0)
+					return -errno;
+			}
+
 			// create node
-			start = fs_node_create(start, path, n, (path[n] == '/' ? true : false), rootfs_id);
+			start = fs_node_create(start, path, n, type, file, rootfs_id);
 
 			if(start == 0x0)
-				return -errno;
-
-			// allocate file
-			if(start->is_dir == false){
-				start->data = file_alloc();
-
-				if(start->data == 0x0)
-					goto_errno(err, E_NOMEM);
-			}
+				goto err;
 
 			path += n;
 			break;
@@ -217,13 +217,12 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 
 err:
-	fs_node_destroy(start);
+	file_free(file);
 
 	return -errno;
 }
 
 static int close(fs_filed_t *fd, process_t *this_p){
-	DEBUG("handle close for %d\n", fd->id);
 	fs_fd_free(fd, this_p);
 
 	return E_OK;
@@ -233,12 +232,15 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 	size_t m;
 	fs_node_t *child;
 	rootfs_file_t *file;
+	dir_ent_t *dir;
 
 
-	DEBUG("handle read for %d from fp %u, %u bytes\n", fd->id, fd->fp, n);
+	if(fd->node->type == FT_DIR){
+		if(n != sizeof(dir_ent_t))
+			goto_errno(err, E_INVAL);
 
-	if(fd->node->is_dir){
 		m = 0;
+		dir = (dir_ent_t*)buf;
 
 		/* iterate to the child indicated by the file pointer */
 		list_for_each(fd->node->childs, child){
@@ -252,17 +254,18 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 		if(child == 0x0)
 			goto_errno(err, E_END);
 
-		/* check if buffer is large enough */
-		m = strlen(child->name);
-
-		if(m > n)
-			goto_errno(err, E_LIMIT);
-
 		/* copy child name to buffer */
-		memcpy(buf, child->name, m);
+		dir->type = child->type;
+
+		// don't show "." and ".." as type FT_LNK
+		if(strcmp(child->name, ".") == 0 || strcmp(child->name, "..") == 0)
+			dir->type = FT_DIR;
+
+		strcpy(dir->name, child->name);
 
 		/* update file pointer */
 		fd->fp++;
+		m = sizeof(dir_ent_t);
 	}
 	else{
 		file = fd->node->data;
@@ -292,10 +295,8 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	rootfs_file_t *file;
 
 
-	DEBUG("handle write for %d to fp %u, %u bytes\n", fd->id, fd->fp, n);
-
 	/* write to a directory is not defined */
-	if(fd->node->is_dir)
+	if(fd->node->type == FT_DIR)
 		goto_errno(err, E_INVAL);
 
 	file = fd->node->data;
@@ -331,8 +332,6 @@ err:
 }
 
 static int fcntl(fs_filed_t *fd, int cmd, void *data){
-	DEBUG("handle fcntl for %d\n", fd->id);
-
 	switch(cmd){
 	case F_SEEK:
 		return file_seek(fd, data);
@@ -349,8 +348,6 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 static int node_rm(fs_node_t *start, char const *path){
 	if(*path == 0)
 		return_errno(E_INVAL);
-
-	DEBUG("remove file system node \"%s\"\n", path);
 
 	switch(fs_node_find(&start, &path)){
 	case 0:

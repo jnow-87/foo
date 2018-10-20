@@ -5,7 +5,6 @@ main-y := main.o string.o vfprintf.o list.o queue.o stack.o memblock.o ringbuf.o
 
 main-hostcppflags += -I$(src_tree) -I$(src_tree)/include -I/usr/include
 main-hostcflags += -fno-builtin
-main-hostldlibs += -T$(loc_src_tree)/default.lds -T$(loc_src_tree)/testcase.lds
 
 
 # testing rules

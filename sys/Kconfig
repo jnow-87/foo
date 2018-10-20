@@ -37,3 +37,13 @@ menu "Hidden"
 		bool "Ring buffer"
 		default n
 endmenu
+
+#
+# file system
+#
+# {{{
+config FILE_NAME_LEN
+	int "Maximum file name length"
+	default 16
+	range 4 4096
+# }}}

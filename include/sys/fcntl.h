@@ -2,6 +2,9 @@
 #define SYS_FCNTL_H
 
 
+#include <sys/types.h>
+
+
 /* types */
 typedef enum{
 	F_SEEK = 1,		// implementation required on lowest callback level
@@ -22,6 +25,15 @@ typedef struct{
 	size_t pos;
 	int offset;
 } seek_t;
+
+typedef enum{
+	O_CREAT = 0x1,
+	O_APPEND = 0x2,
+	O_RDONLY = 0x4,
+	O_WRONLY = 0x8,
+	O_RDWR = 0xc,
+	O_NONBLOCK = 0x10,
+} f_mode_t;
 
 
 #endif // SYS_FCNTL_H

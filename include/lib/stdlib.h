@@ -13,6 +13,8 @@ void free(void *addr);
 
 void exit(int status);
 
+int atoi(char const *s);
+
 
 /* disabled-call macros */
 #ifndef CONFIG_SC_DYNMEM

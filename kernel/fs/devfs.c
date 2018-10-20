@@ -4,6 +4,7 @@
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
+#include <sys/dirent.h>
 #include <sys/list.h>
 
 
@@ -35,7 +36,7 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 		goto_errno(err_0, E_NOMEM);
 
 	fs_lock();
-	node = fs_node_create(devfs_root, name, strlen(name), false, devfs_id);
+	node = fs_node_create(devfs_root, name, strlen(name), FT_CHR, dev, devfs_id);
 	fs_unlock();
 
 	if(node == 0x0)
@@ -44,7 +45,6 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 	dev->ops = *ops;
 	dev->data = data;
 	dev->node = node;
-	node->data = dev;
 
 	return dev;
 
@@ -108,12 +108,10 @@ static int init(void){
 		return -errno;
 
 	/* allocate root node */
-	devfs_root = rootfs_mkdir("/dev", devfs_id);
+	devfs_root = rootfs_mkdir("/dev", fs_root->fs_id);
 
 	if(devfs_root == 0x0)
 		return -errno;
-
-	devfs_root->ops = fs_root->ops;	// use rootfs callbacks to handle devfs root
 
 	return E_OK;
 }
@@ -124,8 +122,6 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 	fs_filed_t *fd;
 	devfs_dev_t *dev;
 
-
-	DEBUG("open device \"%s\"\n", start->name);
 
 	fd = fs_fd_alloc(start, this_p, mode);
 

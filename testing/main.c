@@ -10,8 +10,8 @@
 
 
 /* external variables */
-extern test_case_t __test_cases_base[];
-extern test_case_t __test_cases_end[];
+extern test_case_t __start_testcases[];
+extern test_case_t __stop_testcases[];
 
 
 /* global functions */
@@ -38,9 +38,9 @@ int main(int argc, char **argv){
 	}
 
 	/* iterate through test cases */
-	tc = __test_cases_base;
+	tc = __start_testcases;
 
-	while(tc != __test_cases_end){
+	while(tc != __stop_testcases){
 		printf("run test case: %s... ", tc->desc);
 		tlog(log, " === test case: %s ===\n\n", tc->desc);
 

@@ -5,3 +5,4 @@ gen_lds_memory-y := memory.o
 gen_lds_plugin-y := plugin.o
 
 hostcppflags-y := -I"include/"
+hostcflags-y := -Wno-unused-function

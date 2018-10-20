@@ -18,6 +18,7 @@ extern FILE *stdin,
 /* prototypes */
 FILE *fopen(char const *path, char const *mode);
 FILE *fdopen(int fd, char const *mode);
+int fileno(FILE *stream);
 int fclose(FILE *stream);
 
 size_t fread(void *p, size_t size, FILE *stream);

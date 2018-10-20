@@ -3,12 +3,14 @@
 
 
 #include <kernel/fs.h>
-#include <sys/file.h>
+#include <sys/fcntl.h>
+
+
+/* incomplete types */
+struct devfs_dev_t;
 
 
 /* types */
-struct devfs_dev_t;
-
 typedef struct{
 	/**
 	 * \brief	Perform allocations required if the device pointed to by dev is

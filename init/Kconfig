@@ -1,0 +1,25 @@
+menu "Commands"
+	config INIT_HELP
+	bool help
+
+	config INIT_CD
+	bool cd
+
+	config INIT_LS
+	bool ls
+
+	config INIT_ECHO
+	bool echo
+
+	config INIT_CAT
+	bool cat
+
+	config INIT_MKDIR
+	bool mkdir
+
+	config INIT_RM
+	bool rm
+
+	config INIT_TEST
+	bool test
+endmenu

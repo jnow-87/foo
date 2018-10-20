@@ -7,7 +7,7 @@
 #include <sys/compiler.h>
 #include <sys/binloader.h>
 #include <sys/types.h>
-#include <sys/file.h>
+#include <sys/fcntl.h>
 
 
 /* macros */
@@ -32,6 +32,8 @@ typedef struct{
 /* prototypes */
 // file system
 int open(char const *path, f_mode_t mode);
+int dup(int old_fd);
+int dup2(int old_fd, int new_fd);
 int close(int fd);
 
 int read(int fd, void *buf, size_t n);
@@ -40,6 +42,9 @@ int write(int fd, void *buf, size_t n);
 int ioctl(int fd, int cmd, void *data, size_t data_len);
 int fcntl(int fd, int request, void *data, size_t data_len);
 
+int unlink(char const *path);
+
+int mkdir(char const *path);
 int chdir(char const *path);
 int rmdir(char const *path);
 

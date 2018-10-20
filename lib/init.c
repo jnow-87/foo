@@ -43,12 +43,12 @@ void _start(int (*entry)(void*), void *arg){
 	if((void*)entry == (void*)_start){
 		// basic initialisation required for target
 		if(lib_crt0() != 0)
-			exit(-1);
+			exit(-errno);
 
 		// lib initialisation callbacks
 		for(p=__lib_init_base; p<__lib_init_end; p++){
 			if((*p)() != 0)
-				exit(-2);
+				exit(-errno);
 		}
 
 		argc = args_split(arg);

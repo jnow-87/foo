@@ -3,6 +3,7 @@
 
 
 #include <sys/types.h>
+#include <sys/errno.h>
 
 
 /* macros */
@@ -20,5 +21,8 @@ void *memcpy(void *dest, void const *src, size_t n);
 void *memset(void *p, char c, size_t n);
 int memcmp(void const *s0, void const *s1, size_t n);
 
+char const *strerror(errno_t errno);
+
+char *itoa(int v, unsigned int base, char *s, size_t len);
 
 #endif // SYS_STRING_H
