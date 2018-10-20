@@ -7,7 +7,7 @@ init-y := main.o $(build_tree)/lib/$(lib_name) cmd/
 init-cppflags := -I"include/lib" -I$(loc_src_tree) -I$(loc_build_tree)
 init-ldlibs := \
 	$(ldlibs-app-arch) \
-	-T$(loc_src_tree)/cmd.lds \
+	-T$(loc_src_tree)/lists.lds \
 	-lsys \
 	-lgcc
 
