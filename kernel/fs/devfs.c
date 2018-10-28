@@ -4,7 +4,7 @@
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
-#include <sys/dirent.h>
+#include <sys/stat.h>
 #include <sys/list.h>
 
 
@@ -199,12 +199,24 @@ static int ioctl(fs_filed_t *fd, int request, void *data){
 
 static int fcntl(fs_filed_t *fd, int cmd, void *data){
 	devfs_dev_t *dev;
+	stat_t *stat;
 
 
 	dev = (devfs_dev_t*)fd->node->data;
 
-	if(dev->ops.fcntl == 0x0)
-		return_errno(E_NOIMP);
+	switch(cmd){
+	case F_STAT:
+		stat = (stat_t*)data;
 
-	return dev->ops.fcntl(dev, fd, cmd, data);
+		stat->type = fd->node->type;
+		stat->size = 0;
+
+		return E_OK;
+
+	default:
+		if(dev->ops.fcntl == 0x0)
+			return_errno(E_NOIMP);
+
+		return dev->ops.fcntl(dev, fd, cmd, data);
+	};
 }

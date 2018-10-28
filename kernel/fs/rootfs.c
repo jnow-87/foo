@@ -11,6 +11,7 @@
 #include <sys/list.h>
 #include <sys/math.h>
 #include <sys/errno.h>
+#include <sys/stat.h>
 #include <sys/dirent.h>
 
 
@@ -332,6 +333,10 @@ err:
 }
 
 static int fcntl(fs_filed_t *fd, int cmd, void *data){
+	fs_node_t *node;
+	stat_t *stat;
+
+
 	switch(cmd){
 	case F_SEEK:
 		return file_seek(fd, data);
@@ -339,6 +344,22 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 	case F_TELL:
 		((seek_t*)data)->pos = fd->fp;
 		return -errno;
+
+	case F_STAT:
+		stat = (stat_t*)data;
+
+		if(fd->node->type == FT_DIR){
+			stat->size = 0;
+
+			list_for_each(fd->node->childs, node)
+				stat->size++;
+		}
+		else
+			stat->size = ((rootfs_file_t*)fd->node->data)->data_used;
+
+		stat->type = fd->node->type;
+
+		return E_OK;
 
 	default:
 		return_errno(E_INVAL);
