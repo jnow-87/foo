@@ -50,6 +50,7 @@ int chdir(char const *path);
 int rmdir(char const *path);
 
 int stat(char const *path, stat_t *stat);
+int statat(char const *dir, char const *path, stat_t *stat);
 int fstat(int fd, stat_t *stat);
 
 // process control
