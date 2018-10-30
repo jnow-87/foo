@@ -1,8 +1,10 @@
 #include <arch/syscall.h>
 #include <sys/syscall.h>
 #include <lib/unistd.h>
+#include <lib/stdio.h>
 #include <sys/string.h>
 #include <sys/fcntl.h>
+#include <sys/stat.h>
 
 
 /* global functions */
@@ -150,5 +152,39 @@ int chdir(char const *path){
 }
 
 int rmdir(char const *path){
+	stat_t f_stat;
+
+
+	if(stat(path, &f_stat) != 0 || f_stat.type != FT_DIR)
+		return_errno(E_INVAL);
+
 	return unlink(path);
+}
+
+int stat(char const *path, stat_t *stat){
+	int fd;
+
+
+	fd = open(path, O_RDONLY);
+
+	if(fd < 0 || fstat(fd, stat) != 0)
+		return -errno;
+
+	return close(fd);
+}
+
+int statat(char const *dir, char const *path, stat_t *_stat){
+	char _path[strlen(dir) + strlen(path) + 2];
+
+
+	if(dir == 0x0 || path == 0x0)
+		return_errno(E_INVAL);
+
+	sprintf(_path, "%s/%s", dir, path);
+
+	return stat(_path, _stat);
+}
+
+int fstat(int fd, stat_t *stat){
+	return fcntl(fd, F_STAT, stat, sizeof(stat_t));
 }

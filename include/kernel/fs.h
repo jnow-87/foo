@@ -5,7 +5,7 @@
 #include <kernel/signal.h>
 #include <kernel/task.h>
 #include <sys/fcntl.h>
-#include <sys/dirent.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
 

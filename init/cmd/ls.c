@@ -1,6 +1,8 @@
 #include <sys/dirent.h>
 #include <sys/fcntl.h>
+#include <sys/stat.h>
 #include <sys/errno.h>
+#include <sys/escape.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -13,6 +15,7 @@ static int exec(int argc, char **argv){
 	int dir;
 	char *path;
 	dir_ent_t entry;
+	stat_t f_stat;
 
 
 	path = ".";
@@ -35,7 +38,12 @@ static int exec(int argc, char **argv){
 			break;
 		}
 
-		printf("%s\n", entry.name);
+		statat(path, entry.name, &f_stat);
+
+		if(f_stat.type == FT_DIR)
+			fputs(FG_BLUE, stdout);
+
+		printf("%s%s\n", entry.name, (f_stat.type == FT_DIR ? "/" RESET_ATTR : ""));
 	}
 
 	close(dir);

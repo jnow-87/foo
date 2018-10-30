@@ -8,6 +8,7 @@
 #include <sys/binloader.h>
 #include <sys/types.h>
 #include <sys/fcntl.h>
+#include <sys/stat.h>
 
 
 /* macros */
@@ -47,6 +48,10 @@ int unlink(char const *path);
 int mkdir(char const *path);
 int chdir(char const *path);
 int rmdir(char const *path);
+
+int stat(char const *path, stat_t *stat);
+int statat(char const *dir, char const *path, stat_t *stat);
+int fstat(int fd, stat_t *stat);
 
 // process control
 pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args);

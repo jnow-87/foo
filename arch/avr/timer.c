@@ -86,7 +86,7 @@ static int init(void){
 
 platform_init(0, init);
 
-static void stat(void){
+static void stats(void){
 #ifdef CONFIG_SCHED_CYCLETIME_US
 	STAT("scheduler cycle time: " STRVAL(CONFIG_SCHED_CYCLETIME_US) "us\n");
 	STAT("scheduler error: " STRVAL(AVRCONFIG_SCHED_ERROR_US) "us\n");
@@ -98,4 +98,4 @@ static void stat(void){
 #endif // CONFIG_KTIMER_CYCLETIME_US
 }
 
-kernel_stat(stat);
+kernel_stat(stats);
