@@ -7,6 +7,7 @@
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
+#include <sys/stat.h>
 #include <sys/term.h>
 #include <sys/list.h>
 #include <cmd/cmd.h>
@@ -101,6 +102,8 @@ static void cmd_exec(char *line, size_t len){
 		goto end_1;
 	}
 
+	errno = 0;
+
 	/* check for output redirection */
 	stdout_dup = -1;
 
@@ -109,14 +112,13 @@ static void cmd_exec(char *line, size_t len){
 			stdout_dup = redirect_init(stdout, argv[i]);
 
 			if(stdout_dup < 0){
-				printf("redirecting output to %s failed, errno %#x\n", argv[i], errno);
+				printf("redirecting output to %s failed, errno %s\n", argv[i], strerror(errno));
 				goto end_1;
 			}
 		}
 	}
 
 	/* execute command */
-	errno = 0;
 	(void)cmd->exec((stdout_dup != -1 ? argc - 2 : argc), argv);
 
 	/* revert output redirection */
@@ -368,9 +370,16 @@ static int strsplit(char *line, int *_argc, char ***_argv){
 }
 
 static int redirect_init(FILE *fp, char *file){
-	int fd_dup,
+	int r,
+		fd_dup,
 		fd_redir;
+	stat_t f_stat;
 
+
+	r = stat(file, &f_stat);
+
+	if((r != 0 && (errno & ~E_UNAVAIL)) || (r == 0 && f_stat.type != FT_REG))
+		goto_errno(err_0, E_INVAL);
 
 	if(fflush(fp) != 0)
 		goto err_0;
