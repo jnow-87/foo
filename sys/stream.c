@@ -208,6 +208,10 @@ spec_err:
 		format = fp;
 	}
 
+	// zero-terminate string streams
+	if(stream->putc == 0x0)
+		put_char(stream, 0);
+
 	return n;
 }
 

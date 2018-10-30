@@ -27,7 +27,6 @@
 	if(len != strlen(ref_ext)) \
 		tlog(log, "%s: length differ res(%d) != ref(%d)\n", s, len, strlen(ref_ext)) \
 	\
-	((char*)f.wbuf)[len] = 0; \
 	if(strcmp(ref_ext, f.wbuf) == 0) \
 		tlog(log, "%s: res('%s') == ref('%s')\n", s, f.wbuf, ref_ext) \
 	\
