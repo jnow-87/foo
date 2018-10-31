@@ -3,6 +3,7 @@
 #include <kernel/kprintf.h>
 #include <sys/escape.h>
 #include <sys/errno.h>
+#include <sys/string.h>
 #include <version.h>
 
 
@@ -51,7 +52,7 @@ static void exec_init_call(init_call_t *base, init_call_t *end, bool p_err){
 		if(errno != E_OK)
 			return;
 
-		if((*p)() != E_OK && p_err)
-			WARN("\033[33minit-call %#x failed with return code %#x\n\033[0m", *p, errno);
+		if(p->call() != E_OK && p_err)
+			WARN("\033[33minit-call \"%s\" failed with errno %#x (%s)\n\033[0m", p->name, errno, strerror(errno));
 	}
 }

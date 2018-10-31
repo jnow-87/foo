@@ -2,17 +2,38 @@
 #define KERNEL_INIT_H
 
 
+#include <config/config.h>
 #include <sys/compiler.h>
 #include <sys/errno.h>
 
 
 /* types */
-typedef int (*init_call_t)(void);
+typedef struct{
+	int (*call)(void);
+
+#ifdef CONFIG_KERNEL_EARLY_PRINT
+	char const *name;
+#endif // CONFIG_KERNEL_EARLY_PRINT
+} init_call_t;
 
 
 /* macros */
-#define init_call(call, level, stage) \
-	static init_call_t init_call_##call __section("."#level"_init_stage"#stage) __used = call;
+#ifdef CONFIG_KERNEL_EARLY_PRINT
+
+#define init_call(_call, level, stage) \
+	static init_call_t init_call_##_call __section("."#level"_init_stage"#stage) __used = { \
+		.call = _call, \
+		.name = __FILE__ ":" #_call \
+	}
+
+#else
+
+#define init_call(_call, level, stage) \
+	static init_call_t init_call_##_call __section("."#level"_init_stage"#stage) __used = { \
+		.call = _call, \
+	}
+
+#endif // CONFIG_KERNEL_EARLY_PRINT
 
 /**
  * currently defined init levels, order according to calling sequence
