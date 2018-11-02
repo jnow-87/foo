@@ -378,7 +378,7 @@ static int redirect_init(FILE *fp, char *file){
 
 	r = stat(file, &f_stat);
 
-	if((r != 0 && (errno & ~E_UNAVAIL)) || (r == 0 && f_stat.type != FT_REG))
+	if((r != 0 && (errno & ~E_UNAVAIL)) || (r == 0 && f_stat.type != FT_REG && f_stat.type != FT_CHR))
 		goto_errno(err_0, E_INVAL);
 
 	if(fflush(fp) != 0)
@@ -413,6 +413,8 @@ err_0:
 }
 
 static int redirect_revert(FILE *fp, int fd_revert){
+	(void)fflush(fp);
+
 	if(dup2(fd_revert, fileno(fp)) != fileno(fp))
 		return -1;
 	return close(fd_revert);

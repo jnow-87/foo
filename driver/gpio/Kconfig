@@ -1,0 +1,79 @@
+menuconfig DRIVER_GPIO
+	bool "GPIO driver"
+	select KERNEL_DEVFS
+
+if DRIVER_GPIO
+	if AVR
+		if AVR_NPORTS_1
+			config GPIO_PORTA_IN_MASK
+				hex "PortA input mask"
+				range 0x0 0xff
+				default 0x0
+
+			config GPIO_PORTA_OUT_MASK
+				hex "PortA output mask"
+				range 0x0 0xff
+				default 0x0
+		endif # AVR_NPORTS_1
+
+		if AVR_NPORTS_2
+			config GPIO_PORTB_IN_MASK
+				hex "PortB input mask"
+				range 0x0 0xff
+				default 0x0
+
+			config GPIO_PORTB_OUT_MASK
+				hex "PortB output mask"
+				range 0x0 0xff
+				default 0x0
+		endif # AVR_NPORTS_2
+
+		if AVR_NPORTS_3
+			config GPIO_PORTC_IN_MASK
+				hex "PortC input mask"
+				range 0x0 0xff
+				default 0x0
+
+			config GPIO_PORTC_OUT_MASK
+				hex "PortC output mask"
+				range 0x0 0xff
+				default 0x0
+		endif # AVR_NPORTS_3
+
+		if AVR_NPORTS_4
+			config GPIO_PORTD_IN_MASK
+				hex "PortD input mask"
+				range 0x0 0xff
+				default 0x0
+
+			config GPIO_PORTD_OUT_MASK
+				hex "PortD output mask"
+				range 0x0 0xff
+				default 0x0
+		endif # AVR_NPORTS_4
+
+		if AVR_NPORTS_5
+			config GPIO_PORTE_IN_MASK
+				hex "PortE input mask"
+				range 0x0 0xff
+				default 0x0
+
+			config GPIO_PORTE_OUT_MASK
+				hex "PortE output mask"
+				range 0x0 0xff
+				default 0x0
+		endif # AVR_NPORTS_5
+
+		if AVR_NPORTS_6
+			config GPIO_PORTF_IN_MASK
+				hex "PortF input mask"
+				range 0x0 0xff
+				default 0x0
+
+			config GPIO_PORTF_OUT_MASK
+				hex "PortF output mask"
+				range 0x0 0xff
+				default 0x0
+		endif # AVR_NPORTS_6
+	endif # AVR
+endif # DRIVER_GPIO
