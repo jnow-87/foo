@@ -14,6 +14,7 @@ void free(void *addr);
 void exit(int status);
 
 int atoi(char const *s);
+long int strtol(char const *p, char **endp, int base);
 
 
 /* disabled-call macros */
