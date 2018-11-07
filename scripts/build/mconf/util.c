@@ -3,6 +3,9 @@
  * Copyright (C) 2002-2005 Sam Ravnborg <sam@ravnborg.org>
  *
  * Released under the terms of the GNU GPL v2.0.
+ *
+ * Note by Jan Nowotsch:
+ * 	This code has been borrowed from the linux kernel build system.
  */
 
 #include <stdarg.h>

@@ -6,6 +6,9 @@
  * 2002-11-06 Petr Baudis <pasky@ucw.cz>
  *
  * i18n, 2005, Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+ *
+ * Note by Jan Nowotsch:
+ * 	This code has been borrowed from the linux kernel build system.
  */
 
 #include <ctype.h>

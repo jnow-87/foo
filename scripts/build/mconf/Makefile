@@ -1,3 +1,12 @@
+#
+# Copyright (C) 2015 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
 hostbin-y := mconfig confheader
 
 $(loc_build_tree)/zconf.tab.host.o: $(loc_build_tree)/zconf.lex.c $(loc_build_tree)/zconf.hash.c $(loc_build_tree)/zconf.tab.c
