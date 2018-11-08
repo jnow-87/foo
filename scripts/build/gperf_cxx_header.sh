@@ -1,4 +1,12 @@
 #!/bin/bash
+#
+# Copyright (C) 2015 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
 
 cfile=$1	# c++ source file
 header=$2	# output file name

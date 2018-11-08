@@ -1,3 +1,15 @@
+/**
+ * Copyright (C) 2015 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Most of source code is taken from the linux kernel's build helper fixdep.c
+ * but has been restructured for the purpose of this project.
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
 #ifndef UTIL_H
 #define UTIL_H
 

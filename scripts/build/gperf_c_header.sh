@@ -1,4 +1,12 @@
 #!/bin/bash
+#
+# Copyright (C) 2015 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
 
 gperffile=$1
 cfile=$2	# c++ source file

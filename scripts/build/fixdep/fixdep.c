@@ -101,6 +101,10 @@
  * UML_CONFIG_BOOM, to avoid conflicts with /usr/include/linux/autoconf.h,
  * through arch/um/include/uml-config.h; this fixdep "bug" makes sure that
  * those files will have correct dependencies.
+ *
+ * Note by Jan Nowotsch:
+ * 	This code has been borrowed from the linux kernel build system.
+ *
  */
 
 #include <string.h>

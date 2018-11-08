@@ -1,3 +1,12 @@
+%
+% Copyright (C) 2018 Jan Nowotsch
+% Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+%
+% Released under the terms of the GNU GPL v2.0
+%
+
+
+
 \section{Kernel Locking}
 
 The kernel does not provide a global lock instead each set of functions that modify shared data and could be subject to concurrent invocation need to be protected through individual locks. The following generic rules apply to the kernel:
