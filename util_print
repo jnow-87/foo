@@ -21,7 +21,7 @@ function print(){
 
 # \brief	print ok message (green)
 function pok(){
-	print ${FG_GREEN} $@
+	print ${FG_GREEN} "$@"
 }
 
 # \brief	print error message (read)

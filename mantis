@@ -147,13 +147,20 @@ function mantis_update_db(){
 	for issue_id in ${issue_ids}
 	do
 		echo -n "updating issue ${issue_id} "
-		db_query "update mantis_custom_field_string_table set text=concat(text, \"${data}\n\") where field_id=${field_id} and bug_id=${issue_id}"
 
-		if [ ! $? -eq 0 ];then
-			perror "failed"
-			ret_val=1
+		text=$(db_query "select text from mantis_custom_field_string_table where field_id=${field_id} and bug_id=${issue_id}" | grep "${data}")
+
+		if [ -n "${text}" ];then
+			pok "already up to date"
 		else
-			pok "done"
+			db_query "update mantis_custom_field_string_table set text=concat(text, \"${data}\n\") where field_id=${field_id} and bug_id=${issue_id}"
+
+			if [ ! $? -eq 0 ];then
+				perror "failed"
+				ret_val=1
+			else
+				pok "done"
+			fi
 		fi
 	done
 
