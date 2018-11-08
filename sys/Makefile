@@ -1,3 +1,12 @@
+#
+# Copyright (C) 2016 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
 obj-y := errno.o string.o memblock.o mutex.o list1.o list2.o
 
 obj-$(CONFIG_KERNEL_PRINTF) += stream.o

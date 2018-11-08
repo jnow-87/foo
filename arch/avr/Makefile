@@ -1,3 +1,12 @@
+#
+# Copyright (C) 2016 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
 obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
 
 obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o

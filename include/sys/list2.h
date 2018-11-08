@@ -1,4 +1,9 @@
-/**
+/*
+ * Copyright (C) 2018 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ *
  * \brief	Macro implementation for double-linked lists. The names for
  * 			the next and prev link elements have to be specified as
  * 			parameter.
@@ -9,6 +14,9 @@
  * of the list, while the list is delimited by 0x0 with
  * head->prev->next = 0x0
  */
+
+
+
 #ifndef SYS_LIST2_H
 #define SYS_LIST2_H
 

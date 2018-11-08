@@ -1,3 +1,12 @@
+#
+# Copyright (C) 2016 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
 obj-y := init.o kernel.o panic.o csection.o task.o sched/ fs/ memory/ binloader/
 
 obj-$(CONFIG_KERNEL_SYSCALL) += syscall.o

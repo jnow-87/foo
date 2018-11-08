@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2016 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
 #include <arch/io.h>
 #include <kernel/kprintf.h>
 #include <kernel/opt.h>

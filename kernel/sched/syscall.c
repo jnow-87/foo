@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2018 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
 #include <arch/core.h>
 #include <arch/memory.h>
 #include <kernel/init.h>

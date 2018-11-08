@@ -1,4 +1,9 @@
-/**
+/*
+ * Copyright (C) 2018 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ *
  * \brief	Macro implementation for single-linked lists. The name for
  * 			the next link element has to be specified as parameter.
  *
@@ -8,6 +13,9 @@
  * of the list, while the list is delimited by 0x0 with
  * head->prev->next = 0x0
  */
+
+
+
 #ifndef SYS_LIST1_H
 #define SYS_LIST1_H
 
