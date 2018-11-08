@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2015 Jan Nowotsch
  * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
  *
