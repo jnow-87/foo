@@ -115,9 +115,12 @@ do
 	issue_ids=$(mantis_check_commit "${msg}")
 
 	# check what to do
-	if [ ${has_cfg} -eq 0 -a -n "${issue_ids}" ];then
-		# issue mentioned in commit message but issue tracker config is missing
-		pwarn "detected issue tag in commit message, while issue tracker config is missing"
+	if [ ${has_cfg} -eq 0 ];then
+		if [ -n "${issue_ids}" ];then
+			# issue mentioned in commit message but issue tracker config is missing
+			perror "detected issue tag in commit message, while issue tracker config is missing"
+			exit 1
+		fi
 
 	elif [ ${require_tag} -eq 1 -a -z "${issue_ids}" ];then
 		# no issue in commit message while one is expected
@@ -126,7 +129,9 @@ do
 	fi
 
 	# check if all data match the database configuration
-	mantis_check_db ${issue_ids}; [ $? -eq 0 ] && exit 1
+	if [ ${has_cfg} -eq 1 ];then
+		mantis_check_db ${issue_ids}; [ $? -eq 0 ] && exit 1
+	fi
 
 	let i=$i+1
 done
@@ -136,6 +141,12 @@ i=1
 
 while [ $i -lt ${#commits[*]} ]
 do
+	# do nothing if no config available
+	if [ ! ${has_cfg} -eq 1 ];then
+		let i=$i+1
+		continue
+	fi
+
 	# get commit message
 	msg=$(git log -1 --format=tformat:'%s\n%b' ${commits[$i]})
 
@@ -144,7 +155,12 @@ do
 	#	commit hash (long)
 	#	author mail
 	#	date
-	data=$(git log -1 --date=format:'%Y-%m-%d %k:%M' --format=tformat:'%H %ae %ad' ${commits[$i]})
+	data=$(git log -1 --date=format:'%Y-%m-%d %k:%M' --format=tformat:'%H %ae %ad' ${commits[$i]} 2>>/dev/null)
+
+	# try different date format on error
+	if [ ! $? -eq 0 ];then
+		data=$(git log -1 --date=iso --format=tformat:'%H %ae %ad' ${commits[$i]})
+	fi
 
 	# get issue ids from commit message
 	issue_ids=$(mantis_check_commit "${msg}")
