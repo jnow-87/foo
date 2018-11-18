@@ -116,6 +116,11 @@ all_types := $(obj_types) $(lib_types) $(bin_types)
 all_build_tools := cc cxx as ld ar hostcc hostcxx hostas hostld hostar lex yacc gperf
 all_user_tools := $(tool_deps)
 
+# init global flag variables
+$(foreach flag,$(all_flags), \
+    $(eval $(flag) := ) \
+)
+
 # init global variables for list of objects, libraries and executables
 $(foreach type,$(supported_types), \
 	$(eval $(type) :=) \
