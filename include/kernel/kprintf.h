@@ -77,7 +77,7 @@ typedef enum{
 #endif // CONFIG_KERNEL_PRINTF
 
 
-/* protoypes */
+/* prototypes */
 #if CONFIG_KERNEL_PRINTF
 
 void kprintf(kmsg_t lvl, char const *format, ...);

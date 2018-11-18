@@ -104,7 +104,7 @@ int memblock_free(memblock_t **pool, void *addr){
 	else if(el == 0x0){
 		el = list_last(*pool);
 
-		if((void*)el + el->len == blk){
+		if(el && (void*)el + el->len == blk){
 			// merge with tail
 			el->len += blk->len;
 		}
