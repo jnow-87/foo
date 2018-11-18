@@ -76,7 +76,7 @@ void *malloc(size_t size){
 	list_add_tail(block_lst, cur_block);
 
 	cur_block->mem = addr + sizeof(block_t);
-	memblock_init(cur_block->mem, p.size);
+	memblock_init(cur_block->mem, p.size - sizeof(block_t));
 
 	addr = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
 
