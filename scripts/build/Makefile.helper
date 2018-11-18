@@ -74,16 +74,16 @@ endef
 ##   rule generation   ###
 ###########################
 
-# generate target-specific rule for <target>-*flags
-#	- generate: <target>: <flag> += <target>-flag
-#	- generate: $(basename <target>).i: <flag> += <target>-flag
+# generate target-specific rule for <target>-*flags and <target>-*flags-y
+#	- generate: <target>: <flag> += <target>-<flag> <target>-<flag>-y
+#	- generate: $(basename <target>).i: <flag> += <target>-<flag> <target>-<flag>-y
 #		%.i files are only build on explicite request and thus do not depent on <target>
 #
 #	$(call gen_rule_tgt_flags,<target>,<flag>,<dir_prefix>
 define gen_rule_tgt_flags
-	$(if $($(call hostbasename,$(1))-$(2)), \
-		$(eval $(call gen_rule_basic,,$(3)$(1), $(2) += $($(call hostbasename,$(1))-$(2)))) \
-		$(eval $(call gen_rule_basic,,$(3)$(basename $(1)).i, $(2) += $($(call hostbasename,$(1))-$(2)))) \
+	$(if $($(call hostbasename,$(1))-$(2))$($(call hostbasename,$(1))-$(2)-y), \
+		$(eval $(call gen_rule_basic,,$(3)$(1), $(2) += $($(call hostbasename,$(1))-$(2)) $($(call hostbasename,$(1))-$(2)-y))) \
+		$(eval $(call gen_rule_basic,,$(3)$(basename $(1)).i, $(2) += $($(call hostbasename,$(1))-$(2)) $($(call hostbasename,$(1))-$(2)-y))) \
 	)
 endef
 
