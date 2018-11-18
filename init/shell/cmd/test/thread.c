@@ -7,7 +7,6 @@
 
 
 
-#include <cmd/test/test.h>
 #include <sys/escape.h>
 #include <sys/mutex.h>
 #include <stdio.h>
@@ -15,6 +14,7 @@
 #include <time.h>
 #include <string.h>
 #include <sched.h>
+#include <shell/cmd/test/test.h>
 
 
 /* macros */

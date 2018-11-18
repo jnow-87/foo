@@ -10,7 +10,11 @@
 bin-y := init.elf
 
 
-init-y := main.o $(build_tree)/lib/$(lib_name) cmd/
+init-y := main.o shell/
+
+# ensure init is rebuild if libsys is updated
+init-y += $(build_tree)/lib/$(lib_name)
+
 
 # additional init linker options
 init-cppflags := -I"include/lib" -I$(loc_src_tree) -I$(loc_build_tree)

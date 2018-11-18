@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <cmd/cmd.h>
+#include <shell/cmd.h>
 
 
 /* local/static prototyes */

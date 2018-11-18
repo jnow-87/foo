@@ -89,7 +89,7 @@ endmenu
 # {{{
 menu "Init binary settings"
 	config INIT_BINARY
-		hex "Adress of the init binary"
+		hex "Address of the init binary"
 
 	choice
 		prompt "Init binary type"
