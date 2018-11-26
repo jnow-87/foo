@@ -178,7 +178,7 @@ static void parse_dep_file(void *dmap, size_t len){
 	hashtbl_clear();
 
 	/* find target */
-	while(m < end && (*m == ' ' || *m == '\\' || *m == '\n')) m++;
+	while(m < end && (*m == ' ' || *m == '\\' || *m == '\n' || *m == '\r')) m++;
 
 	tgt = m;
 
@@ -195,11 +195,11 @@ static void parse_dep_file(void *dmap, size_t len){
 	/* handle prerequisites */
 	while(m < end){
 		// find next prerequisites
-		while(m < end && (*m == ' ' || *m == '\\' || *m == '\n')) m++;
+		while(m < end && (*m == ' ' || *m == '\\' || *m == '\n' || *m == '\r')) m++;
 
 		prereq = m;
 
-		while(m < end && *m != ' ' && *m != '\n' && *m != '\\') m++;
+		while(m < end && *m != ' ' && *m != '\\' && *m != '\n' && *m != '\r') m++;
 
 		// break if prerequisite is actually a target
 		if(m > 0 && m[-1] == ':'){
