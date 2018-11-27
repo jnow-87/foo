@@ -278,8 +278,6 @@ static void task_cleanup(void *p){
 		csection_unlock(&sched_lock);
 
 		/* destroy thread and potentially parent process */
-		DEBUG("destroy thread %s.%d\n", this_p->name, this_t->tid);
-
 		thread_destroy(this_t);
 
 		if(list_empty_safe(this_p->threads, &this_p->mtx))

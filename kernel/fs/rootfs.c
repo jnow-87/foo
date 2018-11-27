@@ -55,7 +55,7 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 	if(*path == 0)
 		goto_errno(err, E_INVAL);
 
-	DEBUG("register file system to \"%s\"\n", path);
+	INFO("register file system to \"%s\"\n", path);
 
 	fs_lock();
 
@@ -109,7 +109,7 @@ int rootfs_rmdir(fs_node_t *node){
 	if(!list_empty(node->childs) || node->data != 0x0)
 		goto_errno(end, E_INUSE);
 
-	DEBUG("release file system from \"%s\"\n", node->name);
+	INFO("release file system from \"%s\"\n", node->name);
 
 	goto_errno(end, fs_node_destroy(node));
 
@@ -187,8 +187,6 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 			/* file system boundary reached, hence call subsequent file system handler */
 			if(start->ops->open == 0x0)
 				return_errno(E_NOIMP);
-
-			DEBUG("call subsequent file system\n");
 
 			return start->ops->open(start, path, mode, this_p);
 

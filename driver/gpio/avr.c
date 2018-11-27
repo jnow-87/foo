@@ -11,6 +11,7 @@
 #include <arch/avr/atmega.h>
 #include <kernel/init.h>
 #include <kernel/devfs.h>
+#include <kernel/kprintf.h>
 #include <sys/types.h>
 #include <sys/register.h>
 
@@ -184,6 +185,8 @@ static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	v = *ports[port].reg_pin & (ports[port].in_mask | ports[port].out_mask);
 	*((char*)buf) = bits(v, pin, mask);
 
+	DEBUG("port %#hhx, pin %#hhx, mask %#hhx, val %#hhx\n", port, pin, mask, *((char*)buf));
+
 	return 1;
 }
 
@@ -208,6 +211,8 @@ static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	v = *ports[port].reg_pin & ~mask;
 	v |= (*((char*)buf) << pin) & mask;
 	*ports[port].reg_port = v & ports[port].out_mask;
+
+	DEBUG("port %#hhx, pin %#hhx, mask %#hhx, val %#hhx\n", port, pin, mask, v);
 
 	return 1;
 }

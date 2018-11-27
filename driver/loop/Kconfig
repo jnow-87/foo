@@ -16,4 +16,9 @@ if DRIVER_LOOPBACK
 	config LOOP_BUF_SIZE
 		int "Loop device buffer size"
 		default 16
+
+	config LOOP_DEBUG
+		bool "Enable debug messages"
+		depends on KERNEL_MSG_DEBUG
+		default n
 endif # DRIVER_LOOPBACK

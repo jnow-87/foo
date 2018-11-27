@@ -16,6 +16,7 @@
 #include <sys/syscall.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
+#include <sys/string.h>
 
 
 /* static variables */
@@ -37,7 +38,7 @@ int sc_register(sc_t num, sc_hdlr_t hdlr){
 
 	mutex_unlock(&sc_mtx);
 
-	DEBUG("registered handler for syscall %d to %#x\n", num, hdlr);
+	INFO("registered handler for syscall %d to %#x\n", num, hdlr);
 
 	return E_OK;
 
@@ -85,8 +86,6 @@ int ksc_hdlr(sc_t num, void *param, size_t psize){
 	hdlr = sc_map[num];
 	mutex_unlock(&sc_mtx);
 
-	DEBUG("syscall %d on %s:%u\n", num, this_t->parent->name, this_t->tid);
-
 	/* check syscall */
 	if(num >= NSYSCALLS || hdlr == 0x0)
 		return E_INVAL;
@@ -99,7 +98,8 @@ int ksc_hdlr(sc_t num, void *param, size_t psize){
 	r = hdlr(kparam);
 	int_enable(INT_NONE);
 
-	DEBUG("syscall %d returned %#x, errno %#x\n", num, r, errno);
+	if(r != 0)
+		DEBUG("syscall %d on %s:%u failed %s (%#x, %#x)\n", num, this_t->parent->name, this_t->tid, strerror(errno), errno, r);
 
 	/* copy result to user space */
 	copy_to_user(param, kparam, psize, this_t->parent);

@@ -31,40 +31,35 @@ typedef enum{
 #define KMSG_ANY	(KMSG_FATAL | KMSG_WARN | KMSG_DEBUG | KMSG_INFO | KMSG_STAT)
 
 // general print macros
-#ifdef CONFIG_KERNEL_MSG_FATAL
+#if (defined(CONFIG_KERNEL_MSG_FATAL) && !defined(BUILD_KERNEL_MSG_FATAL_DISABLE))
 #define	FATAL(fmt, ...)		cprintf(KMSG_FATAL, FG_RED "[FTL]" RESET_ATTR " %25.25s:%-20.20s    " FG_RED fmt RESET_ATTR, __FILE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define FATAL(fmt, ...)		{}
 #endif // CONFIG_KERNEL_MSG_FATAL
 
-#if !defined(CONFIG_KERNEL_MSG_WARN) \
- || (defined(BUILD_KERNEL_INIT) && !defined(CONFIG_KERNEL_EARLY_PRINT))
-#define WARN(fmt, ...)		{}
-#else
+#if (defined(CONFIG_KERNEL_MSG_WARN) && !defined(BUILD_KERNEL_MSG_WARN_DISABLE))
 #define WARN(fmt, ...)		cprintf(KMSG_WARN, FG_YELLOW "[WRN]" RESET_ATTR " %25.25s:%-20.20s    " FG_YELLOW fmt RESET_ATTR, __FILE__, __FUNCTION__, ##__VA_ARGS__)
+#else
+#define WARN(fmt, ...)		{}
 #endif // CONFIG_KERNEL_MSG_WARN
 
-#ifdef CONFIG_KERNEL_MSG_INFO
+#if (defined(CONFIG_KERNEL_MSG_INFO) && !defined(BUILD_KERNEL_MSG_INFO_DISABLE))
 #define INFO(fmt, ...)		cprintf(KMSG_INFO, fmt, ##__VA_ARGS__)
 #else
 #define INFO(fmt, ...)		{}
 #endif // CONFIG_KERNEL_MSG_INFO
 
-#ifdef CONFIG_KERNEL_STAT
+#if (defined(CONFIG_KERNEL_STAT) && !defined(BUILD_KERNEL_STAT_DISABLE))
 #define STAT(fmt, ...)		kprintf(KMSG_STAT, fmt, ##__VA_ARGS__)
 #else
 #define STAT(fmt, ...)		{}
 #endif // CONFIG_KERNEL_STAT
 
 // debug print macros
-#if !defined(CONFIG_KERNEL_MSG_DEBUG) \
- || (defined(BUILD_KERNEL_INIT) && !defined(CONFIG_KERNEL_EARLY_PRINT)) \
- || (defined(BUILD_KERNEL_SYSCALL) && !defined(CONFIG_KERNEL_SC_DEBUG)) \
- || (defined(BUILD_KERNEL_FS) && !defined(CONFIG_KERNEL_FS_DEBUG)) \
- || (defined(BUILD_DRIVER) && !defined(CONFIG_DRIVER_DEBUG))
-#define DEBUG(fmt, ...)		{}
-#else
+#if (defined(BUILD_KERNEL_MSG_DEBUG) && !defined(BUILD_KERNEL_MSG_DEBUG_DISABLE))
 #define DEBUG(fmt, ...)		cprintf(KMSG_DEBUG, "[DBG] %25.25s:%-20.20s    "fmt, __FILE__, __FUNCTION__, ##__VA_ARGS__)
+#else
+#define DEBUG(fmt, ...)		{}
 #endif
 
 // kprintf

@@ -13,4 +13,4 @@ obj-$(CONFIG_KERNEL_DEVFS) += devfs.o
 obj-$(CONFIG_SC_FILESYSTEM) += syscall.o
 
 
-cppflags-y := -DBUILD_KERNEL_FS
+cppflags-$(CONFIG_SC_FILESYSTEM_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
