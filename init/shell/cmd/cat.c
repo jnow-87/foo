@@ -73,6 +73,11 @@ static int exec(int argc, char **argv){
 		n = f_stat.size;
 	}
 
+	if(n == 0){
+		fprintf(stderr, "error: zero len\n");
+		goto end;
+	}
+
 	// read
 	for(; n>0; n--){
 		c = fgetc(fp);
