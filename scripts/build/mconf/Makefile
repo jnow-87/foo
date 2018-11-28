@@ -24,7 +24,7 @@ mconfig-gperfflags := -a -C -E -g -k '1,3,$$$$' -p -t
 confheader-y := confheader.o zconf.tab.o
 
 confheader-hostcppflags := -I"$(loc_src_tree)" -I"$(loc_build_tree)" -DYYDEBUG
-confheader-hostcflags := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
+confheader-hostcflags := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -Wno-shadow
 confheader-yaccflags := --name-prefix=zconf
 confheader-lexflags := --prefix=zconf
 confheader-gperfflags := -a -C -E -g -k '1,3,$$$$' -p -t
