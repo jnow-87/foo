@@ -21,8 +21,9 @@ ifneq ($(PREPARE_DONE),13)
 
   # prevent prepare_deps if either of the following targets is called
   # 	%clean%
-  # 	%defconfig%
-  ifneq ($(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS)))),)
+  # 	defconfig%
+  # 	menuconfig
+  ifneq ($(filter-out menuconfig,$(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS))))),)
     # check if clean targets are mixed with other targets that require prepare_deps
     ifneq ($(filter clean%,$(MAKECMDGOALS))$(filter %clean,$(MAKECMDGOALS)),)
       $(error Mixing clean with other targets is not supported by the build system)
@@ -95,7 +96,16 @@ endif
 
 # include config file if defined
 ifneq ("$(config)","")
--include $(config)
+  # warn if $(config) does not exist and none of the following targets is called
+  # 	defconfig%
+  # 	menuconfig
+  ifneq ($(filter-out menuconfig,$(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS))))),)
+    ifeq ("$(wildcard $(config))","")
+      $(warning $(config) does not exist, run $$make menuconfig or $$make defconfig-* first)
+    endif
+  endif
+
+  -include $(config)
 endif
 
 # check project type
@@ -227,7 +237,7 @@ prepare_deps:
 	@:
 
 # check if all build tools are available
-check_build_tools_error := "please make sure that $${id} or CONFIG_$${id} is initialised correctly, current value is \"$${val}\""
+check_build_tools_error := "can't find \"$${val}\", ensure the variables $${id} or CONFIG_$${id} to be initialised correctly"
 
 build_tools :=
 $(foreach tool,$(all_build_tools), \
@@ -246,7 +256,7 @@ check_build_tools:
 	exit $${r}
 
 # check if all user tools are available
-check_user_tools_error := "$${tool} required for execution, not found, please make sure it is installed"
+check_user_tools_error := "can't find \"$${tool}\", ensure it is installed"
 
 .PHONY: check_user_tools
 check_user_tools:
