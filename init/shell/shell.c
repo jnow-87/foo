@@ -7,22 +7,20 @@
 
 
 
+#include <config/config.h>
 #include <sys/errno.h>
 #include <sys/stat.h>
 #include <sys/term.h>
 #include <sys/ioctl.h>
 #include <sys/stack.h>
+#include <sys/escape.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <shell/cmd.h>
 #include <shell/shell.h>
-
-
-/* macros */
-#define MAX_LINE_LEN	32
-#define MAX_FILE_NAME	8
+#include <shell/readline.h>
 
 
 /* types */
@@ -30,23 +28,22 @@ typedef struct stream_stack{
 	struct stream_stack *next;
 	FILE *stream;
 	size_t line;
-	char file[MAX_FILE_NAME];
+	char file[CONFIG_FILE_MAX];
 } stream_stack;
 
 
 /* local/static prototypes */
-static size_t readline(FILE *stream, char *line, size_t n);
 static int strsplit(char *line, int *_argc, char ***_argv);
 
 
 /* global variables */
-char shell_file[MAX_FILE_NAME];
+char shell_file[CONFIG_FILE_MAX];
 size_t shell_line = 0;
 
 
 /* global functions */
 void shell(char const *prompt){
-	char buf[MAX_LINE_LEN];
+	char buf[CONFIG_LINE_MAX];
 	int argc;
 	char **argv;
 	int exec_err;
@@ -62,11 +59,11 @@ void shell(char const *prompt){
 	stream = stdin;
 	streams = 0x0;
 	shell_line = 0;
-	strncpy(shell_file, "stdin", MAX_FILE_NAME);
+	strncpy(shell_file, "stdin", CONFIG_FILE_MAX);
 
 	// enable terminal echo
 	ioctl(0, IOCTL_CFGRD, &tc, sizeof(term_cfg_t));
-	tc.flags |= TF_ECHO;
+	tc.flags &= ~TF_ECHO;
 	ioctl(0, IOCTL_CFGWR, &tc, sizeof(term_cfg_t));
 
 	// init commands
@@ -77,13 +74,15 @@ void shell(char const *prompt){
 		/* shell prompt */
 		if(stream == stdin){
 			fputs(prompt, stdout);
+			fputs(STORE_POS, stdout);
 			fflush(stdout);
+			exec_err = 0;
 		}
 
 		/* read input */
 		shell_line++;
 
-		if(exec_err || stream == 0x0 || readline(stream, buf, MAX_LINE_LEN) == 0){
+		if(exec_err || stream == 0x0 || readline(stream, buf, CONFIG_LINE_MAX) == 0){
 			exec_err = 0;
 			stackp = stack_pop(streams);
 
@@ -91,7 +90,7 @@ void shell(char const *prompt){
 				fclose(stream);
 
 				stream = stackp->stream;
-				strncpy(shell_file, stackp->file, MAX_FILE_NAME);
+				strncpy(shell_file, stackp->file, CONFIG_FILE_MAX);
 				shell_line = stackp->line;
 
 				free(stackp);
@@ -117,7 +116,7 @@ void shell(char const *prompt){
 			}
 
 			stackp->stream = stream;
-			strncpy(stackp->file, shell_file, MAX_FILE_NAME);
+			strncpy(stackp->file, shell_file, CONFIG_FILE_MAX);
 			stackp->line = shell_line;
 
 			stack_push(streams, stackp);
@@ -129,7 +128,7 @@ void shell(char const *prompt){
 				SHELL_ERROR("error opening script %s \"%s\"\n", argv[0], strerror(errno));
 
 			// update globals
-			strncpy(shell_file, argv[0], MAX_FILE_NAME);
+			strncpy(shell_file, argv[0], CONFIG_FILE_MAX);
 			shell_line = 0;
 		}
 		else
@@ -146,47 +145,6 @@ iter_clean:
 
 
 /* local functions */
-static size_t readline(FILE *stream, char *line, size_t n){
-	size_t i;
-	int r;
-	term_err_t terr;
-
-
-	i = 0;
-
-	while(i < n){
-		r = read(fileno(stream), line + i, 1);
-
-		if(r < 0)
-			goto err;
-
-		if(r == 0 || line[i] == '\n'){
-			line[i] = 0;
-			return i;
-		}
-
-		if(line[i] == '\r')
-			continue;
-
-		i++;
-	}
-
-
-err:
-	if(errno & E_IO){
-		ioctl(fileno(stream), IOCTL_STATUS, &terr, sizeof(term_err_t));
-		printf("readline I/O error: %s (%#x), term error %#x\n", strerror(errno), errno, terr);
-		errno = 0;
-	}
-
-	if(errno){
-		printf("readline error on fd %d: %s (%#x)\n", fileno(stream), strerror(errno), errno);
-		errno = 0;
-	}
-
-	return 0;
-}
-
 static int strsplit(char *line, int *_argc, char ***_argv){
 	unsigned int i, j, len, start, arg_len;
 	int argc;

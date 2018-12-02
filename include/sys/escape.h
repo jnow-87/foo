@@ -42,5 +42,9 @@
 #define INVERSE		"\033[7m"
 #define INVISIBLE	"\033[8m"
 
+// cursor
+#define STORE_POS	"\033[s"
+#define RESTORE_POS	"\033[u"
+
 
 #endif // SYS_ESCAPE_H

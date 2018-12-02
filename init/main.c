@@ -7,13 +7,14 @@
 
 
 
+#include <sys/escape.h>
 #include <shell/shell.h>
 
 
 /* global functions */
 int main(int argc, char **argv){
 	/* shell */
-	shell("> ");
+	shell(FG_BLUE "::: " RESET_ATTR);
 
 	return 0;
 }
