@@ -210,7 +210,10 @@ static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	/* update port */
 	v = *ports[port].reg_pin & ~mask;
 	v |= (*((char*)buf) << pin) & mask;
-	*ports[port].reg_port = v & ports[port].out_mask;
+
+	// only update pins configured as output
+	// input pins are kept set to ensure their changes remain visible
+	*ports[port].reg_port = (v & ports[port].out_mask) | ports[port].in_mask;
 
 	DEBUG("port %#hhx, pin %#hhx, mask %#hhx, val %#hhx\n", port, pin, mask, v);
 
