@@ -109,6 +109,26 @@ static int init(void){
 	char name[] = "pa0";
 	int *data;
 	devfs_ops_t ops;
+	uint8_t inits[] = {
+#ifdef CONFIG_GPIO_PORTA_IN_MASK
+	CONFIG_GPIO_PORTA_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTB_IN_MASK
+	CONFIG_GPIO_PORTB_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTC_IN_MASK
+	CONFIG_GPIO_PORTC_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTD_IN_MASK
+	CONFIG_GPIO_PORTD_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTE_IN_MASK
+	CONFIG_GPIO_PORTE_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTF_IN_MASK
+	CONFIG_GPIO_PORTF_INIT,
+#endif
+	};
 
 
 	ops.open = 0x0;
@@ -156,7 +176,7 @@ static int init(void){
 		 * 		1			1			1 (output)
 		 */
 		*ports[i].reg_ddr = ports[i].out_mask;
-		*ports[i].reg_port = ports[i].in_mask;
+		*ports[i].reg_port = inits[i] | ports[i].in_mask;
 	}
 
 	return 0;
