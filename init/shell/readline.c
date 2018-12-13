@@ -34,7 +34,7 @@ static esc_t parse_esc(char const *s, size_t len);
 
 
 /* global functions */
-size_t readline(FILE *stream, char *line, size_t n){
+size_t readline_stdin(FILE *stream, char *line, size_t n){
 	char c;
 	size_t i,
 		   end,
@@ -192,6 +192,40 @@ err:
 		errno = 0;
 	}
 
+	if(errno){
+		printf("readline error on fd %d: %s (%#x)\n", fileno(stream), strerror(errno), errno);
+		errno = 0;
+	}
+
+	return 0;
+}
+
+size_t readline_regfile(FILE *stream, char *line, size_t n){
+	size_t i;
+	int r;
+
+
+	i = 0;
+
+	while(i < n){
+		r = read(fileno(stream), line + i, 1);
+
+		if(r < 0)
+			goto err;
+
+		if(r == 0 || line[i] == '\n'){
+			line[i] = 0;
+			return i;
+		}
+
+		if(line[i] == '\r')
+			continue;
+
+		i++;
+	}
+
+
+err:
 	if(errno){
 		printf("readline error on fd %d: %s (%#x)\n", fileno(stream), strerror(errno), errno);
 		errno = 0;

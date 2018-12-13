@@ -16,7 +16,8 @@
 
 
 /* prototypes */
-size_t readline(FILE *stream, char *line, size_t n);
+size_t readline_stdin(FILE *stream, char *line, size_t n);
+size_t readline_regfile(FILE *stream, char *line, size_t n);
 
 
 #endif // INIT_READLINE

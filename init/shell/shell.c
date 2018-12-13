@@ -82,7 +82,12 @@ void shell(char const *prompt){
 		/* read input */
 		shell_line++;
 
-		if(exec_err || stream == 0x0 || readline(stream, buf, CONFIG_LINE_MAX) == 0){
+		if(!exec_err && stream){
+			if(stream == stdin)	exec_err = (readline_stdin(stream, buf, CONFIG_LINE_MAX) == 0);
+			else				exec_err = (readline_regfile(stream, buf, CONFIG_LINE_MAX) == 0);
+		}
+
+		if(exec_err || stream == 0x0){
 			exec_err = 0;
 			stackp = stack_pop(streams);
 
