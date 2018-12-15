@@ -11,6 +11,7 @@
 #include <sys/stdarg.h>
 #include <sys/string.h>
 #include <sys/stream.h>
+#include <sys/limits.h>
 
 
 /* macros */
@@ -27,8 +28,8 @@
 #define INTTYPE		ssize_t
 #define UINTTYPE	size_t
 #elif defined(CONFIG_PRINTF_PTRDIFF)
-#define INTTYPE		ptrdiff_t
-#define UINTTYPE	ptrdiff_t
+#define INTTYPE		long int
+#define UINTTYPE	unsigned long int
 #else
 #define INTTYPE		int
 #define UINTTYPE	unsigned int
@@ -66,31 +67,8 @@ typedef enum{
 } len_t;
 
 typedef union{
-	INTTYPE ref;
-	char c;
-	short int s;
-	int i;
+	UINTTYPE i;
 	void *p;
-
-#ifdef CONFIG_PRINTF_LONG
-	long int l;
-#endif // CONFIG_PRINTF_LONG
-
-#ifdef CONFIG_PRINTF_LONGLONG
-	long long int ll;
-#endif // CONFIG_PRINTF_LONGLONG
-
-#ifdef CONFIG_PRINTF_INTMAX
-	intmax_t im;
-#endif // CONFIG_PRINTF_INTMAX
-
-#ifdef CONFIG_PRINTF_SIZET
-	ssize_t st;
-#endif // CONFIG_PRINTF_SIZET
-
-#ifdef CONFIG_PRINTF_PTRDIFF
-	ptrdiff_t pd;
-#endif // CONFIG_PRINTF_PTRDIFF
 
 #ifdef FLOATTYPE
 	FLOATTYPE d;
@@ -387,26 +365,29 @@ static int get_spec(char const *format, va_list lst, len_t len, fflag_t *flags, 
 }
 
 static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, value_t *v){
+	UINTTYPE max;
+
+
 	switch(len){
 	case LEN_CHAR:
+		v->i = va_arg(lst, int);
+		max = UCHAR_MAX;
+		break;
+
 	case LEN_SHORT:
+		v->i = va_arg(lst, int);
+		max = USHRT_MAX;
+		break;
+
 	case LEN_INT:
 		v->i = va_arg(lst, int);
-
-		if(check_sign && v->i < 0){
-			*flags |= FFL_SIGNED;
-			v->i *= -1;
-		}
+		max = UINT_MAX;
 		break;
 
 	case LEN_LONG:
 #ifdef CONFIG_PRINTF_LONG
-		v->l = va_arg(lst, long int);
-
-		if(check_sign && v->l < 0){
-			*flags |= FFL_SIGNED;
-			v->l *= -1;
-		}
+		v->i = va_arg(lst, long int);
+		max = ULONG_MAX;
 		break;
 #else
 		(void)va_arg(lst, long int);
@@ -415,12 +396,8 @@ static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, valu
 
 	case LEN_LONGLONG:
 #ifdef CONFIG_PRINTF_LONGLONG
-		v->ll = va_arg(lst, long long int);
-
-		if(check_sign && v->ll < 0){
-			*flags |= FFL_SIGNED;
-			v->ll *= -1;
-		}
+		v->i = va_arg(lst, long long int);
+		max = ULLONG_MAX;
 		break;
 #else
 		(void)va_arg(lst, long long int);
@@ -429,12 +406,8 @@ static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, valu
 
 	case LEN_SIZET:
 #ifdef CONFIG_PRINTF_SIZET
-		v->st = va_arg(lst, size_t);
-
-		if(check_sign && v->st < 0){
-			*flags |= FFL_SIGNED;
-			v->st *= -1;
-		}
+		v->i = va_arg(lst, size_t);
+		max = SIZE_MAX;
 		break;
 #else
 		(void)va_arg(lst, size_t);
@@ -443,12 +416,8 @@ static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, valu
 
 	case LEN_PTRDIFF:
 #ifdef CONFIG_PRINTF_PTRDIFF
-		v->pd = va_arg(lst, PTRDIFF_T);
-
-		if(check_sign && v->pd < 0){
-			*flags |= FFL_SIGNED;
-			v->pd *= -1;
-		}
+		v->i = va_arg(lst, PTRDIFF_T);
+		max = (UINTTYPE)PTRDIFF_MAX * 2 + 1;
 		break;
 #else
 		(void)va_arg(lst, PTRDIFF_T);
@@ -457,17 +426,25 @@ static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, valu
 
 	case LEN_INTMAX:
 #ifdef CONFIG_PRINTF_INTMAX
-		v->im = va_arg(lst, intmax_t);
-
-		if(check_sign && v->im < 0){
-			*flags |= FFL_SIGNED;
-			v->im *= -1;
-		}
+		v->i = va_arg(lst, intmax_t);
+		max = UINTMAX_MAX;
 		break;
 #else
 		(void)va_arg(lst, intmax_t);
 		return -1;
 #endif // CONFIG_PRINTF_INTMAX
+
+	default:
+		return -1;
+	}
+
+	if(!check_sign){
+		if((INTTYPE)v->i < 0)
+			v->i = max + (INTTYPE)v->i + 1;
+	}
+	else if((INTTYPE)v->i < 0){
+		*flags |= FFL_SIGNED;
+		v->i *= -1;
 	}
 
 	return 0;
@@ -647,15 +624,15 @@ static size_t convert(char const *format, fflag_t flags, value_t *v, char *buf){
 	case 'X': // fall through
 	case 'x':
 	case 'p':
-		return utoa_inv(v->ref, buf, 16, flags);
+		return utoa_inv(v->i, buf, 16, flags);
 
 	case 'o':
-		return utoa_inv(v->ref, buf, 8, flags);
+		return utoa_inv(v->i, buf, 8, flags);
 
 	case 'i': // fall through
 	case 'd': // fall through
 	case 'u':
-		return utoa_inv(v->ref, buf, 10, flags);
+		return utoa_inv(v->i, buf, 10, flags);
 
 	case 'f': // fall through
 	case 'F': // fall through
@@ -669,7 +646,7 @@ static size_t convert(char const *format, fflag_t flags, value_t *v, char *buf){
 		return 0;
 
 	case 'c':
-		buf[0] = v->c;
+		buf[0] = (char)v->i;
 		return 1;
 	}
 
