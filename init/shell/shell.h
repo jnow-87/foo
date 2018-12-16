@@ -12,6 +12,7 @@
 
 
 #include <sys/types.h>
+#include <stdio.h>
 
 
 /* macros */
@@ -25,7 +26,7 @@ extern size_t shell_line;
 
 
 /* prototypes */
-void shell(char const *prompt);
+int shell(char const *prompt, FILE *stream);
 
 
 #endif // INIT_SHELL_H

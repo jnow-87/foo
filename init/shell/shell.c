@@ -42,11 +42,12 @@ size_t shell_line = 0;
 
 
 /* global functions */
-void shell(char const *prompt){
+int shell(char const *prompt, FILE *_stream){
 	char buf[CONFIG_LINE_MAX];
 	int argc;
 	char **argv;
-	int exec_err;
+	int exec_err,
+		r;
 	FILE *stream;
 	stat_t f_stat;
 	stream_stack *streams,
@@ -56,7 +57,7 @@ void shell(char const *prompt){
 
 	/* init */
 	exec_err = 0;
-	stream = stdin;
+	stream = _stream;
 	streams = 0x0;
 	shell_line = 0;
 	strncpy(shell_file, "stdin", CONFIG_FILE_MAX);
@@ -83,12 +84,11 @@ void shell(char const *prompt){
 		shell_line++;
 
 		if(!exec_err && stream){
-			if(stream == stdin)	exec_err = (readline_stdin(stream, buf, CONFIG_LINE_MAX) == 0);
-			else				exec_err = (readline_regfile(stream, buf, CONFIG_LINE_MAX) == 0);
+			if(stream == stdin)	r = (readline_stdin(stream, buf, CONFIG_LINE_MAX) == 0);
+			else				r = (readline_regfile(stream, buf, CONFIG_LINE_MAX) == 0);
 		}
 
-		if(exec_err || stream == 0x0){
-			exec_err = 0;
+		if(exec_err || r || stream == 0x0){
 			stackp = stack_pop(streams);
 
 			if(stackp){
@@ -100,7 +100,10 @@ void shell(char const *prompt){
 
 				free(stackp);
 			}
+			else if(_stream != stdin)
+				return exec_err;
 
+			exec_err = 0;
 			continue;
 		}
 
