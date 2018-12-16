@@ -154,14 +154,24 @@ endif
 ## update flash and fuses
 ####
 
+## fuses
 .PHONY: fuse
 fuse:
 	$(CONFIG_AVR_FUSER) $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_TYPE) $(CONFIG_AVR_PROG_PORT)
 
+## flash
+flash_hex := $(loc_build_tree)/flash.hex
+
 .PHONY: flash
-flash: all
-	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(init)
-	sleep 3; $(CONFIG_AVR_PROG) -D -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$(kernel)
+flash: $(flash_hex)
+	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$<
+
+$(flash_hex): all
+	$(echo) generating $@
+	$(QBUILD)avr-objcopy -j .data -j .text -O ihex $(kernel) $(kernel).hex
+	$(QBUILD)avr-objcopy -j .data -j .text -O ihex $(init) $(init).hex
+	$(QBUILD)sed -i "$$ d" $(kernel).hex
+	$(QBUILD)cat $(kernel).hex $(init).hex > $@
 
 ####
 ## read flash
