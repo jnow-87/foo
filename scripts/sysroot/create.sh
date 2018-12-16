@@ -7,26 +7,32 @@
 #
 
 
-
+#
 # argument assignemnt
+#
 build_dir=${1}
 sysroot=${2}
 arch_hdr=${3}
-cfg_hdr=${4}
-kernel_name=${5}
-lib_name=${6}
+kernel_name=${4}
+lib_name=${5}
 
 
+#
 # defines
+#
 verbose=0
 sysroot_dir=${build_dir}/${sysroot}
 
 
+#
 # src include paths to copy to sysroot
-src_dirs="include/sys include/lib include/arch"
+#
+inc_dirs="recent/config include/sys include/lib include/arch"
 
 
+#
 # functions
+#
 function copy(){
 	src=${1}
 	tgt=${2}
@@ -36,21 +42,28 @@ function copy(){
 	cp -r ${src} ${tgt}
 }
 
-
+#
 # script
+#
+
 # create sysroot directory
 echo create sysroot at \"${sysroot_dir}\"
 [ -e ${sysroot_dir} ] && rm -r ${sysroot_dir}
 
-# copy files
+# copy kernel and libsys
 copy ${build_dir}/${kernel_name} ${sysroot_dir}
 copy ${build_dir}/lib/${lib_name} ${sysroot_dir}/lib
-copy ${cfg_hdr} ${sysroot_dir}/usr/include/config
 
-for dir in ${src_dirs}
+# copy include directories
+for dir in ${inc_dirs}
 do
 	copy ${dir} ${sysroot_dir}/usr/include
 done
+
+# copy linker scripts
+copy scripts/linker ${sysroot_dir}
+copy "$(find recent/arch -name \*.lds)" ${sysroot_dir}/linker
+
 
 [ ${verbose} -gt 0 ] && echo -e "\n"
 
