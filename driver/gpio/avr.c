@@ -11,6 +11,7 @@
 #include <arch/avr/atmega.h>
 #include <kernel/init.h>
 #include <kernel/devfs.h>
+#include <kernel/kprintf.h>
 #include <sys/types.h>
 #include <sys/register.h>
 
@@ -108,6 +109,26 @@ static int init(void){
 	char name[] = "pa0";
 	int *data;
 	devfs_ops_t ops;
+	uint8_t inits[] = {
+#ifdef CONFIG_GPIO_PORTA_IN_MASK
+	CONFIG_GPIO_PORTA_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTB_IN_MASK
+	CONFIG_GPIO_PORTB_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTC_IN_MASK
+	CONFIG_GPIO_PORTC_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTD_IN_MASK
+	CONFIG_GPIO_PORTD_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTE_IN_MASK
+	CONFIG_GPIO_PORTE_INIT,
+#endif
+#ifdef CONFIG_GPIO_PORTF_IN_MASK
+	CONFIG_GPIO_PORTF_INIT,
+#endif
+	};
 
 
 	ops.open = 0x0;
@@ -155,7 +176,7 @@ static int init(void){
 		 * 		1			1			1 (output)
 		 */
 		*ports[i].reg_ddr = ports[i].out_mask;
-		*ports[i].reg_port = ports[i].in_mask;
+		*ports[i].reg_port = inits[i] | ports[i].in_mask;
 	}
 
 	return 0;
@@ -184,6 +205,8 @@ static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	v = *ports[port].reg_pin & (ports[port].in_mask | ports[port].out_mask);
 	*((char*)buf) = bits(v, pin, mask);
 
+	DEBUG("port %#hhx, pin %#hhx, mask %#hhx, val %#hhx\n", port, pin, mask, *((char*)buf));
+
 	return 1;
 }
 
@@ -207,7 +230,12 @@ static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	/* update port */
 	v = *ports[port].reg_pin & ~mask;
 	v |= (*((char*)buf) << pin) & mask;
-	*ports[port].reg_port = v & ports[port].out_mask;
+
+	// only update pins configured as output
+	// input pins are kept set to ensure their changes remain visible
+	*ports[port].reg_port = (v & ports[port].out_mask) | ports[port].in_mask;
+
+	DEBUG("port %#hhx, pin %#hhx, mask %#hhx, val %#hhx\n", port, pin, mask, v);
 
 	return 1;
 }

@@ -7,9 +7,4 @@
 
 
 
-obj-y := kernel.o user.o page.o
-
-obj-$(CONFIG_SC_DYNMEM) += syscall.o
-
-
-cppflags-$(CONFIG_SC_DYNMEM_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+obj-y := shell.o readline.o history.o cmd.o cmd/

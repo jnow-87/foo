@@ -161,14 +161,12 @@ static int sc_hdlr_nice(void *_p){
 }
 
 static int sc_hdlr_exit(void *p){
-	process_t *this_p;
 	thread_t const *this_t;
 
 
 	this_t = sched_running();
-	this_p = this_t->parent;
 
-	DEBUG("thread %s.%u exit with status %d\n", this_p->name, this_t->tid, *((int*)p));
+	DEBUG("thread %s.%u exit with status %d\n", this_t->parent->name, this_t->tid, *((int*)p));
 
 	/* ensure thread is no longer the running one */
 	sched_trigger();

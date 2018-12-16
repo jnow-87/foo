@@ -8,23 +8,20 @@
 
 
 #include <sys/errno.h>
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <cmd/cmd.h>
+#include <unistd.h>
+#include <shell/cmd.h>
 
 
 /* local functions */
 static int exec(int argc, char **argv){
-	char *path;
+	if(argc < 2){
+		printf("usage: %s <directory>\n", argv[0]);
+		return -1;
+	}
 
-
-	path = "/";
-
-	if(argc > 1)
-		path = argv[1];
-
-	if(chdir(path) != 0){
+	if(mkdir(argv[1]) != 0){
 		printf("error \"%s\"\n", strerror(errno));
 		return -1;
 	}
@@ -32,4 +29,4 @@ static int exec(int argc, char **argv){
 	return 0;
 }
 
-command("cd", exec);
+command("mkdir", exec);

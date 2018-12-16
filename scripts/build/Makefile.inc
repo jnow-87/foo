@@ -21,8 +21,9 @@ ifneq ($(PREPARE_DONE),13)
 
   # prevent prepare_deps if either of the following targets is called
   # 	%clean%
-  # 	%defconfig%
-  ifneq ($(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS)))),)
+  # 	defconfig%
+  # 	menuconfig
+  ifneq ($(filter-out menuconfig,$(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS))))),)
     # check if clean targets are mixed with other targets that require prepare_deps
     ifneq ($(filter clean%,$(MAKECMDGOALS))$(filter %clean,$(MAKECMDGOALS)),)
       $(error Mixing clean with other targets is not supported by the build system)
@@ -95,7 +96,16 @@ endif
 
 # include config file if defined
 ifneq ("$(config)","")
--include $(config)
+  # warn if $(config) does not exist and none of the following targets is called
+  # 	defconfig%
+  # 	menuconfig
+  ifneq ($(filter-out menuconfig,$(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS))))),)
+    ifeq ("$(wildcard $(config))","")
+      $(warning $(config) does not exist, run $$make menuconfig or $$make defconfig-* first)
+    endif
+  endif
+
+  -include $(config)
 endif
 
 # check project type
@@ -115,6 +125,11 @@ all_types := $(obj_types) $(lib_types) $(bin_types)
 
 all_build_tools := cc cxx as ld ar hostcc hostcxx hostas hostld hostar lex yacc gperf
 all_user_tools := $(tool_deps)
+
+# init global flag variables
+$(foreach flag,$(all_flags), \
+    $(eval $(flag) := ) \
+)
 
 # init global variables for list of objects, libraries and executables
 $(foreach type,$(supported_types), \
@@ -222,7 +237,7 @@ prepare_deps:
 	@:
 
 # check if all build tools are available
-check_build_tools_error := "please make sure that $${id} or CONFIG_$${id} is initialised correctly, current value is \"$${val}\""
+check_build_tools_error := "can't find \"$${val}\", ensure the variables $${id} or CONFIG_$${id} to be initialised correctly"
 
 build_tools :=
 $(foreach tool,$(all_build_tools), \
@@ -241,7 +256,7 @@ check_build_tools:
 	exit $${r}
 
 # check if all user tools are available
-check_user_tools_error := "$${tool} required for execution, not found, please make sure it is installed"
+check_user_tools_error := "can't find \"$${tool}\", ensure it is installed"
 
 .PHONY: check_user_tools
 check_user_tools:
@@ -350,11 +365,12 @@ help-buildsys:
 	$(printf) "         %25s\t%s\n" "subdir-y" "define sub-directories to include"
 	$(printf) "\n"
 	$(printf) "      \033[1mdefining flags\033[0m\n"
-	$(printf) "         %25s\t%s\n" "[host]<flags>-y" "specify <flags> to be used for all targets within the current directory"
-	$(printf) "         %25s\t%s\n" "<target>-[host]<flags>" "specify <flags> only applied for that <target>"
-	$(printf) "         %25s\t%s\n" "subdir-[host]<flags>" "specify <flags> apply to all sub-directories"
-	$(printf) "         %25s\t%s\n" "<subdir>-[host]<flags>" "specify <flags> apply to all sub-directories"
+	$(printf) "         %25s\t%s\n" "[host]<flag>-y" "specified flags apply to  all targets within the current directory"
+	$(printf) "         %25s\t%s\n" "<target>-[host]<flag>[-y]" "specified flags only apply to <target>"
+	$(printf) "         %25s\t%s\n" "subdir-[host]<flag>[-y]" "specified flags apply to all sub-directories"
+	$(printf) "         %25s\t%s\n" "<subdir>-[host]<flag>]-y]" "specified flags only apply to <subdir>"
 	$(printf) "\n"
+	$(printf) "         \033[1m%15s\033[0m\n" "<flag>"
 	$(printf) "         %25s\t%s\n" "cflags" "c compiler flags"
 	$(printf) "         %25s\t%s\n" "cxxflags" "c++ compiler flags"
 	$(printf) "         %25s\t%s\n" "cppflags" "c pre-processor flags"
@@ -372,7 +388,7 @@ help-buildsys:
 	$(printf) "         %25s\t%s\n" "build_tree" "build tree root"
 	$(printf) "         %25s\t%s\n" "loc_build_tree" "build tree for the current directory"
 	$(printf) "\n\n"
-	$(printf) "   \033[1m\033[4muser defineable variables\033[0m\n"
+	$(printf) "   \033[1m\033[4menvironment variables\033[0m\n"
 	$(printf) "\n"
 	$(printf) "         %25s\t%s\n" "V" "change verbosity, default = 0"
 	$(printf) "         %25s\t%s\n" "BUILD_TREE" "define output directory"
@@ -408,7 +424,7 @@ help-buildsys:
 	$(printf) "\n"
 	$(printf) "         %25s\t%s\n" "check_build_tools" "test if all build tools are available"
 	$(printf) "         %25s\t%s\n" "check_user_tools" "test if all externally required tools, define in 'tool_deps', are available"
-	$(printf) "         %25s\t%s\n" "check_config" "test if the config file defined in 'config' is accesable"
+	$(printf) "         %25s\t%s\n" "check_config" "test if the config file defined in 'config' is accessible"
 
 
 ######################################

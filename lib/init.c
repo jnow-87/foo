@@ -71,7 +71,7 @@ void _start(int (*entry)(void*), void *arg){
 
 /* local functions */
 static int main_arg(int argc, char *args){
-	char *argv[argc];
+	char *argv[argc + 1];
 	int i,
 		j;
 
@@ -79,6 +79,7 @@ static int main_arg(int argc, char *args){
 	/* assign argument strings */
 	j = 1;
 	argv[0] = args;
+	argv[argc] = 0x0;
 
 	for(i=0; j<argc; i++){
 		if(args[i] == 0)

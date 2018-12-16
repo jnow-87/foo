@@ -1,0 +1,46 @@
+#
+# Copyright (C) 2018 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+menu "Commands"
+	config INIT_HELP
+		bool help
+
+	config INIT_CD
+		bool cd
+
+	config INIT_LS
+		bool ls
+
+	config INIT_ECHO
+		bool echo
+
+	config INIT_CAT
+		bool cat
+
+	config INIT_MKDIR
+		bool mkdir
+
+	config INIT_RM
+		bool rm
+
+	config INIT_TEST
+		bool test
+endmenu
+
+menu "Limits"
+	config LINE_MAX
+		int "Max. length of input lines"
+		default 32	if AVR
+		default 256
+
+	config FILE_MAX
+		int "Max. length of file names"
+		default 8	if AVR
+		default 32
+endmenu

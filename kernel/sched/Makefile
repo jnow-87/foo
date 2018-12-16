@@ -10,3 +10,6 @@
 obj-y := thread.o process.o sched.o
 
 obj-$(CONFIG_SC_SCHED) += syscall.o
+
+
+cppflags-$(CONFIG_SC_SCHED_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG

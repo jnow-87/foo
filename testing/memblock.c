@@ -15,6 +15,7 @@
 
 
 /* macros */
+#define ALIGNMENT	0
 #define SIZE_EL0	(2 * sizeof(memblock_t) + 2)
 #define SIZE_EL1	(2 * sizeof(memblock_t) + 4)
 #define SIZE_EL2	(2 * sizeof(memblock_t) + 8)
@@ -104,7 +105,7 @@ static int tc_memblock_alloc_empty(int log){
 	INIT_EL();
 
 	/* alloc */
-	blk = memblock_alloc(&pool, 2, CONFIG_KMALLOC_ALIGN);
+	blk = memblock_alloc(&pool, 2, ALIGNMENT);
 
 	/* check blk */
 	n += check_ptr(log, blk, 0x0);
@@ -136,7 +137,7 @@ static int tc_memblock_alloc_small(int log){
 	list_add_head(pool, el0);
 
 	/* alloc */
-	blk = memblock_alloc(&pool, SIZE_EL0, CONFIG_KMALLOC_ALIGN);
+	blk = memblock_alloc(&pool, SIZE_EL0, ALIGNMENT);
 
 	/* check blk */
 	n += check_ptr(log, blk, 0x0);
@@ -174,7 +175,7 @@ static int tc_memblock_alloc_perfect_fit(int log){
 	list_add_tail(pool, el2);
 
 	/* alloc */
-	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), CONFIG_KMALLOC_ALIGN);
+	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), ALIGNMENT);
 
 	/* check blk */
 	n += check_ptr(log, blk, (void*)el1 + sizeof(memblock_t));
@@ -227,7 +228,7 @@ static int tc_memblock_alloc_split_fit(int log){
 	list_add_tail(pool, el2);
 
 	/* alloc */
-	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), CONFIG_KMALLOC_ALIGN);
+	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), ALIGNMENT);
 
 	/* check blk */
 	n += check_ptr(log, blk, (void*)el3 + sizeof(memblock_t));
@@ -596,9 +597,9 @@ int tc_memblock_cycle(int log){
 	list_add_tail(pool, el3);
 
 	/* alloc */
-	blk0 = memblock_alloc(&pool, 4, CONFIG_KMALLOC_ALIGN);
-	blk1 = memblock_alloc(&pool, 4, CONFIG_KMALLOC_ALIGN);
-	blk2 = memblock_alloc(&pool, 4, CONFIG_KMALLOC_ALIGN);
+	blk0 = memblock_alloc(&pool, 4, ALIGNMENT);
+	blk1 = memblock_alloc(&pool, 4, ALIGNMENT);
+	blk2 = memblock_alloc(&pool, 4, ALIGNMENT);
 
 	/* addresses expected to be in line */
 	n += check_ptr(log, blk0, (void*)el3 + sizeof(memblock_t));

@@ -7,15 +7,12 @@
 
 
 
-#include <cmd/test/test.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/term.h>
 #include <unistd.h>
 #include <stdio.h>
-
-
-
+#include <shell/cmd/test/test.h>
 
 
 /* local functions */

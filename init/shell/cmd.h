@@ -17,7 +17,7 @@
 /* macros */
 #define command(_name, _exec) \
 	static char const cmd_name_##_exec[]  __used = _name; \
-	static cmd_t cmd_##_exec __section(".commands") __used = { .name = cmd_name_##_exec, .exec = _exec }
+	static cmd_t _cmd_call_##_exec __section(".commands") __used = { .name = cmd_name_##_exec, .exec = _exec }
 
 
 /* types */
@@ -28,6 +28,11 @@ typedef struct cmd_t{
 	char const *name;
 	int (*exec)(int argc, char **argv);
 } cmd_t;
+
+
+/* prototypes */
+void cmd_init(void);
+int cmd_exec(int argc, char **argv);
 
 
 #endif // INIT_CMD_H

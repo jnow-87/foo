@@ -37,7 +37,7 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 	fs_node_t *node;
 
 
-	DEBUG("register device \"%s\"\n", name);
+	INFO("register device \"%s\"\n", name);
 
 	dev = kmalloc(sizeof(devfs_dev_t));
 

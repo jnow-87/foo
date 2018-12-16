@@ -7,12 +7,12 @@
 
 
 
-#include <cmd/test/test.h>
 #include <sys/errno.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <shell/cmd/test/test.h>
 
 
 /* local functions */

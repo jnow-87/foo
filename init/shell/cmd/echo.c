@@ -10,7 +10,7 @@
 #include <sys/stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cmd/cmd.h>
+#include <shell/cmd.h>
 
 
 /* local/static prototypes */

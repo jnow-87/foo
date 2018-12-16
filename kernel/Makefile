@@ -29,5 +29,10 @@ ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u"
 endif
 
 ## debug messages
-syscall-cppflags := -DBUILD_KERNEL_SYSCALL
-init-cppflags := -DBUILD_KERNEL_INIT
+init-cppflags-$(CONFIG_KERNEL_MSG_INIT) := -DBUILD_KERNEL_MSG_WARN \
+										   -DBUILD_KERNEL_MSG_INFO
+
+init-cppflags-$(CONFIG_KERNEL_NO_MSG_INIT) := -DBUILD_KERNEL_MSG_WARN_DISABLE \
+											  -DBUILD_KERNEL_MSG_INFO_DISABLE
+
+syscall-cppflags-$(CONFIG_SC_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG

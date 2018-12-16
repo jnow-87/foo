@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <cmd/cmd.h>
+#include <shell/cmd.h>
 
 
 /* local/static prototyes */
@@ -71,6 +71,11 @@ static int exec(int argc, char **argv){
 			goto end;
 
 		n = f_stat.size;
+	}
+
+	if(n == 0){
+		fprintf(stderr, "error: zero len\n");
+		goto end;
 	}
 
 	// read

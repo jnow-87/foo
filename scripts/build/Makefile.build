@@ -236,7 +236,7 @@ $(call pdebug1,generate flag rules)
 ## flag rules
 ####
 
-# target specific flag rules, i.e. <target>-*flags
+# target specific flag rules, i.e. <target>-*flags and <target>-*flags-y
 # 	this applies to all files (direct targets and dependencies)
 $(foreach tgt,$(loc_all_tgt), \
 	$(foreach flag,$(all_flags), \
@@ -420,11 +420,11 @@ $(foreach type,$(all_types), \
 ###   subdirectory traversal   ###
 ##################################
 
-# handle subdir-*flags
-# 	assign <subdir>-*flags to subdir-<subdir>-*flags to avoid overwriting them by name collisions
+# handle subdir-*flags and subdir-*flags-y
+# 	assign <subdir>-*flags and subdir-*flags-y to subdir-<subdir>-*flags to avoid overwriting them by name collisions
 $(foreach dir,$(patsubst %/,%,$(subdir-y)), \
 	$(foreach flag,$(all_flags), \
-		$(eval subdir-$(loc_dir)/$(dir)-$(flag) := $($(dir)-$(flag)) $(subdir-$(flag))) \
+		$(eval subdir-$(loc_dir)/$(dir)-$(flag) := $($(dir)-$(flag)) $($(dir)-$(flag)-y) $(subdir-$(flag)) $(subdir-$(flag)-y)) \
 		$(eval $(dir)-$(flag) :=) \
 	) \
 )

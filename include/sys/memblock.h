@@ -16,17 +16,16 @@
 
 
 /* types */
+/**
+ * \brief	type to represent a block of memory
+ * 				- its starting address equals the address of the
+ * 				  memblock_t instance
+ * 				- its len member represents the entire size of the block,
+ * 				  i.e. usable size + sizeof(memblock_t)
+ */
 typedef struct memblock_t{
 	struct memblock_t *prev,
 					  *next;
-
-	/**
-	 * \brief	type to represent a block of memory
-	 * 				- its starting address equals the address of the
-	 * 				  memblock_t instance
-	 * 				- its len member represents the entire size of the block,
-	 * 				  i.e. usable size + sizeof(memblock_t)
-	 */
 
 	size_t len;
 } memblock_t;

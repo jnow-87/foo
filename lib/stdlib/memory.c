@@ -9,6 +9,7 @@
 
 #include <config/config.h>
 #include <arch/syscall.h>
+#include <lib/stdlib.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/list.h>
@@ -22,13 +23,16 @@ typedef struct block_t{
 	struct block_t *prev,
 				   *next;
 
+	size_t len;
+	size_t alloc_cnt;
+
 	memblock_t *mem;
 } block_t;
 
 
 /* static variables */
-static block_t *block_lst = 0x0;
-static block_t *cur_block = 0x0;
+static block_t *block_lst = 0x0,
+			   *cur_block = 0x0;
 
 static mutex_t mem_mtx = MUTEX_INITIALISER();
 
@@ -73,15 +77,21 @@ void *malloc(size_t size){
 	addr = p.p;
 
 	cur_block = addr;
-	list_add_tail(block_lst, cur_block);
+	cur_block->len = p.size;
+	cur_block->alloc_cnt = 0;
 
 	cur_block->mem = addr + sizeof(block_t);
-	memblock_init(cur_block->mem, p.size);
+	memblock_init(cur_block->mem, p.size - sizeof(block_t));
+
+	list_add_tail(block_lst, cur_block);
 
 	addr = memblock_alloc(&cur_block->mem, size, CONFIG_MALLOC_ALIGN);
 
 
 clean:
+	if(addr)
+		cur_block->alloc_cnt++;
+
 	mutex_unlock(&mem_mtx);
 
 	return addr;
@@ -92,11 +102,14 @@ void free(void *addr){
 	sc_malloc_t p;
 
 
+	if(addr == 0x0)
+		return;
+
 	mutex_lock(&mem_mtx);
 
 	/* identify block associated to addr */
 	list_for_each(block_lst, blk){
-		if((void*)blk <= addr && (void*)blk->mem + blk->mem->len > addr)
+		if((void*)blk <= addr && (void*)blk + blk->len > addr)
 			break;
 	}
 
@@ -107,8 +120,10 @@ void free(void *addr){
 	if(memblock_free(&blk->mem, addr) < 0)
 		goto clean;
 
+	blk->alloc_cnt--;
+
 	/* return block to the kernel if nothing is allocated on it */
-	if((void*)blk + sizeof(block_t) != blk->mem || list_first(blk->mem) != list_last(blk->mem))
+	if(blk->alloc_cnt != 0)
 		goto clean;
 
 	list_rm(block_lst, blk);
@@ -116,7 +131,12 @@ void free(void *addr){
 	p.p = blk;
 	(void)sc(SC_FREE, &p);
 
+	if(blk == cur_block)
+		cur_block = list_first(block_lst);
 
 clean:
 	mutex_unlock(&mem_mtx);
+
+	if(blk == 0x0)
+		exit(-E_NOMEM);
 }

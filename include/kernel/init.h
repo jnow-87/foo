@@ -20,14 +20,14 @@
 typedef struct{
 	int (*call)(void);
 
-#ifdef CONFIG_KERNEL_EARLY_PRINT
+#ifdef CONFIG_KERNEL_MSG_INIT
 	char const *name;
-#endif // CONFIG_KERNEL_EARLY_PRINT
+#endif // CONFIG_KERNEL_MSG_INIT
 } init_call_t;
 
 
 /* macros */
-#ifdef CONFIG_KERNEL_EARLY_PRINT
+#ifdef CONFIG_KERNEL_MSG_INIT
 
 #define init_call(_call, level, stage) \
 	static init_call_t init_call_##_call __section("."#level"_init_stage"#stage) __used = { \
@@ -42,7 +42,7 @@ typedef struct{
 		.call = _call, \
 	}
 
-#endif // CONFIG_KERNEL_EARLY_PRINT
+#endif // CONFIG_KERNEL_MSG_INIT
 
 /**
  * currently defined init levels, order according to calling sequence

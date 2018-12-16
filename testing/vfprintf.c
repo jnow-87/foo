@@ -157,7 +157,7 @@ static int tc_vfprintf(int log){
 	n += test(log,		" 0x0fe",				"% 5.3p", (void*)0xfe);
 	n += test(log,		"0x0fe",				"%#5.3p", (void*)0xfe);
 
-#if defined(CONFIG_PRINTF_LONG)
+#if defined(CONFIG_PRINTF_LONG) || defined(CONFIG_PRINTF_SIZET)
 	n += test(log,		"+0xffffffffffffff02",	"%+5.3p", (void*)-0xfe);
 #elif CONFIG_REGISTER_WIDTH == 8
 	n += test(log,		"+0xffffff02",			"%+5.3p", (void*)-0xfe);

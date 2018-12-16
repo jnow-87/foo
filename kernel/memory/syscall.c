@@ -13,6 +13,7 @@
 #include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
+#include <kernel/kprintf.h>
 #include <sys/mutex.h>
 #include <sys/list.h>
 
@@ -47,6 +48,8 @@ static int sc_hdlr_malloc(void *_p){
 	p = (sc_malloc_t*)_p;
 	this_p = sched_running()->parent;
 
+	DEBUG("size %zu\n", p->size);
+
 	/* adjust size to page boundary requirements */
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	for(psize = PAGESIZE_MIN; psize<=PAGESIZE_MAX; psize++){
@@ -75,6 +78,8 @@ static int sc_hdlr_malloc(void *_p){
 	p->size = psize;
 #endif // CONFIG_KERNEL_VIRT_MEM
 
+	DEBUG("result %p\n", p->p);
+
 	return E_OK;
 }
 
@@ -88,6 +93,8 @@ static int sc_hdlr_free(void *_p){
 	p = (sc_malloc_t*)_p;
 	this_t = sched_running();
 	this_p = this_t->parent;
+
+	DEBUG("%p\n", p->p);
 
 	mutex_lock(&this_p->mtx);
 

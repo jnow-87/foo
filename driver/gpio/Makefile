@@ -8,3 +8,6 @@
 
 
 obj-$(CONFIG_AVR) := avr.o
+
+
+cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG

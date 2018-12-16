@@ -23,6 +23,11 @@ if DRIVER_GPIO
 				hex "PortA output mask"
 				range 0x0 0xff
 				default 0x0
+
+			config GPIO_PORTA_INIT
+				hex "PortA init value"
+				range 0x0 0xff
+				default 0x0
 		endif # AVR_NPORTS_1
 
 		if AVR_NPORTS_2
@@ -33,6 +38,11 @@ if DRIVER_GPIO
 
 			config GPIO_PORTB_OUT_MASK
 				hex "PortB output mask"
+				range 0x0 0xff
+				default 0x0
+
+			config GPIO_PORTB_INIT
+				hex "PortB init value"
 				range 0x0 0xff
 				default 0x0
 		endif # AVR_NPORTS_2
@@ -47,6 +57,11 @@ if DRIVER_GPIO
 				hex "PortC output mask"
 				range 0x0 0xff
 				default 0x0
+
+			config GPIO_PORTC_INIT
+				hex "PortC init value"
+				range 0x0 0xff
+				default 0x0
 		endif # AVR_NPORTS_3
 
 		if AVR_NPORTS_4
@@ -57,6 +72,11 @@ if DRIVER_GPIO
 
 			config GPIO_PORTD_OUT_MASK
 				hex "PortD output mask"
+				range 0x0 0xff
+				default 0x0
+
+			config GPIO_PORTD_INIT
+				hex "PortD init value"
 				range 0x0 0xff
 				default 0x0
 		endif # AVR_NPORTS_4
@@ -71,6 +91,11 @@ if DRIVER_GPIO
 				hex "PortE output mask"
 				range 0x0 0xff
 				default 0x0
+
+			config GPIO_PORTE_INIT
+				hex "PortE init value"
+				range 0x0 0xff
+				default 0x0
 		endif # AVR_NPORTS_5
 
 		if AVR_NPORTS_6
@@ -83,6 +108,16 @@ if DRIVER_GPIO
 				hex "PortF output mask"
 				range 0x0 0xff
 				default 0x0
+
+			config GPIO_PORTF_INIT
+				hex "PortF init value"
+				range 0x0 0xff
+				default 0x0
 		endif # AVR_NPORTS_6
 	endif # AVR
+
+	config GPIO_DEBUG
+		bool "Enable debug messages"
+		depends on KERNEL_MSG_DEBUG
+		default n
 endif # DRIVER_GPIO

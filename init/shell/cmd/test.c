@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cmd/cmd.h>
-#include <cmd/test/test.h>
+#include <shell/cmd/test/test.h>
+#include <shell/cmd.h>
 
 
 /* macros */

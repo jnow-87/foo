@@ -19,10 +19,11 @@ source $(dirname $0)/util_print
 # source style checker
 source $(dirname $0)/style
 
+# source copyright checker
+source $(dirname $0)/copyright
+
 # init
 have_violation=0
-
-echo "checking for style guide violations"
 
 
 # get list of files staged
@@ -40,6 +41,9 @@ do
 	then
 		have_violation=1
 	fi
+
+	# check copyright claim
+	check_copyright ${file}
 done
 
 exit ${have_violation}

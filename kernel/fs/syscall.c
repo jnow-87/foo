@@ -21,14 +21,6 @@
 
 
 /* macros */
-// read/write specific debug macros
-#ifdef CONFIG_KERNEL_FS_DEBUG_RDWR
-#define DEBUGRDWR(fmt, ...)		cprintf(KMSG_DEBUG, "[DBG] %25.25s:%-20.20s    "fmt, __FILE__, __FUNCTION__, ##__VA_ARGS__)
-#else
-#define DEBUGRDWR(fmt, ...)		{}
-#endif
-
-
 /* types */
 typedef void (*task_hdlr_t)(sc_fs_t *p, fs_filed_t *fd, process_t *this_p);
 
@@ -105,7 +97,7 @@ static int sc_hdlr_open(void *_p){
 	if(root->ops->open == 0x0)
 		return_errno(E_NOIMP);
 
-	DEBUG("sc open: path \"%s\", mode %#x\n", path, p->mode);
+	DEBUG("path \"%s\", mode %#x\n", path, p->mode);
 
 	fs_lock();
 	p->fd = root->ops->open(root, path, p->mode, this_p);
@@ -130,7 +122,7 @@ static int sc_hdlr_dup(void *_p){
 	old_id = (int)p->data;
 	old_fd = fs_fd_acquire(old_id, this_p);
 
-	DEBUG("sc dup: oldfd %d%s, newfd %d\n", old_id, (old_fd == 0x0 ? " (invalid)" : ""), p->fd);
+	DEBUG("oldfd %d%s, newfd %d\n", old_id, (old_fd == 0x0 ? " (invalid)" : ""), p->fd);
 
 	// exit if oldfd does not exist or old and new fd are the same
 	if(old_fd == 0x0 || old_fd->id == p->fd)
@@ -171,7 +163,7 @@ static int sc_hdlr_close(void *_p){
 	p = (sc_fs_t*)_p;
 	fd = fs_fd_acquire(p->fd, this_p);
 
-	DEBUG("sc close: fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
+	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -208,7 +200,7 @@ static int sc_hdlr_read(void *_p){
 	p = (sc_fs_t*)_p;
 	fd = fs_fd_acquire(p->fd, this_p);
 
-	DEBUGRDWR("sc read: fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
+	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -217,7 +209,7 @@ static int sc_hdlr_read(void *_p){
 	if(fd->node->ops->read == 0x0)
 		goto_errno(end, E_NOIMP);
 
-	DEBUGRDWR("offset %d, max-len %u\n", fd->fp, p->data_len);
+	DEBUG("offset %d, max-len %u\n", fd->fp, p->data_len);
 
 	mutex_lock(&fd->node->rd_mtx);
 
@@ -234,7 +226,7 @@ static int sc_hdlr_read(void *_p){
 
 	mutex_unlock(&fd->node->rd_mtx);
 
-	DEBUGRDWR("read %d bytes, errno %#x\n", r, errno);
+	DEBUG("read %d bytes, errno %#x\n", r, errno);
 
 	// avoid communicating enf of resource to user space
 	errno &= ~E_END;
@@ -262,7 +254,7 @@ static int sc_hdlr_write(void *_p){
 	p = (sc_fs_t*)_p;
 	fd = fs_fd_acquire(p->fd, this_p);
 
-	DEBUGRDWR("sc write: fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
+	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -271,12 +263,12 @@ static int sc_hdlr_write(void *_p){
 	if(fd->node->ops->write == 0x0)
 		goto_errno(end, E_NOIMP);
 
-	DEBUGRDWR("offset %d, len %u\n", fd->fp, p->data_len);
+	DEBUG("offset %d, len %u\n", fd->fp, p->data_len);
 
 	if(fd->mode & O_NONBLOCK)	task_create(write, p, fd, this_p);
 	else						write(p, fd, this_p);
 
-	DEBUGRDWR("written %d bytes, errno %#x\n", p->data_len, errno);
+	DEBUG("written %d bytes, errno %#x\n", p->data_len, errno);
 
 end:
 	fs_fd_release(fd);
@@ -297,7 +289,7 @@ static int sc_hdlr_ioctl(void *_p){
 	p = (sc_fs_t*)_p;
 	fd =  fs_fd_acquire(p->fd, this_p);
 
-	DEBUG("sc ioctl: fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
+	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -322,8 +314,6 @@ static int sc_hdlr_ioctl(void *_p){
 	if(errno == E_OK)
 		copy_to_user(p->data, data, p->data_len, this_p);
 
-	DEBUG("errno %#x\n", errno);
-
 end:
 	fs_fd_release(fd);
 
@@ -343,7 +333,7 @@ static int sc_hdlr_fcntl(void *_p){
 	p = (sc_fs_t*)_p;
 	fd = fs_fd_acquire(p->fd, this_p);
 
-	DEBUG("sc fcntl: fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
+	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
@@ -370,8 +360,6 @@ static int sc_hdlr_fcntl(void *_p){
 
 	fs_fd_release(fd);
 
-	DEBUG("errno %#x\n", errno);
-
 	return -errno;
 }
 
@@ -387,7 +375,8 @@ static int sc_hdlr_rmnode(void *_p){
 	/* initials */
 	p = (sc_fs_t*)_p;
 	copy_from_user(path, p->data, p->data_len, this_p);
-	DEBUG("sc rmnode: %s\n", path);
+
+	DEBUG("%s\n", path);
 
 	/* identify file system and call its rmnode callback */
 	mutex_lock(&this_p->mtx);
@@ -400,8 +389,6 @@ static int sc_hdlr_rmnode(void *_p){
 	fs_lock();
 	(void)root->ops->node_rm(root, path);
 	fs_unlock();
-
-	DEBUG("errno %#x\n", errno);
 
 	return -errno;
 }
@@ -418,6 +405,7 @@ static int sc_hdlr_chdir(void *_p){
 	/* initials */
 	p = (sc_fs_t*)_p;
 	copy_from_user(path, p->data, p->data_len, this_p);
+
 	DEBUG("sc chdir: %s\n", path);
 
 	/* identify file system and call its findnode callback */

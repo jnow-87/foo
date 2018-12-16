@@ -8,3 +8,6 @@
 
 
 obj-y := loop.o
+
+
+cppflags-$(CONFIG_LOOP_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
