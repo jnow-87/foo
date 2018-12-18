@@ -91,8 +91,7 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	.int_enable = avr_int_enable,
 	.int_enabled = avr_int_enabled,
 
-	.ipi_sleep = 0x0,
-	.ipi_wake = 0x0,
+	.int_ipi = 0x0,
 
 	/* threading */
 	.thread_context_init = avr_thread_context_init,
