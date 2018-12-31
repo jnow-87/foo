@@ -12,6 +12,7 @@
 #include <sys/term.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 #include <shell/cmd/test/test.h>
 
 
@@ -55,7 +56,7 @@ static int exec(void){
 
 		// error handling
 		if(errno){
-			printf("read error %#x -", errno);
+			ERROR("read \"%s\" -", strerror(errno));
 			errno = E_OK;
 
 			ioctl(0, IOCTL_STATUS, &err, sizeof(err));
@@ -69,7 +70,7 @@ static int exec(void){
 				);
 			}
 			else
-				printf("\nioctl error %#x\n", errno);
+				printf("\nioctl error \"%s\"\n", strerror(errno));
 
 			errno = E_OK;
 			continue;
@@ -92,11 +93,15 @@ static int exec(void){
 			e = fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t));
 
 			if(e != 0)
-				printf("fcntl error %#x %#x\n", e, errno);
+				ERROR("fcntl %#x \"%s\"\n", e, strerror(errno));
 		}
 		else if(buf[0] == 'q')
 			break;
 	}
+
+	/* restore blocking mode */
+	f_mode &= ~O_NONBLOCK;
+	fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t));
 
 	return 0;
 }

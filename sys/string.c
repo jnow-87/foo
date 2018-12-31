@@ -95,45 +95,19 @@ char const *strerror(errno_t errnum){
 		"Resource busy",
 		"Resource unavailable",
 		"End of resource",
-		0
+		"Unkown",
 	};
 	static char err_unknown[] = "Unkown error 0x....";
-	static char err_multiple[] = "Multiple errors set 0x....";
-	static char err_limit[] = "Error string to short to display errno";
+	static char err_limit[] = "Error string too short to display errno";
 
-	int i;
-	errno_t mask;
-
-
-	/* no error */
-	if(errnum == 0)
-		return err_str[0];
-
-	/* get first set error */
-	i = 1;
-	mask = 1;
-
-	while(mask != 0 && (errnum & mask) == 0 && err_str[i] != 0){
-		mask <<= 1;
-		i++;
-	}
-
-	/* handle valid errors */
-	if(err_str[i] != 0){
-		// check if multiple bits are set
-		if(errnum & (~mask)){
-			if(itoa(errnum, 16, err_multiple + 22, 2) == 0x0)
-				return err_limit;
-			return err_multiple;
-		}
-
-		// only a single bit set
-		return err_str[i];
-	}
 
 	/* handle unknown errors */
+	if(errnum <= E_UNKNOWN)
+		return err_str[errnum];
+
 	if(itoa(errnum, 16, err_unknown + 15, 2) == 0x0)
 		return err_limit;
+
 	return err_unknown;
 }
 

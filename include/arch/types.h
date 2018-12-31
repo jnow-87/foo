@@ -18,12 +18,12 @@
 #include <kernel/process.h>
 #include <kernel/thread.h>
 #include <kernel/memory.h>
-#include <kernel/ipi.h>
 
 #endif // BUILD_KERNEL
 
 #include <sys/errno.h>
 #include <sys/syscall.h>
+#include <sys/thread.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
@@ -62,11 +62,10 @@ typedef struct{
 	int_type_t (*int_enable)(int_type_t mask);
 	int_type_t (*int_enabled)(void);
 
-	int (*ipi_sleep)(void);
-	int (*ipi_wake)(ipi_t type, unsigned int core, bool bcast);
+	void (*int_ipi)(unsigned int core, bool bcast);
 
 	/* threading */
-	thread_context_t * (*thread_context_init)(struct thread_t *this_t, void *proc_entry, void *thread_arg);
+	void (*thread_context_init)(thread_context_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
 
 	/* terminal I/O */
 	char (*putchar)(char c);

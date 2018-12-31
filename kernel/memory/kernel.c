@@ -21,7 +21,7 @@
 
 /* static variables */
 static memblock_t *kernel_heap = 0x0;
-static csection_lock_t kmem_lock = CSECTION_INITIALISER();
+static csection_lock_t kmem_mtx = CSECTION_INITIALISER();
 
 
 /* global functions */
@@ -29,20 +29,20 @@ void *kmalloc(size_t n){
 	void *p;
 
 
-	csection_lock(&kmem_lock);
+	csection_lock(&kmem_mtx);
 	p = memblock_alloc(&kernel_heap, n, CONFIG_KMALLOC_ALIGN);
-	csection_unlock(&kmem_lock);
+	csection_unlock(&kmem_mtx);
 
 	return p;
 }
 
 void kfree(void *addr){
-	csection_lock(&kmem_lock);
+	csection_lock(&kmem_mtx);
 
 	if(memblock_free(&kernel_heap, addr) < 0)
 		kpanic(0x0, "double free at %p\n", addr);
 
-	csection_unlock(&kmem_lock);
+	csection_unlock(&kmem_mtx);
 }
 
 

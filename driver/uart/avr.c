@@ -11,7 +11,7 @@
 #include <arch/avr/interrupt.h>
 #include <arch/avr/register.h>
 #include <kernel/opt.h>
-#include <kernel/signal.h>
+#include <kernel/ksignal.h>
 #include <kernel/init.h>
 #include <driver/term.h>
 #include <sys/term.h>

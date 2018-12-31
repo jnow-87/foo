@@ -8,7 +8,7 @@
 
 
 #include <arch/interrupt.h>
-#include <kernel/signal.h>
+#include <kernel/ksignal.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
 #include <kernel/csection.h>
@@ -17,7 +17,7 @@
 
 
 /* static varaibles */
-static csection_lock_t sig_lock = CSECTION_INITIALISER();
+static csection_lock_t sig_mtx = CSECTION_INITIALISER();
 
 
 /* global functions */
@@ -37,12 +37,12 @@ int ksignal_wait(ksignal_t *sig){
 
 	e->thread = sched_running();
 
-	csection_lock(&sig_lock);
+	csection_lock(&sig_mtx);
 
 	queue_enqueue(sig->head, sig->tail, e);
 	sched_thread_pause((thread_t*)e->thread);
 
-	csection_unlock(&sig_lock);
+	csection_unlock(&sig_mtx);
 
 	sched_yield();
 
@@ -53,7 +53,7 @@ void ksignal_send(ksignal_t *sig){
 	ksignal_queue_t *e;
 
 
-	csection_lock(&sig_lock);
+	csection_lock(&sig_mtx);
 
 	e = queue_dequeue(sig->head, sig->tail);
 
@@ -62,14 +62,14 @@ void ksignal_send(ksignal_t *sig){
 		kfree(e);
 	}
 
-	csection_unlock(&sig_lock);
+	csection_unlock(&sig_mtx);
 }
 
 void ksignal_bcast(ksignal_t *sig){
 	ksignal_queue_t *e;
 
 
-	csection_lock(&sig_lock);
+	csection_lock(&sig_mtx);
 
 	while(1){
 		e = queue_dequeue(sig->head, sig->tail);
@@ -81,5 +81,5 @@ void ksignal_bcast(ksignal_t *sig){
 		kfree(e);
 	}
 
-	csection_unlock(&sig_lock);
+	csection_unlock(&sig_mtx);
 }

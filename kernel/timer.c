@@ -11,7 +11,7 @@
 #include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/syscall.h>
-#include <kernel/signal.h>
+#include <kernel/ksignal.h>
 #include <sys/types.h>
 #include <sys/list.h>
 

@@ -59,11 +59,11 @@ static int exec(void){
 		tid = thread_create(thread, args[i]);
 
 		if(tid == 0){
-			printf(FG_RED "error creating thread %x" RESET_ATTR "\n", errno);
-			return 1;
+			ERROR("creating thread \"%s\"\n", strerror(errno));
+			return -1;
 		}
 
-		printf("created with id: %u\n", tid);
+		printf("created with id: %u, args: %x \"%s\"\n", tid, args[i], args[i]);
 	}
 
 	/* wait for threads to finish */
@@ -73,8 +73,8 @@ static int exec(void){
 		msleep(PERIOD_MS * NTHREAD_ITER);
 
 		if(++to >= TIMEOUT){
-			printf(FG_RED "timeout detected, threads did not return in time" RESET_ATTR "\n");
-			return 1;
+			ERROR("timeout detected, threads did not return in time\n");
+			return -1;
 		}
 	}
 
@@ -91,13 +91,13 @@ static int thread(void *arg){
 
 
 	thread_info(&tinfo);
-	printf(FG_YELLOW "thread %u started with \"%s\"" RESET_ATTR "\n", tinfo.tid, arg);
+	printf("thread %u started with args %x \"%s\"\n", tinfo.tid, arg, arg);
 
 	/* check argument */
 	sprintf(ref, "%u", tinfo.tid);
 
 	if(strcmp(arg, ref) != 0){
-		printf(FG_RED "argument doesn't match thread id (%s != %s)" RESET_ATTR "\n", arg, ref);
+		ERROR("argument doesn't match thread id (%s != %s)\n", arg, ref);
 		ATOMIC_INC(r, m);
 
 		goto end;
@@ -105,7 +105,7 @@ static int thread(void *arg){
 
 	/* test sleep */
 	for(i=NTHREAD_ITER; i>=0; i--){
-		printf(FG_YELLOW "thread %u %d" RESET_ATTR "\n", tinfo.tid, i);
+		printf("thread %u %d\n", tinfo.tid, i);
 		msleep(PERIOD_MS);
 	}
 
@@ -115,5 +115,3 @@ end:
 
 	return 20 + tinfo.tid;
 }
-
-

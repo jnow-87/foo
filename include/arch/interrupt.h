@@ -19,5 +19,7 @@
 #define int_enable(mask)				(arch_kernel_call(int_enable, INT_NONE)(mask))
 #define int_enabled()					(arch_kernel_call(int_enabled, INT_NONE)())
 
+#define int_ipi(core, bcast)			(arch_kernel_call(int_ipi, -E_NOIMP)(core, bcast))
+
 
 #endif // ARCH_INTERRUPT_H

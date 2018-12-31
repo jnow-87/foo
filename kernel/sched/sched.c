@@ -40,16 +40,21 @@ static void sched_transition_safe(thread_t *this_t, thread_state_t queue);
 static void task_cleanup(void *p);
 
 
-/* global variables */
-sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
-csection_lock_t sched_lock = CSECTION_INITIALISER();
-
-
 /* static variables */
+static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
+static csection_lock_t sched_mtx = CSECTION_INITIALISER();
 static thread_t *running[CONFIG_NCORES] = { 0x0 };
 
 
 /* global functions */
+void sched_lock(void){
+	csection_lock(&sched_mtx);
+}
+
+void sched_unlock(void){
+	csection_unlock(&sched_mtx);
+}
+
 void sched_yield(void){
 	char dummy;
 
@@ -66,7 +71,7 @@ void sched_trigger(void){
 	thread_t *this_t;
 
 
-	csection_lock(&sched_lock);
+	csection_lock(&sched_mtx);
 
 	// NOTE The running thread might have already transitioned to a
 	// 		different state, e.g. through the kernel signal mechanism
@@ -82,7 +87,7 @@ void sched_trigger(void){
 	sched_transition(this_t, RUNNING);
 	running[PIR] = this_t;
 
-	csection_unlock(&sched_lock);
+	csection_unlock(&sched_mtx);
 
 	// TODO if the thread is not actually switched and the only ready thread
 	// 		is a kernel thread suspend the core
@@ -93,6 +98,21 @@ thread_t const *sched_running(void){
 		kpanic(0x0, "no running thread\n");
 
 	return running[PIR];
+}
+
+/**
+ * \pre		scheduler is locked, e.g. through sched_lock()
+ */
+int sched_thread_core(thread_t const *this_t){
+	int core;
+
+
+	for(core=0; core<CONFIG_NCORES; core++){
+		if(running[core] == this_t)
+			return core;
+	}
+
+	return -1;
 }
 
 void sched_thread_pause(thread_t *this_t){
@@ -138,11 +158,11 @@ static int init(void){
 		this_t->affinity = (0x1 << i);
 		this_t->parent = this_p;
 
-		this_t->entry = 0x0;	// kernel threads are already running
-		this_t->ctx = 0x0;		// kernel thread context is set automatically once
-								// the thread is interrupted for the first time
-		this_t->stack = 0x0;	// stack pages are only relevant for user space,
-								// since the kernel has a separate memory management
+		this_t->entry = 0x0;		// kernel threads are already running
+		this_t->ctx_stack = 0x0;	// kernel thread context is set automatically once
+									// the thread is interrupted for the first time
+		this_t->stack = 0x0;		// stack pages are only relevant for user space,
+									// since the kernel has a separate memory management
 
 		list_add_tail(this_p->threads, this_t);
 	}
@@ -199,7 +219,7 @@ kernel_init(2, init);
  *
  * TODO kill is not yet implemented
  *
- * \pre	calls to sched_transition are protected through sched_lock
+ * \pre	calls to sched_transition are protected through sched_mtx
  */
 static void sched_transition(thread_t *this_t, thread_state_t queue){
 	thread_state_t s;
@@ -241,9 +261,9 @@ static void sched_transition(thread_t *this_t, thread_state_t queue){
 }
 
 static void sched_transition_safe(thread_t *this_t, thread_state_t queue){
-	csection_lock(&sched_lock);
+	csection_lock(&sched_mtx);
 	sched_transition(this_t, queue);
-	csection_unlock(&sched_lock);
+	csection_unlock(&sched_mtx);
 }
 
 /**
@@ -262,7 +282,7 @@ static void task_cleanup(void *p){
 	 */
 	while(1){
 		/* remove thread scheduler queue entry */
-		csection_lock(&sched_lock);
+		csection_lock(&sched_mtx);
 
 		e = list_first(sched_queues[DEAD]);
 
@@ -275,7 +295,7 @@ static void task_cleanup(void *p){
 		list_rm(sched_queues[this_t->state], e);
 		kfree(e);
 
-		csection_unlock(&sched_lock);
+		csection_unlock(&sched_mtx);
 
 		/* destroy thread and potentially parent process */
 		thread_destroy(this_t);
@@ -284,5 +304,5 @@ static void task_cleanup(void *p){
 			process_destroy(this_p);
 	}
 
-	csection_unlock(&sched_lock);
+	csection_unlock(&sched_mtx);
 }

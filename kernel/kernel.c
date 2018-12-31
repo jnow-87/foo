@@ -62,14 +62,17 @@ static void ktask(void){
 	while(1){
 		task = ktask_next();
 
+		/* ensure recurring tasks are only executed once in this loop */
+		if(task && task == rec_task)
+			ktask_complete(task);
+
+		/* break */
+		if(task == 0x0 || task == rec_task)
+			return;
+
 		/* remember first recurring task */
 		if((task->flags & TASK_RECURRING) && rec_task == 0x0)
 			rec_task = task;
-
-		/* break */
-		// ensure recurring tasks are only executed once in this loop
-		if(task == 0x0 || task == rec_task)
-			return;
 
 		/* execute task */
 		task->hdlr(task->data);

@@ -12,13 +12,12 @@
 
 
 /* types */
-typedef enum{
-	IPI0 = 0x1,
-	IPI1,
-	IPI2,
-	IPI3,
-	IPI_MAX
-} ipi_t;
+typedef void (*ipi_hdlr_t)(void *data);
+
+
+/* prototypes */
+int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *data, size_t size);
+void kipi_hdlr(void);
 
 
 #endif // KERNEL_IPI_H

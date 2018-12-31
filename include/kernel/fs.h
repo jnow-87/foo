@@ -11,7 +11,7 @@
 #define KERNEL_FS_H
 
 
-#include <kernel/signal.h>
+#include <kernel/ksignal.h>
 #include <kernel/task.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>

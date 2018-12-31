@@ -70,10 +70,8 @@ int sc_release(sc_t num){
  * \param	psize	size of param
  *
  * \pre		errno is reset to E_OK
- *
- * \return	return value of the system call handler
  */
-int ksc_hdlr(sc_t num, void *param, size_t psize){
+void ksc_hdlr(sc_t num, void *param, size_t psize){
 	int r;
 	char kparam[psize];
 	sc_hdlr_t hdlr;
@@ -87,8 +85,10 @@ int ksc_hdlr(sc_t num, void *param, size_t psize){
 	mutex_unlock(&sc_mtx);
 
 	/* check syscall */
-	if(num >= NSYSCALLS || hdlr == 0x0)
-		return E_INVAL;
+	if(num >= NSYSCALLS || hdlr == 0x0){
+		errno = E_INVAL;
+		return;
+	}
 
 	/* copy arguments to kernel space */
 	copy_from_user(kparam, param, psize, this_t->parent);
@@ -98,11 +98,13 @@ int ksc_hdlr(sc_t num, void *param, size_t psize){
 	r = hdlr(kparam);
 	int_enable(INT_NONE);
 
-	if(r != 0)
+	if(r != 0){
+		if(errno == E_OK)
+			errno = E_UNKNOWN;
+
 		DEBUG("syscall %d on %s:%u failed %s (%#x, %#x)\n", num, this_t->parent->name, this_t->tid, strerror(errno), errno, r);
+	}
 
 	/* copy result to user space */
 	copy_to_user(param, kparam, psize, this_t->parent);
-
-	return r;
 }

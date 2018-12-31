@@ -25,31 +25,32 @@ static int exec(void){
 
 
 	/* prepare test file */
+	unlink("dummy");
 	fp = fopen("dummy", "w");
 	fwrite("foo", 3, fp);
 	fclose(fp);
 
-	/* check stat for tes file */
+	/* check stat for test file */
 	if(stat("dummy", &f_stat) != 0)
-		return 1;
+		return -1;
 
 	if(f_stat.type != FT_REG){
-		printf("type missmatch, having %d\n", f_stat.type);
-		return 1;
+		ERROR("type mismatch, having %d\n", f_stat.type);
+		return -1;
 	}
 
 	if(f_stat.size != 3){
-		printf("file size missmatch, haveing %u\n", f_stat.size);
-		return 1;
+		ERROR("file size mismatch, having %u\n", f_stat.size);
+		return -1;
 	}
 
 	/* check stat of /dev/tty0 */
 	if(stat("/dev/tty0", &f_stat) != 0)
-		return 1;
+		return -1;
 
 	if(f_stat.type != FT_CHR){
-		printf("type missmatch, having %d\n", f_stat.type);
-		return 1;
+		ERROR("type mismatch, having %d\n", f_stat.type);
+		return -1;
 	}
 
 	return 0;

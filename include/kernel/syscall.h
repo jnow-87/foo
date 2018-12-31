@@ -45,7 +45,7 @@ int sc_release(sc_t num);
 
 #ifdef CONFIG_KERNEL_SYSCALL
 
-int ksc_hdlr(sc_t num, void *param, size_t psize);
+void ksc_hdlr(sc_t num, void *param, size_t psize);
 
 #endif // CONFIG_KERNEL_SYSCALL
 

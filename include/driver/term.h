@@ -12,7 +12,7 @@
 
 
 #include <config/config.h>
-#include <kernel/signal.h>
+#include <kernel/ksignal.h>
 #include <kernel/devfs.h>
 #include <sys/ringbuf.h>
 #include <sys/term.h>
