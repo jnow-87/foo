@@ -27,6 +27,7 @@ static int exec(void){
 	f_mode_t f_mode;
 
 
+	unlink("dummy");
 	fp = fopen("dummy", "w");
 
 	/* set non-blocking mode for file descriptor */
@@ -64,7 +65,7 @@ static int exec(void){
 
 	/* check */
 	if(strcmp(buf, "1457891234") != 0)
-		return 1;
+		return -1;
 
 	return 0;
 }

@@ -48,13 +48,13 @@ static int exec(void){
 	/* prepare */
 	// get process info
 	if(process_info(&pinfo) != 0){
-		printf("error acquiring process info \"%s\"\n", strerror(errno));
+		ERROR("acquiring process info \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
 	// register signal handler
 	if(signal(SIG_INT, hdlr) != hdlr){
-		printf("error registering signal handler \"%s\"\n", strerror(errno));
+		ERROR("registering signal handler \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -62,7 +62,7 @@ static int exec(void){
 	tid = thread_create(thread, "foo");
 
 	if(tid == 0){
-		printf("error creating thread \"%s\"\n", strerror(errno));
+		ERROR("creating thread \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -80,12 +80,12 @@ static int exec(void){
 
 	/* check result */
 	if(r){
-		printf("error sending singal \"%s\"\n", strerror(errno));
+		ERROR("sending singal \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
 	if(nsigs != 3){
-		printf("error only %u/%u signals received by thread\n", nsigs, NSIGS);
+		ERROR("only %u/%u signals received by thread\n", nsigs, NSIGS);
 		return -1;
 	}
 
@@ -121,5 +121,3 @@ static int thread(void *arg){
 
 	return 0;
 }
-
-
