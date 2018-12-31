@@ -43,8 +43,8 @@ typedef struct process_t{
 	unsigned int affinity;
 	int priority;
 
-	char *name,
-		 *args;
+	char *name;
+	struct page_t *args;
 
 	process_mem_t memory;
 

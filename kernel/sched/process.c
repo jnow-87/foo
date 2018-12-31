@@ -26,6 +26,7 @@ static mutex_t ptable_mtx = MUTEX_INITIALISER();
 /* global functions */
 process_t *process_create(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd){
 	void *entry;
+	char *argp;
 	process_t *this_p;
 	thread_t *this_t;
 
@@ -74,14 +75,16 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* init argument string */
-	this_p->args = kmalloc(strlen(name) + 1 + strlen(args) + 1);
+	this_p->args = page_alloc(this_p, strlen(name) + 1 + strlen(args) + 1);
 
-	if(this_p->args == 0)
+	if(this_p->args == 0x0)
 		goto_errno(err_2, E_NOMEM);
 
-	strcpy(this_p->args, name);
-	strcpy(this_p->args + strlen(name), " ");
-	strcpy(this_p->args + strlen(name) + 1, args);
+	argp = this_p->args->phys_addr;
+
+	strcpy(argp, name);
+	strcpy(argp + strlen(name), " ");
+	strcpy(argp + strlen(name) + 1, args);
 
 	/* init file system handles */
 	this_p->fds = 0x0;
@@ -97,7 +100,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 
 	/* create first thread */
 	this_p->threads = 0x0;
-	this_t = thread_create(this_p, 0, entry, (void*)this_p->args);
+	this_t = thread_create(this_p, 0, entry, argp);
 
 	if(this_t == 0)
 		goto err_3;
@@ -109,7 +112,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 
 
 err_3:
-	kfree(this_p->args);
+	page_free(this_p, this_p->args);
 
 err_2:
 	kfree(this_p->name);
@@ -147,7 +150,7 @@ void process_destroy(process_t *this_p){
 	}
 
 	/* free arguments */
-	kfree(this_p->args);
+	page_free(this_p, this_p->args);
 
 	/* free process memory */
 	list_for_each(this_p->memory.pages, page)
