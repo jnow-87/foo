@@ -73,7 +73,7 @@ typedef struct{
 typedef struct{
 	tid_t tid;
 
-	int (*entry)(void *);
+	thread_entry_t entry;
 	void *arg;
 
 	unsigned int affinity;

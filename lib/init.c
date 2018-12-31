@@ -11,11 +11,12 @@
 #include <lib/init.h>
 #include <lib/stdlib.h>
 #include <sys/compiler.h>
+#include <sys/thread.h>
 
 
 /* prototypes */
 int main();
-void _start(int (*entry)(void*), void *arg) __section(".app_start");
+void _start(thread_entry_t entry, void *arg) __section(".app_start");
 
 
 /* extern variables */
@@ -43,7 +44,7 @@ static int args_split(char *args);
  * 					if entry is set to _start arg is assumed to contain the argument string
  * 					otherwise arg is passed to the target function as is
  */
-void _start(int (*entry)(void*), void *arg){
+void _start(thread_entry_t entry, void *arg){
 	int argc;
 	init_call_t *p;
 

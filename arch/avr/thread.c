@@ -17,13 +17,7 @@
 
 
 /* global functions */
-thread_context_t *avr_thread_context_init(thread_t *this_t, void *proc_entry, void *arg){
-	thread_context_t *ctx;
-
-
-	/* set thread context */
-	ctx = (thread_context_t*)(this_t->stack->phys_addr + CONFIG_KERNEL_STACK_SIZE - sizeof(thread_context_t));
-
+void avr_thread_context_init(thread_context_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg){
 	/* init thread context */
 	memset(ctx, 0x0, sizeof(thread_context_t));
 
@@ -32,24 +26,21 @@ thread_context_t *avr_thread_context_init(thread_t *this_t, void *proc_entry, vo
 	ctx->mcusr = mreg_r(MCUSR);
 
 	// init process start address
-	if(proc_entry == (void*)CONFIG_INIT_BINARY)
-		proc_entry = (void*)(((unsigned int)proc_entry) / 2);
+	if(user_entry == (void*)CONFIG_INIT_BINARY)
+		user_entry = (void*)(((unsigned int)user_entry) / 2);
 
-	ctx->ret_addr = (void*)((lo8(proc_entry) << 8) | hi8(proc_entry));
+	ctx->ret_addr = (void*)((lo8(user_entry) << 8) | hi8(user_entry));
 
 	// set _start argument0: entry point
-	ctx->gpr[24] = lo8(this_t->entry);
-	ctx->gpr[25] = hi8(this_t->entry);
+	ctx->gpr[24] = lo8(thread_entry);
+	ctx->gpr[25] = hi8(thread_entry);
 
-	if(this_t->entry == (void*)CONFIG_INIT_BINARY){
+	if(thread_entry == (void*)CONFIG_INIT_BINARY){
 		ctx->gpr[24] = hi8(ctx->ret_addr);
 		ctx->gpr[25] = lo8(ctx->ret_addr);
 	}
 
 	// set _start  argument1: thread argument
-	ctx->gpr[22] = lo8(arg);
-	ctx->gpr[23] = hi8(arg);
-
-
-	return ctx;
+	ctx->gpr[22] = lo8(thread_arg);
+	ctx->gpr[23] = hi8(thread_arg);
 }

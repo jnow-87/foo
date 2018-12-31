@@ -32,7 +32,7 @@ typedef struct thread_t{
 	unsigned int affinity,
 				 priority;
 
-	void *entry;
+	thread_entry_t entry;
 	struct page_t *stack;
 	thread_state_t state;
 	thread_context_t *ctx_stack;
@@ -42,7 +42,7 @@ typedef struct thread_t{
 
 
 /* prototypes */
-thread_t *thread_create(struct process_t *this_p, tid_t tid, void *entry, void *thread_arg);
+thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entry, void *thread_arg);
 void thread_destroy(struct thread_t *this_t);
 
 

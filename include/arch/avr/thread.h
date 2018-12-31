@@ -12,6 +12,7 @@
 
 
 #include <sys/types.h>
+#include <sys/thread.h>
 
 
 /* incomplete types */
@@ -34,7 +35,7 @@ typedef struct thread_context_t{
 
 
 /* prototypes */
-thread_context_t *avr_thread_context_init(struct thread_t *this_t, void *proc_entry, void *thread_arg);
+void avr_thread_context_init(thread_context_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
 
 
 #endif // AVR_THREAD_H
