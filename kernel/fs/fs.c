@@ -12,7 +12,7 @@
 #include <kernel/fs.h>
 #include <kernel/memory.h>
 #include <kernel/sched.h>
-#include <kernel/signal.h>
+#include <kernel/ksignal.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/stat.h>

@@ -14,7 +14,7 @@
 #include <kernel/syscall.h>
 #include <kernel/rootfs.h>
 #include <kernel/task.h>
-#include <kernel/signal.h>
+#include <kernel/ksignal.h>
 #include <kernel/kprintf.h>
 #include <sys/fcntl.h>
 #include <sys/list.h>

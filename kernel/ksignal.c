@@ -8,7 +8,7 @@
 
 
 #include <arch/interrupt.h>
-#include <kernel/signal.h>
+#include <kernel/ksignal.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
 #include <kernel/csection.h>
