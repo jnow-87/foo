@@ -60,5 +60,7 @@ typedef struct process_t{
 process_t *process_create(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd);
 void process_destroy(process_t *this_p);
 
+process_t *process_find(pid_t pid);
+
 
 #endif // KERNEL_PROCESS_H

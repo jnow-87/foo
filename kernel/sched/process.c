@@ -157,3 +157,7 @@ void process_destroy(process_t *this_p){
 	kfree(this_p->name);
 	kfree(this_p);
 }
+
+process_t *process_find(pid_t pid){
+	return list_find_safe(process_table, pid, pid, &ptable_mtx);
+}

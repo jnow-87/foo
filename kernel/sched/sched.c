@@ -40,16 +40,21 @@ static void sched_transition_safe(thread_t *this_t, thread_state_t queue);
 static void task_cleanup(void *p);
 
 
-/* global variables */
-sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
-csection_lock_t sched_mtx = CSECTION_INITIALISER();
-
-
 /* static variables */
+static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
+static csection_lock_t sched_mtx = CSECTION_INITIALISER();
 static thread_t *running[CONFIG_NCORES] = { 0x0 };
 
 
 /* global functions */
+void sched_lock(void){
+	csection_lock(&sched_mtx);
+}
+
+void sched_unlock(void){
+	csection_unlock(&sched_mtx);
+}
+
 void sched_yield(void){
 	char dummy;
 
@@ -93,6 +98,21 @@ thread_t const *sched_running(void){
 		kpanic(0x0, "no running thread\n");
 
 	return running[PIR];
+}
+
+/**
+ * \pre		scheduler is locked, e.g. through sched_lock()
+ */
+int sched_thread_core(thread_t const *this_t){
+	int core;
+
+
+	for(core=0; core<CONFIG_NCORES; core++){
+		if(running[core] == this_t)
+			return core;
+	}
+
+	return -1;
 }
 
 void sched_thread_pause(thread_t *this_t){
