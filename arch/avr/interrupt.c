@@ -37,7 +37,7 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 
 
 	/* save thread context of active thread*/
-	stack_push(sched_running()->ctx, tc);
+	stack_push(sched_running()->ctx_stack, tc);
 
 	/* call respective interrupt handler */
 	// save and reset errno
@@ -70,7 +70,7 @@ struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
 	errno = terrno;
 
 	/* return context of active thread */
-	return stack_pop(((thread_t*)sched_running())->ctx);
+	return stack_pop(((thread_t*)sched_running())->ctx_stack);
 }
 
 void avr_int_warm_reset_hdlr(void){

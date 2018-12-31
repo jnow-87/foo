@@ -35,7 +35,7 @@ typedef struct thread_t{
 	void *entry;
 	struct page_t *stack;
 	thread_state_t state;
-	thread_context_t *ctx;
+	thread_context_t *ctx_stack;
 
 	struct process_t *parent;
 } thread_t;

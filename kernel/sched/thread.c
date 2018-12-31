@@ -52,10 +52,10 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, void *entry, void *
 	if(tid != 0)
 		proc_entry = list_first(this_p->threads)->entry;
 
-	this_t->ctx = 0x0;
-	stack_push(this_t->ctx, thread_context_init(this_t, proc_entry, thread_arg))
+	this_t->ctx_stack = 0x0;
+	stack_push(this_t->ctx_stack, thread_context_init(this_t, proc_entry, thread_arg))
 
-	if(this_t->ctx == 0)
+	if(this_t->ctx_stack == 0)
 		goto_errno(err_2, E_INVAL);
 
 	list_add_tail_safe(this_p->threads, this_t, &this_p->mtx);
