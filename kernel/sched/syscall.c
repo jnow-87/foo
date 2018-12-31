@@ -169,8 +169,8 @@ static int sc_hdlr_exit(void *p){
 	DEBUG("thread %s.%u exit with status %d\n", this_t->parent->name, this_t->tid, *((int*)p));
 
 	/* ensure thread is no longer the running one */
-	sched_trigger();
 	sched_thread_bury((thread_t*)this_t);
+	sched_trigger();
 
 	return E_OK;
 }
