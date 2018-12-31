@@ -54,6 +54,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 	if(tid != 0)
 		user_entry = list_first(this_p->threads)->entry;
 
+	this_t->signal_ctx_stack = 0x0;
 	this_t->ctx_stack = 0x0;
 
 	ctx = (thread_context_t*)(this_t->stack->phys_addr + CONFIG_KERNEL_STACK_SIZE - sizeof(thread_context_t));
@@ -81,6 +82,7 @@ err_0:
 
 void thread_destroy(struct thread_t *this_t){
 	process_t *this_p;
+	usignal_ctx_t *sig_ctx;
 
 
 	this_p = this_t->parent;
@@ -88,5 +90,9 @@ void thread_destroy(struct thread_t *this_t){
 	list_rm_safe(this_p->threads, this_t, &this_p->mtx);
 
 	page_free(this_p, this_t->stack);
+
+	list_for_each(this_t->signal_ctx_stack, sig_ctx)
+		kfree(sig_ctx);
+
 	kfree(this_t);
 }

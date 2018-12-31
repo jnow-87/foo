@@ -17,6 +17,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/fcntl.h>
+#include <sys/signal.h>
 
 
 /* types */
@@ -34,12 +35,14 @@ typedef enum{
 	SC_MALLOC,
 	SC_FREE,
 	SC_EXIT,
+	SC_PROCCREATE,
+	SC_PROCINFO,
 	SC_THREADCREATE,
 	SC_THREADINFO,
 	SC_NICE,
-	SC_PROCCREATE,
-	SC_PROCINFO,
 	SC_SCHEDYIELD,
+	SC_SIGSEND,
+	SC_SIGRETURN,
 	SC_SLEEP,
 	SC_TIME,
 	NSYSCALLS
@@ -71,6 +74,18 @@ typedef struct{
 } sc_fs_t;
 
 typedef struct{
+	pid_t pid;
+
+	void *binary;
+	bin_type_t bin_type;
+
+	char const *name,
+			   *args;
+	size_t name_len,
+		   args_len;
+} sc_process_t;
+
+typedef struct{
 	tid_t tid;
 
 	thread_entry_t entry;
@@ -82,15 +97,11 @@ typedef struct{
 
 typedef struct{
 	pid_t pid;
+	tid_t tid;
 
-	void *binary;
-	bin_type_t bin_type;
-
-	char const *name,
-			   *args;
-	size_t name_len,
-		   args_len;
-} sc_process_t;
+	signal_t sig;
+	user_entry_t hdlr;
+} sc_signal_t;
 
 typedef struct{
 	time_t time;

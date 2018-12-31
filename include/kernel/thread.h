@@ -13,6 +13,7 @@
 
 #include <arch/thread.h>
 #include <kernel/process.h>
+#include <kernel/usignal.h>
 #include <sys/thread.h>
 #include <sys/errno.h>
 
@@ -33,9 +34,12 @@ typedef struct thread_t{
 				 priority;
 
 	thread_entry_t entry;
+
 	struct page_t *stack;
 	thread_state_t state;
+
 	thread_context_t *ctx_stack;
+	usignal_ctx_t *signal_ctx_stack;
 
 	struct process_t *parent;
 } thread_t;
