@@ -21,6 +21,7 @@ void *malloc(size_t size);
 void free(void *addr);
 
 void exit(int status);
+void _exit(int status, bool kill_sibl);
 
 int atoi(char const *s);
 long int strtol(char const *p, char **endp, int base);

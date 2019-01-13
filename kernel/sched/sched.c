@@ -14,6 +14,7 @@
 #include <arch/memory.h>
 #include <kernel/opt.h>
 #include <kernel/init.h>
+#include <kernel/kprintf.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
 #include <kernel/rootfs.h>
@@ -241,14 +242,21 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
 }
 
 /**
- * \brief
+ * \brief	move thread between scheduler queues according to the following
+ * 			state machine
  *
- *                         kill
- *            WAITING ----------------\
- *             |   A                  |
- *             |   | sig wait         |
- *    sig_wake |   |                  |
- *             |   |           exit   |
+ * 			NOTE higher level APIs allow waiting threads to be killed, however
+ * 				 the underyling usignal mechanism ensures that signals are only
+ * 				 processes once the thread has left the kernel (entering the
+ * 				 WAITING state is only possible within the kernel). Hence, it
+ * 				 must never be the case that _thread_transition() is called to
+ * 				 move a thread from WAITING to DEAD.
+ *
+ *            WAITING
+ *             |   A
+ *             |   | sig wait
+ *    sig_wake |   |
+ *             |   |           exit
  *             |  RUNNING ------------|
  *             |  |A                  |
  *             |  || sched            |
@@ -256,7 +264,6 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
  *             V  V|       kill       V
  * CREATED --> READY --------------> DEAD
  *
- * TODO kill is not yet implemented
  *
  * \pre	calls to thread_transition are protected through sched_mtx
  */
@@ -271,10 +278,11 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 	s = this_t->state;
 
 	if((queue == CREATED)
-	|| (queue == READY && s == DEAD)
+	|| (s == DEAD)
 	|| (queue == RUNNING && s != READY)
 	|| (queue == WAITING && s != RUNNING)
 	|| (queue == DEAD && s == CREATED)
+	|| (queue == DEAD && s == WAITING)
 	){
 		kpanic(this_t, "invalid scheduler transition %u -> %u\n", s, queue);
 	}
@@ -328,9 +336,7 @@ static void thread_modify(void *_p){
  * \brief	recurring task used to cleanup terminated threads
  * 			and processes
  */
-#include <kernel/kprintf.h>
 static void cleanup(void *p){
-	int core;
 	sched_queue_t *e;
 	process_t *this_p;
 	thread_t *this_t;
@@ -350,18 +356,25 @@ static void cleanup(void *p){
 			break;
 
 		this_t = e->thread;
-		this_p = this_t->parent;
 
 		list_rm(sched_queues[this_t->state], e);
 		kfree(e);
 
 		csection_unlock(&sched_mtx);
 
+		/* wait for thread being removed as running thread */
+		while(thread_core(this_t) != -1)
+			sched_yield();
+
 		/* destroy thread and potentially parent process */
+		this_p = this_t->parent;
+		DEBUG("cleanup thread %s.%d\n", this_p->name, this_t->tid);
 		thread_destroy(this_t);
 
-		if(list_empty_safe(this_p->threads, &this_p->mtx))
+		if(list_empty_safe(this_p->threads, &this_p->mtx)){
+			DEBUG("cleanup process %s\n", this_p->name);
 			process_destroy(this_p);
+		}
 	}
 
 	csection_unlock(&sched_mtx);

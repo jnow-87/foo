@@ -75,6 +75,11 @@ typedef struct{
 } sc_fs_t;
 
 typedef struct{
+	int status;
+	bool kill_siblings;
+} sc_exit_t;
+
+typedef struct{
 	pid_t pid;
 
 	void *binary;

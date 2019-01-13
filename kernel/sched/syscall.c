@@ -7,6 +7,7 @@
 
 
 
+#include <config/config.h>
 #include <arch/core.h>
 #include <arch/memory.h>
 #include <kernel/init.h>
@@ -14,6 +15,7 @@
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
 #include <kernel/csection.h>
+#include <kernel/usignal.h>
 #include <sys/errno.h>
 #include <sys/syscall.h>
 #include <sys/list.h>
@@ -160,16 +162,32 @@ static int sc_hdlr_nice(void *_p){
 	return E_OK;
 }
 
-static int sc_hdlr_exit(void *p){
-	thread_t const *this_t;
+static int sc_hdlr_exit(void *_p){
+	sc_exit_t *p;
+	thread_t *this_t,
+			 *sibl;
 
 
-	this_t = sched_running();
+	p = (sc_exit_t*)_p;
+	this_t = (thread_t*)sched_running();
 
-	DEBUG("thread %s.%u exit with status %d\n", this_t->parent->name, this_t->tid, *((int*)p));
+	DEBUG("%s.%u exit with status %d\n", this_t->parent->name, this_t->tid, p->status);
 
-	/* ensure thread is no longer the running one */
-	sched_thread_bury((thread_t*)this_t);
+	/* exit siblings */
+	if(this_t->tid == 0 || p->kill_siblings){
+		mutex_lock(&this_t->parent->mtx);
+
+		list_for_each(this_t->parent->threads, sibl){
+			DEBUG("kill %s.%u\n", sibl->parent->name, sibl->tid);
+			usignal_send(sibl, SIG_KILL);
+		}
+
+		mutex_unlock(&this_t->parent->mtx);
+	}
+
+	/* exit current thread */
+	// ensure thread is no longer the running one
+	sched_thread_bury(this_t);
 	sched_trigger();
 
 	return E_OK;
