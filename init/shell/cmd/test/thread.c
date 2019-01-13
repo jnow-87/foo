@@ -63,7 +63,7 @@ static int exec(void){
 			return -1;
 		}
 
-		printf("created with id: %u, args: %x \"%s\"\n", tid, args[i], args[i]);
+		printf("created thread with id: %u, args: %x \"%s\"\n", tid, args[i], args[i]);
 	}
 
 	/* wait for threads to finish */

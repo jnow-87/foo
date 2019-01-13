@@ -16,7 +16,7 @@
 #include <sys/errno.h>
 
 
-/* static varaibles */
+/* static variables */
 static csection_lock_t sig_mtx = CSECTION_INITIALISER();
 
 

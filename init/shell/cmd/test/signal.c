@@ -80,7 +80,7 @@ static int exec(void){
 
 	/* check result */
 	if(r){
-		ERROR("sending singal \"%s\"\n", strerror(errno));
+		ERROR("sending signal \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
