@@ -62,6 +62,7 @@ static int exec(void){
 	printf("read (%d): %s\n", e, buf);
 
 	fclose(fp);
+	unlink("dummy");
 
 	/* check */
 	if(strcmp(buf, "1457891234") != 0)
