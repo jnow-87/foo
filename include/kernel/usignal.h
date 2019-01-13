@@ -13,6 +13,9 @@
 
 #include <arch/thread.h>
 #include <kernel/memory.h>
+#include <kernel/thread.h>
+#include <sys/thread.h>
+#include <sys/signal.h>
 
 
 /* types */
@@ -22,6 +25,10 @@ typedef struct usignal_ctx_t{
 	thread_ctx_t *ctx_addr;
 	thread_ctx_t ctx;
 } usignal_ctx_t;
+
+
+/* prototypes */
+int usignal_send(struct thread_t *this_t, signal_t sig);
 
 
 #endif // KERNEL_USIGNAL_H
