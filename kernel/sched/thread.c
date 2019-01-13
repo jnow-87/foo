@@ -20,7 +20,7 @@
 /* global functions */
 thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entry, void *thread_arg){
 	thread_t *this_t;
-	thread_context_t *ctx;
+	thread_ctx_t *ctx;
 	void *user_entry;
 
 
@@ -57,7 +57,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 	this_t->signal_ctx_stack = 0x0;
 	this_t->ctx_stack = 0x0;
 
-	ctx = (thread_context_t*)(this_t->stack->phys_addr + CONFIG_KERNEL_STACK_SIZE - sizeof(thread_context_t));
+	ctx = (thread_ctx_t*)(this_t->stack->phys_addr + CONFIG_KERNEL_STACK_SIZE - sizeof(thread_ctx_t));
 	thread_context_init(ctx, this_t, user_entry, entry, thread_arg);
 
 	stack_push(this_t->ctx_stack, ctx);

@@ -21,6 +21,9 @@ SECTIONS {
 		*(.trampolines)
 	} > flash_kernel
 
+	__kernel_start = ADDR(.text);
+	__kernel_end = __kernel_start + SIZEOF(.text);
+
 	/* data */
 	.data : {
 		*(.data .data.* .gnu.linkonce.d.*)

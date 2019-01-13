@@ -12,10 +12,11 @@
 
 
 #include <config/config.h>
-#include <arch/thread.h>
 #include <sys/compiler.h>
 #include <sys/binloader.h>
 #include <sys/types.h>
+#include <sys/process.h>
+#include <sys/thread.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 

@@ -190,17 +190,17 @@ __int_hdlr_call:
 	lds		r16, SREG
 	push	r16
 
-	/* reserve space for thread_context_t::next and prepare interrupt hander arguments */
-	// push dummy to reserve space for next member of thread_context_t
+	/* reserve space for thread_ctx_t::next and prepare interrupt hander arguments */
+	// push dummy to reserve space for next member of thread_ctx_t
 #if (CONFIG_ADDR_WIDTH == 16)
 	push	r1
 #endif
 
-	// avr_int_hdlr argument: stack pointer aka thread_context_t pointer
+	// avr_int_hdlr argument: stack pointer aka thread_ctx_t pointer
 	lds		r24, SPL
 	lds		r25, SPH
 
-	// push last dummy byte for next, prev members of thread_context_t
+	// push last dummy byte for next, prev members of thread_ctx_t
 	// thread_context pointer needs to be saved earlier due to post-decrement of push
 	push	r1
 
@@ -217,7 +217,7 @@ __int_hdlr_call:
 	sts		SPH, r25
 
 1:
-	/* pop dummy bytes used to reserve space for next member of thread_context_t */
+	/* pop dummy bytes used to reserve space for next member of thread_ctx_t */
 #if (CONFIG_ADDR_WIDTH == 16)
 	pop		r16
 #endif

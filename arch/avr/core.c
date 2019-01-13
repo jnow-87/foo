@@ -47,7 +47,7 @@ GCC_ERROR(invalid sleep mode - check kernel config)
 }
 
 #ifdef BUILD_KERNEL
-void avr_core_panic(thread_context_t const *tc){
+void avr_core_panic(thread_ctx_t const *tc){
 #ifdef CONFIG_KERNEL_PRINTF
 	unsigned int i,
 				 j,

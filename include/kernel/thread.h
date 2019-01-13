@@ -24,6 +24,12 @@ struct page_t;
 
 
 /* types */
+typedef enum thread_ctx_type_t{
+	CTX_UNKNOWN = 0,
+	CTX_KERNEL,
+	CTX_USER
+} thread_ctx_type_t;
+
 typedef struct thread_t{
 	struct thread_t *prev,
 					*next;
@@ -38,7 +44,7 @@ typedef struct thread_t{
 	struct page_t *stack;
 	thread_state_t state;
 
-	thread_context_t *ctx_stack;
+	thread_ctx_t *ctx_stack;
 	usignal_ctx_t *signal_ctx_stack;
 
 	struct process_t *parent;

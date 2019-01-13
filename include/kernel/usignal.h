@@ -19,8 +19,8 @@
 typedef struct usignal_ctx_t{
 	struct usignal_ctx_t *next;
 
-	thread_context_t *ctx_addr;
-	thread_context_t ctx;
+	thread_ctx_t *ctx_addr;
+	thread_ctx_t ctx;
 } usignal_ctx_t;
 
 

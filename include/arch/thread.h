@@ -12,12 +12,16 @@
 
 
 #include <arch/arch.h>
+#include <kernel/thread.h>
 #include <sys/errno.h>
 
 
 /* macros */
 #define thread_context_init(ctx, thread, user_entry, thread_entry, thread_arg) \
 	(arch_kernel_call(thread_context_init, 0x0)(ctx, thread, user_entry, thread_entry, thread_arg))
+
+#define thread_context_type(ctx) \
+	(arch_kernel_call(thread_context_type, CTX_UNKNOWN)(ctx))
 
 
 #endif // ARCH_THREAD_H

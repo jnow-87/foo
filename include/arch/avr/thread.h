@@ -17,13 +17,14 @@
 
 /* incomplete types */
 struct thread_t;
+enum thread_ctx_type_t;
 
 
 /* types */
-// NOTE when changing thread_context_t also check if modifications
+// NOTE when changing thread_ctx_t also check if modifications
 // 		to the interrupt service routine are required
-typedef struct thread_context_t{
-	struct thread_context_t *next;
+typedef struct thread_ctx_t{
+	struct thread_ctx_t *next;
 
 	uint8_t	sreg,			/**< status register */
 			mcusr,			/**< control register */
@@ -31,11 +32,12 @@ typedef struct thread_context_t{
 	uint8_t gpr[32];		/**< general purpose registers */
 
 	void *ret_addr;			/**< thread return address on interrupt */
-} thread_context_t;
+} thread_ctx_t;
 
 
 /* prototypes */
-void avr_thread_context_init(thread_context_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
+void avr_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
+enum thread_ctx_type_t avr_thread_context_type(thread_ctx_t *ctx);
 
 
 #endif // AVR_THREAD_H
