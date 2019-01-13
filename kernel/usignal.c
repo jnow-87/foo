@@ -22,6 +22,7 @@
 
 
 /* local/static prototypes */
+static int sc_hdlr_signal_register(void *p);
 static int sc_hdlr_signal_send(void *p);
 static int sc_hdlr_signal_return(void *p);
 
@@ -36,6 +37,7 @@ static int init(void){
 
 	r = E_OK;
 
+	r |= sc_register(SC_SIGREGISTER, sc_hdlr_signal_register);
 	r |= sc_register(SC_SIGSEND, sc_hdlr_signal_send);
 	r |= sc_register(SC_SIGRETURN, sc_hdlr_signal_return);
 
@@ -43,6 +45,24 @@ static int init(void){
 }
 
 kernel_init(0, init);
+
+static int sc_hdlr_signal_register(void *_p){
+	sc_signal_t *p;
+	process_t *this_p;
+
+
+	p = (sc_signal_t*)_p;
+
+	this_p = process_find(p->pid);
+
+	if(this_p == 0x0)
+		return_errno(E_INVAL);
+
+	DEBUG("%s: %p\n", this_p->name, p->hdlr);
+	this_p->sig_hdlr = p->hdlr;
+
+	return E_OK;
+}
 
 static int sc_hdlr_signal_send(void *_p){
 	sc_signal_t *p;
@@ -69,7 +89,7 @@ static int sc_hdlr_signal_send(void *_p){
 		return_errno(E_INVAL);
 
 	/* trigger signal */
-	DEBUG("thread %s.%d, signal %d, hdlr %p\n", this_p->name, this_t->tid, p->sig, p->hdlr);
+	DEBUG("thread %s.%d, signal %d, hdlr %p\n", this_p->name, this_t->tid, p->sig, this_t->parent->sig_hdlr);
 
 	sched_lock();
 
@@ -92,7 +112,7 @@ static int sc_hdlr_signal_send(void *_p){
 		stack_push(this_t->signal_ctx_stack, sig_ctx);
 
 		// inject signal handler
-		thread_context_init(ctx, this_t, p->hdlr, 0x0, (void*)p->sig);
+		thread_context_init(ctx, this_t, this_t->parent->sig_hdlr, 0x0, (void*)p->sig);
 		ctx->next = sig_ctx->ctx.next;
 
 #ifdef CONFIG_KERNEL_SMP

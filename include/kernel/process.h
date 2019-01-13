@@ -17,6 +17,7 @@
 #include <kernel/fs.h>
 #include <sys/memblock.h>
 #include <sys/process.h>
+#include <sys/thread.h>
 #include <sys/mutex.h>
 
 
@@ -51,6 +52,7 @@ typedef struct process_t{
 	struct thread_t *threads;
 	fs_filed_t *fds;
 	fs_node_t *cwd;
+	user_entry_t sig_hdlr;
 
 	mutex_t mtx;
 } process_t;

@@ -15,6 +15,7 @@
 #include <lib/init.h>
 #include <lib/stdlib.h>
 #include <lib/signal.h>
+#include <lib/unistd.h>
 
 
 /* local/static prototypes */
@@ -45,7 +46,6 @@ int signal_send(signal_t sig, pid_t pid, tid_t tid){
 
 
 	p.sig = sig;
-	p.hdlr = signal_hdlr;
 	p.pid = pid;
 	p.tid = tid;
 
@@ -56,6 +56,22 @@ int signal_send(signal_t sig, pid_t pid, tid_t tid){
 
 
 /* local functions */
+static int init(void){
+	sc_signal_t p;
+	process_info_t pinfo;
+
+
+	if(process_info(&pinfo) != 0)
+		return -errno;
+
+	p.pid = pinfo.pid;
+	p.hdlr = signal_hdlr;
+
+	return sc(SC_SIGREGISTER, &p);
+}
+
+lib_init(init);
+
 static void signal_hdlr(thread_entry_t entry, void *arg){
 	signal_t sig;
 
