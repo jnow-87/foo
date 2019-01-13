@@ -35,6 +35,7 @@
 
 struct process_t;
 struct thread_t;
+enum thread_ctx_type_t;
 
 #endif // BUILD_KERNEL
 
@@ -47,7 +48,7 @@ typedef struct{
 	int (*core_id)(void);
 	void (*core_sleep)(void);
 
-	void (*core_panic)(thread_context_t const *tc);
+	void (*core_panic)(thread_ctx_t const *tc);
 
 	/* virtual memory management */
 	int (*page_entry_write)(page_t const *page);
@@ -65,7 +66,8 @@ typedef struct{
 	void (*int_ipi)(unsigned int core, bool bcast);
 
 	/* threading */
-	void (*thread_context_init)(thread_context_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
+	void (*thread_context_init)(thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
+	enum thread_ctx_type_t (*thread_context_type)(thread_ctx_t *ctx);
 
 	/* terminal I/O */
 	char (*putchar)(char c);

@@ -62,10 +62,10 @@ void _start(thread_entry_t entry, void *arg){
 		}
 
 		argc = args_split(arg);
-		exit(main_arg(argc, arg));
+		_exit(main_arg(argc, arg), true);
 	}
 	else{
-		exit((*entry)(arg));
+		_exit((*entry)(arg), false);
 	}
 }
 

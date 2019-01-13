@@ -14,6 +14,8 @@
 /* types */
 typedef enum{
 	SIG_INT = 2,
+	SIG_KILL = 9,
+	SIG_TERM = 15,
 	SIG_MAX,
 } signal_t;
 

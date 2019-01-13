@@ -29,7 +29,11 @@
 #include <config/avrconfig.h>
 #include <arch/avr/core.h>
 #include <arch/avr/register.h>
+
+#ifdef BUILD_KERNEL
 #include <arch/avr/interrupt.h>
+#endif // BUILD_KERNEL
+
 #include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
 #include <arch/avr/syscall.h>
@@ -95,6 +99,7 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 
 	/* threading */
 	.thread_context_init = avr_thread_context_init,
+	.thread_context_type = avr_thread_context_type,
 
 	/* terminal I/O */
 #ifdef CONFIG_AVR_UART

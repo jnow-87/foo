@@ -23,16 +23,17 @@
 #endif // CONFIG_SCHED_PREEMPTIVE
 
 
-/* prototypes */
-void sched_lock(void);
-void sched_unlock(void);
+/* types */
+typedef void (*thread_modifier_t)(thread_t *this_t, void *data);
 
+
+/* prototypes */
 void sched_yield(void);
 void sched_trigger(void);
 
 thread_t const *sched_running(void);
-int sched_thread_core(thread_t const *this_t);
 
+void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, size_t size);
 void sched_thread_pause(thread_t *this_t);
 void sched_thread_wake(thread_t *this_t);
 void sched_thread_bury(thread_t *this_t);

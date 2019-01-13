@@ -32,7 +32,7 @@ uint8_t int_num = 0;
 
 
 /* global functions */
-struct thread_context_t *avr_int_hdlr(struct thread_context_t *tc){
+struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 	errno_t terrno;
 
 

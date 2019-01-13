@@ -41,6 +41,7 @@ typedef enum{
 	SC_THREADINFO,
 	SC_NICE,
 	SC_SCHEDYIELD,
+	SC_SIGREGISTER,
 	SC_SIGSEND,
 	SC_SIGRETURN,
 	SC_SLEEP,
@@ -72,6 +73,11 @@ typedef struct{
 	int cmd;
 	f_mode_t mode;
 } sc_fs_t;
+
+typedef struct{
+	int status;
+	bool kill_siblings;
+} sc_exit_t;
 
 typedef struct{
 	pid_t pid;

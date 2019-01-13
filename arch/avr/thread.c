@@ -16,10 +16,15 @@
 #include <sys/register.h>
 
 
+/* external variables */
+extern void (*__kernel_start[])(void);
+extern void (*__kernel_end[])(void);
+
+
 /* global functions */
-void avr_thread_context_init(thread_context_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg){
+void avr_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg){
 	/* init thread context */
-	memset(ctx, 0x0, sizeof(thread_context_t));
+	memset(ctx, 0x0, sizeof(thread_ctx_t));
 
 	// set status and control registers
 	ctx->sreg = mreg_r(SREG);
@@ -43,4 +48,16 @@ void avr_thread_context_init(thread_context_t *ctx, struct thread_t *this_t, use
 	// set _start  argument1: thread argument
 	ctx->gpr[22] = lo8(thread_arg);
 	ctx->gpr[23] = hi8(thread_arg);
+}
+
+enum thread_ctx_type_t avr_thread_context_type(thread_ctx_t *ctx){
+	void *ret_addr;
+
+
+	ret_addr = (void*)(((lo8(ctx->ret_addr) << 8) | hi8(ctx->ret_addr)) * 2);
+
+	if((void*)ret_addr >= (void*)__kernel_start && (void*)ret_addr <= (void*)__kernel_end)
+		return CTX_KERNEL;
+
+	return CTX_USER;
 }

@@ -17,18 +17,8 @@
 #include <shell/cmd/test/test.h>
 
 
-/* macros */
-#define NSIGS	3
-
-
 /* local/static prototypes */
-static void hdlr(signal_t sig);
 static int thread(void *arg);
-
-
-/* static variables */
-static unsigned int nsigs = 0;
-static bool volatile done = false;
 
 
 /* local functions */
@@ -36,25 +26,14 @@ static bool volatile done = false;
  *	\brief	test to verify user-space signals
  */
 static int exec(void){
-	int r;
-	unsigned int i;
-	tid_t tid;
 	process_info_t pinfo;
+	tid_t tid;
 
-
-	done = false;
-	nsigs = 0;
 
 	/* prepare */
 	// get process info
 	if(process_info(&pinfo) != 0){
 		ERROR("acquiring process info \"%s\"\n", strerror(errno));
-		return -1;
-	}
-
-	// register signal handler
-	if(signal(SIG_INT, hdlr) != hdlr){
-		ERROR("registering signal handler \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -66,46 +45,20 @@ static int exec(void){
 		return -1;
 	}
 
-	sleep(500, 0);
+	sleep(2000, 0);
 
-	/* send signals */
-	r = 0;
-
-	for(i=0; i<NSIGS; i++)
-		r |= signal_send(SIG_INT, pinfo.pid, tid);
-
-	/* wait for thread to terminate */
-	while(!done)
-		sleep(250, 0);
-
-	/* check result */
-	if(r){
+	/* send signal */
+	if(signal_send(SIG_KILL, pinfo.pid, tid) != 0){
 		ERROR("sending signal \"%s\"\n", strerror(errno));
-		return -1;
-	}
-
-	if(nsigs != 3){
-		ERROR("only %u/%u signals received by thread\n", nsigs, NSIGS);
 		return -1;
 	}
 
 	return 0;
 }
 
-test("signal", exec, "test user-space signals");
-
-static void hdlr(signal_t sig){
-	thread_info_t info;
-
-
-	thread_info(&info);
-
-	printf("%d caught signal %d\n", info.tid, sig);
-	nsigs++;
-}
+test("thread kill", exec, "kill a thread through SIG_KILL");
 
 static int thread(void *arg){
-	unsigned int i;
 	thread_info_t info;
 
 
@@ -113,11 +66,10 @@ static int thread(void *arg){
 
 	printf("started thread %d with %s\n", info.tid, arg);
 
-	for(i=0; i<20 && nsigs!=NSIGS; i++)
-		sleep(250, 0);
-
-	printf("thread done\n");
-	done = true;
+	while(1){
+		printf("%d still running\n", info.tid);
+		sleep(500, 0);
+	}
 
 	return 0;
 }

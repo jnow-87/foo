@@ -12,3 +12,5 @@ obj-y += thread.o
 obj-y += tty.o
 obj-y += stat.o
 obj-y += signal.o
+obj-y += kill.o
+obj-y += exit.o

@@ -18,7 +18,7 @@
 void avr_core_sleep(void);
 
 #ifdef BUILD_KERNEL
-void avr_core_panic(thread_context_t const *tc);
+void avr_core_panic(thread_ctx_t const *tc);
 #endif // BUILD_KERNEL
 
 

@@ -20,9 +20,12 @@
  * \brief	test to verify stat()
  */
 static int exec(void){
+	int r;
 	FILE *fp;
 	stat_t f_stat;
 
+
+	r = -1;
 
 	/* prepare test file */
 	unlink("dummy");
@@ -32,28 +35,35 @@ static int exec(void){
 
 	/* check stat for test file */
 	if(stat("dummy", &f_stat) != 0)
-		return -1;
+		goto err;
 
 	if(f_stat.type != FT_REG){
 		ERROR("type mismatch, having %d\n", f_stat.type);
-		return -1;
+		goto err;
 	}
 
 	if(f_stat.size != 3){
 		ERROR("file size mismatch, having %u\n", f_stat.size);
-		return -1;
+		goto err;
 	}
 
 	/* check stat of /dev/tty0 */
 	if(stat("/dev/tty0", &f_stat) != 0)
-		return -1;
+		goto err;
 
 	if(f_stat.type != FT_CHR){
 		ERROR("type mismatch, having %d\n", f_stat.type);
-		return -1;
+		goto err;
 	}
 
-	return 0;
+	r = 0;
+
+
+err:
+	unlink("dummy");
+
+	return r;
+
 }
 
 test("stat", exec, "test the stat() syscall");

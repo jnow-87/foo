@@ -20,7 +20,7 @@
 static void exec_init_call(init_call_t *base, init_call_t *end, bool p_err);
 
 
-/* extern variables */
+/* external variables */
 extern init_call_t __core_init0_base[],
 				   __platform_init0_base[],
 				   __platform_init1_base[],

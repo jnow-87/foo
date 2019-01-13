@@ -14,7 +14,7 @@
 
 
 /* global functions */
-void avr_iovfl_hdlr(struct thread_context_t *tc){
+void avr_iovfl_hdlr(struct thread_ctx_t *tc){
 	unsigned int ret_addr;
 
 
