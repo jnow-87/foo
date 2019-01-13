@@ -26,6 +26,11 @@ void ksignal_init(ksignal_t *sig){
 	sig->tail = 0x0;
 }
 
+/**
+ * \pre		no kernel global mutexes, such as the scheduler
+ * 			mutex must be locked, active locks on a dedicated
+ * 			object such	as a file descriptor are fine
+ */
 int ksignal_wait(ksignal_t *sig){
 	ksignal_queue_t *e;
 
