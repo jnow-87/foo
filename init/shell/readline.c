@@ -51,6 +51,7 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 	end = 0;
 	prev = 0;
 	shadowed = false;
+	shadow[0] = 0;
 	hst = 0x0;
 
 	history_startover();
