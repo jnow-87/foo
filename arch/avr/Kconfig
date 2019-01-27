@@ -100,6 +100,67 @@ endmenu
 # }}}
 
 #
+# clock system
+#
+# {{{
+menu "Clock System"
+	config SYSTEM_CLOCK_HZ
+		int "System clock [HZ]"
+		default 1000000
+
+	choice
+		prompt "System clock prescaler"
+		help
+			Prescaler value that shall be applied to the selected clock source to
+			achieve the configured system clock.
+
+		config SYSTEM_CLOCK_PRESCALER_1
+			bool "System clock prescaler 1"
+
+		config SYSTEM_CLOCK_PRESCALER_2
+			bool "System clock prescaler 2"
+
+		config SYSTEM_CLOCK_PRESCALER_4
+			bool "System clock prescaler 4"
+
+		config SYSTEM_CLOCK_PRESCALER_8
+			bool "System clock prescaler 18"
+
+		config SYSTEM_CLOCK_PRESCALER_16
+			bool "System clock prescaler 16"
+
+		config SYSTEM_CLOCK_PRESCALER_32
+			bool "System clock prescaler 32"
+
+		config SYSTEM_CLOCK_PRESCALER_64
+			bool "System clock prescaler 64"
+
+		config SYSTEM_CLOCK_PRESCALER_128
+			bool "System clock prescaler 128"
+
+		config SYSTEM_CLOCK_PRESCALER_256
+			bool "System clock prescaler 256"
+	endchoice
+
+	menu "Hidden"
+		visible if 0
+
+		config SYSTEM_CLOCK_PRESCALER
+			int "System clock prescaler"
+			default 0 if SYSTEM_CLOCK_PRESCALER_1
+			default 1 if SYSTEM_CLOCK_PRESCALER_2
+			default 2 if SYSTEM_CLOCK_PRESCALER_4
+			default 3 if SYSTEM_CLOCK_PRESCALER_8
+			default 4 if SYSTEM_CLOCK_PRESCALER_16
+			default 5 if SYSTEM_CLOCK_PRESCALER_32
+			default 6 if SYSTEM_CLOCK_PRESCALER_64
+			default 7 if SYSTEM_CLOCK_PRESCALER_128
+			default 8 if SYSTEM_CLOCK_PRESCALER_256
+	endmenu
+endmenu
+#  }}}
+
+#
 # memory configuration
 #
 # {{{

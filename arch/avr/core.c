@@ -102,11 +102,14 @@ void avr_core_panic(thread_ctx_t const *tc){
 /* local functions */
 #ifdef BUILD_KERNEL
 static int init(void){
+	/* set system clock prescaler */
+	mreg_w_sync(CLKPR, CONFIG_SYSTEM_CLOCK_PRESCALER, CLKPR_CLKPCE);
+
 	/* set MCUCR[IVSEL], moving interrupt vectors to boot flash if required */
 #if CONFIG_KERNEL_TEXT_BASE == 0
-	mreg_bit_clr_sync(MCUCR, MCUCR_IVSEL, MCUCR_IVCE);
+	mreg_w_sync(MCUCR, (mreg_r(MCUCR) & (0xff ^ (0x1 << MCUCR_IVSEL))), MCUCR_IVCE);
 #else
-	mreg_bit_set_sync(MCUCR, MCUCR_IVSEL, MCUCR_IVCE);
+	mreg_w_sync(MCUCR, (mreg_r(MCUCR) | (0x1 << MCUCR_IVSEL)), MCUCR_IVCE);
 #endif // CONFIG_KERNEL_TEXT_BASE
 
 	return E_OK;

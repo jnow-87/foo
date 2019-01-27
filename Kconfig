@@ -145,7 +145,7 @@ menu "Build system"
 			config AVR_PROG_DEBUG_ARGS
 				string "Programmer debug arguments"
 				default "--debugwire" if AVR_DRAGON_ISP || AVR_STK500V2
-				default "--dragon --jtag $(CONFIG_AVR_PROG_PORT) --jtag-bitrate $(shell echo '$(CONFIG_CORE_CLOCK_HZ) / (4 * 1000)' | bc -q)kHz" if AVR_DRAGON_JTAG
+				default "--dragon --jtag $(CONFIG_AVR_PROG_PORT) --jtag-bitrate $(shell echo '$(CONFIG_SYSTEM_CLOCK_HZ) / (4 * 1000)' | bc -q)kHz" if AVR_DRAGON_JTAG
 				default ""
 
 			config AVR_PROG_TYPE

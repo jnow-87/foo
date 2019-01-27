@@ -61,6 +61,14 @@
 /* RAMPZ */
 #define RAMPZ			0x5b
 
+/* CLKPR */
+// register
+#define CLKPR			0x61
+
+// bits
+#define CLKPR_CLKPCE	7
+#define CLKPR_CLKPS		0
+
 /* SMCR */
 // register
 #define SMCR			0x53

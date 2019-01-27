@@ -52,18 +52,25 @@
 
 
 /* macros */
+// clocks
+#define AVR_CPU_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
+#define AVR_IO_CLOCK_HZ		CONFIG_SYSTEM_CLOCK_HZ
+#define AVR_ADC_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
+#define AVR_ASYNC_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
+#define AVR_FLASH_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
+
 // interrupt handling
 #if defined(CONFIG_AVR_ATMEGA) || defined(CONFIG_AVR_XMEGA)
 
-#define XCALL			call
-#define XJMP			jmp
-#define INT_VEC_SIZE	4
+#define XCALL				call
+#define XJMP				jmp
+#define INT_VEC_SIZE		4
 
 #else
 
-#define XCALL			rcall
-#define XJMP			rjmp
-#define INT_VEC_SIZE	2
+#define XCALL				rcall
+#define XJMP				rjmp
+#define INT_VEC_SIZE		2
 
 #endif
 

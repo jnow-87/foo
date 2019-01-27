@@ -157,7 +157,7 @@ static int configure(term_cfg_t *cfg, void *_regs){
 	if(cfg->baud > 115200)
 		return_errno(E_LIMIT);
 
-	brate = (CONFIG_CORE_CLOCK_HZ / (cfg->baud * 16));
+	brate = (AVR_IO_CLOCK_HZ / (cfg->baud * 16));
 
 	if(brate == 0)
 		return_errno(E_INVAL);

@@ -56,6 +56,14 @@
 #define SPL				0x5d
 #define SPH				0x5e
 
+/* CLKPR */
+// register
+#define CLKPR			0x61
+
+// bits
+#define CLKPR_CLKPCE	7
+#define CLKPR_CLKPS		0
+
 /* SMCR */
 // register
 #define SMCR			0x53

@@ -33,60 +33,27 @@
 	)
 
 /**
- * \brief	set bit synchronously
+ * \brief	set register synchronously
  * 			this sequence is intented for bits that require a change enable flag
  * 			in order to allow changing the actual bit
  *
  * \param	reg_addr		address of the register to modify
- * \param	bit				bit that shall be modified
+ * \param	reg_val			intended value
  * \param	chg_en			change enable bit
  *
  * \pre		interrupts are assumed to be disabled, otherwise the following sequence might fail
  */
-#define mreg_bit_set_sync(reg_addr, bit, chg_en){ \
-	register uint8_t t; \
+#define mreg_w_sync(reg_addr, reg_val, chg_en){ \
+	register uint8_t en = (0x1 << chg_en); \
 	\
 	\
 	asm volatile( \
-		"lds	%[tmp], %[addr]\n" \
-		"ori	%[tmp], %[val_en]\n" \
-		"sts	%[addr], %[tmp]\n" \
-		"ori	%[tmp], %[val_reg]\n" \
-		"andi	%[tmp], %[val_di]\n" \
-		"sts	%[addr], %[tmp]\n" \
-		: [tmp] "=r" (t) \
+		"sts	%[addr], %[en]\n" \
+		"sts	%[addr], %[val]\n" \
+		: \
 		: [addr] "i" (reg_addr), \
-		  [val_en] "i" (0x1 << chg_en), \
-		  [val_di] "i" (0xff ^ (0x1 << chg_en)), \
-		  [val_reg] "i" (0x1 << bit) \
-	); \
-}
-
-/**
- * \brief	clear bit synchronously
- * 			this sequence is intented for bits that require a change enable flag
- * 			in order to allow changing the actual bit
- *
- * \param	reg_addr		address of the register to modify
- * \param	bit				bit that shall be modified
- * \param	chg_en			change enable bit
- *
- * \pre		interrupts are assumed to be disabled, otherwise the following sequence might fail
- */
-#define mreg_bit_clr_sync(reg_addr, bit, chg_en){ \
-	register uint8_t t; \
-	\
-	\
-	asm volatile( \
-		"lds	%[tmp], %[addr]\n" \
-		"ori	%[tmp], %[val_en]\n" \
-		"sts	%[addr], %[tmp]\n" \
-		"andi	%[tmp], %[val_di]\n" \
-		"sts	%[addr], %[tmp]\n" \
-		: [tmp] "=r" (t) \
-		: [addr] "i" (reg_addr), \
-		  [val_en] "i" (0x1 << chg_en), \
-		  [val_di] "i" (0xff ^ ((0x1 << chg_en) | (0x1 << bit))) \
+		  [en] "r" (en), \
+		  [val] "r" ((uint8_t)(reg_val & (0xff ^ (0x1 << chg_en)))) \
 	); \
 }
 
