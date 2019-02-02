@@ -220,7 +220,7 @@ config KERNEL_SIGNAL
 # {{{
 menuconfig KERNEL_UART
 	bool "Uart settings"
-	select DRIVER_TERM
+	select DRIVER_UART
 
 if KERNEL_UART
 	# baud rate

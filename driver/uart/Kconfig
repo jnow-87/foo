@@ -7,6 +7,5 @@
 
 
 
-config AVR_UART
-	bool "AVR uart"
-	select DRIVER_TERM
+config DRIVER_UART
+	bool "UART driver"

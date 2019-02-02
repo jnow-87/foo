@@ -112,7 +112,7 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	.thread_context_type = avr_thread_context_type,
 
 	/* terminal I/O */
-#ifdef CONFIG_AVR_UART
+#ifdef CONFIG_DRIVER_UART
 	.putchar = avr_uart_putchar,
 	.puts = avr_uart_puts,
 #else
