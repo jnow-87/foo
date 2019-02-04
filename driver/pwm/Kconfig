@@ -1,0 +1,66 @@
+#
+# Copyright (C) 2019 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+menuconfig DRIVER_PWM
+	bool "PWM driver"
+	select KERNEL_DEVFS
+
+if DRIVER_PWM
+	if AVR
+		choice
+			prompt "Clock selection"
+
+			config AVR_PWM_CLOCK_SELECT_IO
+				bool "I/O clock"
+
+			config AVR_PWM_CLOCK_SELECT_IO_8
+				bool "I/O clock / 8"
+				
+			config AVR_PWM_CLOCK_SELECT_IO_64
+				bool "I/O clock / 64"
+
+			config AVR_PWM_CLOCK_SELECT_IO_256
+				bool "I/O clock / 256"
+
+			config AVR_PWM_CLOCK_SELECT_IO_1024
+				bool "I/O clock / 1024"
+
+			config AVR_PWM_CLOCK_SELECT_T0_fall
+				bool "Pin T0 (falling edge)"
+
+			config AVR_PWM_CLOCK_SELECT_T0_rise
+				bool "Pin T0 (rising edge)"
+		endchoice
+
+		config AVR_PWM_8BIT
+			bool "8 bit timer support"
+
+		config AVR_PWM_16BIT
+			bool "16 bit timer support"
+
+		menu "Hidden"
+			visible if 0
+
+			config AVR_PWM_CLOCK_SELECT
+				int "AVR pwm clock select"
+				default 1	if AVR_PWM_CLOCK_SELECT_IO
+				default 2	if AVR_PWM_CLOCK_SELECT_IO_8
+				default 3	if AVR_PWM_CLOCK_SELECT_IO_64
+				default 4	if AVR_PWM_CLOCK_SELECT_IO_256
+				default 5	if AVR_PWM_CLOCK_SELECT_IO_1024
+				default 6	if AVR_PWM_CLOCK_SELECT_T0_fall
+				default 7	if AVR_PWM_CLOCK_SELECT_T0_rise
+		endmenu
+	endif # AVR
+
+	config PWM_DEBUG
+		bool "Enable debug messages"
+		depends on KERNEL_MSG_DEBUG
+		default n
+endif # DRIVER_PWM
