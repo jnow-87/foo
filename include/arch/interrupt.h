@@ -11,9 +11,10 @@
 #define ARCH_INTERRUPT_H
 
 
-/* types */
 #include <sys/types.h>
 
+
+/* types */
 typedef uint8_t int_num_t;
 typedef void (*int_hdlr_t)(int_num_t num, void *data);
 
