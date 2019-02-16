@@ -90,7 +90,7 @@ $(avrconfig_header): $(avrconfig)
 ## general flags
 # disable jump tables if kernel is mapped to addresses larger than 64k
 # this is required due to avr-gcc implementation of jump tables
-ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u" 0x10000); echo $$?),0)
+ifeq ($(shell test $$(printf "%u" $(CONFIG_AVR_KERNEL_TEXT_BASE)) -gt $$(printf "%u" 0x10000); echo $$?),0)
   cflags-$(CONFIG_AVR) := -fno-jump-tables
 endif
 
@@ -105,16 +105,16 @@ endif
 ldlibs-kernel-arch := \
 	-L$(loc_build_tree) \
 	-T$(lds_memory_file) \
-	-Wl,--section-start=.text=$(CONFIG_KERNEL_TEXT_BASE) \
-	-Wl,--section-start=.data=$(CONFIG_KERNEL_DATA_BASE) \
+	-Wl,--section-start=.text=$(CONFIG_AVR_KERNEL_TEXT_BASE) \
+	-Wl,--section-start=.data=$(CONFIG_AVR_KERNEL_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/$(basename $(kernel_name)).map,--cref
 
 ## init application flags
 ldlibs-app-arch := \
 	-L$(loc_build_tree) \
 	-T$(lds_memory_file) \
-	-Wl,--section-start=.text=$(CONFIG_APP_TEXT_BASE) \
-	-Wl,--section-start=.data=$(CONFIG_APP_DATA_BASE) \
+	-Wl,--section-start=.text=$(CONFIG_AVR_APP_TEXT_BASE) \
+	-Wl,--section-start=.data=$(CONFIG_AVR_APP_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/init/init.map,--cref
 
 

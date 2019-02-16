@@ -46,12 +46,12 @@ int main(int argc, char **argv){
 
 	/* check configuration validity */
 	r = 0;
-	r |= overlap("kernel flash", CONFIG_KERNEL_TEXT_BASE, CONFIG_KERNEL_TEXT_SIZE,
-				 "application flash", CONFIG_APP_TEXT_BASE, CONFIG_APP_TEXT_SIZE
+	r |= overlap("kernel flash", CONFIG_AVR_KERNEL_TEXT_BASE, CONFIG_AVR_KERNEL_TEXT_SIZE,
+				 "application flash", CONFIG_AVR_APP_TEXT_BASE, CONFIG_AVR_APP_TEXT_SIZE
 	);
 
-	r |= overlap("kernel data", CONFIG_KERNEL_DATA_BASE, CONFIG_KERNEL_DATA_SIZE,
-				 "application data", CONFIG_APP_DATA_BASE, CONFIG_APP_DATA_SIZE
+	r |= overlap("kernel data", CONFIG_AVR_KERNEL_DATA_BASE, CONFIG_AVR_KERNEL_DATA_SIZE,
+				 "application data", CONFIG_AVR_APP_DATA_BASE, CONFIG_AVR_APP_DATA_SIZE
 	);
 
 	if(r != 0)
@@ -67,10 +67,10 @@ int main(int argc, char **argv){
 
 	fprintf(ofile, "MEMORY {\n");
 
-	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "flash_kernel", CONFIG_KERNEL_TEXT_BASE, CONFIG_KERNEL_TEXT_SIZE);
-	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "flash_app", CONFIG_APP_TEXT_BASE, CONFIG_APP_TEXT_SIZE);
-	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "data_kernel", CONFIG_KERNEL_DATA_BASE, CONFIG_KERNEL_DATA_SIZE);
-	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "data_app", CONFIG_APP_DATA_BASE, CONFIG_APP_DATA_SIZE);
+	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "flash_kernel", CONFIG_AVR_KERNEL_TEXT_BASE, CONFIG_AVR_KERNEL_TEXT_SIZE);
+	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "flash_app", CONFIG_AVR_APP_TEXT_BASE, CONFIG_AVR_APP_TEXT_SIZE);
+	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "data_kernel", CONFIG_AVR_KERNEL_DATA_BASE, CONFIG_AVR_KERNEL_DATA_SIZE);
+	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "data_app", CONFIG_AVR_APP_DATA_BASE, CONFIG_AVR_APP_DATA_SIZE);
 	fprintf(ofile, "}\n");
 
 	fclose(ofile);

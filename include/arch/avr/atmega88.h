@@ -111,31 +111,32 @@
 #define INT_VECTORS			26
 
 // interrupt numbers
-#define INT_0				1
-#define INT_1				2
-#define INT_PCINT0			3
-#define INT_PCINT1			4
-#define INT_PCINT2			5
-#define INT_WATCHDOG		6
-#define INT_TIMER2_COMPA	7
-#define INT_TIMER2_COMPB	8
-#define INT_TIMER2_OVFL		9
-#define INT_TIMER1_CAPTURE	10
-#define INT_TIMER1_COMPA	11
-#define INT_TIMER1_COMPB	12
-#define INT_TIMER1_OVFL		13
-#define INT_TIMER0_COMPA	14
-#define INT_TIMER0_COMPB	15
-#define INT_TIMER0_OVFL		16
-#define INT_SPI_TX			17
-#define INT_USART0_RX		18
-#define INT_USART0_UDRE		19
-#define INT_USART0_TX		20
-#define INT_ADC				21
-#define INT_EEPROM_RDY		22
-#define INT_ACOMP			23
-#define INT_TWI				24
-#define INT_SPM_RDY			25
+#define INT_RESET			1
+#define INT_0				2
+#define INT_1				3
+#define INT_PCINT0			4
+#define INT_PCINT1			5
+#define INT_PCINT2			6
+#define INT_WATCHDOG		7
+#define INT_TIMER2_COMPA	8
+#define INT_TIMER2_COMPB	9
+#define INT_TIMER2_OVFL		10
+#define INT_TIMER1_CAPTURE	11
+#define INT_TIMER1_COMPA	12
+#define INT_TIMER1_COMPB	13
+#define INT_TIMER1_OVFL		14
+#define INT_TIMER0_COMPA	15
+#define INT_TIMER0_COMPB	16
+#define INT_TIMER0_OVFL		17
+#define INT_SPI_TX			18
+#define INT_USART0_RX		19
+#define INT_USART0_UDRE		20
+#define INT_USART0_TX		21
+#define INT_ADC				22
+#define INT_EEPROM_RDY		23
+#define INT_ACOMP			24
+#define INT_TWI				25
+#define INT_SPM_RDY			26
 
 
 /**

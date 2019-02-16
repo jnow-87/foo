@@ -38,7 +38,7 @@ menu "Hidden"
 		string "MCU"
 		default "atmega1284p" if ATMEGA1284P
 		default "atmega88pa" if ATMEGA88PA
-		default "unknown MCU"
+		default "unknown-MCU"
 
 	config AVR_ISA_AVR4
 		bool "AVR4"
@@ -166,7 +166,7 @@ endmenu
 # {{{
 menu "Memory configuration"
 	menu "Flash"
-		config KERNEL_TEXT_BASE
+		config AVR_KERNEL_TEXT_BASE
 			hex "Kernel binary base address"
 			range 0x0 0x0fffffff
 			default 0x0
@@ -176,7 +176,7 @@ menu "Memory configuration"
 				Note: Flash addresses given in the datasheet are word addresses, i.e. they
 					  need to be multiplied by 2 to get byte addresses.
 
-		config KERNEL_TEXT_SIZE
+		config AVR_KERNEL_TEXT_SIZE
 			int "Kernel binary size (max)"
 			default 0
 			help
@@ -186,7 +186,7 @@ menu "Memory configuration"
 					  Hence the kernel flash section needs to be large enough to hold both
 					  the kernel's .text and .data sections.
 
-		config APP_TEXT_BASE
+		config AVR_APP_TEXT_BASE
 			hex "Application binary base address"
 			range 0x0 0x0fffffff
 			default 0x0
@@ -196,7 +196,7 @@ menu "Memory configuration"
 				Note: Flash addresses given in the datasheet are word addresses, i.e. they
 					  need to be multiplied by 2 to get byte addresses.
 
-		config APP_TEXT_SIZE
+		config AVR_APP_TEXT_SIZE
 			int "Application binary size (max)"
 			default 0
 			help
@@ -208,7 +208,7 @@ menu "Memory configuration"
 	endmenu
 
 	menu "SRAM"
-		config KERNEL_DATA_BASE
+		config AVR_KERNEL_DATA_BASE
 			hex "Kernel binary .data section base address"
 			range 0x0 0x0fffffff
 			default 0x0
@@ -223,13 +223,13 @@ menu "Memory configuration"
 					  distinguish them from flash addresses. This offset needs to be part of
 					  this address.
 
-		config KERNEL_DATA_SIZE
+		config AVR_KERNEL_DATA_SIZE
 			int "Kernel binary .data section size"
 			default 0
 			help
 				Size of the kernel .data section.
 
-		config APP_DATA_BASE
+		config AVR_APP_DATA_BASE
 			hex "Application binary .data section base address"
 			range 0x0 0x0fffffff
 			default 0x0
@@ -244,20 +244,20 @@ menu "Memory configuration"
 					  distinguish them from flash addresses. This offset needs to be part of
 					  this address.
 
-		config APP_DATA_SIZE
+		config AVR_APP_DATA_SIZE
 			int "Application binary .data section size (max)"
 			default 0
 			help
 				Size of the init application .data section.
 
-		config MREG_BASE
+		config AVR_MREG_BASE
 			hex "Memory mapped register space base address"
 			range 0x0 0x0fffffff
 			default 0x0
 			help
 				SRAM address of memory mapped register space.
 
-		config MREG_SIZE
+		config AVR_MREG_SIZE
 			int "Memory mapped register space size"
 			default 0
 			help
@@ -317,12 +317,83 @@ endchoice
 # debug
 #
 # {{{
-menu Debugging
+menu "Debugging"
 	config IOVERFLOW_DET
 		bool "Instruction overflow detection"
 		default n
 		help
 			Trigger an exception if instructions are executed from unused
 			parts of the flash memory.
+endmenu
+# }}}
+
+#
+# tooling
+#
+# {{{
+menu "Tooling"
+	config AVR_FUSER
+		string "Fuser"
+		default "avrfuser"
+
+	config AVR_PROG
+		string "Programmer"
+		default "avrdude"
+
+	config AVR_DEBUGGER
+		string "Debugger"
+		default "avarice"
+
+	choice
+		prompt "Programmer type"
+
+		config AVR_DRAGON_JTAG
+			bool "AVR Dragon JTAG"
+			depends on ATMEGA1284P
+
+		config AVR_DRAGON_ISP
+			bool "AVR Dragon ISP"
+
+		config AVR_STK500V2
+			bool "STK500v2"
+	endchoice
+
+	choice
+		prompt "Programmer port"
+
+		config AVR_PROG_PORT_USB
+			bool "usb"
+
+		config AVR_PROG_PORT_UART
+			bool "uart"
+	endchoice
+
+	config AVR_PROG_UART_DEV
+		string "Uart device"
+		default "/dev/ttyUSB0"
+		depends on AVR_PROG_PORT_UART
+
+	menu "Hidden"
+		visible if 0
+
+		config AVR_PROG_PORT
+			string "Programmer port"
+			default "usb" if AVR_PROG_PORT_USB
+			default AVR_PROG_UART_DEV if AVR_PROG_PORT_UART
+			default "unknown programmer port"
+
+		config AVR_PROG_DEBUG_ARGS
+			string "Programmer debug arguments"
+			default "--debugwire" if AVR_DRAGON_ISP || AVR_STK500V2
+			default "--dragon --jtag $(CONFIG_AVR_PROG_PORT) --jtag-bitrate $(shell echo '$(CONFIG_SYSTEM_CLOCK_HZ) / (4 * 1000)' | bc -q)kHz" if AVR_DRAGON_JTAG
+			default ""
+
+		config AVR_PROG_TYPE
+			string "Programmer"
+			default "dragon_jtag" if AVR_DRAGON_JTAG
+			default "dragon_isp" if AVR_DRAGON_ISP
+			default "stk500v2" if AVR_STK500V2
+			default "unkown programmer"
+	endmenu
 endmenu
 # }}}

@@ -18,7 +18,7 @@
 
 
 /* macros */
-#define INT_VEC_SC		(CONFIG_KERNEL_TEXT_BASE + INT_VEC_SIZE * INT_VECTORS)
+#define INT_VEC_SC		(CONFIG_AVR_KERNEL_TEXT_BASE + INT_VEC_SIZE * INT_VECTORS)
 #define SYSCALL(addr)	asm volatile("call " STRGIFY(addr));
 
 

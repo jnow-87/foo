@@ -13,17 +13,17 @@
 
 /* macros */
 .macro	vector num
-	.if (\num < INT_VECTORS + 2)				// +2 for the pseude interrupts (syscall, instruction overflow)
-		.if (\num == 0)							// reset
+	.if (\num <= INT_VECTORS + 2)				// +2 for the pseude interrupts (syscall, instruction overflow)
+		.if (\num == INT_RESET)
 			.global __vector_\num
 			XJMP	__isr_reset
 
-		.elseif (\num == INT_VECTORS)			// syscall
+		.elseif (\num == INT_VECTORS + 1)			// syscall
 			.global	__vector_\num
 			XJMP	__isr_syscall
 
 #if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
-		.elseif (\num == INT_VECTORS + 1)		// instruction overflow
+		.elseif (\num == INT_VECTORS + 2)		// instruction overflow
 			.global	__vector_\num
 			XJMP	__isr_iovfl
 #endif // CONFIG_BUILD_DEBUG && CONFIG_IOVERFLOW_DET
@@ -60,7 +60,6 @@
 
 .global int_vectors
 int_vectors:
-vector 0
 vector 1
 vector 2
 vector 3
@@ -97,6 +96,7 @@ vector 33
 vector 34
 vector 35
 vector 36
+vector 37
 
 
 .section .isr
@@ -132,6 +132,7 @@ __isr_sched:
 
 /* instruction overflow handler */
 #if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
+.global __isr_iovfl
 __isr_iovfl:
 	push	r31
 	ldi		r31, INT_VECTORS + 1

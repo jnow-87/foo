@@ -11,12 +11,14 @@
 #include <arch/arch.h>
 
 
+/* external symbols */
 .extern kernel
 
 
+/* boot code */
 .section .start
 
-.globl __start
+.global __start
 __start:
 	/* init stack pointer */
 	ldi		r16, lo8(CONFIG_KERNEL_STACK_BASE + CONFIG_KERNEL_STACK_SIZE - 1)

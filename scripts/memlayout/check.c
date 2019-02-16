@@ -33,9 +33,9 @@ int main(void){
 		{ .name = "process heap",		.base = CONFIG_KERNEL_PROC_BASE,		.size = CONFIG_KERNEL_PROC_SIZE,		.size_max = -1,		.allow_zero_size = 0 },
 		{ .name = "init ram fs",		.base = CONFIG_KERNEL_INITRAMFS_BASE,	.size = CONFIG_KERNEL_INITRAMFS_SIZE,	.size_max = -1,		.allow_zero_size = 1 },
 #ifdef CONFIG_AVR
-		{ .name = "kernel data",		.base = (CONFIG_KERNEL_DATA_BASE),		.size = CONFIG_KERNEL_DATA_SIZE,		.size_max = -1,		.allow_zero_size = 0 },
-		{ .name = "application data",	.base = (CONFIG_APP_DATA_BASE),			.size = CONFIG_APP_DATA_SIZE,			.size_max = -1,		.allow_zero_size = 0 },
-		{ .name = "mapped registers",	.base = (CONFIG_MREG_BASE),				.size = CONFIG_MREG_SIZE,				.size_max = -1,		.allow_zero_size = 0 },
+		{ .name = "kernel data",		.base = (CONFIG_AVR_KERNEL_DATA_BASE),	.size = CONFIG_AVR_KERNEL_DATA_SIZE,	.size_max = -1,		.allow_zero_size = 0 },
+		{ .name = "application data",	.base = (CONFIG_AVR_APP_DATA_BASE),		.size = CONFIG_AVR_APP_DATA_SIZE,		.size_max = -1,		.allow_zero_size = 0 },
+		{ .name = "mapped registers",	.base = (CONFIG_AVR_MREG_BASE),			.size = CONFIG_AVR_MREG_SIZE,			.size_max = -1,		.allow_zero_size = 0 },
 #endif // CONFIG_AVR
 
 		// end of array
@@ -44,11 +44,11 @@ int main(void){
 
 	const region_t reg_size[] = {
 #ifdef CONFIG_AVR
-		{ .name = "flash",		.size_max = FLASH_SIZE,		.size = CONFIG_KERNEL_TEXT_SIZE + CONFIG_APP_TEXT_SIZE },
+		{ .name = "flash",		.size_max = FLASH_SIZE,		.size = CONFIG_AVR_KERNEL_TEXT_SIZE + CONFIG_AVR_APP_TEXT_SIZE },
 		{ .name = "sram",		.size_max = SRAM_SIZE,		.size = CONFIG_KERNEL_STACK_SIZE + CONFIG_KERNEL_HEAP_SIZE
-																  + CONFIG_KERNEL_PROC_SIZE + CONFIG_MREG_SIZE
-																  + CONFIG_KERNEL_INITRAMFS_SIZE + CONFIG_KERNEL_DATA_SIZE
-																  + CONFIG_APP_DATA_SIZE },
+																  + CONFIG_KERNEL_PROC_SIZE + CONFIG_AVR_MREG_SIZE
+																  + CONFIG_KERNEL_INITRAMFS_SIZE + CONFIG_AVR_KERNEL_DATA_SIZE
+																  + CONFIG_AVR_APP_DATA_SIZE },
 #endif // CONFIG_AVR
 
 		// end of array
@@ -99,8 +99,8 @@ int main(void){
 #ifdef CONFIG_AVR
 	// check init binary starting address
 	if(CONFIG_INIT_BINTYPE_RAW){
-		if(CONFIG_INIT_BINARY != CONFIG_APP_TEXT_BASE){
-			printf("\terror: (raw) init binary starting address does not match it's flash address\n\t%s (%#x)  != %s (%#x)\n", "CONFIG_INIT_BINARY", CONFIG_INIT_BINARY, "CONFIG_APP_TEXT_BASE", CONFIG_APP_TEXT_BASE);
+		if(CONFIG_INIT_BINARY != CONFIG_AVR_APP_TEXT_BASE){
+			printf("\terror: (raw) init binary starting address does not match it's flash address\n\t%s (%#x)  != %s (%#x)\n", "CONFIG_INIT_BINARY", CONFIG_INIT_BINARY, "CONFIG_AVR_APP_TEXT_BASE", CONFIG_AVR_APP_TEXT_BASE);
 			return 1;
 		}
 	}

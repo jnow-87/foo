@@ -71,13 +71,12 @@
 					\item \lstinline{CONFIG_ADDR_WIDTH.*}
 					\item \lstinline{CONFIG_REGISTER_WIDTH.*}
 					\item \lstinline{CONFIG_ARCH_HEADER}
-					\item \lstinline{CONFIG_KERNEL_STACK_SIZE}
 				\end{itemize}
 		\end{itemize}
 
 	\subsection{Build System}
 		\begin{itemize}
-			\item libsys.o shall containing all objects that are required to be linked against applications
+			\item libsys.o shall contain all objects that are required to be linked against applications
 			\item linker script scripts/linker/kernel\_$<$arch$>$.lds
 			\item memory layout print (optional): scripts/memlayout/main.c, if target specific sections are required
 				\begin{itemize}
