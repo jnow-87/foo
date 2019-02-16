@@ -7,6 +7,10 @@
 
 
 
+config DEVICE_TREE
+	string "Device tree script"
+	default "scripts/dts/$(CONFIG_PROCESSOR).dts"
+
 source driver/loop/Kconfig
 source driver/term/Kconfig
 source driver/uart/Kconfig

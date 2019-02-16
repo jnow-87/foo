@@ -6,6 +6,8 @@
 #
 # Processor
 #
+CONFIG_AVR=y
+# CONFIG_ARM is not set
 CONFIG_ATMEGA1284P=y
 # CONFIG_ATMEGA88PA is not set
 CONFIG_AVR_MCU=atmega1284p

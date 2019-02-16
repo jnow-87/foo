@@ -38,6 +38,11 @@ int main(void){
 		{ .name = "mapped registers",	.base = (CONFIG_AVR_MREG_BASE),			.size = CONFIG_AVR_MREG_SIZE,			.size_max = -1,		.allow_zero_size = 0 },
 #endif // CONFIG_AVR
 
+#ifdef CONFIG_ARM
+		{ .name = "kernel data",		.base = (CONFIG_ARM_KERNEL_DATA_BASE),	.size = CONFIG_ARM_KERNEL_DATA_SIZE,	.size_max = -1,		.allow_zero_size = 0 },
+		{ .name = "application data",	.base = (CONFIG_ARM_APP_DATA_BASE),		.size = CONFIG_ARM_APP_DATA_SIZE,		.size_max = -1,		.allow_zero_size = 0 },
+#endif // CONFIG_ARM
+
 		// end of array
 		{ .name = ""},
 	};
@@ -51,6 +56,13 @@ int main(void){
 																  + CONFIG_AVR_APP_DATA_SIZE },
 #endif // CONFIG_AVR
 
+#ifdef CONFIG_ARM
+		{ .name = "flash",		.size_max = FLASH_SIZE,		.size = CONFIG_ARM_KERNEL_TEXT_SIZE + CONFIG_ARM_APP_TEXT_SIZE },
+		{ .name = "sram",		.size_max = SRAM_SIZE,		.size = CONFIG_KERNEL_STACK_SIZE + CONFIG_KERNEL_HEAP_SIZE
+																  + CONFIG_KERNEL_PROC_SIZE
+																  + CONFIG_KERNEL_INITRAMFS_SIZE + CONFIG_ARM_KERNEL_DATA_SIZE
+																  + CONFIG_ARM_APP_DATA_SIZE },
+#endif // CONFIG_ARM
 		// end of array
 		{ .name = ""},
 	};
@@ -105,6 +117,16 @@ int main(void){
 		}
 	}
 #endif // CONFIG_AVR
+
+#ifdef CONFIG_ARM
+	// check init binary starting address
+	if(CONFIG_INIT_BINTYPE_RAW){
+		if(CONFIG_INIT_BINARY != CONFIG_ARM_APP_TEXT_BASE){
+			printf("\terror: (raw) init binary starting address does not match it's flash address\n\t%s (%#x)  != %s (%#x)\n", "CONFIG_INIT_BINARY", CONFIG_INIT_BINARY, "CONFIG_ARM_APP_TEXT_BASE", CONFIG_ARM_APP_TEXT_BASE);
+			return 1;
+		}
+	}
+#endif // CONFIG_ARM
 
 	return 0;
 }

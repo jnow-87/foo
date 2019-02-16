@@ -1,0 +1,167 @@
+#
+# Copyright (C) 2019 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+#
+# board / core / family
+#
+# {{{
+choice
+	prompt "Board"
+
+	config ATSAMV71
+		bool "AtSamV71"
+		select ARM_CORE_CORTEX_M7
+
+	config BOARD_UNSPECIFIC
+		bool "Unspecific"
+endchoice
+
+choice
+	prompt "Core"
+
+	config ARM_CORE_CORTEX_M7
+		bool "Cortex-M7"
+		select ARM_ARCH_ARMV7M
+		select ARM_ISA_THUMB
+		select ADDR_WIDTH_32
+		select REGISTER_WIDTH_32
+endchoice
+
+menu "Hidden"
+	visible if 0
+
+	config ARM_BOARD
+		string "Board"
+		default "atsamv71"	if ATSAMV71
+		default	"unspecific-board"
+
+	config ARM_CORE
+		string "Core"
+		default "cortex-m7" if ARM_CORE_CORTEX_M7
+		default "unknown-core"
+
+	config ARM_ARCH_ARMV7M
+		bool "Armv7-M"
+
+	config ARM_ARCH
+		string "Arm architecture"
+		default "armv7m"	if ARM_ARCH_ARMV7M
+		default "unknown-arch"
+
+	config ARM_ISA_ARM
+		bool "Arm instruction set"
+
+	config ARM_ISA_THUMB
+		bool "Thumb instruction set"
+
+	config ARM_ISA
+		string "ISA"
+		default "arm"		if ARM_ISA_ARM
+		default "thumb"		if ARM_ISA_THUMB
+
+	# architecture defining header
+	config ARCH_HEADER
+		string "Arch Header"
+		default "<arch/$(CONFIG_ARCH)/arm.h>" if ARM
+endmenu
+# }}}
+
+#
+# memory configuration
+#
+# {{{
+menu "Memory configuration"
+	menu "Flash"
+		config ARM_KERNEL_TEXT_BASE
+			hex "Kernel binary base address"
+			default 0x0
+			help
+				Flash address to map the kernel image .text section to.
+
+		config ARM_KERNEL_TEXT_SIZE
+			int "Kernel binary size (max)"
+			default 0
+			help
+				Size of the kernel flash.
+
+				Note: The kernel .data section needs to be mapped to the flash memory also.
+					  Hence the kernel flash section needs to be large enough to hold both
+					  the kernel's .text and .data sections.
+
+		config ARM_APP_TEXT_BASE
+			hex "Application binary base address"
+			default 0x0
+			help
+				Flash address to map the init application image .text section to.
+
+		config ARM_APP_TEXT_SIZE
+			int "Application binary size (max)"
+			default 0
+			help
+				Size of the init application .text section.
+
+				Note: The init application .data section needs to be mapped to the flash
+					  memory also. Hence the init applications flash section needs to be
+					  large enough to hold both the .text and .data sections.
+	endmenu
+
+	menu "SRAM"
+		config ARM_KERNEL_DATA_BASE
+			hex "Kernel binary .data section base address"
+			default 0x0
+			help
+				SRAM address to map the kernel .data section to.
+
+				Note: The .data section is part of the kernel image. As such it is programmed
+					  to flash memory and loaded to SRAM at runtime. This address constitutes
+					  the SRAM address.
+
+		config ARM_KERNEL_DATA_SIZE
+			int "Kernel binary .data section size"
+			default 0
+			help
+				Size of the kernel .data section.
+
+		config ARM_APP_DATA_BASE
+			hex "Application binary .data section base address"
+			default 0x0
+			help
+				SRAM address to map the init application .data section to.
+
+				Note: The .data section is part of the init application. As such it is
+					  programmed to flash memory and loaded to SRAM at runtime. This address
+					  constitutes the SRAM address.
+
+		config ARM_APP_DATA_SIZE
+			int "Application binary .data section size (max)"
+			default 0
+			help
+				Size of the init application .data section.
+	endmenu
+endmenu
+# }}}
+
+#
+# tooling
+#
+# {{{
+menu "Tooling"
+	config ARM_OOCD_SCRIPTS
+		string "OpenOCD scripts path"
+		default ""
+
+	config ARM_OOCD_INTERFACE
+		string "OpenOCD interface"
+		default ""
+
+	config ARM_OOCD_BOARD
+		string "OpenOCD board"
+		default ""
+endmenu
+# }}}

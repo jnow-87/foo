@@ -8,7 +8,7 @@
 
 
 #
-# processor type and features menus
+# processor type
 #
 # {{{
 choice
@@ -18,23 +18,34 @@ choice
 		bool "AVR"
 		select NOFLOAT
 		select KERNEL_NO_VIRT_MEM
+
+	config ARM
+		bool "ARM"
+		select KERNEL_NO_VIRT_MEM
 endchoice
 
-menu "AVR features"
-	visible if AVR
+# processor specifics
+if AVR
 	source "arch/avr/Kconfig"
-endmenu
+endif # AVR
 
+if ARM
+	source "arch/arm/Kconfig"
+endif # ARM
+
+# generic options
 menu "Hidden"
 	visible if 0
 
 	config ARCH
 		string "Architecture"
-		default "avr" if AVR
+		default "avr"		if AVR
+		default "arm"		if ARM
 	
 	config PROCESSOR
 		string "Processor"
-		default AVR_MCU if AVR
+		default AVR_MCU		if AVR
+		default ARM_BOARD	if ARM
 
 	config ADDR_WIDTH_8
 		bool "8-bit"
@@ -86,8 +97,4 @@ config CORE_MASK
 	hex "Core mask"
 	range 0x1 0x0fffffff
 	default 0x1
-
-config DEVICE_TREE
-	string "Device tree script"
-	default "scripts/dts/$(CONFIG_PROCESSOR).dts"
 # }}}
