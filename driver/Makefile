@@ -12,15 +12,3 @@ obj-$(CONFIG_DRIVER_TERM) += term/
 obj-$(CONFIG_DRIVER_UART) += uart/
 obj-$(CONFIG_DRIVER_GPIO) += gpio/
 obj-$(CONFIG_DRIVER_PWM) += pwm/
-
-
-####
-# flags
-####
-
-## avr
-# disable jump tables if kernel is mapped to addresses larger than 64k
-# this is required due to avr-gcc implementation of jump tables
-ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u" 0x10000); echo $$?),0)
-  cflags-$(CONFIG_AVR) := -fno-jump-tables
-endif
