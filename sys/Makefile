@@ -39,15 +39,3 @@ $(loc_build_tree)/devicetree.c: $(CONFIG_DEVICE_TREE) $(devtree)
 
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,      $(loc_build_tree)/devicetree.c,)
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o, $(loc_build_tree)/devicetree.c, host)
-
-
-####
-# flags
-####
-
-## avr
-# disable jump tables if kernel is mapped to addresses larger than 64k
-# this is required due to avr-gcc implementation of jump tables
-ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u" 0x10000); echo $$?),0)
-  cflags-$(CONFIG_AVR) := -fno-jump-tables
-endif
