@@ -7,8 +7,9 @@
 
 
 
-/** MEMORY sections are defined in a separate script depending on the
- *  configured target MCU, cf. scripts/linker/mem_*
+/**
+ * MEMORY sections are defined in an automatically generated script,
+ * cf. scripts/arch/<arch>/linker/
  */
 SECTIONS {
 	/* code */
@@ -58,7 +59,7 @@ SECTIONS {
 	__bss_end = __bss_start + SIZEOF(.bss);
 
 	/* plugin */
-	INCLUDE avr_plugin_kernel.lds
+	INCLUDE plugin_kernel.lds
 
 	/* discard sections */
 	/DISCARD/ : {

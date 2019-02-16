@@ -7,15 +7,16 @@
 
 
 
-/** MEMORY sections are defined in a separate script depending on the
- *  configured target MCU, cf. scripts/linker/mem_*
+/**
+ * MEMORY sections are defined in an automatically generated script,
+ * cf. scripts/arch/<arch>/linker/
  */
 ENTRY(_start)
 
 SECTIONS {
 	/* code */
 	.text : {
-		/* ensure .app_start, i.e. _start will always be located at 0x2
+		/* ensure .app_start, i.e. _start will always be located at 0x0
 		 * this is used to have a fixed starting address, which in turn
 		 * can be used to configure the kernel, in particular
 		 * CONFIG_INIT_BINARY
@@ -59,7 +60,7 @@ SECTIONS {
 	__bss_end = __bss_start + SIZEOF(.bss);
 
 	/* plugin */
-	INCLUDE avr_plugin_app.lds
+	INCLUDE plugin_app.lds
 
 	/* discard sections */
 	/DISCARD/ : {

@@ -29,7 +29,7 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree
 
 ## memory layout
 lds_memory_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_memory
-lds_memory_file := $(loc_build_tree)/avr_memory.lds
+lds_memory_file := $(loc_build_tree)/memory.lds
 
 $(lds_memory_file): $(lds_memory_script)
 	$(mkdir) $(dir $(lds_memory_file))
@@ -37,8 +37,8 @@ $(lds_memory_file): $(lds_memory_script)
 
 ## plugin
 lds_plugin_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_plugin
-lds_plugin_kernel_file := $(loc_build_tree)/avr_plugin_kernel.lds
-lds_plugin_app_file := $(loc_build_tree)/avr_plugin_app.lds
+lds_plugin_kernel_file := $(loc_build_tree)/plugin_kernel.lds
+lds_plugin_app_file := $(loc_build_tree)/plugin_app.lds
 
 $(lds_plugin_kernel_file): $(lds_plugin_script)
 	$(mkdir) $(dir $(lds_plugin_kernel_file))
