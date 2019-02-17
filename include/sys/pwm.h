@@ -18,7 +18,8 @@ typedef enum{
 } pwm_mode_t;
 
 typedef enum{
-	PWM_PRES_1 = 1,
+	PWM_PRES_0 = 0,
+	PWM_PRES_1,
 	PWM_PRES_2,
 	PWM_PRES_4,
 	PWM_PRES_8,
@@ -29,13 +30,14 @@ typedef enum{
 	PWM_PRES_256,
 	PWM_PRES_512,
 	PWM_PRES_1024,
-} pwm_prescaler_t;
+	PWM_PRES_MAX
+} pwm_pres_t;
 
 typedef struct{
 	pwm_mode_t mode;
 
 	unsigned int base_clock_khz;
-	pwm_prescaler_t prescale;
+	pwm_pres_t prescaler;
 
 	unsigned int max;
 } pwm_cfg_t;
