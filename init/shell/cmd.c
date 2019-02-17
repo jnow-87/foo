@@ -68,7 +68,7 @@ int cmd_exec(int argc, char **argv){
 		return -E_INVAL;
 	}
 
-	errno = 0;
+	errno = E_OK;
 
 	/* check for output redirection */
 	stdout_dup = -1;
@@ -114,7 +114,10 @@ static int redirect_init(FILE *fp, char const *file, char const *redir_type){
 	r = stat(file, &f_stat);
 
 	// check if file is a regular file or character device
-	if((r != 0 && (errno & ~E_UNAVAIL)) || (r == 0 && f_stat.type != FT_REG && f_stat.type != FT_CHR))
+	if(errno == E_UNAVAIL)
+		errno = E_OK;
+
+	if((r != 0 && errno) || (r == 0 && f_stat.type != FT_REG && f_stat.type != FT_CHR))
 		goto_errno(err_0, E_INVAL);
 
 	// remove file depending on redir_type

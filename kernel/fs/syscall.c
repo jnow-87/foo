@@ -116,7 +116,7 @@ static int sc_hdlr_dup(void *_p){
 
 	// E_INVAL is expected in case the desired fd
 	// was not open before
-	if(errno & (~E_INVAL))
+	if(errno && errno != E_INVAL)
 		return -errno;
 
 	errno = E_OK;
@@ -203,8 +203,9 @@ static int sc_hdlr_read(void *_p){
 
 	DEBUG("read %d bytes, errno %#x\n", r, errno);
 
-	// avoid communicating enf of resource to user space
-	errno &= ~E_END;
+	// avoid communicating end of resource to user space
+	if(errno == E_END)
+		errno = E_OK;
 
 	/* update user space */
 	if(errno == E_OK)
@@ -330,7 +331,7 @@ static int sc_hdlr_fcntl(void *_p){
 
 	if(fcntl(fd, p->cmd, data, this_p) == -E_NOIMP){
 		if(fd->node->ops->fcntl != 0x0)		(void)fd->node->ops->fcntl(fd, p->cmd, data);
-		else								errno |= E_NOIMP;
+		else								errno = E_NOIMP;
 	}
 
 	mutex_unlock(&fd->node->rd_mtx);

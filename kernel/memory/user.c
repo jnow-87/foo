@@ -48,7 +48,7 @@ static int init(void){
 	process_mem = (void*)(CONFIG_KERNEL_PROC_BASE);
 	memblock_init(process_mem, CONFIG_KERNEL_PROC_SIZE);
 
-	return errno;
+	return -errno;
 }
 
 kernel_init(0, init);

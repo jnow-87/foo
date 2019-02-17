@@ -42,9 +42,9 @@ int avr_sc(sc_t num, void *param, size_t psize){
 	/* trigger syscall */
 	SYSCALL(INT_VEC_SC);
 
-	errno |= arg.errno;
-
-	return -arg.errno;
+	if(arg.errno)
+		return_errno(arg.errno);
+	return E_OK;
 }
 
 #ifdef BUILD_KERNEL
