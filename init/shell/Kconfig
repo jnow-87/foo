@@ -29,6 +29,9 @@ menu "Commands"
 	config INIT_RM
 		bool rm
 
+	config INIT_PINSAMPLER
+		bool pinsampler
+
 	config INIT_TEST
 		bool test
 endmenu
