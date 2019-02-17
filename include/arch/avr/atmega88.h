@@ -72,6 +72,13 @@
 #define SMCR_SM			1
 #define SMCR_SE			0
 
+/* PRR */
+// register
+#define PRR0			0x64
+
+// bits
+#define PRR0_PRUSART0	1
+
 /* GPIOR */
 #define GPIOR0			0x3e
 #define GPIOR1			0x4a
@@ -95,10 +102,6 @@
 // register
 #define UCSR0A			0xc0
 #define UDR0			0xc6
-#define PRR0			0x64
-
-// bits
-#define PRR0_PRUSART0	1
 
 
 /**

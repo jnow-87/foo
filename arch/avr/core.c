@@ -9,6 +9,7 @@
 
 #include <config/config.h>
 #include <arch/thread.h>
+#include <arch/avr/register.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <sys/errno.h>
@@ -111,6 +112,10 @@ static int init(void){
 #else
 	mreg_w_sync(MCUCR, (mreg_r(MCUCR) | (0x1 << MCUCR_IVSEL)), MCUCR_IVCE);
 #endif // CONFIG_KERNEL_TEXT_BASE
+
+	/* enable power reduction */
+	mreg_w(PRR0, 0xff);
+	mreg_w(PRR1, 0xff);
 
 	return E_OK;
 }
