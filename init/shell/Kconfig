@@ -9,28 +9,31 @@
 
 menu "Commands"
 	config INIT_HELP
-		bool help
+		bool "help"
 
 	config INIT_CD
-		bool cd
+		bool "cd"
 
 	config INIT_LS
-		bool ls
+		bool "ls"
 
 	config INIT_ECHO
-		bool echo
+		bool "echo"
 
 	config INIT_CAT
-		bool cat
+		bool "cat"
 
 	config INIT_MKDIR
-		bool mkdir
+		bool "mkdir"
 
 	config INIT_RM
-		bool rm
+		bool "rm"
 
 	config INIT_PINSAMPLER
-		bool pinsampler
+		bool "pinsampler"
+
+	config INIT_PWMCTRL
+		bool "pwmctrl"
 
 	config INIT_TEST
 		bool test
