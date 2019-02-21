@@ -7,17 +7,17 @@
 
 
 
-obj-y := errno.o string.o memblock.o mutex.o list1.o list2.o
+obj-y := errno.o string.o memblock.o mutex.o list1.o list2.o vector.o
 
 obj-$(CONFIG_KERNEL_PRINTF) += stream.o
 obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 
-hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o
+hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o vector.o
 
 obj-nobuiltin-y := libsys.o
 
 
-libsys-y := errno.o string.o list1.o list2.o
+libsys-y := errno.o string.o list1.o list2.o vector_lib.o
 
 libsys-$(CONFIG_SC_DYNMEM) += memblock.o
 libsys-$(CONFIG_LIB_MUTEX) += mutex_lib.o
