@@ -7,12 +7,12 @@
 
 
 
-obj-y := start.o isr.o core.o
+obj-y := start.o isr.o atomic.o
 
 
 obj-nobuiltin-y := libsys.o
 
-libsys-y := core_lib.o
+libsys-y := atomic_lib.o
 
 # custom rules to generate separate objects files for src files that are reuired by kernel and libsys
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree)/%.c,)

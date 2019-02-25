@@ -28,6 +28,7 @@
 
 #include <arch/arm/timebase.h>
 #include <arch/arm/thread.h>
+#include <arch/arm/atomic.h>
 #include <arch/types.h>
 
 #endif // __x86_64__
@@ -86,7 +87,7 @@ static arch_callbacks_common_t const arch_cbs_common = {
 	.timebase_to_time = 0x0,	/* TODO */
 
 	/* atomics */
-	.cas = 0x0,					/* TODO */
+	.cas = arm_cas,
 
 	/* syscall */
 	.sc = 0x0,					/* TODO */
