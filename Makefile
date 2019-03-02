@@ -27,7 +27,7 @@ githooks_tree := .githooks
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := arch kernel driver lib sys init testing scripts/memlayout scripts/arch
+src_dirs := arch kernel driver lib sys init testing scripts/memlayout scripts/arch scripts/devtree
 
 kernel_name := kimg.elf
 lib_name := libsys.a
