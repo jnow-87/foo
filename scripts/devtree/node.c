@@ -69,60 +69,125 @@ char const *node_validate(node_t *node){
 	return 0x0;
 }
 
-void node_export(node_t *node){
-	/* TODO */
-}
-
-void node_print(node_t *node, size_t indent){
-	size_t i;
+int node_export(node_t *node, FILE *fp){
+	size_t n_int,
+		   n_reg;
 	unsigned int *p;
-	member_int_t *lst;
+	member_int_t *int_lst;
 	member_t *m;
-	char s_ind[indent + 1];
 	node_t *child;
 
 
-	for(i=0; i<indent; i++)
-		s_ind[i] = '\t';
-	s_ind[i] = 0;
+	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node->name);
 
+	/* child list */
+	if(!list_empty(node->childs)){
+		// child declarations
+		fprintf(fp, "// __dt_%s child declarations\n", node->name);
 
-	printf("\n%snode: %s\n", s_ind, node->name);
-	printf("%s\tcompatible: %s\n", s_ind, node->compatible);
-	printf("%s\tparent: %s\n", s_ind, (node->parent != 0x0 ? node->parent->name : ""));
+		list_for_each(node->childs, child)
+			fprintf(fp, "devtree_t const __dt_%s;\n", child->name);
 
-	printf("\n%s\t%u members\n", s_ind, node->data.size);
+		fprintf(fp, "\n");
 
-	vector_for_each(&node->data, m){
-		switch(m->type){
-		case MT_REG_BASE:
-			printf("%s\t\treg-base: %p\n", s_ind, m->data);
-			break;
+		// child array
+		fprintf(fp, "// __dt_%s child list\n", node->name);
 
-		case MT_REG_LIST:
-			printf("%s\t\treg-list (%u):", s_ind, ((vector_t*)m->data)->size);
+		fprintf(fp, "devtree_t const * const __%s_childs[] = {\n", node->name);
 
-			vector_for_each((vector_t*)m->data, p)
-				printf(" %#x", *p);
+		list_for_each(node->childs, child)
+			fprintf(fp, "\t&__dt_%s,\n", child->name);
 
-			printf("\n");
-			break;
-
-		case MT_INT_LIST:
-			lst = m->data;
-			printf("%s\t\tint<%u>-list (%u):", s_ind, lst->size, lst->lst->size);
-
-			vector_for_each(lst->lst, p)
-				printf(" %#x", *p);
-
-			printf("\n");
-			break;
-
-		default:
-			printf("%s\t\tunknown member type %u\n", s_ind, m->type);
-		}
+		fprintf(fp, "\t0x0\n};\n\n");
 	}
 
+	/* data */
+	m = vector_get(&node->data, 0);
+
+	if(m != 0x0 && m->type != MT_REG_BASE){
+		n_int = 0;
+		n_reg = 0;
+
+		fprintf(fp, "// __dt_%s data\n", node->name);
+
+		// struct definition
+		fprintf(fp, "struct{\n");
+
+		vector_for_each(&node->data, m){
+			switch(m->type){
+			case MT_REG_LIST:
+				vector_for_each((vector_t*)m->data, p)
+					fprintf(fp, "\tvoid *reg%zu;\n", n_reg++);
+				break;
+
+			case MT_INT_LIST:
+				int_lst = m->data;
+
+				vector_for_each(int_lst->lst, p)
+					fprintf(fp, "\tuint%d_t int%zu;\n", int_lst->size, n_int++);
+				break;
+
+			default:
+				fprintf(stderr, "unexpected member in node \"%s\"\n", node->name);
+				return -1;
+			}
+		}
+
+		fprintf(fp, "} __attribute__((packed))\n");
+
+		n_int = 0;
+		n_reg = 0;
+
+		// data
+		fprintf(fp, " const __%s_data = {\n", node->name);
+
+		vector_for_each(&node->data, m){
+			switch(m->type){
+			case MT_REG_LIST:
+				vector_for_each((vector_t*)m->data, p)
+					fprintf(fp, "\t.reg%zu = (void*)%#x,\n", n_reg++, *p);
+				break;
+
+			case MT_INT_LIST:
+				int_lst = m->data;
+
+				vector_for_each(int_lst->lst, p)
+					fprintf(fp, "\t.int%zu = %u,\n", n_int++, *p);
+				break;
+
+			default:
+				// already exited above
+				break;
+			}
+		}
+
+		fprintf(fp, "};\n\n");
+	}
+
+	/* node definition */
+	fprintf(fp, "// __dt_%s definition\n", node->name);
+	fprintf(fp, "devtree_t const __dt_%s = {\n", node->name);
+
+	fprintf(fp, "\t.name = \"%s\",\n", node->name);
+	fprintf(fp, "\t.compatible = \"%s\",\n", node->compatible);
+
+	m = vector_get(&node->data, 0);
+
+	if(m == 0x0 || m->data == 0x0)		fprintf(fp, "\t.data = 0x0,\n");
+	else if(m->type == MT_REG_BASE)		fprintf(fp, "\t.data = %p,\n", m->data);
+	else								fprintf(fp, "\t.data = &__%s_data,\n", node->name);
+
+	if(node->parent)					fprintf(fp, "\t.parent = &__dt_%s,\n", node->parent->name);
+	else								fprintf(fp, "\t.parent = 0x0,\n");
+
+	if(!list_empty(node->childs))		fprintf(fp, "\t.childs = __%s_childs,\n", node->name);
+	else								fprintf(fp, "\t.childs = 0x0,\n");
+
+	fprintf(fp, "};\n\n\n");
+
+	/* export childs */
 	list_for_each(node->childs, child)
-		node_print(child, indent + 1);
+		node_export(child, fp);
+
+	return 0;
 }

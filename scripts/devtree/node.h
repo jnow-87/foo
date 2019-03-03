@@ -12,6 +12,7 @@
 
 
 #include <sys/vector.h>
+#include <stdio.h>
 
 
 /* types */
@@ -45,9 +46,8 @@ typedef struct node_t{
 
 
 /* prototypes */
-char const *node_validate(node_t *n);
-void node_export(node_t *n);
-void node_print(node_t *n, size_t indent);
+char const *node_validate(node_t *node);
+int node_export(node_t *node, FILE *fp);
 
 
 #endif // DEVTREE_NODE_H

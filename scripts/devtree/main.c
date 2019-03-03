@@ -7,32 +7,67 @@
 
 
 
-#include <sys/list.h>
-#include <sys/vector.h>
-#include <sys/escape.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
 #include <parser.tab.h>
 #include <node.h>
-#include <stdio.h>
-
-
-/* macros */
-#define ERROR(fmt, ...) \
-	printf(FG_RED "error" RESET_ATTR ": " fmt, ##__VA_ARGS__)
 
 
 /* global functions */
 int main(int argc, char **argv){
+	FILE *fp;
+	int r;
 	node_t root;
 
 
+	if(argc < 2){
+		printf("usage: %s <device tree script> [<output file>]\n", argv[0]);
+		return 1;
+	}
+
+	/* parse device tree */
 	memset(&root, 0x0, sizeof(node_t));
 	root.name = "root";
-	root.compatible = "root";
+	root.compatible = "";
 
 	if(devtreeparse(argv[1], &root) != 0)
-		return 1;
+		return 2;
 
-	node_print(&root, 0);
+	/* write output file */
+	fp = stdout;
+
+	if(argc > 2)
+		fp = fopen(argv[2], "w");
+
+	if(fp == 0x0){
+		fprintf(stderr, "can't open \"%s\": %s\n", argv[1], strerror(errno));
+		return 3;
+	}
+
+	// header
+	fprintf(fp,
+		"#ifdef BUILD_HOST\n"
+		"#include <stdint.h>\n"
+		"#else\n"
+		"#include <sys/types.h>\n"
+		"#endif // BUILD_HOST\n"
+		"\n"
+		"#include <kernel/devtree.h>\n"
+		"\n"
+		"\n"
+	);
+
+	// device tree
+	r = node_export(&root, fp);
+
+	fclose(fp);
+
+	if(r != 0 && fp != stdout){
+		unlink(argv[2]);
+		return 4;
+	}
 
 	return 0;
 }
