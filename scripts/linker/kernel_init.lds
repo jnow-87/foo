@@ -7,6 +7,7 @@
 
 
 
+/* init calls */
 __core_init0_base = .;
 *(.core_init_stage0)
 
@@ -29,3 +30,12 @@ __driver_init0_base = .;
 *(.driver_init_stage0)
 
 __init_end = .;
+
+/* driver calls */
+__driver_interface_base = .;
+*(.driver_interface)
+__driver_interface_end = .;
+
+__driver_device_base = .;
+*(.driver_device)
+__driver_device_end = .;

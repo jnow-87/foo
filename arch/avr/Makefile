@@ -7,7 +7,7 @@
 
 
 
-obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
+obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o devicetree.o
 
 obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o
@@ -19,7 +19,7 @@ obj-nobuiltin-y := libsys.o
 libsys-y := core_lib.o lib.o syscall_lib.o atomic.o
 
 
-# custom rules to generate separate objects files for src files that are reuired by kernel and libsys
+# custom rules to generate separate object files for src files that are reuired by kernel and libsys
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree)/%.c,)
 
 
@@ -53,6 +53,18 @@ avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
 
 kernel_deps: avr_lds
 init_deps: avr_lds
+
+####
+## device tree
+####
+
+devtree := $(build_tree)/scripts/devtree/devtree
+
+$(loc_build_tree)/devicetree.c: $(CONFIG_DEVICE_TREE) $(devtree)
+	$(QBUILD)$(devtree) $< $@
+
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,    $(loc_build_tree)/devicetree.c,)
+
 
 ####
 ## AVR config header
