@@ -176,8 +176,10 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 
 	dev = (devfs_dev_t*)fd->node->data;
 
-	if(dev->ops.read == 0x0)
-		return_errno(E_NOIMP);
+	if(dev->ops.read == 0x0){
+		errno = E_NOIMP;
+		return 0;
+	}
 
 	return dev->ops.read(dev, fd, buf, n);
 }
@@ -188,8 +190,10 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 
 	dev = (devfs_dev_t*)fd->node->data;
 
-	if(dev->ops.write == 0x0)
-		return_errno(E_NOIMP);
+	if(dev->ops.write == 0x0){
+		errno = E_NOIMP;
+		return 0;
+	}
 
 	return dev->ops.write(dev, fd, buf, n);
 }

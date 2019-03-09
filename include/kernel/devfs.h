@@ -58,7 +58,7 @@ typedef struct{
 	 * \return	Number of bytes read. On error 0 is returned and errno is set
 	 * 			appropriately.
 	 */
-	int (*read)(struct devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+	size_t (*read)(struct devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 
 	/**
 	 * \brief	Write utmost n bytes to the target device.
@@ -71,7 +71,7 @@ typedef struct{
 	 * \return	Number of bytes written. On error 0 is returned and errno is set
 	 * 			appropriately.
 	 */
-	int (*write)(struct devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+	size_t (*write)(struct devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 
 	/**
 	 * \brief	Perform the given device manipulation defined by request.

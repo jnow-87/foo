@@ -34,8 +34,8 @@ typedef struct{
 
 
 /* local/static prototypes */
-static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 
 
 /* static variables */
@@ -184,7 +184,7 @@ static int init(void){
 
 driver_init(init);
 
-static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	uint8_t port,
 			pin;
 	uint8_t mask;
@@ -210,7 +210,7 @@ static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	return 1;
 }
 
-static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	uint8_t port,
 			pin;
 	uint8_t mask;

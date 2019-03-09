@@ -23,8 +23,8 @@ static ringbuf_t dev_buf;
 /* local/static prototypes */
 static int open(devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode);
 static int close(devfs_dev_t *dev, fs_filed_t *fd);
-static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
 static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 
@@ -74,14 +74,14 @@ static int close(devfs_dev_t *dev, fs_filed_t *fd){
 	return E_OK;
 }
 
-static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	n = ringbuf_read(&dev_buf, buf, n);
 	DEBUG("copy from loop buffer \"%*.*s\"\n", n, n, buf);
 
 	return n;
 }
 
-static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	n = ringbuf_write(&dev_buf, buf, n);
 
 	DEBUG("copy to buffer \"%*.*s\"\n", n, n, buf);
