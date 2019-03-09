@@ -14,64 +14,10 @@
 
 
 /* global functions */
-char const *node_validate(node_t *node){
-	int have_reg_base,
-		have_reg,
-		have_int;
-	unsigned int x;
-	char const *c;
-	member_t *m;
-	node_t *child;
-
-
-	/* init */
-	have_reg_base = 0;
-	have_reg = 0;
-	have_int = 0;
-
-	/* check compatible string */
-	if(node->compatible == 0x0 || *node->compatible == 0)
-		return "empty compatible string";
-
-	/* check attributes */
-	vector_for_each(&node->data, m){
-		if(m->type == MT_INT_LIST){
-			have_int++;
-
-			for(x=8; x<1024; x*=2){
-				if(x == ((member_int_t*)m->data)->size)
-					break;
-			}
-
-			if(x == 1024)
-				return "node contains integer type of invalid size";
-		}
-		else if(m->type == MT_REG_BASE)
-			have_reg_base++;
-		else if(m->type == MT_REG_LIST)
-			have_reg++;
-	}
-
-	// only have a single register base address
-	if(have_reg_base > 1)
-		return "more than one register base address defined";
-
-	// only have either a register base address or register and integer lists
-	if(have_reg_base && (have_reg || have_int))
-		return "register base address as well as register or integer members defined";
-
-	/* check childs */
-	list_for_each(node->childs, child){
-		if((c = node_validate(child)) != 0)
-			return c;
-	}
-
-	return 0x0;
-}
-
 int node_export(node_t *node, FILE *fp){
 	size_t n_int,
-		   n_reg;
+		   n_reg,
+		   n_base;
 	unsigned int *p;
 	member_int_t *int_lst;
 	member_t *m;
@@ -93,7 +39,7 @@ int node_export(node_t *node, FILE *fp){
 		// child array
 		fprintf(fp, "// __dt_%s child list\n", node->name);
 
-		fprintf(fp, "devtree_t const * const __%s_childs[] = {\n", node->name);
+		fprintf(fp, "devtree_t const * const __dt_%s_childs[] = {\n", node->name);
 
 		list_for_each(node->childs, child)
 			fprintf(fp, "\t&__dt_%s,\n", child->name);
@@ -104,9 +50,10 @@ int node_export(node_t *node, FILE *fp){
 	/* data */
 	m = vector_get(&node->data, 0);
 
-	if(m != 0x0 && m->type != MT_REG_BASE){
+	if(node->data.size > 1 || (m != 0x0 && m->type != MT_BASE_ADDR)){
 		n_int = 0;
 		n_reg = 0;
+		n_base = 0;
 
 		fprintf(fp, "// __dt_%s data\n", node->name);
 
@@ -127,6 +74,10 @@ int node_export(node_t *node, FILE *fp){
 					fprintf(fp, "\tuint%d_t int%zu;\n", int_lst->size, n_int++);
 				break;
 
+			case MT_BASE_ADDR:
+				fprintf(fp, "\tvoid *base%zu;\n", n_base++);
+				break;
+
 			default:
 				fprintf(stderr, "unexpected member in node \"%s\"\n", node->name);
 				return -1;
@@ -137,9 +88,10 @@ int node_export(node_t *node, FILE *fp){
 
 		n_int = 0;
 		n_reg = 0;
+		n_base = 0;
 
 		// data
-		fprintf(fp, " const __%s_data = {\n", node->name);
+		fprintf(fp, " const __dt_%s_data = {\n", node->name);
 
 		vector_for_each(&node->data, m){
 			switch(m->type){
@@ -153,6 +105,10 @@ int node_export(node_t *node, FILE *fp){
 
 				vector_for_each(int_lst->lst, p)
 					fprintf(fp, "\t.int%zu = %u,\n", n_int++, *p);
+				break;
+
+			case MT_BASE_ADDR:
+				fprintf(fp, "\t.base%zu = (void*)%#x,\n", n_base++, m->data);
 				break;
 
 			default:
@@ -173,15 +129,15 @@ int node_export(node_t *node, FILE *fp){
 
 	m = vector_get(&node->data, 0);
 
-	if(m == 0x0 || m->data == 0x0)		fprintf(fp, "\t.data = 0x0,\n");
-	else if(m->type == MT_REG_BASE)		fprintf(fp, "\t.data = %p,\n", m->data);
-	else								fprintf(fp, "\t.data = &__%s_data,\n", node->name);
+	if(node->data.size == 1 && m->type == MT_BASE_ADDR)	fprintf(fp, "\t.data = %p,\n", m->data);
+	else if(m == 0x0 || m->data == 0x0)					fprintf(fp, "\t.data = 0x0,\n");
+	else												fprintf(fp, "\t.data = &__dt_%s_data,\n", node->name);
 
-	if(node->parent)					fprintf(fp, "\t.parent = &__dt_%s,\n", node->parent->name);
-	else								fprintf(fp, "\t.parent = 0x0,\n");
+	if(node->parent)									fprintf(fp, "\t.parent = &__dt_%s,\n", node->parent->name);
+	else												fprintf(fp, "\t.parent = 0x0,\n");
 
-	if(!list_empty(node->childs))		fprintf(fp, "\t.childs = __%s_childs,\n", node->name);
-	else								fprintf(fp, "\t.childs = 0x0,\n");
+	if(!list_empty(node->childs))						fprintf(fp, "\t.childs = __dt_%s_childs,\n", node->name);
+	else												fprintf(fp, "\t.childs = 0x0,\n");
 
 	fprintf(fp, "};\n\n\n");
 

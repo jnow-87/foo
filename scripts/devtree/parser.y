@@ -43,15 +43,15 @@
 		char const *c; \
 		\
 		\
+		if(node->compatible == 0x0 || *node->compatible == 0) \
+			PARSER_ERROR("undefined member \"compatible\"\n"); \
+		\
 		vector_for_each(&node_names, c){ \
 			if(strcmp(c, (node)->name) == 0) \
 				PARSER_ERROR("node with name \"%s\" already exists\n", c); \
 		} \
 		\
 		vector_add(&node_names, (char*)(node)->name); \
-		\
-		if((c = node_validate(node)) != 0) \
-			PARSER_ERROR("%s\n", c); \
 	})
 
 	// vector allocate
@@ -174,7 +174,7 @@
 
 // node members
 %token NA_COMPATIBLE
-%token NA_REGBASE
+%token NA_BASEADDR
 %token NA_REG
 %token NA_INT
 
@@ -204,7 +204,7 @@ node : IDFR '=' '{' member-list '}'										{ $$ = $4; $$->name = stralloc($1.s
 member-list : %empty													{ $$ = NODE_ALLOC(); }
 			| member-list node ';'										{ $$ = $1; NODE_VALIDATE($2); $2->parent = $$; list_add_tail($$->childs, $2); }
 			| member-list NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = stralloc($4.s, $4.len); }
-			| member-list NA_REGBASE '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_REG_BASE, (void*)(unsigned long int)$4); }
+			| member-list NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
 			| member-list NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
 			| member-list NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
 			;

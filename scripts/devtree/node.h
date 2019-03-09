@@ -17,7 +17,7 @@
 
 /* types */
 typedef enum{
-	MT_REG_BASE = 1,
+	MT_BASE_ADDR = 1,
 	MT_REG_LIST,
 	MT_INT_LIST,
 } member_type_t;
@@ -46,7 +46,6 @@ typedef struct node_t{
 
 
 /* prototypes */
-char const *node_validate(node_t *node);
 int node_export(node_t *node, FILE *fp);
 
 
