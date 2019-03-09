@@ -245,7 +245,7 @@ size_t fwrite(void const *p, size_t size, FILE *stream){
 
 
 err:
-	mutex_lock(&stream->wr_mtx);
+	mutex_unlock(&stream->wr_mtx);
 
 	return 0;
 }
