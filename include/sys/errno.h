@@ -27,6 +27,7 @@ typedef enum{
 	E_INUSE,	/**< resource in use */
 	E_UNAVAIL,	/**< resource is not available */
 	E_END,		/**< end of resource reached */
+	E_NOSUP,	/**< operation not supported */
 	E_UNKNOWN,	/**< unknown error */
 } errno_t;
 

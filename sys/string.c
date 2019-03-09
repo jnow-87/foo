@@ -95,6 +95,7 @@ char const *strerror(errno_t errnum){
 		"Resource busy",
 		"Resource unavailable",
 		"End of resource",
+		"Operation not supported",
 		"Unkown",
 	};
 	static char err_unknown[] = "Unkown error 0x....";
