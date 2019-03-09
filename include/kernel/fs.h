@@ -183,8 +183,6 @@ typedef struct fs_filed_t{
 	f_mode_t mode;
 
 	mutex_t mtx;
-
-	ktask_queue_t *tasks;
 } fs_filed_t;
 
 
