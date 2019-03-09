@@ -328,7 +328,7 @@ static int sc_hdlr_fcntl(void *_p){
 	mutex_lock(&fd->node->wr_mtx);
 	mutex_lock(&fd->node->rd_mtx);
 
-	if(fcntl(fd, p->cmd, data, this_p) != E_OK){
+	if(fcntl(fd, p->cmd, data, this_p) == -E_NOIMP){
 		if(fd->node->ops->fcntl != 0x0)		(void)fd->node->ops->fcntl(fd, p->cmd, data);
 		else								errno |= E_NOIMP;
 	}
@@ -435,11 +435,15 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p){
 		break;
 
 	case F_MODE_SET:
-		fd->mode = *mode;
+		fd->mode = (*mode & ~fd->mode_mask) | (fd->mode & fd->mode_mask);
 
+		if(fd->mode != *mode)
+			return_errno(E_NOSUP);
 		break;
 
 	default:
+		// NOTE not setting errno is intentional to
+		// 		allow sc_hdlr_fcntl to overwrite it
 		return -E_NOIMP;
 	}
 

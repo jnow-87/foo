@@ -147,7 +147,7 @@ static int init(void){
 		name[2] = 0;
 		data = (int*)((i << PORT_OFFSET) | PORT_INDICATOR);
 
-		if(devfs_dev_register(name, &ops, data) == 0x0)
+		if(devfs_dev_register(name, &ops, 0x0, data) == 0x0)
 			return -errno;
 
 		/* allocate pins */
@@ -158,7 +158,7 @@ static int init(void){
 			name[2] = '0' + j;
 			data = (int*)((i << PORT_OFFSET) | j);
 
-			if(devfs_dev_register(name, &ops, data) == 0x0)
+			if(devfs_dev_register(name, &ops, 0x0, data) == 0x0)
 				return -errno;
 		}
 

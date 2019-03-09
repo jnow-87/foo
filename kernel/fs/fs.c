@@ -20,6 +20,10 @@
 #include <sys/string.h>
 
 
+/* macros */
+#define FMODE_DEFAULT	(O_NONBLOCK)
+
+
 /* static variables */
 static fs_t *fs_lst = 0x0;
 static mutex_t fs_mtx = MUTEX_INITIALISER();
@@ -72,7 +76,7 @@ void fs_unlock(void){
 	mutex_unlock(&fs_mtx);
 }
 
-fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
+fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mode_t mode_mask){
 	int id;
 	fs_filed_t *fd;
 
@@ -97,7 +101,8 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
 	fd->id = id;
 	fd->node = node;
 	fd->fp = 0;
-	fd->mode = mode;
+	fd->mode = (mode & ~mode_mask) | (FMODE_DEFAULT & mode_mask);
+	fd->mode_mask = mode_mask;
 	mutex_init(&fd->mtx, 0);
 
 	list_add_tail(this_p->fds, fd);

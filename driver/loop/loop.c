@@ -51,7 +51,7 @@ static int init(void){
 	ops.ioctl = ioctl;
 	ops.fcntl = fcntl;
 
-	if(devfs_dev_register("loop", &ops, 0) == 0x0)
+	if(devfs_dev_register("loop", &ops, 0, 0x0) == 0x0)
 		goto err;
 
 	return E_OK;
