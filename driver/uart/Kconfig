@@ -7,12 +7,6 @@
 
 
 
-menuconfig AVR_UART
+config AVR_UART
 	bool "AVR uart"
 	select DRIVER_TERM
-
-if AVR_UART
-	config AVR_UART_CNT
-		int "Number of uarts"
-		range 1 16
-endif # AVR_UART

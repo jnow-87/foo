@@ -54,6 +54,8 @@ typedef enum int_type_t{
 	INT_GLOBAL = 0x1,
 } int_type_t;
 
+typedef uint8_t int_num_t;
+
 
 /* prototypes */
 int_type_t avr_int_enable(int_type_t mask);

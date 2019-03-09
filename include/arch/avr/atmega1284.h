@@ -1609,7 +1609,6 @@
 /**
  * Device Configuration
  */
-#define UART_CNT			2
 #define TIMER_CNT			4
 #define PWM_CNT				6
 #define I2C_CNT				1
