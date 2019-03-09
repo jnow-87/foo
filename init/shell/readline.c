@@ -63,9 +63,12 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 		if(r < 0)
 			goto err;
 
+		if(r == 0)
+			continue;
+
 		/* special character handling */
 		// end of line
-		if(r == 0 || c == '\n'){
+		if(c == '\n'){
 			write(fileno(stream), "\n", 1);
 			line[end] = 0;
 
