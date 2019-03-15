@@ -19,6 +19,7 @@
 #include <kernel/init.h>
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
+#include <kernel/ksignal.h>
 #include <kernel/driver.h>
 #include <kernel/opt.h>
 #include <driver/term.h>
@@ -33,12 +34,12 @@
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static void rx_hdlr(int_num_t num, void *data);
 
 
 /* local functions */
-int probe(char const *name, void *unused, void *hw_itf){
+int probe(char const *name, void *dt_data, void *dt_itf){
 	void *buf;
-	bool use_int;
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	term_t *term;
@@ -47,8 +48,7 @@ int probe(char const *name, void *unused, void *hw_itf){
 
 
 	fmode_mask = 0;
-	itf = (term_itf_t*)hw_itf;
-	use_int = (itf->int_num != 0);
+	itf = (term_itf_t*)dt_itf;
 
 	if(itf->configure == 0x0 || itf->gets == 0x0 || itf->puts == 0x0)
 		goto_errno(err_0, E_INVAL);
@@ -62,7 +62,7 @@ int probe(char const *name, void *unused, void *hw_itf){
 	/* allocate recv buffer */
 	buf = 0x0;
 
-	if(use_int){
+	if(itf->rx_int){
 		buf = kmalloc(CONFIG_TERM_RXBUF_SIZE);
 
 		if(buf == 0x0)
@@ -70,11 +70,11 @@ int probe(char const *name, void *unused, void *hw_itf){
 	}
 
 	/* register device */
-	if(!use_int){
-		fmode_mask = O_NONBLOCK;	// if interrupts are not used the device must
-									// not be used in blocking mode, therefor the
-									// file system default setting (non-blocking)
-									// must not be overwritten
+	if(itf->rx_int == 0){
+		fmode_mask = O_NONBLOCK;	// if rx interrupts are not used the device must
+									// not be used in blocking mode, therefor the file
+									// system default setting (non-blocking) must not
+									// be overwritten
 	}
 
 	dev_ops.open = 0x0;
@@ -89,19 +89,30 @@ int probe(char const *name, void *unused, void *hw_itf){
 	if(dev == 0x0)
 		goto err_2;
 
+	/* register interrupt */
+	if(itf->rx_int && int_register(itf->rx_int, rx_hdlr, term) != 0)
+		goto err_3;
+
+	if(itf->tx_int)
+		WARN("tx interrupts not supported yet\n");
+
 	/* init term */
 	term->cfg = kopt.term_cfg;
-	term->hw = hw_itf;
+	term->hw = dt_itf;
 	term->rx_rdy = &dev->node->rd_sig;
 	term->rx_err = TE_NONE;
 
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
 	if(term->hw->configure(&term->cfg, term->hw->regs) != 0)
-		goto err_3;
+		goto err_4;
 
 	return E_OK;
 
+
+err_4:
+	if(itf->rx_int)
+		int_release(itf->rx_int);
 
 err_3:
 	devfs_dev_release(dev);
@@ -119,7 +130,7 @@ err_0:
 driver_device("terminal", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	int r;
+	int len;
 	term_t *term;
 
 
@@ -132,18 +143,18 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	}
 
 	if(term->rx_buf.data == 0x0)
-		r = term->hw->gets(buf, n, &term->rx_err, term->hw->regs);
+		len = term->hw->gets(buf, n, &term->rx_err, term->hw->regs);
 	else
-		r = ringbuf_read(&term->rx_buf, buf, n);
+		len = ringbuf_read(&term->rx_buf, buf, n);
 
 	/* handle terminal flags */
 	// handle TF_ECHO
-	if(r > 0 && (term->cfg.flags & TF_ECHO)){
+	if(len > 0 && (term->cfg.flags & TF_ECHO)){
 		if(term->hw->puts(buf, n, term->hw->regs) != E_OK)
 			return 0;
 	}
 
-	return r;
+	return len;
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
@@ -182,4 +193,17 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 	default:
 		return_errno(E_NOIMP);
 	}
+}
+
+static void rx_hdlr(int_num_t num, void *data){
+	char buf[16];
+	int len;
+	term_t *term;
+
+
+	term = (term_t*)data;
+
+	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->regs);
+	ringbuf_write(&term->rx_buf, buf, len);
+	ksignal_send(term->rx_rdy);
 }

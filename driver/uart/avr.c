@@ -74,7 +74,8 @@ typedef struct{
 	uint8_t const prr_mask;
 
 	// interrupt number
-	int_num_t int_num;
+	uint8_t rx_int,
+			tx_int;
 } uart_devtree_t;
 
 
@@ -109,7 +110,8 @@ static int kuart_init(void){
 		.uart = (void*)UCSR0A,
 		.prr = (void*)PRR0,
 		.prr_mask = (0x1 << PRR0_PRUSART0),
-		.int_num = 0,
+		.rx_int = 0,
+		.tx_int = 0,
 	};
 
 
@@ -120,10 +122,12 @@ static int kuart_init(void){
 
 platform_init(0, kuart_init);
 
-static void *probe(void *regs, void *unused){
+static void *probe(void *dt_data, void *dt_itf){
+	uart_devtree_t *regs;
 	term_itf_t *itf;
 
 
+	regs = (uart_devtree_t*)dt_data;
 	itf = kmalloc(sizeof(term_itf_t));
 
 	if(itf == 0x0)
@@ -132,7 +136,8 @@ static void *probe(void *regs, void *unused){
 	itf->configure = configure;
 	itf->puts = putsn;
 	itf->gets = gets;
-	itf->int_num = ((uart_devtree_t*)(regs))->int_num;
+	itf->rx_int = regs->rx_int;
+	itf->tx_int = regs->tx_int;
 	itf->regs = regs;
 
 	return itf;
@@ -171,7 +176,8 @@ static int configure(term_cfg_t *cfg, void *_regs){
 	regs->uart->ucsra = 0x0 << UCSRA_U2X;
 	regs->uart->ucsrb = (0x1 << UCSRB_RXEN)
 					  | (0x1 << UCSRB_TXEN)
-					  | (0x0 << UCSRB_RXCIE)
+					  | ((regs->rx_int ? 0x1 : 0x0) << UCSRB_RXCIE)
+					  | ((regs->tx_int ? 0x1 : 0x0) << UCSRB_TXCIE)
 					  ;
 
 	// set baudrate
@@ -220,7 +226,8 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *_regs){
 	i = 0;
 
 	while(i < n && (regs->uart->ucsra & (0x1 << UCSRA_RXC))){
-		e = regs->uart->ucsra & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE));
+		e |= regs->uart->ucsra & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE));
+		s[i] = regs->uart->udr;
 
 		if(e){
 			*err |= (bits(e, UCSRA_FE, 0x1) ? TE_FRAME : 0)
@@ -228,11 +235,9 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *_regs){
 				 |  (bits(e, UCSRA_UPE, 0x1) ? TE_PARITY : 0)
 				 |  (bits(e, UCSRA_RXC, 0x1) ? TE_RX_FULL : 0)
 				 ;
-
-			return i;
 		}
-
-		s[i++] = regs->uart->udr;
+		else
+			i++;
 	}
 
 	return i;

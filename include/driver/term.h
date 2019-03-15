@@ -30,7 +30,8 @@ typedef struct{
 	size_t (*puts)(char const *s, size_t n, void *regs);
 	size_t (*gets)(char *s, size_t n, term_err_t *err, void *regs);
 
-	int_num_t int_num;
+	int_num_t rx_int,
+			  tx_int;
 	void *regs;
 } term_itf_t;
 

@@ -13,7 +13,8 @@ uart0 = {
 	reg = [ 0x64 ];				// PRR0
 	int<8> = [
 		0x1,					// PRR0_PRUSART0
-		0						// uart0 rx interrupt
+		20,						// uart0 rx interrupt
+		0						// uart0 tx interrupt
 	];
 
 	tty0 = {
