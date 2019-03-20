@@ -7,12 +7,16 @@
 
 
 
+#include <arch/arm/board/atmel/pmc.h>
+
+
 /* global functions */
 int atsamv71_init(void){
 	int r;
 
 
 	r = 0;
+	r |= pmc_init();
 
 	return -r;
 }

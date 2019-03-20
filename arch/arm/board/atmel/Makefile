@@ -7,4 +7,6 @@
 
 
 
-source arch/arm/board/atmel/Kconfig
+obj-$(CONFIG_ATMEL_PMC) += pmc.o
+
+pmc-cflags := -O0

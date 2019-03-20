@@ -17,6 +17,7 @@ choice
 	config ATSAMV71
 		bool "AtSamV71"
 		select ARM_CORE_CORTEX_M7
+		select ATMEL_PMC
 
 	config BOARD_UNSPECIFIC
 		bool "Unspecific"
@@ -32,6 +33,13 @@ choice
 		select ADDR_WIDTH_32
 		select REGISTER_WIDTH_32
 endchoice
+
+# board specifics
+menu "Board configuration"
+	if ATSAMV71
+		source "arch/arm/board/atsamv71/Kconfig"
+	endif # ATSAMV71
+endmenu
 
 menu "Hidden"
 	visible if 0

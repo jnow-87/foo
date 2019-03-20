@@ -1,0 +1,28 @@
+#
+# Copyright (C) 2019 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+#
+# clock configuration
+#
+menu "Clock configuration"
+	if ATMEL_PMC
+		source arch/arm/board/atmel/Kconfig.pmc
+	endif
+endmenu
+
+#
+# options to be selected by specific boards
+#
+menu "Hidden"
+	visible if 0
+
+	config ATMEL_PMC
+		bool "Atmel power management controller"
+		default 0
+endmenu

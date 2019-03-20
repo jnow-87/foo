@@ -18,6 +18,8 @@
 #ifndef __x86_64__
 
 #include <arch/arm/board/types.h>
+#include <arch/arm/board/atmel/pmc.h>
+#include <arch/arm/register.h>
 
 #endif // __x86_64__
 #endif // _x86_
@@ -61,6 +63,8 @@ int atsamv71_init(void);
 
 static arm_board_callbacks_t const arm_board_cbs = {
 	.board_init = atsamv71_init,
+	.peripheral_enable = pmc_per_enable,
+	.peripheral_disable = pmc_per_disable,
 };
 
 

@@ -7,4 +7,4 @@
 
 
 
-obj-y := board.o
+obj-y := board.o ../atmel/

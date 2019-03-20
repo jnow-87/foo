@@ -1,0 +1,323 @@
+#
+# Copyright (C) 2019 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+#
+# main clock (MAINCK)
+#
+# {{{
+menu "Main clock (MAINCK)"
+	choice
+		prompt "Main clock source"
+		
+		config PMC_MAINCK_SRC_RC
+			bool "RC oscillator"
+
+		config PMC_MAINCK_SRC_CRYSTAL
+			bool "Crystal oscillator"
+	endchoice
+
+	# RC oscillator
+	if PMC_MAINCK_SRC_RC
+		choice
+			prompt "RC oscillator frequency"
+
+			config PMC_MAINCK_RC_FREQ_4MHZ
+				bool "4 MHz"
+
+			config PMC_MAINCK_RC_FREQ_8MHZ
+				bool "8 MHz"
+
+			config PMC_MAINCK_RC_FREQ_12MHZ
+				bool "12 MHz"
+		endchoice
+	endif # PMC_MAINCK_SRC_RC
+
+	# crystal oscillator
+	if PMC_MAINCK_SRC_CRYSTAL
+		config PMC_MAINCK_CRYSTAL_STARTUP
+			int "Crystal oscillator startup time"
+			range 1 255
+			default 0
+			help
+				Number of SLCK cycles multiplied by 8
+	endif # PMC_MAINCK_SRC_CRYSTAL
+
+	menu "Hidden"
+		visible if 0
+
+		config PMC_MAINCK_SRC
+			int "Main clock source"
+			default 0 if PMC_MAINCK_SRC_RC
+			default 1 if PMC_MAINCK_SRC_CRYSTAL
+
+		config PMC_MAINCK_CRYSTAL_EN
+			int "Crystal oscillator enable"
+			default 1 if PMC_MAINCK_SRC_CRYSTAL
+			default 0
+
+		config PMC_MAINCK_RC_EN
+			int "RC oscillator enable"
+			default 1 if PMC_MAINCK_SRC_RC
+			default 0
+
+		config PMC_MAINCK_RC_FREQ
+			int "RC oscillator frequency"
+			default 0 if PMC_MAINCK_RC_FREQ_4MHZ
+			default 1 if PMC_MAINCK_RC_FREQ_8MHZ
+			default 2 if PMC_MAINCK_RC_FREQ_12MHZ
+			default 2
+	endmenu
+endmenu
+# }}}
+
+#
+# master and processor clock
+#
+# {{{
+menu "Master (MCK), processor (HCLK) and SysTick clocks"
+	choice
+		prompt "Clock source"
+		help
+			Input clock to the master clock controller.
+
+		config PMC_HCLK_SRC_SLCK
+			bool "Slow clock (SLCK)"
+
+		config PMC_HCLK_SRC_MAINCK
+			bool "Main clock (MAINCK)"
+
+		config PMC_HCLK_SRC_PLLACK
+			bool "PLLA (PLLACK)"
+			select PMC_PLLA_EN
+
+		config PMC_HCLK_SRC_UPLLCKDIV
+			bool "UPLLDIV (UPLLCKDIV)"
+			select PMC_UPLL_EN
+endchoice
+
+	choice
+		prompt "Prescaler"
+		help
+			Divider applied to the input clock. The result is used as the processor
+			clock (HCLK). Further, the result divided by 8 is used as the SysTick clock.
+
+		config PMC_HCLK_PRES_1
+			bool "/1"
+
+		config PMC_HCLK_PRES_2
+			bool "/2"
+
+		config PMC_HCLK_PRES_3
+			bool "/3"
+
+		config PMC_HCLK_PRES_4
+			bool "/4"
+
+		config PMC_HCLK_PRES_8
+			bool "/8"
+
+		config PMC_HCLK_PRES_16
+			bool "/16"
+
+		config PMC_HCLK_PRES_32
+			bool "/32"
+	endchoice
+
+	choice
+		prompt "Master clock divider"
+		help
+			Divider applied to processor clock (HCLK). The result is used as the master
+			clock (MCK).
+
+		config PMC_HCLK_DIV_1
+			bool "/1"
+
+		config PMC_HCLK_DIV_2
+			bool "/2"
+
+		config PMC_HCLK_DIV_3
+			bool "/3"
+
+		config PMC_HCLK_DIV_4
+			bool "/4"
+	endchoice
+
+	menu "Hidden"
+		visible if 0
+
+		config PMC_HCLK_SRC
+			int "Clock source"
+			default 0 if PMC_HCLK_SRC_SLCK
+			default 1 if PMC_HCLK_SRC_MAINCK
+			default 2 if PMC_HCLK_SRC_PLLACK
+			default 3 if PMC_HCLK_SRC_UPLLCKDIV
+
+		config PMC_HCLK_PRES
+			int "Prescaler"
+			default 0 if PMC_HCLK_PRES_1
+			default 1 if PMC_HCLK_PRES_2
+			default 2 if PMC_HCLK_PRES_4
+			default 3 if PMC_HCLK_PRES_8
+			default 4 if PMC_HCLK_PRES_16
+			default 5 if PMC_HCLK_PRES_32
+			default 6 if PMC_HCLK_PRES_64
+			default 7 if PMC_HCLK_PRES_3
+
+		config PMC_HCLK_DIV
+			int "Master clock divider"
+			default 0 if PMC_HCLK_DIV_1
+			default 1 if PMC_HCLK_DIV_2
+			default 2 if PMC_HCLK_DIV_4
+			default 3 if PMC_HCLK_DIV_3
+	endmenu
+endmenu
+# }}}
+
+#
+# PLLA
+#
+# {{{
+menuconfig PMC_PLLA_EN
+	bool "PLLA (PLLACK)"
+	default 0
+
+if PMC_PLLA_EN
+	config PMC_PLLA_DIV
+		int "PLLA divider"
+		range 1 255
+		default 0
+
+	config PMC_PLLA_MUL
+		int "PLLA multiplier"
+		range 1 62
+		default 0
+endif
+# }}}
+
+#
+# UPLL
+#
+# {{{
+menuconfig PMC_UPLL_EN
+	bool "UPLL (UPLLCK)"
+	default 0
+
+if PMC_UPLL_EN
+	choice
+		prompt "UPLL divider"
+		help
+			Divider applied to UPLLCK. The result is used as UPLLDIV
+
+		config PMC_UPLL_DIV_1
+			bool "/1"
+
+		config PMC_UPLL_DIV_2
+			bool "/2"
+	endchoice
+
+	menu "Hidden"
+		visible if 0
+
+		config PMC_UPLL_DIV
+			int "UPLL divider"
+			default 0 if PMC_UPLL_DIV_1
+			default 1 if PMC_UPLL_DIV_2
+	endmenu
+endif
+# }}}
+
+#
+# USB clock
+#
+# {{{
+menuconfig PMC_USB_EN
+	bool "USB clock"
+	default 0
+
+if PMC_USB_EN
+	choice
+		prompt "Clock source"
+
+		config PMC_USB_SRC_PLLACK
+			bool "PLLA (PLACK)"
+
+		config PMC_USB_SRC_UPLLCKDIV
+			bool "UPLLDIV (UPLLCKDIV)"
+	endchoice
+
+	config PMC_USB_DIV
+		int "Divider"
+		range 1 16
+		default 0
+
+	menu "Hidden"
+		visible if 0
+
+		config PMC_USB_SRC
+			int "Clock source"
+			default 0 if PMC_USB_SRC_PLLACK
+			default 1 if PMC_USB_SRC_UPLLCKDIV
+	endmenu
+endif
+# }}}
+
+#
+# programmable clocks
+#
+# {{{
+menuconfig PMC_PCKx_EN
+	bool "Programmable clocks (0..7)"
+	default 0
+
+if PMC_PCKx_EN
+	choice
+		prompt "Clock source"
+		help
+			Input clock to programmable clocks.
+
+		config PMC_PCKx_SRC_SLCK
+			bool "Slow clock (SLCK)"
+
+		config PMC_PCKx_SRC_MAINCK
+			bool "Main clock (MAINCK)"
+
+		config PMC_PCKx_SRC_PLLACK
+			bool "PLLA (PLLACK)"
+			select PMC_PLLA_EN
+
+		config PMC_PCKx_SRC_UPLLCKDIV
+			bool "UPLLDIV (UPLLCKDIV)"
+			select PMC_UPLL_EN
+
+		config PMC_PCKx_SRC_MCK
+			bool "Master clock (MCK)"
+
+		config PMC_PCKx_SRC_AUDIO
+			bool "Audio clock (AUDIOPLLCLK)"
+	endchoice
+
+	config PMC_PCKx_PRES
+		int "Prescaler"
+		range 1 256
+		default 0
+
+	menu "Hidden"
+		visible if 0
+
+		config PMC_PCKx_SRC
+			int "Clock source"
+			default 0 if PMC_PCKx_SRC_SLCK
+			default 1 if PMC_PCKx_SRC_MAINCK
+			default 2 if PMC_PCKx_SRC_PLLACK
+			default 3 if PMC_PCKx_SRC_UPLLCKDIV
+			default 4 if PMC_PCKx_SRC_MCK
+			default 5 if PMC_PCKx_SRC_AUDIO
+	endmenu
+endif
+# }}}

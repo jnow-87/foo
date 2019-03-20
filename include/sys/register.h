@@ -11,6 +11,9 @@
 #define REGISTER_H
 
 
+#include <arch/arch.h>
+
+
 /* macros */
 #define mreg_bits(reg_addr, idx, mask) \
 	bits(mreg_r(reg_addr), idx, mask)
