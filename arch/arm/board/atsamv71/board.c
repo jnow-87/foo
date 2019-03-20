@@ -7,3 +7,12 @@
 
 
 
+/* global functions */
+int atsamv71_init(void){
+	int r;
+
+
+	r = 0;
+
+	return -r;
+}

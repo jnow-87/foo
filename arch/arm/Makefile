@@ -7,7 +7,7 @@
 
 
 
-obj-y := start.o isr.o atomic.o
+obj-y := start.o isr.o init.o atomic.o board/$(CONFIG_ARM_BOARD)/
 
 
 obj-nobuiltin-y := libsys.o

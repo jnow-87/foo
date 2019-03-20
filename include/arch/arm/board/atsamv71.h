@@ -13,6 +13,16 @@
 
 #include <sys/const.h>
 
+#ifndef ASM
+#ifndef _x86_
+#ifndef __x86_64__
+
+#include <arch/arm/board/types.h>
+
+#endif // __x86_64__
+#endif // _x86_
+#endif // ASM
+
 
 /* macros */
 #define INT_VECTORS			16
@@ -30,6 +40,33 @@
 
 #define FLASH_SIZE			_2M
 #define SRAM_SIZE			(_128k * 3)
+
+
+/* prototypes */
+#ifndef ASM
+#ifndef _x86_
+#ifndef __x86_64__
+
+int atsamv71_init(void);
+
+#endif // __x86_64__
+#endif // _x86_
+#endif // ASM
+
+
+/* static variables */
+#ifndef ASM
+#ifndef _x86_
+#ifndef __x86_64__
+
+static arm_board_callbacks_t const arm_board_cbs = {
+	.board_init = atsamv71_init,
+};
+
+
+#endif // __x86_64__
+#endif // _x86_
+#endif // ASM
 
 
 #endif // ARCH_ATSAMV71_H
