@@ -90,6 +90,7 @@ endef
 .PHONY: debug
 debug:
 	$(call term, openocd -f $(CONFIG_ARM_OOCD_SCRIPTS)/interface/$(CONFIG_ARM_OOCD_INTERFACE) -f $(CONFIG_ARM_OOCD_SCRIPTS)/board/$(CONFIG_ARM_OOCD_BOARD) -c 'init; reset halt;', &)
+	sleep 3; telnet localhost 4444
 
 ####
 ## update flash
@@ -101,3 +102,9 @@ flash: all
 		-f $(CONFIG_ARM_OOCD_SCRIPTS)/interface/$(CONFIG_ARM_OOCD_INTERFACE) \
 		-f $(CONFIG_ARM_OOCD_SCRIPTS)/board/$(CONFIG_ARM_OOCD_BOARD) \
 		-c "init; reset halt; flash write_image erase \"$(kernel)\"; reset run; shutdown"
+ifeq ($(CONFIG_ATSAMV71),y)
+	openocd \
+		-f $(CONFIG_ARM_OOCD_SCRIPTS)/interface/$(CONFIG_ARM_OOCD_INTERFACE) \
+		-f $(CONFIG_ARM_OOCD_SCRIPTS)/board/$(CONFIG_ARM_OOCD_BOARD) \
+		-c "init; reset halt; atsamv gpnvm set 1; atsamv gpnvm show; reset run; shutdown"
+endif
