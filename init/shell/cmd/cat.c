@@ -27,7 +27,7 @@ static int exec(int argc, char **argv){
 	size_t n;
 	uint8_t c;
 	bool binary;
-	FILE *fp;
+	int fd;
 	stat_t f_stat;
 
 
@@ -58,16 +58,16 @@ static int exec(int argc, char **argv){
 
 	/* read */
 	// open file
-	fp = fopen(argv[i], "r");
+	fd = open(argv[i], O_RDONLY);
 
-	if(fp == 0x0){
+	if(fd < 0){
 		printf("open \"%s\" failed \"%s\"\n", argv[i], strerror(errno));
 		return 1;
 	}
 
 	// get file size
 	if(n == 0){
-		if(fstat(fileno(fp), &f_stat) != 0)
+		if(fstat(fd, &f_stat) != 0)
 			goto end;
 
 		n = f_stat.size;
@@ -80,9 +80,7 @@ static int exec(int argc, char **argv){
 
 	// read
 	for(; n>0; n--){
-		c = fgetc(fp);
-
-		if(c == EOF)
+		if(read(fd, &c, 1) <= 0)
 			break;
 
 		if(binary)	printf("%x", (int)(c & 0xff));
@@ -95,7 +93,7 @@ end:
 	if(errno)
 		printf("error %s\n", strerror(errno));
 
-	fclose(fp);
+	close(fd);
 
 	return 0;
 }
