@@ -7,6 +7,10 @@
 
 
 
+/* properties */
+property little-endian
+
+/* general purpose register */
 range 0x1 31{	// range cannot start at 0x0, since gdb doesn't
 				// allow to read memory from address 0x0
 
@@ -48,12 +52,13 @@ range 0x1 31{	// range cannot start at 0x0, since gdb doesn't
 
 		emptyline
 
-		register "X"		""		25	2 swap {}
-		register "Y"		""		27	2 swap {}
-		register "Z"		""		29	2 swap {}
+		register "X"		""		25	2{}
+		register "Y"		""		27	2{}
+		register "Z"		""		29	2{}
 	}
 }
 
+/* peripheral registers */
 range 0x20 175{
 	/* MCU Control */
 	section "MCU General Control and Status"{
@@ -84,7 +89,7 @@ range 0x20 175{
 			bits "C"	0	1
 		}
 
-		register "SP"		"Stack Pointer"										61	2 swap {}
+		register "SP"		"Stack Pointer"										61	2{}
 		emptyline
 
 		register "SMCR"	"Sleep Mode Control Register"							51	1{
@@ -410,13 +415,13 @@ range 0x20 175{
 			bits "CNTH"		0	8
 		}
 
-		register "ICR1"		"Timer/Counter Input Capture Register"			102	2 swap {}
+		register "ICR1"		"Timer/Counter Input Capture Register"			102	2{}
 		emptyline
 
-		register "OCR1A"	"Output Compare Register A"						104	2 swap {}
+		register "OCR1A"	"Output Compare Register A"						104	2{}
 		emptyline
 
-		register "OCR1B"	"Output Compare Register B"						106	2 swap {}
+		register "OCR1B"	"Output Compare Register B"						106	2{}
 		emptyline
 
 		register "TIMSK1"	"Timer/Counter Interrupt Mask Register"	79	1{

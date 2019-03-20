@@ -246,9 +246,11 @@ ifeq ($(CONFIG_BUILD_DEBUG),y)
   cflags += -g
   cxxflags += -g
   asflags += -g
+  ldlibs += -g
   hostcflags += -g
   hostcxxflags += -g
   hostasflags += -g
+  hostldlibs += -g
 endif
 
 all: sysroot $(lib) $(hostlib) $(bin) $(hostbin)
