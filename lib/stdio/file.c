@@ -168,17 +168,25 @@ size_t fread(void *p, size_t size, FILE *stream){
 		if(size - rd < stream->blen){
 			r = read(stream->fileno, stream->rbuf, stream->blen);
 
-			if(r <= 0)
-				goto err_2;
-
 			stream->dataidx = r;
 			stream->ridx = 0;
+
+			if(r < 0){
+				stream->dataidx = 0;
+				goto err_1;
+			}
+
+			if(r == 0)
+				break;
 		}
 		else{
 			r = read(stream->fileno, p + rd, size - rd);
 
 			if(r < 0)
 				goto err_1;
+
+			if(r == 0)
+				break;
 
 			rd += r;
 			break;
@@ -189,10 +197,6 @@ size_t fread(void *p, size_t size, FILE *stream){
 
 	return rd;
 
-
-err_2:
-	stream->dataidx = 0;
-	stream->ridx = 0;
 
 err_1:
 	mutex_unlock(&stream->rd_mtx);
