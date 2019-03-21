@@ -61,7 +61,7 @@ static int exec(int argc, char **argv){
 	fd = open(argv[i], O_RDONLY);
 
 	if(fd < 0){
-		printf("open \"%s\" failed \"%s\"\n", argv[i], strerror(errno));
+		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[i], strerror(errno));
 		return 1;
 	}
 
@@ -91,7 +91,7 @@ static int exec(int argc, char **argv){
 	/* cleanup */
 end:
 	if(errno)
-		printf("error %s\n", strerror(errno));
+		fprintf(stderr, "error %s\n", strerror(errno));
 
 	close(fd);
 

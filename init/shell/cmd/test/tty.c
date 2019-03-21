@@ -65,7 +65,7 @@ static int exec(void){
 			ioctl(0, IOCTL_STATUS, &err, sizeof(err));
 
 			if(errno == E_OK){
-				printf("%s%s%s%s\n",
+				fprintf(stderr, "%s%s%s%s\n",
 					(err & TE_DATA_OVERRUN ? " data overrun" : ""),
 					(err & TE_PARITY ? " parity error" : ""),
 					(err & TE_FRAME ? " frame error" : ""),
@@ -73,7 +73,7 @@ static int exec(void){
 				);
 			}
 			else
-				printf("\nioctl error \"%s\"\n", strerror(errno));
+				fprintf(stderr, "\nioctl error \"%s\"\n", strerror(errno));
 
 			errno = E_OK;
 			continue;

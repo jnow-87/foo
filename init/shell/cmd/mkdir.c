@@ -22,7 +22,7 @@ static int exec(int argc, char **argv){
 	}
 
 	if(mkdir(argv[1]) != 0){
-		printf("error \"%s\"\n", strerror(errno));
+		fprintf(stderr, "error \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
