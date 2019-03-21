@@ -21,3 +21,36 @@ uart0 = {
 		compatible = "terminal";
 	};
 };
+
+a0 = {
+	compatible = "avr,gpio";
+	baseaddr = 0x20;			// porta
+
+	int<8> = [
+		0x2,					// direction (out)
+		0,						// offset
+		0x1						// mask
+	];
+};
+
+a1 = {
+	compatible = "avr,gpio";
+	baseaddr = 0x20;			// porta
+
+	int<8> = [
+		0x3,					// direction (in/out)
+		1,						// offset
+		0x2						// mask
+	];
+};
+
+a23 = {
+	compatible = "avr,gpio";
+	baseaddr = 0x20;			// porta
+
+	int<8> = [
+		0x1,					// direction (in)
+		2,						// offset
+		0xc						// mask
+	];
+};
