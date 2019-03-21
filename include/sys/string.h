@@ -6,7 +6,7 @@
  */
 
 
-
+#ifndef _STRING_H		// include guard against host header
 #ifndef SYS_STRING_H
 #define SYS_STRING_H
 
@@ -35,3 +35,4 @@ char const *strerror(errno_t errno);
 char *itoa(int v, unsigned int base, char *s, size_t len);
 
 #endif // SYS_STRING_H
+#endif // _STRING_H

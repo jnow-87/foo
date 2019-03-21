@@ -1,0 +1,56 @@
+/**
+ * Copyright (C) 2019 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+uart0 = {
+	compatible = "avr,uart";
+	baseaddr = 0xc0;			// uart0 config register base
+	reg = [ 0x64 ];				// PRR0
+	int<8> = [
+		0x1,					// PRR0_PRUSART0
+		20,						// uart0 rx interrupt
+		0						// uart0 tx interrupt
+	];
+
+	tty0 = {
+		compatible = "terminal";
+	};
+};
+
+a0 = {
+	compatible = "avr,gpio";
+	baseaddr = 0x20;			// porta
+
+	int<8> = [
+		0x2,					// direction (out)
+		0,						// offset
+		0x1						// mask
+	];
+};
+
+a1 = {
+	compatible = "avr,gpio";
+	baseaddr = 0x20;			// porta
+
+	int<8> = [
+		0x3,					// direction (in/out)
+		1,						// offset
+		0x2						// mask
+	];
+};
+
+a23 = {
+	compatible = "avr,gpio";
+	baseaddr = 0x20;			// porta
+
+	int<8> = [
+		0x1,					// direction (in)
+		2,						// offset
+		0xc						// mask
+	];
+};

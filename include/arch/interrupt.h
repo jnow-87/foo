@@ -11,11 +11,21 @@
 #define ARCH_INTERRUPT_H
 
 
+/* types */
+#include <sys/types.h>
+
+typedef uint8_t int_num_t;
+typedef void (*int_hdlr_t)(int_num_t num, void *data);
+
+
 #include <arch/arch.h>
 #include <sys/errno.h>
 
 
 /* macros */
+#define int_register(num, hdlr, data)	(arch_kernel_call(int_register, -E_NOIMP)(num, hdlr, data))
+#define int_release(num)				(arch_kernel_call(int_release, -E_NOIMP)(num))
+
 #define int_enable(mask)				(arch_kernel_call(int_enable, INT_NONE)(mask))
 #define int_enabled()					(arch_kernel_call(int_enabled, INT_NONE)())
 

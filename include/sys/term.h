@@ -16,6 +16,7 @@
 
 /* types */
 typedef enum{
+	TBR_0 = 0,
 	TBR_2400 = 2400,
 	TBR_4800 = 4800,
 	TBR_9600 = 9600,

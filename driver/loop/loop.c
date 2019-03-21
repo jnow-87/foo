@@ -7,7 +7,7 @@
 
 
 
-#include <kernel/init.h>
+#include <kernel/driver.h>
 #include <kernel/devfs.h>
 #include <kernel/kprintf.h>
 #include <kernel/memory.h>
@@ -16,32 +16,28 @@
 #include <sys/ringbuf.h>
 
 
-/* local variables */
-static ringbuf_t dev_buf;
-
-
 /* local/static prototypes */
 static int open(devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode);
 static int close(devfs_dev_t *dev, fs_filed_t *fd);
-static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
 static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 
 
 /* local functions */
-static int init(void){
-	char *b;
+static int probe(char const *name, void *data, void *hw_itf){
 	devfs_ops_t ops;
+	ringbuf_t *b;
 
 
 	/* init device buffer */
-	b = kmalloc(CONFIG_LOOP_BUF_SIZE);
+	b = kmalloc(sizeof(ringbuf_t) + CONFIG_LOOP_BUF_SIZE);
 
 	if(b == 0x0)
 		return_errno(E_NOMEM);
 
-	ringbuf_init(&dev_buf, b, CONFIG_LOOP_BUF_SIZE);
+	ringbuf_init(b, (char*)b + sizeof(ringbuf_t), CONFIG_LOOP_BUF_SIZE);
 
 	/* register device */
 	ops.open = open;
@@ -51,7 +47,7 @@ static int init(void){
 	ops.ioctl = ioctl;
 	ops.fcntl = fcntl;
 
-	if(devfs_dev_register("loop", &ops, 0) == 0x0)
+	if(devfs_dev_register(name, &ops, 0, b) == 0x0)
 		goto err;
 
 	return E_OK;
@@ -62,7 +58,7 @@ err:
 	return -errno;
 }
 
-driver_init(init);
+driver_device("loop", probe);
 
 static int open(devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode){
 	DEBUG("dummy callback for loop device\n");
@@ -74,17 +70,23 @@ static int close(devfs_dev_t *dev, fs_filed_t *fd){
 	return E_OK;
 }
 
-static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	n = ringbuf_read(&dev_buf, buf, n);
-	DEBUG("copy from loop buffer \"%*.*s\"\n", n, n, buf);
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+	n = ringbuf_read(dev->data, buf, n);
+	DEBUG("copy %u from loop buffer \"%*.*s\"\n", n, n, n, buf);
+
+	if(n == 0)
+		goto_errno(err, E_END);
 
 	return n;
+
+err:
+	return 0;
 }
 
-static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	n = ringbuf_write(&dev_buf, buf, n);
+static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+	n = ringbuf_write(dev->data, buf, n);
 
-	DEBUG("copy to buffer \"%*.*s\"\n", n, n, buf);
+	DEBUG("copy %u to buffer \"%*.*s\"\n", n, n, n, buf);
 
 	return n;
 }

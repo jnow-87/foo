@@ -31,8 +31,13 @@ extern void int_vectors(void);
 uint8_t int_num = 0;
 
 
+/* static variables */
+static int_hdlr_t dev_hdlr[INT_VECTORS] = { 0x0 };
+static void *dev_hdlr_data[INT_VECTORS] = { 0x0 };
+
+
 /* global functions */
-struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
+struct thread_ctx_t *avr_sys_int_hdlr(struct thread_ctx_t *tc){
 	errno_t terrno;
 
 
@@ -63,7 +68,7 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 #endif // CONFIG_SCHED_PREEMPTIVE || CONFIG_KERNEL_TIMER
 
 	default:
-		kpanic(sched_running(), "out of bound interrupt num %u\n", (unsigned int)int_num);
+		kpanic(sched_running(), "invalid system interrupt %u\n", (unsigned int)int_num);
 	}
 
 	// restore errno
@@ -73,12 +78,36 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 	return stack_pop(((thread_t*)sched_running())->ctx_stack);
 }
 
+void avr_dev_int_hdlr(void){
+	if(dev_hdlr[int_num] == 0x0)
+		kpanic(0x0, "unhandled interrupt %u", int_num);
+
+	dev_hdlr[int_num](int_num, dev_hdlr_data[int_num]);
+}
+
 void avr_int_warm_reset_hdlr(void){
 	kpanic(0x0, "execute reset handler without actual MCU reset");
 }
 
-void avr_int_inval_hdlr(void){
-	kpanic(0x0, "unhandled interrupt");
+int avr_int_register(int_num_t num, int_hdlr_t hdlr, void *data){
+	if(num >= INT_VECTORS)
+		return_errno(E_INVAL);
+
+	if(dev_hdlr[num] != 0x0)
+		return_errno(E_INUSE);
+
+	dev_hdlr[num] = hdlr;
+	dev_hdlr_data[num] = data;
+
+	return E_OK;
+}
+
+void avr_int_release(int_num_t num){
+	if(num >= INT_VECTORS)
+		return;
+
+	dev_hdlr[num] = 0x0;
+	dev_hdlr_data[num] = 0x0;
 }
 
 int_type_t avr_int_enable(int_type_t mask){

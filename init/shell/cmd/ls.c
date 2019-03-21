@@ -35,14 +35,14 @@ static int exec(int argc, char **argv){
 	dir = open(path, O_RDONLY);
 
 	if(dir < 0){
-		printf("open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
+		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
 		return -1;
 	}
 
 	while(1){
 		if(read(dir, &entry, sizeof(dir_ent_t)) <= 0){
 			if(errno)
-				printf("read error \"%s\"\n", strerror(errno));
+				fprintf(stderr, "read error \"%s\"\n", strerror(errno));
 
 			break;
 		}

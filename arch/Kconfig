@@ -90,4 +90,8 @@ config CORE_MASK
 config CORE_CLOCK_HZ
 	int "Core clock [HZ]"
 	default 1000000
+
+config DEVICE_TREE
+	string "Device tree script"
+	default "scripts/dts/$(CONFIG_PROCESSOR).dts"
 # }}}

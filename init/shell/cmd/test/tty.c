@@ -23,7 +23,6 @@
 static int exec(void){
 	size_t i,
 		   n;
-	int e;
 	char buf[20];
 	term_cfg_t tc;
 	term_err_t err;
@@ -36,7 +35,10 @@ static int exec(void){
 	ioctl(0, IOCTL_CFGWR, &tc, sizeof(term_cfg_t));
 
 	/* get stdin file mode */
-	e = fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t));
+	if(fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t)) != 0){
+		ERROR("can't read stdin file mode \"%s\"\n", strerror(errno));
+		return -1;
+	}
 
 	/* main loop */
 	printf(
@@ -51,6 +53,7 @@ static int exec(void){
 
 	while(1){
 		// read
+		errno = E_OK;
 		n = fread(buf, 1, stdin);
 		i++;
 
@@ -62,7 +65,7 @@ static int exec(void){
 			ioctl(0, IOCTL_STATUS, &err, sizeof(err));
 
 			if(errno == E_OK){
-				printf("%s%s%s%s\n",
+				fprintf(stderr, "%s%s%s%s\n",
 					(err & TE_DATA_OVERRUN ? " data overrun" : ""),
 					(err & TE_PARITY ? " parity error" : ""),
 					(err & TE_FRAME ? " frame error" : ""),
@@ -70,7 +73,7 @@ static int exec(void){
 				);
 			}
 			else
-				printf("\nioctl error \"%s\"\n", strerror(errno));
+				fprintf(stderr, "\nioctl error \"%s\"\n", strerror(errno));
 
 			errno = E_OK;
 			continue;
@@ -90,10 +93,8 @@ static int exec(void){
 
 			printf("toggle blocking mode (set mode: %#x)\n", f_mode);
 
-			e = fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t));
-
-			if(e != 0)
-				ERROR("fcntl %#x \"%s\"\n", e, strerror(errno));
+			if(fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t)) != 0)
+				ERROR("fcntl failed \"%s\"\n", strerror(errno));
 		}
 		else if(buf[0] == 'q')
 			break;
@@ -101,7 +102,7 @@ static int exec(void){
 
 	/* restore blocking mode */
 	f_mode &= ~O_NONBLOCK;
-	fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t));
+	(void)fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t));
 
 	return 0;
 }

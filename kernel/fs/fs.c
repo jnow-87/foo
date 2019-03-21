@@ -20,6 +20,10 @@
 #include <sys/string.h>
 
 
+/* macros */
+#define FMODE_DEFAULT	(O_NONBLOCK)
+
+
 /* static variables */
 static fs_t *fs_lst = 0x0;
 static mutex_t fs_mtx = MUTEX_INITIALISER();
@@ -72,7 +76,7 @@ void fs_unlock(void){
 	mutex_unlock(&fs_mtx);
 }
 
-fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
+fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mode_t mode_mask){
 	int id;
 	fs_filed_t *fd;
 
@@ -94,15 +98,11 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
 	if(fd == 0x0)
 		goto_errno(err_0, E_NOMEM);
 
-	fd->tasks = ktask_queue_create();
-
-	if(fd->tasks == 0x0)
-		goto err_1;
-
 	fd->id = id;
 	fd->node = node;
 	fd->fp = 0;
-	fd->mode = mode;
+	fd->mode = (mode & ~mode_mask) | (FMODE_DEFAULT & mode_mask);
+	fd->mode_mask = mode_mask;
 	mutex_init(&fd->mtx, 0);
 
 	list_add_tail(this_p->fds, fd);
@@ -112,9 +112,6 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
 
 	return fd;
 
-
-err_1:
-	kfree(fd);
 
 err_0:
 	mutex_unlock(&this_p->mtx);
@@ -143,11 +140,6 @@ int fs_fd_dup(fs_filed_t *old_fd, int id, struct process_t *this_p){
 	if(fd == 0x0)
 		goto_errno(err_0, E_NOMEM);
 
-	fd->tasks = ktask_queue_create();
-
-	if(fd->tasks == 0x0)
-		goto err_1;
-
 	fd->id = id;
 	fd->node = old_fd->node;
 	fd->fp = old_fd->fp;
@@ -172,17 +164,12 @@ int fs_fd_dup(fs_filed_t *old_fd, int id, struct process_t *this_p){
 	return id;
 
 
-err_1:
-	kfree(fd);
-
 err_0:
 	mutex_unlock(&this_p->mtx);
 	return -errno;
 }
 
 void fs_fd_free(fs_filed_t *fd, process_t *this_p){
-	ktask_queue_destroy(fd->tasks);
-
 	list_rm_safe(this_p->fds, fd, &this_p->mtx);
 	fd->node->ref_cnt--;
 

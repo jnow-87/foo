@@ -25,7 +25,7 @@ static int exec(int argc, char **argv){
 		path = argv[1];
 
 	if(chdir(path) != 0){
-		printf("error \"%s\"\n", strerror(errno));
+		fprintf(stderr, "error \"%s\"\n", strerror(errno));
 		return -1;
 	}
 

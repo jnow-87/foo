@@ -26,19 +26,19 @@ static int exec(int argc, char **argv){
 	}
 
 	if(stat(argv[1], &f_stat) != 0){
-		printf("file not found\n");
+		fprintf(stderr, "file not found\n");
 		return -1;
 	}
 
 	if(f_stat.type == FT_DIR){
-		printf("%s is a directory, do you want to delete it?\n", argv[1]);
+		fprintf(stderr, "%s is a directory, do you want to delete it?\n", argv[1]);
 
 		if(fgetc(stdin) != 'y')
 			return 0;
 	}
 
 	if(unlink(argv[1]) != 0){
-		printf("error \"%s\"\n", strerror(errno));
+		fprintf(stderr, "error \"%s\"\n", strerror(errno));
 		return -1;
 	}
 

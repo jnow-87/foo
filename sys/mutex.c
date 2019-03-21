@@ -76,6 +76,8 @@ void mutex_lock(mutex_t *m){
 			break;
 
 		// TODO may suspend thread
+		// 		check if this is save
+		// 		if used in ISRs
 	}
 }
 

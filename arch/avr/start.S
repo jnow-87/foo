@@ -12,8 +12,10 @@
 
 
 .extern kernel
-.globl __start
 
+.section .start
+
+.globl __start
 __start:
 	/* init stack pointer */
 	ldi		r16, lo8(CONFIG_KERNEL_STACK_BASE + CONFIG_KERNEL_STACK_SIZE - 1)

@@ -79,7 +79,7 @@ int cmd_exec(int argc, char **argv){
 			i++;
 
 			if(stdout_dup < 0){
-				printf("redirecting output to %s failed, errno %s\n", argv[i], strerror(errno));
+				fprintf(stderr, "redirecting output to %s failed, errno %s\n", argv[i], strerror(errno));
 				return -errno;
 			}
 		}

@@ -15,6 +15,8 @@ SECTIONS {
 	.text : {
 		/* interrupt vectors */
 		*(.reset)
+		*(.start)
+		*(.isr)
 		*( .progmem.gcc*)
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)

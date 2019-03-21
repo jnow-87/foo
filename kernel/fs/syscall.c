@@ -13,24 +13,11 @@
 #include <kernel/sched.h>
 #include <kernel/syscall.h>
 #include <kernel/rootfs.h>
-#include <kernel/task.h>
 #include <kernel/ksignal.h>
 #include <kernel/kprintf.h>
 #include <sys/fcntl.h>
 #include <sys/list.h>
 
-
-/* macros */
-/* types */
-typedef void (*task_hdlr_t)(sc_fs_t *p, fs_filed_t *fd, process_t *this_p);
-
-typedef struct{
-	int fileno;
-	process_t *this_p;
-	sc_fs_t sc_param;
-
-	task_hdlr_t op;
-} task_param_t;
 
 
 /* local/static prototypes */
@@ -46,12 +33,7 @@ static int sc_hdlr_rmnode(void *param);
 static int sc_hdlr_chdir(void *param);
 
 // actual operations
-static void write(sc_fs_t *p, fs_filed_t *fd, process_t *this_p);
 static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p);
-
-// kernel task handling
-static void task_create(task_hdlr_t op, sc_fs_t *sc_p, fs_filed_t *fd, process_t *this_p);
-static void task_hdlr(void *_p);
 
 
 /* local functions */
@@ -169,13 +151,6 @@ static int sc_hdlr_close(void *_p){
 		return_errno(E_INVAL);
 
 	/* handle close */
-	fs_fd_release(fd);
-
-	// wait for outstanding tasks to finish
-	ktask_queue_flush(fd->tasks);
-
-	fd = fs_fd_acquire(p->fd, this_p);
-
 	fs_lock();
 	(void)fd->node->ops->close(fd, this_p);
 	fs_unlock();
@@ -246,6 +221,7 @@ static int sc_hdlr_write(void *_p){
 	sc_fs_t *p;
 	fs_filed_t *fd;
 	process_t *this_p;
+	char buf[((sc_fs_t*)_p)->data_len];
 
 
 	this_p = sched_running()->parent;
@@ -265,8 +241,14 @@ static int sc_hdlr_write(void *_p){
 
 	DEBUG("offset %d, len %u\n", fd->fp, p->data_len);
 
-	if(fd->mode & O_NONBLOCK)	task_create(write, p, fd, this_p);
-	else						write(p, fd, this_p);
+	copy_from_user(buf, p->data, p->data_len, this_p);
+
+	mutex_lock(&fd->node->wr_mtx);
+
+	p->data_len = fd->node->ops->write(fd, buf, p->data_len);
+	ksignal_send(&fd->node->rd_sig);
+
+	mutex_unlock(&fd->node->wr_mtx);
 
 	DEBUG("written %d bytes, errno %#x\n", p->data_len, errno);
 
@@ -346,7 +328,7 @@ static int sc_hdlr_fcntl(void *_p){
 	mutex_lock(&fd->node->wr_mtx);
 	mutex_lock(&fd->node->rd_mtx);
 
-	if(fcntl(fd, p->cmd, data, this_p) != E_OK){
+	if(fcntl(fd, p->cmd, data, this_p) == -E_NOIMP){
 		if(fd->node->ops->fcntl != 0x0)		(void)fd->node->ops->fcntl(fd, p->cmd, data);
 		else								errno |= E_NOIMP;
 	}
@@ -440,22 +422,6 @@ end:
 	return -errno;
 }
 
-static void write(sc_fs_t *p, fs_filed_t *fd, process_t *this_p){
-	char buf[p->data_len];
-
-
-	/* initials */
-	copy_from_user(buf, p->data, p->data_len, this_p);
-
-	/* call write callback */
-	mutex_lock(&fd->node->wr_mtx);
-
-	p->data_len = fd->node->ops->write(fd, buf, p->data_len);
-	ksignal_send(&fd->node->rd_sig);
-
-	mutex_unlock(&fd->node->wr_mtx);
-}
-
 static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p){
 	f_mode_t *mode;
 
@@ -469,56 +435,17 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p){
 		break;
 
 	case F_MODE_SET:
-		fd->mode = *mode;
-		break;
+		fd->mode = (*mode & ~fd->mode_mask) | (fd->mode & fd->mode_mask);
 
-	case F_SYNC:
-		mutex_unlock(&fd->node->rd_mtx);
-		mutex_unlock(&fd->node->wr_mtx);
-		fs_fd_release(fd);
-
-		ktask_queue_flush(fd->tasks);
-
-		fs_fd_acquire(fd->id, this_p);
-		mutex_lock(&fd->node->wr_mtx);
-		mutex_lock(&fd->node->rd_mtx);
+		if(fd->mode != *mode)
+			return_errno(E_NOSUP);
 		break;
 
 	default:
+		// NOTE not setting errno is intentional to
+		// 		allow sc_hdlr_fcntl to overwrite it
 		return -E_NOIMP;
 	}
 
 	return E_OK;
-}
-
-static void task_create(task_hdlr_t op, sc_fs_t *sc_p, fs_filed_t *fd, process_t *this_p){
-	task_param_t tp;
-
-
-	/* init task data */
-	tp.fileno = fd->id;
-	tp.this_p = this_p;
-	tp.op = op;
-	memcpy(&tp.sc_param, sc_p, sizeof(sc_fs_t));
-
-	/* create task */
-	ktask_create(task_hdlr, &tp, sizeof(task_param_t), fd->tasks, false);
-}
-
-static void task_hdlr(void *_p){
-	fs_filed_t *fd;
-	task_param_t *p;
-
-
-	/* initials */
-	p = (task_param_t*)_p;
-	fd = fs_fd_acquire(p->fileno, p->this_p);
-
-	if(fd == 0x0)
-		return;
-
-	/* handle operation */
-	p->op(&p->sc_param, fd, p->this_p);
-
-	fs_fd_release(fd);
 }

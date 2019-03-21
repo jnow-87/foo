@@ -8,6 +8,7 @@
 
 
 #include <sys/stdarg.h>
+#include <sys/string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <shell/cmd.h>
@@ -48,10 +49,16 @@ static int exec(int argc, char **argv){
 			fputs(argv[i], stdout);
 			fputc(' ', stdout);
 		}
+
+		if(errno)
+			break;
 	}
 
-	if(!binary)
-		fputc('\n', stdout);
+	if(!binary)	fputc('\n', stdout);
+	else		fflush(stdout);
+
+	if(errno)
+		fprintf(stderr, "error %s\n", strerror(errno));
 
 	return 0;
 }

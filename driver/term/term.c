@@ -6,11 +6,22 @@
  */
 
 
+// TODO
+// 	signal handling
+// 	interrupt handling
+// 	re-apply write mutex
+// 	check against original uart/terminal capabilities
+// 	update kernel log printing
+
+
 
 #include <config/config.h>
 #include <kernel/init.h>
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
+#include <kernel/ksignal.h>
+#include <kernel/driver.h>
+#include <kernel/opt.h>
 #include <driver/term.h>
 #include <sys/ringbuf.h>
 #include <sys/term.h>
@@ -20,19 +31,27 @@
 
 
 /* local/static prototypes */
-static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
+static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static void rx_hdlr(int_num_t num, void *data);
 
 
-/* global functions */
-term_t *term_register(char const *suffix, term_ops_t *ops, void *data){
-	char name[strlen(suffix) + 4];
-	void *rx_buf;
+/* local functions */
+int probe(char const *name, void *dt_data, void *dt_itf){
+	void *buf;
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	term_t *term;
+	term_itf_t *itf;
+	f_mode_t fmode_mask;
 
+
+	fmode_mask = 0;
+	itf = (term_itf_t*)dt_itf;
+
+	if(itf->configure == 0x0 || itf->gets == 0x0 || itf->puts == 0x0)
+		goto_errno(err_0, E_INVAL);
 
 	/* allocate terminal */
 	term = kmalloc(sizeof(term_t));
@@ -41,14 +60,22 @@ term_t *term_register(char const *suffix, term_ops_t *ops, void *data){
 		goto_errno(err_0, E_NOMEM);
 
 	/* allocate recv buffer */
-	rx_buf = kmalloc(CONFIG_TERM_RXBUF_SIZE);
+	buf = 0x0;
 
-	if(rx_buf == 0x0)
-		goto_errno(err_1, E_NOMEM);
+	if(itf->rx_int){
+		buf = kmalloc(CONFIG_TERM_RXBUF_SIZE);
+
+		if(buf == 0x0)
+			goto_errno(err_1, E_NOMEM);
+	}
 
 	/* register device */
-	strcpy(name, "tty");
-	strcpy(name + 3, suffix);
+	if(itf->rx_int == 0){
+		fmode_mask = O_NONBLOCK;	// if rx interrupts are not used the device must
+									// not be used in blocking mode, therefor the file
+									// system default setting (non-blocking) must not
+									// be overwritten
+	}
 
 	dev_ops.open = 0x0;
 	dev_ops.close = 0x0;
@@ -57,47 +84,53 @@ term_t *term_register(char const *suffix, term_ops_t *ops, void *data){
 	dev_ops.ioctl = ioctl;
 	dev_ops.fcntl = 0x0;
 
-	dev = devfs_dev_register(name, &dev_ops, term);
+	dev = devfs_dev_register(name, &dev_ops, fmode_mask, term);
 
 	if(dev == 0x0)
 		goto err_2;
 
-	/* init term struct */
-	memset(&term->cfg, 0x0, sizeof(term_cfg_t));
+	/* register interrupt */
+	if(itf->rx_int && int_register(itf->rx_int, rx_hdlr, term) != 0)
+		goto err_3;
 
-	term->ops = *ops;
-	term->data = data;
-	term->dev = dev;
+	if(itf->tx_int)
+		WARN("tx interrupts not supported yet\n");
 
+	/* init term */
+	term->cfg = kopt.term_cfg;
+	term->hw = dt_itf;
 	term->rx_rdy = &dev->node->rd_sig;
 	term->rx_err = TE_NONE;
 
-	ringbuf_init(&term->rx_buf, rx_buf, CONFIG_TERM_RXBUF_SIZE);
+	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
-	return term;
+	if(term->hw->configure(&term->cfg, term->hw->regs) != 0)
+		goto err_4;
 
+	return E_OK;
+
+
+err_4:
+	if(itf->rx_int)
+		int_release(itf->rx_int);
+
+err_3:
+	devfs_dev_release(dev);
 
 err_2:
-	kfree(rx_buf);
+	kfree(buf);
 
 err_1:
 	kfree(term);
 
 err_0:
-	return 0x0;
+	return -errno;
 }
 
-void term_release(term_t *term){
-	devfs_dev_release(term->dev);
+driver_device("terminal", probe);
 
-	kfree(term->rx_buf.data);
-	kfree(term);
-}
-
-
-/* local functions */
-static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	int r;
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+	int len;
 	term_t *term;
 
 
@@ -109,27 +142,27 @@ static int read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 		return 0;
 	}
 
-	r = ringbuf_read(&term->rx_buf, buf, n);
+	if(term->rx_buf.data == 0x0)
+		len = term->hw->gets(buf, n, &term->rx_err, term->hw->regs);
+	else
+		len = ringbuf_read(&term->rx_buf, buf, n);
 
 	/* handle terminal flags */
 	// handle TF_ECHO
-	if(r > 0 && (term->cfg.flags & TF_ECHO)){
-		if(term->ops.puts(term, buf, r) != E_OK)
+	if(len > 0 && (term->cfg.flags & TF_ECHO)){
+		if(term->hw->puts(buf, n, term->hw->regs) != E_OK)
 			return 0;
 	}
 
-	return r;
+	return len;
 }
 
-static int write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	term_t *term;
 
 
 	term = (term_t*)dev->data;
-
-	if(term->ops.puts(term, buf, n) != E_OK)
-		return 0;
-	return n;
+	return term->hw->puts(buf, n, term->hw->regs);
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
@@ -144,7 +177,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		if(term->ops.config(term, (term_cfg_t*)data) != E_OK)
+		if(term->hw->configure((term_cfg_t*)data, term->hw->regs) != E_OK)
 			return -errno;
 
 		term->cfg = *((term_cfg_t*)data);
@@ -155,10 +188,22 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 
 		// reset error flags
 		term->rx_err = TE_NONE;
-
 		return E_OK;
 
 	default:
 		return_errno(E_NOIMP);
 	}
+}
+
+static void rx_hdlr(int_num_t num, void *data){
+	char buf[16];
+	int len;
+	term_t *term;
+
+
+	term = (term_t*)data;
+
+	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->regs);
+	ringbuf_write(&term->rx_buf, buf, len);
+	ksignal_send(term->rx_rdy);
 }
