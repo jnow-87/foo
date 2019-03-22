@@ -91,7 +91,7 @@ static int exec(int argc, char **argv){
 	/* cleanup */
 end:
 	if(errno)
-		fprintf(stderr, "error %s\n", strerror(errno));
+		fprintf(stderr, "error \"%s\"\n", strerror(errno));
 
 	close(fd);
 

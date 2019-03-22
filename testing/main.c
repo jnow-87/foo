@@ -42,7 +42,7 @@ int main(int argc, char **argv){
 	log = open(argv[1], O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
 	if(log < 0){
-		printf("unable to open log-file: %s %s\n", argv[1], strerror(errno));
+		printf("open log-file \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
 		return 1;
 	}
 

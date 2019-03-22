@@ -195,7 +195,7 @@ err:
 		fprintf(stderr, "readline I/O error: terminal error %#x\n", terr);
 	}
 	else if(errno)
-		fprintf(stderr, "readline error on fd %d: %s\n", fileno(stream), strerror(errno));
+		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
 
 	errno = E_OK;
 
@@ -229,7 +229,7 @@ size_t readline_regfile(FILE *stream, char *line, size_t n){
 
 err:
 	if(errno){
-		fprintf(stderr, "readline error on fd %d: %s (%#x)\n", fileno(stream), strerror(errno), errno);
+		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
 		errno = E_OK;
 	}
 

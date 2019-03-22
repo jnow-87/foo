@@ -42,7 +42,7 @@ int main(int argc, char **argv){
 		fp = fopen(argv[2], "w");
 
 	if(fp == 0x0){
-		fprintf(stderr, "can't open \"%s\": %s\n", argv[1], strerror(errno));
+		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
 		return 3;
 	}
 

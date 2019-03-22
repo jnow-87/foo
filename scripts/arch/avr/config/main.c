@@ -51,7 +51,7 @@ int main(int argc, char **argv){
 	tmp_file = fopen(tmp_file_name, "w");
 
 	if(tmp_file == 0x0)
-		fprintf(stderr, "unable to open temporary file \"%s\"\n", strerror(errno));
+		fprintf(stderr, "open temporary file failed \"%s\"\n", strerror(errno));
 
 	if(arg.verbose)
 		printf("generating temporary avr config header \"%s\"\n", tmp_file_name);

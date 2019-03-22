@@ -52,7 +52,7 @@ int main(int argc, char **argv){
 	ofile = fopen(ofile_name, "w");
 
 	if(ofile == 0){
-		printf("unable to open output file: %s\n", strerror(errno));
+		printf("open output file failed \"%s\"\n", strerror(errno));
 		return 1;
 	}
 

@@ -133,7 +133,7 @@ int shell(char const *prompt, FILE *_stream){
 			stream = fopen(argv[0], "r");
 
 			if(stream == 0x0)
-				SHELL_ERROR("error opening script %s \"%s\"\n", argv[0], strerror(errno));
+				SHELL_ERROR("open script \"%s\" failed \"%s\"\n", argv[0], strerror(errno));
 
 			// update globals
 			strncpy(shell_file, argv[0], CONFIG_FILE_MAX);

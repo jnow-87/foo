@@ -47,7 +47,7 @@ static int exec(int argc, char **argv){
 	fd = open(argv[1], O_RDONLY);
 
 	if(fd < 0){
-		printf("error opening %s \"%s\"\n", argv[1], strerror(errno));
+		printf("open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
 		return -1;
 	}
 

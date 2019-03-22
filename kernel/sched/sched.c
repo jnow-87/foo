@@ -138,7 +138,7 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, siz
 		memcpy(ipi->data, data, size);
 
 		if(ipi_send(core, thread_modify, ipi, sizeof(sched_ipi_t) + size) != 0)
-			kpanic(this_t, "unable to trigger ipi: %s\n", strerror(errno));
+			kpanic(this_t, "trigger ipi failed \"%s\"\n", strerror(errno));
 	}
 	else
 #endif // CONFIG_KERNEL_SMP
