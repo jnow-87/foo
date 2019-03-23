@@ -43,6 +43,24 @@ pwm0 = {
 
 };
 
+pwm1 = {
+	compatible = "avr,pwm16";
+
+	baseaddr = 0x80;			// tcc1 config register base
+
+	reg = [
+		0x36,					// TIFR1
+		0x6f					// TIMSK1
+	];
+
+	reg = [ 0x64 ];				// PRR0
+	int<8> = [ 0x08 ];			// PRR0_PRTIM1
+
+	reg = [ 0x2a ];				// DRRD
+	int<8> = [ 0x30 ];			// DDRD bits 4..5
+
+};
+
 pa0 = {
 	compatible = "avr,gpio";
 
