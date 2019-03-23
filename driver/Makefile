@@ -7,11 +7,11 @@
 
 
 
-obj-y := uart/
-
 obj-$(CONFIG_DRIVER_LOOPBACK) += loop/
 obj-$(CONFIG_DRIVER_TERM) += term/
+obj-$(CONFIG_DRIVER_UART) += uart/
 obj-$(CONFIG_DRIVER_GPIO) += gpio/
+obj-$(CONFIG_DRIVER_PWM) += pwm/
 
 
 ####

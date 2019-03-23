@@ -190,16 +190,14 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 
 
 err:
-	if(errno & E_IO){
+	if(errno == E_IO){
 		ioctl(fileno(stream), IOCTL_STATUS, &terr, sizeof(term_err_t));
-		fprintf(stderr, "readline I/O error: %s (%#x), term error %#x\n", strerror(errno), errno, terr);
-		errno = 0;
+		fprintf(stderr, "readline I/O error: terminal error %#x\n", terr);
 	}
+	else if(errno)
+		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
 
-	if(errno){
-		fprintf(stderr, "readline error on fd %d: %s (%#x)\n", fileno(stream), strerror(errno), errno);
-		errno = 0;
-	}
+	errno = E_OK;
 
 	return 0;
 }
@@ -231,8 +229,8 @@ size_t readline_regfile(FILE *stream, char *line, size_t n){
 
 err:
 	if(errno){
-		fprintf(stderr, "readline error on fd %d: %s (%#x)\n", fileno(stream), strerror(errno), errno);
-		errno = 0;
+		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
+		errno = E_OK;
 	}
 
 	return 0;

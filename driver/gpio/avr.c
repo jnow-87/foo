@@ -24,18 +24,18 @@ typedef enum{
 } port_dir_t;
 
 typedef struct{
-	uint8_t volatile pin,
-					 ddr,
-					 port;
-} uart_reg_t;
+	// device registers
+	struct{
+		uint8_t volatile pin,
+						 ddr,
+						 port;
+	} *dev;
 
-typedef struct{
-	uart_reg_t *port;
-
-	uint8_t dir,
-			offset,
-			mask;
-} gpio_devtree_t;
+	// configuration
+	uint8_t const dir,		// direction, cf. port_dir_t
+				  offset,	// LSB of pin
+				  mask;		// pin bits
+} dt_data_t;
 
 
 /* local/static prototypes */
@@ -45,17 +45,17 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 
 /* local functions */
 static int probe(char const *name, void *dt_data, void *dt_itf){
-	gpio_devtree_t *regs;
+	dt_data_t *regs;
 	devfs_ops_t ops;
 
 
-	regs = (gpio_devtree_t*)dt_data;
+	regs = (dt_data_t*)dt_data;
 
 	/* configure port */
-	regs->port->port |= regs->mask;
+	regs->dev->port |= regs->mask;
 
 	if(regs->dir & PORT_OUT)
-		regs->port->ddr |= regs->mask;
+		regs->dev->ddr |= regs->mask;
 
 	/* register device */
 	ops.open = 0x0;
@@ -74,14 +74,14 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 driver_device("avr,gpio", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	gpio_devtree_t *regs;
+	dt_data_t *regs;
 	uint8_t v;
 
 
-	regs = (gpio_devtree_t*)dev->data;
+	regs = (dt_data_t*)dev->data;
 
 	/* read port */
-	v = regs->port->pin;
+	v = regs->dev->pin;
 	*((char*)buf) = (v & regs->mask) >> regs->offset;
 
 	DEBUG("port %s, mask %#hhx, val %#hhx %#hhx\n", dev->node->name, regs->mask, *((char*)buf), v);
@@ -91,16 +91,16 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	uint8_t v;
-	gpio_devtree_t *regs;
+	dt_data_t *regs;
 
 
-	regs = (gpio_devtree_t*)dev->data;
+	regs = (dt_data_t*)dev->data;
 
 	/* write port */
-	v = regs->port->pin & ~regs->mask;
+	v = regs->dev->pin & ~regs->mask;
 	v |= (*((char*)buf) << regs->offset) & regs->mask;
 
-	regs->port->port = v;
+	regs->dev->port = v;
 
 	DEBUG("port %s, mask %#hhx, val %#hhx\n", dev->node->name, regs->mask, v);
 

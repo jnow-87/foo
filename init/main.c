@@ -34,12 +34,12 @@ int main(int argc, char **argv){
 				printf("\"%s\" returned with %d\n", argv[1], r);
 			}
 			else
-				printf("can't execute \"%s\": %s\n", argv[1], (r == 0 ? "not a regular file" : strerror(errno)));
+				printf("execution of \"%s\" failed \"%s\"\n", argv[1], (r == 0 ? "not a regular file" : strerror(errno)));
 
 			fclose(fp);
 		}
 		else
-			printf("unable to open \"%s\": %s\n", argv[1], strerror(errno));
+			printf("open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
 	}
 
 	/* fallback shell */

@@ -51,32 +51,28 @@
 
 /* types */
 typedef struct{
-	// config registers */
-	uint8_t volatile ucsra,
-					 ucsrb,
-					 ucsrc;
+	// device registers
+	struct{
+		uint8_t volatile ucsra,
+						 ucsrb,
+						 ucsrc;
 
-	uint8_t res0;
+		uint8_t res0;
 
-	// baud rate registers
-	uint8_t volatile ubrrl,
-					 ubrrh;
+		uint8_t volatile ubrrl,
+						 ubrrh;
 
-	// data register
-	uint8_t volatile udr;
-} uart_reg_t;
-
-typedef struct{
-	uart_reg_t *uart;
+		uint8_t volatile udr;
+	} *dev;
 
 	// power control
 	uint8_t volatile *prr;
-	uint8_t const prr_mask;
+	uint8_t const prr_en;		// PRR device enable value
 
 	// interrupt number
-	uint8_t rx_int,
-			tx_int;
-} uart_devtree_t;
+	uint8_t const rx_int,
+				  tx_int;
+} dt_data_t;
 
 
 /* local/static prototypes */
@@ -106,10 +102,10 @@ int avr_uart_puts(char const *s){
 
 /* local functions */
 static int kuart_init(void){
-	uart_devtree_t regs = {
-		.uart = (void*)UCSR0A,
+	dt_data_t regs = {
+		.dev = (void*)UCSR0A,
 		.prr = (void*)PRR0,
-		.prr_mask = (0x1 << PRR0_PRUSART0),
+		.prr_en = (0x1 << PRR0_PRUSART0),
 		.rx_int = 0,
 		.tx_int = 0,
 	};
@@ -123,11 +119,11 @@ static int kuart_init(void){
 platform_init(0, kuart_init);
 
 static void *probe(void *dt_data, void *dt_itf){
-	uart_devtree_t *regs;
+	dt_data_t *regs;
 	term_itf_t *itf;
 
 
-	regs = (uart_devtree_t*)dt_data;
+	regs = (dt_data_t*)dt_data;
 	itf = kmalloc(sizeof(term_itf_t));
 
 	if(itf == 0x0)
@@ -148,57 +144,57 @@ driver_interface("avr,uart", probe);
 static int configure(term_cfg_t *cfg, void *_regs){
 	uint8_t const parity_bits[] = { 0b00, 0b11, 0b10 };
 	unsigned int brate;
-	uart_devtree_t *regs;
+	dt_data_t *regs;
 
 
-	regs = (uart_devtree_t*)_regs;
+	regs = (dt_data_t*)_regs;
 
 	/* compute baud rate */
 	if(cfg->baud > 115200)
 		return_errno(E_LIMIT);
 
-	brate = (CONFIG_CORE_CLOCK_HZ / (cfg->baud * 16));
+	brate = (AVR_IO_CLOCK_HZ / (cfg->baud * 16));
 
 	if(brate == 0)
 		return_errno(E_INVAL);
 
 	/* finish ongoing transmissions */
-	if(regs->uart->ucsrb & UCSRB_TXEN){
-		while(!(regs->uart->ucsra & (0x1 << UCSRA_TXC)));
+	if(regs->dev->ucsrb & UCSRB_TXEN){
+		while(!(regs->dev->ucsra & (0x1 << UCSRA_TXC)));
 	}
 
 	/* disable uart, triggering reset */
-	*regs->prr |= regs->prr_mask;
+	*regs->prr |= regs->prr_en;
 
 	/* re-enable uart */
-	*regs->prr &= (-1 ^ regs->prr_mask);
+	*regs->prr &= ~regs->prr_en;
 
-	regs->uart->ucsra = 0x0 << UCSRA_U2X;
-	regs->uart->ucsrb = (0x1 << UCSRB_RXEN)
-					  | (0x1 << UCSRB_TXEN)
-					  | ((regs->rx_int ? 0x1 : 0x0) << UCSRB_RXCIE)
-					  | ((regs->tx_int ? 0x1 : 0x0) << UCSRB_TXCIE)
-					  ;
+	regs->dev->ucsra = 0x0 << UCSRA_U2X;
+	regs->dev->ucsrb = (0x1 << UCSRB_RXEN)
+					 | (0x1 << UCSRB_TXEN)
+					 | ((regs->rx_int ? 0x1 : 0x0) << UCSRB_RXCIE)
+					 | ((regs->tx_int ? 0x1 : 0x0) << UCSRB_TXCIE)
+					 ;
 
 	// set baudrate
-	regs->uart->ubrrh = hi8(brate);
-	regs->uart->ubrrl = lo8(brate);
+	regs->dev->ubrrh = hi8(brate);
+	regs->dev->ubrrl = lo8(brate);
 
 	// set csize, parity, stop bits
-	regs->uart->ucsrc = (cfg->csize << UCSRC_UCSZ)
-					  | (parity_bits[cfg->parity] << UCSRC_UPM)
-					  | (cfg->stopb << UCSRC_USBS)
-					  ;
+	regs->dev->ucsrc = (cfg->csize << UCSRC_UCSZ)
+					 | (parity_bits[cfg->parity] << UCSRC_UPM)
+					 | (cfg->stopb << UCSRC_USBS)
+					 ;
 
 	return E_OK;
 }
 
 static size_t putsn(char const *s, size_t n, void *_regs){
 	size_t i;
-	uart_devtree_t *regs;
+	dt_data_t *regs;
 
 
-	regs = (uart_devtree_t*)_regs;
+	regs = (dt_data_t*)_regs;
 
 	if(s == 0x0){
 		errno = E_INVAL;
@@ -206,8 +202,8 @@ static size_t putsn(char const *s, size_t n, void *_regs){
 	}
 
 	for(i=0; i<n; i++, s++){
-		while(!(regs->uart->ucsra & (0x1 << UCSRA_UDRE)));
-		regs->uart->udr = *s;
+		while(!(regs->dev->ucsra & (0x1 << UCSRA_UDRE)));
+		regs->dev->udr = *s;
 	}
 
 	return i;
@@ -216,18 +212,18 @@ static size_t putsn(char const *s, size_t n, void *_regs){
 static size_t gets(char *s, size_t n, term_err_t *err, void *_regs){
 	size_t i;
 	uint8_t e;
-	uart_devtree_t *regs;
+	dt_data_t *regs;
 
 
-	regs = (uart_devtree_t*)_regs;
+	regs = (dt_data_t*)_regs;
 	e = 0;
 
 	/* read data */
 	i = 0;
 
-	while(i < n && (regs->uart->ucsra & (0x1 << UCSRA_RXC))){
-		e |= regs->uart->ucsra & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE));
-		s[i] = regs->uart->udr;
+	while(i < n && (regs->dev->ucsra & (0x1 << UCSRA_RXC))){
+		e |= regs->dev->ucsra & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE));
+		s[i] = regs->dev->udr;
 
 		if(e){
 			*err |= (bits(e, UCSRA_FE, 0x1) ? TE_FRAME : 0)

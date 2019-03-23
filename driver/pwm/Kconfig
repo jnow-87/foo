@@ -1,0 +1,27 @@
+#
+# Copyright (C) 2019 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+menuconfig DRIVER_PWM
+	bool "PWM driver"
+	select KERNEL_DEVFS
+
+if DRIVER_PWM
+	if AVR
+		config AVR_PWM_8BIT
+			bool "8 bit timer support"
+
+		config AVR_PWM_16BIT
+			bool "16 bit timer support"
+	endif # AVR
+
+	config PWM_DEBUG
+		bool "Enable debug messages"
+		depends on KERNEL_MSG_DEBUG
+		default n
+endif # DRIVER_PWM

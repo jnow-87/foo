@@ -32,11 +32,11 @@ static int exec(void){
 
 	/* set non-blocking mode for file descriptor */
 	e = fcntl(fp->fileno, F_MODE_GET, &f_mode, sizeof(f_mode));
-	printf("%#x %#x %#x\n", e, errno, f_mode);
+	printf("%#x %s %#x\n", e, strerror(errno), f_mode);
 
 	f_mode |= O_NONBLOCK;
 	e = fcntl(fp->fileno, F_MODE_SET, &f_mode, sizeof(f_mode));
-	printf("%#x %#x %#x\n", e, errno, f_mode);
+	printf("%#x %s %#x\n", e, strerror(errno), f_mode);
 
 	/* issue some writes */
 	e = write(fp->fileno, "123", 1);

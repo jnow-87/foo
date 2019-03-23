@@ -7,4 +7,4 @@
 
 
 
-obj-$(CONFIG_AVR_UART) += avr.o
+obj-$(CONFIG_AVR) += avr.o

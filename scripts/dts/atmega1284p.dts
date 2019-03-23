@@ -9,10 +9,13 @@
 
 uart0 = {
 	compatible = "avr,uart";
+
 	baseaddr = 0xc0;			// uart0 config register base
+
 	reg = [ 0x64 ];				// PRR0
+	int<8> = [ 0x2 ];			// PRR0_PRUSART0
+
 	int<8> = [
-		0x1,					// PRR0_PRUSART0
 		20,						// uart0 rx interrupt
 		0						// uart0 tx interrupt
 	];
@@ -22,35 +25,62 @@ uart0 = {
 	};
 };
 
-a0 = {
+pwm0 = {
+	compatible = "avr,pwm8";
+
+	baseaddr = 0x44;			// tcc0 config register base
+
+	reg = [
+		0x35,					// TIFR0
+		0x6e					// TIMSK0
+	];
+
+	reg = [ 0x64 ];				// PRR0
+	int<8> = [ 0x20 ];			// PRR0_PRTIM0
+
+	reg = [ 0x24 ];				// DRRB
+	int<8> = [ 0x18 ];			// DDRB bits 3..4
+
+};
+
+pwm1 = {
+	compatible = "avr,pwm16";
+
+	baseaddr = 0x80;			// tcc1 config register base
+
+	reg = [
+		0x36,					// TIFR1
+		0x6f					// TIMSK1
+	];
+
+	reg = [ 0x64 ];				// PRR0
+	int<8> = [ 0x08 ];			// PRR0_PRTIM1
+
+	reg = [ 0x2a ];				// DRRD
+	int<8> = [ 0x30 ];			// DDRD bits 4..5
+
+};
+
+pa0 = {
 	compatible = "avr,gpio";
+
 	baseaddr = 0x20;			// porta
 
 	int<8> = [
-		0x2,					// direction (out)
+		0x3,					// direction (in)
 		0,						// offset
 		0x1						// mask
 	];
 };
 
-a1 = {
+pa1 = {
 	compatible = "avr,gpio";
+
 	baseaddr = 0x20;			// porta
 
 	int<8> = [
 		0x3,					// direction (in/out)
 		1,						// offset
 		0x2						// mask
-	];
-};
-
-a23 = {
-	compatible = "avr,gpio";
-	baseaddr = 0x20;			// porta
-
-	int<8> = [
-		0x1,					// direction (in)
-		2,						// offset
-		0xc						// mask
 	];
 };

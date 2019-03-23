@@ -102,7 +102,7 @@ void ksc_hdlr(sc_t num, void *param, size_t psize){
 		if(errno == E_OK)
 			errno = E_UNKNOWN;
 
-		DEBUG("syscall %d on %s:%u failed %s (%#x, %#x)\n", num, this_t->parent->name, this_t->tid, strerror(errno), errno, r);
+		DEBUG("syscall %d on %s:%u failed \"%s\" (%#x)\n", num, this_t->parent->name, this_t->tid, strerror(errno), r);
 	}
 
 	/* copy result to user space */

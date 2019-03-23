@@ -15,6 +15,7 @@
 #include <kernel/rootfs.h>
 #include <kernel/ksignal.h>
 #include <kernel/kprintf.h>
+#include <sys/string.h>
 #include <sys/fcntl.h>
 #include <sys/list.h>
 
@@ -85,7 +86,7 @@ static int sc_hdlr_open(void *_p){
 	p->fd = root->ops->open(root, path, p->mode, this_p);
 	fs_unlock();
 
-	DEBUG("created fd with id %d, errno %#x\n", p->fd, errno);
+	DEBUG("created fd with id %d, \"%s\"\n", p->fd, strerror(errno));
 
 	return E_OK;
 }
@@ -116,7 +117,7 @@ static int sc_hdlr_dup(void *_p){
 
 	// E_INVAL is expected in case the desired fd
 	// was not open before
-	if(errno & (~E_INVAL))
+	if(errno && errno != E_INVAL)
 		return -errno;
 
 	errno = E_OK;
@@ -201,10 +202,11 @@ static int sc_hdlr_read(void *_p){
 
 	mutex_unlock(&fd->node->rd_mtx);
 
-	DEBUG("read %d bytes, errno %#x\n", r, errno);
+	DEBUG("read %d bytes, \"%s\"\n", r, strerror(errno));
 
-	// avoid communicating enf of resource to user space
-	errno &= ~E_END;
+	// avoid communicating end of resource to user space
+	if(errno == E_END)
+		errno = E_OK;
 
 	/* update user space */
 	if(errno == E_OK)
@@ -250,7 +252,7 @@ static int sc_hdlr_write(void *_p){
 
 	mutex_unlock(&fd->node->wr_mtx);
 
-	DEBUG("written %d bytes, errno %#x\n", p->data_len, errno);
+	DEBUG("written %d bytes, \"%s\"\n", p->data_len, strerror(errno));
 
 end:
 	fs_fd_release(fd);
@@ -330,7 +332,7 @@ static int sc_hdlr_fcntl(void *_p){
 
 	if(fcntl(fd, p->cmd, data, this_p) == -E_NOIMP){
 		if(fd->node->ops->fcntl != 0x0)		(void)fd->node->ops->fcntl(fd, p->cmd, data);
-		else								errno |= E_NOIMP;
+		else								errno = E_NOIMP;
 	}
 
 	mutex_unlock(&fd->node->rd_mtx);
@@ -417,7 +419,7 @@ end:
 	mutex_unlock(&this_p->mtx);
 	fs_unlock();
 
-	DEBUG("new cwd \"%s\", errno %#x\n", this_p->cwd->name, errno);
+	DEBUG("new cwd \"%s\", \"%s\"\n", this_p->cwd->name, strerror(errno));
 
 	return -errno;
 }

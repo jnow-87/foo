@@ -58,7 +58,7 @@ static int exec(int argc, char **argv){
 	else		fflush(stdout);
 
 	if(errno)
-		fprintf(stderr, "error %s\n", strerror(errno));
+		fprintf(stderr, "error \"%s\"\n", strerror(errno));
 
 	return 0;
 }

@@ -14,6 +14,7 @@
 #include <kernel/task.h>
 #include <kernel/driver.h>
 #include <sys/errno.h>
+#include <sys/string.h>
 #include <sys/list.h>
 #include "kernel.h"
 
@@ -30,7 +31,7 @@ kopt_t kopt = KOPT_INITIALISER();
 void kernel(void){
 	/* init */
 	if(kinit() < 0)
-		kpanic(0x0, "error (%#x) during kernel init", errno);
+		kpanic(0x0, "kernel init error \"%s\"", strerror(errno));
 
 	driver_load();
 

@@ -62,7 +62,7 @@ static void exec_init_call(init_call_t *base, init_call_t *end, bool p_err){
 			return;
 
 		if(p->call() != E_OK && p_err){
-			WARN("%s() failed %s (%#x)\n", p->name, strerror(errno), errno);
+			WARN("%s() failed \"%s\"\n", p->name, strerror(errno));
 		}
 		else
 			INFO("%s() succeed\n", p->name);

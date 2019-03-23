@@ -180,7 +180,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 		else{
 			// ignore 0-flag if precision is specified
 			if(flags & FFL_PRECISION)
-				flags &= -1 ^ FFL_LEFTPADZERO;
+				flags &= ~FFL_LEFTPADZERO;
 
 			if(!((flags & FFL_PRECISION) && prec == 0 && *buf == '0'))
 				n += put_spec(stream, *format, buf, blen, true, flags, width, prec);
@@ -320,7 +320,7 @@ static int get_spec(char const *format, va_list lst, len_t len, fflag_t *flags, 
 	case 'u': // fall through
 	case 'o':
 		// ignore +-flag for unsigned specifier
-		*flags &= -1 ^ FFL_FORCESIGN;
+		*flags &= ~FFL_FORCESIGN;
 
 		return get_arg(lst, len, false, flags, v);
 
