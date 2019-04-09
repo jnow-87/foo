@@ -17,6 +17,15 @@ menu "Clock configuration"
 endmenu
 
 #
+# flash configuration
+#
+menu "Flash configuration"
+	if ATMEL_EEFC
+		source arch/arm/board/atmel/Kconfig.eefc
+	endif
+endmenu
+
+#
 # options to be selected by specific boards
 #
 menu "Hidden"
@@ -24,5 +33,9 @@ menu "Hidden"
 
 	config ATMEL_PMC
 		bool "Atmel power management controller"
+		default 0
+
+	config ATMEL_EEFC
+		bool "Atmel enhanced embedded flash controller"
 		default 0
 endmenu

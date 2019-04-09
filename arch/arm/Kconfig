@@ -18,6 +18,7 @@ choice
 		bool "AtSamV71"
 		select ARM_CORE_CORTEX_M7
 		select ATMEL_PMC
+		select ATMEL_EEFC
 
 	config BOARD_UNSPECIFIC
 		bool "Unspecific"

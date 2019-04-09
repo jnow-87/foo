@@ -8,6 +8,7 @@
 
 
 #include <arch/arm/board/atmel/pmc.h>
+#include <arch/arm/board/atmel/eefc.h>
 
 
 /* global functions */
@@ -16,6 +17,7 @@ int atsamv71_init(void){
 
 
 	r = 0;
+	r |= eefc_init();
 	r |= pmc_init();
 
 	return -r;
