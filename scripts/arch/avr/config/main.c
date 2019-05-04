@@ -21,6 +21,7 @@
 
 /* external functions */
 int config_watchdog(void);
+int config_initbin(void);
 
 
 /* global variables */
@@ -60,6 +61,7 @@ int main(int argc, char **argv){
 	r = 0;
 
 	r |= config_watchdog();
+	r |= config_initbin();
 
 	/* close tmp file */
 	fclose(tmp_file);
