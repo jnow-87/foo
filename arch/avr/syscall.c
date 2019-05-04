@@ -10,6 +10,7 @@
 #include <config/config.h>
 #include <arch/arch.h>
 #include <arch/interrupt.h>
+#include <kernel/init.h>
 #include <kernel/syscall.h>
 #include <sys/types.h>
 #include <sys/errno.h>
@@ -18,7 +19,7 @@
 
 
 /* macros */
-#define INT_VEC_SC		(CONFIG_KERNEL_TEXT_BASE + INT_VEC_SIZE * INT_VECTORS)
+#define INT_VEC_SC		(CONFIG_KERNEL_TEXT_BASE + INT_VEC_SIZE * NUM_HW_INT)
 #define SYSCALL(addr)	asm volatile("call " STRGIFY(addr));
 
 
@@ -47,8 +48,10 @@ int avr_sc(sc_t num, void *param, size_t psize){
 	return E_OK;
 }
 
+
+/* local functions */
 #ifdef BUILD_KERNEL
-void avr_sc_hdlr(void){
+static void sc_hdlr(int_num_t num, void *data){
 	sc_arg_t *arg;
 
 
@@ -60,4 +63,12 @@ void avr_sc_hdlr(void){
 	ksc_hdlr(arg->num, arg->param, arg->size);
 	arg->errno = errno;
 }
+#endif // BUILD_KERNEL
+
+#ifdef BUILD_KERNEL
+static int init(void){
+	return int_register(NUM_HW_INT, sc_hdlr, 0x0);
+}
+
+platform_init(0, init);
 #endif // BUILD_KERNEL

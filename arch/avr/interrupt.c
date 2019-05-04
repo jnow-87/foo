@@ -14,7 +14,6 @@
 #include <arch/io.h>
 #include <arch/avr/timer.h>
 #include <arch/avr/iovfl.h>
-#include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
@@ -27,87 +26,31 @@
 extern void int_vectors(void);
 
 
-/* global variables */
-uint8_t int_num = 0;
-
-
 /* static variables */
-static int_hdlr_t dev_hdlr[INT_VECTORS] = { 0x0 };
-static void *dev_hdlr_data[INT_VECTORS] = { 0x0 };
+static int_hdlr_t int_hdlr[NUM_INT] = { 0x0 };
+static void *int_data[NUM_INT] = { 0x0 };
 
 
 /* global functions */
-struct thread_ctx_t *avr_sys_int_hdlr(struct thread_ctx_t *tc){
-	errno_t terrno;
-
-
-	/* save thread context of active thread*/
-	stack_push(sched_running()->ctx_stack, tc);
-
-	/* call respective interrupt handler */
-	// save and reset errno
-	terrno = errno;
-	errno = E_OK;
-
-	// call handler
-	switch(int_num){
-	case INT_VECTORS:		// syscall
-		avr_sc_hdlr();
-		break;
-
-#if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
-	case INT_VECTORS + 1:	// instruction overflow
-		avr_iovfl_hdlr(tc);
-		break;
-#endif // CONFIG_BUILD_DEBUG && CONFIG_IOVERFLOW_DET
-
-#if (defined(CONFIG_SCHED_PREEMPTIVE) || defined(CONFIG_KERNEL_TIMER))
-	case CONFIG_TIMER_INT:	// scheduler
-		avr_timer_hdlr();
-		break;
-#endif // CONFIG_SCHED_PREEMPTIVE || CONFIG_KERNEL_TIMER
-
-	default:
-		kpanic(sched_running(), "invalid system interrupt %u\n", (unsigned int)int_num);
-	}
-
-	// restore errno
-	errno = terrno;
-
-	/* return context of active thread */
-	return stack_pop(((thread_t*)sched_running())->ctx_stack);
-}
-
-void avr_dev_int_hdlr(void){
-	if(dev_hdlr[int_num] == 0x0)
-		kpanic(0x0, "unhandled interrupt %u", int_num);
-
-	dev_hdlr[int_num](int_num, dev_hdlr_data[int_num]);
-}
-
-void avr_int_warm_reset_hdlr(void){
-	kpanic(0x0, "execute reset handler without actual MCU reset");
-}
-
 int avr_int_register(int_num_t num, int_hdlr_t hdlr, void *data){
-	if(num >= INT_VECTORS)
+	if(num >= NUM_INT)
 		return_errno(E_INVAL);
 
-	if(dev_hdlr[num] != 0x0)
+	if(int_hdlr[num] != 0x0)
 		return_errno(E_INUSE);
 
-	dev_hdlr[num] = hdlr;
-	dev_hdlr_data[num] = data;
+	int_hdlr[num] = hdlr;
+	int_data[num] = data;
 
 	return E_OK;
 }
 
 void avr_int_release(int_num_t num){
-	if(num >= INT_VECTORS)
+	if(num >= NUM_INT)
 		return;
 
-	dev_hdlr[num] = 0x0;
-	dev_hdlr_data[num] = 0x0;
+	int_hdlr[num] = 0x0;
+	int_data[num] = 0x0;
 }
 
 int_type_t avr_int_enable(int_type_t mask){
@@ -126,4 +69,36 @@ int_type_t avr_int_enabled(void){
 	if(mreg_r(SREG) & (0x1 << SREG_I))
 		return INT_GLOBAL;
 	return INT_NONE;
+}
+
+struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
+	uint8_t num;
+	errno_t terrno;
+
+
+	/* save thread context of active thread*/
+	stack_push(sched_running()->ctx_stack, tc);
+
+	/* compute interrupt number */
+	// INT_VEC_SIZE / 2 is used since the flash is word-addressed
+	num = (lo8(tc->int_vec_addr) << 8 | hi8(tc->int_vec_addr));
+	num = ((num - (unsigned int)int_vectors) / (INT_VEC_SIZE / 2)) - 1;
+
+	/* call interrupt handler */
+	if(num >= NUM_INT || int_hdlr[num] == 0x0)
+		kpanic(sched_running(), "unhandled or invalid interrupt %u", num);
+
+	terrno = errno;
+	errno = E_OK;
+
+	int_hdlr[num](num, int_data[num]);
+
+	errno = terrno;
+
+	/* return context of active thread */
+	return stack_pop(((thread_t*)sched_running())->ctx_stack);
+}
+
+void avr_int_warm_reset_hdlr(void){
+	kpanic(0x0, "call reset handler without actual MCU reset");
 }

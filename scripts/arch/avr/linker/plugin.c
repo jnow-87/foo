@@ -79,7 +79,7 @@ static void plugin_ioverflow_det(FILE *ofile, char *bin_type){
 
 
 	filler.i = 0x940e0000
-			 | ((CONFIG_KERNEL_TEXT_BASE + (INT_VECTORS + 1) * INT_VEC_SIZE) / 2);
+			 | ((CONFIG_KERNEL_TEXT_BASE + (NUM_HW_INT + 1) * INT_VEC_SIZE) / 2);
 
 	filler.i = htonl(filler.i);
 

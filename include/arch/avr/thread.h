@@ -26,12 +26,14 @@ enum thread_ctx_type_t;
 typedef struct thread_ctx_t{
 	struct thread_ctx_t *next;
 
-	uint8_t	sreg,			/**< status register */
+	uint8_t	undoc,			/**< undocumented register */
+			sreg,			/**< status register */
 			mcusr,			/**< control register */
 			rampz;			/**< extended Z-pointer */
 	uint8_t gpr[32];		/**< general purpose registers */
 
-	void *ret_addr;			/**< thread return address on interrupt */
+	void *int_vec_addr,		/**< int_vectors[cur + 1] */
+		 *ret_addr;			/**< thread return address on interrupt */
 } thread_ctx_t;
 
 

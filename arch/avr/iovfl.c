@@ -7,17 +7,21 @@
 
 
 
+#include <arch/interrupt.h>
+#include <kernel/init.h>
 #include <kernel/panic.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <sys/register.h>
 
 
-/* global functions */
-void avr_iovfl_hdlr(struct thread_ctx_t *tc){
-	unsigned int ret_addr;
-
-
-	ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
-	kpanic(sched_running(), "instruction memory overflow at 0x%x", ret_addr);
+/* local functions */
+static void iovfl_hdlr(int_num_t num, void *data){
+	kpanic(sched_running(), "instruction memory overflow");
 }
+
+static int init(void){
+	return int_register(NUM_HW_INT + 1, iovl_hdlr, 0x0);
+}
+
+platform_init(0, init);
