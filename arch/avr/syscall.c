@@ -10,8 +10,13 @@
 #include <config/config.h>
 #include <arch/arch.h>
 #include <arch/interrupt.h>
+
+#ifdef BUILD_KERNEL
 #include <kernel/init.h>
 #include <kernel/syscall.h>
+#include <kernel/sched.h>
+#endif // BUILD_KERNEL
+
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/register.h>
@@ -25,7 +30,7 @@
 
 /* global functions */
 int avr_sc(sc_t num, void *param, size_t psize){
-	volatile sc_arg_t arg;
+	sc_arg_t volatile arg;
 
 
 	/* clear interrupts */
@@ -43,8 +48,10 @@ int avr_sc(sc_t num, void *param, size_t psize){
 	/* trigger syscall */
 	SYSCALL(INT_VEC_SC);
 
-	if(arg.errno)
-		return_errno(arg.errno);
+	BUILD_ASSERT(sizeof(errno_t) == 1);
+
+	if(mreg_r(GPIOR0))
+		return_errno(mreg_r(GPIOR0));
 	return E_OK;
 }
 
@@ -53,15 +60,22 @@ int avr_sc(sc_t num, void *param, size_t psize){
 #ifdef BUILD_KERNEL
 static void sc_hdlr(int_num_t num, void *data){
 	sc_arg_t *arg;
+	thread_ctx_t *ctx;
 
 
-	/* acquire parameter */
-	// get address from GPIO registers 0/1
+	/* get address from GPIO registers 0/1 */
 	arg = (sc_arg_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
+
+	/* get context early as the running thread might change during the call */
+	ctx = sched_running()->ctx_stack;
 
 	/* call kernel syscall handler */
 	ksc_hdlr(arg->num, arg->param, arg->size);
-	arg->errno = errno;
+
+	BUILD_ASSERT(sizeof(errno_t) == 1);
+
+	/* set errno */
+	ctx->gpior[0] = errno;
 }
 #endif // BUILD_KERNEL
 

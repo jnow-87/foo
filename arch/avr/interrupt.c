@@ -20,6 +20,7 @@
 #include <sys/errno.h>
 #include <sys/stack.h>
 #include <sys/register.h>
+#include <sys/compiler.h>
 
 
 /* external prototypes */
@@ -73,7 +74,6 @@ int_type_t avr_int_enabled(void){
 
 struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 	uint8_t num;
-	errno_t terrno;
 
 
 	/* save thread context of active thread*/
@@ -88,14 +88,12 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 	if(num >= NUM_INT || int_hdlr[num] == 0x0)
 		kpanic(sched_running(), "unhandled or invalid interrupt %u", num);
 
-	terrno = errno;
 	errno = E_OK;
-
 	int_hdlr[num](num, int_data[num]);
 
-	errno = terrno;
-
 	/* return context of active thread */
+	BUILD_ASSERT(sizeof(errno_t) == 1);	// check sizeof thread_ctx_t::errno
+
 	return stack_pop(((thread_t*)sched_running())->ctx_stack);
 }
 

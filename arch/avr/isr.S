@@ -26,6 +26,10 @@
 .endm
 
 
+/* external variables */
+.extern errno
+
+
 /* external functions */
 .extern __start
 .extern avr_int_hdlr
@@ -136,11 +140,21 @@ __isr_int:
 	push	r1
 	push	r0
 
+	lds		r16, GPIOR2
+	push	r16
+	lds		r16, GPIOR1
+	push	r16
+	lds		r16, GPIOR0
+	push	r16
+
 	lds		r16, RAMPZ
 	push	r16
 	lds		r16, MCUSR
 	push	r16
 	lds		r16, SREG
+	push	r16
+
+	lds		r16, errno
 	push	r16
 
 	/* reserve space for thread_ctx_t::next and prepare interrupt hander arguments */
@@ -179,11 +193,21 @@ __isr_int:
 
 	/* restore regsiters */
 	pop		r16
+	sts		errno, r16
+
+	pop		r16
 	sts		SREG, r16
 	pop		r16
 	sts		MCUSR, r16
 	pop		r16
 	sts		RAMPZ, r16
+
+	pop		r16
+	sts		GPIOR0, r16
+	pop		r16
+	sts		GPIOR1, r16
+	pop		r16
+	sts		GPIOR2, r16
 
 	pop		r0
 	pop		r1
