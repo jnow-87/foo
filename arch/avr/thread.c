@@ -27,8 +27,7 @@ void avr_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, user_en
 	/* init thread context */
 	memset(ctx, 0x0, sizeof(thread_ctx_t));
 
-	// set status and control registers
-	ctx->sreg = mreg_r(SREG);
+	// set status registers
 	ctx->mcusr = mreg_r(MCUSR);
 
 	// init process start address

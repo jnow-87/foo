@@ -32,6 +32,11 @@
 .extern avr_int_warm_reset_hdlr
 
 
+/* data */
+.section .bss
+zero: .byte 1
+
+
 /* interrupt vectors */
 .section .reset
 
@@ -82,6 +87,10 @@ vector 36
 // reset handler
 .global __isr_reset
 __isr_reset:
+	/* ABI requirements */
+	// clear r1
+	clr		r1
+
 	/* check if an interrupt source is present if not,
 	 * the reset vector is triggered due to an error
 	 */
@@ -133,8 +142,6 @@ __isr_int:
 	push	r16
 	lds		r16, SREG
 	push	r16
-	lds		r16, 0x5b
-	push	r16
 
 	/* reserve space for thread_ctx_t::next and prepare interrupt hander arguments */
 	// push dummy to reserve space for next member of thread_ctx_t
@@ -171,8 +178,6 @@ __isr_int:
 	pop		r16
 
 	/* restore regsiters */
-	pop		r16
-	sts		0x5b, r16
 	pop		r16
 	sts		SREG, r16
 	pop		r16
@@ -216,6 +221,6 @@ __isr_int:
 	/* pop int_vectors return address */
 	pop		r1
 	pop		r1
-	clr		r1
+	lds		r1, zero
 
 	reti
