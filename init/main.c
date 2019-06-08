@@ -26,7 +26,7 @@ int main(int argc, char **argv){
 	if(argc > 1){
 		fp = fopen(argv[1], "r");
 
-		if(fp != 0){
+		if(fp != 0x0){
 			r = fstat(fileno(fp), &stat);
 
 			if(r == 0 && stat.type == FT_REG){

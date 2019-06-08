@@ -90,7 +90,7 @@ char avr_uart_putchar(char c){
 }
 
 int avr_uart_puts(char const *s){
-	if(s == 0)
+	if(s == 0x0)
 		return_errno(E_INVAL);
 
 	for(; *s!=0; s++)

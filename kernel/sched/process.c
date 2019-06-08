@@ -34,7 +34,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	/* allocate process structure */
 	this_p = kmalloc(sizeof(process_t));
 
-	if(this_p == 0)
+	if(this_p == 0x0)
 		goto_errno(err_0, E_NOMEM);
 
 	/* get pid */
@@ -60,7 +60,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 
 	this_p->name = kmalloc(strlen(name) + 1);
 
-	if(this_p->name == 0)
+	if(this_p->name == 0x0)
 		goto_errno(err_1, E_NOMEM);
 
 	strcpy(this_p->name, name);
@@ -103,7 +103,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	this_p->threads = 0x0;
 	this_t = thread_create(this_p, 0, entry, argp);
 
-	if(this_t == 0)
+	if(this_t == 0x0)
 		goto err_3;
 
 	/* update process table */

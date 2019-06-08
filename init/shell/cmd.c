@@ -181,7 +181,7 @@ static int help(int argc, char **argv){
 	line_len = 0;
 
 	list_for_each(cmd_lst, cmd){
-		if(cmd->name != 0 && cmd->name[0] != '\0' && cmd->exec != 0x0){
+		if(cmd->name != 0x0 && cmd->name[0] != '\0' && cmd->exec != 0x0){
 			len = strlen(cmd->name) + 1;
 
 			if(line_len + len > MAX_LINE_LEN){

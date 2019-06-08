@@ -26,7 +26,7 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 	/* allocate page structure */
 	page = kmalloc(sizeof(page_t));
 
-	if(page == 0)
+	if(page == 0x0)
 		goto_errno(err_0, E_NOMEM);
 
 #if defined(CONFIG_KERNEL_VIRT_MEM)
@@ -50,7 +50,7 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 	/* allocate physical block */
 	page->phys_addr = umalloc(size);
 
-	if(page->phys_addr == 0)
+	if(page->phys_addr == 0x0)
 		goto_errno(err_1, E_NOMEM);
 
 	/* allocate virtual block */
@@ -59,7 +59,7 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 	page->virt_addr = memblock_alloc(&(this_p->memory.addr_space), size, CONFIG_KMALLOC_ALIGN);
 	mutex_unlock(&this_p->mtx);
 
-	if(page->virt_addr == 0)
+	if(page->virt_addr == 0x0)
 		goto_errno(err_2, E_NOMEM);
 #endif // CONFIG_KERNEL_VIRT_MEM
 
