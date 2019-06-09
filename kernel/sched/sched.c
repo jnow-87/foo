@@ -80,6 +80,7 @@ void sched_trigger(void){
 	thread_t *this_t;
 
 
+	int_enable(INT_NONE);
 	csection_lock(&sched_mtx);
 
 	// NOTE The running thread might have already transitioned to a
@@ -98,6 +99,12 @@ void sched_trigger(void){
 	running[PIR] = this_t;
 
 	csection_unlock(&sched_mtx);
+
+	// NOTE Do not re-enable interrupts to prevent interrupts from occurring until
+	// 		the end of the current interrupt routine. This would otherwise cause
+	// 		those thread contexts, located on the current thread's stack, being
+	// 		pushed to the context stack of the thread that has just been made the
+	// 		running one
 
 	// TODO if the thread is not actually switched and the only ready thread
 	// 		is a kernel thread suspend the core
