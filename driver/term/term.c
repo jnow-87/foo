@@ -6,15 +6,6 @@
  */
 
 
-// TODO
-// 	signal handling
-// 	interrupt handling
-// 	re-apply write mutex
-// 	check against original uart/terminal capabilities
-// 	update kernel log printing
-
-
-
 #include <config/config.h>
 #include <kernel/init.h>
 #include <kernel/devfs.h>

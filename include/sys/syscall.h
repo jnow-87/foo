@@ -54,8 +54,6 @@ typedef struct{
 
 	void *param;
 	size_t size;
-
-	int errno;
 } sc_arg_t;
 
 // syscall specific arguments

@@ -52,7 +52,8 @@ void avr_core_panic(thread_ctx_t const *tc){
 #ifdef CONFIG_KERNEL_PRINTF
 	unsigned int i,
 				 j,
-				 ret_addr;
+				 ret_addr,
+				 int_vec_addr;
 #endif // CONFIG_KERNEL_PRINTF
 
 
@@ -60,17 +61,20 @@ void avr_core_panic(thread_ctx_t const *tc){
 #ifdef CONFIG_KERNEL_PRINTF
 	if(tc != 0x0){
 		ret_addr = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
+		int_vec_addr = ((lo8(tc->int_vec_addr) << 8) | hi8(tc->int_vec_addr)) * 2;
 
 		kprintf(KMSG_ANY, "config and status registers\n"
 			 "%20.20s: %#2.2x\n"
 			 "%20.20s: %#2.2x\n"
 			 "%20.20s: %p\n"
+			 "%20.20s: %4.4p\n"
 			 "%20.20s: %4.4p\n\n"
 			 ,
 			 "SREG", tc->sreg,
 			 "MCUSR", tc->mcusr,
 			 "SP", tc + 1,
-			 "interrupted at", ret_addr
+			 "interrupted at", ret_addr,
+			 "interrupt vector", int_vec_addr
 		);
 
 		kprintf(KMSG_ANY, "general purpose registers\n");
@@ -107,7 +111,7 @@ static int init(void){
 	mreg_w_sync(CLKPR, CONFIG_SYSTEM_CLOCK_PRESCALER, CLKPR_CLKPCE);
 
 	/* set MCUCR[IVSEL], moving interrupt vectors to boot flash if required */
-#if CONFIG_KERNEL_TEXT_BASE == 0
+#if CONFIG_KERNEL_TEXT_BASE == 0x0
 	mreg_w_sync(MCUCR, (mreg_r(MCUCR) & (0xff ^ (0x1 << MCUCR_IVSEL))), MCUCR_IVCE);
 #else
 	mreg_w_sync(MCUCR, (mreg_r(MCUCR) | (0x1 << MCUCR_IVSEL)), MCUCR_IVCE);

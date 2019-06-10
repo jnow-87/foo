@@ -113,7 +113,9 @@ void ktask_complete(ktask_t *task){
 	/* re-enqueue recurring tasks and delete non-recurring ones */
 	if((task->flags & TASK_RECURRING) && (task->queue == 0x0 || queue_valid)){
 		list_add_tail(tasks, task);
-		__list1_add_tail(queue->head, queue->tail, task, queue_next);
+
+		if(queue_valid)
+			__list1_add_tail(queue->head, queue->tail, task, queue_next);
 	}
 	else
 		kfree(task);

@@ -54,6 +54,7 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 	shadow[0] = 0;
 	hst = 0x0;
 
+	errno = E_OK;
 	history_startover();
 
 	while(end < n && i < n){

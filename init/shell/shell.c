@@ -159,7 +159,7 @@ static int strsplit(char *line, int *_argc, char ***_argv){
 	char **argv;
 
 
-	if(line == 0)
+	if(line == 0x0)
 		return_errno(E_INVAL);
 
 	len = strlen(line);
@@ -213,7 +213,7 @@ static int strsplit(char *line, int *_argc, char ***_argv){
 	/* alloc argv */
 	argv = malloc(argc * sizeof(char*));
 
-	if(argv == 0)
+	if(argv == 0x0)
 		return_errno(E_NOMEM);
 
 	/* alloc argv[] and assign strings */

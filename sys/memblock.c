@@ -19,7 +19,7 @@
 
 /* global functions */
 int memblock_init(memblock_t *pool, size_t len){
-	if(pool == 0)
+	if(pool == 0x0)
 		return_errno(E_INVAL);
 
 	list_init(pool);
@@ -72,7 +72,7 @@ int memblock_free(memblock_t **pool, void *addr){
 			   *el;
 
 
-	if(addr == 0)
+	if(addr == 0x0)
 		return E_OK;
 
 	/* get block address */

@@ -159,7 +159,7 @@
 	_el; \
 })
 
-#define list_empty(head) (((head) == 0) ? true : false)
+#define list_empty(head) (((head) == 0x0) ? true : false)
 
 #define list_empty_safe(head, mtx)({ \
 	int _r; \
@@ -172,7 +172,7 @@
 
 #define __list_for_each(head, el, next_name) \
 	el=(head); \
-	for(typeof(head) next=((head) == 0 ? 0 : (head)->next_name); (el)!=0; (el)=(next_name), next=(next == 0 ? 0 : next->next_name))
+	for(typeof(head) next=((head) == 0x0 ? 0x0 : (head)->next_name); (el)!=0x0; (el)=(next_name), next=(next == 0x0 ? 0 : next->next_name))
 
 
 /* types */

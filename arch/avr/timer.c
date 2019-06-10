@@ -10,6 +10,7 @@
 #include <config/config.h>
 #include <config/avrconfig.h>
 #include <arch/arch.h>
+#include <arch/interrupt.h>
 #include <kernel/init.h>
 #include <kernel/stat.h>
 #include <kernel/sched.h>
@@ -23,8 +24,8 @@
 #define STRVAL(s) STR(s)
 
 
-/* global functions */
-void avr_timer_hdlr(void){
+/* local functions */
+static void timer_hdlr(int_num_t num, void *data){
 	static size_t timer = 0,
 				  sched = 0;
 
@@ -49,8 +50,6 @@ void avr_timer_hdlr(void){
 #endif // CONFIG_SCHED_PREEMPTIVE
 }
 
-
-/* local functions */
 static int init(void){
 	/* clear reset flags */
 	mreg_w(MCUSR, 0x0);
@@ -90,7 +89,7 @@ static int init(void){
 #endif // AVRCONFIG_WATCHDOG_PRESCALE
 	);
 
-	return E_OK;
+	return int_register(CONFIG_TIMER_INT, timer_hdlr, 0x0);
 }
 
 platform_init(0, init);

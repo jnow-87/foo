@@ -13,46 +13,32 @@
 
 /* macros */
 .macro	vector num
-	.if (\num < INT_VECTORS + 2)				// +2 for the pseude interrupts (syscall, instruction overflow)
-		.if (\num == 0)							// reset
+	.if (\num < NUM_INT)
+		.if(\num == 0)					// reset
 			.global __vector_\num
 			XJMP	__isr_reset
 
-		.elseif (\num == INT_VECTORS)			// syscall
+		.else
 			.global	__vector_\num
-			XJMP	__isr_syscall
-
-#if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
-		.elseif (\num == INT_VECTORS + 1)		// instruction overflow
-			.global	__vector_\num
-			XJMP	__isr_iovfl
-#endif // CONFIG_BUILD_DEBUG && CONFIG_IOVERFLOW_DET
-
-#if (defined(CONFIG_SCHED_PREEMPTIVE) || defined(CONFIG_KERNEL_TIMER))
-		.elseif (\num == CONFIG_TIMER_INT)		// scheduler
-			.global	__vector_\num
-			XJMP	__isr_sched
-#endif // CONFIG_SCHED_PREEMPTIVE || CONFIG_KERNEL_TIMER
-
-		.else									// hardware interrupt
-			.global	__vector_\num
-			.weak	__vector_\num
-			.set	__vector_\num , __isr_dev_int
-			XCALL	__vector_\num
+			XCALL	__isr_int
 		.endif
 	.endif
 .endm
 
 
+/* external variables */
+.extern errno
+
+
 /* external functions */
 .extern __start
-.extern avr_sys_int_hdlr
-.extern avr_dev_int_hdlr
+.extern avr_int_hdlr
 .extern avr_int_warm_reset_hdlr
 
 
-/* external variables */
-.extern int_num
+/* data */
+.section .bss
+zero: .byte 1
 
 
 /* interrupt vectors */
@@ -99,11 +85,16 @@ vector 35
 vector 36
 
 
+/* isrs */
 .section .isr
 
-/* reset handler */
+// reset handler
 .global __isr_reset
 __isr_reset:
+	/* ABI requirements */
+	// clear r1
+	clr		r1
+
 	/* check if an interrupt source is present if not,
 	 * the reset vector is triggered due to an error
 	 */
@@ -112,89 +103,11 @@ __isr_reset:
 	brne	__start
 	XJMP	avr_int_warm_reset_hdlr
 
-/* syscall handler */
-.global __isr_syscall
-__isr_syscall:
-	push	r31
-	ldi		r31, INT_VECTORS
-	sts		int_num, r31
-	XJMP	__sys_int_hdlr_call
-
-/* scheduler/timer handler */
-#if (defined(CONFIG_SCHED_PREEMPTIVE) || defined(CONFIG_KERNEL_TIMER))
-.global __isr_sched
-__isr_sched:
-	push	r31
-	ldi		r31, CONFIG_TIMER_INT
-	sts		int_num, r31
-	XJMP	__sys_int_hdlr_call
-#endif // CONFIG_SCHED_PREEMPTIVE || CONFIG_KERNEL_TIMER
-
-/* instruction overflow handler */
-#if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
-__isr_iovfl:
-	push	r31
-	ldi		r31, INT_VECTORS + 1
-	sts		int_num, r31
-	XJMP	__sys_int_hdlr_call
-#endif // CONFIG_BUILD_DEBUG && CONFIG_IOVERFLOW_DET
-
-.global __isr_dev_int
-__isr_dev_int:
+// generic isr
+.global __isr_int
+__isr_int:
 	/* save registers */
-	// save regs
 	push	r31
-	push	r30
-	lds		r31, SREG
-	push	r31
-
-	/* compute interrupt number */
-	// NOTE int_num:
-	//		int_num = ((ret-addr - int_vectors) / (INT_VEC_SIZE / 2)) - 1
-	//			INT_VEC_SIZE / 2 is used since flash is word addressed
-	// load SP to Z
-	lds		r30, SPL
-	lds		r31, SPH
-
-	// load low byte of return address
-#if FLASH_SIZE > _128k
-	ldd		r31, Z+6	// 3 bytes return address + 3 bytes stack frame of __isr_dev_int
-#else
-	ldd		r31, Z+5	// 2 bytes return address + 3 bytes stack frame of __isr_dev_int
-#endif
-
-	// offset from int_vectors to return address
-	subi	r31, lo8(int_vectors)
-
-	// divide by 2 if required
-#if INT_VEC_SIZE == 4
-	lsr		r31
-#endif
-
-	subi	r31, 1
-
-	/* store result to int_num */
-	sts		int_num, r31
-	XCALL	avr_dev_int_hdlr
-
-	/* restore registers */
-	pop		r31
-	sts		SREG, r31
-	pop		r30
-	pop		r31
-
-	// pop int_vectors return address
-	pop		r1
-	pop		r1
-	clr		r1	// r1 is zero by ABI
-
-	reti
-
-/* ISR with context handling */
-.global __sys_int_hdlr_call
-__sys_int_hdlr_call:
-	/* save registers */
-	// NOTE r31 is assumed being pushed by the calling routine
 	push	r30
 	push	r29
 	push	r28
@@ -227,11 +140,21 @@ __sys_int_hdlr_call:
 	push	r1
 	push	r0
 
+	lds		r16, GPIOR2
+	push	r16
+	lds		r16, GPIOR1
+	push	r16
+	lds		r16, GPIOR0
+	push	r16
+
 	lds		r16, RAMPZ
 	push	r16
 	lds		r16, MCUSR
 	push	r16
 	lds		r16, SREG
+	push	r16
+
+	lds		r16, errno
 	push	r16
 
 	/* reserve space for thread_ctx_t::next and prepare interrupt hander arguments */
@@ -253,7 +176,7 @@ __sys_int_hdlr_call:
 	clr		r1
 
 1:
-	XCALL	avr_sys_int_hdlr
+	XCALL	avr_int_hdlr
 
 	// restore thread stack pointer from return value
 	sbiw	r24, 0x1	// decrement due to pre-increment of pop
@@ -270,11 +193,21 @@ __sys_int_hdlr_call:
 
 	/* restore regsiters */
 	pop		r16
+	sts		errno, r16
+
+	pop		r16
 	sts		SREG, r16
 	pop		r16
 	sts		MCUSR, r16
 	pop		r16
 	sts		RAMPZ, r16
+
+	pop		r16
+	sts		GPIOR0, r16
+	pop		r16
+	sts		GPIOR1, r16
+	pop		r16
+	sts		GPIOR2, r16
 
 	pop		r0
 	pop		r1
@@ -308,5 +241,10 @@ __sys_int_hdlr_call:
 	pop		r29
 	pop		r30
 	pop		r31
+
+	/* pop int_vectors return address */
+	pop		r1
+	pop		r1
+	lds		r1, zero
 
 	reti

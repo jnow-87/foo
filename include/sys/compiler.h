@@ -17,6 +17,8 @@
 #define STR(s)			STRGIFY(s)
 
 // error and warnings
+#define BUILD_ASSERT(cond)				((void)sizeof(char[1 - 2*!(cond)]))
+
 #define GCC_ERROR(s)					_Pragma(STRGIFY(GCC error s))
 #define GCC_WARNING(s)					_Pragma(STRGIFY(GCC warning s))
 

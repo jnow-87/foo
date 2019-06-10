@@ -84,8 +84,8 @@ static int exec(void){
 		return -1;
 	}
 
-	if(nsigs != 3){
-		ERROR("only %u/%u signals received by thread\n", nsigs, NSIGS);
+	if(nsigs != NSIGS){
+		ERROR("%u/%u signals received by thread\n", nsigs, NSIGS);
 		return -1;
 	}
 

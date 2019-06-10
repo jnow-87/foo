@@ -8,6 +8,7 @@
 
 
 #include <config/config.h>
+#include <config/avrconfig.h>
 #include <arch/arch.h>
 #include <arch/avr/register.h>
 #include <kernel/thread.h>
@@ -26,13 +27,14 @@ void avr_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, user_en
 	/* init thread context */
 	memset(ctx, 0x0, sizeof(thread_ctx_t));
 
-	// set status and control registers
-	ctx->sreg = mreg_r(SREG);
+	// set status registers
 	ctx->mcusr = mreg_r(MCUSR);
 
 	// init process start address
+	// 	NOTE CONFIG_INIT_BINARY might be larger than (void*)
+	// 		 hence it might overlap with some user addresses
 	if(user_entry == (void*)CONFIG_INIT_BINARY)
-		user_entry = (void*)(((unsigned int)user_entry) / 2);
+		user_entry = (void*)AVRCONFIG_INIT_BINARY;
 
 	ctx->ret_addr = (void*)((lo8(user_entry) << 8) | hi8(user_entry));
 

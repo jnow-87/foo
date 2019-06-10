@@ -26,7 +26,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	this_t = kmalloc(sizeof(thread_t));
 
-	if(this_t == 0)
+	if(this_t == 0x0)
 		goto_errno(err_0, E_NOMEM);
 
 	/* set tid */
@@ -45,7 +45,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 	/* prepare stack */
 	this_t->stack = page_alloc(this_p, CONFIG_KERNEL_STACK_SIZE);
 
-	if(this_t->stack == 0)
+	if(this_t->stack == 0x0)
 		goto_errno(err_1, E_NOMEM);
 
 	/* init thread context */
@@ -62,7 +62,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	stack_push(this_t->ctx_stack, ctx);
 
-	if(this_t->ctx_stack == 0)
+	if(this_t->ctx_stack == 0x0)
 		goto_errno(err_2, E_INVAL);
 
 	list_add_tail_safe(this_p->threads, this_t, &this_p->mtx);
@@ -71,7 +71,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 
 err_2:
-	kfree(this_t->stack);
+	page_free(this_p, this_t->stack);
 
 err_1:
 	kfree(this_t);

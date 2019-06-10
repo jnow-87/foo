@@ -115,7 +115,7 @@
  *	interrupt vectors
  */
 // number of interrupts
-#define INT_VECTORS			35
+#define NUM_HW_INT			35
 
 // interrupt numbers
 #define INT_0				1
