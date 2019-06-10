@@ -45,6 +45,7 @@ typedef struct thread_t{
 	thread_state_t state;
 
 	thread_ctx_t *ctx_stack;
+	thread_ctx_t *ctx_stack_cmp;
 	usignal_ctx_t *signal_ctx_stack;
 
 	struct process_t *parent;

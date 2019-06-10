@@ -60,7 +60,8 @@ int avr_sc(sc_t num, void *param, size_t psize){
 #ifdef BUILD_KERNEL
 static void sc_hdlr(int_num_t num, void *data){
 	sc_arg_t *arg;
-	thread_ctx_t *ctx;
+	thread_ctx_t *ctx,
+				 *ctx_cmp;
 
 
 	/* get address from GPIO registers 0/1 */
@@ -68,6 +69,7 @@ static void sc_hdlr(int_num_t num, void *data){
 
 	/* get context early as the running thread might change during the call */
 	ctx = sched_running()->ctx_stack;
+	ctx_cmp = sched_running()->ctx_stack_cmp;
 
 	/* call kernel syscall handler */
 	ksc_hdlr(arg->num, arg->param, arg->size);
@@ -76,6 +78,7 @@ static void sc_hdlr(int_num_t num, void *data){
 
 	/* set errno */
 	ctx->gpior[0] = errno;
+	ctx_cmp->gpior[0] = errno;
 }
 #endif // BUILD_KERNEL
 

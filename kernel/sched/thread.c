@@ -56,6 +56,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	this_t->signal_ctx_stack = 0x0;
 	this_t->ctx_stack = 0x0;
+	this_t->ctx_stack_cmp = 0x0;
 
 	ctx = (thread_ctx_t*)(this_t->stack->phys_addr + CONFIG_KERNEL_STACK_SIZE - sizeof(thread_ctx_t));
 	thread_context_init(ctx, this_t, user_entry, entry, thread_arg);
@@ -64,6 +65,10 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	if(this_t->ctx_stack == 0x0)
 		goto_errno(err_2, E_INVAL);
+
+	ctx = kmalloc(sizeof(thread_ctx_t));
+	memcpy(ctx, this_t->ctx_stack, sizeof(thread_ctx_t));
+	stack_push(this_t->ctx_stack_cmp, ctx);
 
 	list_add_tail_safe(this_p->threads, this_t, &this_p->mtx);
 

@@ -7,7 +7,7 @@
 
 
 
-obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o devicetree.o
+obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o devicetree.o ctxsanity.o
 
 obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o

@@ -14,6 +14,7 @@
 #include <arch/io.h>
 #include <arch/avr/timer.h>
 #include <arch/avr/iovfl.h>
+#include <arch/avr/ctxsanity.h>
 #include <kernel/kprintf.h>
 #include <kernel/sched.h>
 #include <kernel/panic.h>
@@ -74,10 +75,34 @@ int_type_t avr_int_enabled(void){
 
 struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 	uint8_t num;
+	int sc;
+	int stack_err;
+	thread_ctx_t *tc_cmp;
+	thread_t const *this_t_entry,
+				   *this_t_exit;
+
+
+	stack_err = 0;
+	sc = -1;
+
+	num = (lo8(tc->int_vec_addr) << 8 | hi8(tc->int_vec_addr));
+	num = ((num - (unsigned int)int_vectors) / (INT_VEC_SIZE / 2)) - 1;
+
+	if(num == NUM_HW_INT)
+		sc = ctxsanity_sc_num();
 
 
 	/* save thread context of active thread*/
+	this_t_entry = sched_running();
+
+	stack_err |= ctxsanity_check_stack_addr("entry", num, sc, tc, this_t_entry);
+	stack_err |= ctxsanity_check_all_ctx("entry0", num, sc);
+
 	stack_push(sched_running()->ctx_stack, tc);
+
+	tc_cmp = kmalloc(sizeof(thread_ctx_t));
+	memcpy(tc_cmp, tc, sizeof(thread_ctx_t));
+	stack_push(sched_running()->ctx_stack_cmp, tc_cmp);
 
 	/* compute interrupt number */
 	// INT_VEC_SIZE / 2 is used since the flash is word-addressed
@@ -94,7 +119,25 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 	/* return context of active thread */
 	BUILD_ASSERT(sizeof(errno_t) == 1);	// check sizeof thread_ctx_t::errno
 
-	return stack_pop(((thread_t*)sched_running())->ctx_stack);
+	stack_err |= ctxsanity_check_all_ctx("exit0", num, sc);
+
+	this_t_exit = sched_running();
+
+	tc = stack_pop(((thread_t*)this_t_exit)->ctx_stack);
+	tc_cmp = stack_pop(((thread_t*)this_t_exit)->ctx_stack_cmp);
+
+	stack_err |= ctxsanity_check_stack_addr("exit", num, sc, tc, this_t_exit);
+	stack_err |= ctxsanity_check_all_ctx("exit1", num, sc);
+	stack_err |= ctxsanity_check_ctx("exit", num, sc, tc, tc_cmp, this_t_entry, this_t_exit);
+
+	kfree(tc_cmp);
+
+	if(stack_err){
+		FATAL("thread context corruption detected, halting\n");
+		while(1);
+	}
+
+	return tc;
 }
 
 void avr_int_warm_reset_hdlr(void){
