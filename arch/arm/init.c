@@ -8,7 +8,8 @@
 
 
 #include <kernel/init.h>
-#include <arch/arm/board/board.h>
+#include <arch/arch.h>
+#include <arch/arm/board.h>
 
 
 /* local functions */

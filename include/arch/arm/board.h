@@ -11,7 +11,6 @@
 #define ARM_BOARD_H
 
 
-#include <arch/arch.h>
 #include <sys/errno.h>
 
 
@@ -23,6 +22,15 @@
 #define board_init()						(arm_board_call(board_init, -E_NOIMP)())
 #define per_clk_enable(id, src, pres, div)	(arm_board_call(per_clk_enable, -E_NOIMP)(id, src, pres, div))
 #define per_clk_disable(id)					(arm_board_call(per_clk_disable, -E_NOIMP)(id))
+
+
+/* types */
+typedef struct{
+	int (*board_init)(void);
+
+	int (*peripheral_enable)(unsigned int id, unsigned int clk_src, unsigned int clk_div);
+	int (*peripheral_disable)(unsigned int id);
+} arm_board_callbacks_t;
 
 
 #endif // ARM_BOARD_H

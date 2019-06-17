@@ -15,7 +15,7 @@
 
 
 #ifdef CONFIG_ATSAMV71
-#include <arch/arm/board/atsamv71.h>
+#include <arch/arm/atsamv71.h>
 #endif // CONFIG_ATSAMV71
 
 #ifndef ASM

@@ -39,7 +39,7 @@ endchoice
 # board specifics
 menu "Board configuration"
 	if ATSAMV71
-		source "arch/arm/board/atsamv71/Kconfig"
+		source "arch/arm/atsamv71/Kconfig"
 	endif # ATSAMV71
 endmenu
 

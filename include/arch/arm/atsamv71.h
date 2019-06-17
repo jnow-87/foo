@@ -17,8 +17,8 @@
 #ifndef _x86_
 #ifndef __x86_64__
 
-#include <arch/arm/board/types.h>
-#include <arch/arm/board/atmel/pmc.h>
+#include <arch/arm/board.h>
+#include <arch/arm/atmel/pmc.h>
 #include <arch/arm/register.h>
 
 #endif // __x86_64__

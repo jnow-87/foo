@@ -7,4 +7,4 @@
 
 
 
-source arch/arm/board/atmel/Kconfig
+source arch/arm/atmel/Kconfig

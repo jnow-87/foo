@@ -8,7 +8,7 @@
 
 
 #include <config/config.h>
-#include <arch/arm/board/atmel/pio.h>
+#include <arch/arm/atmel/pio.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/register.h>

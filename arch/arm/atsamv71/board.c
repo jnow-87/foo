@@ -7,9 +7,9 @@
 
 
 
-#include <arch/arm/board/atmel/pmc.h>
-#include <arch/arm/board/atmel/eefc.h>
-#include <arch/arm/board/atmel/pio.h>
+#include <arch/arm/atmel/pmc.h>
+#include <arch/arm/atmel/eefc.h>
+#include <arch/arm/atmel/pio.h>
 
 
 /* global functions */
@@ -30,7 +30,6 @@ int atsamv71_init(void){
 	pio_pin_enable(PIO_B, 1, PIO_FUNC_C);	// uart0 tx
 	pio_pin_enable(PIO_A, 21, PIO_FUNC_A);	// uart1 rx
 	pio_pin_enable(PIO_B, 4, PIO_FUNC_D);	// uart1 tx
-
 
 	return -r;
 }

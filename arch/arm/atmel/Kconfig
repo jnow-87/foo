@@ -12,7 +12,7 @@
 #
 menu "Clock configuration"
 	if ATMEL_PMC
-		source arch/arm/board/atmel/Kconfig.pmc
+		source arch/arm/atmel/Kconfig.pmc
 	endif
 endmenu
 
@@ -21,7 +21,7 @@ endmenu
 #
 menu "Flash configuration"
 	if ATMEL_EEFC
-		source arch/arm/board/atmel/Kconfig.eefc
+		source arch/arm/atmel/Kconfig.eefc
 	endif
 endmenu
 
