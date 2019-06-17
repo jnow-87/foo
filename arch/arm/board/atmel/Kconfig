@@ -38,4 +38,8 @@ menu "Hidden"
 	config ATMEL_EEFC
 		bool "Atmel enhanced embedded flash controller"
 		default 0
+
+	config ATMEL_PIO
+		bool "Atmel peripheral parallel I/O controller"
+		default 0
 endmenu

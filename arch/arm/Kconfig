@@ -19,6 +19,7 @@ choice
 		select ARM_CORE_CORTEX_M7
 		select ATMEL_PMC
 		select ATMEL_EEFC
+		select ATMEL_PIO
 
 	config BOARD_UNSPECIFIC
 		bool "Unspecific"
