@@ -141,7 +141,7 @@ static void *probe(void *dt_data, void *dt_itf){
 	return itf;
 }
 
-driver_interface("avr,uart", probe);
+interface_probe("avr,uart", probe);
 
 static int configure(term_cfg_t *cfg, void *_regs){
 	uint8_t const parity_bits[] = { 0b00, 0b11, 0b10 };

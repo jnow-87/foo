@@ -14,10 +14,10 @@
 
 
 /* external variables */
-extern driver_interface_t __driver_interface_base[],
-						  __driver_interface_end[];
-extern driver_device_t __driver_device_base[],
-					   __driver_device_end[];
+extern interface_driver_t __interface_driver_base[],
+						  __interface_driver_end[];
+extern device_driver_t __device_driver_base[],
+					   __device_driver_end[];
 
 extern devtree_t __dt_root;
 
@@ -40,6 +40,9 @@ static void probe_childs(devtree_t const * const *childs, void *itf){
 	size_t i;
 
 
+	if(childs == 0x0)
+		return;
+
 	for(i=0; childs[i]!=0x0; i++){
 		if(childs[i]->childs != 0x0)	probe_interface(childs[i], itf);
 		else							probe_device(childs[i], itf);
@@ -47,21 +50,18 @@ static void probe_childs(devtree_t const * const *childs, void *itf){
 }
 
 static void probe_interface(devtree_t const *node, void *itf){
-	driver_interface_t *e;
+	interface_driver_t *e;
 
 
-	for(e=__driver_interface_base; e!=__driver_interface_end; e++){
+	for(e=__interface_driver_base; e!=__interface_driver_end; e++){
 		if(strcmp(e->compatible, node->compatible) == 0){
 			INFO("probe driver \"%s\" for \"%s\"\n", e->compatible, node->name);
 
-			itf = e->probe((void*)node->data, itf);
+			itf = e->probe(node->name, (void*)node->data, itf);
 
-			if(itf == 0x0){
-				INFO("failed\n");
-				return;
-			}
+			if(itf)	probe_childs(node->childs, itf);
+			else	INFO("probe error \"%s\"\n", strerror(errno));
 
-			probe_childs(node->childs, itf);
 			return;
 		}
 	}
@@ -70,10 +70,10 @@ static void probe_interface(devtree_t const *node, void *itf){
 }
 
 static void probe_device(devtree_t const *node, void *itf){
-	driver_device_t *e;
+	device_driver_t *e;
 
 
-	for(e=__driver_device_base; e!=__driver_device_end; e++){
+	for(e=__device_driver_base; e!=__device_driver_end; e++){
 		if(strcmp(e->compatible, node->compatible) == 0){
 			INFO("probe driver \"%s\" for \"%s\"\n", e->compatible, node->name);
 

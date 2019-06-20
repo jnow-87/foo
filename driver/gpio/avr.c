@@ -71,7 +71,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	return E_OK;
 }
 
-driver_device("avr,gpio", probe);
+device_probe("avr,gpio", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	dt_data_t *regs;

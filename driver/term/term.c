@@ -129,7 +129,7 @@ err_0:
 	return -errno;
 }
 
-driver_device("terminal", probe);
+device_probe("terminal", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	int len;
