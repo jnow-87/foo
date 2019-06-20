@@ -82,25 +82,6 @@ static size_t putsn(char const *s, size_t n, void *regs);
 static size_t gets(char *s, size_t n, term_err_t *err, void *regs);
 
 
-/* global functions */
-char avr_uart_putchar(char c){
-	while(!(mreg_r(UCSR0A) & (0x1 << UCSRA_UDRE)));
-	mreg_w(UDR0, c);
-
-	return c;
-}
-
-int avr_uart_puts(char const *s){
-	if(s == 0x0)
-		return_errno(E_INVAL);
-
-	for(; *s!=0; s++)
-		avr_uart_putchar(*s);
-
-	return E_OK;
-}
-
-
 /* local functions */
 static int kuart_init(void){
 	dt_data_t regs = {
@@ -119,7 +100,7 @@ static int kuart_init(void){
 
 platform_init(0, kuart_init);
 
-static void *probe(void *dt_data, void *dt_itf){
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *regs;
 	term_itf_t *itf;
 
@@ -166,6 +147,7 @@ static int configure(term_cfg_t *cfg, void *_regs){
 	}
 
 	/* disable uart, triggering reset */
+	regs->dev->ucsrb = 0x0;
 	*regs->prr |= regs->prr_en;
 
 	/* re-enable uart */

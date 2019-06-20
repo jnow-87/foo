@@ -71,10 +71,6 @@ typedef struct{
 	/* threading */
 	void (*thread_context_init)(thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
 	enum thread_ctx_type_t (*thread_context_type)(thread_ctx_t *ctx);
-
-	/* terminal I/O */
-	char (*putchar)(char c);
-	int (*puts)(char const *s);
 } arch_callbacks_kernel_t;
 
 #endif // BUILD_KERNEL

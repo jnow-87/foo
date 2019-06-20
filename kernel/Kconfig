@@ -223,6 +223,10 @@ menuconfig KERNEL_UART
 	select DRIVER_UART
 
 if KERNEL_UART
+	config KERNEL_LOG_SIZE
+		int "Kernel log buffer size"
+		default 10
+
 	# baud rate
 	choice
 		prompt "Uart baud rate"

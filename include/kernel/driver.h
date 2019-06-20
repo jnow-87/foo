@@ -33,7 +33,7 @@
 /* types */
 typedef struct{
 	char const *compatible;
-	void * (*probe)(void *data, void *itf);
+	void * (*probe)(char const *name, void *data, void *itf);
 } interface_driver_t;
 
 typedef struct{
