@@ -17,7 +17,7 @@ uart0 = {
 
 	int<8> = [
 		20,						// uart0 rx interrupt
-		0						// uart0 tx interrupt
+		22						// uart0 tx interrupt
 	];
 
 	tty0 = {

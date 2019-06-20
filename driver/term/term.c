@@ -19,13 +19,17 @@
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/string.h>
+#include <sys/mutex.h>
+#include <sys/list.h>
 
 
 /* local/static prototypes */
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static size_t puts(char const *s, size_t n, term_t *term) __attribute__((noinline));
 static void rx_hdlr(int_num_t num, void *data);
+static void tx_hdlr(int_num_t num, void *data);
 
 
 /* local functions */
@@ -84,22 +88,29 @@ int probe(char const *name, void *dt_data, void *dt_itf){
 	if(itf->rx_int && int_register(itf->rx_int, rx_hdlr, term) != 0)
 		goto err_3;
 
-	if(itf->tx_int)
-		WARN("tx interrupts not supported yet\n");
+	if(itf->tx_int && int_register(itf->tx_int, tx_hdlr, term) != 0)
+		goto err_4;
 
 	/* init term */
 	term->cfg = kopt.term_cfg;
 	term->hw = dt_itf;
 	term->rx_rdy = &dev->node->rd_sig;
 	term->rx_err = TE_NONE;
+	term->tx_queue_head = 0x0;
+	term->tx_queue_tail = 0x0;
 
+	mutex_init(&term->tx_mtx, 0);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
 	if(term->hw->configure(&term->cfg, term->hw->regs) != 0)
-		goto err_4;
+		goto err_5;
 
 	return E_OK;
 
+
+err_5:
+	if(itf->tx_int)
+		int_release(itf->tx_int);
 
 err_4:
 	if(itf->rx_int)
@@ -149,11 +160,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	term_t *term;
-
-
-	term = (term_t*)dev->data;
-	return term->hw->puts(buf, n, term->hw->regs);
+	return puts(buf, n, dev->data);
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
@@ -186,15 +193,72 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 	}
 }
 
+static size_t puts(char const *s, size_t n, term_t *term){
+	term_txqueue_t buf;
+	bool start;
+
+
+	if(term->hw->tx_int == 0 || n <= 1)
+		return term->hw->puts(s, n, term->hw->regs);
+
+	buf.data = s;
+	buf.len = n;
+	ksignal_init(&buf.fin);
+
+	mutex_lock(&term->tx_mtx);
+
+	list1_add_tail(term->tx_queue_head, term->tx_queue_tail, &buf);
+	start = (list_first(term->tx_queue_head) == &buf);
+
+	mutex_unlock(&term->tx_mtx);
+
+	if(start)
+		tx_hdlr(term->hw->tx_int, term);
+
+	ksignal_wait(&buf.fin);
+
+	return n;
+}
+
 static void rx_hdlr(int_num_t num, void *data){
 	char buf[16];
-	int len;
+	size_t len;
 	term_t *term;
 
 
 	term = (term_t*)data;
 
 	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->regs);
-	ringbuf_write(&term->rx_buf, buf, len);
+
+	if(ringbuf_write(&term->rx_buf, buf, len) != len)
+		term->rx_err |= TE_RX_FULL;
+
 	ksignal_send(term->rx_rdy);
+}
+
+static void tx_hdlr(int_num_t num, void *data){
+	term_t *term;
+	term_txqueue_t *buf;
+
+
+	term = (term_t*)data;
+
+	mutex_lock(&term->tx_mtx);
+
+	buf = list_first(term->tx_queue_head);
+
+	if(buf && buf->len == 0){
+		list1_rm_head(term->tx_queue_head, term->tx_queue_tail);
+		ksignal_send(&buf->fin);
+	}
+
+	buf = list_first(term->tx_queue_head);
+
+	mutex_unlock(&term->tx_mtx);
+
+	if(buf && buf->len){
+		term->hw->putc(*buf->data, term->hw->regs);
+		buf->data++;
+		buf->len--;
+	}
 }
