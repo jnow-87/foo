@@ -7,6 +7,7 @@
 
 
 #include <config/config.h>
+#include <arch/interrupt.h>
 #include <kernel/init.h>
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
@@ -14,22 +15,32 @@
 #include <kernel/driver.h>
 #include <kernel/opt.h>
 #include <driver/term.h>
+#include <driver/klog.h>
 #include <sys/ringbuf.h>
 #include <sys/term.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/string.h>
+#include <sys/mutex.h>
+#include <sys/list.h>
 
 
 /* local/static prototypes */
+static int probe(char const *name, void *dt_data, void *dt_itf, term_t **term);
+
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+
+static size_t puts_noint(char const *s, size_t n, void *data);
+static size_t puts_int(char const *s, size_t n, void *data);
+
 static void rx_hdlr(int_num_t num, void *data);
+static void tx_hdlr(int_num_t num, void *data);
 
 
 /* local functions */
-int probe(char const *name, void *dt_data, void *dt_itf){
+static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 	void *buf;
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
@@ -84,22 +95,32 @@ int probe(char const *name, void *dt_data, void *dt_itf){
 	if(itf->rx_int && int_register(itf->rx_int, rx_hdlr, term) != 0)
 		goto err_3;
 
-	if(itf->tx_int)
-		WARN("tx interrupts not supported yet\n");
+	if(itf->tx_int && int_register(itf->tx_int, tx_hdlr, term) != 0)
+		goto err_4;
 
 	/* init term */
 	term->cfg = kopt.term_cfg;
 	term->hw = dt_itf;
 	term->rx_rdy = &dev->node->rd_sig;
 	term->rx_err = TE_NONE;
+	term->tx_queue_head = 0x0;
+	term->tx_queue_tail = 0x0;
 
+	mutex_init(&term->tx_mtx, 0);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
 	if(term->hw->configure(&term->cfg, term->hw->regs) != 0)
-		goto err_4;
+		goto err_5;
+
+	if(_term)
+		*_term = term;
 
 	return E_OK;
 
+
+err_5:
+	if(itf->tx_int)
+		int_release(itf->tx_int);
 
 err_4:
 	if(itf->rx_int)
@@ -118,7 +139,32 @@ err_0:
 	return -errno;
 }
 
-driver_device("terminal", probe);
+static int probe_dev(char const *name, void *dt_data, void *dt_itf){
+	return probe(name, dt_data, dt_itf, 0x0);
+}
+
+device_probe("terminal", probe_dev);
+
+static void *probe_itf(char const *name, void *dt_data, void *dt_itf){
+	term_t *term;
+	klog_itf_t *itf;
+
+
+	if(probe(name, dt_data, dt_itf, &term))
+		return 0x0;
+
+	itf = kmalloc(sizeof(klog_itf_t));
+
+	if(itf == 0x0)
+		return 0x0;
+
+	itf->puts = puts_noint;
+	itf->data = term;
+
+	return itf;
+}
+
+interface_probe("terminal", probe_itf);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	int len;
@@ -152,8 +198,11 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	term_t *term;
 
 
-	term = (term_t*)dev->data;
-	return term->hw->puts(buf, n, term->hw->regs);
+	term = dev->data;
+
+	if(n <= 1 || term->hw->tx_int == 0)
+		return puts_noint(buf, n, term);
+	return puts_int(buf, n, term);
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
@@ -186,15 +235,89 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 	}
 }
 
+static size_t puts_noint(char const *s, size_t n, void *data){
+	size_t r;
+	term_t *term;
+	int_type_t imask;
+
+
+	term = (term_t*)data;
+
+	imask = int_enable(INT_NONE);
+	r = term->hw->puts(s, n, term->hw->regs);
+	int_enable(imask);
+
+	return r;
+}
+
+static size_t puts_int(char const *s, size_t n, void *data){
+	bool start;
+	term_t *term;
+	term_txqueue_t buf;
+
+
+	term = (term_t*)data;
+
+	buf.data = s;
+	buf.len = n;
+	ksignal_init(&buf.fin);
+
+	mutex_lock(&term->tx_mtx);
+
+	list1_add_tail(term->tx_queue_head, term->tx_queue_tail, &buf);
+	start = (list_first(term->tx_queue_head) == &buf);
+
+	mutex_unlock(&term->tx_mtx);
+
+	if(start)
+		tx_hdlr(term->hw->tx_int, term);
+
+	ksignal_wait(&buf.fin);
+
+	return n;
+}
+
 static void rx_hdlr(int_num_t num, void *data){
 	char buf[16];
-	int len;
+	size_t len;
 	term_t *term;
 
 
 	term = (term_t*)data;
 
 	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->regs);
-	ringbuf_write(&term->rx_buf, buf, len);
+
+	if(ringbuf_write(&term->rx_buf, buf, len) != len)
+		term->rx_err |= TE_RX_FULL;
+
 	ksignal_send(term->rx_rdy);
+}
+
+static void tx_hdlr(int_num_t num, void *data){
+	static term_txqueue_t *buf = 0x0;
+	term_t *term;
+
+
+	term = (term_t*)data;
+
+	/* get next buffer */
+	if(buf == 0x0){
+		mutex_lock(&term->tx_mtx);
+		buf = list_first(term->tx_queue_head);
+		mutex_unlock(&term->tx_mtx);
+	}
+
+	/* output character */
+	if(buf){
+		term->hw->putc(*buf->data, term->hw->regs);
+		buf->data++;
+		buf->len--;
+
+		// finish current buffer
+		if(buf->len == 0){
+			list1_rm_head(term->tx_queue_head, term->tx_queue_tail);
+			ksignal_send(&buf->fin);
+			buf = 0x0;
+		}
+	}
 }

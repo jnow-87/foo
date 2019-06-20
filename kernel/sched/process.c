@@ -19,7 +19,7 @@
 
 
 /* static variables */
-static process_t *process_table = 0;
+static process_t *process_table = 0x0;
 static mutex_t ptable_mtx = MUTEX_INITIALISER();
 
 

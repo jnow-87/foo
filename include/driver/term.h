@@ -17,6 +17,7 @@
 #include <kernel/devfs.h>
 #include <sys/ringbuf.h>
 #include <sys/term.h>
+#include <sys/mutex.h>
 
 
 /* incomplete types */
@@ -27,6 +28,7 @@ struct term_t;
 typedef struct{
 	int (*configure)(term_cfg_t *cfg, void *regs);
 
+	void (*putc)(char c, void *regs);
 	size_t (*puts)(char const *s, size_t n, void *regs);
 	size_t (*gets)(char *s, size_t n, term_err_t *err, void *regs);
 
@@ -35,6 +37,15 @@ typedef struct{
 	void *regs;
 } term_itf_t;
 
+typedef struct term_txqueue_t{
+	struct term_txqueue_t *next;
+
+	char const *data;
+	size_t len;
+
+	ksignal_t fin;
+} term_txqueue_t;
+
 typedef struct term_t{
 	term_cfg_t cfg;
 	term_itf_t *hw;
@@ -42,6 +53,10 @@ typedef struct term_t{
 	term_err_t rx_err;
 	ringbuf_t rx_buf;
 	ksignal_t *rx_rdy;
+
+	mutex_t tx_mtx;
+	term_txqueue_t *tx_queue_head,
+				   *tx_queue_tail;
 } term_t;
 
 

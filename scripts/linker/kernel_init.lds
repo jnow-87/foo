@@ -32,10 +32,10 @@ __driver_init0_base = .;
 __init_end = .;
 
 /* driver calls */
-__driver_interface_base = .;
-*(.driver_interface)
-__driver_interface_end = .;
+__interface_driver_base = .;
+*(.interface_driver)
+__interface_driver_end = .;
 
-__driver_device_base = .;
-*(.driver_device)
-__driver_device_end = .;
+__device_driver_base = .;
+*(.device_driver)
+__device_driver_end = .;

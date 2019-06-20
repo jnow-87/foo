@@ -117,7 +117,7 @@ err_0:
 	return -errno;
 }
 
-driver_device("avr,pwm8", probe);
+device_probe("avr,pwm8", probe);
 
 static size_t read_a(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	return read(buf, n, &((dt_data_t*)dev->data)->dev->ocra);

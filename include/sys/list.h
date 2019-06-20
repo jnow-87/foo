@@ -64,7 +64,7 @@
 }
 
 #define list_add_tail_safe(head, el, mtx) \
-	LOCK_SECTION(mtx, list_add_tail((head), (el)))
+	LOCK_SECTION(mtx, list_add_tail(head, el))
 
 #define list_add_in(el, front, back){ \
 	LIST_TYPE_COMPAT2(*el); \
@@ -94,6 +94,41 @@
 
 #define list_rm_safe(head, el, mtx) \
 	LOCK_SECTION(mtx, list_rm(head, el))
+
+#define list1_init(head, tail){ \
+	LIST_TYPE_COMPAT(*head); \
+	LIST_TYPE_COMPAT(*tail); \
+	_list1_init((list1_t*)head, (list1_t**)&(tail)); \
+}
+
+#define list1_add_head(head, tail, el){ \
+	LIST_TYPE_COMPAT(*head); \
+	LIST_TYPE_COMPAT(*tail); \
+	LIST_TYPE_COMPAT(*el); \
+	_list1_add_head((list1_t**)(&(head)), (list1_t**)(&(tail)), (list1_t*)(el)); \
+}
+
+#define list1_add_head_safe(head, tail, el, mtx) \
+	LOCK_SECTION(mtx, list1_add_head(head, tail, el))
+
+#define list1_add_tail(head, tail, el){ \
+	LIST_TYPE_COMPAT(*head); \
+	LIST_TYPE_COMPAT(*tail); \
+	LIST_TYPE_COMPAT(*el); \
+	_list1_add_tail((list1_t**)(&(head)), (list1_t**)(&(tail)), (list1_t*)(el)); \
+}
+
+#define list1_add_tail_safe(head, tail, el, mtx) \
+	LOCK_SECTION(mtx, list1_add_tail(head, tail, el))
+
+#define list1_rm_head(head, tail){ \
+	LIST_TYPE_COMPAT(*head); \
+	LIST_TYPE_COMPAT(*tail); \
+	_list1_rm_head((list1_t**)(&(head)), (list1_t**)(&(tail))); \
+}
+
+#define list1_rm_head_safe(head, tail, mtx) \
+	LOCK_SECTION(mtx, list1_rm_head(head, tail))
 
 #define list_first(head) (head)
 

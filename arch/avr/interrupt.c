@@ -11,7 +11,6 @@
 #include <arch/arch.h>
 #include <arch/interrupt.h>
 #include <arch/core.h>
-#include <arch/io.h>
 #include <arch/avr/timer.h>
 #include <arch/avr/iovfl.h>
 #include <kernel/kprintf.h>

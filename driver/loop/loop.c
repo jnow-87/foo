@@ -58,7 +58,7 @@ err:
 	return -errno;
 }
 
-driver_device("loop", probe);
+device_probe("loop", probe);
 
 static int open(devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode){
 	DEBUG("dummy callback for loop device\n");

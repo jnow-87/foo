@@ -38,8 +38,6 @@ int sc_register(sc_t num, sc_hdlr_t hdlr){
 
 	mutex_unlock(&sc_mtx);
 
-	INFO("registered handler for syscall %d to %#x\n", num, hdlr);
-
 	return E_OK;
 
 

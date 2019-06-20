@@ -15,16 +15,16 @@
 
 
 /* macros */
-#define driver_interface(_compatible, _probe) \
+#define interface_probe(_compatible, _probe) \
 	static char const driver_comp_##_probe[] __used = _compatible; \
-	static driver_interface_t driver_##_probe __section(".driver_interface") __used = { \
+	static interface_driver_t driver_##_probe __section(".interface_driver") __used = { \
 		.compatible = driver_comp_##_probe, \
 		.probe = _probe, \
 	}
 
-#define driver_device(_compatible, _probe) \
+#define device_probe(_compatible, _probe) \
 	static char const driver_comp_##_probe[] __used = _compatible; \
-	static driver_device_t driver_##_probe __section(".driver_device") __used = { \
+	static device_driver_t driver_##_probe __section(".device_driver") __used = { \
 		.compatible = driver_comp_##_probe, \
 		.probe = _probe, \
 	}
@@ -33,13 +33,13 @@
 /* types */
 typedef struct{
 	char const *compatible;
-	void * (*probe)(void *data, void *itf);
-} driver_interface_t;
+	void * (*probe)(char const *name, void *data, void *itf);
+} interface_driver_t;
 
 typedef struct{
 	char const *compatible;
 	int (*probe)(char const *name, void *data, void *itf);
-} driver_device_t;
+} device_driver_t;
 
 
 /* prototypes */

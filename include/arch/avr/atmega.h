@@ -42,10 +42,6 @@
 #include <arch/types.h>
 #include <sys/types.h>
 
-#ifdef BUILD_KERNEL
-#include <driver/avr_uart.h>
-#endif // BUILD_KERNEL
-
 #endif // __x86_64__
 #endif // _x86_
 #endif // ASM
@@ -112,15 +108,6 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	/* threading */
 	.thread_context_init = avr_thread_context_init,
 	.thread_context_type = avr_thread_context_type,
-
-	/* terminal I/O */
-#ifdef CONFIG_DRIVER_UART
-	.putchar = avr_uart_putchar,
-	.puts = avr_uart_puts,
-#else
-	.putchar = 0x0,
-	.puts = 0x0,
-#endif // CONFIG_KERNEL_UART
 };
 
 #endif // BUILD_KERNEL
