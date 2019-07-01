@@ -42,11 +42,16 @@
 	static unsigned int devtree_line = 1;
 %}
 
+	/* sections */
+"driver"						{ return SEC_DRIVER; }
+"memory"						{ return SEC_MEMORY; }
+
 	/* node attributes */
 "compatible"					{ return NA_COMPATIBLE; }
 "baseaddr"						{ return NA_BASEADDR; }
 "reg"							{ return NA_REG; }
 "int"							{ return NA_INT; }
+"size"							{ return NA_SIZE; }
 
 	/* comments */
 \/\/.*\r?\n						{ devtree_col = 1; ++devtree_line; }

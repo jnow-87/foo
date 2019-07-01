@@ -19,7 +19,8 @@
 int main(int argc, char **argv){
 	FILE *fp;
 	int r;
-	node_t root;
+	driver_node_t driver_root;
+	memory_node_t memory_root;
 
 
 	if(argc < 2){
@@ -28,11 +29,14 @@ int main(int argc, char **argv){
 	}
 
 	/* parse device tree */
-	memset(&root, 0x0, sizeof(node_t));
-	root.name = "root";
-	root.compatible = "";
+	memset(&driver_root, 0x0, sizeof(driver_node_t));
+	driver_root.name = "driver_root";
+	driver_root.compatible = "";
 
-	if(devtreeparse(argv[1], &root) != 0)
+	memset(&memory_root, 0x0, sizeof(memory_node_t));
+	memory_root.name = "memory_root";
+
+	if(devtreeparse(argv[1], &driver_root, &memory_root) != 0)
 		return 2;
 
 	/* write output file */
@@ -60,7 +64,10 @@ int main(int argc, char **argv){
 	);
 
 	// device tree
-	r = node_export(&root, fp);
+	r = 0;
+
+	r |= node_export_driver(&driver_root, fp);
+	r |= node_export_memory(&memory_root, fp);
 
 	fclose(fp);
 

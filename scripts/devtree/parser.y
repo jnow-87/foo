@@ -25,11 +25,11 @@
 	#define YYDEBUG	1
 
 	// node allocate
-	#define NODE_ALLOC()({ \
-		node_t *n; \
+	#define NODE_ALLOC_DRIVER()({ \
+		driver_node_t *n; \
 		\
 		\
-		if((n = calloc(1, sizeof(node_t))) == 0x0) \
+		if((n = calloc(1, sizeof(driver_node_t))) == 0x0) \
 			PARSER_ERROR("allocating node\n"); \
 		\
 		if(vector_init(&n->data, sizeof(member_t), 16) != 0) \
@@ -38,13 +38,38 @@
 		n; \
 	})
 
+	#define NODE_ALLOC_MEMORY()({ \
+		memory_node_t *n; \
+		\
+		\
+		if((n = calloc(1, sizeof(memory_node_t))) == 0x0) \
+			PARSER_ERROR("allocating node\n"); \
+		\
+		n; \
+	})
+
 	// node validation
-	#define NODE_VALIDATE(node)({ \
+	#define NODE_VALIDATE_DRIVER(node)({ \
 		char const *c; \
 		\
 		\
 		if(node->compatible == 0x0 || *node->compatible == 0) \
 			PARSER_ERROR("undefined member \"compatible\"\n"); \
+		\
+		vector_for_each(&node_names, c){ \
+			if(strcmp(c, (node)->name) == 0) \
+				PARSER_ERROR("node with name \"%s\" already exists\n", c); \
+		} \
+		\
+		vector_add(&node_names, (char*)(node)->name); \
+	})
+
+	#define NODE_VALIDATE_MEMORY(node)({ \
+		char const *c; \
+		\
+		\
+		if(node->size == 0 && node->childs == 0x0) \
+			PARSER_ERROR("zero size for node \"%s\"\n", node->name); \
 		\
 		vector_for_each(&node_names, c){ \
 			if(strcmp(c, (node)->name) == 0) \
@@ -121,7 +146,7 @@
 
 
 	/* prototypes */
-	static int devtreeerror(char const *file, node_t *root, char const *s);
+	static int devtreeerror(char const *file, driver_node_t *driver_root, memory_node_t *memory_root, char const *s);
 	static void cleanup(void);
 	static char *stralloc(char *s, size_t len);
 %}
@@ -135,10 +160,12 @@
 
 /* parse paramters */
 %parse-param { char const *file }
-%parse-param { node_t *root }
+%parse-param { driver_node_t *driver_root }
+%parse-param { memory_node_t *memory_root }
 
 /* init code */
 %initial-action{
+	/* init node name list */
 	vector_init(&node_names, sizeof(char*), 16);
 
 	/* open input file */
@@ -162,7 +189,8 @@
 		unsigned int len;
 	} str;
 
-	node_t *node;
+	driver_node_t *driver;
+	memory_node_t *memory;
 	vector_t *int_lst;
 }
 
@@ -172,15 +200,22 @@
 %token <str> STRING
 %token <str> IDFR
 
-// node members
+// sections
+%token SEC_DRIVER
+%token SEC_MEMORY
+
+// node attributes
 %token NA_COMPATIBLE
 %token NA_BASEADDR
 %token NA_REG
 %token NA_INT
+%token NA_SIZE
 
 /* non-terminals */
-%type <node> node
-%type <node> member-list
+%type <driver> driver
+%type <driver> driver-attr
+%type <memory> memory
+%type <memory> memory-attr
 %type <int_lst> int-list
 
 
@@ -189,24 +224,39 @@
 
 /* start */
 start : error															{ cleanup(); YYABORT; }
-	  | node-lst														{ cleanup(); }
+	  | section-lst														{ cleanup(); }
 	  ;
 
-/* node */
-node-lst : %empty														{ }
-		 | node-lst node ';'											{ NODE_VALIDATE($2); $2->parent = root; list_add_tail(root->childs, $2); }
-		 ;
+/* sections */
+section-lst : %empty													{ }
+			| section-lst section ';'									{ }
+			;
 
-node : IDFR '=' '{' member-list '}'										{ $$ = $4; $$->name = stralloc($1.s, $1.len); }
-	 ;
+section : SEC_DRIVER '=' '{' driver-lst '}'								{ }
+		| SEC_MEMORY '=' '{' memory-lst '}'								{ }
+		;
 
-/* node members */
-member-list : %empty													{ $$ = NODE_ALLOC(); }
-			| member-list node ';'										{ $$ = $1; NODE_VALIDATE($2); $2->parent = $$; list_add_tail($$->childs, $2); }
-			| member-list NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = stralloc($4.s, $4.len); }
-			| member-list NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
-			| member-list NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
-			| member-list NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
+/* node lists */
+driver-lst : %empty { } | driver-lst driver ';'							{ NODE_VALIDATE_DRIVER($2); $2->parent = driver_root; list_add_tail(driver_root->childs, $2); };
+memory-lst : %empty { } | memory-lst memory ';'							{ NODE_VALIDATE_MEMORY($2); $2->parent = memory_root; list_add_tail(memory_root->childs, $2); };
+
+/* nodes */
+driver : IDFR '=' '{' driver-attr '}'									{ $$ = $4; $$->name = stralloc($1.s, $1.len); };
+memory : IDFR '=' '{' memory-attr '}'									{ $$ = $4; $$->name = stralloc($1.s, $1.len); };
+
+/* node attributes */
+driver-attr : %empty													{ $$ = NODE_ALLOC_DRIVER(); }
+			| driver-attr driver ';'									{ $$ = $1; NODE_VALIDATE_DRIVER($2); $2->parent = $$; list_add_tail($$->childs, $2); }
+			| driver-attr NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = stralloc($4.s, $4.len); }
+			| driver-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
+			| driver-attr NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
+			| driver-attr NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
+			;
+
+memory-attr : %empty													{ $$ = NODE_ALLOC_MEMORY(); }
+			| memory-attr memory ';'									{ $$ = $1; NODE_VALIDATE_MEMORY($2); $2->parent = $$; list_add_tail($$->childs, $2); }
+			| memory-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
+			| memory-attr NA_SIZE '=' INT ';'							{ $$ = $1; $$->size = (size_t)$4; }
 			;
 
 /* basic types */
@@ -218,7 +268,7 @@ int-list : INT															{ $$ = VECTOR_ALLOC(&$1); }
 %%
 
 
-static int devtreeerror(char const *file, node_t *root, char const *s){
+static int devtreeerror(char const *file, driver_node_t *driver_root, memory_node_t *memory_root, char const *s){
 	fprintf(stderr, FG_VIOLETT "%s" RESET_ATTR ":" FG_GREEN "%d:%d" RESET_ATTR " token \"%s\" -- %s\n", file, devtreelloc.first_line, devtreelloc.first_column, devtreetext, s);
 	return 0;
 }
