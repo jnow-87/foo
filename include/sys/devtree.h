@@ -7,13 +7,14 @@
 
 
 
-#ifndef KERNEL_DEVTREE_H
-#define KERNEL_DEVTREE_H
+#ifndef SYS_DEVTREE_H
+#define SYS_DEVTREE_H
 
 
 #ifndef BUILD_HOST
 #include <sys/types.h>
 #else
+#include <stdint.h>
 #include <stdio.h>
 #endif // BUILD_HOST
 
@@ -32,11 +33,18 @@ typedef struct devtree_driver_t{
 typedef struct devtree_memory_t{
 	char const *name;
 	void *base;
-	size_t size;
+	uint32_t size;
 
 	struct devtree_memory_t const *parent;
 	struct devtree_memory_t const * const *childs;
 } devtree_memory_t;
 
 
-#endif // KERNEL_DEVTREE_H
+/* prototypes */
+devtree_driver_t const *devtree_find_driver_by_name(devtree_driver_t const *root, char const *name);
+devtree_driver_t const *devtree_find_driver_by_comp(devtree_driver_t const *root, char const *name);
+
+devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root, char const *name);
+
+
+#endif // SYS_DEVTREE_H

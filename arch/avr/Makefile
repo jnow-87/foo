@@ -7,7 +7,7 @@
 
 
 
-obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o devicetree.o
+obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
 
 obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o
@@ -53,17 +53,6 @@ avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
 
 kernel_deps: avr_lds
 init_deps: avr_lds
-
-####
-## device tree
-####
-
-devtree := $(build_tree)/scripts/devtree/devtree
-
-$(loc_build_tree)/devicetree.c: $(CONFIG_DEVICE_TREE) $(devtree)
-	$(QBUILD)$(devtree) $< $@
-
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,    $(loc_build_tree)/devicetree.c,)
 
 
 ####

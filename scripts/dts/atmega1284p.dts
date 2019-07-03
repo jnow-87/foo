@@ -7,84 +7,138 @@
 
 
 
-uart0 = {
-	compatible = "avr,uart";
+memory = {
+	flash = {
+		baseaddr = 0x0;
+		size = 131072;
 
-	baseaddr = 0xc0;			// uart0 config register base
+		kernel_flash = {
+			baseaddr = 0x0;
+			size = 36864;
+		};
 
-	reg = [ 0x64 ];				// PRR0
-	int<8> = [ 0x2 ];			// PRR0_PRUSART0
+		process_flash = {
+			baseaddr = 0x00009000;
+			size = 94208;
+		};
+	};
 
-	int<8> = [
-		20,						// uart0 rx interrupt
-		22						// uart0 tx interrupt
-	];
+	ram = {
+		baseaddr = 0x00800000;
+		size = 16384;
 
-	tty0 = {
-		compatible = "terminal";
+		registers = {
+			baseaddr = 0x00800000;
+			size = 256;
+		};
 
-		klog = {
-			compatible = "kernel,log";
+		kernel_data = {
+			baseaddr = 0x00800100;
+			size = 4096;
+		};
+
+		kernel_heap = {
+			baseaddr = 0x00801100;
+			size = 3072;
+		};
+
+		kernel_stack = {
+			baseaddr = 0x00801d00;
+			size = 768;
+		};
+
+		process_heap = {
+			baseaddr = 0x00802000;
+			size = 2816;
+		};
+
+		process_data = {
+			baseaddr = 0x00802b00;
+			size = 5376;
 		};
 	};
 };
 
-pwm0 = {
-	compatible = "avr,pwm8";
+driver = {
+	uart0 = {
+		compatible = "avr,uart";
 
-	baseaddr = 0x44;			// tcc0 config register base
+		baseaddr = 0xc0;			// uart0 config register base
 
-	reg = [
-		0x35,					// TIFR0
-		0x6e					// TIMSK0
-	];
+		reg = [ 0x64 ];				// PRR0
+		int<8> = [ 0x2 ];			// PRR0_PRUSART0
 
-	reg = [ 0x64 ];				// PRR0
-	int<8> = [ 0x20 ];			// PRR0_PRTIM0
+		int<8> = [
+			20,						// uart0 rx interrupt
+			22						// uart0 tx interrupt
+		];
 
-	reg = [ 0x24 ];				// DRRB
-	int<8> = [ 0x18 ];			// DDRB bits 3..4
+		tty0 = {
+			compatible = "terminal";
 
-};
+			klog = {
+				compatible = "kernel,log";
+			};
+		};
+	};
 
-pwm1 = {
-	compatible = "avr,pwm16";
+	pwm0 = {
+		compatible = "avr,pwm8";
 
-	baseaddr = 0x80;			// tcc1 config register base
+		baseaddr = 0x44;			// tcc0 config register base
 
-	reg = [
-		0x36,					// TIFR1
-		0x6f					// TIMSK1
-	];
+		reg = [
+			0x35,					// TIFR0
+			0x6e					// TIMSK0
+		];
 
-	reg = [ 0x64 ];				// PRR0
-	int<8> = [ 0x08 ];			// PRR0_PRTIM1
+		reg = [ 0x64 ];				// PRR0
+		int<8> = [ 0x20 ];			// PRR0_PRTIM0
 
-	reg = [ 0x2a ];				// DRRD
-	int<8> = [ 0x30 ];			// DDRD bits 4..5
+		reg = [ 0x24 ];				// DRRB
+		int<8> = [ 0x18 ];			// DDRB bits 3..4
 
-};
+	};
 
-pa0 = {
-	compatible = "avr,gpio";
+	pwm1 = {
+		compatible = "avr,pwm16";
 
-	baseaddr = 0x20;			// porta
+		baseaddr = 0x80;			// tcc1 config register base
 
-	int<8> = [
-		0x3,					// direction (in)
-		0,						// offset
-		0x1						// mask
-	];
-};
+		reg = [
+			0x36,					// TIFR1
+			0x6f					// TIMSK1
+		];
 
-pa1 = {
-	compatible = "avr,gpio";
+		reg = [ 0x64 ];				// PRR0
+		int<8> = [ 0x08 ];			// PRR0_PRTIM1
 
-	baseaddr = 0x20;			// porta
+		reg = [ 0x2a ];				// DRRD
+		int<8> = [ 0x30 ];			// DDRD bits 4..5
 
-	int<8> = [
-		0x3,					// direction (in/out)
-		1,						// offset
-		0x2						// mask
-	];
+	};
+
+	pa0 = {
+		compatible = "avr,gpio";
+
+		baseaddr = 0x20;			// porta
+
+		int<8> = [
+			0x3,					// direction (in)
+			0,						// offset
+			0x1						// mask
+		];
+	};
+
+	pa1 = {
+		compatible = "avr,gpio";
+
+		baseaddr = 0x20;			// porta
+
+		int<8> = [
+			0x3,					// direction (in/out)
+			1,						// offset
+			0x2						// mask
+		];
+	};
 };

@@ -186,7 +186,6 @@ sysroot := sysroot
 recent := recent
 
 memlayout := $(build_tree)/scripts/memlayout/memlayout
-memlayout_check := $(build_tree)/scripts/memlayout/memlayout_check
 sysroot_create := scripts/sysroot/create.sh
 
 
@@ -238,8 +237,8 @@ memlayout: $(memlayout)
 	$(QUTIL)$(memlayout)
 
 .PHONY: check_memlayout
-check_memlayout: $(memlayout_check)
-	$(QUTIL)$(memlayout_check)
+check_memlayout: $(memlayout)
+	$(QUTIL)$(memlayout) --check
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)

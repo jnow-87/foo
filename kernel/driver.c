@@ -7,9 +7,9 @@
 
 
 
-#include <kernel/devtree.h>
 #include <kernel/driver.h>
 #include <kernel/kprintf.h>
+#include <sys/devtree.h>
 #include <sys/string.h>
 
 
@@ -19,7 +19,7 @@ extern interface_driver_t __interface_driver_base[],
 extern device_driver_t __device_driver_base[],
 					   __device_driver_end[];
 
-extern devtree_driver_t __dt_driver_root;
+extern devtree_driver_t const __dt_driver_root;
 
 
 /* local/static prototypes */

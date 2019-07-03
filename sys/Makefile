@@ -7,12 +7,12 @@
 
 
 
-obj-y := errno.o string.o memblock.o mutex.o list1.o list2.o vector.o
+obj-y := errno.o string.o memblock.o mutex.o list1.o list2.o vector.o devtree.o devicetree.o
 
 obj-$(CONFIG_KERNEL_PRINTF) += stream.o
 obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 
-hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o vector.o
+hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o vector.o devtree.o devicetree.o
 
 obj-nobuiltin-y := libsys.o
 
@@ -26,6 +26,19 @@ libsys-$(CONFIG_LIB_STREAM) += stream_lib.o
 
 # custom rules to generate separate objects files for src files that are reuired by kernel and libsys
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree)/%.c,)
+
+
+####
+## device tree
+####
+
+devtree := $(build_tree)/scripts/devtree/devtree
+
+$(loc_build_tree)/devicetree.c: $(CONFIG_DEVICE_TREE) $(devtree)
+	$(QBUILD)$(devtree) $< $@
+
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,      $(loc_build_tree)/devicetree.c,)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o, $(loc_build_tree)/devicetree.c, host)
 
 
 ####

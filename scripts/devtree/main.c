@@ -15,6 +15,10 @@
 #include <node.h>
 
 
+/* local/static prototypes */
+static void complement_node(memory_node_t *node);
+
+
 /* global functions */
 int main(int argc, char **argv){
 	FILE *fp;
@@ -39,6 +43,9 @@ int main(int argc, char **argv){
 	if(devtreeparse(argv[1], &driver_root, &memory_root) != 0)
 		return 2;
 
+	/* complement node data */
+	complement_node(&memory_root);
+
 	/* write output file */
 	fp = stdout;
 
@@ -58,7 +65,7 @@ int main(int argc, char **argv){
 		"#include <sys/types.h>\n"
 		"#endif // BUILD_HOST\n"
 		"\n"
-		"#include <kernel/devtree.h>\n"
+		"#include <sys/devtree.h>\n"
 		"\n"
 		"\n"
 	);
@@ -78,3 +85,35 @@ int main(int argc, char **argv){
 
 	return 0;
 }
+
+
+/* local functions */
+static void complement_node(memory_node_t *node){
+	void *min,
+		 *max;
+	memory_node_t *child;
+
+
+	if(node == 0x0 || list_empty(node->childs))
+		return;
+
+	min = (void*)0xffffffff;
+	max = 0x0;
+
+	list_for_each(node->childs, child){
+		complement_node(child);
+
+		if(min > child->base)
+			min = child->base;
+
+		if(max < child->base + child->size)
+			max = child->base + child->size;
+	}
+
+	if(node->size == 0 && strcmp(node->name, "memory_root") != 0){
+		node->base = min;
+		node->size = max - min;
+	}
+}
+
+
