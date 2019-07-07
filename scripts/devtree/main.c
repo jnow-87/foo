@@ -12,7 +12,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <parser.tab.h>
-#include <node.h>
+#include <export.h>
+#include <options.h>
 
 
 /* local/static prototypes */
@@ -27,10 +28,8 @@ int main(int argc, char **argv){
 	memory_node_t memory_root;
 
 
-	if(argc < 2){
-		printf("usage: %s <device tree script> [<output file>]\n", argv[0]);
-		return 1;
-	}
+	/* parse arguments */
+	opt_parse(argc, argv);
 
 	/* parse device tree */
 	memset(&driver_root, 0x0, sizeof(driver_node_t));
@@ -40,7 +39,7 @@ int main(int argc, char **argv){
 	memset(&memory_root, 0x0, sizeof(memory_node_t));
 	memory_root.name = "memory_root";
 
-	if(devtreeparse(argv[1], &driver_root, &memory_root) != 0)
+	if(devtreeparse(options.ifile_name, &driver_root, &memory_root) != 0)
 		return 2;
 
 	/* complement node data */
@@ -49,32 +48,41 @@ int main(int argc, char **argv){
 	/* write output file */
 	fp = stdout;
 
-	if(argc > 2)
-		fp = fopen(argv[2], "w");
+	if(options.ofile_name){
+		printf("generating device tree export \"%s\"\n", options.ofile_name);
+		fp = fopen(options.ofile_name, "w");
+	}
 
 	if(fp == 0x0){
-		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
+		fprintf(stderr, "open \"%s\" failed \"%s\"\n", options.ofile_name, strerror(errno));
 		return 3;
 	}
 
-	// header
-	fprintf(fp,
-		"#ifdef BUILD_HOST\n"
-		"#include <stdint.h>\n"
-		"#else\n"
-		"#include <sys/types.h>\n"
-		"#endif // BUILD_HOST\n"
-		"\n"
-		"#include <sys/devtree.h>\n"
-		"\n"
-		"\n"
-	);
 
-	// device tree
 	r = 0;
 
-	r |= node_export_driver(&driver_root, fp);
-	r |= node_export_memory(&memory_root, fp);
+	switch(options.ofile_format){
+	case FMT_C:
+		r |= export_c_header(fp);
+
+		if(options.export_sections & DT_DRIVER)	r |= export_driver_c(&driver_root, fp);
+		if(options.export_sections & DT_MEMORY)	r |= export_memory_c(&memory_root, fp);
+		break;
+
+	case FMT_HEADER:
+		r |= export_header_header(fp);
+
+		if(options.export_sections & DT_DRIVER)	r |= export_driver_header(&driver_root, fp);
+		if(options.export_sections & DT_MEMORY)	r |= export_memory_header(&memory_root, fp);
+		break;
+
+	case FMT_MAKE:
+		r |= export_make_header(fp);
+
+		if(options.export_sections & DT_DRIVER)	r |= export_driver_make(&driver_root, fp);
+		if(options.export_sections & DT_MEMORY)	r |= export_memory_make(&memory_root, fp);
+		break;
+	}
 
 	fclose(fp);
 
@@ -110,10 +118,8 @@ static void complement_node(memory_node_t *node){
 			max = child->base + child->size;
 	}
 
-	if(node->size == 0 && strcmp(node->name, "memory_root") != 0){
+	if(node->size == 0){
 		node->base = min;
 		node->size = max - min;
 	}
 }
-
-

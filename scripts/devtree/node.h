@@ -63,9 +63,4 @@ typedef struct memory_node_t{
 } memory_node_t;
 
 
-/* prototypes */
-int node_export_driver(driver_node_t *node, FILE *fp);
-int node_export_memory(memory_node_t *node, FILE *fp);
-
-
 #endif // DEVTREE_NODE_H
