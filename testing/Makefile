@@ -18,5 +18,5 @@ main-hostcflags += -fno-builtin
 
 # testing rules
 .PHONY: test
-test: check_config $(loc_build_tree)/main
-	$(loc_build_tree)/main $(loc_build_tree)/result.log
+test: $(loc_build_tree)/main
+	$< $(build_tree)/testing/result.log

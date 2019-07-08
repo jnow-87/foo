@@ -68,7 +68,7 @@ libsys_deps: $(avrconfig_header)
 prepare_deps: $(avrconfig_header)
 
 $(avrconfig_header): $(avrconfig)
-	$(mkdir) $(dir $(avrconfig_header))
+	$(mkdir) $(dir $@)
 	$(QUTIL)$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v)
 
 
@@ -76,10 +76,12 @@ $(avrconfig_header): $(avrconfig)
 ## flags
 ####
 
+$(call include_devicetree)
+
 ## general flags
 # disable jump tables if kernel is mapped to addresses larger than 64k
 # this is required due to avr-gcc implementation of jump tables
-ifeq ($(shell test $$(printf "%u" $(CONFIG_KERNEL_TEXT_BASE)) -gt $$(printf "%u" 0x10000); echo $$?),0)
+ifeq ($(shell test $$(printf "%u" $(DEVTREE_KERNEL_FLASH_BASE)) -gt $$(printf "%u" 0x10000); echo $$?),0)
   cflags += -fno-jump-tables
 endif
 
@@ -94,16 +96,16 @@ endif
 ldlibs-kernel-arch := \
 	-L$(loc_build_tree) \
 	-T$(lds_memory_file) \
-	-Wl,--section-start=.text=$(CONFIG_KERNEL_TEXT_BASE) \
-	-Wl,--section-start=.data=$(CONFIG_KERNEL_DATA_BASE) \
+	-Wl,--section-start=.text=$(DEVTREE_KERNEL_FLASH_BASE) \
+	-Wl,--section-start=.data=$(DEVTREE_KERNEL_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/$(basename $(kernel_name)).map,--cref
 
 ## init application flags
 ldlibs-app-arch := \
 	-L$(loc_build_tree) \
 	-T$(lds_memory_file) \
-	-Wl,--section-start=.text=$(CONFIG_APP_TEXT_BASE) \
-	-Wl,--section-start=.data=$(CONFIG_APP_DATA_BASE) \
+	-Wl,--section-start=.text=$(DEVTREE_APP_FLASH_BASE) \
+	-Wl,--section-start=.data=$(DEVTREE_APP_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/init/init.map,--cref
 
 
