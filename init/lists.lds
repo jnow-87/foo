@@ -18,7 +18,7 @@ SECTIONS {
 		__tests_start = .;
 		*(.tests*)
 		__tests_end = .;
-	} > data_app AT>flash_app
+	} > app_data AT>app_flash
 }
 
 INSERT AFTER .text;

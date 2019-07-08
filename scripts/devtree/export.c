@@ -10,12 +10,39 @@
 #include <sys/vector.h>
 #include <sys/list.h>
 #include <sys/escape.h>
+#include <options.h>
 #include <node.h>
 #include <stdio.h>
 
 
+/* local/static prototypes */
+static char *strupr(char const *src, char *dst);
+
+
 /* global functions */
-int node_export_driver(driver_node_t *node, FILE *fp){
+int export_c_header(FILE *fp){
+	fprintf(fp,
+		"/* generated based on the device tree script \"%s\" */\n"
+		"\n"
+		"\n"
+		"\n"
+		"#ifdef BUILD_HOST\n"
+		"#include <stdint.h>\n"
+		"#else\n"
+		"#include <sys/types.h>\n"
+		"#endif // BUILD_HOST\n"
+		"\n"
+		"#include <sys/devtree.h>\n"
+		"\n"
+		"\n"
+		,
+		options.ifile_name
+	);
+
+	return 0;
+}
+
+int export_driver_c(driver_node_t *node, FILE *fp){
 	int r;
 	size_t n_int,
 		   n_reg,
@@ -147,14 +174,14 @@ int node_export_driver(driver_node_t *node, FILE *fp){
 
 	/* export childs */
 	list_for_each(node->childs, child){
-		if((r = node_export_driver(child, fp)))
+		if((r = export_driver_c(child, fp)))
 			return r;
 	}
 
 	return 0;
 }
 
-int node_export_memory(memory_node_t *node, FILE *fp){
+int export_memory_c(memory_node_t *node, FILE *fp){
 	int r;
 	memory_node_t *child;
 
@@ -200,9 +227,115 @@ int node_export_memory(memory_node_t *node, FILE *fp){
 
 	/* export childs */
 	list_for_each(node->childs, child){
-		if((r = node_export_memory(child, fp)))
+		if((r = export_memory_c(child, fp)))
 			return r;
 	}
 
 	return 0;
+}
+
+int export_header_header(FILE *fp){
+	fprintf(fp,
+		"/* generated based on the device tree script \"%s\" */\n\n\n\n"
+		,
+		options.ifile_name
+	);
+
+	return 0;
+}
+
+int export_driver_header(driver_node_t *node, FILE *fp){
+	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
+	driver_node_t *child;
+
+
+	/* node attributes */
+	fprintf(fp, "#define DEVTREE_%s_COMPATIBLE %zu\n", strupr(node->name, name), node->compatible);
+
+	/* export childs */
+	list_for_each(node->childs, child)
+		(void)export_driver_header(child, fp);
+
+	return 0;
+}
+
+int export_memory_header(memory_node_t *node, FILE *fp){
+	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
+	memory_node_t *child;
+
+
+	/* node attributes */
+	fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", strupr(node->name, name), node->base);
+	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", strupr(node->name, name), node->size);
+
+	/* export childs */
+	list_for_each(node->childs, child)
+		(void)export_memory_header(child, fp);
+
+	return 0;
+}
+
+int export_make_header(FILE *fp){
+	fprintf(fp,
+		"# generated based on the device tree script \"%s\" */\n\n\n\n"
+		,
+		options.ifile_name
+	);
+
+	return 0;
+}
+
+int export_driver_make(driver_node_t *node, FILE *fp){
+	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
+	driver_node_t *child;
+
+
+	/* node attributes */
+	fprintf(fp, "DEVTREE_%s_COMPATIBLE := %zu\n", strupr(node->name, name), node->compatible);
+
+	/* export childs */
+	list_for_each(node->childs, child)
+		(void)export_driver_make(child, fp);
+
+	return 0;
+}
+
+int export_memory_make(memory_node_t *node, FILE *fp){
+	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
+	memory_node_t *child;
+
+
+	/* node attributes */
+	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", strupr(node->name, name), node->base);
+	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", strupr(node->name, name), node->size);
+
+	/* export childs */
+	list_for_each(node->childs, child)
+		(void)export_memory_make(child, fp);
+
+	return 0;
+}
+
+
+/* local functions */
+/**
+ * \brief	convert src string to upper case
+ *
+ * \param	src		source string
+ * \param	dst		destination string
+ *
+ * \return	destiantion string
+ */
+static char *strupr(char const *src, char *dst){
+	size_t i;
+
+
+	for(i=0; src[i]!=0; i++){
+		if(src[i] >= 'a' && src[i] <= 'z')	dst[i] = src[i] - 32;
+		else								dst[i] = src[i];
+	}
+
+	dst[i] = 0;
+
+	return dst;
 }

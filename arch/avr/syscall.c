@@ -21,10 +21,11 @@
 #include <sys/errno.h>
 #include <sys/register.h>
 #include <sys/compiler.h>
+#include <sys/devicetree.h>
 
 
 /* macros */
-#define INT_VEC_SC		(CONFIG_KERNEL_TEXT_BASE + INT_VEC_SIZE * NUM_HW_INT)
+#define INT_VEC_SC		(DEVTREE_KERNEL_FLASH_BASE + INT_VEC_SIZE * NUM_HW_INT)
 #define SYSCALL(addr)	asm volatile("call " STRGIFY(addr));
 
 

@@ -13,8 +13,9 @@
 #include <kernel/init.h>
 #include <kernel/panic.h>
 #include <kernel/csection.h>
-#include <sys/types.h>
 #include <sys/memblock.h>
+#include <sys/devtree.h>
+#include <sys/types.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
 
@@ -63,9 +64,16 @@ void *addr_phys_to_virt(void *pa){
 
 /* local functions */
 static int init(void){
-	kernel_heap = (void*)(CONFIG_KERNEL_HEAP_BASE);
+	devtree_memory_t const *node;
 
-	return memblock_init(kernel_heap, CONFIG_KERNEL_HEAP_SIZE);
+
+	// NOTE the memory node is ensured to exist by the build system
+	node = devtree_find_memory_by_name(&__dt_memory_root, "kernel_heap");
+
+	kernel_heap = node->base;
+	memblock_init(kernel_heap, node->size);
+
+	return -errno;
 }
 
 kernel_init(0, init);

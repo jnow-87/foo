@@ -27,7 +27,7 @@ githooks_tree := .githooks
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := arch kernel driver lib sys init testing scripts/memlayout scripts/arch scripts/devtree
+src_dirs := sys arch kernel driver lib init testing scripts/memlayout scripts/arch scripts/devtree
 
 kernel_name := kimg.elf
 lib_name := libsys.a
@@ -186,7 +186,6 @@ sysroot := sysroot
 recent := recent
 
 memlayout := $(build_tree)/scripts/memlayout/memlayout
-memlayout_check := $(build_tree)/scripts/memlayout/memlayout_check
 sysroot_create := scripts/sysroot/create.sh
 
 
@@ -238,8 +237,8 @@ memlayout: $(memlayout)
 	$(QUTIL)$(memlayout)
 
 .PHONY: check_memlayout
-check_memlayout: $(memlayout_check)
-	$(QUTIL)$(memlayout_check)
+check_memlayout: $(memlayout)
+	$(QUTIL)$(memlayout) --check
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)

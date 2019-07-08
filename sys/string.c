@@ -62,11 +62,8 @@ void *memcpy(void *dest, void const *src, size_t n){
 }
 
 void *memset(void *p, char c, size_t n){
-	while(1){
+	while(n != 0){
 		((char*)p)[--n] = c;
-
-		if(n == 0)
-			break;
 	}
 
 	return p;

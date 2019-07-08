@@ -7,10 +7,9 @@
 
 
 
-hostbin-y := memlayout memlayout_check
+hostbin-y := memlayout
 
-memlayout-y := main.o
-memlayout_check-y := check.o
+memlayout-y := main.o sys/
 
 hostcppflags-y := -I"include/"
 hostcflags-y := -fno-builtin

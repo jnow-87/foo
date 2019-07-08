@@ -7,91 +7,169 @@
 
 
 
-/* target header */
-#include BUILD_ARCH_HEADER
+#include <sys/devtree.h>
 #include <sys/escape.h>
-
-/* host header */
 #include <stdio.h>
+#include <string.h>
+#include "config.h"
 
 
 /* macros */
-#define KERNEL_STACK_CORE_SIZE			(CONFIG_KERNEL_STACK_SIZE / CONFIG_NCORES)
-#define KERNEL_STACK_CORE_BASE(core)	(CONFIG_KERNEL_STACK_BASE + ((core) * CONFIG_KERNEL_STACK_CORE_SIZE))
+#define ERROR(msg, ...) fprintf(stderr, FG_RED "error" RESET_ATTR ": " msg, __VA_ARGS__)
 
-// print table header
-#define PRINT_HEAD(name) \
-	printf("\n" UNDERLINE BG_WHITE FG_BLACK "%s:" RESET_ATTR "\n" BG_WHITE FG_BLACK "         target         base          end        size               " RESET_ATTR "\n", name);
+#define CONTAINS(n0, n1)	(((n0)->base <= (n1)->base) && ((n1)->base + (n1)->size <= (n0)->base + (n0)->size))
+#define OVERLAPS(n0, n1)	(((n0)->base < (n1)->base + (n1)->size) && ((n1)->base < (n0)->base + (n0)->size))
 
-// print a table line if size is non-zero
-#define PRINT_RANGE(name, base, size) \
-	if(size) \
-		printf(BOLD "%20.20s" RESET_ATTR ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", name, base, (base) + (size) - 1, (size) / 1024.0, size);
 
-// print an 'unknown' message
-#define PRINT_UNKNOWN(name, base, size) \
-	printf(BOLD "%20.20s" RESET_ATTR ": " FG_RED "unknown" RESET_ATTR ", please define %s and %s\n", name, #base, #size);
+/* local/static prototypes */
+static void print_layout(devtree_memory_t const *node);
 
-// print a table line or unknown message
-#define PRINT_RANGE_EE(name, base, size) \
-	PRINT_RANGE(name, base, size) \
-	else \
-		PRINT_UNKNOWN(name, #base, #size);
+static int check_availability(void);
+static int check_bounds(devtree_memory_t const *node);
+static int check_overlap(devtree_memory_t const *node);
 
 
 /* global functions */
-int main(){
-#if CONFIG_NCORES > 1
+int main(int argc, char **argv){
+	int r;
+
+
+	r = 0;
+
+	if(argc == 1){
+		print_layout(&__dt_memory_root);
+	}
+	else if(strcmp(argv[1], "-c") == 0 || strcmp(argv[1], "--check") == 0){
+		r |= check_availability();
+		r |= check_bounds(&__dt_memory_root);
+		r |= check_overlap(&__dt_memory_root);
+	}
+	else{
+		printf("invalid option \n");
+		printf("usage: %s [-c|--check]\n", argv[0]);
+
+		r = 1;
+	}
+
+	return r != 0;
+}
+
+
+/* local functions */
+/**
+ * \brief	print the memory nodes defined in the device tree
+ */
+static void print_layout(devtree_memory_t const *node){
 	unsigned int i;
-#endif
+	char name[node != 0x0 ? strlen(node->name) : 1];
 
 
-	/* header */
-	printf("\n                       " UNDERLINE BG_WHITE FG_BLACK "brickos memory layout" RESET_ATTR "\n");
+	if(node == 0x0)
+		return;
 
-	/* mandatory */
-	PRINT_HEAD("mandatory");
+	if(node != &__dt_memory_root){
+		strcpy(name, node->name);
 
-	PRINT_RANGE_EE("kernel image", CONFIG_KERNEL_IMAGE_BASE, CONFIG_KERNEL_IMAGE_SIZE);
-	PRINT_RANGE_EE("kernel stack", CONFIG_KERNEL_STACK_BASE, CONFIG_KERNEL_STACK_SIZE);
+		for(i=0; i<strlen(name); i++){
+			if(name[i] == '_')
+				name[i] = ' ';
+		}
 
-	// stack per core
-#if CONFIG_NCORES > 1
-	for(i=0; i<CONFIG_NCORES; i++)
-#if KERNEL_STACK_CORE_SIZE == 0
-		PRINT_UNKNOWN("kernel stack core", "KERNEL_STACK_CORE_BASE", "KERNEL_STACK_CORE_SIZE");
-#else
-		printf(BOLD "%18.18s%2d" RESET_ATTR ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", "kernel stack core", i, KERNEL_STACK_CORE_BASE(i), KERNEL_STACK_CORE_BASE(i) + KERNEL_STACK_CORE_SIZE - 1, KERNEL_STACK_CORE_SIZE / 1024.0, KERNEL_STACK_CORE_SIZE);
-#endif
-#endif
+		if(node->parent == &__dt_memory_root && node->childs != 0x0){
+			printf("\n" UNDERLINE BG_WHITE FG_BLACK "%s:" RESET_ATTR "\n" BG_WHITE FG_BLACK "         target         base          end        size               " RESET_ATTR "\n", name);
 
-	PRINT_RANGE_EE("kernel heap", CONFIG_KERNEL_HEAP_BASE, CONFIG_KERNEL_HEAP_SIZE);
-	PRINT_RANGE_EE("process heap", CONFIG_KERNEL_PROC_BASE, CONFIG_KERNEL_PROC_SIZE);
+			if(node->size != 0)
+				printf(BOLD "%20.20s" RESET_ATTR ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n\n", "total", node->base, node->base + node->size - 1, node->size / 1024.0, node->size);
+		}
+		else
+			printf(BOLD "%20.20s" RESET_ATTR ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", name, node->base, node->base + node->size - 1, node->size / 1024.0, node->size);
+	}
 
-	/* optional */
-	PRINT_HEAD("optional");
+	if(node->childs == 0x0)
+		return;
 
-	PRINT_RANGE("mapped register", CONFIG_MREG_BASE, CONFIG_MREG_SIZE);
-	PRINT_RANGE("file system", CONFIG_KERNEL_INITRAMFS_BASE, CONFIG_KERNEL_INITRAMFS_SIZE);
+	for(i=0; node->childs[i]!=0x0; i++)
+		print_layout(node->childs[i]);
+}
 
-#ifdef CONFIG_POWERPC_QORIQ
-	PRINT_HEAD("qoriq specific");
+/**
+ * \brief	check if all sections defined in required_nodes are present in the
+ * 			device tree
+ */
+static int check_availability(void){
+	unsigned int i;
+	int r;
 
-	PRINT_RANGE("CCSR", CCSRBAR, CCSRBAR_SIZE);
-	PRINT_RANGE("DCSR", DCSRBAR, DCSRBAR_SIZE);
-	PRINT_RANGE("DPAA", DPAA_BASE, DPAA_SIZE);
-#endif // CONFIG_POWERPC_QORIQ
 
-#ifdef CONFIG_AVR
-	PRINT_HEAD("avr specific");
+	r = 0;
 
-	PRINT_RANGE("kernel flash", CONFIG_KERNEL_TEXT_BASE, CONFIG_KERNEL_TEXT_SIZE);
-	PRINT_RANGE("kernel data", CONFIG_KERNEL_DATA_BASE, CONFIG_KERNEL_DATA_SIZE);
-	PRINT_RANGE("application flash", CONFIG_APP_TEXT_BASE, CONFIG_APP_TEXT_SIZE);
-	PRINT_RANGE("application data", CONFIG_APP_DATA_BASE, CONFIG_APP_DATA_SIZE);
-#endif // CONFIG_AVR
+	for(i=0; i<sizeof(required_nodes)/sizeof(*required_nodes); i++){
+		if(devtree_find_memory_by_name(&__dt_memory_root, required_nodes[i]) == 0x0){
+			ERROR("device tree lacks node \"%s\"\n", required_nodes[i]);
+			r++;
+		}
+	}
 
-	printf("\n");
+	return -r;
+}
 
-	return 0;
+/**
+ * \brief	check if all address ranges of child nodes are within the range of
+ * 			the parent node
+ */
+static int check_bounds(devtree_memory_t const *node){
+	unsigned int i;
+	int r;
+
+
+	if(node == 0x0 || node->childs == 0x0)
+		return 0;
+
+	r = 0;
+
+	for(i=0; node->childs[i]!=0x0; i++){
+		r -= check_bounds(node->childs[i]);
+
+		if(node->size == 0)
+			continue;
+
+		if(!CONTAINS(node, node->childs[i])){
+			ERROR("memory node \"%s\" address range is outside of parent node \"%s\"\n", node->childs[i]->name, node->name);
+			r++;
+		}
+	}
+
+	return -r;
+}
+
+
+/**
+ * \brief	check if sibling nodes have overlapping address ranges
+ */
+static int check_overlap(devtree_memory_t const *node){
+	unsigned int i,
+				 j;
+	int r;
+
+
+	if(node == 0x0 || node->childs == 0x0)
+		return 0;
+
+	r = 0;
+
+	for(i=0; node->childs[i]!=0x0; i++){
+		r -= check_overlap(node->childs[i]);
+
+		for(j=i+1; node->childs[j]!=0x0; j++){
+			if(node->childs[i]->size == 0 || node->childs[j]->size == 0)
+				continue;
+
+			if(OVERLAPS(node->childs[i], node->childs[j])){
+				ERROR("memory node \"%s\" has overlapping address range with node \"%s\"\n", node->childs[i]->name, node->childs[j]->name);
+				r++;
+			}
+		}
+	}
+
+	return -r;
 }

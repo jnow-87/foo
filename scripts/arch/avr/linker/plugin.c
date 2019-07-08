@@ -10,6 +10,7 @@
 /* target header */
 #include BUILD_ARCH_HEADER
 #include <config/config.h>
+#include <sys/devtree.h>
 #include <sys/compiler.h>
 
 /* host header */
@@ -20,11 +21,12 @@
 
 
 /* local/static prototypes */
-static void plugin_ioverflow_det(FILE *ofile, char *bin_type);
+static int plugin_ioverflow_det(FILE *ofile, char *bin_type);
 
 
 /* global functions */
 int main(int argc, char **argv){
+	int r;
 	char *ofile_name;
 	char *bin_type;
 	FILE *ofile;
@@ -56,13 +58,15 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
+	r = 0;
+
 #if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
-	plugin_ioverflow_det(ofile, bin_type);
+	r |= plugin_ioverflow_det(ofile, bin_type);
 #endif
 
 	fclose(ofile);
 
-	return 0;
+	return r;
 }
 
 
@@ -70,17 +74,21 @@ int main(int argc, char **argv){
 /**
  * \brief	flash fill: fills unsused flash areas with jumps to an overflow handler
  */
-static void plugin_ioverflow_det(FILE *ofile, char *bin_type){
+static int plugin_ioverflow_det(FILE *ofile, char *bin_type){
 	char c;
 	union{
 		unsigned int i;
 		char c[4];
 	} filler;
+	devtree_memory_t const *node;
 
 
-	filler.i = 0x940e0000
-			 | ((CONFIG_KERNEL_TEXT_BASE + (NUM_HW_INT + 1) * INT_VEC_SIZE) / 2);
+	node = devtree_find_memory_by_name(&__dt_memory_root, "kernel_flash");
 
+	if(node == 0x0)
+		return -1;
+
+	filler.i = 0x940e0000 | ((ptrdiff_t)(node->base + (NUM_HW_INT + 1) * INT_VEC_SIZE) / 2);
 	filler.i = htonl(filler.i);
 
 	c = filler.c[1];
@@ -99,4 +107,6 @@ static void plugin_ioverflow_det(FILE *ofile, char *bin_type){
 	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[2]);
 	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[3]);
 	fprintf(ofile, "} > flash_%s\n", bin_type);
+
+	return 0;
 }

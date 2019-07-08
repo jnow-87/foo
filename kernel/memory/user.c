@@ -10,8 +10,9 @@
 #include <config/config.h>
 #include <kernel/init.h>
 #include <kernel/panic.h>
-#include <sys/types.h>
 #include <sys/memblock.h>
+#include <sys/devtree.h>
+#include <sys/types.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
 
@@ -45,8 +46,14 @@ void ufree(void *addr){
 
 /* local functions */
 static int init(void){
-	process_mem = (void*)(CONFIG_KERNEL_PROC_BASE);
-	memblock_init(process_mem, CONFIG_KERNEL_PROC_SIZE);
+	devtree_memory_t const *node;
+
+
+	// NOTE the memory node is ensured to exist by the build system
+	node = devtree_find_memory_by_name(&__dt_memory_root, "app_heap");
+
+	process_mem = node->base;
+	memblock_init(process_mem, node->size);
 
 	return -errno;
 }

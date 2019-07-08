@@ -9,6 +9,7 @@
 
 /* target header */
 #include <config/config.h>
+#include <sys/devtree.h>
 #include <sys/escape.h>
 
 /* host header */
@@ -23,9 +24,17 @@ static int overlap(char const *name0, size_t base0, size_t size0, char const *na
 
 /* global functions */
 int main(int argc, char **argv){
-	int r;
 	char *ofile_name;
 	FILE *ofile;
+	unsigned int i;
+	int r;
+	devtree_memory_t const *node;
+	char const *sec_names[] = {
+		"kernel_flash",
+		"app_flash",
+		"kernel_data",
+		"app_data",
+	};
 
 
 	/* check arguments */
@@ -44,19 +53,6 @@ int main(int argc, char **argv){
 
 	printf("generating avr memory layout linker script \"%s\"\n", ofile_name);
 
-	/* check configuration validity */
-	r = 0;
-	r |= overlap("kernel flash", CONFIG_KERNEL_TEXT_BASE, CONFIG_KERNEL_TEXT_SIZE,
-				 "application flash", CONFIG_APP_TEXT_BASE, CONFIG_APP_TEXT_SIZE
-	);
-
-	r |= overlap("kernel data", CONFIG_KERNEL_DATA_BASE, CONFIG_KERNEL_DATA_SIZE,
-				 "application data", CONFIG_APP_DATA_BASE, CONFIG_APP_DATA_SIZE
-	);
-
-	if(r != 0)
-		return 1;
-
 	/* generate output file */
 	ofile = fopen(ofile_name, "w");
 
@@ -67,15 +63,22 @@ int main(int argc, char **argv){
 
 	fprintf(ofile, "MEMORY {\n");
 
-	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "flash_kernel", CONFIG_KERNEL_TEXT_BASE, CONFIG_KERNEL_TEXT_SIZE);
-	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "flash_app", CONFIG_APP_TEXT_BASE, CONFIG_APP_TEXT_SIZE);
-	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "data_kernel", CONFIG_KERNEL_DATA_BASE, CONFIG_KERNEL_DATA_SIZE);
-	fprintf(ofile, "%20s : ORIGIN = %#10x, LENGTH = %u\n", "data_app", CONFIG_APP_DATA_BASE, CONFIG_APP_DATA_SIZE);
+	r = 0;
+
+	for(i=0; i<sizeof(sec_names)/sizeof(*sec_names); i++){
+		node = devtree_find_memory_by_name(&__dt_memory_root, sec_names[i]);
+
+		if(node == 0x0)
+			r = 1;
+
+		fprintf(ofile, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", sec_names[i], (unsigned long int)node->base, node->size);
+	}
+
 	fprintf(ofile, "}\n");
 
 	fclose(ofile);
 
-	return 0;
+	return r;
 }
 
 

@@ -111,11 +111,11 @@ static int init(void){
 	mreg_w_sync(CLKPR, CONFIG_SYSTEM_CLOCK_PRESCALER, CLKPR_CLKPCE);
 
 	/* set MCUCR[IVSEL], moving interrupt vectors to boot flash if required */
-#if CONFIG_KERNEL_TEXT_BASE == 0x0
+#if DEVTREE_KERNEL_FLASH_BASE == 0x0
 	mreg_w_sync(MCUCR, (mreg_r(MCUCR) & (0xff ^ (0x1 << MCUCR_IVSEL))), MCUCR_IVCE);
 #else
 	mreg_w_sync(MCUCR, (mreg_r(MCUCR) | (0x1 << MCUCR_IVSEL)), MCUCR_IVCE);
-#endif // CONFIG_KERNEL_TEXT_BASE
+#endif // DEVTREE_KERNEL_FLASH_BASE
 
 	/* enable power reduction */
 	mreg_w(PRR0, 0xff);
