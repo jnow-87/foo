@@ -168,7 +168,7 @@ static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *dat
 	switch(request){
 	case IOCTL_CFGRD:	return config_get(data, dev->data);
 	case IOCTL_CFGWR:	return config_set(data, dev->data);
-	default:			return_errno(E_NOIMP);
+	default:			return_errno(E_NOSUP);
 	}
 }
 
