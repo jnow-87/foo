@@ -19,8 +19,6 @@ extern interface_driver_t __interface_driver_base[],
 extern device_driver_t __device_driver_base[],
 					   __device_driver_end[];
 
-extern devtree_driver_t const __dt_driver_root;
-
 
 /* local/static prototypes */
 static void probe_childs(devtree_driver_t const * const *childs, void *itf);

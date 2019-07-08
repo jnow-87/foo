@@ -17,7 +17,7 @@ memory = {
 			size = 36864;
 		};
 
-		process_flash = {
+		app_flash = {
 			baseaddr = 0x00009000;
 			size = 94208;
 		};
@@ -47,12 +47,12 @@ memory = {
 			size = 768;
 		};
 
-		process_heap = {
+		app_heap = {
 			baseaddr = 0x00802000;
 			size = 2816;
 		};
 
-		process_data = {
+		app_data = {
 			baseaddr = 0x00802b00;
 			size = 5376;
 		};

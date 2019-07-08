@@ -18,11 +18,11 @@
 static char const *required_nodes[] = {
 	"kernel_stack",
 	"kernel_heap",
-	"process_heap",
+	"app_heap",
 
 #ifdef CONFIG_AVR
 	"kernel_flash",
-	"process_flash",
+	"app_flash",
 #endif // CONFIG_AVR
 
 #ifdef CONFIG_POWERPC_QORIQ

@@ -10,8 +10,10 @@
 hostbin-y := gen_lds_memory gen_lds_plugin
 
 
-gen_lds_memory-y := memory.o
-gen_lds_plugin-y := plugin.o
+gen_lds_memory-y := memory.o sys/
+gen_lds_plugin-y := plugin.o sys/
 
 hostcppflags-y := -I"include/"
-hostcflags-y := -Wno-unused-function
+hostcflags-y := \
+	-Wno-unused-function \
+	-fno-builtin

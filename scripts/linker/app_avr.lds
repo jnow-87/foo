@@ -26,7 +26,7 @@ SECTIONS {
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
 		*(.trampolines)
-	} > flash_app
+	} > app_flash
 
 	/* data */
 	.data : {
@@ -35,7 +35,7 @@ SECTIONS {
 		*(.rodata1)
 
 		INCLUDE libsys_init.lds
-	} > data_app AT>flash_app
+	} > app_data AT>app_flash
 
 	__data_start = ADDR(.data);
 	__data_end = __data_start + SIZEOF(.data);
@@ -53,7 +53,7 @@ SECTIONS {
 		*(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 		*(.scommon)
 		*(COMMON)
-	} > data_app
+	} > app_data
 
 	__bss_start = ADDR(.bss);
 	__bss_end = __bss_start + SIZEOF(.bss);

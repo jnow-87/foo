@@ -21,7 +21,7 @@ SECTIONS {
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
 		*(.trampolines)
-	} > flash_kernel
+	} > kernel_flash
 
 	__kernel_start = ADDR(.text);
 	__kernel_end = __kernel_start + SIZEOF(.text);
@@ -34,7 +34,7 @@ SECTIONS {
 
 		INCLUDE kernel_init.lds
 		INCLUDE kernel_stat.lds
-	} > data_kernel AT>flash_kernel
+	} > kernel_data AT>kernel_flash
 
 	__data_start = ADDR(.data);
 	__data_end = __data_start + SIZEOF(.data);
@@ -52,7 +52,7 @@ SECTIONS {
 		*(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 		*(.scommon)
 		*(COMMON)
-	} > data_kernel
+	} > kernel_data
 
 	__bss_start = ADDR(.bss);
 	__bss_end = __bss_start + SIZEOF(.bss);

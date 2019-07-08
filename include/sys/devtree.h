@@ -47,4 +47,9 @@ devtree_driver_t const *devtree_find_driver_by_comp(devtree_driver_t const *root
 devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root, char const *name);
 
 
+/* external variables */
+extern devtree_driver_t const __dt_driver_root;
+extern devtree_memory_t const __dt_memory_root;
+
+
 #endif // SYS_DEVTREE_H

@@ -29,10 +29,6 @@ static int check_bounds(devtree_memory_t const *node);
 static int check_overlap(devtree_memory_t const *node);
 
 
-/* external variables */
-extern devtree_memory_t const __dt_memory_root;
-
-
 /* global functions */
 int main(int argc, char **argv){
 	int r;
