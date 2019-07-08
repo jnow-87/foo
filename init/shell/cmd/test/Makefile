@@ -14,3 +14,4 @@ obj-y += stat.o
 obj-y += signal.o
 obj-y += kill.o
 obj-y += exit.o
+obj-y += gpioint.o
