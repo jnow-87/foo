@@ -18,6 +18,7 @@ typedef enum{
 	TERM_ERR_PARITY = 0x2,
 	TERM_ERR_FRAME = 0x4,
 	TERM_ERR_RX_FULL = 0x8,
+	TERM_ERR_WRITE_COLL = 0x10,
 } term_err_t;
 
 typedef enum{

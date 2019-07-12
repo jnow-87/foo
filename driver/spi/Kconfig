@@ -1,0 +1,19 @@
+#
+# Copyright (C) 2019 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+menuconfig DRIVER_SPI
+	bool "SPI driver"
+	select KERNEL_DEVFS
+
+if DRIVER_SPI
+	config SPI_DEBUG
+		bool "Enable debug messages"
+		depends on KERNEL_MSG_DEBUG
+		default n
+endif # DRIVER_SPI

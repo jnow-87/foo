@@ -91,7 +91,7 @@ driver = {
 				1,					// stop bits (1)
 				0,					// parity (TPARITY_NONE)
 				3,					// csize (TCS_8)
-				0					// flags
+				0					// flags (none)
 			];
 
 			klog = {
@@ -118,7 +118,7 @@ driver = {
 		reg = [ 0x64 ];				// PRR0
 		int<8> = [ 0x20 ];			// PRR0_PRTIM0
 
-		reg = [ 0x24 ];				// DRRB
+		reg = [ 0x24 ];				// DDRB
 		int<8> = [ 0x18 ];			// DDRB bits 3..4
 
 	};
@@ -141,7 +141,7 @@ driver = {
 		reg = [ 0x64 ];				// PRR0
 		int<8> = [ 0x08 ];			// PRR0_PRTIM1
 
-		reg = [ 0x2a ];				// DRRD
+		reg = [ 0x2a ];				// DDRD
 		int<8> = [ 0x30 ];			// DDRD bits 4..5
 
 	};
@@ -165,7 +165,7 @@ driver = {
 
 		int<8> = [
 			0x3,					// direction (in)
-			0x1						// mask
+			0x1						// pin mask
 		];
 	};
 
@@ -188,7 +188,7 @@ driver = {
 
 		int<8> = [
 			0x3,					// direction (in/out)
-			0x2						// mask
+			0x2						// pin mask
 		];
 	};
 
@@ -211,7 +211,45 @@ driver = {
 
 		int<8> = [
 			0x3,					// direction (in/out)
-			0x4						// mask
+			0x4						// pin mask
 		];
+	};
+
+	spi0 = {
+		compatible = "avr,spi";
+
+		/**
+		 * spi hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr spi driver
+		 */
+		baseaddr = 0x4c;			// spi config register base
+
+		reg = [ 0x24 ];				// DDRB
+		int<8> = [
+			0x40,					// PB6 (MISO)
+			0x20,					// PB5 (MOSI)
+			0x80					// PB7 (SCK)
+		];
+
+		reg = [ 0x64 ];				// PRRO
+		int<8> = [ 0x4 ];			// PRR0_PRSPI
+
+		tty1 = {
+			compatible = "terminal";
+
+			/**
+			 * serial configuration
+			 * 	has to match the configuration data type of
+			 * 	the underlying device driver
+			 */
+			int<8> = [
+				1,					// device mode (master)
+				0,					// sample mode (CPOL = 0, CPHA = 0)
+				0,					// data order (MSB first)
+				1,					// prescaler (4)
+				0					// flags (none)
+			];
+		};
 	};
 };
