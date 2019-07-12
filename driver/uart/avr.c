@@ -15,6 +15,7 @@
 #include <driver/term.h>
 #include <sys/register.h>
 #include <sys/term.h>
+#include <sys/uart.h>
 #include <sys/errno.h>
 
 
@@ -102,7 +103,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->regs = regs;
 	itf->rx_int = regs->rx_int;
 	itf->tx_int = regs->tx_int;
-	itf->cfg_size = sizeof(term_cfg_t);
+	itf->cfg_size = sizeof(uart_cfg_t);
 
 	return itf;
 }
@@ -113,17 +114,17 @@ static int configure(void *_cfg, void *_regs){
 	uint8_t const parity_bits[] = { 0b00, 0b11, 0b10 };
 	unsigned int brate;
 	dt_data_t *regs;
-	term_cfg_t *cfg;
+	uart_cfg_t *cfg;
 
 
 	regs = (dt_data_t*)_regs;
-	cfg = (term_cfg_t*)_cfg;
+	cfg = (uart_cfg_t*)_cfg;
 
 	/* compute baud rate */
-	if(cfg->baud > 115200)
+	if(cfg->baudrate > 115200)
 		return_errno(E_LIMIT);
 
-	brate = (AVR_IO_CLOCK_HZ / (cfg->baud * 16));
+	brate = (AVR_IO_CLOCK_HZ / (cfg->baudrate * 16));
 
 	if(brate == 0)
 		return_errno(E_INVAL);
@@ -161,7 +162,7 @@ static int configure(void *_cfg, void *_regs){
 }
 
 static term_flags_t get_flags(void *cfg){
-	return ((term_cfg_t*)cfg)->flags;
+	return ((uart_cfg_t*)cfg)->flags;
 }
 
 static void putc(char c, void *_regs){
@@ -211,10 +212,10 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *_regs){
 		s[i] = regs->dev->udr;
 
 		if(e){
-			*err |= (bits(e, UCSRA_FE, 0x1) ? TE_FRAME : 0)
-				 |  (bits(e, UCSRA_DOR, 0x1) ? TE_DATA_OVERRUN : 0)
-				 |  (bits(e, UCSRA_UPE, 0x1) ? TE_PARITY : 0)
-				 |  (bits(e, UCSRA_RXC, 0x1) ? TE_RX_FULL : 0)
+			*err |= (bits(e, UCSRA_FE, 0x1) ? TERM_ERR_FRAME : 0)
+				 |  (bits(e, UCSRA_DOR, 0x1) ? TERM_ERR_DATA_OVERRUN : 0)
+				 |  (bits(e, UCSRA_UPE, 0x1) ? TERM_ERR_PARITY : 0)
+				 |  (bits(e, UCSRA_RXC, 0x1) ? TERM_ERR_RX_FULL : 0)
 				 ;
 		}
 		else
