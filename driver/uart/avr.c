@@ -9,7 +9,6 @@
 
 #include <arch/interrupt.h>
 #include <arch/avr/register.h>
-#include <kernel/opt.h>
 #include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/driver.h>
@@ -67,7 +66,7 @@ typedef struct{
 
 	// power control
 	uint8_t volatile *prr;
-	uint8_t const prr_en;		// PRR device enable value
+	uint8_t const prr_en;		// PRR device enable value (bit mask)
 
 	// interrupt number
 	uint8_t const rx_int,
@@ -76,30 +75,14 @@ typedef struct{
 
 
 /* local/static prototypes */
-static int configure(term_cfg_t *cfg, void *regs);
+static int configure(void *cfg, void *regs);
+static term_flags_t get_flags(void *cfg);
 static void putc(char c, void *regs);
 static size_t putsn(char const *s, size_t n, void *regs);
 static size_t gets(char *s, size_t n, term_err_t *err, void *regs);
 
 
 /* local functions */
-static int kuart_init(void){
-	dt_data_t regs = {
-		.dev = (void*)UCSR0A,
-		.prr = (void*)PRR0,
-		.prr_en = (0x1 << PRR0_PRUSART0),
-		.rx_int = 0,
-		.tx_int = 0,
-	};
-
-
-	/* apply kernel uart config */
-	(void)configure(&kopt.term_cfg, &regs);
-	return -errno;
-}
-
-platform_init(0, kuart_init);
-
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *regs;
 	term_itf_t *itf;
@@ -112,25 +95,29 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		return 0x0;
 
 	itf->configure = configure;
+	itf->get_flags = get_flags;
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
+	itf->regs = regs;
 	itf->rx_int = regs->rx_int;
 	itf->tx_int = regs->tx_int;
-	itf->regs = regs;
+	itf->cfg_size = sizeof(term_cfg_t);
 
 	return itf;
 }
 
 interface_probe("avr,uart", probe);
 
-static int configure(term_cfg_t *cfg, void *_regs){
+static int configure(void *_cfg, void *_regs){
 	uint8_t const parity_bits[] = { 0b00, 0b11, 0b10 };
 	unsigned int brate;
 	dt_data_t *regs;
+	term_cfg_t *cfg;
 
 
 	regs = (dt_data_t*)_regs;
+	cfg = (term_cfg_t*)_cfg;
 
 	/* compute baud rate */
 	if(cfg->baud > 115200)
@@ -171,6 +158,10 @@ static int configure(term_cfg_t *cfg, void *_regs){
 					 ;
 
 	return E_OK;
+}
+
+static term_flags_t get_flags(void *cfg){
+	return ((term_cfg_t*)cfg)->flags;
 }
 
 static void putc(char c, void *_regs){

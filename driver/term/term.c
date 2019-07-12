@@ -99,7 +99,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 		goto err_4;
 
 	/* init term */
-	term->cfg = kopt.term_cfg;
+	term->cfg = dt_data;
 	term->hw = dt_itf;
 	term->rx_rdy = &dev->node->rd_sig;
 	term->rx_err = TE_NONE;
@@ -109,7 +109,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 	mutex_init(&term->tx_mtx, 0);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
-	if(term->hw->configure(&term->cfg, term->hw->regs) != 0)
+	if(term->hw->configure(term->cfg, term->hw->regs) != 0)
 		goto err_5;
 
 	if(_term)
@@ -186,7 +186,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 	/* handle terminal flags */
 	// handle TF_ECHO
-	if(len > 0 && (term->cfg.flags & TF_ECHO)){
+	if(len > 0 && (term->hw->get_flags(term->cfg) & TF_ECHO)){
 		if(term->hw->puts(buf, n, term->hw->regs) != E_OK)
 			return 0;
 	}
@@ -213,14 +213,14 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, &term->cfg, sizeof(term_cfg_t));
+		memcpy(data, term->cfg, term->hw->cfg_size);
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		if(term->hw->configure((term_cfg_t*)data, term->hw->regs) != E_OK)
+		if(term->hw->configure(data, term->hw->regs) != E_OK)
 			return -errno;
 
-		term->cfg = *((term_cfg_t*)data);
+		memcpy(term->cfg, data, term->hw->cfg_size);
 		return E_OK;
 
 	case IOCTL_STATUS:

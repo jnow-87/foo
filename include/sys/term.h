@@ -63,12 +63,14 @@ typedef enum{
 	TE_RX_FULL = 0x8,
 } term_err_t;
 
+// NOTE fixed-size types are used to allow
+// 		using this type with the device tree
 typedef struct{
-	term_baudrate_t baud;
-	term_stopb_t stopb;
-	term_parity_t parity;
-	term_csize_t csize;
-	term_flags_t flags;
+	uint32_t baud;
+	uint8_t stopb,
+	uint8_t parity,
+	uint8_t csize,
+	uint8_t flags;
 } term_cfg_t;
 
 

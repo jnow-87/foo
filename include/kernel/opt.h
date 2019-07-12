@@ -14,7 +14,6 @@
 #include <config/config.h>
 #include <kernel/kprintf.h>
 #include <kernel/binloader.h>
-#include <sys/term.h>
 #include <sys/types.h>
 
 
@@ -59,12 +58,6 @@
 	.init_type = CONFIG_INIT_BINTYPE, \
 	.init_arg = CONFIG_INIT_ARGS, \
 	.dbg_lvl = CONFIG_KMSG_FATAL | CONFIG_KMSG_WARN | CONFIG_KMSG_INFO | CONFIG_KMSG_DEBUG | CONFIG_KMSG_STAT, \
-	.term_cfg = { \
-		.baud = CONFIG_KERNEL_UART_BAUDRATE, \
-		.stopb = CONFIG_KERNEL_UART_STOPBITS, \
-		.csize = TCS_8, \
-		.parity = CONFIG_KERNEL_UART_PARITY, \
-	}, \
 }
 
 
@@ -79,8 +72,6 @@ typedef struct{
 	char const init_arg[255];	// argument string for init
 
 	kmsg_t dbg_lvl;				// kernel debug level
-
-	term_cfg_t term_cfg;
 } kopt_t;
 
 

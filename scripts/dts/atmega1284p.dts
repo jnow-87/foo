@@ -63,6 +63,11 @@ driver = {
 	uart0 = {
 		compatible = "avr,uart";
 
+		/**
+		 * uart hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr uart driver
+		 */
 		baseaddr = 0xc0;			// uart0 config register base
 
 		reg = [ 0x64 ];				// PRR0
@@ -76,6 +81,19 @@ driver = {
 		tty0 = {
 			compatible = "terminal";
 
+			/**
+			 * terminal configuration
+			 * 	has to match the configuration data type of
+			 * 	the underlying device driver
+			 */
+			int<32> = [ 115200 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0					// flags
+			];
+
 			klog = {
 				compatible = "kernel,log";
 			};
@@ -85,6 +103,11 @@ driver = {
 	pwm0 = {
 		compatible = "avr,pwm8";
 
+		/**
+		 * pwm hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr pwm driver
+		 */
 		baseaddr = 0x44;			// tcc0 config register base
 
 		reg = [
@@ -103,6 +126,11 @@ driver = {
 	pwm1 = {
 		compatible = "avr,pwm16";
 
+		/**
+		 * pwm hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr pwm driver
+		 */
 		baseaddr = 0x80;			// tcc1 config register base
 
 		reg = [
@@ -121,11 +149,16 @@ driver = {
 	pa0 = {
 		compatible = "avr,gpio";
 
+		/**
+		 * gpio hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr gpio driver
+		 */
 		baseaddr = 0x20;			// porta
 
 		reg = [
-			0x0,					// pcicr
-			0x0						// pcmsk
+			0x0,					// PCICR
+			0x0						// PCMASK
 		];
 
 		int<8> = [ 0 ];				// pcint number
@@ -139,11 +172,16 @@ driver = {
 	pa1 = {
 		compatible = "avr,gpio";
 
+		/**
+		 * gpio hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr gpio driver
+		 */
 		baseaddr = 0x20;			// porta
 
 		reg = [
-			0x0,					// pcicr
-			0x0						// pcmsk
+			0x0,					// PCICR
+			0x0						// PCMSK
 		];
 
 		int<8> = [ 0 ] ;			// pcint number
@@ -157,11 +195,16 @@ driver = {
 	int0 = {
 		compatible = "avr,gpio";
 
+		/**
+		 * gpio hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr gpio driver
+		 */
 		baseaddr = 0x20;			// porta
 
 		reg = [
-			0x68,					// pcicr
-			0x6b					// pcmsk
+			0x68,					// PCICR
+			0x6b					// PCMSK
 		];
 
 		int<8> = [ 2 ];				// pcint number
