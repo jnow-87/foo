@@ -12,7 +12,6 @@ menuconfig DRIVER_GPIO
 	select KERNEL_DEVFS
 
 if DRIVER_GPIO
-
 	config GPIO_DEBUG
 		bool "Enable debug messages"
 		depends on KERNEL_MSG_DEBUG
