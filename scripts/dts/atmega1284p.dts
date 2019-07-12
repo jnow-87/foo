@@ -34,12 +34,12 @@ memory = {
 
 		kernel_data = {
 			baseaddr = 0x00800100;
-			size = 4096;
+			size = 3584;
 		};
 
 		kernel_heap = {
-			baseaddr = 0x00801100;
-			size = 3072;
+			baseaddr = 0x00800f00;
+			size = 3584;
 		};
 
 		kernel_stack = {
@@ -49,12 +49,12 @@ memory = {
 
 		app_heap = {
 			baseaddr = 0x00802000;
-			size = 2816;
+			size = 4096;
 		};
 
 		app_data = {
-			baseaddr = 0x00802b00;
-			size = 5376;
+			baseaddr = 0x00803000;
+			size = 4096;
 		};
 	};
 };
