@@ -22,6 +22,7 @@ libsys-y := errno.o string.o list1.o list2.o vector_lib.o
 libsys-$(CONFIG_SC_DYNMEM) += memblock.o
 libsys-$(CONFIG_LIB_MUTEX) += mutex_lib.o
 libsys-$(CONFIG_LIB_STREAM) += stream_lib.o
+libsys-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 
 
 # custom rules to generate separate objects files for src files that are reuired by kernel and libsys

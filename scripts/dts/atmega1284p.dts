@@ -34,12 +34,12 @@ memory = {
 
 		kernel_data = {
 			baseaddr = 0x00800100;
-			size = 4096;
+			size = 3584;
 		};
 
 		kernel_heap = {
-			baseaddr = 0x00801100;
-			size = 3072;
+			baseaddr = 0x00800f00;
+			size = 3584;
 		};
 
 		kernel_stack = {
@@ -49,12 +49,12 @@ memory = {
 
 		app_heap = {
 			baseaddr = 0x00802000;
-			size = 2816;
+			size = 4096;
 		};
 
 		app_data = {
-			baseaddr = 0x00802b00;
-			size = 5376;
+			baseaddr = 0x00803000;
+			size = 4096;
 		};
 	};
 };
@@ -63,6 +63,11 @@ driver = {
 	uart0 = {
 		compatible = "avr,uart";
 
+		/**
+		 * uart hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr uart driver
+		 */
 		baseaddr = 0xc0;			// uart0 config register base
 
 		reg = [ 0x64 ];				// PRR0
@@ -76,6 +81,19 @@ driver = {
 		tty0 = {
 			compatible = "terminal";
 
+			/**
+			 * terminal configuration
+			 * 	has to match the configuration data type of
+			 * 	the underlying device driver
+			 */
+			int<32> = [ 115200 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0					// flags (none)
+			];
+
 			klog = {
 				compatible = "kernel,log";
 			};
@@ -85,6 +103,11 @@ driver = {
 	pwm0 = {
 		compatible = "avr,pwm8";
 
+		/**
+		 * pwm hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr pwm driver
+		 */
 		baseaddr = 0x44;			// tcc0 config register base
 
 		reg = [
@@ -95,7 +118,7 @@ driver = {
 		reg = [ 0x64 ];				// PRR0
 		int<8> = [ 0x20 ];			// PRR0_PRTIM0
 
-		reg = [ 0x24 ];				// DRRB
+		reg = [ 0x24 ];				// DDRB
 		int<8> = [ 0x18 ];			// DDRB bits 3..4
 
 	};
@@ -103,6 +126,11 @@ driver = {
 	pwm1 = {
 		compatible = "avr,pwm16";
 
+		/**
+		 * pwm hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr pwm driver
+		 */
 		baseaddr = 0x80;			// tcc1 config register base
 
 		reg = [
@@ -113,7 +141,7 @@ driver = {
 		reg = [ 0x64 ];				// PRR0
 		int<8> = [ 0x08 ];			// PRR0_PRTIM1
 
-		reg = [ 0x2a ];				// DRRD
+		reg = [ 0x2a ];				// DDRD
 		int<8> = [ 0x30 ];			// DDRD bits 4..5
 
 	};
@@ -121,54 +149,109 @@ driver = {
 	pa0 = {
 		compatible = "avr,gpio";
 
+		/**
+		 * gpio hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr gpio driver
+		 */
 		baseaddr = 0x20;			// porta
 
 		reg = [
-			0x0,					// pcicr
-			0x0						// pcmsk
+			0x0,					// PCICR
+			0x0						// PCMASK
 		];
 
 		int<8> = [ 0 ];				// pcint number
 
 		int<8> = [
 			0x3,					// direction (in)
-			0x1						// mask
+			0x1						// pin mask
 		];
 	};
 
 	pa1 = {
 		compatible = "avr,gpio";
 
+		/**
+		 * gpio hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr gpio driver
+		 */
 		baseaddr = 0x20;			// porta
 
 		reg = [
-			0x0,					// pcicr
-			0x0						// pcmsk
+			0x0,					// PCICR
+			0x0						// PCMSK
 		];
 
 		int<8> = [ 0 ] ;			// pcint number
 
 		int<8> = [
 			0x3,					// direction (in/out)
-			0x2						// mask
+			0x2						// pin mask
 		];
 	};
 
 	int0 = {
 		compatible = "avr,gpio";
 
+		/**
+		 * gpio hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr gpio driver
+		 */
 		baseaddr = 0x20;			// porta
 
 		reg = [
-			0x68,					// pcicr
-			0x6b					// pcmsk
+			0x68,					// PCICR
+			0x6b					// PCMSK
 		];
 
 		int<8> = [ 2 ];				// pcint number
 
 		int<8> = [
 			0x3,					// direction (in/out)
-			0x4						// mask
+			0x4						// pin mask
 		];
+	};
+
+	spi0 = {
+		compatible = "avr,spi";
+
+		/**
+		 * spi hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr spi driver
+		 */
+		baseaddr = 0x4c;			// spi config register base
+
+		reg = [ 0x24 ];				// DDRB
+		int<8> = [
+			0x40,					// PB6 (MISO)
+			0x20,					// PB5 (MOSI)
+			0x80					// PB7 (SCK)
+		];
+
+		reg = [ 0x64 ];				// PRRO
+		int<8> = [ 0x4 ];			// PRR0_PRSPI
+
+		int<8> = [ 19 ];			// interrupt number
+
+		tty1 = {
+			compatible = "terminal";
+
+			/**
+			 * serial configuration
+			 * 	has to match the configuration data type of
+			 * 	the underlying device driver
+			 */
+			int<8> = [
+				1,					// device mode (master)
+				0,					// sample mode (CPOL = 0, CPHA = 0)
+				0,					// data order (MSB first)
+				1,					// prescaler (4)
+				0					// flags (none)
+			];
+		};
 	};
 };

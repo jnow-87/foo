@@ -11,6 +11,7 @@
 #include <sys/errno.h>
 #include <sys/stat.h>
 #include <sys/term.h>
+#include <sys/uart.h>
 #include <sys/ioctl.h>
 #include <sys/stack.h>
 #include <sys/escape.h>
@@ -52,7 +53,7 @@ int shell(char const *prompt, FILE *_stream){
 	stat_t f_stat;
 	stream_stack *streams,
 				 *stackp;
-	term_cfg_t tc;
+	uart_cfg_t cfg;
 
 
 	/* init */
@@ -63,9 +64,9 @@ int shell(char const *prompt, FILE *_stream){
 	strncpy(shell_file, "stdin", CONFIG_FILE_MAX);
 
 	// enable terminal echo
-	ioctl(0, IOCTL_CFGRD, &tc, sizeof(term_cfg_t));
-	tc.flags &= ~TF_ECHO;
-	ioctl(0, IOCTL_CFGWR, &tc, sizeof(term_cfg_t));
+	ioctl(0, IOCTL_CFGRD, &cfg, sizeof(uart_cfg_t));
+	cfg.flags &= ~TERM_FLAG_ECHO;
+	ioctl(0, IOCTL_CFGWR, &cfg, sizeof(uart_cfg_t));
 
 	// init commands
 	cmd_init();

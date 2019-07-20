@@ -10,6 +10,7 @@
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/term.h>
+#include <sys/uart.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -24,15 +25,15 @@ static int exec(void){
 	size_t i,
 		   n;
 	char buf[20];
-	term_cfg_t tc;
+	uart_cfg_t cfg;
 	term_err_t err;
 	f_mode_t f_mode;
 
 
 	/* disable terminal echo */
-	ioctl(0, IOCTL_CFGRD, &tc, sizeof(term_cfg_t));
-	tc.flags &= ~TF_ECHO;
-	ioctl(0, IOCTL_CFGWR, &tc, sizeof(term_cfg_t));
+	ioctl(0, IOCTL_CFGRD, &cfg, sizeof(uart_cfg_t));
+	cfg.flags &= ~TERM_FLAG_ECHO;
+	ioctl(0, IOCTL_CFGWR, &cfg, sizeof(uart_cfg_t));
 
 	/* get stdin file mode */
 	if(fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t)) != 0){
@@ -66,10 +67,10 @@ static int exec(void){
 
 			if(errno == E_OK){
 				fprintf(stderr, "%s%s%s%s\n",
-					(err & TE_DATA_OVERRUN ? " data overrun" : ""),
-					(err & TE_PARITY ? " parity error" : ""),
-					(err & TE_FRAME ? " frame error" : ""),
-					(err & TE_RX_FULL ? " rx queue full" : "")
+					(err & TERM_ERR_DATA_OVERRUN ? " data overrun" : ""),
+					(err & TERM_ERR_PARITY ? " parity error" : ""),
+					(err & TERM_ERR_FRAME ? " frame error" : ""),
+					(err & TERM_ERR_RX_FULL ? " rx queue full" : "")
 				);
 			}
 			else

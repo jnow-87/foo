@@ -25,6 +25,30 @@
 #include <sys/list.h>
 
 
+/* types */
+typedef struct term_txqueue_t{
+	struct term_txqueue_t *next;
+
+	char const *data;
+	size_t len;
+
+	ksignal_t fin;
+} term_txqueue_t;
+
+typedef struct{
+	void *cfg;
+	term_itf_t *hw;
+
+	term_err_t rx_err;
+	ringbuf_t rx_buf;
+	ksignal_t *rx_rdy;
+
+	mutex_t tx_mtx;
+	term_txqueue_t *tx_queue_head,
+				   *tx_queue_tail;
+} term_t;
+
+
 /* local/static prototypes */
 static int probe(char const *name, void *dt_data, void *dt_itf, term_t **term);
 
@@ -99,17 +123,17 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 		goto err_4;
 
 	/* init term */
-	term->cfg = kopt.term_cfg;
+	term->cfg = dt_data;
 	term->hw = dt_itf;
 	term->rx_rdy = &dev->node->rd_sig;
-	term->rx_err = TE_NONE;
+	term->rx_err = TERM_ERR_NONE;
 	term->tx_queue_head = 0x0;
 	term->tx_queue_tail = 0x0;
 
 	mutex_init(&term->tx_mtx, 0);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
-	if(term->hw->configure(&term->cfg, term->hw->regs) != 0)
+	if(term->hw->configure(term->cfg, term->hw->regs) != 0)
 		goto err_5;
 
 	if(_term)
@@ -185,8 +209,8 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 		len = ringbuf_read(&term->rx_buf, buf, n);
 
 	/* handle terminal flags */
-	// handle TF_ECHO
-	if(len > 0 && (term->cfg.flags & TF_ECHO)){
+	// handle TERM_FLAG_ECHO
+	if(len > 0 && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO)){
 		if(term->hw->puts(buf, n, term->hw->regs) != E_OK)
 			return 0;
 	}
@@ -213,21 +237,21 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, &term->cfg, sizeof(term_cfg_t));
+		memcpy(data, term->cfg, term->hw->cfg_size);
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		if(term->hw->configure((term_cfg_t*)data, term->hw->regs) != E_OK)
+		if(term->hw->configure(data, term->hw->regs) != E_OK)
 			return -errno;
 
-		term->cfg = *((term_cfg_t*)data);
+		memcpy(term->cfg, data, term->hw->cfg_size);
 		return E_OK;
 
 	case IOCTL_STATUS:
 		memcpy(data, &term->rx_err, sizeof(term_err_t));
 
 		// reset error flags
-		term->rx_err = TE_NONE;
+		term->rx_err = TERM_ERR_NONE;
 		return E_OK;
 
 	default:
@@ -288,7 +312,7 @@ static void rx_hdlr(int_num_t num, void *data){
 	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->regs);
 
 	if(ringbuf_write(&term->rx_buf, buf, len) != len)
-		term->rx_err |= TE_RX_FULL;
+		term->rx_err |= TERM_ERR_RX_FULL;
 
 	ksignal_send(term->rx_rdy);
 }
