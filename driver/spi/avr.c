@@ -51,6 +51,9 @@ typedef struct{
 	// power control
 	uint8_t volatile *prr;
 	uint8_t const prr_en;		// PRR device enable value (bit mask)
+
+	// interrupt
+	uint8_t const int_num;
 } dt_data_t;
 
 
@@ -80,7 +83,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->puts = putsn;
 	itf->gets = gets;
 	itf->regs = regs;
-	itf->rx_int = 0;
+	itf->rx_int = regs->int_num;
 	itf->tx_int = 0;
 	itf->cfg_size = sizeof(spi_cfg_t);
 
@@ -113,7 +116,7 @@ static int configure(void *_cfg, void *_regs){
 	// interface configuration
 	regs->dev->spsr = (((pres_bits[cfg->prescaler] & 0x4) >> 2) << SPSR_SPI2X);
 	regs->dev->spcr = (0x1 << SPCR_SPE)
-					| (0x0 << SPCR_SPIE)
+					| ((regs->int_num ? 0x1 : 0x0) << SPCR_SPIE)
 					| (cfg->dev_mode << SPCR_MSTR)
 					| (cfg->data_order << SPCR_DORD)
 					| ((cfg->sample_mode >= SPI_SAMPLE_MODE_2) << SPCR_CPOL)

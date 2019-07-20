@@ -235,6 +235,8 @@ driver = {
 		reg = [ 0x64 ];				// PRRO
 		int<8> = [ 0x4 ];			// PRR0_PRSPI
 
+		int<8> = [ 19 ];			// interrupt number
+
 		tty1 = {
 			compatible = "terminal";
 
