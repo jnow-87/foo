@@ -100,6 +100,22 @@ driver = {
 		};
 	};
 
+	eeprom0 = {
+		compatible = "avr,eeprom";
+
+		/**
+		 * eeprom hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr eeprom driver
+		 */
+		baseaddr = 0x3f;			// eeprom register base
+
+		int<16> = [
+			0x0,					// start
+			4096					// size
+		];
+	};
+
 	pwm0 = {
 		compatible = "avr,pwm8";
 
