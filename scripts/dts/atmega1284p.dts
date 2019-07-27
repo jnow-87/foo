@@ -111,9 +111,11 @@ driver = {
 		baseaddr = 0x3f;			// eeprom register base
 
 		int<16> = [
-			0x0,					// start
+			0x0,					// base address
 			4096					// size
 		];
+
+		int<8> = [ 25 ];			// eeprom ready interrupt
 	};
 
 	pwm0 = {
