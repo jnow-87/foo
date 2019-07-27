@@ -140,7 +140,7 @@ static void putc(char c, void *_regs){
 	regs->dev->spdr = c;
 	while(!(regs->dev->spsr & (0x1 << SPSR_SPIF)));
 
-	DEBUG("%c (%#x)\n", c, (int)c);
+	DEBUG("%c (%#hhx)\n", c, c);
 }
 
 static size_t putsn(char const *s, size_t n, void *_regs){
@@ -159,7 +159,7 @@ static size_t putsn(char const *s, size_t n, void *_regs){
 		regs->dev->spdr = *s;
 		while(!(regs->dev->spsr & (0x1 << SPSR_SPIF)));
 
-		DEBUG("send %c (%#x)\n", *s, (int)*s);
+		DEBUG("send %c (%#hhx)\n", *s, *s);
 	}
 
 	return i;
