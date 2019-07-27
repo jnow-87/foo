@@ -13,7 +13,7 @@
 #include <kernel/memory.h>
 #include <kernel/ksignal.h>
 #include <kernel/driver.h>
-#include <kernel/opt.h>
+#include <kernel/sigqueue.h>
 #include <driver/term.h>
 #include <driver/klog.h>
 #include <sys/ringbuf.h>
@@ -26,14 +26,10 @@
 
 
 /* types */
-typedef struct term_txqueue_t{
-	struct term_txqueue_t *next;
-
-	char const *data;
+typedef struct{
+	char const *s;
 	size_t len;
-
-	ksignal_t fin;
-} term_txqueue_t;
+} tx_data_t;
 
 typedef struct{
 	void *cfg;
@@ -43,9 +39,7 @@ typedef struct{
 	ringbuf_t rx_buf;
 	ksignal_t *rx_rdy;
 
-	mutex_t tx_mtx;
-	term_txqueue_t *tx_queue_head,
-				   *tx_queue_tail;
+	sigq_queue_t tx_queue;
 } term_t;
 
 
@@ -56,11 +50,11 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
 
-static size_t puts_noint(char const *s, size_t n, void *data);
-static size_t puts_int(char const *s, size_t n, void *data);
+static size_t puts_noint(char const *s, size_t n, void *term);
+static size_t puts_int(char const *s, size_t n, void *term);
 
-static void rx_hdlr(int_num_t num, void *data);
-static void tx_hdlr(int_num_t num, void *data);
+static void rx_hdlr(int_num_t num, void *term);
+static void tx_hdlr(int_num_t num, void *term);
 
 
 /* local functions */
@@ -127,10 +121,8 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 	term->hw = dt_itf;
 	term->rx_rdy = &dev->node->rd_sig;
 	term->rx_err = TERM_ERR_NONE;
-	term->tx_queue_head = 0x0;
-	term->tx_queue_tail = 0x0;
 
-	mutex_init(&term->tx_mtx, 0);
+	sigq_queue_init(&term->tx_queue);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
 	if(term->hw->configure(term->cfg, term->hw->regs) != 0)
@@ -259,13 +251,13 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 	}
 }
 
-static size_t puts_noint(char const *s, size_t n, void *data){
+static size_t puts_noint(char const *s, size_t n, void *_term){
 	size_t r;
 	term_t *term;
 	int_type_t imask;
 
 
-	term = (term_t*)data;
+	term = (term_t*)_term;
 
 	imask = int_enable(INT_NONE);
 	r = term->hw->puts(s, n, term->hw->regs);
@@ -274,40 +266,34 @@ static size_t puts_noint(char const *s, size_t n, void *data){
 	return r;
 }
 
-static size_t puts_int(char const *s, size_t n, void *data){
-	bool start;
+static size_t puts_int(char const *s, size_t n, void *_term){
 	term_t *term;
-	term_txqueue_t buf;
+	tx_data_t data;
+	sigq_t e;
 
 
-	term = (term_t*)data;
+	term = (term_t*)_term;
 
-	buf.data = s;
-	buf.len = n;
-	ksignal_init(&buf.fin);
+	data.s = s;
+	data.len = n;
 
-	mutex_lock(&term->tx_mtx);
+	sigq_init(&e, &data);
 
-	list1_add_tail(term->tx_queue_head, term->tx_queue_tail, &buf);
-	start = (list_first(term->tx_queue_head) == &buf);
-
-	mutex_unlock(&term->tx_mtx);
-
-	if(start)
+	if(sigq_enqueue(&term->tx_queue, &e))
 		tx_hdlr(term->hw->tx_int, term);
 
-	ksignal_wait(&buf.fin);
+	sigq_wait(&e);
 
 	return n;
 }
 
-static void rx_hdlr(int_num_t num, void *data){
+static void rx_hdlr(int_num_t num, void *_term){
 	char buf[16];
 	size_t len;
 	term_t *term;
 
 
-	term = (term_t*)data;
+	term = (term_t*)_term;
 
 	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->regs);
 
@@ -317,31 +303,30 @@ static void rx_hdlr(int_num_t num, void *data){
 	ksignal_send(term->rx_rdy);
 }
 
-static void tx_hdlr(int_num_t num, void *data){
-	static term_txqueue_t *buf = 0x0;
+static void tx_hdlr(int_num_t num, void *_term){
+	static sigq_t *e = 0x0;
 	term_t *term;
+	tx_data_t *data;
 
 
-	term = (term_t*)data;
+	term = (term_t*)_term;
 
-	/* get next buffer */
-	if(buf == 0x0){
-		mutex_lock(&term->tx_mtx);
-		buf = list_first(term->tx_queue_head);
-		mutex_unlock(&term->tx_mtx);
-	}
+	/* get next tx queue element */
+	if(e == 0x0)
+		e = sigq_first(&term->tx_queue);
 
 	/* output character */
-	if(buf){
-		term->hw->putc(*buf->data, term->hw->regs);
-		buf->data++;
-		buf->len--;
+	if(e){
+		data = e->data;
 
-		// finish current buffer
-		if(buf->len == 0){
-			list1_rm_head(term->tx_queue_head, term->tx_queue_tail);
-			ksignal_send(&buf->fin);
-			buf = 0x0;
+		term->hw->putc(*data->s, term->hw->regs);
+		data->s++;
+		data->len--;
+
+		// signal tx complete
+		if(data->len == 0){
+			sigq_dequeue(&term->tx_queue, e);
+			e = 0x0;
 		}
 	}
 }
