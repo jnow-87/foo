@@ -17,6 +17,7 @@ obj-$(CONFIG_KERNEL_TEST) += test.o
 obj-$(CONFIG_KERNEL_PRINTF) += kprintf.o
 obj-$(CONFIG_SC_SIGNAL) += usignal.o
 obj-$(CONFIG_KERNEL_IPI) += ipi.o
+obj-$(CONFIG_KERNEL_SIGQUEUE) += sigqueue.o
 
 
 ####
