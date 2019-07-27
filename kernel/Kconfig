@@ -212,6 +212,11 @@ endmenu
 config KERNEL_SIGNAL
 	bool "Kernel signal support"
 	default y
+
+config KERNEL_SIGQUEUE
+	bool "Kernel signaled queue"
+	select KERNEL_SIGNAL
+	default n
 # }}}
 
 #

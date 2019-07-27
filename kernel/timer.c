@@ -106,7 +106,7 @@ static int sc_hdlr_sleep(void *_p){
 	list_add_tail(timer_lst, t);
 
 	/* wait for timer to expire */
-	(void)ksignal_wait(&t->sig);
+	ksignal_wait(&t->sig);
 
 	/* cleanup */
 	list_rm(timer_lst, t);

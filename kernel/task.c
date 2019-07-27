@@ -19,7 +19,6 @@
 
 /* static variables */
 static ktask_t *tasks = 0x0;
-static ktask_queue_t *queues = 0x0;
 static mutex_t task_mtx = MUTEX_INITIALISER();
 
 
@@ -33,7 +32,7 @@ static mutex_t task_mtx = MUTEX_INITIALISER();
  * 							 to the task implementation must not be freed
  *
  * \param	size		size of the data
- * \param	queue		Optional dependency queue of tasks that defines dependencies
+ * \param	dep_queue	Optional dependency queue of tasks that defines dependencies
  * 						between	tasks, i.e. the task is not executed as long as not
  * 						all preceding tasks in that queue have been processed.
  * 						If 0x0 is passed the task is assumed to have no dependencies
@@ -46,7 +45,7 @@ static mutex_t task_mtx = MUTEX_INITIALISER();
  * 			<0 on error, with errno being set appropriately
  * 				E_NOMEM		not enough memory to allocate the task
  */
-int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queue, bool recurring){
+int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *dep_queue, bool recurring){
 	ktask_t *task;
 
 
@@ -57,7 +56,7 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queu
 		return_errno(E_NOMEM);
 
 	task->hdlr = hdlr;
-	task->queue = queue;
+	task->dep_queue = dep_queue;
 	task->queue_next = 0x0;
 	task->flags = TASK_READY | (recurring ? TASK_RECURRING : 0);
 
@@ -67,12 +66,12 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queu
 	/* enqueue task */
 	mutex_lock(&task_mtx);
 
-	// add to local task queue
-	if(queue != 0x0){
-		if(!list_empty(queue->head))
+	// add task to dependency queue
+	if(dep_queue){
+		if(!list_empty(dep_queue->head))
 			task->flags &= ~TASK_READY;
 
-		__list1_add_tail(queue->head, queue->tail, task, queue_next);
+		__list1_add_tail(dep_queue->head, dep_queue->tail, task, queue_next);
 	}
 
 	// add to global task queue
@@ -91,30 +90,28 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *queu
  */
 void ktask_complete(ktask_t *task){
 	ktask_queue_t *queue;
-	bool queue_valid;
 
 
 	mutex_lock(&task_mtx);
 
-	queue = task->queue;
-	queue_valid = (queue && list_contains(queues, queue));
+	queue = task->dep_queue;
 
 	/* update local task queue */
 	// check if the task's queue is still valid or has been destroyed
-	if(queue_valid){
-		// remove task from local queue
-		__list1_rm_head(queue->head, queue->tail, queue_next);
-
+	if(queue){
 		// activate next task in queue
 		if(task->queue_next)
 			task->queue_next->flags |= TASK_READY;
+
+		// remove task from dependency queue
+		__list1_rm_head(queue->head, queue->tail, queue_next);
 	}
 
 	/* re-enqueue recurring tasks and delete non-recurring ones */
-	if((task->flags & TASK_RECURRING) && (task->queue == 0x0 || queue_valid)){
+	if((task->flags & TASK_RECURRING)){
 		list_add_tail(tasks, task);
 
-		if(queue_valid)
+		if(queue)
 			__list1_add_tail(queue->head, queue->tail, task, queue_next);
 	}
 	else
@@ -172,10 +169,6 @@ ktask_queue_t *ktask_queue_create(void){
 	queue->head = 0x0;
 	queue->tail = 0x0;
 
-	mutex_lock(&task_mtx);
-	list_add_tail(queues, queue);
-	mutex_unlock(&task_mtx);
-
 	return queue;
 
 err:
@@ -197,8 +190,10 @@ void ktask_queue_destroy(ktask_queue_t *queue){
 	while(queue->head){
 		task = list_first(queue->head);
 
-		if(task)
+		if(task){
 			__list1_rm_head(queue->head, queue->tail, queue_next);
+			task->dep_queue = 0x0;	// ensure the task will not access an invalid queue
+		}
 
 		// only delete tasks that are still in the global
 		// task list, since all other tasks are currently
@@ -210,7 +205,6 @@ void ktask_queue_destroy(ktask_queue_t *queue){
 	}
 
 	/* free the queue */
-	list_rm(queues, queue);
 	kfree(queue);
 
 	mutex_unlock(&task_mtx);

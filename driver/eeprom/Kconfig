@@ -1,0 +1,20 @@
+#
+# Copyright (C) 2019 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+menuconfig DRIVER_EEPROM
+	bool "EEPROM driver"
+	select KERNEL_DEVFS
+	select KERNEL_SIGQUEUE
+
+if DRIVER_EEPROM
+	config EEPROM_DEBUG
+		bool "Enable debug messages"
+		depends on KERNEL_MSG_DEBUG
+		default n
+endif # DRIVER_EEPROM

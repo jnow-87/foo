@@ -11,6 +11,7 @@ menuconfig DRIVER_TERM
 	bool "Terminal driver"
 	select KERNEL_DEVFS
 	select KERNEL_SIGNAL
+	select KERNEL_SIGQUEUE
 	select SYS_RINGBUFFER
 
 if DRIVER_TERM

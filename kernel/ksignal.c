@@ -22,6 +22,7 @@ static csection_lock_t sig_mtx = CSECTION_INITIALISER();
 
 /* global functions */
 void ksignal_init(ksignal_t *sig){
+	sig->unmatched = 0;
 	sig->head = 0x0;
 	sig->tail = 0x0;
 }
@@ -31,27 +32,27 @@ void ksignal_init(ksignal_t *sig){
  * 			mutex must be locked, active locks on a dedicated
  * 			object such	as a file descriptor are fine
  */
-int ksignal_wait(ksignal_t *sig){
-	ksignal_queue_t *e;
+void ksignal_wait(ksignal_t *sig){
+	ksignal_queue_t e;
 
 
-	e = kmalloc(sizeof(ksignal_queue_t));
-
-	if(e == 0x0)
-		return_errno(E_NOMEM);
-
-	e->thread = sched_running();
+	e.thread = sched_running();
 
 	csection_lock(&sig_mtx);
 
-	queue_enqueue(sig->head, sig->tail, e);
-	sched_thread_pause((thread_t*)e->thread);
+	if(sig->unmatched){
+		sig->unmatched--;
+		csection_unlock(&sig_mtx);
+
+		return;
+	}
+
+	queue_enqueue(sig->head, sig->tail, &e);
+	sched_thread_pause((thread_t*)e.thread);
 
 	csection_unlock(&sig_mtx);
 
 	sched_yield();
-
-	return E_OK;
 }
 
 void ksignal_send(ksignal_t *sig){
@@ -62,10 +63,8 @@ void ksignal_send(ksignal_t *sig){
 
 	e = queue_dequeue(sig->head, sig->tail);
 
-	if(e != 0x0){
-		sched_thread_wake((thread_t*)e->thread);
-		kfree(e);
-	}
+	if(e != 0x0)	sched_thread_wake((thread_t*)e->thread);
+	else			sig->unmatched++;
 
 	csection_unlock(&sig_mtx);
 }
@@ -76,6 +75,9 @@ void ksignal_bcast(ksignal_t *sig){
 
 	csection_lock(&sig_mtx);
 
+	if(list_empty(sig->head))
+		sig->unmatched++;
+
 	while(1){
 		e = queue_dequeue(sig->head, sig->tail);
 
@@ -83,7 +85,6 @@ void ksignal_bcast(ksignal_t *sig){
 			break;
 
 		sched_thread_wake((thread_t*)e->thread);
-		kfree(e);
 	}
 
 	csection_unlock(&sig_mtx);
