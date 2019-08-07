@@ -22,16 +22,22 @@ static int help(char const *prog_name, char const *msg, ...);
 static int exec(int argc, char **argv){
 	int i;
 	uint8_t x;
-	bool binary;
+	bool binary,
+		 newline;
 
 
 	binary = false;
+	newline = true;
 
 	/* check options */
 	for(i=1; i<argc && argv[i][0]=='-'; i++){
 		switch(argv[i][1]){
 		case 'b':
 			binary = true;
+			break;
+
+		case 'n':
+			newline = false;
 			break;
 
 		default:
@@ -54,13 +60,15 @@ static int exec(int argc, char **argv){
 			break;
 	}
 
-	if(!binary)	fputc('\n', stdout);
-	else		fflush(stdout);
+	if(!binary && newline)
+		fputc('\n', stdout);
+
+	fflush(stdout);
 
 	if(errno)
 		fprintf(stderr, "error \"%s\"\n", strerror(errno));
 
-	return 0;
+	return errno;
 }
 
 command("echo", exec);
@@ -80,8 +88,10 @@ static int help(char const *prog_name, char const *msg, ...){
 		"usage: %s <options> <args>\n"
 		"\noptions:\n"
 		"%15.15s    %s\n"
+		"%15.15s    %s\n"
 		, prog_name
 		, "-b", "convert <args> to binary representation"
+		, "-n", "skip trailing newline"
 	);
 
 	return (msg ? 1 : 0);
