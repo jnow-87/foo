@@ -53,7 +53,9 @@ static int exec(int argc, char **argv){
 		}
 		else{
 			fputs(argv[i], stdout);
-			fputc(' ', stdout);
+
+			if(i + 1 < argc)
+				fputc(' ', stdout);
 		}
 
 		if(errno)
