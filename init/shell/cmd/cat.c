@@ -103,7 +103,7 @@ static int exec(int argc, char **argv){
 	f_seek.offset = offset;
 	f_seek.whence = SEEK_SET;
 
-	if(fcntl(fd, F_SEEK, &f_seek, sizeof(seek_t)) != E_OK){
+	if(offset && fcntl(fd, F_SEEK, &f_seek, sizeof(seek_t)) != E_OK){
 		fprintf(stderr, "seek failed \"%s\"\n", strerror(errno));
 		goto end_1;
 	}
