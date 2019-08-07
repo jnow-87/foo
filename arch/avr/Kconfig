@@ -20,7 +20,6 @@ choice
 		select REGISTER_WIDTH_8
 		select AVR_ISA_AVR51
 		select AVR_ATMEGA
-		select AVR_NPORTS_4
 
 	config ATMEGA88PA
 		bool "Atmega88PA"
@@ -28,7 +27,6 @@ choice
 		select REGISTER_WIDTH_8
 		select AVR_ISA_AVR4
 		select AVR_ATMEGA
-		select AVR_NPORTS_4
 endchoice
 
 menu "Hidden"
@@ -58,39 +56,6 @@ menu "Hidden"
 	config AVR_XMEGA
 		bool "Xmega MCU"
 		default n
-
-	config AVR_NPORTS_1
-		bool "1 I/O port"
-
-	config AVR_NPORTS_2
-		bool "2 I/O ports"
-		select AVR_NPORTS_1
-
-	config AVR_NPORTS_3
-		bool "3 I/O ports"
-		select AVR_NPORTS_2
-
-	config AVR_NPORTS_4
-		bool "4 I/O ports"
-		select AVR_NPORTS_3
-
-	config AVR_NPORTS_5
-		bool "5 I/O ports"
-		select AVR_NPORTS_4
-
-	config AVR_NPORTS_6
-		bool "6 I/O ports"
-		select AVR_NPORTS_5
-
-	config AVR_NPORTS
-		int "Number of I/O ports"
-		default 1 if AVR_NPORTS_1 && !AVR_NPORTS_2
-		default 2 if AVR_NPORTS_2 && !AVR_NPORTS_3
-		default 3 if AVR_NPORTS_3 && !AVR_NPORTS_4
-		default 4 if AVR_NPORTS_4 && !AVR_NPORTS_5
-		default 5 if AVR_NPORTS_5 && !AVR_NPORTS_6
-		default 6 if AVR_NPORTS_6
-		default 0
 
 	# architecture defining header
 	config ARCH_HEADER
