@@ -14,3 +14,4 @@ obj-$(CONFIG_DRIVER_GPIO) += gpio/
 obj-$(CONFIG_DRIVER_PWM) += pwm/
 obj-$(CONFIG_DRIVER_SPI) += spi/
 obj-$(CONFIG_DRIVER_EEPROM) += eeprom/
+obj-$(CONFIG_DRIVER_I2C) += i2c/

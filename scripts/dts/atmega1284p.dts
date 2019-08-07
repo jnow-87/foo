@@ -272,4 +272,15 @@ driver = {
 			];
 		};
 	};
+
+	i2c0 = {
+		compatible = "avr,i2c";
+
+		baseaddr = 0xb8;
+
+		reg = [ 0x64 ];				// PRRO
+		int<8> = [ 0x80 ];			// PRR0_PRTWI
+
+		int<8> = [ 0 ];				// interrupt number
+	};
 };

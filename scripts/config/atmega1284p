@@ -151,6 +151,7 @@ CONFIG_DRIVER_UART=y
 # CONFIG_DRIVER_PWM is not set
 # CONFIG_DRIVER_SPI is not set
 # CONFIG_DRIVER_EEPROM is not set
+# CONFIG_DRIVER_I2C is not set
 
 #
 # Sys
