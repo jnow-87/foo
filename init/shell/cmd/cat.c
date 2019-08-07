@@ -26,7 +26,8 @@ static int help(char const *prog_name, char const *msg, ...);
 static int exec(int argc, char **argv){
 	size_t i;
 	size_t n,
-		   bs;
+		   bs,
+		   r;
 	int offset;
 	char *buf;
 	bool binary;
@@ -116,14 +117,16 @@ static int exec(int argc, char **argv){
 	}
 
 	/* read */
-	buf[bs] = 0;
-
 	for(; n>0; n--){
-		if(read(fd, buf, bs) <= 0)
+		r = read(fd, buf, bs);
+
+		if(r <= 0)
 			break;
 
+		buf[r] = 0;
+
 		if(binary){
-			for(i=0; i<bs; i++)
+			for(i=0; i<r; i++)
 				printf("%x", (int)(buf[i] & 0xff));
 		}
 		else
