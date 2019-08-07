@@ -79,7 +79,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *regs;
 	devfs_ops_t ops;
 	devfs_dev_t *dev;
-	dev_data_t *dev_data;
+	dev_data_t *port;
 
 
 	regs = (dt_data_t*)dt_data;
@@ -92,15 +92,15 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	ops.ioctl = ioctl;
 	ops.fcntl = 0x0;
 
-	dev_data = kmalloc(sizeof(dev_data_t));
+	port = kmalloc(sizeof(dev_data_t));
 
-	if(dev_data == 0x0)
+	if(port == 0x0)
 		goto err_0;
 
-	dev_data->regs = dt_data;
-	dev_data->sig_tgt_lst = 0x0;
+	port->regs = dt_data;
+	port->sig_tgt_lst = 0x0;
 
-	dev = devfs_dev_register(name, &ops, 0x0, dev_data);
+	dev = devfs_dev_register(name, &ops, 0x0, port);
 
 	if(dev == 0x0)
 		goto err_1;
@@ -127,7 +127,7 @@ err_2:
 	devfs_dev_release(dev);
 
 err_1:
-	kfree(dev_data);
+	kfree(port);
 
 err_0:
 	return -errno;
@@ -136,19 +136,19 @@ err_0:
 device_probe("avr,gpio", probe);
 
 static int close(struct devfs_dev_t *dev, fs_filed_t *fd){
-	dev_data_t *dev_data;
+	dev_data_t *port;
 	sig_tgt_t *tgt;
 
 
-	dev_data = (dev_data_t*)dev->data;
+	port = (dev_data_t*)dev->data;
 
-	list_for_each(dev_data->sig_tgt_lst, tgt){
+	list_for_each(port->sig_tgt_lst, tgt){
 		if(tgt->fd != fd)
 			continue;
 
 		DEBUG("remove %s.%d from signal list for \"%s\"\n", tgt->thread->parent->name, tgt->thread->tid, dev->node->name);
 
-		list_rm(dev_data->sig_tgt_lst, tgt);
+		list_rm(port->sig_tgt_lst, tgt);
 		kfree(tgt);
 	}
 
@@ -190,12 +190,12 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 }
 
 static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
-	dev_data_t *dev_data;
+	dev_data_t *port;
 	sig_tgt_t *tgt;
 	signal_t sig;
 
 
-	dev_data = (dev_data_t*)dev->data;
+	port = (dev_data_t*)dev->data;
 
 	switch(request){
 	case IOCTL_CFGWR:
@@ -213,7 +213,7 @@ static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *dat
 		tgt->thread = (thread_t*)sched_running();
 		tgt->fd = fd;
 
-		list_add_tail(dev_data->sig_tgt_lst, tgt);
+		list_add_tail(port->sig_tgt_lst, tgt);
 
 		DEBUG("add %s.%d to signal list for \"%s\"\n", tgt->thread->parent->name, tgt->thread->tid, dev->node->name);
 
@@ -226,16 +226,16 @@ static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *dat
 
 static void int_hdlr(int_num_t num, void *data){
 	devfs_dev_t *dev;
-	dev_data_t *dev_data;
+	dev_data_t *port;
 	sig_tgt_t *tgt;
 
 
 	dev = (devfs_dev_t*)data;
-	dev_data = (dev_data_t*)dev->data;
+	port = (dev_data_t*)dev->data;
 
 	DEBUG("int %d on \"%s\"\n", num, dev->node->name);
 
-	list_for_each(dev_data->sig_tgt_lst, tgt)
+	list_for_each(port->sig_tgt_lst, tgt)
 		usignal_send(tgt->thread, tgt->signal);
 }
 

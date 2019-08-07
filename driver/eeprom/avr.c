@@ -51,18 +51,16 @@ typedef struct{
 	dt_data_t *regs;
 
 	sigq_queue_t write_queue;
-} eeprom_t;
+} dev_data_t;
 
 
 /* local/static prototypes */
-static int probe(char const *name, void *dt_data, void *dt_itf);
-
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 
-static size_t write_noint(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
-static size_t write_int(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
+static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
+static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
 static void write_byte(uint8_t b, size_t offset, dt_data_t *regs);
 static void write_hdlr(int_num_t num, void *eeprom);
 
@@ -71,13 +69,13 @@ static void write_hdlr(int_num_t num, void *eeprom);
 static int probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *regs;
 	devfs_ops_t ops;
-	eeprom_t *eeprom;
+	dev_data_t *eeprom;
 
 
 	regs = (dt_data_t*)dt_data;
 
 	/* allocate eeprom */
-	eeprom = kmalloc(sizeof(eeprom_t));
+	eeprom = kmalloc(sizeof(dev_data_t));
 
 	if(eeprom == 0x0)
 		goto err_0;
@@ -126,7 +124,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
 
 
 	buf = (char*)_buf;
-	regs = ((eeprom_t*)dev->data)->regs;
+	regs = ((dev_data_t*)dev->data)->regs;
 
 	if(fd->fp + n >= regs->size){
 		errno = E_LIMIT;
@@ -155,7 +153,7 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	dt_data_t *regs;
 
 
-	regs = ((eeprom_t*)dev->data)->regs;
+	regs = ((dev_data_t*)dev->data)->regs;
 
 	if(fd->fp + n >= regs->size){
 		errno = E_LIMIT;
@@ -174,7 +172,7 @@ static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *_data){
 
 
 	data = (seek_t*)_data;
-	regs = ((eeprom_t*)dev->data)->regs;
+	regs = ((dev_data_t*)dev->data)->regs;
 
 	switch(cmd){
 	case F_SEEK:
@@ -198,7 +196,7 @@ static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *_data){
 	};
 }
 
-static size_t write_noint(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
+static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
 	size_t i;
 
 
@@ -210,7 +208,7 @@ static size_t write_noint(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t
 	return n;
 }
 
-static size_t write_int(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
+static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
 	write_data_t data;
 	sigq_t e;
 
@@ -259,11 +257,11 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *regs){
 
 static void write_hdlr(int_num_t num, void *_eeprom){
 	static sigq_t *e = 0x0;
-	eeprom_t *eeprom;
+	dev_data_t *eeprom;
 	write_data_t *data;
 
 
-	eeprom = (eeprom_t*)_eeprom;
+	eeprom = (dev_data_t*)_eeprom;
 
 	/* disable interrupt */
 	// NOTE ithis is required since an interrupt is triggered

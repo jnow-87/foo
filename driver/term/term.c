@@ -44,8 +44,6 @@ typedef struct{
 
 
 /* local/static prototypes */
-static int probe(char const *name, void *dt_data, void *dt_itf, term_t **term);
-
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
