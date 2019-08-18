@@ -273,7 +273,7 @@ driver = {
 		};
 	};
 
-	i2c0 = {
+	avri2c = {
 		compatible = "avr,i2c";
 
 		baseaddr = 0xb8;
@@ -282,5 +282,22 @@ driver = {
 		int<8> = [ 0x80 ];			// PRR0_PRTWI
 
 		int<8> = [ 0 ];				// interrupt number
+
+		i2c0 = {
+			compatible = "i2c";
+
+			/**
+			 * i2c configuration
+			 *	has to match the configuration data type of
+			 *	the underlying device driver
+			 */
+			 int<8> = [ 1 ];		// mode (master)
+			 int<16> = [ 50 ];		// clock (50kHz)
+			 int<8> = [
+				1,				// broadcast (enabled)
+				1,				// host address
+				0				// target address
+			 ];
+		};
 	};
 };

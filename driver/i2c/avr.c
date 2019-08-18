@@ -10,13 +10,10 @@
 #include <arch/interrupt.h>
 #include <arch/avr/register.h>
 #include <kernel/driver.h>
-#include <kernel/devfs.h>
 #include <kernel/kprintf.h>
-#include <sys/i2c.h>
+#include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>
-#include <sys/ioctl.h>
-#include <sys/string.h>
 #include <sys/mutex.h>
 
 
@@ -72,6 +69,13 @@ typedef struct{
 	uint8_t const int_num;
 } dt_data_t;
 
+typedef struct{
+	i2c_itf_t itf;
+	dt_data_t *regs;
+
+	mutex_t mtx;
+} dev_data_t;
+
 typedef enum{
 	// master mode status
 	S_MST_START = 0x08,
@@ -108,57 +112,43 @@ typedef enum{
 	S_SLA_SLAR_DATA_NACK = 0xc0,
 	S_SLA_SLAR_DATA_LAST_ACK = 0xc8,
 
-	// error
+	// misc
 	S_ERROR = 0x0,
 	S_INVAL = 0xf8,
 } status_t;
 
-typedef struct{
-	dt_data_t *regs;
-
-	i2c_cfg_t cfg;
-	mutex_t mtx;
-} dev_data_t;
-
 
 /* local/static prototypes */
-static int probe(char const *name, void *dt_data, void *dt_itf);
-
-static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
-static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
-
-static int configure(i2c_cfg_t *cfg, dt_data_t *regs);
-static int master_read(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t len);
-static int slave_read(dt_data_t *regs, uint8_t *data, size_t len);
-static int master_write(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t len);
-static int slave_write(dt_data_t *regs, uint8_t *data, size_t len);
+static int configure(i2c_cfg_t *cfg, void *data);
+static int master_read(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
+static int master_write(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
+static int slave_read(uint8_t *buf, size_t n, void *data);
+static int slave_write(uint8_t *buf, size_t n, void *data);
 
 static void int_hdlr(int_num_t num, void *data);
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
-	devfs_ops_t ops;
-	dt_data_t *regs;
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dev_data_t *i2c;
+	dt_data_t *regs;
 
 
 	regs = (dt_data_t*)dt_data;
 
-	/* allocate eeprom */
+	/* allocate interface */
 	i2c = kmalloc(sizeof(dev_data_t));
 
 	if(i2c == 0x0)
 		goto err_0;
 
+	i2c->itf.configure = configure;
+	i2c->itf.master_read = master_read;
+	i2c->itf.master_write = master_write;
+	i2c->itf.slave_read = slave_read;
+	i2c->itf.slave_write = slave_write;
+	i2c->itf.data = i2c;
 	i2c->regs = regs;
-	i2c->cfg.mode = I2C_MODE_MASTER;
-	i2c->cfg.clock_khz = 50;
-	i2c->cfg.host_addr = 1;
-	i2c->cfg.host_addr = 2;
-	i2c->cfg.bcast_en = true;
 
 	mutex_init(&i2c->mtx, MTX_NONE);
 
@@ -166,108 +156,26 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(regs->int_num && int_register(regs->int_num, int_hdlr, i2c) != 0)
 		goto err_1;
 
-	/* register device */
-	ops.open = 0x0;
-	ops.close = 0x0;
-	ops.read = read;
-	ops.write = write;
-	ops.ioctl = ioctl;
-	ops.fcntl = fcntl;
+	return &i2c->itf;
 
-	if(devfs_dev_register(name, &ops, 0, i2c) == 0x0)
-		goto err_2;
-
-	return E_OK;
-
-
-err_2:
-	int_release(regs->int_num);
 
 err_1:
 	kfree(i2c);
 
 err_0:
-	return -errno;
+	return 0x0;
 }
 
-device_probe("avr,i2c", probe);
+interface_probe("avr,i2c", probe);
 
-static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	size_t r;
-	dev_data_t *i2c;
-
-
-	i2c = (dev_data_t*)dev->data;
-
-	mutex_lock(&i2c->mtx);
-
-	if(i2c->cfg.mode == I2C_MODE_MASTER)	r = master_read(i2c->regs, &i2c->cfg, buf, n);
-	else									r = slave_read(i2c->regs, buf, n);
-
-	mutex_unlock(&i2c->mtx);
-
-	return r;
-}
-
-static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	size_t r;
-	dev_data_t *i2c;
-
-
-	i2c = (dev_data_t*)dev->data;
-
-	mutex_lock(&i2c->mtx);
-
-	if(i2c->cfg.mode == I2C_MODE_MASTER)	r = master_write(i2c->regs, &i2c->cfg, buf, n);
-	else									r = slave_write(i2c->regs, buf, n);
-
-	mutex_unlock(&i2c->mtx);
-
-	return r;
-}
-
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
-	dev_data_t *i2c;
-
-
-	i2c = (dev_data_t*)dev->data;
-
-	mutex_lock(&i2c->mtx);
-
-	switch(request){
-	case IOCTL_CFGRD:
-		memcpy(data, &i2c->cfg, sizeof(i2c_cfg_t));
-		break;
-
-	case IOCTL_CFGWR:
-		if(configure(data, i2c->regs) != E_OK)
-			goto err;
-
-		memcpy(&i2c->cfg, data, sizeof(i2c_cfg_t));
-		break;
-
-	default:
-		goto_errno(err, E_NOSUP);
-	}
-
-	mutex_unlock(&i2c->mtx);
-	return E_OK;
-
-
-err:
-	mutex_unlock(&i2c->mtx);
-	return -errno;
-}
-
-static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data){
-	// TODO
-	// 	allow seeking within the slave rx/tx queues
-	return_errno(E_NOSUP);
-}
-
-static int configure(i2c_cfg_t *cfg, dt_data_t *regs){
+static int configure(i2c_cfg_t *cfg, void *data){
 	uint8_t brate;
+	dt_data_t *regs;
+	dev_data_t *i2c;
 
+
+	i2c = (dev_data_t*)data;
+	regs = i2c->regs;
 
 	/* check config */
 	// max 400 kHz
@@ -285,6 +193,8 @@ static int configure(i2c_cfg_t *cfg, dt_data_t *regs){
 	if(brate == 0)
 		return_errno(E_INVAL);
 
+	mutex_lock(&i2c->mtx);
+
 	/* disable twi */
 	*regs->prr |= regs->prr_en;
 
@@ -300,17 +210,26 @@ static int configure(i2c_cfg_t *cfg, dt_data_t *regs){
 					| ((regs->int_num ? 0x1 : 0x0) << TWCR_TWIE)
 					;
 
+	mutex_unlock(&i2c->mtx);
+
 	return E_OK;
 }
 
-static int master_read(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t len){
-	size_t n;
+static int master_read(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
+	size_t i;
 	uint8_t cr,
 			c;
+	dev_data_t *i2c;
+	dt_data_t *regs;
 	status_t s;
 
 
-	n = 0;
+	i2c = (dev_data_t*)data;
+	regs = i2c->regs;
+	i = 0;
+
+	mutex_lock(&i2c->mtx);
+
 	cr = (regs->int_num ? 0x1 : 0x0) << TWCR_TWIE
 	   | (0x1 << TWCR_TWEN)
 	   ;
@@ -325,7 +244,7 @@ static int master_read(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t le
 	DEBUG("start (%#hhx)\n", s);
 
 	/* slave read */
-	regs->dev->twdr = cfg->target_addr << TWDR_ADDR | (0x1 << TWDR_RW);
+	regs->dev->twdr = target_addr << TWDR_ADDR | (0x1 << TWDR_RW);
 	regs->dev->twcr = cr | (0x1 << TWCR_TWINT);
 
 	s = WAITINT(regs);
@@ -336,9 +255,9 @@ static int master_read(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t le
 	DEBUG("sla-r (%#hhx)\n", s);
 
 	/* read bytes */
-	while(n < len){
-		if(n + 1 == len)	regs->dev->twcr = cr | (0x1 << TWCR_TWINT);
-		else				regs->dev->twcr = cr | (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+	while(i < n){
+		if(i + 1 == n)	regs->dev->twcr = cr | (0x1 << TWCR_TWINT);
+		else			regs->dev->twcr = cr | (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
 
 		s = WAITINT(regs);
 		c = regs->dev->twdr;
@@ -348,7 +267,7 @@ static int master_read(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t le
 		if(!(s == S_MST_SLAR_DATA_ACK || s == S_MST_SLAR_DATA_NACK) || c == 0xff)
 			break;
 
-		data[n++] = c;
+		buf[i++] = c;
 
 		// no further data, i.e. nack
 		if(!(s == S_MST_SLAR_DATA_ACK))
@@ -357,61 +276,27 @@ static int master_read(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t le
 
 end:
 	/* stop and reset to unaddressed slave mode */
-	regs->dev->twcr = cr | (0x1 << TWCR_TWSTO) | (0x1 << TWCR_TWINT);
+	regs->dev->twcr = cr | (0x1 << TWCR_TWSTO) | (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
 
-	return n;
+	mutex_unlock(&i2c->mtx);
+
+	return i;
 }
 
-static int slave_read(dt_data_t *regs, uint8_t *data, size_t len){
-	size_t n;
-	uint8_t c;
-	status_t s;
-
-
-	n = 0;
-
-	/* wait for slave being addressed */
-	s = WAITINT(regs);
-
-	if(!(s == S_SLA_SLAW_MATCH || s == S_SLA_SLAW_ARBLOST_ADDR_MATCH || s == S_SLA_BCAST_MATCH || s == S_SLA_BCAST_ARBLOST_MATCH))
-		goto_errno(end, E_IO);
-
-	DEBUG("match (%#hhx)\n", s);
-
-	/* read bytes */
-	while(n < len){
-		if(n + 1 == len)	regs->dev->twcr = (regs->dev->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
-		else				regs->dev->twcr |= (0x1 << TWCR_TWINT) | (0x1 << TWCR_TWEA);
-
-		s = WAITINT(regs);
-		c = regs->dev->twdr;
-		DEBUG("read (%#hhx): %c (%#hhx)\n", s, c, c);
-
-		// no data
-		if(!(s == S_SLA_SLAW_DATA_ACK || s == S_SLA_SLAW_DATA_NACK || s == S_SLA_BCAST_DATA_ACK || s == S_SLA_BCAST_DATA_NACK))
-			break;
-
-		data[n++] = c;
-
-		// no further data, i.e. nack
-		if(!(s == S_SLA_SLAW_DATA_ACK || s == S_SLA_BCAST_DATA_ACK))
-			break;
-	}
-
-end:
-	/* reset to unaddressed slave mode */
-	regs->dev->twcr |= (0x1 << TWCR_TWINT) | (0x1 << TWCR_TWEA);
-
-	return n;
-}
-
-static int master_write(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t len){
-	size_t n;
+static int master_write(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
+	size_t i;
 	register uint8_t cr;
+	dev_data_t *i2c;
+	dt_data_t *regs;
 	status_t s;
 
 
-	n = 0;
+	i2c = (dev_data_t*)data;
+	regs = i2c->regs;
+	i = 0;
+
+	mutex_lock(&i2c->mtx);
+
 	cr = (regs->int_num ? 0x1 : 0x0) << TWCR_TWIE
 	   | (0x1 << TWCR_TWEN)
 	   ;
@@ -426,7 +311,7 @@ static int master_write(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t l
 	DEBUG("start (%#hhx)\n", s);
 
 	/* slave write */
-	regs->dev->twdr = cfg->target_addr << TWDR_ADDR | (0x0 << TWDR_RW);
+	regs->dev->twdr = target_addr << TWDR_ADDR | (0x0 << TWDR_RW);
 	regs->dev->twcr = cr | (0x1 << TWCR_TWINT);
 
 	s = WAITINT(regs);
@@ -437,33 +322,92 @@ static int master_write(dt_data_t *regs, i2c_cfg_t *cfg, uint8_t *data, size_t l
 	DEBUG("sla-w (%#hhx)\n", s);
 
 	/* write bytes */
-	while(n < len){
-		regs->dev->twdr = data[n];
+	while(i < n){
+		regs->dev->twdr = buf[i];
 		regs->dev->twcr = cr | (0x1 << TWCR_TWINT);
 
 		s = WAITINT(regs);
-		DEBUG("write (%#hhx): %c (%#hhx)\n", s, data[n], data[n]);
+		DEBUG("write (%#hhx): %c (%#hhx)\n", s, buf[i], buf[i]);
 
 		// nack
 		if(!(s == S_MST_SLAW_DATA_ACK))
 			break;
 
-		n++;
+		i++;
 	}
 
 end:
-	// stop and reset to unaddressed slave mode */
-	regs->dev->twcr = cr | (0x1 << TWCR_TWSTO) | (0x1 << TWCR_TWINT);
+	/* stop and reset to unaddressed slave mode */
+	regs->dev->twcr = cr | (0x1 << TWCR_TWSTO) | (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
 
-	return n;
+	mutex_unlock(&i2c->mtx);
+
+	return i;
 }
 
-static int slave_write(dt_data_t *regs, uint8_t *data, size_t len){
-	size_t n;
+static int slave_read(uint8_t *buf, size_t n, void *data){
+	size_t i;
+	uint8_t c;
+	dev_data_t *i2c;
+	dt_data_t *regs;
 	status_t s;
 
 
-	n = 0;
+	i2c = (dev_data_t*)data;
+	regs = i2c->regs;
+	i = 0;
+
+	mutex_lock(&i2c->mtx);
+
+	/* wait for slave being addressed */
+	s = WAITINT(regs);
+
+	if(!(s == S_SLA_SLAW_MATCH || s == S_SLA_SLAW_ARBLOST_ADDR_MATCH || s == S_SLA_BCAST_MATCH || s == S_SLA_BCAST_ARBLOST_MATCH))
+		goto_errno(end, E_IO);
+
+	DEBUG("match (%#hhx)\n", s);
+
+	/* read bytes */
+	while(i < n){
+		if(i + 1 == n)	regs->dev->twcr = (regs->dev->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
+		else			regs->dev->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+
+		s = WAITINT(regs);
+		c = regs->dev->twdr;
+		DEBUG("read (%#hhx): %c (%#hhx)\n", s, c, c);
+
+		// no data
+		if(!(s == S_SLA_SLAW_DATA_ACK || s == S_SLA_SLAW_DATA_NACK || s == S_SLA_BCAST_DATA_ACK || s == S_SLA_BCAST_DATA_NACK))
+			break;
+
+		buf[i++] = c;
+
+		// no further data, i.e. nack
+		if(!(s == S_SLA_SLAW_DATA_ACK || s == S_SLA_BCAST_DATA_ACK))
+			break;
+	}
+
+end:
+	/* reset to unaddressed slave mode */
+	regs->dev->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+
+	mutex_unlock(&i2c->mtx);
+
+	return i;
+}
+
+static int slave_write(uint8_t *buf, size_t n, void *data){
+	size_t i;
+	dev_data_t *i2c;
+	dt_data_t *regs;
+	status_t s;
+
+
+	i2c = (dev_data_t*)data;
+	regs = i2c->regs;
+	i = 0;
+
+	mutex_lock(&i2c->mtx);
 
 	/* wait for slave being addressed */
 	s = WAITINT(regs);
@@ -474,27 +418,29 @@ static int slave_write(dt_data_t *regs, uint8_t *data, size_t len){
 	DEBUG("match (%#hhx)\n", s);
 
 	/* write bytes */
-	while(n < len){
-		regs->dev->twdr = data[n];
+	while(i < n){
+		regs->dev->twdr = buf[i];
 
-		if(n + 1 == len)	regs->dev->twcr = (regs->dev->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
-		else				regs->dev->twcr |= (0x1 << TWCR_TWINT) | (0x1 << TWCR_TWEA);
+		if(i + 1 == n)	regs->dev->twcr = (regs->dev->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
+		else			regs->dev->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
 
 		s = WAITINT(regs);
-		DEBUG("write (%#hhx): %c (%#hhx)\n", s, data[n], data[n]);
+		DEBUG("write (%#hhx): %c (%#hhx)\n", s, buf[i], buf[i]);
 
 		// nack
 		if(!(s == S_SLA_SLAR_DATA_ACK))
 			break;
 
-		n++;
+		i++;
 	}
 
 end:
 	/* reset to unaddressed slave mode */
-	regs->dev->twcr |= (0x1 << TWCR_TWINT) | (0x1 << TWCR_TWEA);
+	regs->dev->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
 
-	return n;
+	mutex_unlock(&i2c->mtx);
+
+	return i;
 }
 
 static void int_hdlr(int_num_t num, void *data){

@@ -7,7 +7,8 @@
 
 
 
-obj-$(CONFIG_AVR) := avr.o
+obj-y := i2c.o
+obj-$(CONFIG_AVR) += avr.o
 
 
 cppflags-$(CONFIG_I2C_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
