@@ -37,6 +37,8 @@ typedef struct{
 void ringbuf_init(ringbuf_t *buf, void *data, size_t n);
 size_t ringbuf_read(ringbuf_t *buf, void *data, size_t n);
 size_t ringbuf_write(ringbuf_t *buf, void *data, size_t n);
+size_t ringbuf_contains(ringbuf_t *buf);
+size_t ringbuf_left(ringbuf_t *buf);
 bool ringbuf_empty(ringbuf_t *buf);
 bool ringbuf_full(ringbuf_t *buf);
 
