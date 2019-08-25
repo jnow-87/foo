@@ -36,6 +36,9 @@ menu "Commands"
 	config INIT_PWMCTRL
 		bool "pwmctrl"
 
+	config INIT_I2CCFG
+		bool "i2ccfg"
+
 	config INIT_TEST
 		bool test
 endmenu
