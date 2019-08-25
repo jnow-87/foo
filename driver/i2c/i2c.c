@@ -29,7 +29,6 @@ typedef struct{
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
-static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 
 
 /* local functions */
@@ -53,9 +52,8 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	ops.read = read;
 	ops.write = write;
 	ops.ioctl = ioctl;
-	ops.fcntl = fcntl;
 
-	if(devfs_dev_register(name, &ops, 0, i2c) == 0x0)
+	if(devfs_dev_register(name, &ops, O_NONBLOCK, i2c) == 0x0)
 		goto err_1;
 
 	return E_OK;
@@ -129,10 +127,4 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 
 err:
 	return -errno;
-}
-
-static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data){
-	// TODO
-	// 	allow seeking within the slave rx/tx queues
-	return_errno(E_NOSUP);
 }
