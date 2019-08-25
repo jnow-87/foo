@@ -281,7 +281,7 @@ driver = {
 		reg = [ 0x64 ];				// PRRO
 		int<8> = [ 0x80 ];			// PRR0_PRTWI
 
-		int<8> = [ 0 ];				// interrupt number
+		int<8> = [ 26 ];			// interrupt number
 
 		i2c0 = {
 			compatible = "i2c";

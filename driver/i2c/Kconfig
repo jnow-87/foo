@@ -10,8 +10,14 @@
 menuconfig DRIVER_I2C
 	bool "I2C driver"
 	select KERNEL_DEVFS
+	select KERNEL_SIGQUEUE
+	select SYS_RINGBUFFER
 
 if DRIVER_I2C
+	config I2C_RXBUF_SIZE
+		int "Rx buffer size"
+		default 16
+
 	config I2C_DEBUG
 		bool "Enable debug messages"
 		depends on KERNEL_MSG_DEBUG
