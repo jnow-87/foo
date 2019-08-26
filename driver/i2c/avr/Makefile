@@ -7,8 +7,6 @@
 
 
 
-obj-$(CONFIG_I2C_DEVICE) += i2c.o
-obj-$(CONFIG_AVR) += avr/
-
-
-cppflags-$(CONFIG_I2C_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+obj-y := itf.o
+obj-$(CONFIG_I2C_AVR_INTERRUPT) += int.o
+obj-$(CONFIG_I2C_AVR_POLLING) += poll.o

@@ -7,8 +7,10 @@
 
 
 
-obj-$(CONFIG_I2C_DEVICE) += i2c.o
-obj-$(CONFIG_AVR) += avr/
+config I2C_AVR_INTERRUPT
+	bool "Interrupt support"
+	default y
 
-
-cppflags-$(CONFIG_I2C_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+config I2C_AVR_POLLING
+	bool "Polling support"
+	default n

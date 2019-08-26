@@ -273,7 +273,7 @@ driver = {
 		};
 	};
 
-	avri2c = {
+	i2c = {
 		compatible = "avr,i2c";
 
 		baseaddr = 0xb8;

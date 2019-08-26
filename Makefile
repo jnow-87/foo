@@ -53,6 +53,7 @@ cflags := \
 	-Wextra \
 	-Wshadow \
 	-Wno-unused-parameter \
+	-Wno-unused-label \
 	-Wno-unknown-pragmas \
 	-nostdinc \
 	-fno-builtin \
@@ -67,6 +68,7 @@ cxxflags := \
 	-Wextra \
 	-Wshadow \
 	-Wno-unused-parameter \
+	-Wno-unused-label \
 	-Wno-unknown-pragmas \
 	-nostdinc \
 	-fno-builtin \
@@ -115,6 +117,7 @@ hostcflags := \
 	-Wextra \
 	-Wshadow \
 	-Wno-unused-parameter \
+	-Wno-unused-label \
 	-Wno-unknown-pragmas \
 	-O2 \
 	-flto
@@ -127,6 +130,7 @@ hostcxxflags := \
 	-Wextra \
 	-Wshadow \
 	-Wno-unused-parameter \
+	-Wno-unused-label \
 	-Wno-unknown-pragmas \
 	-O2 \
 	-flto
