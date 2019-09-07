@@ -18,15 +18,15 @@
 
 /* types */
 typedef struct{
-	int (*configure)(void *cfg, void *regs);
+	int (*configure)(void *cfg, void *data);
 
 	term_flags_t (*get_flags)(void *cfg);
 
-	void (*putc)(char c, void *regs);
-	size_t (*puts)(char const *s, size_t n, void *regs);
-	size_t (*gets)(char *s, size_t n, term_err_t *err, void *regs);
+	void (*putc)(char c, void *data);
+	size_t (*puts)(char const *s, size_t n, void *data);
+	size_t (*gets)(char *s, size_t n, term_err_t *err, void *data);
 
-	void *regs;
+	void *data;
 	int_num_t rx_int,
 			  tx_int;
 

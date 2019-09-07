@@ -40,12 +40,14 @@ typedef struct sig_tgt_t{
 } sig_tgt_t;
 
 typedef struct{
+	uint8_t volatile pin,
+					 ddr,
+					 port;
+} gpio_regs_t;
+
+typedef struct{
 	// port registers
-	struct{
-		uint8_t volatile pin,
-						 ddr,
-						 port;
-	} *dev;
+	gpio_regs_t *regs;
 
 	// interrupt registers
 	uint8_t volatile *pcicr,
@@ -59,7 +61,7 @@ typedef struct{
 } dt_data_t;
 
 typedef struct{
-	dt_data_t *regs;
+	dt_data_t *dtd;
 	sig_tgt_t *sig_tgt_lst;
 } dev_data_t;
 
@@ -76,19 +78,21 @@ static uint8_t rightmost_bit(uint8_t v);
 
 /* local functions */
 static int probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *regs;
+	dt_data_t *dtd;
 	devfs_ops_t ops;
 	devfs_dev_t *dev;
 	dev_data_t *port;
+	gpio_regs_t *regs;
 
 
-	regs = (dt_data_t*)dt_data;
+	dtd = (dt_data_t*)dt_data;
+	regs = dtd->regs;
 
 	/* register device */
 	ops.open = 0x0;
 	ops.close = close;
-	ops.read = regs->dir & PORT_IN ? read : 0x0;
-	ops.write = regs->dir & PORT_OUT ? write : 0x0;
+	ops.read = dtd->dir & PORT_IN ? read : 0x0;
+	ops.write = dtd->dir & PORT_OUT ? write : 0x0;
 	ops.ioctl = ioctl;
 	ops.fcntl = 0x0;
 
@@ -97,7 +101,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(port == 0x0)
 		goto err_0;
 
-	port->regs = dt_data;
+	port->dtd = dt_data;
 	port->sig_tgt_lst = 0x0;
 
 	dev = devfs_dev_register(name, &ops, 0x0, port);
@@ -106,17 +110,17 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_1;
 
 	/* configure port */
-	regs->dev->port |= regs->mask;
+	regs->port |= dtd->mask;
 
-	if(regs->dir & PORT_OUT)
-		regs->dev->ddr |= regs->mask;
+	if(dtd->dir & PORT_OUT)
+		regs->ddr |= dtd->mask;
 
 	/* configure interrupt */
-	if(regs->pcicr != 0x0 && regs->pcmsk != 0x0){
-		*regs->pcicr |= (0x1 << (regs->pcint_num / 8));
-		*regs->pcmsk |= regs->mask;
+	if(dtd->pcicr != 0x0 && dtd->pcmsk != 0x0){
+		*dtd->pcicr |= (0x1 << (dtd->pcint_num / 8));
+		*dtd->pcmsk |= dtd->mask;
 
-		if(int_register(INT_PCINT0 + regs->pcint_num / 8, int_hdlr, dev))
+		if(int_register(INT_PCINT0 + dtd->pcint_num / 8, int_hdlr, dev))
 			goto err_2;
 	}
 
@@ -156,35 +160,37 @@ static int close(struct devfs_dev_t *dev, fs_filed_t *fd){
 }
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dt_data_t *regs;
+	dt_data_t *dtd;
 	uint8_t v;
 
 
-	regs = ((dev_data_t*)dev->data)->regs;
+	dtd = ((dev_data_t*)dev->data)->dtd;
 
 	/* read port */
-	v = regs->dev->pin;
-	*((char*)buf) = (v & regs->mask) >> rightmost_bit(regs->mask);
+	v = dtd->regs->pin;
+	*((char*)buf) = (v & dtd->mask) >> rightmost_bit(dtd->mask);
 
-	DEBUG("port %s, mask %#hhx, val %#hhx %#hhx\n", dev->node->name, regs->mask, *((char*)buf), v);
+	DEBUG("port %s, mask %#hhx, val %#hhx %#hhx\n", dev->node->name, dtd->mask, *((char*)buf), v);
 
 	return 1;
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	uint8_t v;
-	dt_data_t *regs;
+	dt_data_t *dtd;
+	gpio_regs_t *regs;
 
 
-	regs = ((dev_data_t*)dev->data)->regs;
+	dtd = ((dev_data_t*)dev->data)->dtd;
+	regs = dtd->regs;
 
 	/* write port */
-	v = regs->dev->pin & ~regs->mask;
-	v |= (*((char*)buf) << rightmost_bit(regs->mask)) & regs->mask;
+	v = regs->pin & ~dtd->mask;
+	v |= (*((char*)buf) << rightmost_bit(dtd->mask)) & dtd->mask;
 
-	regs->dev->port = v;
+	regs->port = v;
 
-	DEBUG("port %s, mask %#hhx, val %#hhx\n", dev->node->name, regs->mask, v);
+	DEBUG("port %s, mask %#hhx, val %#hhx\n", dev->node->name, dtd->mask, v);
 
 	return 1;
 }

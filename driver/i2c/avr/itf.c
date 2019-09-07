@@ -34,17 +34,17 @@ static int configure(i2c_cfg_t *cfg, void *data);
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	void *buf;
-	dev_data_t *i2c;
-	dt_data_t *regs;
+	dt_data_t *dtd;
+	avr_i2c_t *i2c;
 
 
-	regs = (dt_data_t*)dt_data;
+	dtd = (dt_data_t*)dt_data;
 
 	/* allocate rx buffer */
 	buf = 0x0;
 
 #ifdef CONFIG_I2C_AVR_INTERRUPT
-	if(regs->int_num){
+	if(dtd->int_num){
 		buf = kmalloc(CONFIG_I2C_RXBUF_SIZE);
 
 		if(buf == 0x0)
@@ -53,36 +53,36 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 #endif // CONFIG_I2C_AVR_INTERRUPT
 
 	/* allocate interface */
-	i2c = kmalloc(sizeof(dev_data_t));
+	i2c = kmalloc(sizeof(avr_i2c_t));
 
 	if(i2c == 0x0)
 		goto err_1;
 
-	i2c->itf.configure = configure;
+	i2c->hw.configure = configure;
 
-	if(regs->int_num){
+	if(dtd->int_num){
 #ifdef CONFIG_I2C_AVR_INTERRUPT
-		i2c->itf.master_read = avr_i2c_master_read_int;
-		i2c->itf.master_write = avr_i2c_master_write_int;
-		i2c->itf.slave_read = avr_i2c_slave_read_int;
-		i2c->itf.slave_write = avr_i2c_slave_write_int;
+		i2c->hw.master_read = avr_i2c_master_read_int;
+		i2c->hw.master_write = avr_i2c_master_write_int;
+		i2c->hw.slave_read = avr_i2c_slave_read_int;
+		i2c->hw.slave_write = avr_i2c_slave_write_int;
 #else
 		goto_errno(err_1, E_NOSUP);
 #endif // CONFIG_I2C_AVR_INTERRUPT
 	}
 	else{
 #ifdef CONFIG_I2C_AVR_POLLING
-		i2c->itf.master_read = avr_i2c_master_read_poll;
-		i2c->itf.master_write = avr_i2c_master_write_poll;
-		i2c->itf.slave_read = avr_i2c_slave_read_poll;
-		i2c->itf.slave_write = avr_i2c_slave_write_poll;
+		i2c->hw.master_read = avr_i2c_master_read_poll;
+		i2c->hw.master_write = avr_i2c_master_write_poll;
+		i2c->hw.slave_read = avr_i2c_slave_read_poll;
+		i2c->hw.slave_write = avr_i2c_slave_write_poll;
 #else
 		goto_errno(err_0, E_NOSUP);
 #endif // CONFIG_I2C_AVR_POLLING
 	}
 
-	i2c->itf.data = i2c;
-	i2c->regs = regs;
+	i2c->hw.data = i2c;
+	i2c->dtd = dtd;
 
 	mutex_init(&i2c->mtx, MTX_NONE);
 	sigq_queue_init(&i2c->master_cmd_queue);
@@ -91,11 +91,11 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 	/* register interrupt */
 #ifdef CONFIG_I2C_AVR_INTERRUPT
-	if(regs->int_num && int_register(regs->int_num, avr_i2c_int_hdlr, i2c) != 0)
+	if(dtd->int_num && int_register(dtd->int_num, avr_i2c_int_hdlr, i2c) != 0)
 		goto err_2;
 #endif // CONFIG_I2C_AVR_INTERRUPT
 
-	return &i2c->itf;
+	return &i2c->hw;
 
 
 err_2:
@@ -112,12 +112,14 @@ interface_probe("avr,i2c", probe);
 
 static int configure(i2c_cfg_t *cfg, void *data){
 	uint8_t brate;
-	dt_data_t *regs;
-	dev_data_t *i2c;
+	dt_data_t *dtd;
+	i2c_regs_t *regs;
+	avr_i2c_t *i2c;
 
 
-	i2c = (dev_data_t*)data;
-	regs = i2c->regs;
+	i2c = (avr_i2c_t*)data;
+	dtd = i2c->dtd;
+	regs = dtd->regs;
 
 	/* check config */
 	// max 400 kHz
@@ -138,18 +140,18 @@ static int configure(i2c_cfg_t *cfg, void *data){
 	mutex_lock(&i2c->mtx);
 
 	/* disable twi */
-	*regs->prr |= regs->prr_en;
+	*dtd->prr |= dtd->prr_en;
 
 	/* re-enable twi */
-	*regs->prr &= ~regs->prr_en;
+	*dtd->prr &= ~dtd->prr_en;
 
-	regs->dev->twsr = 0x0;
-	regs->dev->twbr = brate;
-	regs->dev->twamr = 0x0;
-	regs->dev->twar = cfg->host_addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
-	regs->dev->twcr = (0x1 << TWCR_TWEN)
+	regs->twsr = 0x0;
+	regs->twbr = brate;
+	regs->twamr = 0x0;
+	regs->twar = cfg->host_addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
+	regs->twcr = (0x1 << TWCR_TWEN)
 					| (0x1 << TWCR_TWEA)
-					| ((regs->int_num ? 0x1 : 0x0) << TWCR_TWIE)
+					| ((dtd->int_num ? 0x1 : 0x0) << TWCR_TWIE)
 					;
 
 	mutex_unlock(&i2c->mtx);

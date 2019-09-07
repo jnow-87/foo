@@ -33,14 +33,16 @@
 
 /* types */
 typedef struct{
+	uint8_t volatile tccra,
+					 tccrb,
+					 tcnt,
+					 ocra,
+					 ocrb;
+} pwm_regs_t;
+
+typedef struct{
 	// device registers
-	struct{
-		uint8_t volatile tccra,
-						 tccrb,
-						 tcnt,
-						 ocra,
-						 ocrb;
-	} *dev;
+	pwm_regs_t *regs;
 
 	// interrupt control
 	uint8_t volatile *tifr,
@@ -61,17 +63,17 @@ static size_t read_a(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write_a(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t read_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static size_t read(unsigned int *buf, size_t n, uint8_t volatile *reg);
-static size_t write(unsigned int *buf, size_t n, uint8_t volatile *reg);
+static size_t read(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg);
+static size_t write(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg);
 static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
-static int config_set(pwm_cfg_t *cfg, dt_data_t *regs);
-static int config_get(pwm_cfg_t *cfg, dt_data_t *regs);
+static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd);
+static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs);
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
-	size_t name_len = strlen(name);
-	char cname[name_len + 2];
+static int probe(char const *_name, void *dt_data, void *dt_itf){
+	size_t name_len = strlen(_name);
+	char name[name_len + 2];
 	devfs_dev_t *dev;
 	devfs_ops_t ops;
 	pwm_cfg_t cfg;
@@ -86,26 +88,26 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 		return -errno;
 
 	/* register device */
-	strcpy(cname, name);
-	cname[name_len + 1] = 0;
+	strcpy(name, _name);
+	name[name_len + 1] = 0;
 
 	ops.open = 0x0;
 	ops.close = 0x0;
 	ops.ioctl = ioctl;
 	ops.fcntl = 0x0;
 
-	cname[name_len] = 'a';
+	name[name_len] = 'a';
 	ops.read = read_a;
 	ops.write = write_a;
 
-	if((dev = devfs_dev_register(cname, &ops, 0x0, dt_data)) == 0x0)
+	if((dev = devfs_dev_register(name, &ops, 0x0, dt_data)) == 0x0)
 		goto err_0;
 
-	cname[name_len] = 'b';
+	name[name_len] = 'b';
 	ops.read = read_b;
 	ops.write = write_b;
 
-	if(devfs_dev_register(cname, &ops, 0x0, dt_data) == 0x0)
+	if(devfs_dev_register(name, &ops, 0x0, dt_data) == 0x0)
 		goto err_1;
 
 	return E_OK;
@@ -120,52 +122,55 @@ err_0:
 device_probe("avr,pwm8", probe);
 
 static size_t read_a(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	return read(buf, n, &((dt_data_t*)dev->data)->dev->ocra);
+	return read(buf, n, &((dt_data_t*)dev->data)->regs->ocra);
 }
 
 static size_t write_a(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	return write(buf, n, &((dt_data_t*)dev->data)->dev->ocra);
+	return write(buf, n, &((dt_data_t*)dev->data)->regs->ocra);
 }
 
 static size_t read_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	return read(buf, n, &((dt_data_t*)dev->data)->dev->ocrb);
+	return read(buf, n, &((dt_data_t*)dev->data)->regs->ocrb);
 }
 
 static size_t write_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	return write(buf, n, &((dt_data_t*)dev->data)->dev->ocrb);
+	return write(buf, n, &((dt_data_t*)dev->data)->regs->ocrb);
 }
 
-static size_t read(unsigned int *buf, size_t n, uint8_t volatile *reg){
+static size_t read(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg){
 	if(n != sizeof(*buf)){
 		errno = E_INVAL;
 		return 0;
 	}
 
-	*buf = *reg;
+	*buf = *ocr_reg;
 	return sizeof(*buf);
 }
 
-static size_t write(unsigned int *buf, size_t n, uint8_t volatile *reg){
+static size_t write(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg){
 	if(n != sizeof(*buf)){
 		errno = E_INVAL;
 		return 0;
 	}
 
-	*reg = (*buf) & 0xff;
+	*ocr_reg = (*buf) & 0xff;
 	return sizeof(*buf);
 }
 
 static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 	switch(request){
-	case IOCTL_CFGRD:	return config_get(data, dev->data);
+	case IOCTL_CFGRD:	return config_get(data, ((dt_data_t*)dev->data)->regs);
 	case IOCTL_CFGWR:	return config_set(data, dev->data);
 	default:			return_errno(E_NOSUP);
 	}
 }
 
-static int config_set(pwm_cfg_t *cfg, dt_data_t *regs){
+static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd){
 	uint8_t pres;
+	pwm_regs_t *regs;
 
+
+	regs = dtd->regs;
 
 	/* check config */
 	if(cfg->mode != PWM_FAST && cfg->mode != PWM_PHASECORRECT)
@@ -182,25 +187,25 @@ static int config_set(pwm_cfg_t *cfg, dt_data_t *regs){
 	}
 
 	/* make output compare pin an output */
-	*regs->ddr |= regs->ddr_en;
+	*dtd->ddr |= dtd->ddr_en;
 
 	/* enable timer */
-	*regs->prr &= ~regs->prr_en;
+	*dtd->prr &= ~dtd->prr_en;
 
 	/* set mode */
-	regs->dev->tccra = (0x2 << TCCRA_COMA)
-					 | (0x2 << TCCRA_COMB)
-					 | ((cfg->mode == PWM_FAST ? 0x3 : 0x1) << TCCRA_WGM0)
-					 ;
+	regs->tccra = (0x2 << TCCRA_COMA)
+				| (0x2 << TCCRA_COMB)
+				| ((cfg->mode == PWM_FAST ? 0x3 : 0x1) << TCCRA_WGM0)
+				;
 
-	regs->dev->tccrb = (0x0 << TCCRB_WGM2)
-					 | (0x0 << TCCRB_FOCA)
-					 | (0x0 << TCCRB_FOCB)
-					 | (pres << TCCRB_CS)
-					 ;
+	regs->tccrb = (0x0 << TCCRB_WGM2)
+				| (0x0 << TCCRB_FOCA)
+				| (0x0 << TCCRB_FOCB)
+				| (pres << TCCRB_CS)
+				;
 
-	*regs->timsk = 0x0;
-	*regs->tifr = 0x0;
+	*dtd->timsk = 0x0;
+	*dtd->tifr = 0x0;
 
 	// NOTE tcnt, ocra and ocrb are not set
 	// 		there value doesn't matter on initialisation since the prescaler
@@ -211,16 +216,16 @@ static int config_set(pwm_cfg_t *cfg, dt_data_t *regs){
 	return E_OK;
 }
 
-static int config_get(pwm_cfg_t *cfg, dt_data_t *regs){
+static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs){
 	cfg->mode = PWM_PHASECORRECT;
 
-	if((bits(regs->dev->tccra, TCCRA_WGM0, 0x3)) == 0x3)
+	if((bits(regs->tccra, TCCRA_WGM0, 0x3)) == 0x3)
 		cfg->mode = PWM_FAST;
 
 	cfg->base_clock_khz = AVR_IO_CLOCK_HZ / 1000;
 	cfg->max = 0xff;
 
-	switch(bits(regs->dev->tccrb, TCCRB_CS, 0x7)){
+	switch(bits(regs->tccrb, TCCRB_CS, 0x7)){
 	case 0:	cfg->prescaler = PWM_PRES_0;	break;
 	case 1:	cfg->prescaler = PWM_PRES_1;	break;
 	case 2:	cfg->prescaler = PWM_PRES_8;	break;

@@ -43,10 +43,10 @@
 
 // instructions
 #define STATUS(regs) \
-	(regs)->dev->twsr & ~(0x3 << TWSR_TWPS)
+	(regs)->twsr & ~(0x3 << TWSR_TWPS)
 
 #define WAITINT(regs)({ \
-	while(!((regs)->dev->twcr & (0x1 << TWCR_TWINT))); \
+	while(!((regs)->twcr & (0x1 << TWCR_TWINT))); \
 	STATUS(regs); \
 })
 
@@ -96,15 +96,17 @@ typedef enum{
 } status_t;
 
 typedef struct{
+	uint8_t volatile twbr,
+					 twsr,
+					 twar,
+					 twdr,
+					 twcr,
+					 twamr;
+} i2c_regs_t;
+
+typedef struct{
 	// device registers
-	struct{
-		uint8_t volatile twbr,
-						 twsr,
-						 twar,
-						 twdr,
-						 twcr,
-						 twamr;
-	} *dev;
+	i2c_regs_t *regs;
 
 	// power control
 	uint8_t volatile *prr;
@@ -114,15 +116,15 @@ typedef struct{
 } dt_data_t;
 
 typedef struct{
-	i2c_itf_t itf;
-	dt_data_t *regs;
+	i2c_itf_t hw;
+	dt_data_t *dtd;
 
 	mutex_t mtx;
 
 	sigq_queue_t master_cmd_queue,
 				 slave_cmd_queue;
 	ringbuf_t slave_rx_buf;
-} dev_data_t;
+} avr_i2c_t;
 
 
 /* prototypes */
