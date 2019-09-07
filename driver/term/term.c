@@ -302,29 +302,27 @@ static void rx_hdlr(int_num_t num, void *_term){
 }
 
 static void tx_hdlr(int_num_t num, void *_term){
-	static sigq_t *e = 0x0;
+	sigq_t *e;
 	term_t *term;
 	tx_data_t *data;
 
 
 	term = (term_t*)_term;
+	e = sigq_first(&term->tx_queue);
 
-	/* get next tx queue element */
 	if(e == 0x0)
-		e = sigq_first(&term->tx_queue);
+		return;
 
 	/* output character */
-	if(e){
-		data = e->data;
+	data = e->data;
 
-		term->hw->putc(*data->s, term->hw->data);
-		data->s++;
-		data->len--;
+	term->hw->putc(*data->s, term->hw->data);
+	data->s++;
+	data->len--;
 
-		// signal tx complete
-		if(data->len == 0){
-			sigq_dequeue(&term->tx_queue, e);
-			e = 0x0;
-		}
+	// signal tx complete
+	if(data->len == 0){
+		sigq_dequeue(&term->tx_queue, e);
+		e = 0x0;
 	}
 }

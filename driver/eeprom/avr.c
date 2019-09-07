@@ -265,7 +265,7 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
 }
 
 static void write_hdlr(int_num_t num, void *_eeprom){
-	static sigq_t *e = 0x0;
+	sigq_t *e;
 	dev_data_t *eeprom;
 	write_data_t *data;
 
@@ -277,24 +277,22 @@ static void write_hdlr(int_num_t num, void *_eeprom){
 	// 		as long as EECR_EEPE is zero, i.e. always except
 	// 		during ongoing write operations
 	eeprom->dtd->regs->eecr &= ~(0x1 << EECR_EERIE);
+	e = sigq_first(&eeprom->write_queue);
 
-	/* get next write queue element */
 	if(e == 0x0)
-		e = sigq_first(&eeprom->write_queue);
+		return;
 
 	/* write data */
-	if(e){
-		data = e->data;
+	data = e->data;
 
-		write_byte(*data->buf, data->offset, eeprom->dtd);
-		data->buf++;
-		data->offset++;
-		data->len--;
+	write_byte(*data->buf, data->offset, eeprom->dtd);
+	data->buf++;
+	data->offset++;
+	data->len--;
 
-		// signal write complete
-		if(data->len == 0){
-			sigq_dequeue(&eeprom->write_queue, e);
-			e = 0x0;
-		}
+	// signal write complete
+	if(data->len == 0){
+		sigq_dequeue(&eeprom->write_queue, e);
+		e = 0x0;
 	}
 }
