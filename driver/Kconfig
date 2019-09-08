@@ -14,3 +14,4 @@ source driver/gpio/Kconfig
 source driver/pwm/Kconfig
 source driver/spi/Kconfig
 source driver/eeprom/Kconfig
+source driver/i2c/Kconfig

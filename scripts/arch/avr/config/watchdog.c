@@ -66,6 +66,8 @@ int config_watchdog(void){
 
 	/* identify watchdog prescale value that results in the minimal deviation
 	 * between scheduler and watchdog frequency */
+	ps_min = 0;
+
 	for(ps=1048576; ps>=2048; ps/=2){
 		mul = cycle_time_multiple(tgt_cycle_time, ps);
 		err = err_abs(tgt_cycle_time, ps, mul);
@@ -85,6 +87,11 @@ int config_watchdog(void){
 				err * 1000,
 				err * 100 * (1000000.0 / tgt_cycle_time)
 			);
+	}
+
+	if(ps_min == 0){
+		fprintf(stderr, "error: invalid prescaler value\n");
+		return -1;
 	}
 
 	if(arg.verbose)

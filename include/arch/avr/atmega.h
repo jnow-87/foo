@@ -100,6 +100,8 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	.int_register = avr_int_register,
 	.int_release = avr_int_release,
 
+	.int_call = avr_int_call,
+
 	.int_enable = avr_int_enable,
 	.int_enabled = avr_int_enabled,
 

@@ -13,17 +13,15 @@
 
 
 /* macros */
-#define DATA_SIZE	10
-
-#define INIT()		ringbuf_init(&ring, data, DATA_SIZE)
+#define INIT()		ringbuf_init(&ring, data, 10)
 #define READ(n)		ringbuf_read(&ring, readb, n)
 #define WRITE(s)	ringbuf_write(&ring, s, strlen(s))
 
 
 /* static variables */
 ringbuf_t ring;
-char data[DATA_SIZE];
-char readb[DATA_SIZE];
+char data[10];
+char readb[10];
 
 
 /* local functions */
@@ -99,6 +97,49 @@ static int tc_ringbuf_write(int log){
 
 test_case(tc_ringbuf_write, "ringbuf_write");
 
+static int tc_ringbuf_contains_left(int log){
+	int n;
+
+
+	n = 0;
+
+	/* empty */
+	INIT();
+	n += check_int(log, ringbuf_contains(&ring), 0);
+	n += check_int(log, ringbuf_left(&ring), 9);
+
+	/* one used */
+	INIT();
+	WRITE("dead");
+	n += check_int(log, ringbuf_contains(&ring), 4);
+	n += check_int(log, ringbuf_left(&ring), 5);
+
+	/* all used */
+	INIT();
+	WRITE("deadbeef0");
+	n += check_int(log, ringbuf_contains(&ring), 9);
+	n += check_int(log, ringbuf_left(&ring), 0);
+
+	/* wrap around */
+	INIT();
+	WRITE("deadbeef0");
+	READ(4);
+	n += check_int(log, ringbuf_contains(&ring), 5);
+	n += check_int(log, ringbuf_left(&ring), 4);
+
+	WRITE("123");
+	n += check_int(log, ringbuf_contains(&ring), 8);
+	n += check_int(log, ringbuf_left(&ring), 1);
+
+	READ(3);
+	n += check_int(log, ringbuf_contains(&ring), 5);
+	n += check_int(log, ringbuf_left(&ring), 4);
+
+	return -n;
+}
+
+test_case(tc_ringbuf_contains_left, "ringbuf_contains_left");
+
 static int tc_ringbuf_empty(int log){
 	int n;
 
@@ -137,7 +178,10 @@ static int tc_ringbuf_full(int log){
 
 	n += check_int(log, ringbuf_full(&ring), false);
 
-	WRITE("deadbeef01");
+	WRITE("deadbeef");
+	n += check_int(log, ringbuf_full(&ring), false);
+
+	WRITE("1");
 	n += check_int(log, ringbuf_full(&ring), true);
 
 	return -n;

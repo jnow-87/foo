@@ -44,6 +44,14 @@ size_t ringbuf_write(ringbuf_t *buf, void *data, size_t n){
 	return i;
 }
 
+size_t ringbuf_contains(ringbuf_t *buf){
+	return buf->size - ringbuf_left(buf) - 1;
+}
+
+size_t ringbuf_left(ringbuf_t *buf){
+	return (buf->rd - buf->wr) + (buf->rd < buf->wr ? buf->size : 0);
+}
+
 bool ringbuf_empty(ringbuf_t *buf){
 	return ((buf->rd + 1) % buf->size != buf->wr) ? false : true;
 }

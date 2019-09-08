@@ -63,6 +63,8 @@ typedef struct{
 	int (*int_register)(int_num_t num, int_hdlr_t hdlr, void *data);
 	void (*int_release)(int_num_t num);
 
+	void (*int_call)(int_num_t num);
+
 	int_type_t (*int_enable)(int_type_t mask);
 	int_type_t (*int_enabled)(void);
 

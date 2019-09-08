@@ -13,7 +13,7 @@
 #include <kernel/memory.h>
 #include <kernel/ksignal.h>
 #include <kernel/driver.h>
-#include <kernel/sigqueue.h>
+#include <kernel/inttask.h>
 #include <driver/term.h>
 #include <driver/klog.h>
 #include <sys/ringbuf.h>
@@ -39,13 +39,11 @@ typedef struct{
 	ringbuf_t rx_buf;
 	ksignal_t *rx_rdy;
 
-	sigq_queue_t tx_queue;
+	itask_queue_t tx_queue;
 } term_t;
 
 
 /* local/static prototypes */
-static int probe(char const *name, void *dt_data, void *dt_itf, term_t **term);
-
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
@@ -122,10 +120,10 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 	term->rx_rdy = &dev->node->rd_sig;
 	term->rx_err = TERM_ERR_NONE;
 
-	sigq_queue_init(&term->tx_queue);
+	itask_queue_init(&term->tx_queue);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
-	if(term->hw->configure(term->cfg, term->hw->regs) != 0)
+	if(term->hw->configure(term->cfg, term->hw->data) != 0)
 		goto err_5;
 
 	if(_term)
@@ -196,14 +194,14 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	}
 
 	if(term->rx_buf.data == 0x0)
-		len = term->hw->gets(buf, n, &term->rx_err, term->hw->regs);
+		len = term->hw->gets(buf, n, &term->rx_err, term->hw->data);
 	else
 		len = ringbuf_read(&term->rx_buf, buf, n);
 
 	/* handle terminal flags */
 	// handle TERM_FLAG_ECHO
 	if(len > 0 && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO)){
-		if(term->hw->puts(buf, n, term->hw->regs) != E_OK)
+		if(term->hw->puts(buf, n, term->hw->data) != E_OK)
 			return 0;
 	}
 
@@ -233,7 +231,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		if(term->hw->configure(data, term->hw->regs) != E_OK)
+		if(term->hw->configure(data, term->hw->data) != E_OK)
 			return -errno;
 
 		memcpy(term->cfg, data, term->hw->cfg_size);
@@ -260,7 +258,7 @@ static size_t puts_noint(char const *s, size_t n, void *_term){
 	term = (term_t*)_term;
 
 	imask = int_enable(INT_NONE);
-	r = term->hw->puts(s, n, term->hw->regs);
+	r = term->hw->puts(s, n, term->hw->data);
 	int_enable(imask);
 
 	return r;
@@ -269,7 +267,6 @@ static size_t puts_noint(char const *s, size_t n, void *_term){
 static size_t puts_int(char const *s, size_t n, void *_term){
 	term_t *term;
 	tx_data_t data;
-	sigq_t e;
 
 
 	term = (term_t*)_term;
@@ -277,14 +274,9 @@ static size_t puts_int(char const *s, size_t n, void *_term){
 	data.s = s;
 	data.len = n;
 
-	sigq_init(&e, &data);
+	itask_issue(&term->tx_queue, &data, term->hw->tx_int);
 
-	if(sigq_enqueue(&term->tx_queue, &e))
-		tx_hdlr(term->hw->tx_int, term);
-
-	sigq_wait(&e);
-
-	return n;
+	return n - data.len;
 }
 
 static void rx_hdlr(int_num_t num, void *_term){
@@ -295,7 +287,7 @@ static void rx_hdlr(int_num_t num, void *_term){
 
 	term = (term_t*)_term;
 
-	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->regs);
+	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->data);
 
 	if(ringbuf_write(&term->rx_buf, buf, len) != len)
 		term->rx_err |= TERM_ERR_RX_FULL;
@@ -304,29 +296,22 @@ static void rx_hdlr(int_num_t num, void *_term){
 }
 
 static void tx_hdlr(int_num_t num, void *_term){
-	static sigq_t *e = 0x0;
 	term_t *term;
 	tx_data_t *data;
 
 
 	term = (term_t*)_term;
+	data = itask_query_data(&term->tx_queue);
 
-	/* get next tx queue element */
-	if(e == 0x0)
-		e = sigq_first(&term->tx_queue);
+	if(data == 0x0)
+		return;
 
 	/* output character */
-	if(e){
-		data = e->data;
+	term->hw->putc(*data->s, term->hw->data);
+	data->s++;
+	data->len--;
 
-		term->hw->putc(*data->s, term->hw->regs);
-		data->s++;
-		data->len--;
-
-		// signal tx complete
-		if(data->len == 0){
-			sigq_dequeue(&term->tx_queue, e);
-			e = 0x0;
-		}
-	}
+	// signal tx complete
+	if(data->len == 0)
+		itask_complete(&term->tx_queue);
 }

@@ -12,7 +12,7 @@
 #include <kernel/driver.h>
 #include <kernel/devfs.h>
 #include <kernel/kprintf.h>
-#include <kernel/sigqueue.h>
+#include <kernel/inttask.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 
@@ -29,15 +29,20 @@
 
 /* types */
 typedef struct{
-	struct{
-		uint8_t volatile eecr,
-						 eedr;
-		uint16_t volatile eear;
-	} *dev;
+	uint8_t volatile eecr,
+					 eedr;
+	uint16_t volatile eear;
+} eeprom_regs_t;
 
+typedef struct{
+	// device registers
+	eeprom_regs_t *regs;
+
+	// memory properties
 	void *base;
 	size_t size;
 
+	// interrupt
 	uint8_t const int_num;
 } dt_data_t;
 
@@ -48,45 +53,43 @@ typedef struct{
 } write_data_t;
 
 typedef struct{
-	dt_data_t *regs;
+	dt_data_t *dtd;
 
-	sigq_queue_t write_queue;
-} eeprom_t;
+	itask_queue_t write_queue;
+} dev_data_t;
 
 
 /* local/static prototypes */
-static int probe(char const *name, void *dt_data, void *dt_itf);
-
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
+static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 
-static size_t write_noint(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
-static size_t write_int(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
-static void write_byte(uint8_t b, size_t offset, dt_data_t *regs);
+static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
+static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
+static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd);
 static void write_hdlr(int_num_t num, void *eeprom);
 
 
 /* local functions */
 static int probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *regs;
+	dt_data_t *dtd;
 	devfs_ops_t ops;
-	eeprom_t *eeprom;
+	dev_data_t *eeprom;
 
 
-	regs = (dt_data_t*)dt_data;
+	dtd = (dt_data_t*)dt_data;
 
 	/* allocate eeprom */
-	eeprom = kmalloc(sizeof(eeprom_t));
+	eeprom = kmalloc(sizeof(dev_data_t));
 
 	if(eeprom == 0x0)
 		goto err_0;
 
-	eeprom->regs = regs;
-	sigq_queue_init(&eeprom->write_queue);
+	eeprom->dtd = dtd;
+	itask_queue_init(&eeprom->write_queue);
 
 	/* register interrupt */
-	if(regs->int_num && int_register(regs->int_num, write_hdlr, eeprom) != 0)
+	if(dtd->int_num && int_register(dtd->int_num, write_hdlr, eeprom) != 0)
 		goto err_1;
 
 	/* register device */
@@ -101,13 +104,13 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_2;
 
 	/* configure hardware */
-	regs->dev->eecr = 0x0;
+	dtd->regs->eecr = 0x0;
 
 	return E_OK;
 
 
 err_2:
-	int_release(regs->int_num);
+	int_release(dtd->int_num);
 
 err_1:
 	kfree(eeprom);
@@ -121,14 +124,16 @@ device_probe("avr,eeprom", probe);
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
 	size_t i;
 	char *buf;
-	dt_data_t *regs;
+	dt_data_t *dtd;
+	eeprom_regs_t *regs;
 	int_type_t imask;
 
 
 	buf = (char*)_buf;
-	regs = ((eeprom_t*)dev->data)->regs;
+	dtd = ((dev_data_t*)dev->data)->dtd;
+	regs = dtd->regs;
 
-	if(fd->fp + n >= regs->size){
+	if(fd->fp + n >= dtd->size){
 		errno = E_LIMIT;
 		return 0;
 	}
@@ -136,13 +141,13 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
 	imask = int_enable(INT_NONE);
 
 	for(i=0; i<n; i++){
-		while(regs->dev->eecr & (0x1 << EECR_EEPE));
+		while(regs->eecr & (0x1 << EECR_EEPE));
 
-		regs->dev->eear = (uint16_t)(regs->base + fd->fp);
-		regs->dev->eecr |= (0x1 << EECR_EERE);
-		buf[i] = regs->dev->eedr;
+		regs->eear = (uint16_t)(dtd->base + fd->fp);
+		regs->eecr |= (0x1 << EECR_EERE);
+		buf[i] = regs->eedr;
 
-		DEBUG("read %#4.4x: %c (%#hhx)\n", regs->base + fd->fp, buf[i], buf[i]);
+		DEBUG("read %#4.4x: %c (%#hhx)\n", dtd->base + fd->fp, buf[i], buf[i]);
 		fd->fp++;
 	}
 
@@ -152,17 +157,17 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dt_data_t *regs;
+	dt_data_t *dtd;
 
 
-	regs = ((eeprom_t*)dev->data)->regs;
+	dtd = ((dev_data_t*)dev->data)->dtd;
 
-	if(fd->fp + n >= regs->size){
+	if(fd->fp + n >= dtd->size){
 		errno = E_LIMIT;
 		return 0;
 	}
 
-	if(n <= 1 || regs->int_num == 0)
+	if(n <= 1 || dtd->int_num == 0)
 		return write_noint(dev->data, fd, buf, n);
 	return write_int(dev->data, fd, buf, n);
 }
@@ -170,20 +175,20 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *_data){
 	size_t whence;
 	seek_t *data;
-	dt_data_t *regs;
+	dt_data_t *dtd;
 
 
 	data = (seek_t*)_data;
-	regs = ((eeprom_t*)dev->data)->regs;
+	dtd = ((dev_data_t*)dev->data)->dtd;
 
 	switch(cmd){
 	case F_SEEK:
 		if(data->whence == SEEK_SET)		whence = 0;
 		else if(data->whence == SEEK_CUR)	whence = fd->fp;
-		else if(data->whence == SEEK_END)	whence = regs->size - 1;
+		else if(data->whence == SEEK_END)	whence = dtd->size - 1;
 		else								return_errno(E_NOIMP);
 
-		if(whence + data->offset >= regs->size)
+		if(whence + data->offset >= dtd->size)
 			return_errno(E_LIMIT);
 
 		fd->fp = whence + data->offset;
@@ -198,49 +203,45 @@ static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *_data){
 	};
 }
 
-static size_t write_noint(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
+static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
 	size_t i;
 
 
 	for(i=0; i<n; i++){
-		write_byte(buf[i], fd->fp, eeprom->regs);
+		write_byte(buf[i], fd->fp, eeprom->dtd);
 		fd->fp++;
 	}
 
 	return n;
 }
 
-static size_t write_int(eeprom_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
+static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
 	write_data_t data;
-	sigq_t e;
 
 
 	data.buf = buf;
 	data.len = n;
 	data.offset = fd->fp;
 
-	sigq_init(&e, &data);
+	itask_issue(&eeprom->write_queue, &data, eeprom->dtd->int_num);
 
-	if(sigq_enqueue(&eeprom->write_queue, &e))
-		write_hdlr(eeprom->regs->int_num, eeprom);
-
-	sigq_wait(&e);
-
-	return n;
+	return n - data.len;
 }
 
-static void write_byte(uint8_t b, size_t offset, dt_data_t *regs){
+static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
+	eeprom_regs_t *regs;
 	int_type_t imask;
 
 
-	DEBUG("write %#4.4x: %c (%#hhx)\n", regs->base + offset, b, b);
+	DEBUG("write %#4.4x: %c (%#hhx)\n", dtd->base + offset, b, b);
 
+	regs = dtd->regs;
 	imask = int_enable(INT_NONE);	// ensure the write sequence is never interrupted
 
-	while(regs->dev->eecr & (0x1 << EECR_EEPE));
+	while(regs->eecr & (0x1 << EECR_EEPE));
 
-	regs->dev->eear = (uint16_t)regs->base + offset;
-	regs->dev->eedr = b;
+	regs->eear = (uint16_t)dtd->base + offset;
+	regs->eedr = b;
 
 	asm volatile(
 		"ori	%[eecr], %[prot_mask]\n"
@@ -248,46 +249,39 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *regs){
 		"or		%[eecr], %[write_mask]\n"
 		"st		%a[eecr_p], %[eecr]\n"
 		:
-		: [eecr_p] "e" (&regs->dev->eecr),
-		  [eecr] "r" (regs->dev->eecr),
+		: [eecr_p] "e" (&regs->eecr),
+		  [eecr] "r" (regs->eecr),
 		  [prot_mask] "i" (0x1 << EECR_EEMPE),
-		  [write_mask] "r" (0x1 << EECR_EEPE | ((regs->int_num ? 0x1 : 0x0) << EECR_EERIE))
+		  [write_mask] "r" (0x1 << EECR_EEPE | ((dtd->int_num ? 0x1 : 0x0) << EECR_EERIE))
 	);
 
 	int_enable(imask);
 }
 
 static void write_hdlr(int_num_t num, void *_eeprom){
-	static sigq_t *e = 0x0;
-	eeprom_t *eeprom;
+	dev_data_t *eeprom;
 	write_data_t *data;
 
 
-	eeprom = (eeprom_t*)_eeprom;
+	eeprom = (dev_data_t*)_eeprom;
 
 	/* disable interrupt */
-	// NOTE ithis is required since an interrupt is triggered
+	// NOTE this is required since an interrupt is triggered
 	// 		as long as EECR_EEPE is zero, i.e. always except
 	// 		during ongoing write operations
-	eeprom->regs->dev->eecr &= ~(0x1 << EECR_EERIE);
+	eeprom->dtd->regs->eecr &= ~(0x1 << EECR_EERIE);
+	data = itask_query_data(&eeprom->write_queue);
 
-	/* get next write queue element */
-	if(e == 0x0)
-		e = sigq_first(&eeprom->write_queue);
+	if(data == 0x0)
+		return;
 
 	/* write data */
-	if(e){
-		data = e->data;
+	write_byte(*data->buf, data->offset, eeprom->dtd);
+	data->buf++;
+	data->offset++;
+	data->len--;
 
-		write_byte(*data->buf, data->offset, eeprom->regs);
-		data->buf++;
-		data->offset++;
-		data->len--;
-
-		// signal write complete
-		if(data->len == 0){
-			sigq_dequeue(&eeprom->write_queue, e);
-			e = 0x0;
-		}
-	}
+	/* signal write completion */
+	if(data->len == 0)
+		itask_complete(&eeprom->write_queue);
 }
