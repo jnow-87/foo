@@ -10,7 +10,7 @@
 menuconfig DRIVER_EEPROM
 	bool "EEPROM driver"
 	select KERNEL_DEVFS
-	select KERNEL_SIGQUEUE
+	select KERNEL_INTTASK
 
 if DRIVER_EEPROM
 	config EEPROM_DEBUG

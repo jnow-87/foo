@@ -12,7 +12,7 @@
 #include <kernel/driver.h>
 #include <kernel/devfs.h>
 #include <kernel/kprintf.h>
-#include <kernel/sigqueue.h>
+#include <kernel/inttask.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 
@@ -55,7 +55,7 @@ typedef struct{
 typedef struct{
 	dt_data_t *dtd;
 
-	sigq_queue_t write_queue;
+	itask_queue_t write_queue;
 } dev_data_t;
 
 
@@ -86,7 +86,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_0;
 
 	eeprom->dtd = dtd;
-	sigq_queue_init(&eeprom->write_queue);
+	itask_queue_init(&eeprom->write_queue);
 
 	/* register interrupt */
 	if(dtd->int_num && int_register(dtd->int_num, write_hdlr, eeprom) != 0)
@@ -217,21 +217,15 @@ static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size
 
 static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
 	write_data_t data;
-	sigq_t e;
 
 
 	data.buf = buf;
 	data.len = n;
 	data.offset = fd->fp;
 
-	sigq_init(&e, &data);
+	itask_issue(&eeprom->write_queue, &data, eeprom->dtd->int_num);
 
-	if(sigq_enqueue(&eeprom->write_queue, &e))
-		write_hdlr(eeprom->dtd->int_num, eeprom);
-
-	sigq_wait(&e);
-
-	return n;
+	return n - data.len;
 }
 
 static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
@@ -265,7 +259,6 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
 }
 
 static void write_hdlr(int_num_t num, void *_eeprom){
-	sigq_t *e;
 	dev_data_t *eeprom;
 	write_data_t *data;
 
@@ -273,26 +266,22 @@ static void write_hdlr(int_num_t num, void *_eeprom){
 	eeprom = (dev_data_t*)_eeprom;
 
 	/* disable interrupt */
-	// NOTE ithis is required since an interrupt is triggered
+	// NOTE this is required since an interrupt is triggered
 	// 		as long as EECR_EEPE is zero, i.e. always except
 	// 		during ongoing write operations
 	eeprom->dtd->regs->eecr &= ~(0x1 << EECR_EERIE);
-	e = sigq_first(&eeprom->write_queue);
+	data = itask_query_data(&eeprom->write_queue);
 
-	if(e == 0x0)
+	if(data == 0x0)
 		return;
 
 	/* write data */
-	data = e->data;
-
 	write_byte(*data->buf, data->offset, eeprom->dtd);
 	data->buf++;
 	data->offset++;
 	data->len--;
 
-	// signal write complete
-	if(data->len == 0){
-		sigq_dequeue(&eeprom->write_queue, e);
-		e = 0x0;
-	}
+	/* signal write completion */
+	if(data->len == 0)
+		itask_complete(&eeprom->write_queue);
 }

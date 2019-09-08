@@ -13,7 +13,7 @@
 
 #include <config/config.h>
 #include <arch/interrupt.h>
-#include <kernel/sigqueue.h>
+#include <kernel/inttask.h>
 #include <driver/i2c.h>
 #include <sys/ringbuf.h>
 
@@ -91,7 +91,8 @@ typedef enum{
 	// misc
 	S_ERROR = 0x0,
 	S_INVAL = 0xf8,
-	S_NEXT_CMD = 0x1,	// artificial state introduced by the driver
+	S_NONE = 0x1,		// artificial state introduced by the driver
+	S_NEXT_CMD = 0x2,	// artificial state introduced by the driver
 						// to process the next interrupt command
 } status_t;
 
@@ -121,8 +122,8 @@ typedef struct{
 
 	mutex_t mtx;
 
-	sigq_queue_t master_cmd_queue,
-				 slave_cmd_queue;
+	itask_queue_t master_cmd_queue,
+				  slave_cmd_queue;
 	ringbuf_t slave_rx_buf;
 } avr_i2c_t;
 

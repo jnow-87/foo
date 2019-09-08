@@ -11,7 +11,7 @@
 #include <arch/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/driver.h>
-#include <kernel/sigqueue.h>
+#include <kernel/inttask.h>
 #include <driver/i2c.h>
 #include <sys/ringbuf.h>
 #include <sys/compiler.h>
@@ -85,8 +85,8 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	i2c->dtd = dtd;
 
 	mutex_init(&i2c->mtx, MTX_NONE);
-	sigq_queue_init(&i2c->master_cmd_queue);
-	sigq_queue_init(&i2c->slave_cmd_queue);
+	itask_queue_init(&i2c->master_cmd_queue);
+	itask_queue_init(&i2c->slave_cmd_queue);
 	ringbuf_init(&i2c->slave_rx_buf, buf, CONFIG_I2C_RXBUF_SIZE);
 
 	/* register interrupt */

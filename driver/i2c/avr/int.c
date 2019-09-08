@@ -8,11 +8,12 @@
 
 
 #include <kernel/kprintf.h>
-#include <kernel/sigqueue.h>
+#include <kernel/inttask.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
 #include <sys/ringbuf.h>
 #include "itf.h"
+
 
 /* types */
 typedef enum{
@@ -35,10 +36,10 @@ typedef struct{
 
 
 /* local/static prototypes */
-static size_t cmd_issue(sigq_queue_t *queue, cmd_type_t type, uint8_t addr, void *buf, size_t n, bool trigger, avr_i2c_t *i2c);
-static void cmd_signal(sigq_queue_t *queue, sigq_t *e);
+static size_t cmd_issue(itask_queue_t *queue, cmd_type_t type, uint8_t addr, void *buf, size_t n, avr_i2c_t *i2c);
+static void cmd_signal(itask_queue_t *queue);
 
-static void process_int(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs);
+static int process_int(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs);
 static int_action_t process_master_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs);
 static int_action_t process_slave_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs);
 
@@ -49,7 +50,7 @@ int avr_i2c_master_read_int(uint8_t target_addr, uint8_t *buf, size_t n, void *d
 
 
 	i2c = (avr_i2c_t*)data;
-	n -= cmd_issue(&i2c->master_cmd_queue, CMD_READ, target_addr, buf, n, true, i2c);
+	n -= cmd_issue(&i2c->master_cmd_queue, CMD_READ, target_addr, buf, n, i2c);
 
 	return n;
 }
@@ -59,7 +60,7 @@ int avr_i2c_master_write_int(uint8_t target_addr, uint8_t *buf, size_t n, void *
 
 
 	i2c = (avr_i2c_t*)data;
-	n -= cmd_issue(&i2c->master_cmd_queue, CMD_WRITE, target_addr, buf, n, true, i2c);
+	n -= cmd_issue(&i2c->master_cmd_queue, CMD_WRITE, target_addr, buf, n, i2c);
 
 	return n;
 }
@@ -73,7 +74,7 @@ int avr_i2c_slave_write_int(uint8_t *buf, size_t n, void *data){
 
 
 	i2c = (avr_i2c_t*)data;
-	n -= cmd_issue(&i2c->slave_cmd_queue, CMD_WRITE, 0, buf, n, false, i2c);
+	n -= cmd_issue(&i2c->slave_cmd_queue, CMD_WRITE, 0, buf, n, i2c);
 
 	return n;
 }
@@ -81,18 +82,31 @@ int avr_i2c_slave_write_int(uint8_t *buf, size_t n, void *data){
 void avr_i2c_int_hdlr(int_num_t num, void *data){
 	avr_i2c_t *i2c;
 	i2c_regs_t *regs;
+	status_t s;
 
 
 	i2c = (avr_i2c_t*)data;
 	regs = i2c->dtd->regs;
 
-	process_int(STATUS(regs), i2c, regs);
+	mutex_lock(&i2c->mtx);
+
+	s = STATUS(regs);
+
+	// check if the interrupt is triggered by hard- or software
+	// software interrupts can be triggered by itask_issue()
+	if(!(regs->twcr & (0x1 << TWCR_TWINT)))
+		s = S_NEXT_CMD;
+
+	while(s != S_NONE){
+		s = process_int(s, i2c, regs);
+	}
+
+	mutex_unlock(&i2c->mtx);
 }
 
 
 /* local functions */
-static size_t cmd_issue(sigq_queue_t *queue, cmd_type_t type, uint8_t addr, void *buf, size_t n, bool trigger, avr_i2c_t *i2c){
-	sigq_t e;
+static size_t cmd_issue(itask_queue_t *queue, cmd_type_t type, uint8_t addr, void *buf, size_t n, avr_i2c_t *i2c){
 	int_cmd_t cmd;
 
 
@@ -101,27 +115,20 @@ static size_t cmd_issue(sigq_queue_t *queue, cmd_type_t type, uint8_t addr, void
 	cmd.data = buf;
 	cmd.len = n;
 
-	sigq_init(&e, &cmd);
-
-	if(sigq_enqueue(queue, &e) && trigger)
-		process_int(S_NEXT_CMD, i2c, i2c->dtd->regs);
-
-	sigq_wait(&e);
+	itask_issue(queue, &cmd, i2c->dtd->int_num);
 
 	return cmd.len;
 }
 
-static void cmd_signal(sigq_queue_t *queue, sigq_t *e){
-	sigq_dequeue(queue, e);
+static void cmd_signal(itask_queue_t *queue){
+	itask_complete(queue);
 }
 
-static void process_int(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs){
+static int process_int(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs){
 	int_action_t action;
 
 
 	action = 0;
-
-	mutex_lock(&i2c->mtx);
 
 	/* handle status */
 	switch(s){
@@ -178,31 +185,25 @@ static void process_int(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs){
 				   | (0x1 << TWCR_TWEN)
 				   | (0x1 << TWCR_TWINT)
 				   ;
+
+		return S_NEXT_CMD;
 	}
 
-	mutex_unlock(&i2c->mtx);
-
-	/* check for outstanding master operations */
-	if(action)
-		process_int(S_NEXT_CMD, i2c, regs);
+	return S_NONE;
 }
 
 static int_action_t process_master_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs){
-	static sigq_t *e = 0x0;
 	uint8_t c;
 	int_cmd_t *cmd;
 
 
-	cmd = (e ? e->data : 0x0);
+	cmd = itask_query_data(&i2c->master_cmd_queue);
 
 	switch(s){
 	/* master start */
 	case S_NEXT_CMD:
-		if(e == 0x0)
-			e = sigq_first(&i2c->master_cmd_queue);
-
 		// start
-		if(e){
+		if(cmd){
 			DEBUG("issue start\n");
 			regs->twcr |= (0x1 << TWCR_TWSTA) | (0x1 << TWCR_TWINT);
 		}
@@ -246,9 +247,7 @@ static int_action_t process_master_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *re
 		// fall through
 	case S_MST_SLAW_DATA_NACK:
 		if(cmd->len == 0 || s == S_MST_SLAW_DATA_NACK){
-			cmd_signal(&i2c->master_cmd_queue, e);
-			e = 0x0;
-
+			cmd_signal(&i2c->master_cmd_queue);
 			return ACT_DO_STOP;
 		}
 
@@ -276,9 +275,7 @@ static int_action_t process_master_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *re
 		}
 
 		if(cmd->len == 0 || s == S_MST_SLAR_DATA_NACK || c == 0xff){
-			cmd_signal(&i2c->master_cmd_queue, e);
-			e = 0x0;
-
+			cmd_signal(&i2c->master_cmd_queue);
 			return ACT_DO_STOP;
 		}
 
@@ -301,12 +298,11 @@ static int_action_t process_master_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *re
 }
 
 static int_action_t process_slave_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs){
-	static sigq_t *e = 0x0;
 	uint8_t c;
 	int_cmd_t *cmd;
 
 
-	cmd = (e ? e->data : 0x0);
+	cmd = itask_query_data(&i2c->slave_cmd_queue);
 
 	switch(s){
 		// NOTE lost arbitration does not require any special treatment since the last master
@@ -350,10 +346,8 @@ static int_action_t process_slave_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *reg
 			cmd->len--;
 			cmd->data++;
 
-			if(cmd->len == 0){
-				sigq_dequeue(&i2c->slave_cmd_queue, e);
-				e = 0x0;
-			}
+			if(cmd->len == 0)
+				cmd_signal(&i2c->slave_cmd_queue);
 		}
 
 		if(s == S_SLA_SLAR_DATA_LAST_ACK || s == S_SLA_SLAR_DATA_NACK)
@@ -365,10 +359,7 @@ static int_action_t process_slave_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *reg
 		DEBUG("match (%#hhx)\n", s);
 
 		// check for new cmd
-		if(e == 0x0)
-			e = sigq_first(&i2c->slave_cmd_queue);
-
-		cmd = (e ? e->data : 0x0);
+		cmd = itask_query_data(&i2c->slave_cmd_queue);
 
 		// send data
 		if(cmd)	regs->twdr = *cmd->data;

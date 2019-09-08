@@ -53,6 +53,21 @@ void avr_int_release(int_num_t num){
 	int_data[num] = 0x0;
 }
 
+void avr_int_call(int_num_t num){
+	int_type_t imask;
+
+
+	imask = int_enable(INT_NONE);
+
+	if(num >= NUM_INT || int_hdlr[num] == 0x0)
+		kpanic(sched_running(), "unhandled or invalid interrupt %u", num);
+
+	errno = E_OK;
+	int_hdlr[num](num, int_data[num]);
+
+	int_enable(imask);
+}
+
 int_type_t avr_int_enable(int_type_t mask){
 	int_type_t s;
 
@@ -84,11 +99,7 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 	num = ((num - (unsigned int)int_vectors) / (INT_VEC_SIZE / 2)) - 1;
 
 	/* call interrupt handler */
-	if(num >= NUM_INT || int_hdlr[num] == 0x0)
-		kpanic(sched_running(), "unhandled or invalid interrupt %u", num);
-
-	errno = E_OK;
-	int_hdlr[num](num, int_data[num]);
+	avr_int_call(num);
 
 	/* return context of active thread */
 	BUILD_ASSERT(sizeof(errno_t) == 1);	// check sizeof thread_ctx_t::errno
