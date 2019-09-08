@@ -16,7 +16,7 @@
 
 
 /* global functions */
-int avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
+size_t avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
 	size_t i;
 	uint8_t cr,
 			c;
@@ -84,7 +84,7 @@ end:
 	return i;
 }
 
-int avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
+size_t avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
 	size_t i;
 	register uint8_t cr;
 	avr_i2c_t *i2c;
@@ -146,7 +146,7 @@ end:
 	return i;
 }
 
-int avr_i2c_slave_read_poll(uint8_t *buf, size_t n, void *data){
+size_t avr_i2c_slave_read_poll(uint8_t *buf, size_t n, void *data){
 	size_t i;
 	uint8_t c;
 	avr_i2c_t *i2c;
@@ -197,7 +197,7 @@ end:
 	return i;
 }
 
-int avr_i2c_slave_write_poll(uint8_t *buf, size_t n, void *data){
+size_t avr_i2c_slave_write_poll(uint8_t *buf, size_t n, void *data){
 	size_t i;
 	avr_i2c_t *i2c;
 	i2c_regs_t *regs;

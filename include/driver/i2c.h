@@ -18,10 +18,10 @@
 typedef struct i2c_itf_t{
 	int (*configure)(i2c_cfg_t *cfg, void *data);
 
-	int (*master_read)(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
-	int (*master_write)(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
-	int (*slave_read)(uint8_t *buf, size_t n, void *data);
-	int (*slave_write)(uint8_t *buf, size_t n, void *data);
+	size_t (*master_read)(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
+	size_t (*master_write)(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
+	size_t (*slave_read)(uint8_t *buf, size_t n, void *data);
+	size_t (*slave_write)(uint8_t *buf, size_t n, void *data);
 
 	void *data;
 } i2c_itf_t;

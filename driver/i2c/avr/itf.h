@@ -130,17 +130,17 @@ typedef struct{
 
 /* prototypes */
 #ifdef CONFIG_I2C_AVR_POLLING
-int avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
-int avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
-int avr_i2c_slave_read_poll(uint8_t *buf, size_t n, void *data);
-int avr_i2c_slave_write_poll(uint8_t *buf, size_t n, void *data);
+size_t avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
+size_t avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
+size_t avr_i2c_slave_read_poll(uint8_t *buf, size_t n, void *data);
+size_t avr_i2c_slave_write_poll(uint8_t *buf, size_t n, void *data);
 #endif // CONFIG_I2C_AVR_POLLING
 
 #ifdef CONFIG_I2C_AVR_INTERRUPT
-int avr_i2c_master_read_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
-int avr_i2c_master_write_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
-int avr_i2c_slave_read_int(uint8_t *buf, size_t n, void *data);
-int avr_i2c_slave_write_int(uint8_t *buf, size_t n, void *data);
+size_t avr_i2c_master_read_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
+size_t avr_i2c_master_write_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data);
+size_t avr_i2c_slave_read_int(uint8_t *buf, size_t n, void *data);
+size_t avr_i2c_slave_write_int(uint8_t *buf, size_t n, void *data);
 
 void avr_i2c_int_hdlr(int_num_t num, void *data);
 #endif // CONFIG_I2C_AVR_INTERRUPT

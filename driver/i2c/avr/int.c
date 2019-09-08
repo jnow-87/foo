@@ -45,7 +45,7 @@ static int_action_t process_slave_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *reg
 
 
 /* global functions */
-int avr_i2c_master_read_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
+size_t avr_i2c_master_read_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
 	avr_i2c_t *i2c;
 
 
@@ -55,7 +55,7 @@ int avr_i2c_master_read_int(uint8_t target_addr, uint8_t *buf, size_t n, void *d
 	return n;
 }
 
-int avr_i2c_master_write_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
+size_t avr_i2c_master_write_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
 	avr_i2c_t *i2c;
 
 
@@ -65,11 +65,11 @@ int avr_i2c_master_write_int(uint8_t target_addr, uint8_t *buf, size_t n, void *
 	return n;
 }
 
-int avr_i2c_slave_read_int(uint8_t *buf, size_t n, void *data){
+size_t avr_i2c_slave_read_int(uint8_t *buf, size_t n, void *data){
 	return ringbuf_read(&((avr_i2c_t*)data)->slave_rx_buf, buf, n);
 }
 
-int avr_i2c_slave_write_int(uint8_t *buf, size_t n, void *data){
+size_t avr_i2c_slave_write_int(uint8_t *buf, size_t n, void *data){
 	avr_i2c_t *i2c;
 
 
