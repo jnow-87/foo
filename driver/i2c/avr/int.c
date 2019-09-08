@@ -21,11 +21,6 @@ typedef enum{
 	CMD_READ = 1
 } cmd_type_t;
 
-typedef enum{
-	ACT_DO_RESET = 0x1,
-	ACT_DO_STOP = 0x2,
-} int_action_t;
-
 typedef struct{
 	cmd_type_t type;
 	uint8_t addr;
@@ -37,11 +32,9 @@ typedef struct{
 
 /* local/static prototypes */
 static size_t cmd_issue(itask_queue_t *queue, cmd_type_t type, uint8_t addr, void *buf, size_t n, avr_i2c_t *i2c);
-static void cmd_signal(itask_queue_t *queue);
+static void cmd_complete(itask_queue_t *queue);
 
 static int process_int(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs);
-static int_action_t process_master_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs);
-static int_action_t process_slave_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs);
 
 
 /* global functions */
@@ -50,9 +43,7 @@ size_t avr_i2c_master_read_int(uint8_t target_addr, uint8_t *buf, size_t n, void
 
 
 	i2c = (avr_i2c_t*)data;
-	n -= cmd_issue(&i2c->master_cmd_queue, CMD_READ, target_addr, buf, n, i2c);
-
-	return n;
+	return cmd_issue(&i2c->master_cmd_queue, CMD_READ, target_addr, buf, n, i2c);
 }
 
 size_t avr_i2c_master_write_int(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
@@ -60,9 +51,7 @@ size_t avr_i2c_master_write_int(uint8_t target_addr, uint8_t *buf, size_t n, voi
 
 
 	i2c = (avr_i2c_t*)data;
-	n -= cmd_issue(&i2c->master_cmd_queue, CMD_WRITE, target_addr, buf, n, i2c);
-
-	return n;
+	return cmd_issue(&i2c->master_cmd_queue, CMD_WRITE, target_addr, buf, n, i2c);
 }
 
 size_t avr_i2c_slave_read_int(uint8_t *buf, size_t n, void *data){
@@ -74,9 +63,7 @@ size_t avr_i2c_slave_write_int(uint8_t *buf, size_t n, void *data){
 
 
 	i2c = (avr_i2c_t*)data;
-	n -= cmd_issue(&i2c->slave_cmd_queue, CMD_WRITE, 0, buf, n, i2c);
-
-	return n;
+	return cmd_issue(&i2c->slave_cmd_queue, CMD_WRITE, 0, buf, n, i2c);
 }
 
 void avr_i2c_int_hdlr(int_num_t num, void *data){
@@ -117,196 +104,99 @@ static size_t cmd_issue(itask_queue_t *queue, cmd_type_t type, uint8_t addr, voi
 
 	itask_issue(queue, &cmd, i2c->dtd->int_num);
 
-	return cmd.len;
+	return n - cmd.len;
 }
 
-static void cmd_signal(itask_queue_t *queue){
+static void cmd_complete(itask_queue_t *queue){
 	itask_complete(queue);
 }
 
 static int process_int(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs){
-	int_action_t action;
+	uint8_t c;
+	bool stop;
+	int_cmd_t *mst_cmd,
+			  *slv_cmd;
 
 
-	action = 0;
+	stop = false;
+	mst_cmd = itask_query_data(&i2c->master_cmd_queue);
+	slv_cmd = itask_query_data(&i2c->slave_cmd_queue);
 
 	/* handle status */
 	switch(s){
-	// master mode operations
-	case S_NEXT_CMD:
-	case S_MST_START:
-	case S_MST_RESTART:
-	case S_MST_SLAW_NACK:
-	case S_MST_SLAR_NACK:
-	case S_MST_ARBLOST:
-	case S_MST_SLAW_DATA_ACK:
-	case S_MST_SLAW_DATA_NACK:
-	case S_MST_SLAW_ACK:
-	case S_MST_SLAR_DATA_ACK:
-	case S_MST_SLAR_DATA_NACK:
-	case S_MST_SLAR_ACK:
-		action = process_master_op(s, i2c, regs);
-		break;
-
-	// slave mode operations
-	case S_SLA_SLAW_DATA_ACK:
-	case S_SLA_SLAW_DATA_NACK:
-	case S_SLA_BCAST_DATA_ACK:
-	case S_SLA_BCAST_DATA_NACK:
-	case S_SLA_SLAW_ARBLOST_ADDR_MATCH:
-	case S_SLA_BCAST_ARBLOST_MATCH:
-	case S_SLA_SLAW_MATCH:
-	case S_SLA_BCAST_MATCH:
-	case S_SLA_SLAR_ARBLOST_ADDR_MATCH:
-	case S_SLA_SLAR_ADDR_MATCH:
-	case S_SLA_SLAR_DATA_ACK:
-	case S_SLA_SLAR_DATA_LAST_ACK:
-	case S_SLA_SLAR_DATA_NACK:
-	case S_SLA_SLAW_STOP:
-		action = process_slave_op(s, i2c, regs);
-		break;
-
-	case S_ERROR:
-		action = ACT_DO_RESET;
-		break;
-
-	case S_INVAL:
-	default:
-		break;
-	}
-
-	/* update hardware state */
-	if(action){
-		// set hardware to not addressed slave mode
-		// potentially trigger a stop command
-		regs->twcr = (i2c->dtd->int_num ? 0x1 : 0x0) << TWCR_TWIE
-				   | (((action & ACT_DO_STOP) ? 0x1 : 0x0) << TWCR_TWSTO)
-				   | (0x1 << TWCR_TWEA)
-				   | (0x1 << TWCR_TWEN)
-				   | (0x1 << TWCR_TWINT)
-				   ;
-
-		return S_NEXT_CMD;
-	}
-
-	return S_NONE;
-}
-
-static int_action_t process_master_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs){
-	uint8_t c;
-	int_cmd_t *cmd;
-
-
-	cmd = itask_query_data(&i2c->master_cmd_queue);
-
-	switch(s){
 	/* master start */
 	case S_NEXT_CMD:
-		// start
-		if(cmd){
-			DEBUG("issue start\n");
-			regs->twcr |= (0x1 << TWCR_TWSTA) | (0x1 << TWCR_TWINT);
-		}
+		if(mst_cmd == 0x0)
+			return S_NONE;
 
+		DEBUG("issue start\n");
+		START(regs);
 		break;
 
 	case S_MST_START:
 	case S_MST_RESTART:
 		DEBUG("start (%#hhx)\n", s);
-
-		// sla-rw
-		regs->twdr = cmd->addr << TWDR_ADDR | (cmd->type << TWDR_RW);
-		regs->twcr = (i2c->dtd->int_num ? 0x1 : 0x0) << TWCR_TWIE
-	   			   | (0x1 << TWCR_TWEN)
-				   | (0x1 << TWCR_TWINT)
-				   ;
+		SLAVE_RW(regs, mst_cmd->addr, mst_cmd->type, true);
 		break;
 
 	case S_MST_SLAW_NACK:
 	case S_MST_SLAR_NACK:
 		DEBUG("nack (%#hhx)\n", s);
-
-		// stop + start
-		regs->twcr |= (0x1 << TWCR_TWSTO) | (0x1 << TWCR_TWSTA) | (0x1 << TWCR_TWINT);
+		STOP_START(regs);
 		break;
 
 	case S_MST_ARBLOST:
 		DEBUG("arb lost (%#hhx)\n", s);
-
-		// start
-		regs->twcr |= (0x1 << TWCR_TWSTA) | (0x1 << TWCR_TWINT);
+		START(regs);
 		break;
+
 
 	/* master write */
 	case S_MST_SLAW_DATA_ACK:
-		DEBUG("write (%#hhx): %c (%#hhx)\n", s, *cmd->data, *cmd->data);
+		DEBUG("write (%#hhx): %c (%#hhx)\n", s, *mst_cmd->data, *mst_cmd->data);
 
-		cmd->len--;
-		cmd->data++;
+		mst_cmd->len--;
+		mst_cmd->data++;
 
 		// fall through
 	case S_MST_SLAW_DATA_NACK:
-		if(cmd->len == 0 || s == S_MST_SLAW_DATA_NACK){
-			cmd_signal(&i2c->master_cmd_queue);
-			return ACT_DO_STOP;
+		if(mst_cmd->len == 0 || s == S_MST_SLAW_DATA_NACK){
+			cmd_complete(&i2c->master_cmd_queue);
+			goto do_stop;
 		}
 
 		// fall through
 	case S_MST_SLAW_ACK:
 		DEBUG("sla-w (%#hhx)\n", s);
-
-		// write data
-		regs->twdr = *cmd->data;
-		regs->twcr |= (0x1 << TWCR_TWINT);
+		DATA_WRITE(regs, *mst_cmd->data, true);
 		break;
+
 
 	/* maste read */
 	case S_MST_SLAR_DATA_ACK:
 	case S_MST_SLAR_DATA_NACK:
 		// read data
-		c = regs->twdr;
+		c = DATA_READ(regs);;
 		DEBUG("read (%#hhx): %c (%#hhx)\n", s, c, c);
 
 		if(c != 0xff){
-			*cmd->data = c;
+			*mst_cmd->data = c;
 
-			cmd->len--;
-			cmd->data++;
+			mst_cmd->len--;
+			mst_cmd->data++;
 		}
 
-		if(cmd->len == 0 || s == S_MST_SLAR_DATA_NACK || c == 0xff){
-			cmd_signal(&i2c->master_cmd_queue);
-			return ACT_DO_STOP;
+		if(mst_cmd->len == 0 || s == S_MST_SLAR_DATA_NACK || c == 0xff){
+			cmd_complete(&i2c->master_cmd_queue);
+			goto do_stop;
 		}
 
 		// fall through
 	case S_MST_SLAR_ACK:
 		DEBUG("sla-r (%#hhx)\n", s);
-
-		// request data
-		if(cmd->len == 1)	regs->twcr = (regs->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
-		else				regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
-
+		REQUEST_DATA(regs, (mst_cmd->len > 1));
 		break;
 
-	default:
-		WARN("invalid status %#hhx\n", s);
-		break;
-	}
-
-	return 0;
-}
-
-static int_action_t process_slave_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *regs){
-	uint8_t c;
-	int_cmd_t *cmd;
-
-
-	cmd = itask_query_data(&i2c->slave_cmd_queue);
-
-	switch(s){
-		// NOTE lost arbitration does not require any special treatment since the last master
-		// 		command will be continued once the slave transmissions has beem finished
 
 	/* slave read */
 	case S_SLA_SLAW_DATA_ACK:
@@ -314,70 +204,78 @@ static int_action_t process_slave_op(status_t s, avr_i2c_t *i2c, i2c_regs_t *reg
 	case S_SLA_BCAST_DATA_ACK:
 	case S_SLA_BCAST_DATA_NACK:
 		// read data
-		c = regs->twdr;
+		c = DATA_READ(regs);
 		DEBUG("read (%#hhx): %c (%#hhx)\n", s, c, c);
+
 		ringbuf_write(&i2c->slave_rx_buf, &c, 1);
 
 		if(s == S_SLA_SLAW_DATA_NACK || s == S_SLA_BCAST_DATA_NACK)
-			return ACT_DO_RESET;
+			goto do_reset;
 
 		// fall through
+	// NOTE lost arbitration does not require any special treatment since the last master
+	// 		command will be continued once the slave transmissions has beem finished
 	case S_SLA_SLAW_ARBLOST_ADDR_MATCH:
 	case S_SLA_BCAST_ARBLOST_MATCH:
 	case S_SLA_SLAW_MATCH:
 	case S_SLA_BCAST_MATCH:
 		DEBUG("match (%#hhx)\n", s);
-
-		// ready for data
-		if(ringbuf_left(&i2c->slave_rx_buf) == 1)
-			regs->twcr = (regs->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
-		else
-			regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
-
+		REQUEST_DATA(regs, (ringbuf_left(&i2c->slave_rx_buf) >= 1));
 		break;
+
 
 	/* slave write */
 	case S_SLA_SLAR_DATA_ACK:
 	case S_SLA_SLAR_DATA_NACK:
 	case S_SLA_SLAR_DATA_LAST_ACK:
-		if(cmd){
-			DEBUG("write (%#hhx): %c (%#hhx)\n", s, *cmd->data, *cmd->data);
+		if(slv_cmd){
+			DEBUG("write (%#hhx): %c (%#hhx)\n", s, *slv_cmd->data, *slv_cmd->data);
 
-			cmd->len--;
-			cmd->data++;
+			slv_cmd->len--;
+			slv_cmd->data++;
 
-			if(cmd->len == 0)
-				cmd_signal(&i2c->slave_cmd_queue);
+			if(slv_cmd->len == 0)
+				cmd_complete(&i2c->slave_cmd_queue);
 		}
 
 		if(s == S_SLA_SLAR_DATA_LAST_ACK || s == S_SLA_SLAR_DATA_NACK)
-			return ACT_DO_RESET;
+			goto do_reset;
 
 		// fall through
+	// NOTE lost arbitration does not require any special treatment since the last master
+	// 		command will be continued once the slave transmissions has beem finished
 	case S_SLA_SLAR_ARBLOST_ADDR_MATCH:
 	case S_SLA_SLAR_ADDR_MATCH:
 		DEBUG("match (%#hhx)\n", s);
 
-		// check for new cmd
-		cmd = itask_query_data(&i2c->slave_cmd_queue);
-
-		// send data
-		if(cmd)	regs->twdr = *cmd->data;
-		else	regs->twdr = 0xff;
-
-		if(cmd && cmd->len > 1)	regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
-		else					regs->twcr = (regs->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
-
+		slv_cmd = itask_query_data(&i2c->slave_cmd_queue);	// last cmd might be finished
+		DATA_WRITE(regs, (slv_cmd ? *slv_cmd->data : 0xff), (slv_cmd && slv_cmd->len > 1));
 		break;
 
 	case S_SLA_SLAW_STOP:
 		DEBUG("stop (%#hhx)\n", s);
-		return ACT_DO_RESET;
+		goto do_reset;
 
+
+	/* misc states */
+	case S_ERROR:
+		goto do_reset;
+
+	case S_INVAL:
 	default:
 		WARN("invalid status %#hhx\n", s);
 		break;
 	}
 
-	return 0;
+	return S_NONE;
+
+
+	/* reset hardware */
+do_stop:
+	stop = true;
+
+do_reset:
+	SET_SLAVE_MODE(regs, stop, true);
+
+	return S_NEXT_CMD;
 }

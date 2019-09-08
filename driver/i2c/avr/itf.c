@@ -150,9 +150,9 @@ static int configure(i2c_cfg_t *cfg, void *data){
 	regs->twamr = 0x0;
 	regs->twar = cfg->host_addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
 	regs->twcr = (0x1 << TWCR_TWEN)
-					| (0x1 << TWCR_TWEA)
-					| ((dtd->int_num ? 0x1 : 0x0) << TWCR_TWIE)
-					;
+			   | (0x1 << TWCR_TWEA)
+			   | ((dtd->int_num ? 0x1 : 0x0) << TWCR_TWIE)
+			   ;
 
 	mutex_unlock(&i2c->mtx);
 

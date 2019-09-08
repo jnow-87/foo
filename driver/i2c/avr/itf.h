@@ -50,6 +50,44 @@
 	STATUS(regs); \
 })
 
+#define START(regs) \
+	(regs)->twcr |= (0x1 << TWCR_TWSTA) | (0x1 << TWCR_TWINT)
+
+#define STOP_START(regs) \
+	(regs)->twcr |= (0x1 << TWCR_TWSTO) | (0x1 << TWCR_TWSTA) | (0x1 << TWCR_TWINT)
+
+#define SET_SLAVE_MODE(regs, stop, int_en){ \
+	(regs)->twcr = ((int_en) ? 0x1 : 0x0) << TWCR_TWIE \
+			   | (0x1 << TWCR_TWEA) \
+			   | (0x1 << TWCR_TWEN) \
+			   | (0x1 << TWCR_TWINT) \
+			   | (((stop) ? 0x1 : 0x0)  << TWCR_TWSTO) \
+			   ; \
+}
+
+#define SLAVE_RW(regs, addr, rw, int_en){ \
+	(regs)->twdr = (addr) << TWDR_ADDR | ((rw) << TWDR_RW); \
+	(regs)->twcr = ((int_en) ? 0x1 : 0x0) << TWCR_TWIE \
+			   | (0x1 << TWCR_TWEN) \
+			   | (0x1 << TWCR_TWINT) \
+			   ; \
+}
+
+#define REQUEST_DATA(regs, ack){ \
+	if(ack)	(regs)->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT); \
+	else	(regs)->twcr = ((regs)->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT); \
+}
+
+#define DATA_READ(regs) \
+	(regs)->twdr
+
+#define DATA_WRITE(regs, c, ack){ \
+	(regs)->twdr = (c); \
+	\
+	if(ack)	(regs)->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT); \
+	else	(regs)->twcr = ((regs)->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT); \
+}
+
 
 /* types */
 typedef enum{

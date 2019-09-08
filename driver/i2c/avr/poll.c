@@ -18,8 +18,7 @@
 /* global functions */
 size_t avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
 	size_t i;
-	uint8_t cr,
-			c;
+	uint8_t c;
 	avr_i2c_t *i2c;
 	i2c_regs_t *regs;
 	status_t s;
@@ -31,12 +30,8 @@ size_t avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, voi
 
 	mutex_lock(&i2c->mtx);
 
-	cr = (i2c->dtd->int_num ? 0x1 : 0x0) << TWCR_TWIE
-	   | (0x1 << TWCR_TWEN)
-	   ;
-
-	/* start */
-	regs->twcr = cr | (0x1 << TWCR_TWSTA) | (0x1 << TWCR_TWINT);
+	/* init transfer */
+	START(regs);
 	s = WAITINT(regs);
 
 	if(!(s == S_MST_START || s == S_MST_RESTART))
@@ -44,10 +39,7 @@ size_t avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, voi
 
 	DEBUG("start (%#hhx)\n", s);
 
-	/* slave read */
-	regs->twdr = target_addr << TWDR_ADDR | (0x1 << TWDR_RW);
-	regs->twcr = cr | (0x1 << TWCR_TWINT);
-
+	SLAVE_RW(regs, target_addr, 1, false);
 	s = WAITINT(regs);
 
 	if(!(s == S_MST_SLAR_ACK))
@@ -57,11 +49,10 @@ size_t avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, voi
 
 	/* read bytes */
 	while(i < n){
-		if(i + 1 == n)	regs->twcr = cr | (0x1 << TWCR_TWINT);
-		else			regs->twcr = cr | (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
-
+		REQUEST_DATA(regs, (i + 1 < n));
 		s = WAITINT(regs);
-		c = regs->twdr;
+
+		c = DATA_READ(regs);
 		DEBUG("read (%#hhx): %c (%#hhx)\n", s, c, c);
 
 		// no data or invalid data (0xff)
@@ -76,8 +67,8 @@ size_t avr_i2c_master_read_poll(uint8_t target_addr, uint8_t *buf, size_t n, voi
 	}
 
 end:
-	/* stop and reset to not addressed slave mode */
-	regs->twcr = cr | (0x1 << TWCR_TWSTO) | (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+	/* end transfer and reset hardware */
+	SET_SLAVE_MODE(regs, true, false);
 
 	mutex_unlock(&i2c->mtx);
 
@@ -86,7 +77,6 @@ end:
 
 size_t avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, void *data){
 	size_t i;
-	register uint8_t cr;
 	avr_i2c_t *i2c;
 	i2c_regs_t *regs;
 	status_t s;
@@ -98,12 +88,8 @@ size_t avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, vo
 
 	mutex_lock(&i2c->mtx);
 
-	cr = (i2c->dtd->int_num ? 0x1 : 0x0) << TWCR_TWIE
-	   | (0x1 << TWCR_TWEN)
-	   ;
-
-	/* start */
-	regs->twcr = cr | (0x1 << TWCR_TWSTA) | (0x1 << TWCR_TWINT);
+	/* init transfer */
+	START(regs);
 	s = WAITINT(regs);
 
 	if(!(s == S_MST_START || s == S_MST_RESTART))
@@ -111,10 +97,7 @@ size_t avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, vo
 
 	DEBUG("start (%#hhx)\n", s);
 
-	/* slave write */
-	regs->twdr = target_addr << TWDR_ADDR | (0x0 << TWDR_RW);
-	regs->twcr = cr | (0x1 << TWCR_TWINT);
-
+	SLAVE_RW(regs, target_addr, 0, false);
 	s = WAITINT(regs);
 
 	if(!(s == S_MST_SLAW_ACK))
@@ -124,13 +107,11 @@ size_t avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, vo
 
 	/* write bytes */
 	while(i < n){
-		regs->twdr = buf[i];
-		regs->twcr = cr | (0x1 << TWCR_TWINT);
-
+		DATA_WRITE(regs, buf[i], true);
 		s = WAITINT(regs);
+
 		DEBUG("write (%#hhx): %c (%#hhx)\n", s, buf[i], buf[i]);
 
-		// nack
 		if(!(s == S_MST_SLAW_DATA_ACK))
 			break;
 
@@ -138,8 +119,8 @@ size_t avr_i2c_master_write_poll(uint8_t target_addr, uint8_t *buf, size_t n, vo
 	}
 
 end:
-	/* stop and reset to not addressed slave mode */
-	regs->twcr = cr | (0x1 << TWCR_TWSTO) | (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+	/* end transfer and reset hardware */
+	SET_SLAVE_MODE(regs, true, false);
 
 	mutex_unlock(&i2c->mtx);
 
@@ -160,7 +141,7 @@ size_t avr_i2c_slave_read_poll(uint8_t *buf, size_t n, void *data){
 
 	mutex_lock(&i2c->mtx);
 
-	/* wait for slave being addressed */
+	/* wait for slave to be addressed */
 	s = WAITINT(regs);
 
 	if(!(s == S_SLA_SLAW_MATCH || s == S_SLA_SLAW_ARBLOST_ADDR_MATCH || s == S_SLA_BCAST_MATCH || s == S_SLA_BCAST_ARBLOST_MATCH))
@@ -170,11 +151,10 @@ size_t avr_i2c_slave_read_poll(uint8_t *buf, size_t n, void *data){
 
 	/* read bytes */
 	while(i < n){
-		if(i + 1 == n)	regs->twcr = (regs->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
-		else			regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
-
+		REQUEST_DATA(regs, (i + 1 < n));
 		s = WAITINT(regs);
-		c = regs->twdr;
+
+		c = DATA_READ(regs);
 		DEBUG("read (%#hhx): %c (%#hhx)\n", s, c, c);
 
 		// no data
@@ -183,14 +163,14 @@ size_t avr_i2c_slave_read_poll(uint8_t *buf, size_t n, void *data){
 
 		buf[i++] = c;
 
-		// no further data, i.e. nack
+		// no further data
 		if(!(s == S_SLA_SLAW_DATA_ACK || s == S_SLA_BCAST_DATA_ACK))
 			break;
 	}
 
 end:
-	/* reset to not addressed slave mode */
-	regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+	/* reset hardware */
+	SET_SLAVE_MODE(regs, false, false);
 
 	mutex_unlock(&i2c->mtx);
 
@@ -210,7 +190,7 @@ size_t avr_i2c_slave_write_poll(uint8_t *buf, size_t n, void *data){
 
 	mutex_lock(&i2c->mtx);
 
-	/* wait for slave being addressed */
+	/* wait for slave to be addressed */
 	s = WAITINT(regs);
 
 	if(!(s == S_SLA_SLAR_ADDR_MATCH || s == S_SLA_SLAR_ARBLOST_ADDR_MATCH))
@@ -220,15 +200,11 @@ size_t avr_i2c_slave_write_poll(uint8_t *buf, size_t n, void *data){
 
 	/* write bytes */
 	while(i < n){
-		regs->twdr = buf[i];
-
-		if(i + 1 == n)	regs->twcr = (regs->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
-		else			regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
-
+		DATA_WRITE(regs, buf[i], (i + 1 < n));
 		s = WAITINT(regs);
+
 		DEBUG("write (%#hhx): %c (%#hhx)\n", s, buf[i], buf[i]);
 
-		// nack
 		if(!(s == S_SLA_SLAR_DATA_ACK))
 			break;
 
@@ -236,8 +212,8 @@ size_t avr_i2c_slave_write_poll(uint8_t *buf, size_t n, void *data){
 	}
 
 end:
-	/* reset to not addressed slave mode */
-	regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+	/* reset hardware */
+	SET_SLAVE_MODE(regs, false, false);
 
 	mutex_unlock(&i2c->mtx);
 
