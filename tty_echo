@@ -1,0 +1,26 @@
+#!/bin/bash
+
+delay=0.1
+
+if [ "$1" == "m" ];then
+	tty="/dev/ttyUSB0"
+	msg=$(echo -en \
+"i2ccfg dev/i2c0 1 2 1 50\n" \
+"cat -n 1 -s 4 dev/i2c0\n" \
+" "
+	)
+
+else
+	tty="/dev/ttyUSB2"
+	msg=$(echo -en \
+"i2ccfg dev/i2c0 2 1 1 50\n" \
+"echo -n 1234 > dev/i2c0\n" \
+" "
+	)
+
+fi
+
+for (( i=0; i<${#msg} ; i++ ));do 
+	echo -n "${msg:i:1}" > $tty
+	sleep 0.005
+done

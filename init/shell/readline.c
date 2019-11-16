@@ -62,7 +62,7 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 		r = read(fileno(stream), &c, 1);
 
 		if(r < 0)
-			goto err;
+			continue;
 
 		if(r == 0)
 			continue;
@@ -178,7 +178,6 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 					end = strlen(line);
 					i = end;
 
-					fputs(RESTORE_POS CLEARLINE, stdout);	// restore pos to end of input prompt
 					fwrite(line, end, stdout);
 					fflush(stdout);
 				}

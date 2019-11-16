@@ -44,7 +44,7 @@ int main(int argc, char **argv){
 
 	/* fallback shell */
 	printf("executing fallback shell\n");
-	shell(FG_BLUE "::: " RESET_ATTR, stdin);
+	shell("", stdin);
 
 	return 0;
 }

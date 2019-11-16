@@ -14,12 +14,12 @@ memory = {
 
 		kernel_flash = {
 			baseaddr = 0x0;
-			size = 36864;
+			size = 46080;
 		};
 
 		app_flash = {
-			baseaddr = 0x00009000;
-			size = 94208;
+			baseaddr = 0x0000b400;
+			size = 84992;
 		};
 	};
 
@@ -34,12 +34,12 @@ memory = {
 
 		kernel_data = {
 			baseaddr = 0x00800100;
-			size = 3584;
+			size = 5120;
 		};
 
 		kernel_heap = {
-			baseaddr = 0x00800f00;
-			size = 3584;
+			baseaddr = 0x00801500;
+			size = 2048;
 		};
 
 		kernel_stack = {
@@ -49,12 +49,12 @@ memory = {
 
 		app_heap = {
 			baseaddr = 0x00802000;
-			size = 4096;
+			size = 3072;
 		};
 
 		app_data = {
-			baseaddr = 0x00803000;
-			size = 4096;
+			baseaddr = 0x00802c00;
+			size = 5120;
 		};
 	};
 };
