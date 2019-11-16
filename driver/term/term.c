@@ -75,7 +75,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 	term = kmalloc(sizeof(term_t));
 
 	if(term == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	/* allocate recv buffer */
 	buf = 0x0;
@@ -84,7 +84,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 		buf = kmalloc(CONFIG_TERM_RXBUF_SIZE);
 
 		if(buf == 0x0)
-			goto_errno(err_1, E_NOMEM);
+			goto err_1;
 	}
 
 	/* register device */

@@ -102,6 +102,8 @@ void ksc_hdlr(sc_t num, void *param, size_t psize){
 
 		DEBUG("syscall %d on %s:%u failed \"%s\" (%#x)\n", num, this_t->parent->name, this_t->tid, strerror(errno), r);
 	}
+	else if(errno != E_OK)
+		WARN("uncaught error %s\n", strerror(errno));
 
 	/* copy result to user space */
 	copy_to_user(param, kparam, psize, this_t->parent);

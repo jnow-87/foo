@@ -27,7 +27,7 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 	page = kmalloc(sizeof(page_t));
 
 	if(page == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 #if defined(CONFIG_KERNEL_VIRT_MEM)
 	if(psize < PAGESIZE_MIN || psize > PAGESIZE_MAX)

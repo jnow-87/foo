@@ -163,7 +163,7 @@ static int sc_hdlr_close(void *_p){
 }
 
 static int sc_hdlr_read(void *_p){
-	int r;
+	ssize_t r;
 	char buf[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
@@ -211,7 +211,6 @@ static int sc_hdlr_read(void *_p){
 	/* update user space */
 	if(errno == E_OK)
 		copy_to_user(p->data, buf, p->data_len, this_p);
-
 
 end:
 	fs_fd_release(fd);
@@ -413,7 +412,6 @@ static int sc_hdlr_chdir(void *_p){
 	this_p->cwd->ref_cnt--;
 	this_p->cwd = root;
 	root->ref_cnt++;
-
 
 end:
 	mutex_unlock(&this_p->mtx);

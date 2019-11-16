@@ -34,6 +34,9 @@ void *kmalloc(size_t n){
 	p = memblock_alloc(&kernel_heap, n, CONFIG_KMALLOC_ALIGN);
 	csection_unlock(&kmem_mtx);
 
+	if(n != 0 && p == 0x0)
+		errno = E_NOMEM;
+
 	return p;
 }
 

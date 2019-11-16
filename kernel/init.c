@@ -40,7 +40,7 @@ int kinit(void){
 		/* platform (stage: 0, 1) */
 		exec_init_call(__platform_init0_base, __kernel_init0_base, false);
 
-		kprintf(KMSG_ANY, "\n\t\t" FG_BLUE "::: boot system :::" RESET_ATTR "\n" VERSION "\n");
+		kprintf(KMSG_ANY, "\n\t\t" FG_BLUE "::: brickos :::" RESET_ATTR "\n" VERSION "\n");
 
 		/* kernel (stage: 0, 1, 2)
 		 * driver (stage: 0)

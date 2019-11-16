@@ -32,13 +32,13 @@ typedef enum{
 
 // general print macros
 #if (defined(CONFIG_KERNEL_MSG_FATAL) && !defined(BUILD_KERNEL_MSG_FATAL_DISABLE))
-#define	FATAL(fmt, ...)		cprintf(KMSG_FATAL, FG_RED "[FTL]" RESET_ATTR " %25.25s:%-20.20s    " FG_RED fmt RESET_ATTR, __FILE__, __FUNCTION__, ##__VA_ARGS__)
+#define	FATAL(fmt, ...)		cprintf(KMSG_FATAL, FG_RED "[FTL]" RESET_ATTR " %25.25s:%-5u %-20.20s    " FG_RED fmt RESET_ATTR, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define FATAL(fmt, ...)		{}
 #endif // CONFIG_KERNEL_MSG_FATAL
 
 #if (defined(CONFIG_KERNEL_MSG_WARN) && !defined(BUILD_KERNEL_MSG_WARN_DISABLE))
-#define WARN(fmt, ...)		cprintf(KMSG_WARN, FG_YELLOW "[WRN]" RESET_ATTR " %25.25s:%-20.20s    " FG_YELLOW fmt RESET_ATTR, __FILE__, __FUNCTION__, ##__VA_ARGS__)
+#define WARN(fmt, ...)		cprintf(KMSG_WARN, FG_YELLOW "[WRN]" RESET_ATTR " %25.25s:%-5u %-20.20s    " FG_YELLOW fmt RESET_ATTR, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define WARN(fmt, ...)		{}
 #endif // CONFIG_KERNEL_MSG_WARN
@@ -57,7 +57,7 @@ typedef enum{
 
 // debug print macros
 #if (defined(BUILD_KERNEL_MSG_DEBUG) && !defined(BUILD_KERNEL_MSG_DEBUG_DISABLE))
-#define DEBUG(fmt, ...)		cprintf(KMSG_DEBUG, "[DBG] %25.25s:%-20.20s    "fmt, __FILE__, __FUNCTION__, ##__VA_ARGS__)
+#define DEBUG(fmt, ...)		cprintf(KMSG_DEBUG, "[DBG] %25.25s:%-5u %-20.20s    "fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define DEBUG(fmt, ...)		{}
 #endif

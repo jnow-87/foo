@@ -35,7 +35,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	this_p = kmalloc(sizeof(process_t));
 
 	if(this_p == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	/* get pid */
 	this_p->pid = 1;
@@ -61,7 +61,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	this_p->name = kmalloc(strlen(name) + 1);
 
 	if(this_p->name == 0x0)
-		goto_errno(err_1, E_NOMEM);
+		goto err_1;
 
 	strcpy(this_p->name, name);
 
@@ -122,7 +122,7 @@ err_1:
 	kfree(this_p);
 
 err_0:
-	return 0;
+	return 0x0;
 }
 
 void process_destroy(process_t *this_p){

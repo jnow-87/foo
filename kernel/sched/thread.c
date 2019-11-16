@@ -29,7 +29,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 	this_t = kmalloc(sizeof(thread_t));
 
 	if(this_t == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	/* set tid */
 	if(tid == TID_MAX)

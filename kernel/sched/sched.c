@@ -178,7 +178,7 @@ static int init(void){
 	this_p = kmalloc(sizeof(process_t));
 
 	if(this_p == 0x0)
-		goto_errno(err, E_NOMEM);
+		goto err;
 
 	memset(this_p, 0x0, sizeof(process_t));
 	this_p->name = (char*)("kernel");
@@ -189,7 +189,7 @@ static int init(void){
 		this_t = kmalloc(sizeof(thread_t));
 
 		if(this_t == 0x0)
-			goto_errno(err, E_NOMEM);
+			goto err;
 
 		this_t->tid = i;
 		this_t->state = CREATED;

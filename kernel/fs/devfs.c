@@ -18,7 +18,7 @@
 
 
 /* static variables */
-static int devfs_id;
+static int devfs_id = 0;
 static fs_node_t *devfs_root = 0x0;
 
 
@@ -42,7 +42,7 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, f_mode_t mod
 	dev = kmalloc(sizeof(devfs_dev_t));
 
 	if(dev == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	fs_lock();
 	node = fs_node_create(devfs_root, name, strlen(name), FT_CHR, dev, devfs_id);
@@ -97,7 +97,7 @@ err:
 }
 
 
-/* static functions */
+/* local functions */
 static int init(void){
 	fs_ops_t ops;
 

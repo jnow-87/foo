@@ -29,7 +29,7 @@ fs_node_t *fs_root = 0x0;
 
 
 /* local variables */
-static int rootfs_id;
+static int rootfs_id = 0;
 
 
 /* local/static prototypes */
@@ -318,7 +318,7 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 		data = kmalloc(f_size);
 
 		if(data == 0x0)
-			goto_errno(err, E_NOMEM);
+			goto err;
 
 		memcpy(data, file->data, file->data_used);
 
@@ -438,12 +438,12 @@ static rootfs_file_t *file_alloc(void){
 	f = kmalloc(sizeof(rootfs_file_t));
 
 	if(f == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	f->data = kmalloc(CONFIG_ROOTFS_INIT_FILE_SIZE);
 
 	if(f->data == 0x0)
-		goto_errno(err_1, E_NOMEM);
+		goto err_1;
 
 	/* init file attributes */
 	f->data_max = CONFIG_ROOTFS_INIT_FILE_SIZE;

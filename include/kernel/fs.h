@@ -194,7 +194,7 @@ int fs_register(fs_ops_t *ops);
 void fs_lock(void);
 void fs_unlock(void);
 
-// file operations
+// file descriptor operations
 fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p, f_mode_t mode, f_mode_t mode_mask);
 int fs_fd_dup(fs_filed_t *fd, int id, struct process_t *this_p);
 void fs_fd_free(fs_filed_t *fd, struct process_t *this_p);

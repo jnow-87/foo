@@ -51,7 +51,7 @@ int fs_register(fs_ops_t *ops){
 	fs = kmalloc(sizeof(fs_t));
 
 	if(fs == 0x0)
-		goto_errno(err, E_NOMEM);
+		goto err;
 
 	fs->id = id;
 	fs->ops = *ops;
@@ -96,7 +96,7 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mod
 	fd = kmalloc(sizeof(fs_filed_t));
 
 	if(fd == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	fd->id = id;
 	fd->node = node;
@@ -138,7 +138,7 @@ int fs_fd_dup(fs_filed_t *old_fd, int id, struct process_t *this_p){
 	fd = kmalloc(sizeof(fs_filed_t));
 
 	if(fd == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	fd->id = id;
 	fd->node = old_fd->node;
@@ -217,7 +217,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 	node = kmalloc(sizeof(fs_node_t) + name_len + 1);
 
 	if(node == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	/* init node attributes */
 	node->fs_id = fs_id;

@@ -53,7 +53,7 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *dep_
 	task = kmalloc(sizeof(ktask_t) + size);
 
 	if(task == 0x0)
-		return_errno(E_NOMEM);
+		return -errno;
 
 	task->hdlr = hdlr;
 	task->dep_queue = dep_queue;
@@ -164,15 +164,12 @@ ktask_queue_t *ktask_queue_create(void){
 	queue = kmalloc(sizeof(ktask_queue_t));
 
 	if(queue == 0x0)
-		goto_errno(err, E_NOMEM);
+		return 0x0;
 
 	queue->head = 0x0;
 	queue->tail = 0x0;
 
 	return queue;
-
-err:
-	return 0x0;
 }
 
 /**
