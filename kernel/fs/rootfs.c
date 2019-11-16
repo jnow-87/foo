@@ -29,7 +29,7 @@ fs_node_t *fs_root = 0x0;
 
 
 /* local variables */
-static int rootfs_id;
+static int rootfs_id = 0;
 
 
 /* local/static prototypes */

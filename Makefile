@@ -250,8 +250,8 @@ ifeq ($(CONFIG_BUILD_DEBUG),y)
   cxxflags += -g
   asflags += -g
   ldlibs += -g
-  hostcflags += -g
-  hostcxxflags += -g
+  hostcflags += -g -O0
+  hostcxxflags += -g -O0
   hostasflags += -g
   hostldlibs += -g
 endif

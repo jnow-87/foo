@@ -163,7 +163,7 @@ static int sc_hdlr_close(void *_p){
 }
 
 static int sc_hdlr_read(void *_p){
-	int r;
+	ssize_t r;
 	char buf[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;

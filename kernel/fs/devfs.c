@@ -18,7 +18,7 @@
 
 
 /* static variables */
-static int devfs_id;
+static int devfs_id = 0;
 static fs_node_t *devfs_root = 0x0;
 
 
@@ -97,7 +97,7 @@ err:
 }
 
 
-/* static functions */
+/* local functions */
 static int init(void){
 	fs_ops_t ops;
 
