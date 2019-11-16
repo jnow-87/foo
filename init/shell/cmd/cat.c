@@ -127,7 +127,7 @@ static int exec(int argc, char **argv){
 
 		if(binary){
 			for(i=0; i<r; i++)
-				printf("%x", (int)(buf[i] & 0xff));
+				printf("%.2x", (int)(buf[i] & 0xff));
 		}
 		else
 			fprintf(stdout, buf);
