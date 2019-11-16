@@ -329,7 +329,7 @@ endif
 # update .clang file
 .PHONY: dotclang
 dotclang:
-	$(echo) $(cppflags) $(hostcppflags) | grep -o -e "-I[ \t]*[a-zA-Z0-9_/\.]*" > .clang
+	$(echo) $(cppflags) $(hostcppflags) | grep -o -e "-I[ \t]*[a-zA-Z0-9_/\.]*" > .clang || true
 
 # help for the build system
 help-buildsys:
