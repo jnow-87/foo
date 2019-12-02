@@ -47,11 +47,6 @@ int printf(char const *format, ...);
 int fprintf(FILE *stream, char const *format, ...);
 int vprintf(char const *format, va_list lst);
 
-int sprintf(char *s, char const *format, ...);
-int snprintf(char *s, size_t n, char const *format, ...);
-int vsprintf(char *s, char const *format, va_list lst);
-int vsnprintf(char *s, size_t n, char const *format, va_list lst);
-
 
 /* disabled-call macros */
 #ifndef CONFIG_SC_FILESYSTEM

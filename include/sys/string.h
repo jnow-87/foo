@@ -33,6 +33,9 @@ int memcmp(void const *s0, void const *s1, size_t n);
 char const *strerror(errno_t errno);
 
 char *itoa(int v, unsigned int base, char *s, size_t len);
+int atoi(char const *s);
+long int strtol(char const *p, char **endp, int base);
+
 
 #endif // SYS_STRING_H
 #endif // _STRING_H
