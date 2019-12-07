@@ -68,6 +68,19 @@ err:
 	return -errno;
 }
 
+void fs_release(int id){
+	fs_t *fs;
+
+
+	fs = list_find_safe(fs_lst, id, id, &fs_mtx);
+
+	if(fs == 0x0)
+		return;
+
+	list_rm_safe(fs_lst, fs, &fs_mtx);
+	kfree(fs);
+}
+
 void fs_lock(void){
 	mutex_lock(&fs_mtx);
 }

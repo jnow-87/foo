@@ -190,6 +190,7 @@ typedef struct fs_filed_t{
 /* prototypes */
 // file system operations
 int fs_register(fs_ops_t *ops);
+void fs_release(int id);
 
 void fs_lock(void);
 void fs_unlock(void);
