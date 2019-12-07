@@ -115,15 +115,22 @@ static int init(void){
 	devfs_id = fs_register(&ops);
 
 	if(devfs_id < 0)
-		return -errno;
+		goto err_0;
 
 	/* allocate root node */
 	devfs_root = rootfs_mkdir("/dev", fs_root->fs_id);
 
 	if(devfs_root == 0x0)
-		return -errno;
+		goto err_1;
 
 	return E_OK;
+
+
+err_1:
+	fs_release(devfs_id);
+
+err_0:
+	return -errno;
 }
 
 kernel_init(2, init);

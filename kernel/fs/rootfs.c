@@ -140,7 +140,7 @@ static int init(void){
 	rootfs_id = fs_register(&ops);
 
 	if(rootfs_id < 0)
-		return -errno;
+		goto err_0;
 
 	/* init fs_root */
 	memset(&dummy, 0x0, sizeof(dummy));
@@ -151,11 +151,18 @@ static int init(void){
 	fs_unlock();
 
 	if(fs_root == 0x0)
-		return -errno;
+		goto err_1;
 
 	fs_root->parent = fs_root;
 
 	return E_OK;
+
+
+err_1:
+	fs_release(rootfs_id);
+
+err_0:
+	return -errno;
 }
 
 kernel_init(1, init);
