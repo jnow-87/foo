@@ -93,6 +93,8 @@ char const *strerror(errno_t errnum){
 		"Resource unavailable",
 		"End of resource",
 		"Operation not supported",
+		"Already connected",
+		"No connection",
 		"Unkown",
 	};
 	static char err_unknown[] = "Unkown error 0x....";

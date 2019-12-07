@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/fcntl.h>
 #include <sys/signal.h>
+#include <sys/net.h>
 
 
 /* types */
@@ -46,6 +47,9 @@ typedef enum{
 	SC_SIGRETURN,
 	SC_SLEEP,
 	SC_TIME,
+	SC_SOCKET,
+	SC_RECV,
+	SC_SEND,
 	NSYSCALLS
 } sc_t;
 
@@ -110,6 +114,17 @@ typedef struct{
 typedef struct{
 	time_t time;
 } sc_time_t;
+
+typedef struct{
+	int fd;
+
+	sock_type_t type;
+	sock_addr_t *addr;
+	size_t addr_len;
+
+	void *data;
+	size_t data_len;
+} sc_socket_t;
 
 
 #endif // SYS_SYSCALL_H

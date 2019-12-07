@@ -18,6 +18,7 @@ obj-$(CONFIG_KERNEL_PRINTF) += kprintf.o
 obj-$(CONFIG_SC_SIGNAL) += usignal.o
 obj-$(CONFIG_KERNEL_IPI) += ipi.o
 obj-$(CONFIG_KERNEL_INTTASK) += inttask.o
+obj-$(CONFIG_KERNEL_NET) += net/
 
 
 ####

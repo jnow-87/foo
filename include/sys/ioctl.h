@@ -16,7 +16,11 @@ typedef enum{
 	IOCTL_CFGRD = 1,
 	IOCTL_CFGWR,
 	IOCTL_STATUS,
-} ioct_cmd_t;
+	IOCTL_CONNECT,
+	IOCTL_BIND,
+	IOCTL_LISTEN,
+	IOCTL_ACCEPT,
+} ioctl_cmd_t;
 
 
 #endif // SYS_IOCTL_H
