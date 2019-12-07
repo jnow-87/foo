@@ -28,6 +28,8 @@ typedef enum{
 	E_UNAVAIL,	/**< resource is not available */
 	E_END,		/**< end of resource reached */
 	E_NOSUP,	/**< operation not supported */
+	E_CONN,		/**< connection already established */
+	E_NOCONN,	/**< no connection */
 	E_UNKNOWN,	/**< unknown error */
 } errno_t;
 

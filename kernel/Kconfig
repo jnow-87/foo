@@ -108,6 +108,18 @@ menu "System calls"
 		help
 			Timer syscalls, such as sleep and time.
 
+	config SC_SOCKET
+		bool "Socket"
+		select KERNEL_NET
+		default n
+		help
+			Socket family of syscalls
+
+	config SC_SOCKET_DEBUG
+		bool "Socket debug messages"
+		depends on SC_SOCKET
+		default n
+
 	menu "Hidden"
 		visible if 0
 
@@ -203,6 +215,21 @@ endmenu
 menu "File system"
 	source "kernel/fs/Kconfig"
 endmenu
+# }}}
+
+#
+# network
+#
+# {{{
+menuconfig KERNEL_NET
+	bool "Networking infrastructure"
+	select KERNEL_DEVFS
+	select KERNEL_SIGNAL
+	select SYS_RINGBUFFER
+
+if KERNEL_NET
+	source "kernel/net/Kconfig"
+endif
 # }}}
 
 #
