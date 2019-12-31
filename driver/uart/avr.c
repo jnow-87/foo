@@ -80,7 +80,7 @@ typedef struct{
 /* local/static prototypes */
 static int configure(void *cfg, void *data);
 static term_flags_t get_flags(void *cfg);
-static void putc(char c, void *data);
+static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, term_err_t *err, void *data);
 
@@ -169,7 +169,7 @@ static term_flags_t get_flags(void *cfg){
 	return ((uart_cfg_t*)cfg)->flags;
 }
 
-static void putc(char c, void *data){
+static char putc(char c, void *data){
 	uart_regs_t *regs;
 
 
@@ -177,6 +177,8 @@ static void putc(char c, void *data){
 
 	while(!(regs->ucsra & (0x1 << UCSRA_UDRE)));
 	regs->udr = c;
+
+	return c;
 }
 
 static size_t putsn(char const *s, size_t n, void *data){

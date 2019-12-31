@@ -22,7 +22,7 @@ typedef struct{
 
 	term_flags_t (*get_flags)(void *cfg);
 
-	void (*putc)(char c, void *data);
+	char (*putc)(char c, void *data);
 	size_t (*puts)(char const *s, size_t n, void *data);
 	size_t (*gets)(char *s, size_t n, term_err_t *err, void *data);
 
