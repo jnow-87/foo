@@ -31,6 +31,18 @@ int dprintf(int fd, char const *format, ...);
 
 #define tlog(log, fmt, ...)	dprintf(log, __FILE__ ":%d " fmt, __LINE__, ##__VA_ARGS__);
 
+#define exit_on_error(check_res)({ \
+	int _check_res; \
+	\
+	\
+	_check_res = check_res; \
+	\
+	if(_check_res != 0) \
+		return -1; \
+	\
+	_check_res; \
+})
+
 #define check_int(log, expr, ref)({ \
 	typeof(ref) _res; \
 	\

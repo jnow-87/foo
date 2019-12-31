@@ -25,6 +25,8 @@
 /* prototypes */
 size_t strlen(char const *s);
 int strcmp(char const *s0, char const *s1);
+size_t strcnt(char const *s, char c);
+bool isoneof(char c, char const *s);
 
 void *memcpy(void *dest, void const *src, size_t n);
 void *memset(void *p, char c, size_t n);

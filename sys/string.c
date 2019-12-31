@@ -7,6 +7,7 @@
 
 
 
+#include <sys/types.h>
 #include <sys/string.h>
 #include <sys/errno.h>
 
@@ -35,6 +36,32 @@ int strcmp(char const *s0, char const *s1){
 		return -1;
 
 	return 0;
+}
+
+size_t strcnt(char const *s, char c){
+	size_t n;
+
+
+	n = 0;
+
+	while(*s){
+		if(*(s++) == c)
+			n++;
+	}
+
+	return n;
+}
+
+bool isoneof(char c, char const *s){
+	if(s == 0x0)
+		return false;
+
+	for(; *s; s++){
+		if(c == *s)
+			return true;
+	}
+
+	return false;
 }
 
 void *memcpy(void *dest, void const *src, size_t n){
