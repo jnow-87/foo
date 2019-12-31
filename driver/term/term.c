@@ -181,7 +181,7 @@ static void *probe_itf(char const *name, void *dt_data, void *dt_itf){
 interface_probe("terminal", probe_itf);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	int len;
+	size_t len;
 	term_t *term;
 
 
@@ -200,8 +200,8 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 	/* handle terminal flags */
 	// handle TERM_FLAG_ECHO
-	if(len > 0 && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO)){
-		if(term->hw->puts(buf, n, term->hw->data) != E_OK)
+	if(len && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO)){
+		if(term->hw->puts(buf, len, term->hw->data) != len)
 			return 0;
 	}
 
