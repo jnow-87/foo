@@ -307,7 +307,8 @@ static void tx_hdlr(int_num_t num, void *_term){
 		return;
 
 	/* output character */
-	term->hw->putc(*data->s, term->hw->data);
+	while(term->hw->putc(*data->s, term->hw->data) != *data->s);
+
 	data->s++;
 	data->len--;
 
