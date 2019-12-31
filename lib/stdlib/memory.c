@@ -16,6 +16,7 @@
 #include <sys/memblock.h>
 #include <sys/math.h>
 #include <sys/mutex.h>
+#include <sys/string.h>
 
 
 /* types */
@@ -95,6 +96,20 @@ clean:
 	mutex_unlock(&mem_mtx);
 
 	return addr;
+}
+
+void *calloc(size_t n, size_t size){
+	void *p;
+	size_t x;
+
+
+	x = n * size;
+	p = malloc(x);
+
+	if(p != 0x0)
+		memset(p, 0, x);
+
+	return p;
 }
 
 void free(void *addr){

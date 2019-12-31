@@ -73,7 +73,7 @@ static int tc_vfprintf(int log){
 	n += test(log,		"11",					"%hhd", tmp[1]);
 
 	// test is not allowed to write more than defined size to tmp (char in this case)
-	memset(tmp, 0x0, 3);
+	memset(tmp, 0, 3);
 
 	// this test is intended to fail, it only prepares tmp for the next one
 	test(log,			"intended to fail",		"%280s%hhn", "foo", tmp + 1);

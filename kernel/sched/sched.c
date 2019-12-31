@@ -175,12 +175,11 @@ static int init(void){
 
 
 	/* create kernel process */
-	this_p = kmalloc(sizeof(process_t));
+	this_p = kcalloc(1, sizeof(process_t));
 
 	if(this_p == 0x0)
 		goto err;
 
-	memset(this_p, 0x0, sizeof(process_t));
 	this_p->name = (char*)("kernel");
 
 	/* create kernel thread */

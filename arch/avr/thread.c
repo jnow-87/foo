@@ -25,7 +25,7 @@ extern void (*__kernel_end[])(void);
 /* global functions */
 void avr_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg){
 	/* init thread context */
-	memset(ctx, 0x0, sizeof(thread_ctx_t));
+	memset(ctx, 0, sizeof(thread_ctx_t));
 
 	// set status registers
 	ctx->mcusr = mreg_r(MCUSR);

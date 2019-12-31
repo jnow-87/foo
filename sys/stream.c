@@ -170,7 +170,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 
 		fp = ++format;
 
-		memset(&v, 0x0, sizeof(v));
+		memset(&v, 0, sizeof(v));
 
 		/* parse flags */
 		format += parse_flags(format, &flags);

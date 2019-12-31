@@ -32,11 +32,11 @@ int main(int argc, char **argv){
 	opt_parse(argc, argv);
 
 	/* parse device tree */
-	memset(&driver_root, 0x0, sizeof(driver_node_t));
+	memset(&driver_root, 0, sizeof(driver_node_t));
 	driver_root.name = "driver_root";
 	driver_root.compatible = "";
 
-	memset(&memory_root, 0x0, sizeof(memory_node_t));
+	memset(&memory_root, 0, sizeof(memory_node_t));
 	memory_root.name = "memory_root";
 
 	if(devtreeparse(options.ifile_name, &driver_root, &memory_root) != 0)

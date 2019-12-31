@@ -28,7 +28,7 @@ static int exec(int argc, char **argv){
 	i2c_cfg_t cfg;
 
 
-	memset(&cfg, 0x0, sizeof(i2c_cfg_t));
+	memset(&cfg, 0, sizeof(i2c_cfg_t));
 
 	/* check options */
 	if(argc < 6)

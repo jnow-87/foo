@@ -143,7 +143,7 @@ static int init(void){
 		goto err_0;
 
 	/* init fs_root */
-	memset(&dummy, 0x0, sizeof(dummy));
+	memset(&dummy, 0, sizeof(dummy));
 
 	fs_lock();
 	fs_root = fs_node_create(&dummy, "/", 1, FT_DIR, 0x0, rootfs_id);

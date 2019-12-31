@@ -52,6 +52,39 @@ static int tc_strlen(int log){
 test_case(tc_strlen, "strlen");
 
 
+static int tc_strcnt(int log){
+	unsigned int n;
+
+
+	n = 0;
+
+	n += check_int(log, strcnt("", '%'), 0);
+	n += check_int(log, strcnt("foo", '%'), 0);
+	n += check_int(log, strcnt("%foo", '%'), 1);
+	n += check_int(log, strcnt("foo%", '%'), 1);
+	n += check_int(log, strcnt("%bar%foo%", '%'), 3);
+
+	return -n;
+}
+
+test_case(tc_strcnt, "strcnt");
+
+static int tc_isoneof(int log){
+	unsigned int n;
+
+
+	n = 0;
+
+	n += check_int(log, isoneof('a', ""), false);
+	n += check_int(log, isoneof('a', "bcde"), false);
+	n += check_int(log, isoneof('a', "abcde"), true);
+	n += check_int(log, isoneof('a', "bcade"), true);
+
+	return -n;
+}
+
+test_case(tc_isoneof, "isoneof");
+
 static int tc_strcpy(int log){
 	unsigned int n;
 	char d[5];
