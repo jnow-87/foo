@@ -39,14 +39,6 @@ if KERNEL_PRINTF || LIB_STREAM
 endif # KERNEL_PRINTF || LIB_STREAM
 # }}}
 
-menu "Hidden"
-	visible if 0
-
-	config SYS_RINGBUFFER
-		bool "Ring buffer"
-		default n
-endmenu
-
 #
 # file system
 #
@@ -55,4 +47,21 @@ config FILE_NAME_LEN
 	int "Maximum file name length"
 	default 16
 	range 4 4096
+# }}}
+
+#
+# miscellaneous
+#
+# {{{
+menu "Hidden"
+	visible if 0
+
+	config SYS_RINGBUFFER
+		bool "Ring buffer"
+		default n
+
+	config SYS_PATTERN_MATCH
+		bool "Pattern matching api"
+		default n
+endmenu
 # }}}
