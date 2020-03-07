@@ -224,8 +224,8 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *data){
 				 |  (bits(e, UCSRA_RXC, 0x1) ? TERM_ERR_RX_FULL : 0)
 				 ;
 		}
-		else
-			i++;
+
+		i++;
 	}
 
 	return i;
