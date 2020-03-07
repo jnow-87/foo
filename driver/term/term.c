@@ -14,6 +14,7 @@
 #include <kernel/ksignal.h>
 #include <kernel/driver.h>
 #include <kernel/inttask.h>
+#include <kernel/csection.h>
 #include <driver/term.h>
 #include <driver/klog.h>
 #include <sys/ringbuf.h>
@@ -21,7 +22,6 @@
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/string.h>
-#include <sys/mutex.h>
 #include <sys/list.h>
 
 
@@ -40,6 +40,8 @@ typedef struct{
 	ksignal_t *rx_rdy;
 
 	itask_queue_t tx_queue;
+
+	csection_lock_t lock;
 } term_t;
 
 
@@ -122,6 +124,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 
 	itask_queue_init(&term->tx_queue);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
+	csection_init(&term->lock);
 
 	if(term->hw->configure(term->cfg, term->hw->data) != 0)
 		goto err_5;
@@ -193,6 +196,8 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 		return 0;
 	}
 
+	csection_lock(&term->lock);
+
 	if(term->rx_buf.data == 0x0)
 		len = term->hw->gets(buf, n, &term->rx_err, term->hw->data);
 	else
@@ -200,10 +205,10 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 	/* handle terminal flags */
 	// handle TERM_FLAG_ECHO
-	if(len && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO)){
-		if(term->hw->puts(buf, len, term->hw->data) != len)
-			return 0;
-	}
+	if(len && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO))
+		len = term->hw->puts(buf, len, term->hw->data);
+
+	csection_unlock(&term->lock);
 
 	return len;
 }
@@ -257,9 +262,13 @@ static size_t puts_noint(char const *s, size_t n, void *_term){
 
 	term = (term_t*)_term;
 
+	csection_lock(&term->lock);
 	imask = int_enable(INT_NONE);
+
 	r = term->hw->puts(s, n, term->hw->data);
+
 	int_enable(imask);
+	csection_unlock(&term->lock);
 
 	return r;
 }
@@ -287,10 +296,14 @@ static void rx_hdlr(int_num_t num, void *_term){
 
 	term = (term_t*)_term;
 
+	csection_lock(&term->lock);
+
 	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->data);
 
 	if(ringbuf_write(&term->rx_buf, buf, len) != len)
 		term->rx_err |= TERM_ERR_RX_FULL;
+
+	csection_unlock(&term->lock);
 
 	ksignal_send(term->rx_rdy);
 }
@@ -307,7 +320,9 @@ static void tx_hdlr(int_num_t num, void *_term){
 		return;
 
 	/* output character */
+	csection_lock(&term->lock);
 	while(term->hw->putc(*data->s, term->hw->data) != *data->s);
+	csection_unlock(&term->lock);
 
 	data->s++;
 	data->len--;
