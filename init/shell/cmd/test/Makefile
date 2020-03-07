@@ -15,3 +15,5 @@ obj-y += signal.o
 obj-y += kill.o
 obj-y += exit.o
 obj-y += gpioint.o
+obj-y += socket.o
+obj-y += corruption.o

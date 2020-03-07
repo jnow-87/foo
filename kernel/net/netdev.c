@@ -141,10 +141,10 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		if(netdev->ops.configure(netdev, data) != E_OK)
-			return -errno;
-
-		memcpy(&netdev->cfg, data, cfg_size);
+//		if(netdev->ops.configure(netdev, data) != E_OK)
+//			return -errno;
+//
+//		memcpy(&netdev->cfg, data, cfg_size);
 		return E_OK;
 
 	default:

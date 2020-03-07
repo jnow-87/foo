@@ -14,12 +14,12 @@ memory = {
 
 		kernel_flash = {
 			baseaddr = 0x0;
-			size = 36864;
+			size = 46080;
 		};
 
 		app_flash = {
-			baseaddr = 0x00009000;
-			size = 94208;
+			baseaddr = 0x0000b400;
+			size = 84992;
 		};
 	};
 
@@ -34,12 +34,12 @@ memory = {
 
 		kernel_data = {
 			baseaddr = 0x00800100;
-			size = 3584;
+			size = 4096;
 		};
 
 		kernel_heap = {
-			baseaddr = 0x00800f00;
-			size = 3584;
+			baseaddr = 0x00801100;
+			size = 3072;
 		};
 
 		kernel_stack = {
@@ -49,12 +49,12 @@ memory = {
 
 		app_heap = {
 			baseaddr = 0x00802000;
-			size = 4096;
+			size = 3072;
 		};
 
 		app_data = {
-			baseaddr = 0x00803000;
-			size = 4096;
+			baseaddr = 0x00802c00;
+			size = 5120;
 		};
 	};
 };
@@ -75,7 +75,7 @@ driver = {
 
 		int<8> = [
 			20,						// uart0 rx interrupt
-			22						// uart0 tx interrupt
+			0						// uart0 tx interrupt
 		];
 
 		tty0 = {
@@ -100,204 +100,56 @@ driver = {
 		};
 	};
 
-	eeprom0 = {
-		compatible = "avr,eeprom";
+	uart1 = {
+		compatible = "avr,uart";
 
 		/**
-		 * eeprom hardware description
+		 * uart hardware description
 		 * 	has to match the device tree data type
-		 *	of the avr eeprom driver
+		 *	of the avr uart driver
 		 */
-		baseaddr = 0x3f;			// eeprom register base
-
-		int<16> = [
-			0x0,					// base address
-			4096					// size
-		];
-
-		int<8> = [ 25 ];			// eeprom ready interrupt
-	};
-
-	pwm0 = {
-		compatible = "avr,pwm8";
-
-		/**
-		 * pwm hardware description
-		 * 	has to match the device tree data type
-		 *	of the avr pwm driver
-		 */
-		baseaddr = 0x44;			// tcc0 config register base
-
-		reg = [
-			0x35,					// TIFR0
-			0x6e					// TIMSK0
-		];
+		baseaddr = 0xc8;			// uart1 config register base
 
 		reg = [ 0x64 ];				// PRR0
-		int<8> = [ 0x20 ];			// PRR0_PRTIM0
-
-		reg = [ 0x24 ];				// DDRB
-		int<8> = [ 0x18 ];			// DDRB bits 3..4
-
-	};
-
-	pwm1 = {
-		compatible = "avr,pwm16";
-
-		/**
-		 * pwm hardware description
-		 * 	has to match the device tree data type
-		 *	of the avr pwm driver
-		 */
-		baseaddr = 0x80;			// tcc1 config register base
-
-		reg = [
-			0x36,					// TIFR1
-			0x6f					// TIMSK1
-		];
-
-		reg = [ 0x64 ];				// PRR0
-		int<8> = [ 0x08 ];			// PRR0_PRTIM1
-
-		reg = [ 0x2a ];				// DDRD
-		int<8> = [ 0x30 ];			// DDRD bits 4..5
-
-	};
-
-	pa0 = {
-		compatible = "avr,gpio";
-
-		/**
-		 * gpio hardware description
-		 * 	has to match the device tree data type
-		 *	of the avr gpio driver
-		 */
-		baseaddr = 0x20;			// porta
-
-		reg = [
-			0x0,					// PCICR
-			0x0						// PCMASK
-		];
-
-		int<8> = [ 0 ];				// pcint number
+		int<8> = [ 0x10 ];			// PRR0_PRUSART1
 
 		int<8> = [
-			0x3,					// direction (in)
-			0x1						// pin mask
-		];
-	};
-
-	pa1 = {
-		compatible = "avr,gpio";
-
-		/**
-		 * gpio hardware description
-		 * 	has to match the device tree data type
-		 *	of the avr gpio driver
-		 */
-		baseaddr = 0x20;			// porta
-
-		reg = [
-			0x0,					// PCICR
-			0x0						// PCMSK
+			28,						// uart1 rx interrupt
+			0						// uart1 tx interrupt (disabled)
 		];
 
-		int<8> = [ 0 ] ;			// pcint number
+//		tty2 = {
+//			compatible = "terminal";
+//
+//			/**
+//			 * terminal configuration
+//			 * 	has to match the configuration data type of
+//			 * 	the underlying device driver
+//			 */
+//			int<32> = [ 115200 ];	// baudrate
+//			int<8> = [
+//				1,					// stop bits (1)
+//				0,					// parity (TPARITY_NONE)
+//				3,					// csize (TCS_8)
+//				1					// flags (none)
+//			];
+//		};
 
-		int<8> = [
-			0x3,					// direction (in/out)
-			0x2						// pin mask
-		];
-	};
-
-	int0 = {
-		compatible = "avr,gpio";
-
-		/**
-		 * gpio hardware description
-		 * 	has to match the device tree data type
-		 *	of the avr gpio driver
-		 */
-		baseaddr = 0x20;			// porta
-
-		reg = [
-			0x68,					// PCICR
-			0x6b					// PCMSK
-		];
-
-		int<8> = [ 2 ];				// pcint number
-
-		int<8> = [
-			0x3,					// direction (in/out)
-			0x4						// pin mask
-		];
-	};
-
-	spi0 = {
-		compatible = "avr,spi";
-
-		/**
-		 * spi hardware description
-		 * 	has to match the device tree data type
-		 *	of the avr spi driver
-		 */
-		baseaddr = 0x4c;			// spi config register base
-
-		reg = [ 0x24 ];				// DDRB
-		int<8> = [
-			0x40,					// PB6 (MISO)
-			0x20,					// PB5 (MOSI)
-			0x80					// PB7 (SCK)
-		];
-
-		reg = [ 0x64 ];				// PRRO
-		int<8> = [ 0x4 ];			// PRR0_PRSPI
-
-		int<8> = [ 19 ];			// interrupt number
-
-		tty1 = {
-			compatible = "terminal";
+		eth0 = {
+			compatible = "esp8266";
 
 			/**
-			 * serial configuration
+			 * uart configuration
 			 * 	has to match the configuration data type of
-			 * 	the underlying device driver
+			 * 	the avr uart driver
 			 */
+			int<32> = [ 2400 ];	// baudrate
 			int<8> = [
-				1,					// device mode (master)
-				0,					// sample mode (CPOL = 0, CPHA = 0)
-				0,					// data order (MSB first)
-				1,					// prescaler (4)
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
 				0					// flags (none)
 			];
-		};
-	};
-
-	i2c = {
-		compatible = "avr,i2c";
-
-		baseaddr = 0xb8;
-
-		reg = [ 0x64 ];				// PRRO
-		int<8> = [ 0x80 ];			// PRR0_PRTWI
-
-		int<8> = [ 26 ];			// interrupt number
-
-		i2c0 = {
-			compatible = "i2c";
-
-			/**
-			 * i2c configuration
-			 *	has to match the configuration data type of
-			 *	the underlying device driver
-			 */
-			 int<8> = [ 1 ];		// mode (master)
-			 int<16> = [ 50 ];		// clock (50kHz)
-			 int<8> = [
-				1,				// broadcast (enabled)
-				1,				// host address
-				0				// target address
-			 ];
 		};
 	};
 };
