@@ -60,7 +60,16 @@ static void cleanup(void *p);
 /* static variables */
 static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
 static csection_lock_t sched_mtx = CSECTION_INITIALISER();
-static thread_t *running[CONFIG_NCORES] = { 0x0 };
+
+static process_t kernel_process = { 0 };
+static thread_t kernel_threads[CONFIG_NCORES] = {
+	{ .tid = 0, .parent = &kernel_process, }
+};
+
+// NOTE having valid entries is required for functions that use
+// 		sched_running() early on, e.g. nested mutexes
+static thread_t *running[CONFIG_NCORES] = { kernel_threads + 0 };
+
 
 
 /* global functions */
@@ -168,27 +177,38 @@ void sched_thread_bury(thread_t *this_t){
 
 
 /* local functions */
-static int init(void){
+#if CONFIG_NCORES > 1
+
+static int init_shallow(void){
+	size_t i;
+
+
+	for(i=1; i<CONFIG_NCORES; i++){
+		memcpy(kernel_threads + i, kernel_threads + 0, sizeof(thread_t));
+		running[i] = kernel_threads + i;
+	}
+
+	return E_OK;
+}
+
+kernel_init(0, init_shallow);
+
+#endif // CONFIG_NCORES
+
+static int init_deep(void){
 	unsigned int i;
 	process_t *this_p;
 	thread_t *this_t;
 
 
-	/* create kernel process */
-	this_p = kcalloc(1, sizeof(process_t));
-
-	if(this_p == 0x0)
-		goto err;
-
+	/* init kernel process */
+	this_p = &kernel_process;
 	this_p->name = (char*)("kernel");
 
-	/* create kernel thread */
-	// allocate one thread per core
+	/* init kernel threads */
+	// one thread per core
 	for(i=0; i<CONFIG_NCORES; i++){
-		this_t = kmalloc(sizeof(thread_t));
-
-		if(this_t == 0x0)
-			goto err;
+		this_t = kernel_threads + i;
 
 		this_t->tid = i;
 		this_t->state = CREATED;
@@ -237,7 +257,7 @@ err:
 	return -errno;
 }
 
-kernel_init(2, init);
+kernel_init(2, init_deep);
 
 static void thread_transition(thread_t *this_t, thread_state_t queue){
 	sched_thread_modify(this_t, _thread_transition, &queue, sizeof(thread_state_t));
