@@ -142,12 +142,8 @@ void process_destroy(process_t *this_p){
 	list_for_each(this_p->fds, fd){
 		ops = fd->node->ops;
 
-		fs_lock();
-
 		if(ops->close != 0x0)	ops->close(fd, this_p);
 		else					fs_fd_free(fd, this_p);
-
-		fs_unlock();
 	}
 
 	/* free arguments */

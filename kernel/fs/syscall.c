@@ -81,11 +81,7 @@ static int sc_hdlr_open(void *_p){
 		return_errno(E_NOIMP);
 
 	DEBUG("path \"%s\", mode %#x\n", path, p->mode);
-
-	fs_lock();
 	p->fd = root->ops->open(root, path, p->mode, this_p);
-	fs_unlock();
-
 	DEBUG("created fd with id %d, \"%s\"\n", p->fd, strerror(errno));
 
 	return E_OK;
@@ -123,9 +119,7 @@ static int sc_hdlr_dup(void *_p){
 	errno = E_OK;
 
 	/* duplicate old fd */
-	fs_lock();
 	p->fd = fs_fd_dup(old_fd, p->fd, this_p);
-	fs_unlock();
 
 	fs_fd_release(old_fd);
 
@@ -152,9 +146,7 @@ static int sc_hdlr_close(void *_p){
 		return_errno(E_INVAL);
 
 	/* handle close */
-	fs_lock();
 	(void)fd->node->ops->close(fd, this_p);
-	fs_unlock();
 
 	// NOTE fs_fd_release must not be called, since
 	// 		close has already deleted the decriptor
@@ -369,9 +361,7 @@ static int sc_hdlr_rmnode(void *_p){
 	if(root->ops->node_rm == 0x0)
 		return_errno(E_NOIMP);
 
-	fs_lock();
 	(void)root->ops->node_rm(root, path);
-	fs_unlock();
 
 	return -errno;
 }

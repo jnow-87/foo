@@ -208,5 +208,4 @@ int fs_node_destroy(fs_node_t *node);
 int fs_node_find(fs_node_t **start, char const **path);
 
 
-
 #endif // KERNEL_FS_H
