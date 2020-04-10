@@ -1,0 +1,25 @@
+#
+# Copyright (C) 2019 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+menuconfig DRIVER_ESP8266
+	bool "ESP8266 wlan module"
+	select KERNEL_NET
+	select KERNEL_SIGNAL
+	select SYS_PATTERN_MATCH
+
+if DRIVER_ESP8266
+	config ESP8266_LINK_COUNT
+		int "Number of supported links"
+		default 5
+
+	config ESP8266_DEBUG
+		bool "Enable debug messages"
+		depends on KERNEL_MSG_DEBUG
+		default n
+endif # DRIVER_ESP8266
