@@ -100,6 +100,42 @@ driver = {
 		};
 	};
 
+	uart1 = {
+		compatible = "avr,uart";
+
+		/**
+		 * uart hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr uart driver
+		 */
+		baseaddr = 0xc8;			// uart1 config register base
+
+		reg = [ 0x64 ];				// PRR0
+		int<8> = [ 0x10 ];			// PRR0_PRUSART1
+
+		int<8> = [
+			28,						// uart1 rx interrupt
+			0						// uart1 tx interrupt (disabled)
+		];
+
+		eth0 = {
+			compatible = "esp8266";
+
+			/**
+			 * uart configuration
+			 * 	has to match the configuration data type of
+			 * 	the avr uart driver
+			 */
+			int<32> = [ 2400 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0					// flags (none)
+			];
+		};
+	};
+
 	eeprom0 = {
 		compatible = "avr,eeprom";
 

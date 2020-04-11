@@ -15,3 +15,4 @@ source driver/pwm/Kconfig
 source driver/spi/Kconfig
 source driver/eeprom/Kconfig
 source driver/i2c/Kconfig
+source driver/esp8266/Kconfig
