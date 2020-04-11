@@ -108,6 +108,22 @@ int memcmp(void const *s0, void const *s1, size_t n){
 	return 0;
 }
 
+void *memscan(void *addr, char c, size_t n){
+	return memnscan(addr, &c, n, 1);
+}
+
+void *memnscan(void *s0, void *s1, ssize_t nmemb, size_t size){
+	ssize_t i;
+
+
+	for(i=0; i<nmemb; i++){
+		if(memcmp(s0 + i * size, s1, size) == 0)
+			return s0 + i * size;
+	}
+
+	return 0x0;
+}
+
 char const *strerror(errno_t errnum){
 	static char const *err_str[] = {
 		"Success",
