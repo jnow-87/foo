@@ -73,12 +73,10 @@ FILE *fdopen(int fd, char const *mode){
 	fmode = mode_parse(mode);
 
 	/* allocate base struct and rw buffers */
-	file = malloc(sizeof(FILE));
+	file = calloc(1, sizeof(FILE));
 
 	if(file == 0x0)
 		goto_errno(err_0, E_NOMEM);
-
-	memset(file, 0x0, sizeof(FILE));
 
 	file->fileno = fd;
 	file->blen = CONFIG_FILE_BUF_SIZE;

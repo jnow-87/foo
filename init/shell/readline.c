@@ -8,6 +8,7 @@
 
 
 #include <sys/types.h>
+#include <sys/compiler.h>
 #include <sys/ioctl.h>
 #include <sys/errno.h>
 #include <sys/term.h>
@@ -251,7 +252,7 @@ static esc_t parse_esc(char const *s, size_t len){
 
 	i = *(s + 2) - 'A';
 
-	if(i > sizeof(codes) / sizeof(esc_t))
+	if(i > sizeof_array(codes))
 		return ESC_INVAL;
 
 	return codes[i];

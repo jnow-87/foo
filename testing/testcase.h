@@ -29,10 +29,22 @@ int dprintf(int fd, char const *format, ...);
 	static char const test_case_desc_##_hdlr[]  __used = _desc; \
 	static test_case_t test_case_##_hdlr __section("testcases") __used = { .hdlr = _hdlr, .desc = test_case_desc_##_hdlr, }
 
-#define tlog(log, fmt, ...)	dprintf(log, fmt, ##__VA_ARGS__);
+#define tlog(log, fmt, ...)	dprintf(log, __FILE__ ":%d " fmt, __LINE__, ##__VA_ARGS__);
+
+#define exit_on_error(check_res)({ \
+	int _check_res; \
+	\
+	\
+	_check_res = check_res; \
+	\
+	if(_check_res != 0) \
+		return -1; \
+	\
+	_check_res; \
+})
 
 #define check_int(log, expr, ref)({ \
-	int _res; \
+	typeof(ref) _res; \
 	\
 	\
 	_res = expr; \

@@ -212,11 +212,11 @@ ifneq ("$(githooks_tree)","")
 .PHONY: githooks
 .SILENT: githooks
 githooks:
-	test -e "$(githooks_tree)/style" || (echo $(githooks_tree)/style does not exist; exit 1)
-	test -e "$(githooks_tree)/mantis" || (echo $(githooks_tree)/mantis does not exist; exit 1)
-	test -e "$(githooks_tree)/util_print" || (echo $(githooks_tree)/util_print does not exist; exit 1)
-	test -e "$(githooks_tree)/pre-commit" || (echo $(githooks_tree)/pre-commit does not exist; exit 1)
-	test -e "$(githooks_tree)/post-commit" || (echo $(githooks_tree)/post-commit does not exist; exit 1)
+	test -e "$(githooks_tree)/style" || { echo $(githooks_tree)/style does not exist; exit 1; }
+	test -e "$(githooks_tree)/mantis" || { echo $(githooks_tree)/mantis does not exist; exit 1; }
+	test -e "$(githooks_tree)/util_print" || { echo $(githooks_tree)/util_print does not exist; exit 1; }
+	test -e "$(githooks_tree)/pre-commit" || { echo $(githooks_tree)/pre-commit does not exist; exit 1; }
+	test -e "$(githooks_tree)/post-commit" || { echo $(githooks_tree)/post-commit does not exist; exit 1; }
 	ln -frs $(githooks_tree)/style .git/hooks/style
 	ln -frs $(githooks_tree)/mantis .git/hooks/mantis
 	ln -frs $(githooks_tree)/util_print .git/hooks/util_print
@@ -329,7 +329,7 @@ endif
 # update .clang file
 .PHONY: dotclang
 dotclang:
-	$(echo) $(cppflags) $(hostcppflags) | grep -o -e "-I[ \t]*[a-zA-Z0-9_/\.]*" > .clang
+	$(echo) $(cppflags) $(hostcppflags) | grep -o -e "-I[ \t]*[a-zA-Z0-9_/\.]*" > .clang || true
 
 # help for the build system
 help-buildsys:

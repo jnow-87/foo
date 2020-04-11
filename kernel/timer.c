@@ -91,7 +91,7 @@ static int sc_hdlr_sleep(void *_p){
 	t = kmalloc(sizeof(timer_t));
 
 	if(t == 0x0)
-		return_errno(E_NOMEM);
+		return -errno;
 
 	/* init timer */
 	ksignal_init(&t->sig);

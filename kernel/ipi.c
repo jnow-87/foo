@@ -50,7 +50,7 @@ int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *data, size_t size){
 	msg = kmalloc(sizeof(ipi_msg_t) + size);
 
 	if(msg == 0x0)
-		return_errno(E_NOMEM);
+		return -errno;
 
 	msg->hdlr = hdlr;
 	memcpy(msg->data, data, size);

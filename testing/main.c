@@ -51,18 +51,18 @@ int main(int argc, char **argv){
 
 	while(tc != __stop_testcases){
 		printf("run test case: %s... ", tc->desc);
-		tlog(log, " === test case: %s ===\n\n", tc->desc);
+		dprintf(log, " === test case: %s ===\n\n", tc->desc);
 
 
 		if((tc->hdlr)(log) == 0){
 			printf(FG_GREEN "passed\n" RESET_ATTR);
-			tlog(log, "\n === test case: %s passed ===\n\n\n", tc->desc);
+			dprintf(log, "\n === test case: %s passed ===\n\n\n", tc->desc);
 
 			passed++;
 		}
 		else{
 			printf(FG_RED "failed\n" RESET_ATTR);
-			tlog(log, "\n === test case: %s failed ===\n\n\n", tc->desc);
+			dprintf(log, "\n === test case: %s failed ===\n\n\n", tc->desc);
 
 			failed++;
 		}
@@ -82,5 +82,5 @@ int main(int argc, char **argv){
 		   failed
 	);
 
-	return 0;
+	return failed;
 }

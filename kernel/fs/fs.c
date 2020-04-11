@@ -24,9 +24,17 @@
 #define FMODE_DEFAULT	(O_NONBLOCK)
 
 
+/* local/static prototypes */
+static void rw_lock(void);
+static void rw_unlock(void);
+
+static int fs_node_find_unsafe(fs_node_t **start, char const **path);
+
+
 /* static variables */
 static fs_t *fs_lst = 0x0;
-static mutex_t fs_mtx = MUTEX_INITIALISER();
+static mutex_t fs_ro_mtx = NESTED_MUTEX_INITIALISER(),
+			   fs_rw_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -37,7 +45,7 @@ int fs_register(fs_ops_t *ops){
 
 	id = 0;
 
-	fs_lock();
+	rw_lock();
 
 	if(!list_empty(fs_lst))
 		id = list_last(fs_lst)->id + 1;
@@ -51,29 +59,46 @@ int fs_register(fs_ops_t *ops){
 	fs = kmalloc(sizeof(fs_t));
 
 	if(fs == 0x0)
-		goto_errno(err, E_NOMEM);
+		goto err;
 
 	fs->id = id;
 	fs->ops = *ops;
 
 	list_add_tail(fs_lst, fs);
 
-	fs_unlock();
+	rw_unlock();
 
 	return fs->id;
 
 
 err:
-	fs_unlock();
+	rw_unlock();
+
 	return -errno;
 }
 
+void fs_release(int id){
+	fs_t *fs;
+
+
+	rw_lock();
+
+	fs = list_find(fs_lst, id, id);
+
+	if(fs != 0x0){
+		list_rm(fs_lst, fs);
+		kfree(fs);
+	}
+
+	rw_unlock();
+}
+
 void fs_lock(void){
-	mutex_lock(&fs_mtx);
+	mutex_lock(&fs_ro_mtx);
 }
 
 void fs_unlock(void){
-	mutex_unlock(&fs_mtx);
+	mutex_unlock(&fs_ro_mtx);
 }
 
 fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mode_t mode_mask){
@@ -82,6 +107,7 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mod
 
 
 	mutex_lock(&this_p->mtx);
+	rw_lock();
 
 	/* acquire descriptor id */
 	id = 0;
@@ -96,7 +122,7 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mod
 	fd = kmalloc(sizeof(fs_filed_t));
 
 	if(fd == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	fd->id = id;
 	fd->node = node;
@@ -108,13 +134,16 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mod
 	list_add_tail(this_p->fds, fd);
 	node->ref_cnt++;
 
+	rw_unlock();
 	mutex_unlock(&this_p->mtx);
 
 	return fd;
 
 
 err_0:
+	rw_unlock();
 	mutex_unlock(&this_p->mtx);
+
 	return 0x0;
 }
 
@@ -124,6 +153,7 @@ int fs_fd_dup(fs_filed_t *old_fd, int id, struct process_t *this_p){
 
 
 	mutex_lock(&this_p->mtx);
+	rw_lock();
 
 	/* acquire descriptor id if no valid is given */
 	if(id < 0){
@@ -138,7 +168,7 @@ int fs_fd_dup(fs_filed_t *old_fd, int id, struct process_t *this_p){
 	fd = kmalloc(sizeof(fs_filed_t));
 
 	if(fd == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	fd->id = id;
 	fd->node = old_fd->node;
@@ -159,19 +189,25 @@ int fs_fd_dup(fs_filed_t *old_fd, int id, struct process_t *this_p){
 	if(e == 0x0)
 		list_add_tail(this_p->fds, fd);
 
+	rw_unlock();
 	mutex_unlock(&this_p->mtx);
 
 	return id;
 
 
 err_0:
+	rw_unlock();
 	mutex_unlock(&this_p->mtx);
+
 	return -errno;
 }
 
 void fs_fd_free(fs_filed_t *fd, process_t *this_p){
 	list_rm_safe(this_p->fds, fd, &this_p->mtx);
+
+	rw_lock();
 	fd->node->ref_cnt--;
+	rw_unlock();
 
 	kfree(fd);
 }
@@ -201,6 +237,8 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 	fs_node_t *node;
 
 
+	fs_lock();
+
 	if(name_len + 1 > CONFIG_FILE_NAME_LEN)
 		goto_errno(err_0, E_LIMIT);
 
@@ -217,7 +255,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 	node = kmalloc(sizeof(fs_node_t) + name_len + 1);
 
 	if(node == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	/* init node attributes */
 	node->fs_id = fs_id;
@@ -237,7 +275,9 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 	ksignal_init(&node->rd_sig);
 
 	/* add node to file system */
+	rw_lock();
 	list_add_tail(parent->childs, node);
+	rw_unlock();
 
 	/* add '.' and '..' nodes for directories */
 	if(type == FT_DIR){
@@ -248,6 +288,8 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 			goto err_1;
 	}
 
+	fs_unlock();
+
 	return node;
 
 
@@ -255,12 +297,16 @@ err_1:
 	fs_node_destroy(node);
 
 err_0:
+	fs_unlock();
+
 	return 0x0;
 }
 
 int fs_node_destroy(fs_node_t *node){
 	fs_node_t *child;
 
+
+	fs_lock();
 
 	if(node->ref_cnt > 0)
 		goto_errno(err, E_INUSE);
@@ -270,15 +316,44 @@ int fs_node_destroy(fs_node_t *node){
 			goto err;
 	}
 
+	rw_lock();
 	list_rm(node->parent->childs, node);
+	rw_unlock();
 
 	kfree(node);
+
+	fs_unlock();
 
 	return E_OK;
 
 
 err:
+	fs_unlock();
+
 	return -errno;
+}
+
+int fs_node_find(fs_node_t **start, char const **path){
+	int r;
+
+
+	fs_lock();
+	r = fs_node_find_unsafe(start, path);
+	fs_unlock();
+
+	return r;
+}
+
+
+/* local functions */
+static void rw_lock(void){
+	mutex_lock(&fs_rw_mtx);
+	mutex_lock(&fs_ro_mtx);
+}
+
+static void rw_unlock(void){
+	mutex_unlock(&fs_ro_mtx);
+	mutex_unlock(&fs_rw_mtx);
 }
 
 /**
@@ -296,7 +371,7 @@ err:
  * \post	path points to the next part of the path that needs to be
  * 			evaluated. if start is the target node, path points to 0x0.
  */
-int fs_node_find(fs_node_t **start, char const **path){
+static int fs_node_find_unsafe(fs_node_t **start, char const **path){
 	size_t n;
 	fs_node_t *child;
 

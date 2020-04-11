@@ -75,6 +75,10 @@ typedef struct FILE{
  || defined(__x86_64)
 
 int vfprintf(FILE *stream, char const *format, va_list lst);
+int sprintf(char *s, char const *format, ...);
+int snprintf(char *s, size_t n, char const *format, ...);
+int vsprintf(char *s, char const *format, va_list lst);
+int vsnprintf(char *s, size_t n, char const *format, va_list lst);
 
 #endif
 

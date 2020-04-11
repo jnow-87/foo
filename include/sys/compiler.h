@@ -59,5 +59,8 @@
 #define offsetofvar(var, member)	((size_t)(&(((typeof((var))*)(0))->member)))
 #define offsetof(type, member)		((size_t)(&(((type*)(0))->member)))
 
+// sizeof for arrays
+#define sizeof_array(a)	(sizeof(a) / sizeof((a)[0]))
+
 
 #endif // SYS_COMPILER_H

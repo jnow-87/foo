@@ -9,31 +9,12 @@
 
 #include <sys/vector.h>
 #include <sys/string.h>
-
-#ifdef BUILD_KERNEL
-
-#include <kernel/memory.h>
-
-#define	_alloc	kmalloc
-#define _free	kfree
-
-#else
-
-#ifdef BUILD_HOST
-#include <stdlib.h>
-#else
-#include <lib/stdlib.h>
-#endif // BUILD_HOST
-
-#define _alloc malloc
-#define _free free
-
-#endif // BUILD_KERNEL
+#include <sys/memory.h>
 
 
 /* global functions */
 int vector_init(vector_t *v, size_t dt_size, size_t capa){
-	v->data = _alloc(dt_size * capa);
+	v->data = sys_malloc(dt_size * capa);
 
 	if(v->data == 0x0)
 		return -1;
@@ -46,7 +27,7 @@ int vector_init(vector_t *v, size_t dt_size, size_t capa){
 }
 
 void vector_destroy(vector_t *v){
-	_free(v->data);
+	sys_free(v->data);
 
 	v->capacity = 0;
 	v->size = 0;
@@ -58,13 +39,13 @@ int vector_add(vector_t *v, void *data){
 
 	if(v->size >= v->capacity){
 		v->capacity *= 2;
-		t = _alloc(v->capacity * v->dt_size);
+		t = sys_malloc(v->capacity * v->dt_size);
 
 		if(t == 0x0)
 			return -1;
 
 		memcpy(t, v->data, v->size * v->dt_size);
-		_free(v->data);
+		sys_free(v->data);
 		v->data = t;
 	}
 

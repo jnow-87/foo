@@ -29,16 +29,18 @@ fs_node_t *fs_root = 0x0;
 
 
 /* local variables */
-static int rootfs_id;
+static int rootfs_id = 0;
 
 
 /* local/static prototypes */
 static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p);
+static int open_unsafe(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p);
 static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
 static int fcntl(fs_filed_t *fd, int cmd, void *data);
 static int node_rm(fs_node_t *start, char const *path);
+static int node_rm_unsafe(fs_node_t *start, char const *path);
 static fs_node_t *node_find(fs_node_t *start, char const *path);
 
 static rootfs_file_t *file_alloc(void);
@@ -104,17 +106,23 @@ err:
 }
 
 int rootfs_rmdir(fs_node_t *node){
+	int r;
+
+
 	fs_lock();
 
 	if(!list_empty(node->childs) || node->data != 0x0)
-		goto_errno(end, E_INUSE);
+		goto_errno(err, E_INUSE);
 
 	INFO("release file system from \"%s\"\n", node->name);
+	r = fs_node_destroy(node);
 
-	goto_errno(end, fs_node_destroy(node));
+	fs_unlock();
+
+	return r;
 
 
-end:
+err:
 	fs_unlock();
 
 	return -errno;
@@ -140,27 +148,43 @@ static int init(void){
 	rootfs_id = fs_register(&ops);
 
 	if(rootfs_id < 0)
-		return -errno;
+		goto err_0;
 
 	/* init fs_root */
-	memset(&dummy, 0x0, sizeof(dummy));
+	memset(&dummy, 0, sizeof(dummy));
 
-	fs_lock();
 	fs_root = fs_node_create(&dummy, "/", 1, FT_DIR, 0x0, rootfs_id);
 	fs_node_destroy(fs_root->childs->next);		// remove the ".." child
-	fs_unlock();
 
 	if(fs_root == 0x0)
-		return -errno;
+		goto err_1;
 
 	fs_root->parent = fs_root;
 
 	return E_OK;
+
+
+err_1:
+	fs_release(rootfs_id);
+
+err_0:
+	return -errno;
 }
 
 kernel_init(1, init);
 
 static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p){
+	int r;
+
+
+	fs_lock();
+	r = open_unsafe(start, path, mode, this_p);
+	fs_unlock();
+
+	return r;
+}
+
+static int open_unsafe(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p){
 	int n;
 	fs_filed_t *fd;
 	rootfs_file_t *file;
@@ -318,7 +342,7 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 		data = kmalloc(f_size);
 
 		if(data == 0x0)
-			goto_errno(err, E_NOMEM);
+			goto err;
 
 		memcpy(data, file->data, file->data_used);
 
@@ -374,6 +398,17 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 }
 
 static int node_rm(fs_node_t *start, char const *path){
+	int r;
+
+
+	fs_lock();
+	r = node_rm_unsafe(start, path);
+	fs_unlock();
+
+	return r;
+}
+
+static int node_rm_unsafe(fs_node_t *start, char const *path){
 	if(*path == 0)
 		return_errno(E_INVAL);
 
@@ -438,12 +473,12 @@ static rootfs_file_t *file_alloc(void){
 	f = kmalloc(sizeof(rootfs_file_t));
 
 	if(f == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	f->data = kmalloc(CONFIG_ROOTFS_INIT_FILE_SIZE);
 
 	if(f->data == 0x0)
-		goto_errno(err_1, E_NOMEM);
+		goto err_1;
 
 	/* init file attributes */
 	f->data_max = CONFIG_ROOTFS_INIT_FILE_SIZE;

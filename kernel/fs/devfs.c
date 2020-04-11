@@ -18,7 +18,7 @@
 
 
 /* static variables */
-static int devfs_id;
+static int devfs_id = 0;
 static fs_node_t *devfs_root = 0x0;
 
 
@@ -42,11 +42,9 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, f_mode_t mod
 	dev = kmalloc(sizeof(devfs_dev_t));
 
 	if(dev == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
-	fs_lock();
 	node = fs_node_create(devfs_root, name, strlen(name), FT_CHR, dev, devfs_id);
-	fs_unlock();
 
 	if(node == 0x0)
 		goto err_1;
@@ -72,10 +70,7 @@ int devfs_dev_release(devfs_dev_t *dev){
 
 	fs_lock();
 
-	list_for_each(devfs_root->childs, node){
-		if(((devfs_dev_t*)(node->data)) == dev)
-			break;
-	}
+	node = list_find(devfs_root->childs, data, dev);
 
 	if(node == 0x0)
 		goto_errno(err, E_INVAL);
@@ -97,7 +92,7 @@ err:
 }
 
 
-/* static functions */
+/* local functions */
 static int init(void){
 	fs_ops_t ops;
 
@@ -115,15 +110,22 @@ static int init(void){
 	devfs_id = fs_register(&ops);
 
 	if(devfs_id < 0)
-		return -errno;
+		goto err_0;
 
 	/* allocate root node */
 	devfs_root = rootfs_mkdir("/dev", fs_root->fs_id);
 
 	if(devfs_root == 0x0)
-		return -errno;
+		goto err_1;
 
 	return E_OK;
+
+
+err_1:
+	fs_release(devfs_id);
+
+err_0:
+	return -errno;
 }
 
 kernel_init(2, init);
@@ -155,19 +157,24 @@ err:
 }
 
 static int close(fs_filed_t *fd, process_t *this_p){
+	int r;
 	devfs_dev_t *dev;
 
 
+	fs_lock();
+
+	r = E_OK;
 	dev = (devfs_dev_t*)fd->node->data;
 
-	if(dev->ops.close != 0x0){
-		if(dev->ops.close(dev, fd) != E_OK)
-			return -errno;
-	}
+	if(dev->ops.close != 0x0)
+		r = dev->ops.close(dev, fd);
 
-	fs_fd_free(fd, this_p);
+	if(r == E_OK)
+		fs_fd_free(fd, this_p);
 
-	return 0;
+	fs_unlock();
+
+	return r;
 }
 
 static size_t read(fs_filed_t *fd, void *buf, size_t n){

@@ -81,11 +81,7 @@ static int sc_hdlr_open(void *_p){
 		return_errno(E_NOIMP);
 
 	DEBUG("path \"%s\", mode %#x\n", path, p->mode);
-
-	fs_lock();
 	p->fd = root->ops->open(root, path, p->mode, this_p);
-	fs_unlock();
-
 	DEBUG("created fd with id %d, \"%s\"\n", p->fd, strerror(errno));
 
 	return E_OK;
@@ -123,9 +119,7 @@ static int sc_hdlr_dup(void *_p){
 	errno = E_OK;
 
 	/* duplicate old fd */
-	fs_lock();
 	p->fd = fs_fd_dup(old_fd, p->fd, this_p);
-	fs_unlock();
 
 	fs_fd_release(old_fd);
 
@@ -152,9 +146,7 @@ static int sc_hdlr_close(void *_p){
 		return_errno(E_INVAL);
 
 	/* handle close */
-	fs_lock();
 	(void)fd->node->ops->close(fd, this_p);
-	fs_unlock();
 
 	// NOTE fs_fd_release must not be called, since
 	// 		close has already deleted the decriptor
@@ -163,7 +155,7 @@ static int sc_hdlr_close(void *_p){
 }
 
 static int sc_hdlr_read(void *_p){
-	int r;
+	ssize_t r;
 	char buf[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
@@ -211,7 +203,6 @@ static int sc_hdlr_read(void *_p){
 	/* update user space */
 	if(errno == E_OK)
 		copy_to_user(p->data, buf, p->data_len, this_p);
-
 
 end:
 	fs_fd_release(fd);
@@ -370,9 +361,7 @@ static int sc_hdlr_rmnode(void *_p){
 	if(root->ops->node_rm == 0x0)
 		return_errno(E_NOIMP);
 
-	fs_lock();
 	(void)root->ops->node_rm(root, path);
-	fs_unlock();
 
 	return -errno;
 }
@@ -413,7 +402,6 @@ static int sc_hdlr_chdir(void *_p){
 	this_p->cwd->ref_cnt--;
 	this_p->cwd = root;
 	root->ref_cnt++;
-
 
 end:
 	mutex_unlock(&this_p->mtx);

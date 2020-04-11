@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
+#include <sys/string.h>
 
 
 /* static variables */
@@ -33,6 +34,23 @@ void *kmalloc(size_t n){
 	csection_lock(&kmem_mtx);
 	p = memblock_alloc(&kernel_heap, n, CONFIG_KMALLOC_ALIGN);
 	csection_unlock(&kmem_mtx);
+
+	if(n != 0 && p == 0x0)
+		errno = E_NOMEM;
+
+	return p;
+}
+
+void *kcalloc(size_t n, size_t size){
+	void *p;
+	size_t x;
+
+
+	x = n * size;
+	p = kmalloc(x);
+
+	if(p != 0x0)
+		memset(p, 0, x);
 
 	return p;
 }

@@ -109,7 +109,6 @@ static int thread(void *arg){
 		msleep(PERIOD_MS);
 	}
 
-
 end:
 	ATOMIC_INC(finished, m);
 

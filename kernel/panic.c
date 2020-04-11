@@ -27,21 +27,18 @@ void kpanic_ext(thread_t const *this_t, char const *file, char const *func, unsi
 
 	kprintf(KMSG_ANY, FG_RED "\n\nwoops!!" RESET_ATTR "\t");
 	kvprintf(KMSG_ANY, format, lst);
-	kprintf(KMSG_ANY,
-		"\ntrace\n"
-		"%20.20s: %u\n"
-		"%20.20s: %u\n"
-		"%20.20s: %s\n"
-		"%20.20s: %s\n"
-		"%20.20s: %s\n"
-		"%20.20s: %u\n\n"
-		,
-		"pid", (this_t == 0x0) ? 0 : (unsigned int)(this_t->parent->pid),
-		"tid", (this_t == 0x0) ? 0 : (unsigned int)(this_t->tid),
-		"process", (this_t == 0x0) ? "unknown" : this_t->parent->name,
-		"file", file,
-		"function", func,
-		"line", line);
+	kprintf(KMSG_ANY, "%10.10s: %s:%u %s()\n", "location", file, line, func);
+
+	if(this_t){
+		kprintf(KMSG_ANY, "%10.10s: %s(%u).%u\n\n",
+			"thread",
+			this_t->parent->name,
+			(unsigned int)(this_t->parent->pid),
+			(unsigned int)(this_t->tid)
+		);
+	}
+	else
+		kprintf(KMSG_ANY, "%10.10s: 0x0\n\n", "thread");
 
 	va_end(lst);
 

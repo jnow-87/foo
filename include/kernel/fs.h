@@ -190,11 +190,12 @@ typedef struct fs_filed_t{
 /* prototypes */
 // file system operations
 int fs_register(fs_ops_t *ops);
+void fs_release(int id);
 
 void fs_lock(void);
 void fs_unlock(void);
 
-// file operations
+// file descriptor operations
 fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p, f_mode_t mode, f_mode_t mode_mask);
 int fs_fd_dup(fs_filed_t *fd, int id, struct process_t *this_p);
 void fs_fd_free(fs_filed_t *fd, struct process_t *this_p);
@@ -205,7 +206,6 @@ void fs_fd_release(fs_filed_t *fd);
 fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *data, int fs_id);
 int fs_node_destroy(fs_node_t *node);
 int fs_node_find(fs_node_t **start, char const **path);
-
 
 
 #endif // KERNEL_FS_H

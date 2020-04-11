@@ -14,17 +14,16 @@
 #include <config/config.h>
 #include <sys/compiler.h>
 #include <sys/types.h>
+#include <sys/string.h>
 
 
 /* prototypes */
 void *malloc(size_t size);
+void *calloc(size_t n, size_t size);
 void free(void *addr);
 
 void exit(int status);
 void _exit(int status, bool kill_sibl);
-
-int atoi(char const *s);
-long int strtol(char const *p, char **endp, int base);
 
 
 /* disabled-call macros */

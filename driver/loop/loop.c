@@ -35,7 +35,7 @@ static int probe(char const *name, void *data, void *hw_itf){
 	b = kmalloc(sizeof(ringbuf_t) + CONFIG_LOOP_BUF_SIZE);
 
 	if(b == 0x0)
-		return_errno(E_NOMEM);
+		return -errno;
 
 	ringbuf_init(b, (char*)b + sizeof(ringbuf_t), CONFIG_LOOP_BUF_SIZE);
 

@@ -75,7 +75,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 	term = kmalloc(sizeof(term_t));
 
 	if(term == 0x0)
-		goto_errno(err_0, E_NOMEM);
+		goto err_0;
 
 	/* allocate recv buffer */
 	buf = 0x0;
@@ -84,7 +84,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 		buf = kmalloc(CONFIG_TERM_RXBUF_SIZE);
 
 		if(buf == 0x0)
-			goto_errno(err_1, E_NOMEM);
+			goto err_1;
 	}
 
 	/* register device */
@@ -181,7 +181,7 @@ static void *probe_itf(char const *name, void *dt_data, void *dt_itf){
 interface_probe("terminal", probe_itf);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	int len;
+	size_t len;
 	term_t *term;
 
 
@@ -200,8 +200,8 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 	/* handle terminal flags */
 	// handle TERM_FLAG_ECHO
-	if(len > 0 && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO)){
-		if(term->hw->puts(buf, n, term->hw->data) != E_OK)
+	if(len && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO)){
+		if(term->hw->puts(buf, len, term->hw->data) != len)
 			return 0;
 	}
 
@@ -307,7 +307,8 @@ static void tx_hdlr(int_num_t num, void *_term){
 		return;
 
 	/* output character */
-	term->hw->putc(*data->s, term->hw->data);
+	while(term->hw->putc(*data->s, term->hw->data) != *data->s);
+
 	data->s++;
 	data->len--;
 

@@ -27,9 +27,11 @@ static void probe_device(devtree_driver_t const *node, void *itf);
 
 
 /* global functions */
-void driver_load(void){
+int driver_load(void){
 	INFO("load drivers\n");
 	probe_childs(__dt_driver_root.childs, 0x0);
+
+	return -errno;
 }
 
 

@@ -25,6 +25,8 @@
 /* prototypes */
 size_t strlen(char const *s);
 int strcmp(char const *s0, char const *s1);
+size_t strcnt(char const *s, char c);
+bool isoneof(char c, char const *s);
 
 void *memcpy(void *dest, void const *src, size_t n);
 void *memset(void *p, char c, size_t n);
@@ -33,6 +35,9 @@ int memcmp(void const *s0, void const *s1, size_t n);
 char const *strerror(errno_t errno);
 
 char *itoa(int v, unsigned int base, char *s, size_t len);
+int atoi(char const *s);
+long int strtol(char const *p, char **endp, int base);
+
 
 #endif // SYS_STRING_H
 #endif // _STRING_H
