@@ -12,21 +12,6 @@
 
 
 #include <arch/interrupt.h>
-#include <arch/thread.h>
-#include <sys/errno.h>
-#include <sys/types.h>
-#include <sys/compiler.h>
-
-
-/* macros */
-#define INT_ALL ((int_type_t)(INT_GLOBAL))
-
-
-/* types */
-typedef enum int_type_t{
-	INT_NONE = 0x0,
-	INT_GLOBAL = 0x1,
-} int_type_t;
 
 
 /* prototypes */

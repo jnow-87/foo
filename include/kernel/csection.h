@@ -21,6 +21,7 @@
 	.mtx = MUTEX_INITIALISER(), \
 }
 
+
 /* types */
 typedef struct{
 	mutex_t mtx;
