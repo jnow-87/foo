@@ -14,6 +14,7 @@
 #include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
+#include <kernel/ksignal.h>
 #include <sys/fcntl.h>
 #include <sys/types.h>
 #include <sys/string.h>
@@ -355,6 +356,8 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 
 	fd->fp += n;
 	file->data_used = MAX(fd->fp, file->data_used);
+
+	ksignal_send(&fd->node->datain_sig);
 
 	return n;
 

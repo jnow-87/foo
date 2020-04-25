@@ -270,9 +270,8 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 	node->childs = 0x0;
 	node->data = data;
 
-	mutex_init(&node->rd_mtx, 0);
-	mutex_init(&node->wr_mtx, 0);
-	ksignal_init(&node->rd_sig);
+	mutex_init(&node->mtx, 0);
+	ksignal_init(&node->datain_sig);
 
 	/* add node to file system */
 	rw_lock();

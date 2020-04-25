@@ -123,7 +123,7 @@ void socket_disconnect(socket_t *sock){
 	mutex_unlock(&sock->mtx);
 
 	if(node)
-		ksignal_send(&node->rd_sig);
+		ksignal_send(&node->datain_sig);
 }
 
 socket_t *socket_add_client_socket(socket_t *sock, socket_t *client, bool notify){
@@ -141,7 +141,7 @@ socket_t *socket_add_client_socket(socket_t *sock, socket_t *client, bool notify
 	mutex_unlock(&sock->mtx);
 
 	if(notify && node)
-		ksignal_send(&node->rd_sig);
+		ksignal_send(&node->datain_sig);
 
 	return client;
 
@@ -222,14 +222,14 @@ int socket_datain_stream(socket_t *sock, uint8_t *data, size_t len, bool signal)
 		if(node == 0x0)
 			goto_errno(end, E_LIMIT);
 
+		ksignal_send(&node->datain_sig);
 		mutex_unlock(&sock->mtx);
-		ksignal_send(&node->rd_sig);
 		sched_yield();
 		mutex_lock(&sock->mtx);
 	}
 
 	if(node && signal)
-		ksignal_send(&node->rd_sig);
+		ksignal_send(&node->datain_sig);
 
 end:
 	mutex_unlock(&sock->mtx);
@@ -239,7 +239,6 @@ end:
 
 int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint8_t *data, size_t len){
 	datagram_t *dgram;
-	fs_node_t *node;
 
 
 	dgram = kmalloc(sizeof(datagram_t) + addr_len - sizeof(sock_addr_t));
@@ -253,16 +252,10 @@ int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint
 
 	memcpy(&dgram->addr, addr, addr_len);
 
-	mutex_lock(&sock->mtx);
+	list_add_tail_safe(sock->dgrams, dgram, &sock->mtx);
 
-	list_add_tail(sock->dgrams, dgram);
-
-	node = sock->node;
-
-	if(node)
-		ksignal_send(&node->rd_sig);
-
-	mutex_unlock(&sock->mtx);
+	if(sock->node)
+		ksignal_send(&sock->node->datain_sig);
 
 	return E_OK;
 }

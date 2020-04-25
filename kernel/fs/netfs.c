@@ -16,6 +16,8 @@
 #include <kernel/net.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
+#include <kernel/critsec.h>
+#include <kernel/ksignal.h>
 #include <sys/syscall.h>
 #include <sys/ioctl.h>
 #include <sys/net.h>
@@ -149,6 +151,7 @@ static int sc_hdlr_recv(void *_p){
 	sock_addr_t *addr;
 	sc_socket_t *p;
 	fs_filed_t *fd;
+	fs_node_t *node;
 	process_t *this_p;
 
 
@@ -164,6 +167,7 @@ static int sc_hdlr_recv(void *_p){
 		return_errno(E_INVAL);
 
 	addr = 0x0;
+	node = fd->node;
 
 	if(p->addr){
 		addr = (sock_addr_t*)_addr;
@@ -171,7 +175,7 @@ static int sc_hdlr_recv(void *_p){
 	}
 
 	/* call read callback if implemented */
-	mutex_lock(&fd->node->rd_mtx);
+	mutex_lock(&node->mtx);
 
 	while(1){
 		r = recvfrom(fd, buf, p->data_len, addr, (addr ? &p->addr_len : 0x0));
@@ -179,14 +183,12 @@ static int sc_hdlr_recv(void *_p){
 		if(r || errno || (fd->mode & O_NONBLOCK))
 			break;
 
-		mutex_unlock(&fd->node->rd_mtx);
-		ksignal_wait(&fd->node->rd_sig);
-		mutex_lock(&fd->node->rd_mtx);
+		ksignal_wait_mtx(&node->datain_sig, &node->mtx);
 	}
 
 	p->data_len = r;
 
-	mutex_unlock(&fd->node->rd_mtx);
+	mutex_unlock(&node->mtx);
 
 	DEBUG("recv %d bytes, \"%s\"\n", r, strerror(errno));
 
@@ -238,9 +240,9 @@ static int sc_hdlr_send(void *_p){
 	/* handle send */
 	copy_from_user(buf, p->data, p->data_len, this_p);
 
-	mutex_lock(&fd->node->wr_mtx);
+	mutex_lock(&fd->node->mtx);
 	p->data_len = sendto(fd, buf, p->data_len, addr, p->addr_len);
-	mutex_unlock(&fd->node->wr_mtx);
+	mutex_unlock(&fd->node->mtx);
 
 	DEBUG("sent %d bytes, \"%s\"\n", p->data_len, strerror(errno));
 
@@ -256,20 +258,18 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 static int close(fs_filed_t *fd, process_t *this_p){
 	socket_t *sock;
-	fs_node_t *node;
 
 
 	fs_lock();
 
 	sock = (socket_t*)fd->node->data;
-	node = fd->node;
 
 	if(sock->dev)
 		sock->dev->ops.close(sock);
 
 	fs_fd_free(fd, this_p);
 
-	if(fs_node_destroy(node) != 0)
+	if(fs_node_destroy(fd->node) != 0)
 		goto end;
 
 	while(sock->type == SOCK_STREAM){
@@ -324,9 +324,7 @@ static int ioctl(fs_filed_t *fd, int request, void *_data){
 			if(data->fd >= 0 || errno || (fd->mode & O_NONBLOCK))
 				break;
 
-			mutex_unlock(&sock->mtx);
-			ksignal_wait(&fd->node->rd_sig);
-			mutex_lock(&sock->mtx);
+			ksignal_wait_mtx(&fd->node->datain_sig, &sock->mtx);
 		}
 
 		r = (data->fd >= 0) ? E_OK : -errno;
