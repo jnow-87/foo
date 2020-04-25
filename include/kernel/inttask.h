@@ -13,8 +13,8 @@
 
 #include <arch/interrupt.h>
 #include <kernel/ksignal.h>
+#include <kernel/critsec.h>
 #include <sys/types.h>
-#include <sys/mutex.h>
 
 
 /* types */
@@ -29,7 +29,7 @@ typedef struct{
 	itask_t *head,
 			*tail;
 
-	mutex_t mtx;
+	critsec_lock_t lock;
 } itask_queue_t;
 
 
