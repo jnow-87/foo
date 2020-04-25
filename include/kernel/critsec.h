@@ -7,8 +7,8 @@
 
 
 
-#ifndef KERNEL_CSECTION_H
-#define KERNEL_CSECTION_H
+#ifndef KERNEL_CRITSEC_H
+#define KERNEL_CRITSEC_H
 
 
 #include <arch/interrupt.h>
@@ -16,7 +16,7 @@
 
 
 /* macros */
-#define CSECTION_INITIALISER(){ \
+#define CRITSEC_INITIALISER(){ \
 	.imask = 0, \
 	.mtx = MUTEX_INITIALISER(), \
 }
@@ -26,13 +26,13 @@
 typedef struct{
 	mutex_t mtx;
 	int_type_t imask;
-} csection_lock_t;
+} critsec_lock_t;
 
 
 /* prototypes */
-void csection_init(csection_lock_t *l);
-void csection_lock(csection_lock_t *l);
-void csection_unlock(csection_lock_t *l);
+void critsec_init(critsec_lock_t *l);
+void critsec_lock(critsec_lock_t *l);
+void critsec_unlock(critsec_lock_t *l);
 
 
-#endif // KERNEL_CSECTION_H
+#endif // KERNEL_CRITSEC_H

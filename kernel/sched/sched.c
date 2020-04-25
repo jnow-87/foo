@@ -21,7 +21,7 @@
 #include <kernel/syscall.h>
 #include <kernel/panic.h>
 #include <kernel/task.h>
-#include <kernel/csection.h>
+#include <kernel/critsec.h>
 #include <kernel/ipi.h>
 #include <sys/errno.h>
 #include <sys/list.h>
@@ -59,7 +59,7 @@ static void cleanup(void *p);
 
 /* static variables */
 static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
-static csection_lock_t sched_mtx = CSECTION_INITIALISER();
+static critsec_lock_t sched_lock = CRITSEC_INITIALISER();
 
 static process_t kernel_process = { 0 };
 static thread_t kernel_threads[CONFIG_NCORES] = {
@@ -90,7 +90,7 @@ void sched_trigger(void){
 
 
 	int_enable(INT_NONE);
-	csection_lock(&sched_mtx);
+	critsec_lock(&sched_lock);
 
 	// NOTE The running thread might have already transitioned to a
 	// 		different state, e.g. through the kernel signal mechanism
@@ -107,7 +107,7 @@ void sched_trigger(void){
 
 	running[PIR] = this_t;
 
-	csection_unlock(&sched_mtx);
+	critsec_unlock(&sched_lock);
 
 	// NOTE Do not re-enable interrupts to prevent interrupts from occurring until
 	// 		the end of the current interrupt routine. This would otherwise cause
@@ -138,7 +138,7 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, siz
 #endif // CONFIG_KERNEL_SMP
 
 
-	csection_lock(&sched_mtx);
+	critsec_lock(&sched_lock);
 
 #ifdef CONFIG_KERNEL_SMP
 	/* identify core for current thread */
@@ -160,7 +160,7 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, siz
 #endif // CONFIG_KERNEL_SMP
 		op(this_t, data);
 
-	csection_unlock(&sched_mtx);
+	critsec_unlock(&sched_lock);
 }
 
 void sched_thread_pause(thread_t *this_t){
@@ -291,7 +291,7 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
  * CREATED --> READY --------------> DEAD
  *
  *
- * \pre	calls to thread_transition are protected through sched_mtx
+ * \pre	calls to thread_transition are protected through sched_lock
  */
 static void _thread_transition(thread_t *this_t, void *_queue){
 	thread_state_t queue,
@@ -374,7 +374,7 @@ static void cleanup(void *p){
 	 */
 	while(1){
 		/* remove thread scheduler queue entry */
-		csection_lock(&sched_mtx);
+		critsec_lock(&sched_lock);
 
 		e = list_first(sched_queues[DEAD]);
 
@@ -386,7 +386,7 @@ static void cleanup(void *p){
 		list_rm(sched_queues[this_t->state], e);
 		kfree(e);
 
-		csection_unlock(&sched_mtx);
+		critsec_unlock(&sched_lock);
 
 		/* wait for thread being removed as running thread */
 		while(thread_core(this_t) != -1)
@@ -403,5 +403,5 @@ static void cleanup(void *p){
 		}
 	}
 
-	csection_unlock(&sched_mtx);
+	critsec_unlock(&sched_lock);
 }

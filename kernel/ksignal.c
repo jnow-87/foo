@@ -11,13 +11,13 @@
 #include <kernel/ksignal.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
-#include <kernel/csection.h>
+#include <kernel/critsec.h>
 #include <sys/queue.h>
 #include <sys/errno.h>
 
 
 /* static variables */
-static csection_lock_t sig_mtx = CSECTION_INITIALISER();
+static critsec_lock_t ksignal_lock = CRITSEC_INITIALISER();
 
 
 /* global functions */
@@ -38,7 +38,7 @@ void ksignal_wait(ksignal_t *sig){
 
 	e.thread = sched_running();
 
-	csection_lock(&sig_mtx);
+	critsec_lock(&ksignal_lock);
 
 	if(sig->unmatched){
 		sig->unmatched--;
@@ -50,7 +50,7 @@ void ksignal_wait(ksignal_t *sig){
 	queue_enqueue(sig->head, sig->tail, &e);
 	sched_thread_pause((thread_t*)e.thread);
 
-	csection_unlock(&sig_mtx);
+	critsec_unlock(&sig_mtx);
 
 	sched_yield();
 }
@@ -59,21 +59,21 @@ void ksignal_send(ksignal_t *sig){
 	ksignal_queue_t *e;
 
 
-	csection_lock(&sig_mtx);
+	critsec_lock(&ksignal_lock);
 
 	e = queue_dequeue(sig->head, sig->tail);
 
 	if(e != 0x0)	sched_thread_wake((thread_t*)e->thread);
 	else			sig->unmatched++;
 
-	csection_unlock(&sig_mtx);
+	critsec_unlock(&ksignal_lock);
 }
 
 void ksignal_bcast(ksignal_t *sig){
 	ksignal_queue_t *e;
 
 
-	csection_lock(&sig_mtx);
+	critsec_lock(&ksignal_lock);
 
 	if(list_empty(sig->head))
 		sig->unmatched++;
@@ -87,5 +87,5 @@ void ksignal_bcast(ksignal_t *sig){
 		sched_thread_wake((thread_t*)e->thread);
 	}
 
-	csection_unlock(&sig_mtx);
+	critsec_unlock(&ksignal_lock);
 }

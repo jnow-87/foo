@@ -14,7 +14,6 @@
 #include <kernel/syscall.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
-#include <kernel/csection.h>
 #include <kernel/usignal.h>
 #include <sys/errno.h>
 #include <sys/syscall.h>
