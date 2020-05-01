@@ -22,12 +22,13 @@ void itask_queue_init(itask_queue_t *queue){
 	critsec_init(&queue->lock);
 }
 
-void itask_issue(itask_queue_t *queue, void *data, int_num_t num){
+int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
 	bool is_first;
 	itask_t task;
 
 
 	task.data = data;
+	task.errno = E_OK;
 	ksignal_init(&task.sig);
 
 	critsec_lock(&queue->lock);
@@ -41,9 +42,11 @@ void itask_issue(itask_queue_t *queue, void *data, int_num_t num){
 		int_call(num);
 
 	ksignal_wait(&task.sig);
+
+	return_errno(task.errno);
 }
 
-void itask_complete(itask_queue_t *queue){
+void itask_complete(itask_queue_t *queue, errno_t e_code){
 	itask_t *task;
 
 

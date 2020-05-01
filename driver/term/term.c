@@ -274,7 +274,7 @@ static size_t puts_int(char const *s, size_t n, void *_term){
 	data.s = s;
 	data.len = n;
 
-	itask_issue(&term->tx_queue, &data, term->hw->tx_int);
+	(void)itask_issue(&term->tx_queue, &data, term->hw->tx_int);
 
 	return n - data.len;
 }
@@ -314,5 +314,5 @@ static void tx_hdlr(int_num_t num, void *_term){
 
 	// signal tx complete
 	if(data->len == 0)
-		itask_complete(&term->tx_queue);
+		itask_complete(&term->tx_queue, E_OK);
 }

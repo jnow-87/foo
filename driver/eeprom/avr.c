@@ -223,7 +223,7 @@ static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t
 	data.len = n;
 	data.offset = fd->fp;
 
-	itask_issue(&eeprom->write_queue, &data, eeprom->dtd->int_num);
+	(void)itask_issue(&eeprom->write_queue, &data, eeprom->dtd->int_num);
 
 	return n - data.len;
 }
@@ -283,5 +283,5 @@ static void write_hdlr(int_num_t num, void *_eeprom){
 
 	/* signal write completion */
 	if(data->len == 0)
-		itask_complete(&eeprom->write_queue);
+		itask_complete(&eeprom->write_queue, E_OK);
 }

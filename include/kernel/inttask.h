@@ -15,6 +15,7 @@
 #include <kernel/ksignal.h>
 #include <kernel/critsec.h>
 #include <sys/types.h>
+#include <sys/errno.h>
 
 
 /* types */
@@ -22,6 +23,8 @@ typedef struct itask_t{
 	struct itask_t *next;
 
 	void *data;
+	errno_t errno;
+
 	ksignal_t sig;
 } itask_t;
 
@@ -36,8 +39,8 @@ typedef struct{
 /* prototypes i*/
 void itask_queue_init(itask_queue_t *queue);
 
-void itask_issue(itask_queue_t *queue, void *data, int_num_t num);
-void itask_complete(itask_queue_t *queue);
+int itask_issue(itask_queue_t *queue, void *data, int_num_t num);
+void itask_complete(itask_queue_t *queue, errno_t e_code);
 void *itask_query_data(itask_queue_t *queue);
 
 
