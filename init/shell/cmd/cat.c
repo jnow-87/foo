@@ -24,10 +24,10 @@ static int help(char const *prog_name, char const *msg, ...);
 
 /* local functions */
 static int exec(int argc, char **argv){
-	size_t i;
+	ssize_t i;
 	size_t n,
-		   bs,
-		   r;
+		   bs;
+	ssize_t r;
 	int offset;
 	char *buf;
 	bool binary;
@@ -43,28 +43,28 @@ static int exec(int argc, char **argv){
 	binary = false;
 
 	/* check options */
-	for(i=1; i<(size_t)argc && argv[i][0]=='-'; i++){
+	for(i=1; i<argc && argv[i][0]=='-'; i++){
 		switch(argv[i][1]){
 		case 'b':
 			binary = true;
 			break;
 
 		case 'n':
-			if(i + 1 >= (size_t)argc)
+			if(i + 1 >= argc)
 				return help(argv[0], "missing argument to option '-n'");
 
 			n = atoi(argv[++i]);
 			break;
 
 		case 's':
-			if(i + 1 >= (size_t)argc)
+			if(i + 1 >= argc)
 				return help(argv[0], "missing argument to option '-s'");
 
 			bs = atoi(argv[++i]);
 			break;
 
 		case 'o':
-			if(i + 1 >= (size_t)argc)
+			if(i + 1 >= argc)
 				return help(argv[0], "missing argument to option '-o'");
 
 			offset = atoi(argv[++i]);
@@ -75,7 +75,7 @@ static int exec(int argc, char **argv){
 		}
 	}
 
-	if(i >= (size_t)argc)
+	if(i >= argc)
 		return help(argv[0], "missing input file");
 
 	/* open file */
@@ -120,7 +120,7 @@ static int exec(int argc, char **argv){
 	for(; n>0; n--){
 		r = read(fd, buf, bs);
 
-		if(r <= 0)
+		if(r <= 0 || errno)
 			break;
 
 		buf[r] = 0;
@@ -133,6 +133,8 @@ static int exec(int argc, char **argv){
 			fprintf(stdout, buf);
 	}
 
+	if(errno)
+		fprintf(stderr, "error \"%s\"\n", strerror(errno));
 
 	/* cleanup */
 	free(buf);
