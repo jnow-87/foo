@@ -13,6 +13,7 @@
 
 /* prototypes */
 int avr_cas(int volatile *v, int old, int new);
+void avr_atomic_inc(int volatile *v, int inc);
 
 
 #endif // AVR_ATOMIC_H

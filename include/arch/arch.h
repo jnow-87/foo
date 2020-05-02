@@ -80,6 +80,7 @@ typedef struct{
 typedef struct{
 	/* atomics */
 	int (*cas)(volatile int *v, int old, int new);
+	void (*atomic_inc)(volatile int *v, int inc);
 
 	/* syscall */
 	int (*sc)(sc_t num, void *param, size_t psize);

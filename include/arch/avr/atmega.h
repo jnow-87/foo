@@ -116,6 +116,7 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 static arch_callbacks_common_t const arch_cbs_common = {
 	/* atomics */
 	.cas = avr_cas,
+	.atomic_inc = avr_atomic_inc,
 
 	/* syscall */
 	.sc = avr_sc,
