@@ -18,8 +18,8 @@
 
 
 /* external variables */
-extern void (*__kernel_start[])(void);
-extern void (*__kernel_end[])(void);
+extern void (*__kernel_start_wa[])(void);
+extern void (*__kernel_end_wa[])(void);
 
 
 /* global functions */
@@ -56,9 +56,9 @@ enum thread_ctx_type_t avr_thread_context_type(thread_ctx_t *ctx){
 	void *ret_addr;
 
 
-	ret_addr = (void*)(((lo8(ctx->ret_addr) << 8) | hi8(ctx->ret_addr)) * 2);
+	ret_addr = (void*)((lo8(ctx->ret_addr) << 8) | hi8(ctx->ret_addr));
 
-	if((void*)ret_addr >= (void*)__kernel_start && (void*)ret_addr <= (void*)__kernel_end)
+	if(ret_addr >= (void*)__kernel_start_wa && ret_addr <= (void*)__kernel_end_wa)
 		return CTX_KERNEL;
 
 	return CTX_USER;
