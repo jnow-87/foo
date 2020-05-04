@@ -38,29 +38,26 @@ static mutex_t net_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-devfs_dev_t *netdev_register(char const *name, netdev_ops_t *ops, net_family_t domain, void *data){
+devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t *itf, void *data){
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	netdev_t *netdev;
-	size_t cfg_size;
 	void (*fp_zero)(void);
 
 
 	fp_zero = 0x0;
 
-	if(memnscan(ops, &fp_zero, sizeof(netdev_ops_t) / sizeof(fp_zero), sizeof(fp_zero)) != 0x0)
+	if(memnscan(itf, &fp_zero, sizeof(netdev_itf_t) / sizeof(fp_zero), sizeof(fp_zero)) != 0x0)
 		goto_errno(err_0, E_INVAL);
 
-	cfg_size = net_domain_cfg[domain].cfg_size;
-
 	/* init netdev */
-	netdev = kcalloc(1, sizeof(netdev_t) + cfg_size);
+	netdev = kcalloc(1, sizeof(netdev_t));
 
 	if(netdev == 0x0)
 		goto err_0;
 
 	netdev->domain = domain;
-	netdev->ops = *ops;
+	netdev->hw = *itf;
 	netdev->data = data;
 
 	/* register device */
@@ -146,14 +143,15 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, &netdev->cfg, cfg_size);
+		memcpy(data, netdev->hw.cfg, cfg_size);
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		if(netdev->ops.configure(netdev, data) != E_OK)
+		memcpy(netdev->hw.cfg, data, cfg_size);
+
+		if(netdev->hw.configure(netdev) != E_OK)
 			return -errno;
 
-		memcpy(&netdev->cfg, data, cfg_size);
 		return E_OK;
 
 	default:

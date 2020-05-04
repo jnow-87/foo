@@ -53,7 +53,7 @@ typedef struct socket_t{
 } socket_t;
 
 typedef struct{
-	int (*configure)(struct netdev_t *dev, void *cfg);
+	int (*configure)(struct netdev_t *dev);
 
 	int (*connect)(socket_t *sock);
 	int (*bind)(socket_t *sock);
@@ -61,7 +61,9 @@ typedef struct{
 	void (*close)(socket_t *sock);
 
 	ssize_t (*send)(socket_t *sock, void *data, size_t data_len);
-} netdev_ops_t;
+
+	void *cfg;
+} netdev_itf_t;
 
 typedef struct netdev_t{
 	struct netdev_t *prev,
@@ -69,9 +71,8 @@ typedef struct netdev_t{
 
 	net_family_t domain;
 
-	netdev_ops_t ops;
+	netdev_itf_t hw;
 	void *data;
-	uint8_t cfg[];
 } netdev_t;
 
 typedef struct{
@@ -84,7 +85,7 @@ typedef struct{
 
 /* prototypes */
 // network device function
-devfs_dev_t *netdev_register(char const *name, netdev_ops_t *ops, net_family_t domain, void *data);
+devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t *itf, void *data);
 int netdev_release(devfs_dev_t *dev);
 
 netdev_t *netdev_bind(socket_t *sock, sock_addr_t *addr, size_t addr_len);
