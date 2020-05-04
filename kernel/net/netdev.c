@@ -103,36 +103,35 @@ int netdev_release(devfs_dev_t *dev){
 	return 0;
 }
 
-int netdev_bind(socket_t *sock, sock_addr_t *addr, size_t addr_len){
-	netdev_t *netdev;
+netdev_t *netdev_bind(socket_t *sock, sock_addr_t *addr, size_t addr_len){
+	netdev_t *dev;
 
 
 	if(addr_len != net_domain_cfg[sock->addr.domain].addr_len)
-		return_errno(E_INVAL);
+		goto_errno(err, E_INVAL);
 
 	mutex_lock(&net_mtx);
 
-	list_for_each(dev_lst, netdev){
-		if(netdev->domain != addr->domain)
+	list_for_each(dev_lst, dev){
+		if(dev->domain != addr->domain)
 			continue;
 
-		if(net_domain_cfg[addr->domain].match_addr(netdev, addr, addr_len))
+		if(net_domain_cfg[addr->domain].match_addr(dev, addr, addr_len))
 			break;
 	}
 
 	mutex_unlock(&net_mtx);
 
-	if(netdev == 0x0)
-		return_errno(E_END);
+	if(dev == 0x0)
+		goto_errno(err, E_END);
 
-	mutex_lock(&sock->mtx);
+	socket_bind(sock, dev, addr, addr_len);
 
-	sock->dev = netdev;
-	memcpy(&sock->addr, addr, addr_len);
+	return dev;
 
-	mutex_unlock(&sock->mtx);
 
-	return E_OK;
+err:
+	return 0x0;
 }
 
 
