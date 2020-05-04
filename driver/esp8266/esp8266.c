@@ -14,6 +14,7 @@
 #include <kernel/kprintf.h>
 #include <kernel/critsec.h>
 #include <kernel/ksignal.h>
+#include <kernel/inttask.h>
 #include <kernel/net.h>
 #include <driver/term.h>
 #include <sys/types.h>
@@ -46,6 +47,11 @@ typedef enum{
 	RESP_IP_INFO,
 } response_t;
 
+typedef struct{
+	char const *s;
+	size_t len;
+} tx_data_t;
+
 typedef struct esp_t{
 	term_itf_t *hw;
 	critsec_lock_t lock;
@@ -70,6 +76,8 @@ typedef struct esp_t{
 			   idx;
 		uint8_t *dgram;
 	} rx;
+
+	itask_queue_t tx_queue;
 } esp_t;
 
 
@@ -83,7 +91,7 @@ static void close(socket_t *sock);
 static ssize_t send(socket_t *sock, void *data, size_t data_len);
 static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uint16_t local_port);
 
-// esp interrupt handling
+// rx interrupt handling
 static void rx_hdlr(int_num_t num, void *esp);
 static void rx_task(void *esp);
 
@@ -97,11 +105,14 @@ static void rx_act_accept(esp_t *esp);
 static void rx_act_close(esp_t *esp);
 static void rx_act_ip_info(esp_t *esp);
 
+// tx interrupt handling
+static void tx_hdlr(int_num_t num, void *esp);
+
 // command handling
 static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...);
 static void cmd_resp(esp_t *esp, ssize_t resp);
-static int puts(esp_t *esp, char const *s);
-static int putsn(esp_t *esp, char const *s, size_t len);
+static int puts(char const *s, esp_t *esp);
+static int putsn(char const *s, size_t len, esp_t *esp);
 
 // utilities
 static int get_link_id(esp_t *esp, socket_t *sock);
@@ -133,8 +144,8 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 
 	hw = (term_itf_t*)dt_itf;
 
-	if(hw->rx_int == 0){
-		FATAL("uart does not support rx interrupt\n");
+	if(hw->rx_int == 0 || hw->tx_int == 0){
+		WARN("uart does not support interrupts\n");
 		goto_errno(err_0, E_NOSUP);
 	}
 
@@ -163,6 +174,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	ksignal_init(&esp->sig);
 	mutex_init(&esp->mtx, MTX_NONE);
 	critsec_init(&esp->lock);
+	itask_queue_init(&esp->tx_queue);
 
 	itf.configure = configure;
 	itf.connect = connect;
@@ -181,6 +193,9 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(int_register(hw->rx_int, rx_hdlr, esp) != 0)
 		goto err_4;
 
+	if(int_register(hw->tx_int, tx_hdlr, esp) != 0)
+		goto err_4;
+
 	if(hw->configure(dt_data, hw->data) != 0)
 		goto err_5;
 
@@ -191,6 +206,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 
 
 err_5:
+	int_release(hw->tx_int);
 	int_release(hw->rx_int);
 
 err_4:
@@ -394,7 +410,7 @@ static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uin
 	return E_OK;
 }
 
-// esp interrupt handling
+// rx interrupt handling
 static void rx_hdlr(int_num_t num, void *_esp){
 	size_t len;
 	char buf[16];
@@ -626,6 +642,32 @@ static void rx_act_ip_info(esp_t *esp){
 	if(strcmp(info, "ip") == 0)				esp->cfg.ip = addr;
 	else if(strcmp(info, "gateway") == 0)	esp->cfg.gateway = addr;
 	else if(strcmp(info, "netmask") == 0)	esp->cfg.netmask = addr;
+
+}
+
+// tx interrupt handling
+static void tx_hdlr(int_num_t num, void *_esp){
+	esp_t *esp;
+	tx_data_t *data;
+
+
+	esp = (esp_t*)_esp;
+
+	data = itask_query_data(&esp->tx_queue);
+
+	if(data == 0x0)
+		return;
+
+	/* output character */
+	critsec_lock(&esp->lock);
+	while(esp->hw->putc(*data->s, esp->hw->data) != *data->s);
+	critsec_unlock(&esp->lock);
+
+	data->s++;
+	data->len--;
+
+	if(data->len == 0)
+		itask_complete(&esp->tx_queue, E_OK);
 }
 
 // command handling
@@ -655,32 +697,32 @@ static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...){
 
 			switch(c){
 			case 'a':
-				r |= puts(esp, inet_ntoa(*va_arg(lst, inet_addr_t*)));
+				r |= puts(inet_ntoa(*va_arg(lst, inet_addr_t*)), esp);
 				break;
 
 			case 's':
-				r |= puts(esp, va_arg(lst, char*));
+				r |= puts(va_arg(lst, char*), esp);
 				break;
 
 			case 'x':
 				len = va_arg(lst, size_t);
-				r |= putsn(esp, va_arg(lst, char*), len);
+				r |= putsn(va_arg(lst, char*), len, esp);
 				break;
 
 			case 'u':
 				snprintf(s, 16, "%u", va_arg(lst, int));
-				r |= puts(esp, s);
+				r |= puts(s, esp);
 				break;
 
 			default:
-				r |= putsn(esp, &c, 1);
+				r |= putsn(&c, 1, esp);
 			}
 		}
 		else
-			r |= putsn(esp, &c, 1);
+			r |= putsn(&c, 1, esp);
 	}
 
-	r |= putsn(esp, "\r\n", 2);
+	r |= putsn("\r\n", 2, esp);
 
 	if(r != 0)
 		goto_errno(end, E_IO);
@@ -712,21 +754,20 @@ static void cmd_resp(esp_t *esp, ssize_t resp){
 	ksignal_send(&esp->sig);
 }
 
-static int puts(esp_t *esp, char const *s){
-	return putsn(esp, s, strlen(s));
+static int puts(char const *s, esp_t *esp){
+	return putsn(s, strlen(s), esp);
 }
 
-static int putsn(esp_t *esp, char const *s, size_t len){
-	size_t n;
+static int putsn(char const *s, size_t len, esp_t *esp){
+	tx_data_t data;
 
 
-	// TODO
-	// 	use tx interrupt
-	critsec_lock(&esp->lock);
-	n = esp->hw->puts(s, len, esp->hw->data);
-	critsec_unlock(&esp->lock);
+	data.s = s;
+	data.len = len;
 
-	return (n != len) ? -1 : 0;
+	(void)itask_issue(&esp->tx_queue, &data, esp->hw->tx_int);
+
+	return data.len;
 }
 
 // utilities
