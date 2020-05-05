@@ -98,8 +98,8 @@ FILE *fdopen(int fd, char const *mode){
 			goto_errno(err_1, E_NOMEM);
 	}
 
-	mutex_init(&file->rd_mtx, 0);
-	mutex_init(&file->wr_mtx, 0);
+	mutex_init(&file->rd_mtx, MTX_NONE);
+	mutex_init(&file->wr_mtx, MTX_NONE);
 
 	return file;
 

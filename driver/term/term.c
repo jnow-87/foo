@@ -9,11 +9,13 @@
 #include <config/config.h>
 #include <arch/interrupt.h>
 #include <kernel/init.h>
+#include <kernel/fs.h>
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
 #include <kernel/ksignal.h>
 #include <kernel/driver.h>
 #include <kernel/inttask.h>
+#include <kernel/critsec.h>
 #include <driver/term.h>
 #include <driver/klog.h>
 #include <sys/ringbuf.h>
@@ -21,7 +23,6 @@
 #include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/string.h>
-#include <sys/mutex.h>
 #include <sys/list.h>
 
 
@@ -35,11 +36,12 @@ typedef struct{
 	void *cfg;
 	term_itf_t *hw;
 
-	term_err_t rx_err;
 	ringbuf_t rx_buf;
 	ksignal_t *rx_rdy;
+	term_err_t rx_err;
 
 	itask_queue_t tx_queue;
+	critsec_lock_t lock;
 } term_t;
 
 
@@ -56,17 +58,15 @@ static void tx_hdlr(int_num_t num, void *term);
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
+static int probe(char const *name, void *dt_data, term_itf_t *itf, term_t **_term){
 	void *buf;
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	term_t *term;
-	term_itf_t *itf;
 	f_mode_t fmode_mask;
 
 
 	fmode_mask = 0;
-	itf = (term_itf_t*)dt_itf;
 
 	if(itf->configure == 0x0 || itf->gets == 0x0 || itf->puts == 0x0)
 		goto_errno(err_0, E_INVAL);
@@ -116,10 +116,11 @@ static int probe(char const *name, void *dt_data, void *dt_itf, term_t **_term){
 
 	/* init term */
 	term->cfg = dt_data;
-	term->hw = dt_itf;
-	term->rx_rdy = &dev->node->rd_sig;
+	term->hw = itf;
+	term->rx_rdy = &dev->node->datain_sig;
 	term->rx_err = TERM_ERR_NONE;
 
+	critsec_init(&term->lock);
 	itask_queue_init(&term->tx_queue);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 
@@ -193,17 +194,17 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 		return 0;
 	}
 
-	if(term->rx_buf.data == 0x0)
-		len = term->hw->gets(buf, n, &term->rx_err, term->hw->data);
-	else
-		len = ringbuf_read(&term->rx_buf, buf, n);
+	critsec_lock(&term->lock);
+
+	if(term->hw->rx_int)	len = ringbuf_read(&term->rx_buf, buf, n);
+	else					len = term->hw->gets(buf, n, &term->rx_err, term->hw->data);
+
+	critsec_unlock(&term->lock);
 
 	/* handle terminal flags */
 	// handle TERM_FLAG_ECHO
-	if(len && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO)){
-		if(term->hw->puts(buf, len, term->hw->data) != len)
-			return 0;
-	}
+	if(len && (term->hw->get_flags(term->cfg) & TERM_FLAG_ECHO))
+		len = write(dev, fd, buf, len);
 
 	return len;
 }
@@ -220,6 +221,7 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
+	int r;
 	term_t *term;
 
 
@@ -231,7 +233,11 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		if(term->hw->configure(data, term->hw->data) != E_OK)
+		critsec_lock(&term->lock);
+		r = term->hw->configure(data, term->hw->data);
+		critsec_unlock(&term->lock);
+
+		if(r != E_OK)
 			return -errno;
 
 		memcpy(term->cfg, data, term->hw->cfg_size);
@@ -252,14 +258,13 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 static size_t puts_noint(char const *s, size_t n, void *_term){
 	size_t r;
 	term_t *term;
-	int_type_t imask;
 
 
 	term = (term_t*)_term;
 
-	imask = int_enable(INT_NONE);
+	critsec_lock(&term->lock);
 	r = term->hw->puts(s, n, term->hw->data);
-	int_enable(imask);
+	critsec_unlock(&term->lock);
 
 	return r;
 }
@@ -274,7 +279,7 @@ static size_t puts_int(char const *s, size_t n, void *_term){
 	data.s = s;
 	data.len = n;
 
-	itask_issue(&term->tx_queue, &data, term->hw->tx_int);
+	(void)itask_issue(&term->tx_queue, &data, term->hw->tx_int);
 
 	return n - data.len;
 }
@@ -287,10 +292,14 @@ static void rx_hdlr(int_num_t num, void *_term){
 
 	term = (term_t*)_term;
 
+	critsec_lock(&term->lock);
+
 	len = term->hw->gets(buf, 16, &term->rx_err, term->hw->data);
 
 	if(ringbuf_write(&term->rx_buf, buf, len) != len)
 		term->rx_err |= TERM_ERR_RX_FULL;
+
+	critsec_unlock(&term->lock);
 
 	ksignal_send(term->rx_rdy);
 }
@@ -301,18 +310,20 @@ static void tx_hdlr(int_num_t num, void *_term){
 
 
 	term = (term_t*)_term;
+
 	data = itask_query_data(&term->tx_queue);
 
 	if(data == 0x0)
 		return;
 
 	/* output character */
+	critsec_lock(&term->lock);
 	while(term->hw->putc(*data->s, term->hw->data) != *data->s);
+	critsec_unlock(&term->lock);
 
 	data->s++;
 	data->len--;
 
-	// signal tx complete
 	if(data->len == 0)
-		itask_complete(&term->tx_queue);
+		itask_complete(&term->tx_queue, E_OK);
 }

@@ -84,7 +84,7 @@ static int sc_hdlr_open(void *_p){
 	p->fd = root->ops->open(root, path, p->mode, this_p);
 	DEBUG("created fd with id %d, \"%s\"\n", p->fd, strerror(errno));
 
-	return E_OK;
+	return -errno;
 }
 
 static int sc_hdlr_dup(void *_p){
@@ -146,12 +146,9 @@ static int sc_hdlr_close(void *_p){
 		return_errno(E_INVAL);
 
 	/* handle close */
-	(void)fd->node->ops->close(fd, this_p);
-
 	// NOTE fs_fd_release must not be called, since
 	// 		close has already deleted the decriptor
-
-	return E_OK;
+	return fd->node->ops->close(fd, this_p);
 }
 
 static int sc_hdlr_read(void *_p){
@@ -159,6 +156,7 @@ static int sc_hdlr_read(void *_p){
 	char buf[((sc_fs_t*)(_p))->data_len];
 	sc_fs_t *p;
 	fs_filed_t *fd;
+	fs_node_t *node;
 	process_t *this_p;
 
 
@@ -173,26 +171,28 @@ static int sc_hdlr_read(void *_p){
 	if(fd == 0x0)
 		return_errno(E_INVAL);
 
+	node = fd->node;
+
 	/* call read callback if implemented */
-	if(fd->node->ops->read == 0x0)
+	if(node->ops->read == 0x0)
 		goto_errno(end, E_NOIMP);
 
 	DEBUG("offset %d, max-len %u\n", fd->fp, p->data_len);
 
-	mutex_lock(&fd->node->rd_mtx);
+	mutex_lock(&node->mtx);
 
 	while(1){
-		r = fd->node->ops->read(fd, buf, p->data_len);
+		r = node->ops->read(fd, buf, p->data_len);
 
 		if(r || errno || (fd->mode & O_NONBLOCK))
 			break;
 
-		ksignal_wait(&fd->node->rd_sig);
+		ksignal_wait_mtx(&node->datain_sig, &node->mtx);
 	}
 
 	p->data_len = r;
 
-	mutex_unlock(&fd->node->rd_mtx);
+	mutex_unlock(&node->mtx);
 
 	DEBUG("read %d bytes, \"%s\"\n", r, strerror(errno));
 
@@ -213,6 +213,7 @@ end:
 static int sc_hdlr_write(void *_p){
 	sc_fs_t *p;
 	fs_filed_t *fd;
+	fs_node_t *node;
 	process_t *this_p;
 	char buf[((sc_fs_t*)_p)->data_len];
 
@@ -228,20 +229,19 @@ static int sc_hdlr_write(void *_p){
 	if(fd == 0x0)
 		return_errno(E_INVAL);
 
+	node = fd->node;
+
 	/* handle write */
-	if(fd->node->ops->write == 0x0)
+	if(node->ops->write == 0x0)
 		goto_errno(end, E_NOIMP);
 
 	DEBUG("offset %d, len %u\n", fd->fp, p->data_len);
 
 	copy_from_user(buf, p->data, p->data_len, this_p);
 
-	mutex_lock(&fd->node->wr_mtx);
-
-	p->data_len = fd->node->ops->write(fd, buf, p->data_len);
-	ksignal_send(&fd->node->rd_sig);
-
-	mutex_unlock(&fd->node->wr_mtx);
+	mutex_lock(&node->mtx);
+	p->data_len = node->ops->write(fd, buf, p->data_len);
+	mutex_unlock(&node->mtx);
 
 	DEBUG("written %d bytes, \"%s\"\n", p->data_len, strerror(errno));
 
@@ -253,52 +253,10 @@ end:
 
 static int sc_hdlr_ioctl(void *_p){
 	char data[((sc_fs_t*)(_p))->data_len];
+	int r;
 	sc_fs_t *p;
 	fs_filed_t *fd;
-	process_t *this_p;
-
-
-	this_p = sched_running()->parent;
-
-	/* initials */
-	p = (sc_fs_t*)_p;
-	fd =  fs_fd_acquire(p->fd, this_p);
-
-	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
-
-	if(fd == 0x0)
-		return_errno(E_INVAL);
-
-	copy_from_user(data, p->data, p->data_len, this_p);
-
-	/* call ioctl callback if implemented */
-	if(fd->node->ops->ioctl == 0x0)
-		goto_errno(end, E_NOIMP);
-
-	DEBUG("cmd %d\n", p->cmd);
-
-	mutex_lock(&fd->node->wr_mtx);
-	mutex_lock(&fd->node->rd_mtx);
-
-	(void)fd->node->ops->ioctl(fd, p->cmd, data);
-
-	mutex_unlock(&fd->node->rd_mtx);
-	mutex_unlock(&fd->node->wr_mtx);
-
-	/* update user space */
-	if(errno == E_OK)
-		copy_to_user(p->data, data, p->data_len, this_p);
-
-end:
-	fs_fd_release(fd);
-
-	return -errno;
-}
-
-static int sc_hdlr_fcntl(void *_p){
-	char data[((sc_fs_t*)(_p))->data_len];
-	sc_fs_t *p;
-	fs_filed_t *fd;
+	fs_node_t *node;
 	process_t *this_p;
 
 
@@ -313,29 +271,79 @@ static int sc_hdlr_fcntl(void *_p){
 	if(fd == 0x0)
 		return_errno(E_INVAL);
 
-	copy_from_user(data, p->data, p->data_len, this_p);
+	node = fd->node;
 
-	/* call fcntl callback if implemented */
+	/* call ioctl callback if implemented */
+	r = -E_NOIMP;
+
+	if(node->ops->ioctl == 0x0)
+		goto_errno(end, E_NOIMP);
+
 	DEBUG("cmd %d\n", p->cmd);
 
-	mutex_lock(&fd->node->wr_mtx);
-	mutex_lock(&fd->node->rd_mtx);
+	copy_from_user(data, p->data, p->data_len, this_p);
 
-	if(fcntl(fd, p->cmd, data, this_p) == -E_NOIMP){
-		if(fd->node->ops->fcntl != 0x0)		(void)fd->node->ops->fcntl(fd, p->cmd, data);
-		else								errno = E_NOIMP;
-	}
-
-	mutex_unlock(&fd->node->rd_mtx);
-	mutex_unlock(&fd->node->wr_mtx);
+	mutex_lock(&node->mtx);
+	r = node->ops->ioctl(fd, p->cmd, data);
+	mutex_unlock(&node->mtx);
 
 	/* update user space */
 	if(errno == E_OK)
 		copy_to_user(p->data, data, p->data_len, this_p);
 
+end:
 	fs_fd_release(fd);
 
-	return -errno;
+	return r;
+}
+
+static int sc_hdlr_fcntl(void *_p){
+	char data[((sc_fs_t*)(_p))->data_len];
+	int r;
+	sc_fs_t *p;
+	fs_filed_t *fd;
+	fs_node_t *node;
+	process_t *this_p;
+
+
+	this_p = sched_running()->parent;
+
+	/* initials */
+	p = (sc_fs_t*)_p;
+	fd = fs_fd_acquire(p->fd, this_p);
+
+	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
+
+	if(fd == 0x0)
+		return_errno(E_INVAL);
+
+	node = fd->node;
+
+	/* call fcntl callback if implemented */
+	DEBUG("cmd %d\n", p->cmd);
+
+	copy_from_user(data, p->data, p->data_len, this_p);
+
+	mutex_lock(&node->mtx);
+
+	r = fcntl(fd, p->cmd, data, this_p);
+
+	if(r == -E_NOIMP){
+		if(node->ops->fcntl != 0x0){
+			errno = E_OK;
+			r = node->ops->fcntl(fd, p->cmd, data);
+		}
+	}
+
+	mutex_unlock(&node->mtx);
+
+	/* update user space */
+	if(r == E_OK)
+		copy_to_user(p->data, data, p->data_len, this_p);
+
+	fs_fd_release(fd);
+
+	return r;
 }
 
 static int sc_hdlr_rmnode(void *_p){
@@ -360,10 +368,7 @@ static int sc_hdlr_rmnode(void *_p){
 
 	if(root->ops->node_rm == 0x0)
 		return_errno(E_NOIMP);
-
-	(void)root->ops->node_rm(root, path);
-
-	return -errno;
+	return root->ops->node_rm(root, path);
 }
 
 static int sc_hdlr_chdir(void *_p){
@@ -432,9 +437,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p){
 		break;
 
 	default:
-		// NOTE not setting errno is intentional to
-		// 		allow sc_hdlr_fcntl to overwrite it
-		return -E_NOIMP;
+		return_errno(E_NOIMP);
 	}
 
 	return E_OK;

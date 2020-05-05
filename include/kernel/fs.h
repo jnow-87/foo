@@ -161,9 +161,8 @@ typedef struct fs_node_t{
 	unsigned int ref_cnt;
 	file_type_t type;
 
-	mutex_t rd_mtx,
-			wr_mtx;
-	ksignal_t rd_sig;
+	mutex_t mtx;
+	ksignal_t datain_sig;
 
 	struct fs_node_t *childs,
 					 *parent;

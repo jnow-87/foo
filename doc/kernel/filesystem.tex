@@ -20,7 +20,12 @@
 		\end{enumerate}
 
 		Each file system node stores a pointer to its callback functions to handle system calls. For callback interface documentation see \hyperref[structfs__ops__t]{fs\_ops\_t}. Most of the callbacks are optional, except for \hyperref[structfs__ops__t_a0ea05ccab180719ed0f32631d5ad71bf]{open()}.
-		In general all system calls create kernel space buffers and copy the system call parameter from user space. Only pointers provided through the system call parameters need to be copied by subsequent functions.
+
+		\subsubsection{Memory Buffers}
+			In general all system calls create kernel space buffers and copy the system call parameter from user space. Only pointers provided through the system call parameters need to be copied by subsequent functions.
+
+		\subsubsection{Locking}
+			Each file system node contains a mutex. This mutex is locked on every system call, i.e. there is no need for individual file systems to implement a locking mechanisms between their callback functions.
 
 	\subsection{Rootfs}
 		The actual root file system is implemented based on the kernel interface. The root file system provides implements the following aspects

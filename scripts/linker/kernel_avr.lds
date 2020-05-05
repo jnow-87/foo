@@ -23,8 +23,10 @@ SECTIONS {
 		*(.trampolines)
 	} > kernel_flash
 
-	__kernel_start = ADDR(.text);
+	__kernel_start = ADDR(.text);					/* byte addresses */
 	__kernel_end = __kernel_start + SIZEOF(.text);
+	__kernel_start_wa = __kernel_start / 2;			/* word addresses */
+	__kernel_end_wa = __kernel_end / 2;
 
 	/* data */
 	.data : {

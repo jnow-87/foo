@@ -130,7 +130,7 @@ char const *strerror(errno_t errnum){
 		"Invalid",
 		"Out of memory",
 		"Resource limitation reached",
-		"Input output error",
+		"Input output",
 		"Function not implemented",
 		"Resource busy",
 		"Resource unavailable",

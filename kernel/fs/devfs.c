@@ -11,6 +11,7 @@
 #include <kernel/fs.h>
 #include <kernel/rootfs.h>
 #include <kernel/devfs.h>
+#include <kernel/process.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
 #include <sys/stat.h>

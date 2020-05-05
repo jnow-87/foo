@@ -16,6 +16,8 @@
 #include <sys/string.h>
 #include <sys/ringbuf.h>
 #include <sys/list.h>
+#include <sys/mutex.h>
+#include <sys/math.h>
 
 
 /* global functions */
@@ -100,18 +102,13 @@ int socket_listen(socket_t *sock, int backlog){
 	return E_OK;
 }
 
-bool socket_connected(socket_t *sock){
-	bool r;
-
-
+void socket_link(socket_t *sock, fs_node_t *node){
 	mutex_lock(&sock->mtx);
-	r = (sock->node != 0x0);
+	sock->node = node;
 	mutex_unlock(&sock->mtx);
-
-	return r;
 }
 
-void socket_disconnect(socket_t *sock){
+void socket_unlink(socket_t *sock){
 	fs_node_t *node;
 
 
@@ -123,7 +120,38 @@ void socket_disconnect(socket_t *sock){
 	mutex_unlock(&sock->mtx);
 
 	if(node)
-		ksignal_send(&node->rd_sig);
+		ksignal_send(&node->datain_sig);
+}
+
+fs_node_t *socket_linked(socket_t *sock){
+	fs_node_t *node;
+
+
+	mutex_lock(&sock->mtx);
+	node = sock->node;
+	mutex_unlock(&sock->mtx);
+
+	return node;
+}
+
+void socket_bind(socket_t *sock, netdev_t *dev, sock_addr_t *addr, size_t addr_len){
+	mutex_lock(&sock->mtx);
+
+	sock->dev = dev;
+	memcpy(&sock->addr, addr, addr_len);
+
+	mutex_unlock(&sock->mtx);
+}
+
+netdev_t *socket_bound(socket_t *sock){
+	netdev_t *dev;
+
+
+	mutex_lock(&sock->mtx);
+	dev = sock->dev;
+	mutex_unlock(&sock->mtx);
+
+	return dev;
 }
 
 socket_t *socket_add_client_socket(socket_t *sock, socket_t *client, bool notify){
@@ -141,7 +169,7 @@ socket_t *socket_add_client_socket(socket_t *sock, socket_t *client, bool notify
 	mutex_unlock(&sock->mtx);
 
 	if(notify && node)
-		ksignal_send(&node->rd_sig);
+		ksignal_send(&node->datain_sig);
 
 	return client;
 
@@ -161,7 +189,10 @@ socket_t *socket_add_client_addr(socket_t *sock, sock_addr_t *addr, size_t addr_
 	if(client == 0x0)
 		return 0x0;
 
+	mutex_lock(&sock->mtx);
 	client->dev = sock->dev;
+	mutex_unlock(&sock->mtx);
+
 	memcpy(&client->addr, addr, addr_len);
 
 	if(socket_add_client_socket(sock, client, notify) != client){
@@ -220,21 +251,36 @@ int socket_datain_stream(socket_t *sock, uint8_t *data, size_t len, bool signal)
 			break;
 
 		if(node == 0x0)
-			goto_errno(end, E_LIMIT);
+			break;
 
 		mutex_unlock(&sock->mtx);
-		ksignal_send(&node->rd_sig);
+
+		ksignal_send(&node->datain_sig);
 		sched_yield();
+
 		mutex_lock(&sock->mtx);
 	}
 
-	if(node && signal)
-		ksignal_send(&node->rd_sig);
-
-end:
 	mutex_unlock(&sock->mtx);
 
-	return -errno;
+	if(node == 0x0)
+		return_errno(E_LIMIT);
+
+	if(signal)
+		ksignal_send(&node->datain_sig);
+
+	return E_OK;
+}
+
+int socket_dataout_stream(socket_t *sock, void *data, size_t data_len){
+	size_t n;
+
+
+	mutex_lock(&sock->mtx);
+	n = ringbuf_read(&sock->stream, data, data_len);
+	mutex_unlock(&sock->mtx);
+
+	return n;
 }
 
 int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint8_t *data, size_t len){
@@ -256,13 +302,46 @@ int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint
 	mutex_lock(&sock->mtx);
 
 	list_add_tail(sock->dgrams, dgram);
-
 	node = sock->node;
-
-	if(node)
-		ksignal_send(&node->rd_sig);
 
 	mutex_unlock(&sock->mtx);
 
+	if(node)
+		ksignal_send(&node->datain_sig);
+
 	return E_OK;
+}
+
+int socket_dataout_dgram(socket_t *sock, void *data, size_t data_len, sock_addr_t *addr, size_t *addr_len){
+	size_t n;
+	datagram_t *dgram;
+
+
+	mutex_lock(&sock->mtx);
+
+	n = 0;
+	dgram = list_first(sock->dgrams);
+
+	if(dgram == 0x0)
+		goto end;
+
+	if(addr_len && addr){
+		memcpy(addr, &dgram->addr, *addr_len);
+		*addr_len = net_domain_cfg[sock->addr.domain].addr_len;
+	}
+
+	n = MIN(data_len, dgram->len - dgram->idx);
+	memcpy(data, dgram->data + dgram->idx, n);
+	dgram->idx += n;
+
+	if(dgram->idx == dgram->len){
+		list_rm(sock->dgrams, dgram);
+		kfree(dgram->data);
+		kfree(dgram);
+	}
+
+end:
+	mutex_unlock(&sock->mtx);
+
+	return n;
 }

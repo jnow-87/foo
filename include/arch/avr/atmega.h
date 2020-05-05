@@ -34,12 +34,10 @@
 #include <arch/avr/interrupt.h>
 #endif // BUILD_KERNEL
 
-#include <arch/avr/timebase.h>
 #include <arch/avr/thread.h>
 #include <arch/avr/syscall.h>
 #include <arch/avr/atomic.h>
 #include <arch/avr/lib.h>
-#include <arch/types.h>
 #include <sys/types.h>
 
 #endif // __x86_64__
@@ -116,11 +114,9 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 
 // common callbacks
 static arch_callbacks_common_t const arch_cbs_common = {
-	.timebase = 0x0,			/* TODO */
-	.timebase_to_time = 0x0,	/* TODO */
-
 	/* atomics */
 	.cas = avr_cas,
+	.atomic_inc = avr_atomic_inc,
 
 	/* syscall */
 	.sc = avr_sc,

@@ -11,7 +11,90 @@
 #define ARCH_H
 
 
-#include BUILD_ARCH_HEADER
+#ifndef ASM
+#ifdef BUILD_KERNEL
+
+#include <arch/interrupt.h>
+#include <kernel/memory.h>
+
+#endif // BUILD_KERNEL
+
+#include <sys/syscall.h>
+#include <sys/thread.h>
+#include <sys/types.h>
+
+#endif // ASM
+
+
+/* incomplete types */
+#ifndef ASM
+#ifdef BUILD_KERNEL
+
+struct process_t;
+struct thread_t;
+struct thread_ctx_t;
+enum thread_ctx_type_t;
+
+#endif // BUILD_KERNEL
+#endif //ASM
+
+
+/* types */
+#ifndef ASM
+#ifdef BUILD_KERNEL
+
+typedef struct{
+	/* core */
+	int (*core_id)(void);
+	void (*core_sleep)(void);
+
+	void (*core_panic)(struct thread_ctx_t const *tc);
+
+	/* virtual memory management */
+	int (*page_entry_write)(struct page_t const *page);
+	int (*page_entry_inval_idx)(unsigned int idx, bool sync_cores);
+	int (*page_entry_inval_va)(void *virt_addr, bool sync_cores);
+	int (*page_entry_search)(struct page_t const *param, struct page_t *result);
+
+	void (*copy_from_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
+	void (*copy_to_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
+
+	/* interrupts */
+	int (*int_register)(int_num_t num, int_hdlr_t hdlr, void *data);
+	void (*int_release)(int_num_t num);
+
+	void (*int_call)(int_num_t num);
+
+	int_type_t (*int_enable)(int_type_t mask);
+	int_type_t (*int_enabled)(void);
+
+	void (*int_ipi)(unsigned int core, bool bcast);
+
+	/* threading */
+	void (*thread_context_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
+	enum thread_ctx_type_t (*thread_context_type)(struct thread_ctx_t *ctx);
+} arch_callbacks_kernel_t;
+
+#endif // BUILD_KERNEL
+
+typedef struct{
+	/* atomics */
+	int (*cas)(volatile int *v, int old, int new);
+	void (*atomic_inc)(volatile int *v, int inc);
+
+	/* syscall */
+	int (*sc)(sc_t num, void *param, size_t psize);
+
+	/* libsys functionality */
+	int (*lib_crt0)(void);
+} arch_callbacks_common_t;
+
+typedef struct{
+	int kernel_timer_err_us,
+		sched_timer_err_us;
+} arch_info_t;
+
+#endif // ASM
 
 
 /* macros */
@@ -27,6 +110,10 @@
 
 #define arch_info(c) \
 	arch_info.c
+
+
+/* include architecture header */
+#include BUILD_ARCH_HEADER
 
 
 #endif // ARCH_H

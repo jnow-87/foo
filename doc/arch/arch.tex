@@ -14,11 +14,8 @@
 \section{Interface Header}
 	\begin{description}
 	\item[include/arch/arch.h]
-		\hyperref[arch_8h]{include/arch/arch.h} is the main architecture header file. It provides access to the architecture implementation defined through \lstinline{CONFIG_ARCH_HEADER}. The header includes the respective architecture header and provides macros to call kernel and common functions as well as a macro to access architecture information.	
+		\hyperref[arch_8h]{include/arch/arch.h} is the main architecture header file. It provides access to the architecture implementation defined through \lstinline{CONFIG_ARCH_HEADER}. The header includes the respective architecture header and provides macros to call kernel and common functions as well as a macro to access architecture information. Therefor, it also defines the types containing the architecture interface callback functions, which are \hyperref[structarch__callbacks__kernel__t]{arch\_callbacks\_kernel\_t} for kernel and \hyperref[structarch__callbacks__common__t]{arch\_callbacks\_common\_t} for common callbacks.
 		\lstinputlisting[linerange={11-11,16-16,19-19}, numbers=none]{include/arch/arch.h}
-
-	\item[include/arch/types.h]
-		\hyperref[arch_2types_8h]{include/arch/types.h} defines the types containing the architecture interface callback functions. That is \hyperref[structarch__callbacks__kernel__t]{arch\_callbacks\_kernel\_t} for kernel and \hyperref[structarch__callbacks__common__t]{arch\_callbacks\_common\_t} for common callbacks.
 
 	\item[include/arch/*]
 		The remaining header files in \lstinline{include/arch} contain wrapper macros to access all of the architecture interface functions separately.
@@ -32,7 +29,6 @@
 		\begin{itemize}
 			\item \lstinline{struct thread_ctx_t}: struct to store the processor context
 			\item \lstinline{enum int_type_t}: enum for interrupt types, e.g. debug, machine check
-			\item \lstinline{timebase_t}: basic timer type
 		\end{itemize}
 
 	\subsection{Callback Functions}
@@ -55,11 +51,6 @@
 			\item kernel: update the errno member of \hyperref[sys_2syscall_8h_structsc__arg__t]{sc\_arg\_t}
 			\item user space: update \hyperref[errno_8h_ad65a8842cc674e3ddf69355898c0ecbf]{errno}
 		\end{enumerate}
-
-	\subsection{Macros}
-		\begin{itemize}
-			\item \lstinline{TIMEBASE_INITIALISER}: init value for variable of type \lstinline{timebase_t}\\
-		\end{itemize}
 
 	\subsection{Kconfig}
 		\begin{itemize}

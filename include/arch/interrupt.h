@@ -12,18 +12,25 @@
 
 
 #include <sys/types.h>
+#include <sys/errno.h>
 
 
 /* types */
 typedef uint8_t int_num_t;
 typedef void (*int_hdlr_t)(int_num_t num, void *data);
 
+typedef enum int_type_t{
+	INT_NONE = 0x0,
+	INT_GLOBAL = 0x1,
+} int_type_t;
+
 
 #include <arch/arch.h>
-#include <sys/errno.h>
 
 
 /* macros */
+#define INT_ALL ((int_type_t)(INT_GLOBAL))
+
 #define int_register(num, hdlr, data)	(arch_kernel_call(int_register, -E_NOIMP)(num, hdlr, data))
 #define int_release(num)				(arch_kernel_call(int_release, -E_NOIMP)(num))
 

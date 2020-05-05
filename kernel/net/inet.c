@@ -18,7 +18,7 @@ bool inet_match_addr(netdev_t *dev, sock_addr_t *addr, size_t addr_len){
 	sock_addr_inet_t *inet_addr;
 
 
-	cfg = (inetdev_cfg_t*)dev->cfg;
+	cfg = (inetdev_cfg_t*)dev->hw.cfg;
 	inet_addr = (sock_addr_inet_t*)addr;
 
 	if(addr_len != sizeof(sock_addr_inet_t))

@@ -8,6 +8,7 @@
 
 
 #include <arch/memory.h>
+#include <arch/atomic.h>
 #include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/fs.h>
@@ -16,11 +17,12 @@
 #include <kernel/net.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
+#include <kernel/critsec.h>
+#include <kernel/ksignal.h>
 #include <sys/syscall.h>
 #include <sys/ioctl.h>
 #include <sys/net.h>
 #include <sys/string.h>
-#include <sys/math.h>
 #include <sys/list.h>
 #include <sys/ringbuf.h>
 #include <sys/errno.h>
@@ -45,13 +47,12 @@ static size_t recvfrom(fs_filed_t *fd, void *data, size_t data_len, sock_addr_t 
 static ssize_t sendto(fs_filed_t *fd, void *data, size_t data_len, sock_addr_t *addr, size_t addr_len);
 static int free_client(socket_t *sock);
 
-static int link_to_fs(socket_t *sock, process_t *this_p);
+static fs_filed_t *create_filed(process_t *this_p);
 
 
 /* static variables */
 static int netfs_id = 0;
 static fs_node_t *netfs_root = 0x0;
-static mutex_t netfs_mtx = MUTEX_INITIALISER();
 
 
 /* local functions */
@@ -113,6 +114,7 @@ static int sc_hdlr_socket(void *_p){
 	process_t *this_p;
 	socket_t *sock;
 	sock_addr_t addr;
+	fs_filed_t *fd;
 
 
 	p = (sc_socket_t*)_p;
@@ -127,10 +129,15 @@ static int sc_hdlr_socket(void *_p){
 		goto err_0;
 
 	/* create netfs node */
-	p->fd = link_to_fs(sock, this_p);
+	fd = create_filed(this_p);
 
-	if(p->fd < 0)
+	if(fd == 0x0)
 		goto err_1;
+
+	fd->node->data = sock;
+	socket_link(sock, fd->node);
+
+	p->fd = fd->id;
 
 	return E_OK;
 
@@ -149,6 +156,7 @@ static int sc_hdlr_recv(void *_p){
 	sock_addr_t *addr;
 	sc_socket_t *p;
 	fs_filed_t *fd;
+	fs_node_t *node;
 	process_t *this_p;
 
 
@@ -164,6 +172,7 @@ static int sc_hdlr_recv(void *_p){
 		return_errno(E_INVAL);
 
 	addr = 0x0;
+	node = fd->node;
 
 	if(p->addr){
 		addr = (sock_addr_t*)_addr;
@@ -171,7 +180,7 @@ static int sc_hdlr_recv(void *_p){
 	}
 
 	/* call read callback if implemented */
-	mutex_lock(&fd->node->rd_mtx);
+	mutex_lock(&node->mtx);
 
 	while(1){
 		r = recvfrom(fd, buf, p->data_len, addr, (addr ? &p->addr_len : 0x0));
@@ -179,14 +188,12 @@ static int sc_hdlr_recv(void *_p){
 		if(r || errno || (fd->mode & O_NONBLOCK))
 			break;
 
-		mutex_unlock(&fd->node->rd_mtx);
-		ksignal_wait(&fd->node->rd_sig);
-		mutex_lock(&fd->node->rd_mtx);
+		ksignal_wait_mtx(&node->datain_sig, &node->mtx);
 	}
 
 	p->data_len = r;
 
-	mutex_unlock(&fd->node->rd_mtx);
+	mutex_unlock(&node->mtx);
 
 	DEBUG("recv %d bytes, \"%s\"\n", r, strerror(errno));
 
@@ -238,9 +245,9 @@ static int sc_hdlr_send(void *_p){
 	/* handle send */
 	copy_from_user(buf, p->data, p->data_len, this_p);
 
-	mutex_lock(&fd->node->wr_mtx);
+	mutex_lock(&fd->node->mtx);
 	p->data_len = sendto(fd, buf, p->data_len, addr, p->addr_len);
-	mutex_unlock(&fd->node->wr_mtx);
+	mutex_unlock(&fd->node->mtx);
 
 	DEBUG("sent %d bytes, \"%s\"\n", p->data_len, strerror(errno));
 
@@ -256,20 +263,20 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 static int close(fs_filed_t *fd, process_t *this_p){
 	socket_t *sock;
-	fs_node_t *node;
+	netdev_t *dev;
 
 
 	fs_lock();
 
 	sock = (socket_t*)fd->node->data;
-	node = fd->node;
+	dev = socket_bound(sock);
 
-	if(sock->dev)
-		sock->dev->ops.close(sock);
+	if(dev)
+		dev->hw.close(sock);
 
 	fs_fd_free(fd, this_p);
 
-	if(fs_node_destroy(node) != 0)
+	if(fs_node_destroy(fd->node) != 0)
 		goto end;
 
 	while(sock->type == SOCK_STREAM){
@@ -282,7 +289,7 @@ static int close(fs_filed_t *fd, process_t *this_p){
 end:
 	fs_unlock();
 
-	return E_OK;
+	return -errno;
 }
 
 static size_t read(fs_filed_t *fd, void *buf, size_t n){
@@ -301,8 +308,6 @@ static int ioctl(fs_filed_t *fd, int request, void *_data){
 
 	data = (socket_ioctl_t*)_data;
 	sock = (socket_t*)fd->node->data;
-
-	mutex_lock(&sock->mtx);
 
 	switch(request){
 	case IOCTL_CONNECT:
@@ -324,9 +329,7 @@ static int ioctl(fs_filed_t *fd, int request, void *_data){
 			if(data->fd >= 0 || errno || (fd->mode & O_NONBLOCK))
 				break;
 
-			mutex_unlock(&sock->mtx);
-			ksignal_wait(&fd->node->rd_sig);
-			mutex_lock(&sock->mtx);
+			ksignal_wait(&fd->node->datain_sig);
 		}
 
 		r = (data->fd >= 0) ? E_OK : -errno;
@@ -336,197 +339,174 @@ static int ioctl(fs_filed_t *fd, int request, void *_data){
 		r = -E_NOSUP;
 	}
 
-	mutex_unlock(&sock->mtx);
-
 	return r;
 }
 
 static int connect(socket_t *sock, sock_addr_t *addr, size_t addr_len){
-	if(sock->dev != 0x0)
+	netdev_t *dev;
+
+
+	if(socket_bound(sock) != 0x0)
 		return_errno(E_CONN);
 
-	if(netdev_bind(sock, addr, addr_len) != 0)
+	dev = netdev_bind(sock, addr, addr_len);
+
+	if(dev == 0x0)
 		return -errno;
 
-	return sock->dev->ops.connect(sock);
+	return dev->hw.connect(sock);
 }
 
 static int bind(socket_t *sock, sock_addr_t *addr, size_t addr_len){
-	if(sock->dev != 0x0)
+	netdev_t *dev;
+
+
+	if(socket_bound(sock) != 0x0)
 		return_errno(E_CONN);
 
-	if(netdev_bind(sock, addr, addr_len) != 0)
+	dev = netdev_bind(sock, addr, addr_len);
+
+	if(dev == 0x0)
 		return -errno;
 
-	return sock->dev->ops.bind(sock);
+	return dev->hw.bind(sock);
 }
 
 static int listen(socket_t *sock, int backlog){
 	netdev_t *dev;
 
 
-	dev = sock->dev;
+	dev = socket_bound(sock);
 
 	if(sock->type != SOCK_STREAM)
 		return_errno(E_INVAL);
 
-	if(dev == 0x0 || !socket_connected(sock))
+	if(dev == 0x0 || socket_linked(sock) == 0x0)
 		return_errno(E_NOCONN);
 
 	if(socket_listen(sock, backlog) != 0)
 		return -errno;
 
-	return dev->ops.listen(sock);
+	return dev->hw.listen(sock);
 }
 
 static int accept(socket_t *sock, sock_addr_t *addr, size_t *addr_len){
-	int fd_id;
 	socket_t *client;
+	fs_filed_t *fd;
+	process_t *this_p;
 
 
 	if(sock->type != SOCK_STREAM)
 		return_errno(E_INVAL);
 
-	if(sock->dev == 0x0 || !socket_connected(sock))
+	if(socket_bound(sock) == 0x0 || socket_linked(sock) == 0x0)
 		return_errno(E_NOCONN);
 
-	/* get client socket */
-	mutex_lock(&sock->mtx);
+	this_p = sched_running()->parent;
+	fd = create_filed(this_p);
+
+	if(fd == 0x0)
+		return -1;
 
 	client = socket_get_client_addr(sock, addr, addr_len);
 
-	/* create netfs node */
-	fd_id = -1;
+	if(client == 0x0){
+		fs_fd_free(fd, this_p);
+		fs_node_destroy(fd->node);
 
-	if(client){
-		fd_id = link_to_fs(client, sched_running()->parent);
-
-		if(fd_id < 0)
-			(void)socket_add_client_socket(sock, client, false);
+		return -1;
 	}
 
-	mutex_unlock(&sock->mtx);
+	fd->node->data = client;
+	socket_link(client, fd->node);
 
-	return fd_id;
+	return fd->id;
 }
 
 static size_t recvfrom(fs_filed_t *fd, void *data, size_t data_len, sock_addr_t *addr, size_t *addr_len){
-	size_t n;
 	socket_t *sock;
-	datagram_t *dgram;
 
 
-	n = 0;
 	sock = (socket_t*)fd->node->data;
 
-	mutex_lock(&sock->mtx);
-
-	if(sock->dev == 0x0 || !socket_connected(sock))
-		goto_errno(end, E_NOCONN);
-
-	if(sock->type == SOCK_DGRAM){
-		dgram = list_first(sock->dgrams);
-
-		if(dgram == 0x0)
-			goto end;
-
-		if(addr_len && addr){
-			memcpy(addr, &dgram->addr, *addr_len);
-			*addr_len = net_domain_cfg[sock->addr.domain].addr_len;
-		}
-
-		n = MIN(data_len, dgram->len - dgram->idx);
-		memcpy(data, dgram->data + dgram->idx, n);
-		dgram->idx += n;
-
-		if(dgram->idx == dgram->len){
-			list_rm(sock->dgrams, dgram);
-			kfree(dgram->data);
-			kfree(dgram);
-		}
+	if(socket_bound(sock) == 0x0 || socket_linked(sock) == 0x0){
+		errno = E_NOCONN;
+		return 0;
 	}
-	else
-		n = ringbuf_read(&sock->stream, data, data_len);
 
-end:
-	mutex_unlock(&sock->mtx);
-
-	return n;
+	if(sock->type == SOCK_DGRAM)
+		return socket_dataout_dgram(sock, data, data_len, addr, addr_len);
+	return socket_dataout_stream(sock, data, data_len);
 }
 
 static ssize_t sendto(fs_filed_t *fd, void *data, size_t data_len, sock_addr_t *addr, size_t addr_len){
-	int n;
 	socket_t *sock;
 	netdev_t *dev;
 
 
-	n = 0;
 	sock = (socket_t*)fd->node->data;
+	dev = socket_bound(sock);;
 
-	mutex_lock(&sock->mtx);
+	if(sock->type == SOCK_DGRAM){
+		if(addr){
+			dev = netdev_bind(sock, addr, addr_len);
 
-	dev = sock->dev;
-
-	if(sock->type == SOCK_STREAM){
-		if(dev == 0x0 || !socket_connected(sock))
-			goto_errno(end, E_NOCONN);
-
-		// NOTE addr != 0x0 are ignored, instead of returning E_CONN
+			if(dev == 0x0)
+				return 0;
+		}
+		else if(dev == 0x0 || socket_linked(sock) == 0x0)
+			goto_errno(err, E_NOCONN);
 	}
 	else{
-		if(addr){
-			if(netdev_bind(sock, addr, addr_len) != 0)
-				goto end;
-		}
-		else if(dev == 0x0 || !socket_connected(sock))
-			goto_errno(end, E_NOCONN);
+		if(dev == 0x0 || socket_linked(sock) == 0x0)
+			goto_errno(err, E_NOCONN);
 
-		dev = sock->dev;
+		// NOTE addr != 0x0 is ignored, instead of returning E_CONN
 	}
 
-	n = dev->ops.send(sock, data, data_len);
+	return dev->hw.send(sock, data, data_len);
 
-end:
-	mutex_unlock(&sock->mtx);
 
-	return n;
+err:
+	return 0;
 }
 
 static int free_client(socket_t *sock){
+	netdev_t *dev;
+
+
 	if(sock == 0x0)
 		return -1;
 
-	if(sock->dev)
-		sock->dev->ops.close(sock);
+	dev = socket_bound(sock);
+
+	if(dev)
+		dev->hw.close(sock);
 
 	socket_free(sock);
 
 	return 0;
 }
 
-static int link_to_fs(socket_t *sock, process_t *this_p){
-	static uint8_t sock_id = 0;
+static fs_filed_t *create_filed(process_t *this_p){
+	static int sock_id = 0;
 	char name[4];
 	fs_node_t *node;
 	fs_filed_t *fd;
 
 
 	/* create netfs node */
-	mutex_lock(&netfs_mtx);
-	sock_id++;
-	mutex_unlock(&netfs_mtx);
+	atomic_inc(&sock_id, 1);
 
 	if(sock_id == 0)
-		return_errno(E_LIMIT);
+		goto_errno(err_0, E_LIMIT);
 
 	itoa(sock_id, 10, name, 4);
 
-	node = fs_node_create(netfs_root, name, strlen(name), FT_REG, sock, netfs_id);
+	node = fs_node_create(netfs_root, name, strlen(name), FT_REG, 0x0, netfs_id);
 
 	if(node == 0x0)
 		goto err_0;
-
-	sock->node = node;
 
 	/* create file descriptor */
 	fd = fs_fd_alloc(node, this_p, O_RDWR, 0x0);
@@ -534,12 +514,14 @@ static int link_to_fs(socket_t *sock, process_t *this_p){
 	if(fd == 0x0)
 		goto err_1;
 
-	 return fd->id;
+	 return fd;
 
 
 err_1:
 	fs_node_destroy(node);
 
 err_0:
-	return -errno;
+	atomic_inc(&sock_id, -1);
+
+	return 0x0;
 }

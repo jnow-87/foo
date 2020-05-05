@@ -9,22 +9,34 @@
 
 menuconfig DRIVER_I2C
 	bool "I2C driver"
-	select KERNEL_INTTASK
-	select SYS_RINGBUFFER
 
 if DRIVER_I2C
-	config I2C_DEVICE
-		bool "I2C device"
-		select KERNEL_DEVFS
-		default n
-
-	if AVR
-		source driver/i2c/avr/Kconfig
-	endif # AVR
+	config I2C_PROTO_INT
+		bool "Interrupt support"
+		select KERNEL_INTTASK
+		select SYS_RINGBUFFER
+		default y
 
 	config I2C_RXBUF_SIZE
 		int "Rx buffer size"
+		depends on I2C_PROTO_INT
 		default 16
+
+	config I2C_PROTO_POLL
+		bool "Polling support"
+		default n
+
+	config I2C_DEV_INT
+		bool "interrupt-based devfs device"
+		select KERNEL_DEVFS
+		select I2C_PROTO_INT
+		default n
+
+	config I2C_DEV_POLL
+		bool "polling-based devfs device"
+		select KERNEL_DEVFS
+		select I2C_PROTO_POLL
+		default n
 
 	config I2C_DEBUG
 		bool "Enable debug messages"

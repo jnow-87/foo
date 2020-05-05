@@ -7,10 +7,10 @@
 
 
 #include <arch/interrupt.h>
+#include <kernel/critsec.h>
 #include <kernel/inttask.h>
 #include <kernel/ksignal.h>
 #include <kernel/memory.h>
-#include <sys/mutex.h>
 #include <sys/list.h>
 #include <sys/errno.h>
 
@@ -19,49 +19,55 @@
 void itask_queue_init(itask_queue_t *queue){
 	queue->head = 0x0;
 	queue->tail = 0x0;
-	mutex_init(&queue->mtx, 0);
+	critsec_init(&queue->lock);
 }
 
-void itask_issue(itask_queue_t *queue, void *data, int_num_t num){
-	bool empty;
-	itask_t e;
+int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
+	bool is_first;
+	itask_t task;
 
 
-	e.data = data;
-	ksignal_init(&e.sig);
+	task.data = data;
+	task.errno = E_OK;
+	ksignal_init(&task.sig);
 
-	mutex_lock(&queue->mtx);
+	critsec_lock(&queue->lock);
 
-	empty = list_empty(queue->head);
-	list1_add_tail(queue->head, queue->tail, &e);
+	list1_add_tail(queue->head, queue->tail, &task);
+	is_first = (list_first(queue->head) == &task);
 
-	mutex_unlock(&queue->mtx);
+	critsec_unlock(&queue->lock);
 
-	if(empty)
+	if(is_first)
 		int_call(num);
 
-	ksignal_wait(&e.sig);
+	ksignal_wait(&task.sig);
+
+	return_errno(task.errno);
 }
 
-void itask_complete(itask_queue_t *queue){
-	itask_t *e;
+void itask_complete(itask_queue_t *queue, errno_t e_code){
+	itask_t *task;
 
 
-	mutex_lock(&queue->mtx);
+	critsec_lock(&queue->lock);
 
-	e = list_first(queue->head);
+	task = list_first(queue->head);
 	list1_rm_head(queue->head, queue->tail);
+	task->errno = e_code;
 
-	mutex_unlock(&queue->mtx);
+	critsec_unlock(&queue->lock);
 
-	ksignal_send(&e->sig);
+	ksignal_send(&task->sig);
 }
 
 void *itask_query_data(itask_queue_t *queue){
-	itask_t *e;
+	itask_t *task;
 
 
-	e = list_first_safe(queue->head, &queue->mtx);
+	critsec_lock(&queue->lock);
+	task = list_first(queue->head);
+	critsec_unlock(&queue->lock);
 
-	return (e ? e->data : 0x0);
+	return (task ? task->data : 0x0);
 }

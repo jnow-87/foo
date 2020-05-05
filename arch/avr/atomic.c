@@ -34,3 +34,19 @@ int avr_cas(int volatile *v, int old, int new){
 
 	return t != old;
 }
+
+void avr_atomic_inc(int volatile *v, int inc){
+	bool int_en;
+
+
+	/* disable interrupts */
+	int_en = mreg_r(SREG) & (0x1 << SREG_I);
+	asm volatile("cli");
+
+	/* increment */
+	*v += inc;
+
+	/* enable interrupts */
+	if(int_en)
+		asm volatile("sei");
+}

@@ -7,7 +7,7 @@
 
 
 
-obj-y := init.o kernel.o driver.o panic.o csection.o task.o sched/ fs/ memory/ binloader/
+obj-y := init.o kernel.o driver.o panic.o critsec.o task.o sched/ fs/ memory/ binloader/
 
 obj-$(CONFIG_KERNEL_SYSCALL) += syscall.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o

@@ -67,6 +67,7 @@ static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
 static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
 static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd);
+static char read_byte(size_t offset, dt_data_t *dtd);
 static void write_hdlr(int_num_t num, void *eeprom);
 
 
@@ -125,33 +126,20 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
 	size_t i;
 	char *buf;
 	dt_data_t *dtd;
-	eeprom_regs_t *regs;
-	int_type_t imask;
 
 
 	buf = (char*)_buf;
 	dtd = ((dev_data_t*)dev->data)->dtd;
-	regs = dtd->regs;
 
 	if(fd->fp + n >= dtd->size){
 		errno = E_LIMIT;
 		return 0;
 	}
 
-	imask = int_enable(INT_NONE);
-
 	for(i=0; i<n; i++){
-		while(regs->eecr & (0x1 << EECR_EEPE));
-
-		regs->eear = (uint16_t)(dtd->base + fd->fp);
-		regs->eecr |= (0x1 << EECR_EERE);
-		buf[i] = regs->eedr;
-
-		DEBUG("read %#4.4x: %c (%#hhx)\n", dtd->base + fd->fp, buf[i], buf[i]);
+		buf[i] = read_byte(fd->fp, dtd);
 		fd->fp++;
 	}
-
-	int_enable(imask);
 
 	return i;
 }
@@ -223,7 +211,7 @@ static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t
 	data.len = n;
 	data.offset = fd->fp;
 
-	itask_issue(&eeprom->write_queue, &data, eeprom->dtd->int_num);
+	(void)itask_issue(&eeprom->write_queue, &data, eeprom->dtd->int_num);
 
 	return n - data.len;
 }
@@ -236,9 +224,10 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
 	DEBUG("write %#4.4x: %c (%#hhx)\n", dtd->base + offset, b, b);
 
 	regs = dtd->regs;
-	imask = int_enable(INT_NONE);	// ensure the write sequence is never interrupted
 
 	while(regs->eecr & (0x1 << EECR_EEPE));
+
+	imask = int_enable(INT_NONE);	// the write sequence must not be interrupted
 
 	regs->eear = (uint16_t)dtd->base + offset;
 	regs->eedr = b;
@@ -258,6 +247,29 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
 	int_enable(imask);
 }
 
+static char read_byte(size_t offset, dt_data_t *dtd){
+	char c;
+	int_type_t imask;
+	eeprom_regs_t *regs;
+
+
+	regs = dtd->regs;
+
+	while(regs->eecr & (0x1 << EECR_EEPE));
+
+	imask = int_enable(INT_NONE);
+
+	regs->eear = (uint16_t)(dtd->base + offset);
+	regs->eecr |= (0x1 << EECR_EERE);
+	c = regs->eedr;
+
+	int_enable(imask);
+
+	DEBUG("read %#4.4x: %c (%#hhx)\n", dtd->base + fd->fp, buf[i], buf[i]);
+
+	return c;
+}
+
 static void write_hdlr(int_num_t num, void *_eeprom){
 	dev_data_t *eeprom;
 	write_data_t *data;
@@ -265,7 +277,7 @@ static void write_hdlr(int_num_t num, void *_eeprom){
 
 	eeprom = (dev_data_t*)_eeprom;
 
-	/* disable interrupt */
+	/* disable eeprom interrupt */
 	// NOTE this is required since an interrupt is triggered
 	// 		as long as EECR_EEPE is zero, i.e. always except
 	// 		during ongoing write operations
@@ -283,5 +295,5 @@ static void write_hdlr(int_num_t num, void *_eeprom){
 
 	/* signal write completion */
 	if(data->len == 0)
-		itask_complete(&eeprom->write_queue);
+		itask_complete(&eeprom->write_queue, E_OK);
 }

@@ -12,9 +12,10 @@
 #include <kernel/driver.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
-#include <kernel/csection.h>
-#include <kernel/net.h>
+#include <kernel/critsec.h>
 #include <kernel/ksignal.h>
+#include <kernel/inttask.h>
+#include <kernel/net.h>
 #include <driver/term.h>
 #include <sys/types.h>
 #include <sys/errno.h>
@@ -46,9 +47,16 @@ typedef enum{
 	RESP_IP_INFO,
 } response_t;
 
+typedef struct{
+	char const *s;
+	size_t len;
+} tx_data_t;
+
 typedef struct esp_t{
-	term_itf_t *itf;
-	inetdev_cfg_t *cfg;
+	term_itf_t *hw;
+	critsec_lock_t lock;
+
+	inetdev_cfg_t cfg;
 
 	socket_t *tcp_server,
 			 *links[CONFIG_ESP8266_LINK_COUNT];
@@ -62,27 +70,28 @@ typedef struct esp_t{
 		void *(*hdlr)(struct esp_t *esp, char c);
 		ringbuf_t line;
 		patmat_t *parser;
-		csection_lock_t lock;
 
 		socket_t *sock;
 		size_t len,
 			   idx;
 		uint8_t *dgram;
 	} rx;
+
+	itask_queue_t tx_queue;
 } esp_t;
 
 
 /* local/static prototypes */
-static int configure(netdev_t *dev, void *cfg);
-
 // netfs callbacks
+static int configure(netdev_t *dev);
 static int connect(socket_t *sock);
 static int bind(socket_t *sock);
 static int listen(socket_t *sock);
 static void close(socket_t *sock);
 static ssize_t send(socket_t *sock, void *data, size_t data_len);
+static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uint16_t local_port);
 
-// esp input handling
+// rx interrupt handling
 static void rx_hdlr(int_num_t num, void *esp);
 static void rx_task(void *esp);
 
@@ -96,14 +105,17 @@ static void rx_act_accept(esp_t *esp);
 static void rx_act_close(esp_t *esp);
 static void rx_act_ip_info(esp_t *esp);
 
+// tx interrupt handling
+static void tx_hdlr(int_num_t num, void *esp);
+
 // command handling
-static int cmd(esp_t *esp, response_t resp, bool skip, socket_t *sock, char const *fmt, ...);
+static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...);
 static void cmd_resp(esp_t *esp, ssize_t resp);
-static int puts(term_itf_t *serial, char const *s);
+static int puts(char const *s, esp_t *esp);
+static int putsn(char const *s, size_t len, esp_t *esp);
 
 // utilities
 static int get_link_id(esp_t *esp, socket_t *sock);
-static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uint16_t local_port);
 
 
 /* static variables */
@@ -121,19 +133,19 @@ static char const *rx_patterns[] = {
 };
 
 
-/* global functions */
+/* local functions */
 static int probe(char const *name, void *dt_data, void *dt_itf){
 	void *rxbuf;
 	esp_t *esp;
 	devfs_dev_t *dev;
-	netdev_ops_t ops;
-	term_itf_t *itf;
+	netdev_itf_t itf;
+	term_itf_t *hw;
 
 
-	itf = (term_itf_t*)dt_itf;
+	hw = (term_itf_t*)dt_itf;
 
-	if(itf->rx_int == 0){
-		FATAL("uart does not support rx interrupt\n");
+	if(hw->rx_int == 0 || hw->tx_int == 0){
+		WARN("uart does not support interrupts\n");
 		goto_errno(err_0, E_NOSUP);
 	}
 
@@ -155,30 +167,36 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 
 	ringbuf_init(&esp->rx.line, rxbuf, 16);
 
-	esp->itf = itf;
+	esp->hw = hw;
 	esp->rx.hdlr = rx_parse;
+	esp->resp = RESP_INVAL;
 
 	ksignal_init(&esp->sig);
 	mutex_init(&esp->mtx, MTX_NONE);
-	csection_init(&esp->rx.lock);
+	critsec_init(&esp->lock);
+	itask_queue_init(&esp->tx_queue);
 
-	ops.configure = configure;
-	ops.connect = connect;
-	ops.bind = bind;
-	ops.listen = listen;
-	ops.close = close;
-	ops.send = send;
+	itf.configure = configure;
+	itf.connect = connect;
+	itf.bind = bind;
+	itf.listen = listen;
+	itf.close = close;
+	itf.send = send;
+	itf.cfg = &esp->cfg;
 
-	dev = netdev_register(name, &ops, AF_INET, esp);
+	dev = netdev_register(name, AF_INET, &itf, esp);
 
 	if(dev == 0x0)
 		goto err_3;
 
 	/* configure hardware */
-	if(int_register(itf->rx_int, rx_hdlr, esp) != 0)
+	if(int_register(hw->rx_int, rx_hdlr, esp) != 0)
 		goto err_4;
 
-	if(itf->configure(dt_data, itf->data) != 0)
+	if(int_register(hw->tx_int, tx_hdlr, esp) != 0)
+		goto err_4;
+
+	if(hw->configure(dt_data, hw->data) != 0)
 		goto err_5;
 
 	if(ktask_create(rx_task, &esp, sizeof(esp_t*), 0x0, true) != 0)
@@ -188,7 +206,8 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 
 
 err_5:
-	int_release(itf->rx_int);
+	int_release(hw->tx_int);
+	int_release(hw->rx_int);
 
 err_4:
 	netdev_release(dev);
@@ -209,53 +228,47 @@ err_0:
 device_probe("esp8266", probe);
 
 // socket callbacks
-static int configure(netdev_t *dev, void *_cfg){
+static int configure(netdev_t *dev){
 	int r;
 	char *enc[] = {"0", "2", "3", "4"};
 	inetdev_cfg_t *cfg;
 	esp_t *esp;
 
 
-	cfg = (inetdev_cfg_t*)_cfg;
 	esp = (esp_t*)dev->data;
-
-	mutex_lock(&esp->mtx);
-
-	esp->cfg = cfg;
+	cfg = &esp->cfg;
 
 	r = 0;
 
-	r |= cmd(esp, RESP_OK, r, 0x0, "ATE0");					// disable echo
-	r |= cmd(esp, RESP_OK, r, 0x0, "AT+CIPMUX=1");			// allow multiple connections
-	r |= cmd(esp, RESP_OK, r, 0x0, "AT+CWMODE_CUR=%s",		// device mode
+	r |= cmd(esp, RESP_OK, r, "ATE0");					// disable echo
+	r |= cmd(esp, RESP_OK, r, "AT+CIPMUX=1");			// allow multiple connections
+	r |= cmd(esp, RESP_OK, r, "AT+CWMODE_CUR=%s",		// device mode
 		(cfg->mode == INET_AP ? "2" : "1")
 	);
 
-	r |= cmd(esp, RESP_OK, r, 0x0, "AT+SYSMSG=2");			// enable LINK_CONN message for incomming connections
-	r |= cmd(esp, RESP_OK, r, 0x0, "AT+CIPDINFO=1");		// source ip and port for incoming messages
-	r |= cmd(esp, RESP_OK, r, 0x0, "AT+CWDHCP_CUR=%s,%s",	// dhcp
+	r |= cmd(esp, RESP_OK, r, "AT+SYSMSG=2");			// enable LINK_CONN message for incomming connections
+	r |= cmd(esp, RESP_OK, r, "AT+CIPDINFO=1");			// source ip and port for incoming messages
+	r |= cmd(esp, RESP_OK, r, "AT+CWDHCP_CUR=%s,%s",	// dhcp
 		(cfg->mode == INET_AP ? "0" : "1"),
 		(cfg->dhcp ? "1" : "0")
 	);
 
 	if(cfg->mode == INET_AP){
 		// configure access point
-		r |= cmd(esp, RESP_OK, r, 0x0, "AT+CIPAP_CUR=\"%a\",\"%a\",\"%a\"", &cfg->ip, &cfg->gateway, &cfg->netmask);
-		r |= cmd(esp, RESP_OK, r, 0x0, "AT+CWSAP_CUR=\"%s\",\"%s\",1,%s,4,0", cfg->ssid, cfg->password, enc[cfg->enc]);
+		r |= cmd(esp, RESP_OK, r, "AT+CIPAP_CUR=\"%a\",\"%a\",\"%a\"", &cfg->ip, &cfg->gateway, &cfg->netmask);
+		r |= cmd(esp, RESP_OK, r, "AT+CWSAP_CUR=\"%s\",\"%s\",1,%s,4,0", cfg->ssid, cfg->password, enc[cfg->enc]);
 	}
 	else if(cfg->mode == INET_CLIENT){
 		// connect to access point
 		if(!cfg->dhcp)
-			r |= cmd(esp, RESP_OK, r, 0x0, "AT+CIPSTA_CUR=\"%a\",\"%a\",\"%s\"", &cfg->ip, &cfg->netmask, &cfg->gateway);
+			r |= cmd(esp, RESP_OK, r, "AT+CIPSTA_CUR=\"%a\",\"%a\",\"%s\"", &cfg->ip, &cfg->netmask, &cfg->gateway);
 
-		r |= cmd(esp, RESP_OK, r, 0x0, "AT+CWJAP_CUR=\"%s\",\"%s\"", cfg->ssid, cfg->password);
+		r |= cmd(esp, RESP_OK, r, "AT+CWJAP_CUR=\"%s\",\"%s\"", cfg->ssid, cfg->password);
 	}
 	else
 		r = -1;
 
-	r |= cmd(esp, RESP_OK, r, 0x0, "AT+CIPSTA_CUR?");
-
-	mutex_unlock(&esp->mtx);
+	r |= cmd(esp, RESP_OK, r, "AT+CIPSTA_CUR?");
 
 	return r;
 }
@@ -294,7 +307,7 @@ static int listen(socket_t *sock){
 	if(esp->tcp_server != 0x0)
 		goto_errno(end, E_LIMIT);
 
-	if(cmd(esp, RESP_OK, false, sock, "AT+CIPSERVER=1,%u", remote->port) != 0)
+	if(cmd(esp, RESP_OK, false, "AT+CIPSERVER=1,%u", remote->port) != 0)
 		goto end;
 
 	esp->tcp_server = sock;
@@ -315,13 +328,13 @@ static void close(socket_t *sock){
 	mutex_lock(&esp->mtx);
 
 	if(sock == esp->tcp_server){
-		if(cmd(esp, RESP_OK, false, sock, "AT+CIPSERVER=0") == 0)
+		if(cmd(esp, RESP_OK, false, "AT+CIPSERVER=0") == 0)
 			esp->tcp_server = 0x0;
 	}
 	else{
 		link_id = get_link_id(esp, sock);
 
-		if(link_id >= 0 && cmd(esp, RESP_OK, false, sock, "AT+CIPCLOSE=%u", link_id) == 0)
+		if(link_id >= 0 && cmd(esp, RESP_OK, false, "AT+CIPCLOSE=%u", link_id) == 0)
 			esp->links[link_id] = 0x0;
 	}
 
@@ -343,25 +356,61 @@ static ssize_t send(socket_t *sock, void *data, size_t data_len){
 	remote = &((sock_addr_inet_t*)(&sock->addr))->data;
 
 	mutex_lock(&esp->mtx);
-
 	link_id = get_link_id(esp, sock);
+	mutex_unlock(&esp->mtx);
 
 	if(link_id < 0)
-		goto_errno(end, E_NOCONN);
+		return_errno(E_NOCONN);
 
-	if(sock->type == SOCK_DGRAM)	r |= cmd(esp, RESP_OK, r, sock, "AT+CIPSEND=%u,%u,\"%a\",%u", link_id, data_len, &remote->addr, remote->port);
-	else							r |= cmd(esp, RESP_OK, r, sock, "AT+CIPSEND=%u,%u", link_id, data_len);
+	if(sock->type == SOCK_DGRAM)	r |= cmd(esp, RESP_OK, r, "AT+CIPSEND=%u,%u,\"%a\",%u", link_id, data_len, &remote->addr, remote->port);
+	else							r |= cmd(esp, RESP_OK, r, "AT+CIPSEND=%u,%u", link_id, data_len);
 
 	if(r == 0)
-		r |= cmd(esp, RESP_SENDOK, r, sock, "%x", data_len, data);
-
-end:
-	mutex_unlock(&esp->mtx);
+		r |= cmd(esp, RESP_SENDOK, r, "%x", data_len, data);
 
 	return (r == 0 ? (ssize_t)data_len : -1);
 }
 
-// esp input handling
+static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uint16_t local_port){
+	int link_id;
+	int r;
+	esp_t *esp;
+
+
+	esp = (esp_t*)sock->dev->data;
+
+	mutex_lock(&esp->mtx);
+	link_id = get_link_id(esp, 0x0);
+	mutex_unlock(&esp->mtx);
+
+	if(link_id < 0)
+		return_errno(E_LIMIT);
+
+	if(remote_port == 0)
+		remote_port = link_id + 1;
+
+	if(local_port == 0)
+		local_port = link_id + 1;
+
+	r = cmd(esp, RESP_OK, false, "AT+CIPSTART=%u,\"%s\",\"%a\",%u,%u",
+		link_id,
+		(sock->type == SOCK_DGRAM ? "UDP" : "TCP"),
+		addr,
+		remote_port,
+		local_port
+	);
+
+	if(r != 0)
+		return -errno;
+
+	mutex_lock(&esp->mtx);
+	esp->links[link_id] = sock;
+	mutex_unlock(&esp->mtx);
+
+	return E_OK;
+}
+
+// rx interrupt handling
 static void rx_hdlr(int_num_t num, void *_esp){
 	size_t len;
 	char buf[16];
@@ -371,11 +420,12 @@ static void rx_hdlr(int_num_t num, void *_esp){
 
 	esp = (esp_t*)_esp;
 
-	len = esp->itf->gets(buf, 16, &err, esp->itf->data);
+	critsec_lock(&esp->lock);
 
-	csection_lock(&esp->rx.lock);
+	len = esp->hw->gets(buf, 16, &err, esp->hw->data);
 	ringbuf_write(&esp->rx.line, buf, len);
-	csection_unlock(&esp->rx.lock);
+
+	critsec_unlock(&esp->lock);
 }
 
 static void rx_task(void *_esp){
@@ -387,9 +437,9 @@ static void rx_task(void *_esp){
 	esp = *((esp_t**)_esp);
 
 	while(1){
-		csection_lock(&esp->rx.lock);
+		critsec_lock(&esp->lock);
 		n = ringbuf_read(&esp->rx.line, &c, 1);
-		csection_unlock(&esp->rx.lock);
+		critsec_unlock(&esp->lock);
 
 		if(n == 0)
 			break;
@@ -460,16 +510,12 @@ static void *rx_datain_stream(esp_t *esp, char c){
 	socket_t *sock;
 
 
-	mutex_lock(&esp->mtx);
-
 	sock = esp->rx.sock;
 	esp->rx.idx++;
 	is_last = (esp->rx.idx == esp->rx.len);
 
 	if(is_last)
 		patmat_reset(esp->rx.parser);
-
-	mutex_unlock(&esp->mtx);
 
 	if(socket_datain_stream(sock, (uint8_t*)&c, 1, is_last) != 0)
 		WARN("data loss: %s\n", strerror(errno));
@@ -487,8 +533,6 @@ static void *rx_datain_dgram(esp_t *esp, char c){
 
 
 	rx_hdlr = rx_datain_dgram;
-
-	mutex_lock(&esp->mtx);
 
 	sock = esp->rx.sock;
 	esp->rx.dgram[esp->rx.idx] = (uint8_t)c;
@@ -509,30 +553,28 @@ static void *rx_datain_dgram(esp_t *esp, char c){
 		rx_hdlr = rx_parse;
 	}
 
-	mutex_unlock(&esp->mtx);
-
 	return rx_hdlr;
 }
 
 static void *rx_act_pre_datain(esp_t *esp){
 	void *res[4];
+	socket_t *sock;
 
 
 	(void)patmat_get_results(esp->rx.parser, res);
 
 	mutex_lock(&esp->mtx);
+	sock = esp->links[PATMAT_RESULT_INT(res, 0)];
+	mutex_unlock(&esp->mtx);
 
-	esp->rx.sock = esp->links[PATMAT_RESULT_INT(res, 0)];
+	esp->rx.sock = sock;
 	esp->rx.len = PATMAT_RESULT_INT(res, 1);
 	esp->rx.idx = 0;
 
-	if(esp->rx.sock->type == SOCK_DGRAM)
-		esp->rx.dgram = kmalloc(esp->rx.len);
-
-	mutex_unlock(&esp->mtx);
-
-	if(esp->rx.sock->type == SOCK_STREAM)
+	if(sock->type == SOCK_STREAM)
 		return rx_datain_stream;
+
+	esp->rx.dgram = kmalloc(esp->rx.len);
 
 	if(esp->rx.dgram)
 		return rx_datain_dgram;
@@ -548,24 +590,22 @@ static void rx_act_accept(esp_t *esp){
 	socket_t *client;
 
 
-	mutex_lock(&esp->mtx);
-
-	if(esp->tcp_server == 0x0)
-		goto end;
-
 	(void)patmat_get_results(esp->rx.parser, res);
 
 	remote.domain = AF_INET;
 	remote.data.port = (uint16_t)PATMAT_RESULT_INT(res, 5);
 	remote.data.addr = inet_addr(PATMAT_RESULT_STR(res, 4));
 
-	client = socket_add_client_addr(esp->tcp_server, (sock_addr_t*)&remote, sizeof(sock_addr_inet_t), true);
-	esp->links[PATMAT_RESULT_INT(res, 1)] = client;
+	mutex_lock(&esp->mtx);
 
-	if(client == 0x0)
-		FATAL("unable to add client (%s), link stays open\n", strerror(errno));
+	if(esp->tcp_server){
+		client = socket_add_client_addr(esp->tcp_server, (sock_addr_t*)&remote, sizeof(sock_addr_inet_t), true);
+		esp->links[PATMAT_RESULT_INT(res, 1)] = client;
 
-end:
+		if(client == 0x0)
+			FATAL("unable to add client (%s), link stays open\n", strerror(errno));
+	}
+
 	mutex_unlock(&esp->mtx);
 }
 
@@ -581,7 +621,7 @@ static void rx_act_close(esp_t *esp){
 	mutex_lock(&esp->mtx);
 
 	if(esp->links[link_id] != 0x0)
-		socket_disconnect(esp->links[link_id]);
+		socket_unlink(esp->links[link_id]);
 
 	esp->links[link_id] = 0x0;
 
@@ -594,52 +634,51 @@ static void rx_act_ip_info(esp_t *esp){
 	inet_addr_t addr;
 
 
-	if(esp->cfg == 0x0)
-		return;
-
 	(void)patmat_get_results(esp->rx.parser, res);
 
 	info = PATMAT_RESULT_STR(res, 0);
 	addr = inet_addr(PATMAT_RESULT_STR(res, 1));
 
-	mutex_lock(&esp->mtx);
+	if(strcmp(info, "ip") == 0)				esp->cfg.ip = addr;
+	else if(strcmp(info, "gateway") == 0)	esp->cfg.gateway = addr;
+	else if(strcmp(info, "netmask") == 0)	esp->cfg.netmask = addr;
 
-	if(strcmp(info, "ip") == 0)				esp->cfg->ip = addr;
-	else if(strcmp(info, "gateway") == 0)	esp->cfg->gateway = addr;
-	else if(strcmp(info, "netmask") == 0)	esp->cfg->netmask = addr;
-
-	mutex_unlock(&esp->mtx);
 }
 
-// helper
-/**
- * \pre		esp->mtx is locked
- */
-static int get_link_id(esp_t *esp, socket_t *sock){
-	uint8_t i;
+// tx interrupt handling
+static void tx_hdlr(int_num_t num, void *_esp){
+	esp_t *esp;
+	tx_data_t *data;
 
 
-	for(i=0; i<CONFIG_ESP8266_LINK_COUNT; i++){
-		if(esp->links[i] == sock)
-			return i;
-	}
+	esp = (esp_t*)_esp;
 
-	return -1;
+	data = itask_query_data(&esp->tx_queue);
+
+	if(data == 0x0)
+		return;
+
+	/* output character */
+	critsec_lock(&esp->lock);
+	while(esp->hw->putc(*data->s, esp->hw->data) != *data->s);
+	critsec_unlock(&esp->lock);
+
+	data->s++;
+	data->len--;
+
+	if(data->len == 0)
+		itask_complete(&esp->tx_queue, E_OK);
 }
 
-/**
- * \pre		esp->mtx is locked
- */
-static int cmd(esp_t *esp, response_t resp, bool skip, socket_t *sock, char const *fmt, ...){
+// command handling
+static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...){
 	int r;
 	char c;
 	char s[16];
 	size_t len;
 	va_list lst;
-	term_itf_t *itf;
 
 
-	itf = esp->itf;
 	r = 0;
 
 	if(skip)
@@ -648,7 +687,6 @@ static int cmd(esp_t *esp, response_t resp, bool skip, socket_t *sock, char cons
 	va_start(lst, fmt);
 
 	DEBUG("cmd \"%s\"\n", fmt);
-	esp->resp = RESP_INVAL;
 
 	for(c=*fmt; c!=0; c=*(++fmt)){
 		if(c == '%'){
@@ -659,46 +697,37 @@ static int cmd(esp_t *esp, response_t resp, bool skip, socket_t *sock, char cons
 
 			switch(c){
 			case 'a':
-				r |= puts(itf, inet_ntoa(*va_arg(lst, inet_addr_t*)));
+				r |= puts(inet_ntoa(*va_arg(lst, inet_addr_t*)), esp);
 				break;
 
 			case 's':
-				r |= puts(itf, va_arg(lst, char*));
+				r |= puts(va_arg(lst, char*), esp);
 				break;
 
 			case 'x':
 				len = va_arg(lst, size_t);
-				r |= (itf->puts(va_arg(lst, char*), len, itf->data) != len);
+				r |= putsn(va_arg(lst, char*), len, esp);
 				break;
 
 			case 'u':
 				snprintf(s, 16, "%u", va_arg(lst, int));
-				r |= puts(itf, s);
+				r |= puts(s, esp);
 				break;
 
 			default:
-				r |= (itf->putc(c, itf->data) != c);
+				r |= putsn(&c, 1, esp);
 			}
 		}
 		else
-			r |= (itf->putc(c, itf->data) != c);
+			r |= putsn(&c, 1, esp);
 	}
 
-	r |= (itf->putc('\r', itf->data) != '\r');
-	r |= (itf->putc('\n', itf->data) != '\n');
+	r |= putsn("\r\n", 2, esp);
 
 	if(r != 0)
 		goto_errno(end, E_IO);
 
-	if(sock)
-		mutex_unlock(&sock->mtx);
-
-	mutex_unlock(&esp->mtx);
-	ksignal_wait(&esp->sig);
-	mutex_lock(&esp->mtx);
-
-	if(sock)
-		mutex_lock(&sock->mtx);
+	ksignal_wait_mtx(&esp->sig, &esp->mtx);
 
 	if(esp->resp != resp){
 		r = 1;
@@ -706,6 +735,10 @@ static int cmd(esp_t *esp, response_t resp, bool skip, socket_t *sock, char cons
 		if(esp->resp == RESP_BUSY)	errno = E_INUSE;
 		else						errno = E_IO;
 	}
+
+	esp->resp = RESP_INVAL;
+
+	mutex_unlock(&esp->mtx);
 
 end:
 	va_end(lst);
@@ -721,51 +754,31 @@ static void cmd_resp(esp_t *esp, ssize_t resp){
 	ksignal_send(&esp->sig);
 }
 
-static int puts(term_itf_t *serial, char const *s){
-	size_t n;
-
-
-	n = strlen(s);
-
-	if(serial->puts(s, n, serial->data) != n)
-		return -1;
-	return 0;
+static int puts(char const *s, esp_t *esp){
+	return putsn(s, strlen(s), esp);
 }
 
-static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uint16_t local_port){
-	int link_id;
-	int r;
-	esp_t *esp;
+static int putsn(char const *s, size_t len, esp_t *esp){
+	tx_data_t data;
 
 
-	esp = (esp_t*)sock->dev->data;
+	data.s = s;
+	data.len = len;
 
-	mutex_lock(&esp->mtx);
+	(void)itask_issue(&esp->tx_queue, &data, esp->hw->tx_int);
 
-	link_id = get_link_id(esp, 0x0);
+	return data.len;
+}
 
-	if(link_id < 0)
-		goto_errno(end, E_LIMIT);
+// utilities
+static int get_link_id(esp_t *esp, socket_t *sock){
+	uint8_t i;
 
-	if(remote_port == 0)
-		remote_port = link_id + 1;
 
-	if(local_port == 0)
-		local_port = link_id + 1;
+	for(i=0; i<CONFIG_ESP8266_LINK_COUNT; i++){
+		if(esp->links[i] == sock)
+			return i;
+	}
 
-	r = cmd(esp, RESP_OK, false, sock, "AT+CIPSTART=%u,\"%s\",\"%a\",%u,%u",
-		link_id,
-		(sock->type == SOCK_DGRAM ? "UDP" : "TCP"),
-		addr,
-		remote_port,
-		local_port
-	);
-
-	if(r == 0)
-		esp->links[link_id] = sock;
-
-end:
-	mutex_unlock(&esp->mtx);
-
-	return -errno;
+	return -1;
 }
