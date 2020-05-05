@@ -14,12 +14,12 @@ memory = {
 
 		kernel_flash = {
 			baseaddr = 0x0;
-			size = 36864;
+			size = 49152;
 		};
 
 		app_flash = {
-			baseaddr = 0x00009000;
-			size = 94208;
+			baseaddr = 0x0000c000;
+			size = 81920;
 		};
 	};
 
@@ -34,12 +34,12 @@ memory = {
 
 		kernel_data = {
 			baseaddr = 0x00800100;
-			size = 3584;
+			size = 4864;
 		};
 
 		kernel_heap = {
-			baseaddr = 0x00800f00;
-			size = 3584;
+			baseaddr = 0x00801400;
+			size = 2304;
 		};
 
 		kernel_stack = {
@@ -49,12 +49,12 @@ memory = {
 
 		app_heap = {
 			baseaddr = 0x00802000;
-			size = 4096;
+			size = 2560;
 		};
 
 		app_data = {
-			baseaddr = 0x00803000;
-			size = 4096;
+			baseaddr = 0x00802a00;
+			size = 5632;
 		};
 	};
 };
@@ -115,7 +115,7 @@ driver = {
 
 		int<8> = [
 			28,						// uart1 rx interrupt
-			0						// uart1 tx interrupt (disabled)
+			30						// uart1 tx interrupt (disabled)
 		];
 
 		eth0 = {
@@ -320,7 +320,7 @@ driver = {
 		int<8> = [ 26 ];			// interrupt number
 
 		i2c0 = {
-			compatible = "i2c";
+			compatible = "i2c,int";
 
 			/**
 			 * i2c configuration
@@ -330,9 +330,9 @@ driver = {
 			 int<8> = [ 1 ];		// mode (master)
 			 int<16> = [ 50 ];		// clock (50kHz)
 			 int<8> = [
-				1,				// broadcast (enabled)
-				1,				// host address
-				0				// target address
+				1,					// broadcast (enabled)
+				1,					// host address
+				0					// target address
 			 ];
 		};
 	};
