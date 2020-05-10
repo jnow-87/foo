@@ -7,65 +7,56 @@
 #
 
 
-#
-# argument assignemnt
-#
-build_dir=${1}
-sysroot=${2}
-arch_hdr=${3}
-kernel_name=${4}
-lib_name=${5}
+
+VERBOSE=0
 
 
-#
-# defines
-#
-verbose=0
-sysroot_dir=${build_dir}/${sysroot}
-
-
-#
-# src include paths to copy to sysroot
-#
-inc_dirs="recent/config include/sys include/lib include/arch"
-
-
-#
-# functions
-#
-function copy(){
-	src=${1}
-	tgt=${2}
-
-	[ -e ${tgt} ] || mkdir -p ${tgt}
-	[ $verbose -gt 0 ] && echo copy ${src}
-	cp -r ${src} ${tgt}
+# \brief	remove trailing slashes from given string
+function strip_slash(){
+	echo $1 | sed 's:/*$::'
 }
 
-#
-# script
-#
+# \brief	copy (update) target with source
+function copy(){
+	src=$1
+	tgt=$2
 
-# create sysroot directory
-echo create sysroot at \"${sysroot_dir}\"
-[ -e ${sysroot_dir} ] && rm -r ${sysroot_dir}
+	[ -e ${tgt} ] || mkdir -p ${tgt}
 
-# copy kernel and libsys
-copy ${build_dir}/${kernel_name} ${sysroot_dir}
-copy ${build_dir}/lib/${lib_name} ${sysroot_dir}/lib
+	extra_flags=""
+	[ $VERBOSE -gt 0 ] && extra_flags+="--verbose"
 
-# copy include directories
-for dir in ${inc_dirs}
-do
-	copy ${dir} ${sysroot_dir}/usr/include
-done
-
-# copy linker scripts
-copy scripts/linker ${sysroot_dir}
-copy "$(find recent/arch -name \*.lds)" ${sysroot_dir}/linker
+	cp ${extra_flags} -ur ${src} ${tgt}
+}
 
 
-[ ${verbose} -gt 0 ] && echo -e "\n"
+build_dir=$(strip_slash $1)
+sysroot=${build_dir}/$(strip_slash $2)
+arch_hdr=$3
+kernel_name=$4
+lib_name=$5
+
+sysroot_kernel="${sysroot}"
+sysroot_lib="${sysroot}/lib"
+sysroot_inc="${sysroot}/usr/include"
+sysroot_linker="${sysroot}"
+
+
+echo "updating sysroot \"${sysroot}\""
+
+# populate sysroot
+copy "${build_dir}/${kernel_name}"		"${sysroot_kernel}"
+copy "${build_dir}/lib/${lib_name}"		"${sysroot_lib}"
+copy "recent/config/"					"${sysroot_inc}"
+copy "include/sys/"						"${sysroot_inc}"
+copy "include/lib/"						"${sysroot_inc}"
+copy "include/arch/"					"${sysroot_inc}"
+copy "scripts/linker/"					"${sysroot_linker}"
+copy "$(find recent/arch -name \*.lds)"	"${sysroot_linker}/linker/"
 
 # replace BUILD_ARCH_HEADER macro by actual architecture header
-sed -i -e "s:\bBUILD_ARCH_HEADER\b:<${arch_hdr}>:" ${sysroot_dir}/usr/include/arch/arch.h
+diff "include/arch/arch.h" "${sysroot_inc}/arch/arch.h" > /dev/null
+
+if [ $? -eq 0 ];then
+	sed -i -e "s:\bBUILD_ARCH_HEADER\b:<${arch_hdr}>:" "${sysroot_inc}/arch/arch.h"
+fi
