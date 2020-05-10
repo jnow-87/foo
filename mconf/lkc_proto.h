@@ -1,3 +1,13 @@
+/**
+ * Note by Jan Nowotsch:
+ * 	This code has been borrowed from the linux kernel build system.
+ * 	It did not contain any copyright claim but is released und the terms
+ * 	of the GNU GPL v2.0
+ * 	This code has been borrowed from the linux kernel build system.
+ */
+
+
+
 #include <stdarg.h>
 
 /* confdata.c */

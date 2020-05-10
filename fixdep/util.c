@@ -1,3 +1,15 @@
+/**
+ * Copyright (C) 2015 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Most of source code is taken from the linux kernel's build helper fixdep.c
+ * but has been restructured for the purpose of this project.
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -23,19 +35,17 @@ int file_map(const char *filename, int *_fd, void **_map, unsigned int *_size){
 	fd = open(filename, O_RDWR);
 
 	if(fd < 0){
-		fprintf(stderr, "fixdep: error opening file \"%s\": %s\n", filename, strerror(errno));
+		fprintf(stderr, "fixdep: open file \"%s\" failed %s\n", filename, strerror(errno));
 		return -1;
 	}
 
 	if(fstat(fd, &st) < 0){
-		fprintf(stderr, "fixdep: error fstat'ing file: %s\n", strerror(errno));
+		fprintf(stderr, "fixdep: error fstat'ing file \"%s\"\n", strerror(errno));
 		goto err;
 	}
 
-	if(st.st_size == 0){
-		fprintf(stderr,"fixdep: %s is empty\n", filename);
+	if(st.st_size == 0)
 		goto err;
-	}
 
 	map = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 

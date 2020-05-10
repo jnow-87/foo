@@ -54,6 +54,9 @@
  * This fixes a bug in Menuconfig where using ' ' to descend into menus
  * would leave mis-synchronized lxdialog.scrltmp files lying around,
  * fscanf would read in 'scroll', and eventually that value would get used.
+ *
+ * Note by Jan Nowotsch:
+ * 	This code has been borrowed from the linux kernel build system.
  */
 
 #include "dialog.h"

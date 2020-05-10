@@ -1,4 +1,13 @@
-######################
+#
+# Copyright (C) 2015 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+#####################
 ## helper variables ##
 ######################
 
@@ -19,7 +28,7 @@ comma := ,
 #
 #	$(call dinclude,<directory list>)
 define dinclude
-	$(eval traverse := $(sort $(filter-out $(included),$(patsubst %/,%,$(1))))) \
+	$(eval traverse := $(call unique,$(filter-out $(included),$(patsubst %/,%,$(1))))) \
 	$(eval included += $(traverse)) \
 	\
 	$(foreach dir,$(traverse), \
@@ -65,16 +74,16 @@ endef
 ##   rule generation   ###
 ###########################
 
-# generate target-specific rule for <target>-*flags
-#	- generate: <target>: <flag> += <target>-flag
-#	- generate: $(basename <target>).i: <flag> += <target>-flag
+# generate target-specific rule for <target>-*flags and <target>-*flags-y
+#	- generate: <target>: <flag> += <target>-<flag> <target>-<flag>-y
+#	- generate: $(basename <target>).i: <flag> += <target>-<flag> <target>-<flag>-y
 #		%.i files are only build on explicite request and thus do not depent on <target>
 #
 #	$(call gen_rule_tgt_flags,<target>,<flag>,<dir_prefix>
 define gen_rule_tgt_flags
-	$(if $($(call hostbasename,$(1))-$(2)), \
-		$(eval $(call gen_rule_basic,,$(3)$(1), $(2) += $($(call hostbasename,$(1))-$(2)))) \
-		$(eval $(call gen_rule_basic,,$(3)$(basename $(1)).i, $(2) += $($(call hostbasename,$(1))-$(2)))) \
+	$(if $($(call hostbasename,$(1))-$(2))$($(call hostbasename,$(1))-$(2)-y), \
+		$(eval $(call gen_rule_basic,,$(3)$(1), $(2) += $($(call hostbasename,$(1))-$(2)) $($(call hostbasename,$(1))-$(2)-y))) \
+		$(eval $(call gen_rule_basic,,$(3)$(basename $(1)).i, $(2) += $($(call hostbasename,$(1))-$(2)) $($(call hostbasename,$(1))-$(2)-y))) \
 	)
 endef
 
@@ -162,6 +171,16 @@ define cond_ge
 $(shell test $1 -ge $2 && echo 1)
 endef
 
+# remove duplicates from string
+#
+# 	$(strip $(call unique,<string>))
+define unique
+	$(eval lst :=) \
+	$(foreach k,$(1),$(if $(filter $(k), $(lst)),,$(eval lst += $(k)))) \
+	$(lst)
+endef
+
+
 # set default value of variable <var> based on the following scheme
 #	if <var> is defined on the command-line
 #		do not change it
@@ -172,7 +191,7 @@ endef
 #
 # $(call set_default,<var>,<value>)
 define set_default
-	$(if $(subst command line,,$(origin $(1))), \
+	$(if $(subst environment,,$(subst command line,,$(origin $(1)))), \
 		$(if $(CONFIG_$(1)), \
 			$(eval $(1) := $(CONFIG_$(1))) \
 			, \

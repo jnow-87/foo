@@ -1,8 +1,15 @@
 #!/bin/bash
 #
+# Copyright (C) 2016 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+#
 # \brief	generate version header
 #
 # \param	target header
+
 
 
 # arguments
@@ -33,7 +40,7 @@ EOL
 if  ! diff ${header} ${header}.tmp 1>/dev/null 2>&1 ;then
 	# update header
 	cp ${header}.tmp ${header}
-	echo "version header written to ${header}"
+	echo "generating version header \"${header}\""
 fi
 
 # delete temporary header
