@@ -12,7 +12,11 @@
 ######################################
 
 # invoke 'make prepare_deps' if it has not been done already
-ifneq ($(PREPARE_DONE),13)
+# use a key that identifies the local project, allowing to nest
+# projects that use this set of makefiles
+prepare_done_key := $(shell basename $$PWD)
+
+ifneq ($(PREPARE_DONE),$(prepare_done_key))
   # ensure MAKECMDGOALS is not empty, otherwise the following checks would not work
   # and prepare_deps would not be executed if no target is specified
   ifeq ($(MAKECMDGOALS),)
@@ -29,7 +33,7 @@ ifneq ($(PREPARE_DONE),13)
       $(error Mixing clean with other targets is not supported by the build system)
     endif
 
-    r := $(shell PREPARE_DONE=13 $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) prepare_deps 1>&2; r=$$?; if [ "$$(echo $(MFLAGS) | grep 'q')" != "" ]; then echo 0; else echo $$r; fi)
+    r := $(shell PREPARE_DONE=$(prepare_done_key) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) prepare_deps 1>&2; r=$$?; if [ "$$(echo $(MFLAGS) | grep 'q')" != "" ]; then echo 0; else echo $$r; fi)
 
     # stop in case of an error during 'make prepare_deps'
     ifneq ($(r),0)
