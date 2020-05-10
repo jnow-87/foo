@@ -231,8 +231,7 @@ $(libsys): libsys_deps $(addprefix $(build_tree)/, $(libsys_objs))
 
 # sysroot targets
 sysroot: kernel libsys init
-	$(rm) $(recent)
-	$(sym_link) $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
+	$(sym_link) -f $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
 	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(kernel_name) $(lib_name)
 
 # memlayout
