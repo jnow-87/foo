@@ -18,10 +18,6 @@
 #include <arch/avr/atmega1284.h>
 #endif // CONFIG_ATMEGA1284P
 
-#ifdef CONFIG_ATMEGA88PA
-#include <arch/avr/atmega88.h>
-#endif // CONFIG_ATMEGA88PA
-
 #ifndef ASM
 #ifndef _x86_
 #ifndef __x86_64__
@@ -56,7 +52,7 @@
 // interrupt handling
 #define NUM_INT				(NUM_HW_INT + 2)	// +2 for the pseude interrupts (syscall, instruction overflow)
 
-#if defined(CONFIG_AVR_ATMEGA) || defined(CONFIG_AVR_XMEGA)
+#if defined(CONFIG_AVR_ISA_AVR51) || defined(CONFIG_AVR_XMEGA)
 
 #define XCALL				call
 #define XJMP				jmp

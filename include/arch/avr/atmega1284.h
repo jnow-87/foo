@@ -11,9 +11,6 @@
 #define ARCH_ATMEGA1284_H
 
 
-#include <sys/const.h>
-
-
 /**
  *	commonly required registers
  */
@@ -82,10 +79,6 @@
 #define PRR0			0x64
 #define PRR1			0x65
 
-// bits
-#define PRR0_PRUSART0	1
-
-
 /* GPIOR */
 #define GPIOR0			0x3e
 #define GPIOR1			0x4a
@@ -104,11 +97,6 @@
 #define WDTCSR_WDP2		2
 #define WDTCSR_WDP1		1
 #define WDTCSR_WDP0		0
-
-/* UART */
-// register
-#define UCSR0A			0xc0
-#define UDR0			0xc6
 
 
 /**
@@ -152,16 +140,6 @@
 #define INT_TIMER3_COMPA	32
 #define INT_TIMER3_COMPB	33
 #define INT_TIMER3_OVFL		34
-
-
-/**
- * Device Configuration
- */
-#define FLASH_SIZE			_128k
-#define SRAM_SIZE			_16k
-#define EEPROM_SIZE			_4k
-
-#define	WATCHDOG_HZ			_128k
 
 
 #endif // ARCH_ATMEGA1284_H
