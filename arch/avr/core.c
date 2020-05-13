@@ -124,7 +124,10 @@ static int init(void){
 
 	/* enable power reduction */
 	mreg_w(PRR0, 0xff);
+
+#ifdef PRR1
 	mreg_w(PRR1, 0xff);
+#endif // PRR1
 
 	return E_OK;
 }
