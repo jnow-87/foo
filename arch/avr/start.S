@@ -91,9 +91,9 @@ __start:
 /*}}}*/
 
 	/* goto kernel */
-#ifdef CONFIG_ATMEGA88PA
-	ldi		r30, lo8(init)
-	ldi		r31, hi8(init)
+#ifdef CONFIG_AVR_ISA_AVR4
+	ldi		r30, lo8(kernel)
+	ldi		r31, hi8(kernel)
 	icall
 #else
 	call	kernel

@@ -52,7 +52,7 @@
 // interrupt handling
 #define NUM_INT				(NUM_HW_INT + 2)	// +2 for the pseude interrupts (syscall, instruction overflow)
 
-#if defined(CONFIG_AVR_ATMEGA) || defined(CONFIG_AVR_XMEGA)
+#if defined(CONFIG_AVR_ISA_AVR51) || defined(CONFIG_AVR_XMEGA)
 
 #define XCALL				call
 #define XJMP				jmp
