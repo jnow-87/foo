@@ -32,7 +32,7 @@ __start:
 	ldi		r31, hi8(__data_load_start)
 
 	// RAMPZ = __data_load_start[16..23]
-#ifdef CONFIG_AVR_ISA_AVR51
+#ifdef CONFIG_AVR_RAMPZ
 	ldi		r16, hh8(__data_load_start)
 	sts		RAMPZ, r16
 #endif
@@ -48,7 +48,7 @@ __start:
 
 1:
 	// load from flash
-#ifdef CONFIG_AVR_ISA_AVR51
+#ifdef CONFIG_AVR_RAMPZ
 	elpm	r1, Z+
 #else
 	lpm		r1, Z+
@@ -64,7 +64,7 @@ __start:
 
 	brne	1b
 
-#ifdef CONFIG_AVR_ISA_AVR51
+#ifdef CONFIG_AVR_RAMPZ
 	clr		r16
 	sts		RAMPZ, r16
 #endif

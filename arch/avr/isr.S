@@ -147,7 +147,11 @@ __isr_int:
 	lds		r16, GPIOR0
 	push	r16
 
+#ifdef CONFIG_AVR_RAMPZ
 	lds		r16, RAMPZ
+#else
+	ldi		r16, 0
+#endif
 	push	r16
 	lds		r16, MCUSR
 	push	r16
@@ -200,7 +204,9 @@ __isr_int:
 	pop		r16
 	sts		MCUSR, r16
 	pop		r16
+#ifdef CONFIG_AVR_RAMPZ
 	sts		RAMPZ, r16
+#endif
 
 	pop		r16
 	sts		GPIOR0, r16
