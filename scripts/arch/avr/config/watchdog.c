@@ -7,7 +7,6 @@
 
 
 
-#include <arch/avr/atmega.h>
 #include <config/config.h>
 #include <float.h>
 #include <math.h>
@@ -19,7 +18,7 @@
 
 // ensure CONFIG-variables have viable values
 #if (!defined(CONFIG_SCHED_CYCLETIME_US) && !defined(CONFIG_KTIMER_CYCLETIME_US))
-	#define CONFIG_SCHED_CYCLETIME_US	(2048 * 1000000.0 / WATCHDOG_HZ)
+	#define CONFIG_SCHED_CYCLETIME_US	(2048 * 1000000.0 / CONFIG_WATCHDOG_CLOCK_HZ)
 	#define CONFIG_SCHED_ERR_MAX		0
 	#define CONFIG_KTIMER_CYCLETIME_US	CONFIG_SCHED_CYCLETIME_US
 	#define CONFIG_KTIMER_ERR_MAX		0
@@ -59,7 +58,7 @@ int config_watchdog(void){
 		printf("target cycle: %.3fms\n", tgt_cycle_time / 1000.0);
 		printf("\nmax. scheduler timer error: %u%%\n", CONFIG_SCHED_ERR_MAX);
 		printf("max. kernel timer error: %u%%\n", CONFIG_KTIMER_ERR_MAX);
-		printf("\nwatchdog base clock: %uHz\n", WATCHDOG_HZ);
+		printf("\nwatchdog base clock: %uHz\n", CONFIG_WATCHDOG_CLOCK_HZ);
 		printf("\n%9.9s %19.19s %6.6s %21.21s\n", "", "watchdog   ", "", "error    ");
 		printf("%9.9s %9.9s %9.9s %6.6s %10.10s %10.10s\n", "prescale", "[Hz]", "[ms]", "factor", "[ms]", "%");
 	}
@@ -81,8 +80,8 @@ int config_watchdog(void){
 		if(arg.verbose)
 			printf("%9u %9.2f %9.2f %6u %10.2f %10.2f\n",
 				ps,
-				WATCHDOG_HZ / (float)ps,
-				(float)ps * 1000 / WATCHDOG_HZ,
+				CONFIG_WATCHDOG_CLOCK_HZ / (float)ps,
+				(float)ps * 1000 / CONFIG_WATCHDOG_CLOCK_HZ,
 				mul,
 				err * 1000,
 				err * 100 * (1000000.0 / tgt_cycle_time)
@@ -144,7 +143,7 @@ static unsigned int cycle_time_multiple(float cycle_time_us, float prescale){
 	unsigned int mul;
 
 
-	mul = (cycle_time_us / 1000000.0) / (prescale / WATCHDOG_HZ);
+	mul = (cycle_time_us / 1000000.0) / (prescale / CONFIG_WATCHDOG_CLOCK_HZ);
 
 	return (mul == 0 ? 1 : mul);
 }
@@ -161,5 +160,5 @@ static unsigned int cycle_time_multiple(float cycle_time_us, float prescale){
  * \return	error value
  */
 static float err_abs(float cycle_time_us, float prescale, unsigned int mul){
-	return (mul * prescale / WATCHDOG_HZ) - (cycle_time_us / 1000000.0);
+	return (mul * prescale / CONFIG_WATCHDOG_CLOCK_HZ) - (cycle_time_us / 1000000.0);
 }
