@@ -25,7 +25,7 @@ memory = {
 
 	ram = {
 		baseaddr = 0x00800000;
-		size = 16384;
+		size = 16640;
 
 		registers = {
 			baseaddr = 0x00800000;
@@ -39,21 +39,21 @@ memory = {
 
 		kernel_heap = {
 			baseaddr = 0x00801400;
-			size = 2304;
+			size = 2560;
 		};
 
 		kernel_stack = {
-			baseaddr = 0x00801d00;
+			baseaddr = 0x00801e00;
 			size = 768;
 		};
 
 		app_heap = {
-			baseaddr = 0x00802000;
+			baseaddr = 0x00802100;
 			size = 2560;
 		};
 
 		app_data = {
-			baseaddr = 0x00802a00;
+			baseaddr = 0x00802b00;
 			size = 5632;
 		};
 	};
