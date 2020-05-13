@@ -18,10 +18,6 @@
 #include <arch/avr/atmega1284.h>
 #endif // CONFIG_ATMEGA1284P
 
-#ifdef CONFIG_ATMEGA88PA
-#include <arch/avr/atmega88.h>
-#endif // CONFIG_ATMEGA88PA
-
 #ifndef ASM
 #ifndef _x86_
 #ifndef __x86_64__

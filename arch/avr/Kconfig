@@ -20,13 +20,6 @@ choice
 		select REGISTER_WIDTH_8
 		select AVR_ISA_AVR51
 		select AVR_ATMEGA
-
-	config ATMEGA88PA
-		bool "Atmega88PA"
-		select ADDR_WIDTH_16
-		select REGISTER_WIDTH_8
-		select AVR_ISA_AVR4
-		select AVR_ATMEGA
 endchoice
 
 menu "Hidden"
@@ -35,7 +28,6 @@ menu "Hidden"
 	config AVR_MCU
 		string "MCU"
 		default "atmega1284p" if ATMEGA1284P
-		default "atmega88pa" if ATMEGA88PA
 		default "unknown MCU"
 
 	config AVR_ISA_AVR4
@@ -46,8 +38,8 @@ menu "Hidden"
 
 	config AVR_ISA
 		string "ISA"
-		default "avr4" if AVR_ISA_AVR4
-		default "avr51" if AVR_ISA_AVR51
+		default "avr4"	if AVR_ISA_AVR4
+		default "avr51"	if AVR_ISA_AVR51
 
 	config AVR_ATMEGA
 		bool "Atmega MCU"
