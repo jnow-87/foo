@@ -143,3 +143,32 @@ static int tc_vector_rm(int log){
 
 test_case(tc_vector_rm, "vector_rm");
 
+static int tc_vector_foreach(int log){
+	int n;
+	int r;
+	int *p;
+	vector_t v;
+
+
+	r = vector_init(&v, sizeof(int), 20);
+
+	n = 0;
+	n += check_int(log, r, 0);
+
+	r = 10; r = vector_add(&v, &r); n += check_int(log, r, 0);
+	r = 20; r = vector_add(&v, &r); n += check_int(log, r, 0);
+	r = 30; r = vector_add(&v, &r); n += check_int(log, r, 0);
+	r = 40; r = vector_add(&v, &r); n += check_int(log, r, 0);
+	r = 50; r = vector_add(&v, &r); n += check_int(log, r, 0);
+
+	r = 10;
+
+	vector_for_each(&v, p){
+		n += check_int(log, r, *p);
+		r += 10;
+	}
+
+	return -n;
+}
+
+test_case(tc_vector_foreach, "vector_for_each");
