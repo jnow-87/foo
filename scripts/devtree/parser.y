@@ -50,33 +50,33 @@
 
 	// node validation
 	#define NODE_VALIDATE_DRIVER(node)({ \
-		char const *c; \
+		char const **name; \
 		\
 		\
 		if(node->compatible == 0x0 || *node->compatible == 0) \
 			PARSER_ERROR("undefined member \"compatible\"\n"); \
 		\
-		vector_for_each(&node_names, c){ \
-			if(strcmp(c, (node)->name) == 0) \
-				PARSER_ERROR("node with name \"%s\" already exists\n", c); \
+		vector_for_each(&node_names, name){ \
+			if(strcmp(*name, (node)->name) == 0) \
+				PARSER_ERROR("node with name \"%s\" already exists\n", *name); \
 		} \
 		\
-		vector_add(&node_names, (char*)(node)->name); \
+		vector_add(&node_names, &((node)->name)); \
 	})
 
 	#define NODE_VALIDATE_MEMORY(node)({ \
-		char const *c; \
+		char const **name; \
 		\
 		\
 		if(node->size == 0 && node->childs == 0x0) \
 			PARSER_ERROR("zero size for node \"%s\"\n", node->name); \
 		\
-		vector_for_each(&node_names, c){ \
-			if(strcmp(c, (node)->name) == 0) \
-				PARSER_ERROR("node with name \"%s\" already exists\n", c); \
+		vector_for_each(&node_names, name){ \
+			if(strcmp(*name, (node)->name) == 0) \
+				PARSER_ERROR("node with name \"%s\" already exists\n", *name); \
 		} \
 		\
-		vector_add(&node_names, (char*)(node)->name); \
+		vector_add(&node_names, &((node)->name)); \
 	})
 
 	// vector allocate
