@@ -110,7 +110,7 @@ int shell(char const *prompt, FILE *_stream){
 
 		/* process command line */
 		if(strsplit(buf, &argc, &argv) < 0){
-			SHELL_ERROR("error parsing line \"%s\"\n", strerror(errno));
+			SHELL_ERROR("error parsing line, %s\n", strerror(errno));
 			continue;
 		}
 
@@ -120,7 +120,7 @@ int shell(char const *prompt, FILE *_stream){
 			stackp = malloc(sizeof(stream_stack));
 
 			if(stackp == 0x0){
-				SHELL_ERROR("out of memory\n");
+				SHELL_ERROR("run %s failed, %s\n", argv[0], strerror(errno));
 				goto iter_clean;
 			}
 
@@ -134,7 +134,7 @@ int shell(char const *prompt, FILE *_stream){
 			stream = fopen(argv[0], "r");
 
 			if(stream == 0x0)
-				SHELL_ERROR("open script \"%s\" failed \"%s\"\n", argv[0], strerror(errno));
+				SHELL_ERROR("open script %s failed, %s\n", argv[0], strerror(errno));
 
 			// update globals
 			strncpy(shell_file, argv[0], CONFIG_FILE_MAX);
