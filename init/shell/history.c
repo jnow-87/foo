@@ -9,9 +9,11 @@
 
 #include <config/config.h>
 #include <sys/list.h>
+#include <sys/errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <shell/shell.h>
 #include <shell/history.h>
 #include <shell/cmd.h>
 
@@ -44,9 +46,13 @@ void history_add(char *line){
 
 	e = malloc(sizeof(el_t));
 
-	strcpy(e->line, line);
-	list_add_head(history, e);
-	rd = e;
+	if(e){
+		strcpy(e->line, line);
+		list_add_head(history, e);
+		rd = e;
+	}
+	else
+		SHELL_ERROR("cannot add to history, %s\n", strerror(errno));
 }
 
 void history_startover(void){

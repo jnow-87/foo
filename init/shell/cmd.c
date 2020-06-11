@@ -64,7 +64,7 @@ int cmd_exec(int argc, char **argv){
 	cmd = list_find_str(cmd_lst, name, argv[0]);
 
 	if(cmd == 0x0){
-		SHELL_ERROR("unknown command \"%s\"\n", argv[0]);
+		SHELL_ERROR("unknown command %s\n", argv[0]);
 		return -E_INVAL;
 	}
 

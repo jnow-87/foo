@@ -26,7 +26,8 @@ static int help(char const *prog_name, char const *msg, ...);
 static int exec(int argc, char **argv){
 	ssize_t i;
 	size_t n,
-		   bs;
+		   bs,
+		   decr;
 	ssize_t r;
 	int offset;
 	char *buf;
@@ -39,6 +40,7 @@ static int exec(int argc, char **argv){
 	buf = 0x0;
 	n = 0;
 	bs = 1;
+	decr = 1;
 	offset = 0;
 	binary = false;
 
@@ -95,8 +97,9 @@ static int exec(int argc, char **argv){
 	}
 
 	if(n == 0){
-		fprintf(stderr, "error: zero len\n");
-		goto end_1;
+		// setup infinite read loop
+		decr = 0;
+		n = 1;
 	}
 
 	// seek into file
@@ -117,7 +120,7 @@ static int exec(int argc, char **argv){
 	}
 
 	/* read */
-	for(; n>0; n--){
+	for(; n>0; n-=decr){
 		r = read(fd, buf, bs);
 
 		if(r <= 0 || errno)
