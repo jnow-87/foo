@@ -220,11 +220,10 @@ static void parse_dep_file(void *dmap, size_t len){
 		if(strrcmp(prereq, m - prereq, conf_header, confh_len)){
 			printf(" \\\n  %s", prereq);
 
-			if(file_map(prereq, &fd, (void*)&fmap, &size) != 0)
-				return;
-
-			parse_prereq(fmap, size);
-			file_unmap(fd, fmap, size);
+			if(file_map(prereq, &fd, (void*)&fmap, &size) == 0){
+				parse_prereq(fmap, size);
+				file_unmap(fd, fmap, size);
+			}
 		}
 
 		m++;
