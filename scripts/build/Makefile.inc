@@ -199,6 +199,7 @@ rm := $(QUTIL)rm -rf
 mkdir := $(QUTIL)mkdir -p
 touch := $(QUTIL)touch
 cp := $(QUTIL)cp
+mv := $(QUTIL)mv
 grep := $(QUTIL)grep
 sym_link := $(QUTIL)ln -s
 
@@ -293,7 +294,7 @@ ifeq ("$(use_config_sys)","y")
 
     fixdep := $(QBUILD)$(fixdep)
 
-configtools: do_basic := y
+configtools: configtools_unavailable := y
 configtools: $(config_tools)
 
 $(config_header): $(config) configtools
@@ -307,7 +308,7 @@ menuconfig: check_build_tools configtools
 prepare_deps: $(config_header)
   endif
 else
-  do_basic := y
+  configtools_unavailable := y
 endif
 
 # version header
