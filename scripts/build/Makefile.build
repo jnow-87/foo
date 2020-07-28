@@ -369,20 +369,22 @@ $(call pdebug1,generate obj.o rules)
 
 # obj.o
 # 	in case no target objects are specified, generate a dummy obj.o
-# 	the dummy is required to avoid invoking Makefiles to report and
-# 	due to missing obj.o
+# 	the dummy is required since other wise a missing obj.o would be
+# 	reported
 $(if $(loc_single_obj)$(loc_comp_obj)$(loc_dir_obj), \
-	$(call gen_rule_basic, compile_o_o,     $(loc_build_tree)/obj.o, $(loc_dir_obj) $(addprefix $(loc_build_tree)/,$(loc_single_obj) $(loc_comp_obj))), \
-	$(call gen_rule_basic, compile_o_empty, $(loc_build_tree)/obj.o,) \
+	$(call gen_rule_basic, compile_o_o, $(loc_build_tree)/obj.o, $(loc_dir_obj) $(addprefix $(loc_build_tree)/,$(loc_single_obj) $(loc_comp_obj))) \
+	, \
+	$(shell [ ! -e $(loc_build_tree)/obj.empty.c ] && { mkdir -p $(loc_build_tree); touch $(loc_build_tree)/obj.empty.c; }) \
+	$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/obj.o, $(loc_build_tree)/obj.empty.c,) \
 )
 
 # obj.host.o
-# 	in case no target objects are specified, generate a dummy obj.host.o
-# 	the dummy is required to avoid invoking Makefiles to report and	due
-# 	to missing obj.host.o
+# 	same dummy object as above but for the host
 $(if $(loc_single_hostobj)$(loc_comp_hostobj)$(loc_dir_hostobj), \
-	$(call gen_rule_basic, compile_o_o,     $(loc_build_tree)/obj.host.o, $(loc_dir_hostobj) $(addprefix $(loc_build_tree)/,$(loc_single_hostobj) $(loc_comp_hostobj)), host), \
-	$(call gen_rule_basic, compile_o_empty, $(loc_build_tree)/obj.host.o, , host) \
+	$(call gen_rule_basic, compile_o_o, $(loc_build_tree)/obj.host.o, $(loc_dir_hostobj) $(addprefix $(loc_build_tree)/,$(loc_single_hostobj) $(loc_comp_hostobj)), host) \
+	, \
+	$(shell [ ! -e $(loc_build_tree)/obj.empty.c ] && { mkdir -p $(loc_build_tree); touch $(loc_build_tree)/obj.empty.c; }) \
+	$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/obj.host.o, $(loc_build_tree)/obj.empty.c, host) \
 )
 
 # .o -> bin (corresponding pattern rules (<dir>/%: %.o) do not work, since '%:' matches everything)

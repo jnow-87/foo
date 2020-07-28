@@ -212,6 +212,10 @@ sym_link := $(QUTIL)ln -s
 .PHONY: all
 all: check_user_tools check_build_tools check_config dotclang versionheader
 
+# dummy target for non-existent command files
+%.cmd:
+	@:
+
 ifneq ("$(githooks_tree)","")
 # ensure githook links exists
 .PHONY: githooks
@@ -392,6 +396,7 @@ help-buildsys:
 	$(printf) "   \033[1m\033[4menvironment variables\033[0m\n"
 	$(printf) "\n"
 	$(printf) "         %25s\t%s\n" "V" "change verbosity, default = 0"
+	$(printf) "         %25s\t%s\n" "WHATCHANGED" "if set compile commands will indicate why they are rebuild"
 	$(printf) "         %25s\t%s\n" "BUILD_TREE" "define output directory"
 	$(printf) "         %25s\t%s\n" "SRC_TREE" "define source directory"
 	$(printf) "\n"

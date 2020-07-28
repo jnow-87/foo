@@ -11,6 +11,33 @@
 ### helper ###
 ##############
 
+# indicate if a command file has to be generated for <target> and/or <cmd>
+#
+# 	$(call cmd_file_required,<cmd>,<target>)
+define cmd_file_required
+$(findstring compile,$(strip $(1)))
+endef
+
+# update a command file ($@.cmd)
+# 	if <action> is "check" the command file is only touched if an update is required
+# 	otherwise <cmd> is written to the command file
+#
+# 	NOTE commands that contain '$' will deviate from the actual command such that
+# 		 '$' are missing
+#
+#	$(call update_cmd_file,<action>,<cmd>)
+define update_cmd_file
+	$(eval cmd=$(strip $(shell echo '$(2)' | sed -e "s/^@\(.*\)/\1/"))) \
+	$(if $(findstring check,$(1)),
+		$(eval old=$(shell cat $@.cmd 2>/dev/null)) \
+		$(eval added=$(filter-out $(old),$(cmd))) \
+		$(eval removed=$(filter-out $(cmd),$(old))) \
+		$(QUTIL) [ '$(cmd)' = "$$(cat $@.cmd 2>/dev/null)" ] || { echo [TOUCH] $@.cmd $(if $(WHATCHANGED),\(+: $(added), -: $(removed), u: $?\)); echo '$(cmd)' > $@.cmd; } \
+		, \
+		$(QBUILD)echo '$(cmd)' > $@.cmd \
+	)
+endef
+
 # generate a dependency file for the current target
 #
 #	$(call gen_dep_file,<compiler>,<compile-flags>)
@@ -27,8 +54,13 @@ endef
 #
 #	$(call compile_base,<compiler>,<args>)
 define compile_base
-	$(echo) [$(call upper_case,$(1))] $@
-	$($(1)) $(2)
+	$(if $(call is_prestage,stage0),
+		$(call update_cmd_file,check,$($(1)) $(2))
+		,
+		$(call update_cmd_file,build,$($(1)) $(2))
+		$(echo) [$(call upper_case,$(1))] $@ $(if $(WHATCHANGED),\($?\))
+		$($(1)) $(filter-out %.cmd,$(2))
+	)
 endef
 
 # compile function extending $(compile_base) by dependency file generation
@@ -102,25 +134,11 @@ define compile_o_o
 	$(call compile_base,$(1)cc,$(flags) $(filter %.o,$^) -o $@)
 endef
 
-define compile_o_empty
-	$(shell [ ! -e $@.c ] && (mkdir -p $$(dirname $@); touch $@.c))
-	$(call compile_base,$(1)cc,$($(1)cflags) $($(1)cppflags) $($(1)archflags) -c $@.c -o $@.tmp.o)
-	$(eval flags := $($(1)cflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
-	$(call compile_base,$(1)cc,$(flags) $@.tmp.o -o $@)
-endef
-
 else
 
 define compile_o_o
 	$(eval flags := $($(1)cxxflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
 	$(call compile_base,$(1)cxx,$(flags) $(filter %.o,$^) -o $@)
-endef
-
-define compile_o_empty
-	$(shell [ ! -e $@.cc ] && (mkdir -p $$(dirname $@); touch $@.cc))
-	$(call compile_base,$(1)cxx,$($(1)cxxflags) $($(1)cppflags) $($(1)archflags) -c $@.cc -o $@.tmp.o)
-	$(eval flags := $($(1)cxxflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
-	$(call compile_base,$(1)cxx,$(flags) $@.tmp.o -o $@)
 endef
 
 endif
