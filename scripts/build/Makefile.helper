@@ -7,7 +7,7 @@
 
 
 
-#####################
+######################
 ## helper variables ##
 ######################
 
@@ -131,16 +131,31 @@ endef
 #
 #	$(call gen_rule_basic,<cmd-name>,<target>,<dependencies>,<host-flag>
 define gen_rule_basic
+	$(if $(call cmd_file_required,$(1),$(2)), \
+		$(if $(call is_prestage,stage0), \
+			$(call gen_rule,$(1),$(2),$(3) force,$(4)) \
+			, \
+			$(call gen_rule,$(1),$(2),$(3) $(2).cmd,$(4)) \
+		) \
+		, \
+		$(call gen_rule,$(1),$(2),$(3),$(4)) \
+	)
+endef
+
+# generate basic rule
+#
+#	$(call gen_rule,<cmd-name>,<target>,<dependencies>,<host-flag>
+define gen_rule
 	$(eval \
 		$(call pdebug2,    generate rule:)
 		$(call pdebug2,        $(strip $(2)): $(strip $(3)))
-		$(if $(1), \
+		$(if $(strip $(1)), \
 			$(call pdebug2,            $(mkdir) $$(@D)) \
 			$(call pdebug2,            $$(call $(strip $(1)),$(strip $(4)))) \
 		)
 		$(call pdebug2)
 
-		$(if $(1),
+		$(if $(strip $(1)),
 			$(eval \
 				$(strip $(2)): $(strip $(3))
 					$(mkdir) $$(@D)

@@ -7,38 +7,72 @@
 
 
 
+include $(scripts_dir)/Makefile.helper
+
 ######################################
 ###   first stage 'make prepare'   ### 
 ######################################
 
-# invoke 'make prepare_deps' if it has not been done already
+
+# check if prestage <stage> is currently executed
+#
+#	$(call is_prestage,<stage>)
+define is_prestage
+$(findstring $(1),$(PRESTAGE))
+endef
+
+# execute <cmd> during all stages except during <stages>
+#
+#	$(call skip_prestage,<stages>,<cmd>)
+define skip_prestage
+    $(if $(findstring $(PRESTAGE),$(1)),@:,$(2))
+endef
+
+# call make with the prestage target <stage-target>, setting the following
+# environment variables to indicate prestage execution
+# 	EXEC_PRESTAGE
+# 	PRESTAGE
+#
+#	$(call prestage,<stage-name>,<targets>)
+define prestage
+  $(call pdebug0,prestage $(1) $(2)) \
+  \
+  $(eval r := $(shell \
+      EXEC_PRESTAGE=$(prestage_key) \
+      PRESTAGE=$(1) \
+      $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) $(2) 1>&2; \
+      echo $$?
+    ) \
+  ) \
+  \
+  $(if $(findstring q,$(MFLAGS)),, \
+    $(if $(filter-out 0,$(r)),$(error error while executing sub-make $(1) (targets: $(2))),) \
+  )
+endef
+
+# invoke make prestages if it has not been done already
 # use a key that identifies the local project, allowing to nest
 # projects that use this set of makefiles
-prepare_done_key := $(shell basename $$PWD)
+prestage_key := $(shell basename $$PWD)
 
-ifneq ($(PREPARE_DONE),$(prepare_done_key))
+ifneq ($(EXEC_PRESTAGE),$(prestage_key))
   # ensure MAKECMDGOALS is not empty, otherwise the following checks would not work
-  # and prepare_deps would not be executed if no target is specified
+  # and prestages would not be executed if no target is specified
   ifeq ($(MAKECMDGOALS),)
     MAKECMDGOALS := all
   endif
 
-  # prevent prepare_deps if either of the following targets is called
-  # 	%clean%
-  # 	defconfig%
-  # 	menuconfig
-  ifneq ($(filter-out menuconfig,$(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS))))),)
-    # check if clean targets are mixed with other targets that require prepare_deps
-    ifneq ($(filter clean%,$(MAKECMDGOALS))$(filter %clean,$(MAKECMDGOALS)),)
+  # only call prestages if none of the following targets is called
+  ifneq ($(filter-out help% menuconfig defconfig% clean% %clean,$(MAKECMDGOALS)),)
+    # check if clean targets are mixed with other targets that require prestages to be executed
+    ifneq ($(filter clean% %clean,$(MAKECMDGOALS)),)
       $(error Mixing clean with other targets is not supported by the build system)
     endif
 
-    r := $(shell PREPARE_DONE=$(prepare_done_key) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) prepare_deps 1>&2; r=$$?; if [ "$$(echo $(MFLAGS) | grep 'q')" != "" ]; then echo 0; else echo $$r; fi)
+    $(call prestage,stage0,prepare_deps $(MAKECMDGOALS))
+    $(call prestage,stage1,prepare_deps)
 
-    # stop in case of an error during 'make prepare_deps'
-    ifneq ($(r),0)
-      $(error error while executing prepare_deps sub-make)
-    endif
+    $(call pdebug0,prestage done)
   endif
 endif
 
@@ -47,7 +81,6 @@ endif
 ###   second stage 'make targets'   ###
 #######################################
 
-include $(scripts_dir)/Makefile.helper
 include $(scripts_dir)/Makefile.compile
 
 
@@ -100,10 +133,8 @@ endif
 
 # include config file if defined
 ifneq ("$(config)","")
-  # warn if $(config) does not exist and none of the following targets is called
-  # 	defconfig%
-  # 	menuconfig
-  ifneq ($(filter-out menuconfig,$(filter-out defconfig%,$(filter-out clean%,$(filter-out %clean,$(MAKECMDGOALS))))),)
+  # warn if $(config) does not exist and more than the following targets are called
+  ifneq ($(filter-out menuconfig defconfig% clean% %clean,$(MAKECMDGOALS)),)
     ifeq ("$(wildcard $(config))","")
       $(warning $(config) does not exist, run $$make menuconfig or $$make defconfig-* first)
     endif
@@ -210,7 +241,10 @@ sym_link := $(QUTIL)ln -s
 
 # fake target as default target
 .PHONY: all
-all: check_user_tools check_build_tools check_config dotclang versionheader
+all: check_user_tools check_build_tools check_config dotclang
+
+# target used to force recipe execution of dependent targets
+.PHONY: force
 
 # dummy target for non-existent command files
 %.cmd:
@@ -280,7 +314,7 @@ ifneq ($(shell test -e $(config) && echo $(config)),$(config))
 endif
 
 # include dependency files
-include $(shell find $(build_tree)/ -name \*.d 2>/dev/null)
+include $(shell find $(build_tree)/ -type f -name \*.d 2>/dev/null)
 
 # config system targets
 ifeq ("$(use_config_sys)","y")
@@ -305,11 +339,13 @@ $(config_header): $(config) configtools
 	$(mkdir) $(dir $(config_header))
 	$(QBUILD) KCONFIG_CONFIG=$(config) $(confheader) $(config_ftype) $(dir $(config_header))fixdep $(config_header)
 
+all: $(config_header)
+prepare_deps: $(config_header)
+
 .PHONY: menuconfig
 menuconfig: check_build_tools configtools
 	$(QBUILD) KCONFIG_CONFIG=$(config) $(mconfig) $(config_ftype)
 
-prepare_deps: $(config_header)
   endif
 else
   configtools_unavailable := y
@@ -321,6 +357,8 @@ version_header := $(build_tree)/version.h
 .PHONY: versionheader
 versionheader:
 	$(versionheader) $(version_header)
+
+all: versionheader
 
 # default config targets
 ifneq ("$(config_tree)","")

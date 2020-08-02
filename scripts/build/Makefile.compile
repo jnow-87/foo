@@ -39,14 +39,20 @@ define update_cmd_file
 endef
 
 # generate a dependency file for the current target
+# 	dependency file is not generated while executing prestage stage0
+# 	fixdep is only applied if configtools are configured to be used
+# 	and built already
 #
 #	$(call gen_dep_file,<compiler>,<compile-flags>)
 define gen_dep_file
-	$($(1)) $(2) -MM -MF $@.d -MP -MT $@ $<
-	$(if $(configtools_unavailable), \
-		,
-		$(mv) $@.d $@.d.tmp
-		$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
+	$(if $(call is_prestage,stage0), \
+		, \
+		$($(1)) $(filter-out %.cmd,$(2)) -MM -MF $@.d -MP -MT $@ $<
+		$(if $(configtools_unavailable), \
+			,
+			$(mv) $@.d $@.d.tmp
+			$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
+		) \
 	)
 endef
 
@@ -156,6 +162,16 @@ define compile_bin_o
 	$(compile_base,($(1)cxx $($(1)archflags) $(filter %.o,$^) -o $@ $($(1)ldlibs))
 endef
 endif
+
+# execute <script> during all stages except <stages>
+#
+#	$(call compile_file,<script>,<stages>
+define compile_file
+	$(call skip_prestage,$(2),
+		$(mkdir) $(dir $@)
+		$(QBUILD)$(1)
+	)
+endef
 
 define cmd_defconfig
 	$(echo) [CP] $< '->' $(config)
