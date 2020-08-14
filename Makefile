@@ -241,7 +241,7 @@ memlayout: $(memlayout)
 
 .PHONY: check_memlayout
 check_memlayout: $(memlayout)
-	$(QUTIL)$(memlayout) --check
+	$(call cmd_run_script,$(memlayout) --check)
 
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)

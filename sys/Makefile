@@ -38,21 +38,20 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree
 ####
 
 devtree := $(build_tree)/scripts/devtree/devtree
+devtree_make := $(loc_build_tree)/devicetree.make
+devtree_header := $(loc_build_tree)/devicetree.h
+devtree_src := $(loc_build_tree)/devicetree.c
 
-prepare_deps: $(loc_build_tree)/devicetree.make $(loc_build_tree)/devicetree.h
+prepare_deps: $(devtree_header) $(devtree_make)
 
+$(devtree_src): $(CONFIG_DEVICE_TREE) $(devtree)
+	$(call compile_file,$(devtree) --format=c --sections=all -o $@ $<)
 
-$(loc_build_tree)/devicetree.c: $(CONFIG_DEVICE_TREE) $(devtree)
-	$(mkdir) $(dir $@)
-	$(QBUILD)$(devtree) --format=c --sections=all -o $@ $<
+$(devtree_header): $(CONFIG_DEVICE_TREE) $(devtree)
+	$(call compile_file,$(devtree) --format=header --sections=memory -o $@ $<)
 
-$(loc_build_tree)/devicetree.h: $(CONFIG_DEVICE_TREE) $(devtree)
-	$(mkdir) $(dir $@)
-	$(QBUILD)$(devtree) --format=header --sections=memory -o $@ $<
-
-$(loc_build_tree)/devicetree.make: $(CONFIG_DEVICE_TREE) $(devtree)
-	$(mkdir) $(dir $@)
-	$(QBUILD)$(devtree) --format=make --sections=memory -o $@ $<
+$(devtree_make): $(CONFIG_DEVICE_TREE) $(devtree)
+	$(call compile_file,$(devtree) --format=make --sections=memory -o $@ $<)
 
 
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,      $(loc_build_tree)/devicetree.c,)

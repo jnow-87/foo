@@ -22,4 +22,4 @@ main-hostcflags += -fno-builtin
 # testing rules
 .PHONY: test
 test: $(loc_build_tree)/main
-	$< $(build_tree)/testing/result.log
+	$(call cmd_run_script,$< $(build_tree)/testing/result.log)
