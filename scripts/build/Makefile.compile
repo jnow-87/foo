@@ -163,13 +163,22 @@ define compile_bin_o
 endef
 endif
 
-# execute <script> during all stages except <stages>
+# execute <script> during all stages except stage0
 #
-#	$(call compile_file,<script>,<stages>
-define compile_file
-	$(call skip_prestage,$(2),
-		$(mkdir) $(dir $@)
+#	$(call cmd_run_script,<script>
+define cmd_run_script
+	$(call skip_prestage,stage0,
 		$(QBUILD)$(1)
+	)
+endef
+
+# execute <script> during all stages except stage0
+#
+#	$(call compile_file,<script>
+define compile_file
+	$(call cmd_run_script,
+		$(mkdir) $(dir $@)
+		$(QUTIL)$(1)
 	)
 endef
 

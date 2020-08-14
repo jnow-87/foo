@@ -63,7 +63,7 @@ ifneq ($(EXEC_PRESTAGE),$(prestage_key))
   endif
 
   # only call prestages if none of the following targets is called
-  ifneq ($(filter-out help% menuconfig defconfig% clean% %clean,$(MAKECMDGOALS)),)
+  ifneq ($(filter-out help% menuconfig defconfig% clean% %clean githooks check_coding_style check_build_tools check_user_tools,$(MAKECMDGOALS)),)
     # check if clean targets are mixed with other targets that require prestages to be executed
     ifneq ($(filter clean% %clean,$(MAKECMDGOALS)),)
       $(error Mixing clean with other targets is not supported by the build system)
@@ -255,17 +255,19 @@ ifneq ("$(githooks_tree)","")
 .PHONY: githooks
 .SILENT: githooks
 githooks:
-	repo_root=$$(git rev-parse --show-toplevel); \
-	\
-	for hook in style mantis util_print pre-commit post-commit; do \
-	  test -e "$(githooks_tree)/$${hook}" || { echo $(githooks_tree)/$${hook} does not exist; exit 1; }; \
-	  ln -frs $(githooks_tree)/$${hook} $${repo_root}/.git/hooks/$${hook}; \
-	done
+	$(call cmd_run_script, \
+		repo_root=$$(git rev-parse --show-toplevel); \
+		\
+		for hook in style mantis util_print pre-commit post-commit; do \
+		  test -e "$(githooks_tree)/$${hook}" || { echo $(githooks_tree)/$${hook} does not exist; exit 1; }; \
+		  ln -frs $(githooks_tree)/$${hook} $${repo_root}/.git/hooks/$${hook}; \
+		done \
+	)
 
 # check coding style
 .PHONY: check_coding_style
 check_coding_style:
-	$(QBUILD) ${githooks_tree}/pre-commit $(shell find -type f | grep -v -e '\./\.git/' -e '\./build/')
+	$(call cmd_run_script,${githooks_tree}/pre-commit $(shell find -type f | grep -v -e '\./\.git/' -e '\./build/'))
 
 all: githooks
 endif
@@ -285,26 +287,30 @@ $(foreach tool,$(all_build_tools), \
 
 .PHONY: check_build_tools
 check_build_tools:
-	@r=0; \
-	for tool in $(build_tools); do \
-		id=$$(echo $${tool} | cut -d '=' -f 1); \
-		val=$$(echo $${tool} | cut -d '=' -f 2); \
-		test -n "$$(which $${val})" || (echo $(check_build_tools_error); exit 1); \
-		test $${?} -eq 1 && r=1; \
-	done; \
-	exit $${r}
+	$(call cmd_run_script, \
+		@r=0; \
+		for tool in $(build_tools); do \
+			id=$$(echo $${tool} | cut -d '=' -f 1); \
+			val=$$(echo $${tool} | cut -d '=' -f 2); \
+			test -n "$$(which $${val})" || (echo $(check_build_tools_error); exit 1); \
+			test $${?} -eq 1 && r=1; \
+		done; \
+		exit $${r}; \
+	)
 
 # check if all user tools are available
 check_user_tools_error := "can't find \"$${tool}\", ensure it is installed"
 
 .PHONY: check_user_tools
 check_user_tools:
-	@r=0; \
-	for tool in $(all_user_tools); do \
-		test -n "$$(which $${tool})" || (echo $(check_user_tools_error); exit 1); \
-		test $${?} -eq 1 && r=1; \
-	done; \
-	exit $${r}
+	$(call cmd_run_script, \
+		@r=0; \
+		for tool in $(all_user_tools); do \
+			test -n "$$(which $${tool})" || (echo $(check_user_tools_error); exit 1); \
+			test $${?} -eq 1 && r=1; \
+		done; \
+		exit $${r} \
+	)
 
 # check if $(config) file is present
 .PHONY: check_config
@@ -336,15 +342,14 @@ configtools: configtools_unavailable := y
 configtools: $(config_tools)
 
 $(config_header): $(config) configtools
-	$(mkdir) $(dir $(config_header))
-	$(QBUILD) KCONFIG_CONFIG=$(config) $(confheader) $(config_ftype) $(dir $(config_header))fixdep $(config_header)
+	$(call compile_file,KCONFIG_CONFIG=$(config) $(confheader) $(config_ftype) $(dir $(config_header))fixdep $(config_header))
 
 all: $(config_header)
 prepare_deps: $(config_header)
 
 .PHONY: menuconfig
 menuconfig: check_build_tools configtools
-	$(QBUILD) KCONFIG_CONFIG=$(config) $(mconfig) $(config_ftype)
+	$(call cmd_run_script,KCONFIG_CONFIG=$(config) $(mconfig) $(config_ftype))
 
   endif
 else
@@ -356,7 +361,7 @@ version_header := $(build_tree)/version.h
 
 .PHONY: versionheader
 versionheader:
-	$(versionheader) $(version_header)
+	$(call cmd_run_script,$(versionheader) $(version_header))
 
 all: versionheader
 
@@ -372,7 +377,7 @@ endif
 # update .clang file
 .PHONY: dotclang
 dotclang:
-	$(echo) $(cppflags) $(hostcppflags) | grep -o -e "-I[ \t]*[a-zA-Z0-9_/\.]*" > .clang || true
+	$(call cmd_run_script,$(echo) $(cppflags) $(hostcppflags) | grep -o -e "-I[ \t]*[a-zA-Z0-9_/\.]*" > .clang || true)
 
 # help for the build system
 help-buildsys:
