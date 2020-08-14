@@ -19,7 +19,7 @@ header=$1
 tag=$(git describe --abbrev=0 --tags 2>/dev/null || echo "-")
 
 # get current git hash
-hash=$(git rev-parse HEAD)
+hash=$(git rev-parse HEAD 2>/dev/null || echo "-")
 
 # create target directory
 mkdir -p $(dirname ${header})
