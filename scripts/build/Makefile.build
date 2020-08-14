@@ -403,10 +403,11 @@ $(call pdebug1,generate bin rules)
 ###   cleanup   ###
 ###################
 
-# clear target flag variables (<target>-<flag>) to name collisions with targets with the same stem but in a different directory
+# clear target flag variables (<target>-<flag>, <target>-<flag>-y) to name collisions with targets with the same stem but in a different directory
 $(foreach tgt,$(loc_all_tgt), \
 	$(foreach flag,$(all_flags), \
 		$(eval $(call hostbasename,$(tgt))-$(flag) :=) \
+		$(eval $(call hostbasename,$(tgt))-$(flag)-y :=) \
 	) \
 )
 
