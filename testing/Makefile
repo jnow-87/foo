@@ -9,11 +9,11 @@
 
 hostbin-y := main
 
-
 main-y := main.o string.o vfprintf.o list.o list1.o queue.o stack.o memblock.o vector.o sys/
 
 main-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 main-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
+
 
 main-hostcppflags += -I$(src_tree) -I$(src_tree)/include -I/usr/include
 main-hostcflags += -fno-builtin

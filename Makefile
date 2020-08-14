@@ -27,10 +27,7 @@ githooks_tree := .githooks
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := sys arch kernel driver lib init testing scripts/memlayout scripts/arch scripts/devtree
-
-kernel_name := kimg.elf
-lib_name := libsys.a
+src_dirs := sys arch kernel lib init testing scripts/memlayout scripts/arch scripts/devtree
 
 
 ####
@@ -181,12 +178,10 @@ gperfflags := \
 ## brickos specific variables
 ####
 
-kernel := $(build_tree)/$(kernel_name)
-kernel_objs := kernel/obj.o arch/obj.o driver/obj.o sys/obj.o
-libsys := $(build_tree)/lib/$(lib_name)
-libsys_objs := lib/obj.o sys/libsys.o arch/libsys.o
-
-sysroot := sysroot
+kernel := $(build_tree)/kernel/kimg.elf
+init := $(build_tree)/init/init.elf
+libsys := $(build_tree)/lib/libsys.a
+sysroot := $(build_tree)/sysroot
 recent := recent
 
 memlayout := $(build_tree)/scripts/memlayout/memlayout
@@ -200,39 +195,6 @@ sysroot_create := scripts/sysroot/create.sh
 ####
 ## build
 ####
-
-# kernel targets
-kernel: cppflags += -DBUILD_KERNEL
-kernel: check_config check_memlayout versionheader $(kernel)
-kernel_deps: scripts/linker/kernel_$(CONFIG_ARCH).lds
-
-$(kernel): ldlibs += $(ldlibs-kernel-arch)
-$(kernel): ldlibs += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
-$(kernel): ldlibs += -lgcc
-$(kernel): kernel_deps $(addprefix $(build_tree)/, $(kernel_objs))
-	$(call compile_bin_o)
-
-# init targets
-init: cppflags += -DBUILD_INIT
-init: check_config libsys $(init)
-init_deps: scripts/linker/app_$(CONFIG_ARCH).lds
-
-$(init): ldlibs += -Lscripts/linker -Tapp_$(CONFIG_ARCH).lds
-$(init): init_deps
-
-# libsys targets
-libsys: cppflags += -DBUILD_LIBSYS
-libsys: check_config $(libsys)
-libsys_deps:
-
-$(libsys):
-$(libsys): libsys_deps $(addprefix $(build_tree)/, $(libsys_objs))
-	$(call compile_lib_o)
-
-# sysroot targets
-sysroot: kernel libsys init
-	$(sym_link) -f $(build_tree) $(recent); test ! $$? -eq 0 && echo "\033[31munable to create symbolic link \"recent\",\n\033[0m"; exit 0
-	$(QUTIL)$(sysroot_create) $(build_tree) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(kernel_name) $(lib_name)
 
 # memlayout
 .PHONY: memlayout
@@ -255,23 +217,21 @@ ifeq ($(CONFIG_BUILD_DEBUG),y)
   hostldlibs += -g
 endif
 
-all: sysroot $(lib) $(hostlib) $(bin) $(hostbin)
+all: check_config check_memlayout $(lib) $(hostlib) $(bin) $(hostbin)
+	$(call cmd_run_script, \
+		@[ -e $(recent) ] && rm $(recent); \
+		ln -s $(build_tree) $(recent); \
+		[ ! $$? -eq 0 ] && echo -e '\033[31munable to create symbolic link "recent"\n\033[0m'; \
+		$(sysroot_create) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(kernel) $(libsys) \
+	)
 
 ####
 ## cleanup
 ####
 
 .PHONY: clean
-clean: clean-kernel clean-sysroot clean-init
-	$(rm) $(filter-out $(patsubst %/,%,$(dir $(build_tree)/$(scripts_dir))),$(wildcard $(build_tree)/*))
-
-.PHONY: clean-kernel
-clean-kernel:
-	$(rm) $(build_tree)/kernel $(build_tree)/driver $(build_tree)/sys $(build_tree)/lib $(build_tree)/arch $(kernel) $(recent)
-
-.PHONY: clean-init
-clean-init:
-	$(rm) $(build_tree)/init
+clean: clean-sysroot
+	$(rm) $(filter-out $(patsubst %/,%,$(dir $(build_tree)/$(scripts_dir))),$(wildcard $(build_tree)/*)) $(recent)
 
 .PHONY: clean-scripts
 clean-scripts:
@@ -279,7 +239,7 @@ clean-scripts:
 
 .PHONY: clean-sysroot
 clean-sysroot:
-	$(rm) $(build_tree)/$(sysroot)
+	$(rm) $(sysroot)
 
 .PHONY: distclean
 distclean:

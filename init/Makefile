@@ -10,19 +10,26 @@
 bin-y := init.elf
 
 
-init-y := main.o shell/
+init-y := main.o shell/ scripts/linker/app_$(CONFIG_ARCH).lds
 
 # ensure init is rebuild if libsys is updated
-init-y += $(build_tree)/lib/$(lib_name)
+init-y += $(build_tree)/lib/libsys.a
 
 
-# additional init linker options
-init-cppflags := -I"include/lib" -I$(loc_src_tree) -I$(loc_build_tree)
-init-ldlibs := \
+####
+# flags
+####
+
+init-cppflags-y += \
+	-I"include/lib" \
+	-I$(loc_src_tree) \
+	-I$(loc_build_tree) \
+	-DBUILD_INIT
+
+init-ldlibs-y += \
 	$(ldlibs-app-arch) \
 	-T$(loc_src_tree)/lists.lds \
 	-lsys \
-	-lgcc
-
-# init binary name required by main Makefile
-init := $(loc_build_tree)/init.elf
+	-lgcc \
+	-Lscripts/linker \
+	-Tapp_$(CONFIG_ARCH).lds

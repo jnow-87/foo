@@ -7,23 +7,31 @@
 
 
 
-obj-y := init.o kernel.o driver.o panic.o critsec.o task.o sched/ fs/ memory/ binloader/
+bin-y := kimg.elf
 
-obj-$(CONFIG_KERNEL_SYSCALL) += syscall.o
-obj-$(CONFIG_KERNEL_TIMER) += timer.o
-obj-$(CONFIG_KERNEL_SIGNAL) += ksignal.o
-obj-$(CONFIG_KERNEL_STAT) += stat.o
-obj-$(CONFIG_KERNEL_TEST) += test.o
-obj-$(CONFIG_KERNEL_PRINTF) += kprintf.o
-obj-$(CONFIG_SC_SIGNAL) += usignal.o
-obj-$(CONFIG_KERNEL_IPI) += ipi.o
-obj-$(CONFIG_KERNEL_INTTASK) += inttask.o
-obj-$(CONFIG_KERNEL_NET) += net/
+kimg-y := init.o kernel.o driver.o panic.o critsec.o task.o sched/ fs/ memory/ binloader/ arch/ driver/ sys/ scripts/linker/kernel_$(CONFIG_ARCH).lds
+
+kimg-$(CONFIG_KERNEL_SYSCALL) += syscall.o
+kimg-$(CONFIG_KERNEL_TIMER) += timer.o
+kimg-$(CONFIG_KERNEL_SIGNAL) += ksignal.o
+kimg-$(CONFIG_KERNEL_STAT) += stat.o
+kimg-$(CONFIG_KERNEL_TEST) += test.o
+kimg-$(CONFIG_KERNEL_PRINTF) += kprintf.o
+kimg-$(CONFIG_SC_SIGNAL) += usignal.o
+kimg-$(CONFIG_KERNEL_IPI) += ipi.o
+kimg-$(CONFIG_KERNEL_INTTASK) += inttask.o
+kimg-$(CONFIG_KERNEL_NET) += net/
 
 
 ####
 # flags
 ####
+
+kimg-cppflags-y += -DBUILD_KERNEL
+
+kimg-ldlibs-y += $(ldlibs-kernel-arch)
+kimg-ldlibs-y += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
+kimg-ldlibs-y += -lgcc
 
 ## debug messages
 init-cppflags-$(CONFIG_KERNEL_MSG_INIT) := -DBUILD_KERNEL_MSG_WARN \

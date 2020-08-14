@@ -7,20 +7,21 @@
 
 
 
+# kernel
 obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
 
 obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o
 obj-$(CONFIG_IOVERFLOW_DET) += iovfl.o
 
-
+# libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := core_lib.o lib.o syscall_lib.o atomic.o
+libsys-y := core.libsys.o lib.o syscall.libsys.o atomic.libsys.o
 
 
 # custom rules to generate separate object files for src files that are reuired by kernel and libsys
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree)/%.c,)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_tree)/%.c,)
 
 
 ####
@@ -48,8 +49,7 @@ $(lds_plugin_app_file): $(lds_plugin_script)
 ## combined dependencies
 avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
 
-kernel_deps: avr_lds
-init_deps: avr_lds
+prepare_deps: avr_lds
 
 
 ####
@@ -59,9 +59,6 @@ init_deps: avr_lds
 avrconfig := $(build_tree)/scripts/arch/avr/config/avrconfig
 avrconfig_header := $(dir $(config_header))avrconfig.h
 
-kernel_deps: $(avrconfig_header)
-init_deps: $(avrconfig_header)
-libsys_deps: $(avrconfig_header)
 prepare_deps: $(avrconfig_header)
 
 $(avrconfig_header): $(avrconfig)
@@ -94,7 +91,7 @@ ldlibs-kernel-arch := \
 	-T$(lds_memory_file) \
 	-Wl,--section-start=.text=$(DEVTREE_KERNEL_FLASH_BASE) \
 	-Wl,--section-start=.data=$(DEVTREE_KERNEL_DATA_BASE) \
-	-Wl,-Map=$(build_tree)/$(basename $(kernel_name)).map,--cref
+	-Wl,-Map=$(build_tree)/kernel.map,--cref
 
 ## init application flags
 ldlibs-app-arch := \

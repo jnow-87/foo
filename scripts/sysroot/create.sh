@@ -30,11 +30,10 @@ function copy(){
 }
 
 
-build_dir=$(strip_slash $1)
-sysroot=${build_dir}/$(strip_slash $2)
-arch_hdr=$3
-kernel_name=$4
-lib_name=$5
+sysroot=$(strip_slash $1)
+arch_hdr=$2
+kernel_name=$3
+lib_name=$4
 
 sysroot_kernel="${sysroot}"
 sysroot_lib="${sysroot}/lib"
@@ -45,8 +44,8 @@ sysroot_linker="${sysroot}"
 echo "updating sysroot \"${sysroot}\""
 
 # populate sysroot
-copy "${build_dir}/${kernel_name}"		"${sysroot_kernel}"
-copy "${build_dir}/lib/${lib_name}"		"${sysroot_lib}"
+copy "${kernel_name}"					"${sysroot_kernel}"
+copy "${lib_name}"						"${sysroot_lib}"
 copy "recent/config/"					"${sysroot_inc}"
 copy "include/sys/"						"${sysroot_inc}"
 copy "include/lib/"						"${sysroot_inc}"
