@@ -9,7 +9,7 @@
 
 hostbin-y := avrconfig
 
-
 avrconfig-y := main.o watchdog.o initbin.o
+
 
 watchdog-hostcppflags += -I"include/"

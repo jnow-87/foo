@@ -13,9 +13,10 @@ hostbin-y := devtree
 devtree-y := main.o options.o export.o lexer.lex.o parser.tab.o $(build_tree)/sys/vector.o $(build_tree)/sys/list2.o
 
 ## additional dependencies for generated headers
-$(loc_build_tree)/parser.tab.host.o: $(loc_build_tree)/lexer.lex.h
+$(loc_build_tree)/parser.tab.host.o: $(loc_build_tree)/lexer.lex.host.o
 $(loc_build_tree)/lexer.lex.host.o: $(loc_build_tree)/parser.tab.c
 $(loc_build_tree)/main.host.o: $(loc_build_tree)/parser.tab.c
+
 
 hostcppflags-y := \
 	-I$(src_tree) \

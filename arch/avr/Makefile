@@ -7,20 +7,21 @@
 
 
 
+# kernel
 obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
 
 obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o
 obj-$(CONFIG_IOVERFLOW_DET) += iovfl.o
 
-
+# libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := core_lib.o lib.o syscall_lib.o atomic.o
+libsys-y := core.libsys.o lib.o syscall.libsys.o atomic.libsys.o
 
 
 # custom rules to generate separate object files for src files that are reuired by kernel and libsys
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%_lib.o,    $(loc_src_tree)/%.c,)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_tree)/%.c,)
 
 
 ####
@@ -32,8 +33,7 @@ lds_memory_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_memory
 lds_memory_file := $(loc_build_tree)/avr_memory.lds
 
 $(lds_memory_file): $(lds_memory_script)
-	$(mkdir) $(dir $(lds_memory_file))
-	$(QBUILD)$(lds_memory_script) $(lds_memory_file)
+	$(call compile_file,$(lds_memory_script) $(lds_memory_file))
 
 ## plugin
 lds_plugin_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_plugin
@@ -41,18 +41,15 @@ lds_plugin_kernel_file := $(loc_build_tree)/avr_plugin_kernel.lds
 lds_plugin_app_file := $(loc_build_tree)/avr_plugin_app.lds
 
 $(lds_plugin_kernel_file): $(lds_plugin_script)
-	$(mkdir) $(dir $(lds_plugin_kernel_file))
-	$(QBUILD)$(lds_plugin_script) $(lds_plugin_kernel_file) kernel
+	$(call compile_file,$(lds_plugin_script) $(lds_plugin_kernel_file) kernel)
 
 $(lds_plugin_app_file): $(lds_plugin_script)
-	$(mkdir) $(dir $(lds_plugin_app_file))
-	$(QBUILD)$(lds_plugin_script) $(lds_plugin_app_file) app
+	$(call compile_file,$(lds_plugin_script) $(lds_plugin_app_file) app)
 
 ## combined dependencies
 avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
 
-kernel_deps: avr_lds
-init_deps: avr_lds
+prepare_deps: avr_lds
 
 
 ####
@@ -62,14 +59,10 @@ init_deps: avr_lds
 avrconfig := $(build_tree)/scripts/arch/avr/config/avrconfig
 avrconfig_header := $(dir $(config_header))avrconfig.h
 
-kernel_deps: $(avrconfig_header)
-init_deps: $(avrconfig_header)
-libsys_deps: $(avrconfig_header)
 prepare_deps: $(avrconfig_header)
 
 $(avrconfig_header): $(avrconfig)
-	$(mkdir) $(dir $@)
-	$(QUTIL)$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v)
+	$(call compile_file,$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v))
 
 
 ####
@@ -98,7 +91,7 @@ ldlibs-kernel-arch := \
 	-T$(lds_memory_file) \
 	-Wl,--section-start=.text=$(DEVTREE_KERNEL_FLASH_BASE) \
 	-Wl,--section-start=.data=$(DEVTREE_KERNEL_DATA_BASE) \
-	-Wl,-Map=$(build_tree)/$(basename $(kernel_name)).map,--cref
+	-Wl,-Map=$(build_tree)/kernel.map,--cref
 
 ## init application flags
 ldlibs-app-arch := \
@@ -139,18 +132,19 @@ endef
 .PHONY: debug
 debug:
 ifneq ($(findstring debugwire,$(CONFIG_AVR_PROG_DEBUG_ARGS)),)
-	$(call yesno,use debug-wire for debugging?)
-	$(call term, \
-		echo -e '\033[35menabling debug-wire on the target...\033[0m'; \
-		$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U hfuse:w:0x9f:m; \
-		$(CONFIG_AVR_DEBUGGER) -R -P $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_DEBUG_ARGS) :1212; \
-		echo -e '\n\n\033[35mdisabling debug-wire on the target...\033[0m'; \
-		$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE); \
-		$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) \
-		| grep -C 1000 'Waiting for connection' \
-	, &)
+	$(call cmd_run_script,
+		$(call yesno,use debug-wire for debugging?)
+		$(call term, \
+			echo -e '\033[35menabling debug-wire on the target...\033[0m'; \
+			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U hfuse:w:0x9f:m; \
+			$(CONFIG_AVR_DEBUGGER) -R -P $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_DEBUG_ARGS) :1212; \
+			echo -e '\n\n\033[35mdisabling debug-wire on the target...\033[0m'; \
+			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE); \
+			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) | grep -C 1000 'Waiting for connection' \
+		, &)
+	)
 else
-	$(call term, $(CONFIG_AVR_DEBUGGER) -R -P $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_DEBUG_ARGS) :1212 | grep -C 1000 'Waiting for connection', &)
+	$(call cmd_run_script,$(call term, $(CONFIG_AVR_DEBUGGER) -R -P $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_DEBUG_ARGS) :1212, &))
 endif
 
 ####
@@ -160,21 +154,23 @@ endif
 ## fuses
 .PHONY: fuse
 fuse:
-	$(CONFIG_AVR_FUSER) $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_TYPE) $(CONFIG_AVR_PROG_PORT)
+	$(call cmd_run_script,$(CONFIG_AVR_FUSER) $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_TYPE) $(CONFIG_AVR_PROG_PORT))
 
 ## flash
 flash_hex := $(loc_build_tree)/flash.hex
 
 .PHONY: flash
 flash: $(flash_hex)
-	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$<
+	$(call cmd_run_script,$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:w:$<)
 
 $(flash_hex): all
-	$(echo) generating $@
-	$(QBUILD)avr-objcopy -j .data -j .text -O ihex $(kernel) $(kernel).hex
-	$(QBUILD)avr-objcopy -j .data -j .text -O ihex $(init) $(init).hex
-	$(QBUILD)sed -i "$$ d" $(kernel).hex
-	$(QBUILD)cat $(kernel).hex $(init).hex > $@
+	$(call cmd_run_script, \
+		echo generating $@; \
+		avr-objcopy -j .data -j .text -O ihex $(kernel) $(kernel).hex; \
+		avr-objcopy -j .data -j .text -O ihex $(init) $(init).hex; \
+		sed -i "$$ d" $(kernel).hex; \
+		cat $(kernel).hex $(init).hex > $@ \
+	)
 
 ####
 ## read flash
@@ -185,8 +181,8 @@ dump_name := dump.bin
 
 .PHONY: dump-read
 dump-read:
-	$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:r:$(dump_name):r
+	$(call cmd_run_script,$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U flash:r:$(dump_name):r)
 	
 .PHONY: dump-disassemble
 dump-disassemble: dump-read
-	$(objdump) -b binary -m avr -D $(dump_name) | less
+	$(call cmd_run_script,$(objdump) -b binary -m avr -D $(dump_name) | less)

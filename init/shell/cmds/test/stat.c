@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <shell/cmd/test/test.h>
+#include <shell/cmds/test/test.h>
 
 
 /* local functions */

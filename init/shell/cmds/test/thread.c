@@ -14,7 +14,7 @@
 #include <time.h>
 #include <string.h>
 #include <sched.h>
-#include <shell/cmd/test/test.h>
+#include <shell/cmds/test/test.h>
 
 
 /* macros */

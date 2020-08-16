@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <shell/cmd/test/test.h>
+#include <shell/cmds/test/test.h>
 #include <shell/cmd.h>
 
 
