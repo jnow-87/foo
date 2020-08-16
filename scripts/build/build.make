@@ -7,9 +7,9 @@
 
 
 
-################
-###   init   ###
-################
+####
+## init
+####
 
 # remove trailing '/'
 loc_dir := $(patsubst %/,%,$(loc_dir))
@@ -54,9 +54,9 @@ $(foreach flag,$(all_flags), \
 )
 
 
-############################
-###   include Makefile   ###
-############################
+####
+## include Makefile
+####
 
 # backup *flags
 $(foreach flag,$(all_flags), \
@@ -73,15 +73,14 @@ $(foreach flag,$(all_flags), \
 )
 
 
-########################
-###   filter input   ###
-########################
+####
+## filter input
+####
 
 $(call pdebug1,filter input)
 
-####
+
 ## filter loc_single_*, loc_comp_*, loc_dir_*
-####
 
 # split $(type)_y into
 #	loc_single_$(type): non-compound targets
@@ -110,9 +109,8 @@ $(foreach type,$(all_types), \
 	$(call pdebug1,) \
 )
 
-####
+
 ## process directories in targets
-####
 
 $(call pdebug1)
 $(call pdebug1,handle directories)
@@ -181,9 +179,8 @@ $(call pdebug1)
 $(call pdebug1,    subdir: $(subdir-y))
 $(call pdebug1,    external-dir: $(ext_dir))
 
-####
+
 ## collect list of all targets and dependencies
-####
 
 $(call pdebug1)
 $(call pdebug1,collect list of all targets)
@@ -215,9 +212,8 @@ loc_all_tgt := $(sort $(loc_all_tgt))
 
 $(call pdebug1,    loc_all_tgt: $(loc_all_tgt))
 
-####
+
 ## update global list for $(all_types), e.g. bin
-####
 
 # add single and comp targets to the global lists (e.g. obj and lib), prefixing with $(loc_build_tree)
 $(foreach type,$(all_types), \
@@ -225,16 +221,15 @@ $(foreach type,$(all_types), \
 )
 
 
-###########################
-###   rule generation   ###
-###########################
+####
+## rule generation
+####
 
 $(call pdebug1)
 $(call pdebug1,generate flag rules)
 
-####
+
 ## flag rules
-####
 
 # target specific flag rules, i.e. <target>-*flags and <target>-*flags-y
 # 	this applies to all files (direct targets and dependencies)
@@ -260,9 +255,8 @@ $(foreach type,$(obj_types), \
 	) \
 )
 
-####
+
 ## build rules
-####
 
 $(call pdebug1)
 $(call pdebug1,generate compound target rules)
@@ -399,9 +393,9 @@ $(call pdebug1)
 $(call pdebug1,generate bin rules)
 
 
-###################
-###   cleanup   ###
-###################
+####
+## cleanup
+####
 
 # clear target flag variables (<target>-<flag>, <target>-<flag>-y) to name collisions with targets with the same stem but in a different directory
 $(foreach tgt,$(loc_all_tgt), \
@@ -419,9 +413,9 @@ $(foreach type,$(all_types), \
 )
 
 	
-##################################
-###   subdirectory traversal   ###
-##################################
+####
+## subdirectory traversal
+####
 
 # handle subdir-*flags and subdir-*flags-y
 # 	assign <subdir>-*flags and subdir-*flags-y to subdir-<subdir>-*flags to avoid overwriting them by name collisions
