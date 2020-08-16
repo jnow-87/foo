@@ -34,7 +34,7 @@ src_dirs := sys arch kernel lib init testing scripts/memlayout scripts/arch scri
 ## include build system Makefile
 ####
 
-include $(scripts_dir)/Makefile.inc
+include $(scripts_dir)/main.make
 
 
 ####
