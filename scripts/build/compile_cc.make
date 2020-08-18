@@ -109,14 +109,14 @@ endef
 
 ifeq ($(project_type),c)
 define compile_o_o
-	$(eval flags := $($(1)cflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
+	$(eval flags := -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
 	$(call compile_base,$(1)cc,$(flags) $(filter %.o,$^) -o $@)
 endef
 
 else
 
 define compile_o_o
-	$(eval flags := $($(1)cxxflags) -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
+	$(eval flags := -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
 	$(call compile_base,$(1)cxx,$(flags) $(filter %.o,$^) -o $@)
 endef
 
