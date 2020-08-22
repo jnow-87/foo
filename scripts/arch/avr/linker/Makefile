@@ -9,8 +9,8 @@
 
 hostbin-y := gen_lds_memory gen_lds_plugin
 
-gen_lds_memory-y := memory.o sys/
-gen_lds_plugin-y := plugin.o sys/
+gen_lds_memory-y := memory.o $(build_tree)/sys/devicetree.o $(build_tree)/sys/devtree.o
+gen_lds_plugin-y := plugin.o $(build_tree)/sys/devicetree.o $(build_tree)/sys/devtree.o
 
 
 hostcppflags-y := -I"include/"

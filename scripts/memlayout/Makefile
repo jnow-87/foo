@@ -9,7 +9,7 @@
 
 hostbin-y := memlayout
 
-memlayout-y := main.o sys/
+memlayout-y := main.o $(build_tree)/sys/devicetree.o $(build_tree)/sys/devtree.o
 
 
 hostcppflags-y := -I"include/"
