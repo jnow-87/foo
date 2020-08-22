@@ -41,6 +41,11 @@ bin_types := bin hostbin
 all_types := $(obj_types) $(lib_types) $(bin_types)
 
 all_build_tools := cc cxx as ld ar hostcc hostcxx hostas hostld hostar lex yacc gperf
+
+ifneq ("$(coverage_script)","")
+  all_build_tools += gcov
+endif
+
 all_user_tools := $(tool_deps)
 
 # init global flag variables
@@ -87,6 +92,8 @@ $(call set_default,LEX, flex)
 $(call set_default,YACC, bison)
 $(call set_default,GPERF, gperf)
 
+$(call set_default,GCOV, gcov)
+
 # init variables compile tools
 cc := $(QBUILD)$(CC)
 cxx := $(QBUILD)$(CXX)
@@ -105,6 +112,8 @@ yacc := $(QBUILD)$(YACC)
 gperf := $(QBUILD)$(GPERF)
 gperf_c_header := $(QBUILD)$(scripts_dir)/gperf_c_header.sh
 gperf_cxx_header := $(QBUILD)$(scripts_dir)/gperf_cxx_header.sh
+
+gcov := $(QBUILD)$(GCOV)
 
 # init shell command wrappers
 echo := @echo

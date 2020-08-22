@@ -21,6 +21,9 @@ config_ftype := Pconfig
 config := ./config
 config_tree := $(scripts_dir)/config
 
+# init code coverage system
+coverage_script := gcovered
+
 # external dependencies
 tool_deps :=
 

@@ -90,6 +90,10 @@ ifneq ("$(githooks_tree)","")
   include $(scripts_dir)/githooks.make
 endif
 
+ifneq ("$(coverage_script)","")
+  include $(scripts_dir)/coverage.make
+ endif
+
 include $(scripts_dir)/help.make
 
 # include dependency files
