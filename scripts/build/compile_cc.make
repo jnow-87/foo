@@ -132,6 +132,6 @@ define compile_bin_o
 endef
 else
 define compile_bin_o
-	$(compile_base,($(1)cxx $($(1)archflags) $(filter %.o,$^) -o $@ $($(1)ldlibs))
+	$(call compile_base,$(1)cxx,$($(1)archflags) $(filter %.o,$^) -o $@ $($(1)ldlibs))
 endef
 endif
