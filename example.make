@@ -7,9 +7,9 @@
 
 
 
-################
-###   init   ###
-################
+####
+## init
+####
 
 # init build system
 project_type := cxx
@@ -20,6 +20,9 @@ use_config_sys := y
 config_ftype := Pconfig
 config := ./config
 config_tree := $(scripts_dir)/config
+
+# init code coverage system
+coverage_script := gcovered
 
 # external dependencies
 tool_deps :=
@@ -32,7 +35,7 @@ default_build_tree := build/$(CONFIG_BUILD_TYPE)/
 src_dirs := example
 
 # include build system Makefile
-include $(scripts_dir)/Makefile.inc
+include $(scripts_dir)/main.make
 
 # init default flags
 cflags := $(CFLAGS) $(CONFIG_CFLAGS)
@@ -55,13 +58,12 @@ yaccflags := $(YACCFLAGS) $(CONFIG_YACCFLAGS)
 lexflags := $(LEXFLAGS) $(CONFIG_LEXFLAGS)
 gperfflags := $(GPERFFLAGS) $(CONFIG_GPERFFLAGS)
 
-###################
-###   targets   ###
-###################
+####
+## targets
+####
 
-####
 ## build
-####
+
 .PHONY: all
 ifeq ($(CONFIG_BUILD_DEBUG),y)
 all: cflags += -g
@@ -74,9 +76,9 @@ endif
 
 all: $(lib) $(bin) $(hostlib) $(hostbin)
 
-####
+
 ## cleanup
-####
+
 .PHONY: clean
 clean:
 	$(rm) $(filter-out $(build_tree)/$(scripts_dir),$(wildcard $(build_tree)/*))
@@ -85,9 +87,9 @@ clean:
 distclean:
 	$(rm) $(config) $(build_tree)
 
-####
+
 ## install
-####
+
 .PHONY: install-user
 install-user: all
 
@@ -97,9 +99,8 @@ install-system: all
 .PHONY: uninstall
 uninstall:
 
-####
+
 ## help
-####
 
 .PHONY: help
 help:

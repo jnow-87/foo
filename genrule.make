@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2015 Jan Nowotsch
+# Copyright (C) 2020 Jan Nowotsch
 # Author Jan Nowotsch	<jan.nowotsch@gmail.com>
 #
 # Released under the terms of the GNU GPL v2.0
@@ -7,40 +7,12 @@
 
 
 
-#####################
-## helper variables ##
-######################
-
-# variables that contain ' ' and ',' required for some replacements, that
-# do not work with the characters used literally 
-space :=
-space +=
-comma := ,
-
-
-##############################
-##   directory traversal   ###
-##############################
-
-# recursively include 'Makefile.build' on given directories, avoiding
-# double-inclusion of the same Makefile
-# directory for current iteration is available through $(loc_dir)
+# return basename of given path, also removing .host, if present
 #
-#	$(call dinclude,<directory list>)
-define dinclude
-	$(eval traverse := $(call unique,$(filter-out $(included),$(patsubst %/,%,$(1))))) \
-	$(eval included += $(traverse)) \
-	\
-	$(foreach dir,$(traverse), \
-		$(eval loc_dir=$(dir)) \
-		$(eval include $(build)) \
-	)
+# 	$(call hostbasename,<file>)
+define hostbasename
+$(strip $(subst .host,,$(basename $(1))))
 endef
-
-
-##########################
-##   file operations   ###
-##########################
 
 # return files that do not define a separate list of dependencies,
 # i.e. $(<file>-y) is empty
@@ -55,24 +27,44 @@ define filter_single_dep
 	)
 endef
 
-# return basename of given path, also removing .host, if present
+# generate basic rule
 #
-# 	$(call hostbasename,<file>)
-define hostbasename
-$(strip $(subst .host,,$(basename $(1))))
+#	$(call gen_rule,<cmd-name>,<target>,<dependencies>,<host-flag>
+define gen_rule
+	$(eval \
+		$(call pdebug2,    generate rule:)
+		$(call pdebug2,        $(strip $(2)): $(strip $(3)))
+		$(if $(strip $(1)), \
+			$(call pdebug2,            $(mkdir) $$(@D)) \
+			$(call pdebug2,            $$(call $(strip $(1)),$(strip $(4)))) \
+		)
+		$(call pdebug2)
+
+		$(if $(strip $(1)),
+			$(eval \
+				$(strip $(2)): $(strip $(3))
+					$(mkdir) $$(@D)
+					$$(call $(1),$(strip $(4))) \
+			), \
+			$(eval $(strip $(2)): $(strip $(3))) \
+		) \
+	)
 endef
 
-# check if a file exists
+# generate basic rule handling command file creation
 #
-# 	$(call exists,<file>)
-define exists
-$(if $(wildcard $(1)),1,)
+#	$(call gen_rule_basic,<cmd-name>,<target>,<dependencies>,<host-flag>
+define gen_rule_basic
+	$(if $(call cmd_file_required,$(1),$(2)), \
+		$(if $(call is_prestage,stage0), \
+			$(call gen_rule,$(1),$(2),$(3) force,$(4)) \
+			, \
+			$(call gen_rule,$(1),$(2),$(3) $(2).cmd,$(4)) \
+		) \
+		, \
+		$(call gen_rule,$(1),$(2),$(3),$(4)) \
+	)
 endef
-
-
-##########################
-##   rule generation   ###
-###########################
 
 # generate target-specific rule for <target>-*flags and <target>-*flags-y
 #	- generate: <target>: <flag> += <target>-<flag> <target>-<flag>-y
@@ -123,79 +115,6 @@ define gen_rule_comp
 			$(call gen_rule_basic,$(1),$(3)$(tgt),$(patsubst %.o,%.host.o,$(addprefix $(3),$(filter-out $(ext_dep),$($(call hostbasename,$(tgt))-y))) $(ext_dep)),$(4)) \
 			, \
 			$(call gen_rule_basic,$(1),$(3)$(tgt),$(addprefix $(3),$(filter-out $(ext_dep),$($(call hostbasename,$(tgt))-y))) $(ext_dep),$(4)) \
-		) \
-	)
-endef
-
-# generate basic rule
-#
-#	$(call gen_rule_basic,<cmd-name>,<target>,<dependencies>,<host-flag>
-define gen_rule_basic
-	$(eval \
-		$(call pdebug2,    generate rule:)
-		$(call pdebug2,        $(strip $(2)): $(strip $(3)))
-		$(if $(1), \
-			$(call pdebug2,            $(mkdir) $$(@D)) \
-			$(call pdebug2,            $$(call $(strip $(1)),$(strip $(4)))) \
-		)
-		$(call pdebug2)
-
-		$(if $(1),
-			$(eval \
-				$(strip $(2)): $(strip $(3))
-					$(mkdir) $$(@D)
-					$$(call $(1),$(strip $(4))) \
-			), \
-			$(eval $(strip $(2)): $(strip $(3))) \
-		) \
-	)
-endef
-
-
-
-#################
-##   helper   ###
-#################
-
-# convert string to upper case
-#
-# 	$(call upper_case,<string>)
-define upper_case
-$(shell echo $(1) | tr a-z A-Z)
-endef
-
-# returns 1 if $1 >= $2
-#
-# 	$(call cond_ge,<a>,<b>)
-define cond_ge
-$(shell test $1 -ge $2 && echo 1)
-endef
-
-# remove duplicates from string
-#
-# 	$(strip $(call unique,<string>))
-define unique
-	$(eval lst :=) \
-	$(foreach k,$(1),$(if $(filter $(k), $(lst)),,$(eval lst += $(k)))) \
-	$(lst)
-endef
-
-
-# set default value of variable <var> based on the following scheme
-#	if <var> is defined on the command-line
-#		do not change it
-#	else if CONFIG_<var> is defined
-#		<var> := CONFIG_<var>
-#	else
-#		<var> := <value>
-#
-# $(call set_default,<var>,<value>)
-define set_default
-	$(if $(subst environment,,$(subst command line,,$(origin $(1)))), \
-		$(if $(CONFIG_$(1)), \
-			$(eval $(1) := $(CONFIG_$(1))) \
-			, \
-			$(eval $(1) := $(2)) \
 		) \
 	)
 endef
