@@ -22,7 +22,8 @@ config := ./config
 config_tree := $(scripts_dir)/config
 
 # init code coverage system
-coverage_script := gcovered
+use_coverage_sys := y
+gcovered_rc := .gcoveredrc
 
 # external dependencies
 tool_deps :=

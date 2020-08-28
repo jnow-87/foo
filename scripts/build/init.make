@@ -42,7 +42,7 @@ all_types := $(obj_types) $(lib_types) $(bin_types)
 
 all_build_tools := cc cxx as ld ar hostcc hostcxx hostas hostld hostar lex yacc gperf
 
-ifneq ("$(coverage_script)","")
+ifneq ("$(use_coverage_sys)","")
   all_build_tools += gcov
 endif
 

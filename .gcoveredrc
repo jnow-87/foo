@@ -1,0 +1,20 @@
+[general]
+	uncovered = true
+	recursive = true
+	colour = true
+
+[thresholds]
+	function = 90.0, 100.0
+	line = 90.0, 100.0
+	branch = 90.0, 100.0
+
+[exclude-dirs]
+	"build/"
+	"recent/"
+	"scripts/"
+
+	"arch/"
+	"kernel/"
+	"lib/"
+	"init/"
+	"driver/"
