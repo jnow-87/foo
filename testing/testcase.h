@@ -29,7 +29,8 @@ int dprintf(int fd, char const *format, ...);
 	static char const test_case_desc_##_hdlr[]  __used = _desc; \
 	static test_case_t test_case_##_hdlr __section("testcases") __used = { .hdlr = _hdlr, .desc = test_case_desc_##_hdlr, }
 
-#define tlog(log, fmt, ...)	dprintf(log, __FILE__ ":%d " fmt, __LINE__, ##__VA_ARGS__);
+#define tlog(log, fmt, ...)	dprintf(log, __FILE__ ":%d " fmt, __LINE__, ##__VA_ARGS__)
+#define RES_OP(expr)		(((char *[]){ "!=", "==" })[expr])
 
 #define exit_on_error(check_res)({ \
 	int _check_res; \
@@ -48,10 +49,7 @@ int dprintf(int fd, char const *format, ...);
 	\
 	\
 	_res = expr; \
-	if(_res == (ref)) \
-		tlog(log, "%s: res(%d) == ref(%d)\n", #expr, _res, ref) \
-	else \
-		tlog(log, "%s: res(%d) != ref(%d)\n", #expr, _res, ref) \
+	tlog(log, "%s: res(%d) %s ref(%d)\n", #expr, _res, RES_OP(_res == (ref)), ref); \
 	\
 	(_res == (ref)) ? 0 : 1; \
 })
@@ -61,30 +59,21 @@ int dprintf(int fd, char const *format, ...);
 	\
 	\
 	_res = expr; \
-	if(_res == (ref)) \
-		tlog(log, "%s: res(%#x) == ref(%#x)\n", #expr, _res, ref) \
-	else \
-		tlog(log, "%s: res(%#x) != ref(%#x)\n", #expr, _res, ref) \
+	tlog(log, "%s: res(%#x) %s ref(%#x)\n", #expr, _res, RES_OP(_res == (ref)), ref); \
 	\
 	(_res == (ref)) ? 0 : 1; \
 })
 
 #define check_str(log, expr, s, ref)({ \
 	expr; \
-	if(strcmp(s, ref) == 0) \
-		tlog(log, "%s: res('%s') == ref('%s')\n", #expr, s, ref) \
-	else \
-		tlog(log, "%s: res('%s') != ref('%s')\n", #expr, s, ref) \
+	tlog(log, "%s: res('%s') %s ref('%s')\n", #expr, s, RES_OP(strcmp(s, ref) == 0), ref); \
 	\
 	(strcmp(s, ref) == 0) ? 0 : 1; \
 })
 
 #define check_strn(log, expr, s, ref, n)({ \
 	expr; \
-	if(strncmp(s, ref, n) == 0) \
-		tlog(log, "%s: res('%s') == ref('%s')\n", #expr, s, ref) \
-	else \
-		tlog(log, "%s: res('%s') != ref('%s')\n", #expr, s, ref) \
+	tlog(log, "%s: res('%s') %s ref('%s')\n", #expr, s, RES_OP(strncmp(s, ref, n) == 0), ref); \
 	\
 	(strncmp(s, ref, n) == 0) ? 0 : 1; \
 })
