@@ -231,8 +231,10 @@ spec_err:
 	}
 
 	// zero-terminate string streams
-	if(stream->putc == 0x0)
+	if(stream->putc == 0x0){
 		put_char(stream, 0);
+		stream->widx--;
+	}
 
 	return n;
 }

@@ -23,34 +23,38 @@
 #define DUMMY_VALUE	"bar"
 #define DUMMY_STR	" bar"
 
-#define test(log, ref, s, ...)({ \
-	char buf[BUF_SIZE]; \
-	FILE f = FILE_INITIALISER(0x0, buf, BUF_SIZE, 0x0); \
-	size_t len; \
-	char const ref_ext[] = ref DUMMY_STR; \
-	\
-	\
-	memset(buf, 'a', BUF_SIZE); \
-	len = fprintf(&f, s DUMMY_SPEC, ##__VA_ARGS__, DUMMY_VALUE); \
-	\
-	if(len != strlen(ref_ext)) \
-		tlog(log, "%s: length differ res(%d) != ref(%d)\n", s, len, strlen(ref_ext)) \
-	\
-	if(strcmp(ref_ext, f.wbuf) == 0) \
-		tlog(log, "%s: res('%s') == ref('%s')\n", s, f.wbuf, ref_ext) \
-	\
-	else \
-		tlog(log, "%s: res('%s') != ref('%s')\n", s, f.wbuf, ref_ext) \
-	\
-	(len == strlen(ref_ext) && strcmp(ref_ext, f.wbuf) == 0) ? 0 : 1; \
-})
-
 
 /* local/static prototypes */
 static size_t fprintf(FILE *f, char const *format, ...);
 
 
 /* local functions */
+static int test(int log, char const *ref, char const *s, ...){
+	int n;
+	size_t len;
+	char ref_ext[strlen(ref) + strlen(DUMMY_STR) + 1];
+	char buf[BUF_SIZE];
+	FILE f = FILE_INITIALISER(0x0, buf, BUF_SIZE, 0x0);
+	va_list lst;
+
+
+	sprintf(ref_ext, "%s%s", ref, DUMMY_STR);
+	memset(buf, 'a', BUF_SIZE);
+
+	va_start(lst, s);
+	len = vfprintf(&f, s, lst);
+	len += fprintf(&f, DUMMY_SPEC, DUMMY_VALUE);
+	va_end(lst);
+
+	n = 0;
+	n += check_int(log, len, strlen(ref_ext));
+	n += check_str(log, {}, f.wbuf, ref_ext);
+
+	return n;
+}
+
+
+
 static int tc_vfprintf(int log){
 	unsigned int n;
 	char tmp[3];
