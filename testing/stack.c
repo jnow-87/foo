@@ -30,6 +30,10 @@ typedef struct stack_t{
 } stack_t;
 
 
+/* local/static prototypes */
+static stack_t *pop(stack_t **top);
+
+
 /* static variables */
 static stack_t el0 = { .el = 0, .s = "0" },
 			   el1 = { .el = 1, .s = "1" },
@@ -112,19 +116,19 @@ static int tc_stack_pop(int log){
 	stack_push(top, &el1);
 
 	// pop from non-empty stack
-	el = stack_pop(top);
+	el = pop(&top);
 
 	n += check_ptr(log, top, &el0);
 	n += check_ptr(log, el, &el1);
 
 	// pop last element
-	el = stack_pop(top);
+	el = pop(&top);
 
 	n += check_ptr(log, top, 0);
 	n += check_ptr(log, el, &el0);
 
 	// pop from empty stack
-	el = stack_pop(top);
+	el = pop(&top);
 
 	n += check_ptr(log, top, 0);
 	n += check_ptr(log, el, 0);
@@ -133,3 +137,7 @@ static int tc_stack_pop(int log){
 }
 
 test_case(tc_stack_pop, "stack_pop");
+
+static stack_t *pop(stack_t **top){
+	return stack_pop(*top);
+}
