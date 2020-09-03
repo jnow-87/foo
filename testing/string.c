@@ -7,13 +7,15 @@
 
 
 
+#include <sys/compiler.h>
+#include <sys/errno.h>
 #include <sys/string.h>
 #include <testing/testcase.h>
 
 
 /* local functions */
 static int tc_strcmp(int log){
-	unsigned int n;
+	int n;
 
 
 	n = 0;
@@ -37,7 +39,7 @@ static int tc_strcmp(int log){
 test_case(tc_strcmp, "strcmp");
 
 static int tc_strlen(int log){
-	unsigned int n;
+	int n;
 
 
 	n = 0;
@@ -51,7 +53,7 @@ static int tc_strlen(int log){
 test_case(tc_strlen, "strlen");
 
 static int tc_strcnt(int log){
-	unsigned int n;
+	int n;
 
 
 	n = 0;
@@ -68,11 +70,12 @@ static int tc_strcnt(int log){
 test_case(tc_strcnt, "strcnt");
 
 static int tc_isoneof(int log){
-	unsigned int n;
+	int n;
 
 
 	n = 0;
 
+	n += check_int(log, isoneof(' ', 0x0), false);
 	n += check_int(log, isoneof('a', ""), false);
 	n += check_int(log, isoneof('a', "bcde"), false);
 	n += check_int(log, isoneof('a', "abcde"), true);
@@ -84,7 +87,7 @@ static int tc_isoneof(int log){
 test_case(tc_isoneof, "isoneof");
 
 static int tc_strcpy(int log){
-	unsigned int n;
+	int n;
 	char d[5];
 	char s[] = "foo";
 
@@ -113,7 +116,7 @@ static int tc_strcpy(int log){
 test_case(tc_strcpy, "strcpy");
 
 static int tc_memscan(int log){
-	unsigned int n;
+	int n;
 	char s[] = "foobar";
 
 
@@ -130,7 +133,7 @@ static int tc_memscan(int log){
 test_case(tc_memscan, "memscan");
 
 static int tc_memnscan(int log){
-	unsigned int n;
+	int n;
 	int (*fp_array[10])(int);
 	int (*fp_zero)(int);
 	int (*fp_nonzero)(int);
@@ -152,3 +155,82 @@ static int tc_memnscan(int log){
 }
 
 test_case(tc_memnscan, "memnscan");
+
+static int tc_strerror(int log){
+	int n;
+
+
+	n = 0;
+	n += check_str(log, , strerror(E_OK), "Success");
+	n += check_str(log, , strerror(E_UNKNOWN), "Unknown");
+	n += check_str(log, , strerror(0xfe), "Unknown error 0xfe");
+	n += check_str(log, , strerror(0xfefe), "Error string too short to display errno");
+
+	return -n;
+}
+
+test_case(tc_strerror, "strerror");
+
+static int tc_itoa(int log){
+	int n;
+	char s[16];
+
+
+	n = 0;
+
+	/* different base values */
+	n += check_str(log, , itoa(10, 8, s, 15), "12");
+	n += check_str(log, , itoa(10, 10, s, 15), "10");
+	n += check_str(log, , itoa(10, 16, s, 15), "a");
+
+	/* too large number */
+	n += check_ptr(log, itoa(255, 10, s, 2), 0x0);
+
+	return -n;
+}
+
+test_case(tc_itoa, "itoa");
+
+static int tc_strtol(int log){
+	int n;
+	char *s;
+
+
+	n = 0;
+
+	/* different base values */
+	n += check_int(log, strtol("10", 0x0, 10), 10);
+	n += check_int(log, strtol("10", 0x0, 8), 8);
+	n += check_int(log, strtol("deAdbEEF", 0x0, 16), 3735928559);
+
+	/* auto detected base */
+	n += check_int(log, strtol("10", 0x0, 0), 10);
+	n += check_int(log, strtol("0x10", 0x0, 0), 16);
+	n += check_int(log, strtol("011", 0x0, 0), 9);
+
+	/* signs */
+	n += check_int(log, strtol("0xf", 0x0, 16), 15);
+	n += check_int(log, strtol("+0xf", 0x0, 16), 15);
+	n += check_int(log, strtol("-0xf", 0x0, 16), -15);
+
+	/* partial match */
+	n += check_int(log, strtol("10f", 0x0, 10), 10);
+	n += check_int(log, strtol("10f", 0x0, 16), 271);
+
+	/* use endp */
+	n += check_str(log, strtol("10f", &s, 10), s, "f");
+	n += check_str(log, strtol("0xfgo", &s, 0), s, "go");
+
+	/* invalid inputs */
+	n += check_int(log, strtol(" 0xfe", &s, 8), 0);
+	n += check_int(log, strtol("0xfe", &s, 8), 0);
+	n += check_str(log, , s, "xfe");
+
+	/* atoi */
+	n += check_int(log, atoi("10"), 10);
+	n += check_int(log, atoi("0xee"), 0);
+
+	return -n;
+}
+
+test_case(tc_strtol, "strtol");
