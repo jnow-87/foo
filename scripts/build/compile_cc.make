@@ -108,19 +108,21 @@ define compile_o_cxx
 endef
 
 ifeq ($(project_type),c)
-define compile_o_o
-	$(eval flags := -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
-	$(call compile_base,$(1)cc,$(flags) $(filter %.o,$^) -o $@)
-endef
-
+  o_o_cflags := cflags
+  o_o_compiler := cc
 else
-
-define compile_o_o
-	$(eval flags := -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
-	$(call compile_base,$(1)cxx,$(flags) $(filter %.o,$^) -o $@)
-endef
-
+  o_o_cflags := cxxflags
+  o_o_compiler := cxx
 endif
+
+# NOTE
+# 	to combine object files the compiler is used in favor of the linker since it is
+# 	not easily possible to invoke the linker with the correct flags when link time
+# 	optimisation (-flto) shall be used
+define compile_o_o
+	$(eval flags := -nostdlib -r $(filter-out %coverage,$($(1)$(o_o_cflags))) -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
+	$(call compile_base,$(1)$(o_o_compiler),$(flags) $(filter %.o,$^) -o $@)
+endef
 
 define compile_lib_o
 	$(call compile_base,$(1)ar,crs $@ $(filter %.o,$^))
