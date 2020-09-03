@@ -164,6 +164,18 @@
 }
 
 /**
+ * \brief	return the last element of the list
+ *
+ * \param	head		pointer to list head
+ * \param	prev_name	name of the list prev pointer
+ *
+ * \return	pointer to the last element
+ * 			0x0 in case of an empty list
+ */
+#define __list2_last(head, prev_name) \
+	((head) ? (head)->prev_name : 0x0)
+
+/**
  * \brief	check if the given element is part of the list
  *
  * \param	head		pointer to list head

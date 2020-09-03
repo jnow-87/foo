@@ -15,7 +15,6 @@
 
 
 /* macros */
-#define ALIGNMENT	0
 #define SIZE_EL0	(2 * sizeof(memblock_t) + 2)
 #define SIZE_EL1	(2 * sizeof(memblock_t) + 4)
 #define SIZE_EL2	(2 * sizeof(memblock_t) + 8)
@@ -72,6 +71,9 @@ static int tc_memblock_init(int log){
 
 	n = 0;
 
+	/* invalid args */
+	n += check_int(log, memblock_init(0x0, 0), -E_INVAL);
+
 	/* prepare element */
 	memblock_init(el0, 10);
 
@@ -87,6 +89,31 @@ test_case(tc_memblock_init, "memblock_init");
 
 
 /**
+ * \brief	invalid pool
+ *
+ * \return	0x0
+ */
+static int tc_memblock_alloc_inval(int log){
+	unsigned int n;
+	memblock_t *pool;
+
+
+	n = 0;
+
+	/* prepare pool: elements */
+	pool = 0x0;
+
+	/* check */
+	n += check_ptr(log, memblock_alloc(&pool, 0, 0), 0x0);
+	n += check_ptr(log, memblock_alloc(&pool, 0, 4), 0x0);
+
+	return -n;
+}
+
+test_case(tc_memblock_alloc_inval, "memblock_alloc: invalid args");
+
+
+/**
  * \brief	empty pool
  * 			pool with no elements
  *
@@ -94,7 +121,6 @@ test_case(tc_memblock_init, "memblock_init");
  */
 static int tc_memblock_alloc_empty(int log){
 	unsigned int n;
-	void *blk;
 	memblock_t *pool;
 
 
@@ -104,11 +130,9 @@ static int tc_memblock_alloc_empty(int log){
 	pool = 0x0;
 	INIT_EL();
 
-	/* alloc */
-	blk = memblock_alloc(&pool, 2, ALIGNMENT);
-
-	/* check blk */
-	n += check_ptr(log, blk, 0x0);
+	/* check */
+	n += check_ptr(log, memblock_alloc(&pool, 2, 0), 0x0);
+	n += check_ptr(log, memblock_alloc(&pool, 2, 4), 0x0);
 
 	return -n;
 }
@@ -137,7 +161,7 @@ static int tc_memblock_alloc_small(int log){
 	list_add_head(pool, el0);
 
 	/* alloc */
-	blk = memblock_alloc(&pool, SIZE_EL0, ALIGNMENT);
+	blk = memblock_alloc(&pool, SIZE_EL0, 0);
 
 	/* check blk */
 	n += check_ptr(log, blk, 0x0);
@@ -175,7 +199,7 @@ static int tc_memblock_alloc_perfect_fit(int log){
 	list_add_tail(pool, el2);
 
 	/* alloc */
-	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), ALIGNMENT);
+	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), 0);
 
 	/* check blk */
 	n += check_ptr(log, blk, (void*)el1 + sizeof(memblock_t));
@@ -228,7 +252,7 @@ static int tc_memblock_alloc_split_fit(int log){
 	list_add_tail(pool, el2);
 
 	/* alloc */
-	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), ALIGNMENT);
+	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), 4);
 
 	/* check blk */
 	n += check_ptr(log, blk, (void*)el3 + sizeof(memblock_t));
@@ -341,6 +365,38 @@ static int tc_memblock_free_head_merge(int log){
 }
 
 test_case(tc_memblock_free_head_merge, "memblock_free: head merge");
+
+/**
+ * \brief	free on empty pool
+ * 			freed block is inserted at the end
+ *
+ * \return	pool with 1 element
+ */
+static int tc_memblock_free_tail(int log){
+	unsigned int n;
+	memblock_t *pool;
+
+
+	n = 0;
+
+	/* prepare pool: el0 */
+	pool = 0x0;
+	INIT_EL();
+
+	/* free */
+	n += check_int(log, memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), E_OK);
+
+	/* expected pool: el0 -> el2 */
+	// check el0 (el2 linked at back)
+	n += check_int(log, el0->len, SIZE_EL0);
+	n += check_ptr(log, el0->prev, el0);
+	n += check_ptr(log, el0->next, 0x0);
+
+	return -n;
+}
+
+test_case(tc_memblock_free_tail, "memblock_free: tail");
+
 
 
 /**
@@ -597,9 +653,9 @@ int tc_memblock_cycle(int log){
 	list_add_tail(pool, el3);
 
 	/* alloc */
-	blk0 = memblock_alloc(&pool, 4, ALIGNMENT);
-	blk1 = memblock_alloc(&pool, 4, ALIGNMENT);
-	blk2 = memblock_alloc(&pool, 4, ALIGNMENT);
+	blk0 = memblock_alloc(&pool, 4, 0);
+	blk1 = memblock_alloc(&pool, 4, 4);
+	blk2 = memblock_alloc(&pool, 4, 8);
 
 	/* addresses expected to be in line */
 	n += check_ptr(log, blk0, (void*)el3 + sizeof(memblock_t));
@@ -650,9 +706,35 @@ test_case(tc_memblock_cycle, "memblock: entire cycle alloc, free");
 
 
 /**
+ * \brief	zero free
+ * 			call free with 0x0
+ *
+ * \return	E_OK
+ */
+static int tc_memblock_zero_free(int log){
+	unsigned int n;
+	memblock_t *pool;
+
+
+	n = 0;
+
+	/* prepare pool: empty */
+	pool = 0x0;
+	INIT_EL();
+
+	/* 2nd free of el0 */
+	n += check_int(log, memblock_free(&pool, 0x0), E_OK);
+
+	return -n;
+}
+
+test_case(tc_memblock_zero_free, "memblock_free: zero free");
+
+
+/**
  * \brief	double free
  * 			a previously freed block is freed again
-  *
+ *
  * \return	pool with 2 elements
  */
 static int tc_memblock_double_free(int log){
