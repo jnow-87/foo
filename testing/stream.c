@@ -26,6 +26,7 @@
 
 /* local/static prototypes */
 static size_t fprintf(FILE *f, char const *format, ...);
+static char putc(char c, struct FILE *stream);
 
 
 /* local functions */
@@ -53,11 +54,24 @@ static int test(int log, char const *ref, char const *s, ...){
 	return n;
 }
 
+static int tc_snprintf(int log){
+	int n;
+	char s[16];
 
+
+	n = 0;
+	n += check_int(log, snprintf(s, 2, "%d", 100), 1);
+	n += check_str(log, , s, "1");
+
+	return -n;
+}
+
+test_case(tc_snprintf, "snprintf");
 
 static int tc_vfprintf(int log){
 	unsigned int n;
 	char tmp[3];
+	long long int len;
 
 
 	n = 0;
@@ -70,11 +84,40 @@ static int tc_vfprintf(int log){
 	n += test(log,		"  010",				"%*.*d", 5, 3, 10);
 
 	/* % */
+	n += test(log,		"%",					"%");
 	n += test(log,		"%",					"%%");
 
 	/* n */
-	n += test(log,		"123foo   10456",		"123%s%5d%hhn456", "foo", 10, tmp + 1);
-	n += test(log,		"11",					"%hhd", tmp[1]);
+	n += test(log,		"123foo   10456",		"123%s%5d%hhn456", "foo", 10, &len);
+	n += test(log,		"11",					"%hhd", (char)len);
+	n += test(log,		"123foo   10456",		"123%s%5d%hn456", "foo", 10, &len);
+	n += test(log,		"11",					"%hd", (short int)len);
+	n += test(log,		"123foo   10456",		"123%s%5d%n456", "foo", 10, &len);
+	n += test(log,		"11",					"%d", (int)len);
+#ifdef CONFIG_PRINTF_LONG
+	n += test(log,		"123foo   10456",		"123%s%5d%ln456", "foo", 10, &len);
+	n += test(log,		"11",					"%ld", (long int)len);
+#endif // CONFIG_PRINTF_LONG
+
+#ifdef CONFIG_PRINTF_LONGLONG
+	n += test(log,		"123foo   10456",		"123%s%5d%Ln456", "foo", 10, &len);
+	n += test(log,		"11",					"%Ld", len);
+#endif // CONFIG_PRINTF_LONGLONG
+
+#ifdef CONFIG_PRINTF_SIZET
+	n += test(log,		"123foo   10456",		"123%s%5d%zn456", "foo", 10, &len);
+	n += test(log,		"11",					"%zd", (size_t)len);
+#endif // CONFIG_PRINTF_SIZET
+
+#ifdef CONFIG_PRINTF_PTRDIFF
+	n += test(log,		"123foo   10456",		"123%s%5d%tn456", "foo", 10, &len);
+	n += test(log,		"11",					"%td", (ptrdiff_t)len);
+#endif // CONFIG_PRINTF_PTRDIFF
+
+#ifdef CONFIG_PRINTF_INTMAX
+	n += test(log,		"123foo   10456",		"123%s%5d%jn456", "foo", 10, &len);
+	n += test(log,		"11",					"%jd", (intmax_t)len);
+#endif // CONFIG_PRINTF_INTMAX
 
 	// test is not allowed to write more than defined size to tmp (char in this case)
 	memset(tmp, 0, 3);
@@ -92,11 +135,14 @@ static int tc_vfprintf(int log){
 	n += test(log,		"test",					"%s", "test");
 	n += test(log,		"  tes",				"%5.3s", "test");
 	n += test(log,		"tes  ",				"%-5.3s", "test");
+	n += test(log,		"test ",				"%-5.4s", "test");
 
 	/* i, d */
 	n += test(log,		"0",					"%d", 0);
 	n += test(log,		"",						"%.0d", 0);
+	n += test(log,		"1",					"%.0d", 1);
 	n += test(log,		"10",					"%d", 10);
+	n += test(log,		"00010",				"%05d", 10);
 	n += test(log,		"  010",				"%5.3d", 10);
 	n += test(log,		"  010",				"%05.3d", 10);
 	n += test(log,		"010  ",				"%-5.3d", 10);
@@ -143,6 +189,8 @@ static int tc_vfprintf(int log){
 	/* o */
 	n += test(log,		"16",					"%o", 14);
 	n += test(log,		"  016",				"%5.3o", 14);
+	n += test(log,		"    0",				"%#5.1o", 0);
+	n += test(log,		"016",					"%#.1o", 14);
 	n += test(log,		"  016",				"%05.3o", 14);
 	n += test(log,		"016  ",				"%-5.3o", 14);
 	n += test(log,		"  016",				"%+5.3o", 14);
@@ -170,6 +218,14 @@ static int tc_vfprintf(int log){
 #endif // CONFIG_REGISTER_WIDTH
 
 	/* f, F, e, E, g, G, a, A */
+	n += test(log,		"%f",					"%f");
+	n += test(log,		"%F",					"%F");
+	n += test(log,		"%e",					"%e");
+	n += test(log,		"%E",					"%E");
+	n += test(log,		"%g",					"%g");
+	n += test(log,		"%G",					"%G");
+	n += test(log,		"%a",					"%a");
+	n += test(log,		"%A",					"%A");
 
 	/* length */
 	n += test(log,		"-10",					"%hhd", (char)-10);
@@ -203,6 +259,7 @@ static int tc_vfprintf(int log){
 	n += test(log,		"10",					"%Ld", (long long int)10);
 	n += test(log,		"18446744073709551606",	"%Lu", (unsigned long long int)-10);
 	n += test(log,		"10",					"%Lu", (unsigned long long int)10);
+	n += test(log,		"%Lf",					"%Lf");
 #else
 	n += test(log,		"%lld",					"%lld", (long long int)-10);
 	n += test(log,		"%lld",					"%lld", (long long int)10);
@@ -212,6 +269,7 @@ static int tc_vfprintf(int log){
 	n += test(log,		"%Ld",					"%Ld", (long long int)-10);
 	n += test(log,		"%Ld",					"%Ld", (long long int)10);
 	n += test(log,		"%Lu",					"%Lu", (unsigned long long int)10);
+	n += test(log,		"%Lf",					"%Lf");
 #endif // CONFIG_PRINTF_LONGLONG
 
 #ifdef CONFIG_PRINTF_INTMAX
@@ -255,6 +313,29 @@ static int tc_vfprintf(int log){
 
 test_case(tc_vfprintf, "vfprintf");
 
+static int tc_vfprintf_inval(int log){
+	FILE fp = FILE_INITIALISER(0x0, 0x0, 0, 0x0);
+	int n;
+
+
+	n = 0;
+
+	n += test(log, "12", "%#u", 12);
+
+	n += check_int(log, fprintf(0x0, ""), 0);
+	n += check_int(log, fprintf(&fp, ""), 0);
+	n += check_int(log, fprintf(&fp, " "), 0);
+
+	fp.putc = putc;
+	n += check_int(log, fprintf(&fp, ""), 0);
+
+	n += check_int(log, fprintf(&fp, "%5s", "1"), 0);
+
+
+	return -n;
+}
+
+test_case(tc_vfprintf_inval, "vfprintf-inval");
 
 static size_t fprintf(FILE *f, char const *format, ...){
 	size_t n;
@@ -266,4 +347,8 @@ static size_t fprintf(FILE *f, char const *format, ...){
 	va_end(lst);
 
 	return n;
+}
+
+static char putc(char c, struct FILE *stream){
+	return 0;
 }
