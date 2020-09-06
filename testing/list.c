@@ -32,6 +32,10 @@ typedef struct tlist_t{
 } tlist_t;
 
 
+/* local/static prototypes */
+static void for_each_rm(tlist_t **head);
+
+
 /* static variables */
 static char const el_names[][5] = {
 	"0",
@@ -355,6 +359,11 @@ static int tc_list_find(int log){
 	n += check_ptr(log, list_find_strn(head, s_arr, "0", 1), &el0);
 	n += check_ptr(log, list_find_strn(head, s_arr, "3", 1), &el3);
 
+	/* error cases */
+	n += check_ptr(log, list_find(head, el, 4), 0x0);
+	n += check_ptr(log, list_find((tlist_t*)0x0, el, 4), 0x0);
+	n += check_ptr(log, list_find_str((tlist_t*)0x0, s_arr, "4"), 0x0);
+
 	return -n;
 }
 
@@ -363,12 +372,14 @@ test_case(tc_list_find, "list_find");
 
 static int tc_list_for_each(int log){
 	unsigned int n;
-	tlist_t *head,
-		   *el;
+	tlist_t *head;
 
 
 	n = 0;
 	head = 0x0;
+
+	for_each_rm(&head);
+
 	INIT_EL();
 
 	list_add_tail(head, &el0);
@@ -376,8 +387,7 @@ static int tc_list_for_each(int log){
 	list_add_tail(head, &el2);
 	list_add_tail(head, &el3);
 
-	list_for_each(head, el)
-		list_rm(head, el);
+	for_each_rm(&head);
 
 	n += check_int(log, list_empty(head), true);
 
@@ -385,3 +395,11 @@ static int tc_list_for_each(int log){
 }
 
 test_case(tc_list_for_each, "list_for_each");
+
+static void for_each_rm(tlist_t **head){
+	tlist_t *el;
+
+
+	list_for_each(*head, el)
+		list_rm(*head, el);
+}
