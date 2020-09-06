@@ -203,7 +203,7 @@ static int pattern_init(patmat_pattern_t *pat, char const *text){
 
 	for(i=0; text[i]!=0; i++){
 		if(text[i] == '%'){
-			pat->specs[j] = spec_alloc(text + i);
+			pat->specs[j] = spec_alloc(text + i + 1);
 
 			if(pat->specs[j] == 0x0)
 				goto err_1;
@@ -232,7 +232,7 @@ static void pattern_destroy(patmat_pattern_t *pat){
 	size_t i;
 
 
-	for(i=0; i<pat->nspec; i++)
+	for(i=0; i<pat->nspec && pat->specs; i++)
 		sys_free(pat->specs[i]);
 
 	sys_free(pat->specs);
@@ -315,6 +315,9 @@ static bool match_int(char c, patmat_spec_t *spec){
 }
 
 static bool match_char(char c, patmat_spec_t *spec){
+	if(spec->chars_matched != 0)
+		return false;
+
 	spec->data[0] = c;
 	spec->chars_matched++;
 
@@ -335,9 +338,6 @@ static patmat_spec_t *spec_alloc(char const *spec){
 	patmat_spec_t *s;
 	spec_cfg_t *cfg;
 
-
-	if(*(spec++) != '%')
-		return 0x0;
 
 	/* parse data size */
 	size = strtol(spec, &end, 10);
