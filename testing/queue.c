@@ -30,6 +30,10 @@ typedef struct queue_t{
 } queue_t;
 
 
+/* local/static prototypes */
+static queue_t *dequeue(queue_t **head, queue_t **tail);
+
+
 /* static variables */
 static queue_t el0 = { .el = 0, .s = "0" },
 			   el1 = { .el = 1, .s = "1" },
@@ -120,21 +124,21 @@ static int tc_queue_dequeue(int log){
 	queue_enqueue(head, tail, &el1);
 
 	// dequeue from non-empty queue
-	el = queue_dequeue(head, tail);
+	el = dequeue(&head, &tail);
 
 	n += check_ptr(log, head, &el1);
 	n += check_ptr(log, tail, &el1);
 	n += check_ptr(log, el, &el0);
 
 	// dequeue last element
-	el = queue_dequeue(head, tail);
+	el = dequeue(&head, &tail);
 
 	n += check_ptr(log, head, 0);
 	n += check_ptr(log, tail, 0);
 	n += check_ptr(log, el, &el1);
 
-	// dequeue from empty lis from empty queue
-	el = queue_dequeue(head, tail);
+	// dequeue from empty empty queue
+	el = dequeue(&head, &tail);
 
 	n += check_ptr(log, head, 0);
 	n += check_ptr(log, tail, 0);
@@ -144,3 +148,7 @@ static int tc_queue_dequeue(int log){
 }
 
 test_case(tc_queue_dequeue, "queue_dequeue");
+
+static queue_t *dequeue(queue_t **head, queue_t **tail){
+	return queue_dequeue(*head, *tail);
+}
