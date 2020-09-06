@@ -20,15 +20,15 @@
 
 
 /* types */
-typedef struct devtree_driver_t{
+typedef struct devtree_device_t{
 	char const *name,
 			   *compatible;
 
 	void const *data;
 
-	struct devtree_driver_t const *parent;
-	struct devtree_driver_t const * const *childs;
-} devtree_driver_t;
+	struct devtree_device_t const *parent;
+	struct devtree_device_t const * const *childs;
+} devtree_device_t;
 
 typedef struct devtree_memory_t{
 	char const *name;
@@ -41,14 +41,14 @@ typedef struct devtree_memory_t{
 
 
 /* prototypes */
-devtree_driver_t const *devtree_find_driver_by_name(devtree_driver_t const *root, char const *name);
-devtree_driver_t const *devtree_find_driver_by_comp(devtree_driver_t const *root, char const *name);
+devtree_device_t const *devtree_find_device_by_name(devtree_device_t const *root, char const *name);
+devtree_device_t const *devtree_find_device_by_comp(devtree_device_t const *root, char const *name);
 
 devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root, char const *name);
 
 
 /* external variables */
-extern devtree_driver_t const __dt_driver_root;
+extern devtree_device_t const __dt_devices_root;
 extern devtree_memory_t const __dt_memory_root;
 
 

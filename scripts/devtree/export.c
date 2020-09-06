@@ -42,7 +42,7 @@ int export_c_header(FILE *fp){
 	return 0;
 }
 
-int export_driver_c(driver_node_t *node, FILE *fp){
+int export_devices_c(device_node_t *node, FILE *fp){
 	int r;
 	size_t n_int,
 		   n_reg,
@@ -50,7 +50,7 @@ int export_driver_c(driver_node_t *node, FILE *fp){
 	unsigned int *p;
 	member_int_t *int_lst;
 	member_t *m;
-	driver_node_t *child;
+	device_node_t *child;
 
 
 	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node->name);
@@ -61,14 +61,14 @@ int export_driver_c(driver_node_t *node, FILE *fp){
 		fprintf(fp, "// __dt_%s child declarations\n", node->name);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "devtree_driver_t const __dt_%s;\n", child->name);
+			fprintf(fp, "devtree_device_t const __dt_%s;\n", child->name);
 
 		fprintf(fp, "\n");
 
 		// child array
 		fprintf(fp, "// __dt_%s child list\n", node->name);
 
-		fprintf(fp, "devtree_driver_t const * const __dt_%s_childs[] = {\n", node->name);
+		fprintf(fp, "devtree_device_t const * const __dt_%s_childs[] = {\n", node->name);
 
 		list_for_each(node->childs, child)
 			fprintf(fp, "\t&__dt_%s,\n", child->name);
@@ -153,7 +153,7 @@ int export_driver_c(driver_node_t *node, FILE *fp){
 
 	/* node definition */
 	fprintf(fp, "// __dt_%s definition\n", node->name);
-	fprintf(fp, "devtree_driver_t const __dt_%s = {\n", node->name);
+	fprintf(fp, "devtree_device_t const __dt_%s = {\n", node->name);
 
 	fprintf(fp, "\t.name = \"%s\",\n", node->name);
 	fprintf(fp, "\t.compatible = \"%s\",\n", node->compatible);
@@ -174,7 +174,7 @@ int export_driver_c(driver_node_t *node, FILE *fp){
 
 	/* export childs */
 	list_for_each(node->childs, child){
-		if((r = export_driver_c(child, fp)))
+		if((r = export_devices_c(child, fp)))
 			return r;
 	}
 
@@ -244,9 +244,9 @@ int export_header_header(FILE *fp){
 	return 0;
 }
 
-int export_driver_header(driver_node_t *node, FILE *fp){
+int export_devices_header(device_node_t *node, FILE *fp){
 	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
-	driver_node_t *child;
+	device_node_t *child;
 
 
 	/* node attributes */
@@ -254,7 +254,7 @@ int export_driver_header(driver_node_t *node, FILE *fp){
 
 	/* export childs */
 	list_for_each(node->childs, child)
-		(void)export_driver_header(child, fp);
+		(void)export_devices_header(child, fp);
 
 	return 0;
 }
@@ -285,9 +285,9 @@ int export_make_header(FILE *fp){
 	return 0;
 }
 
-int export_driver_make(driver_node_t *node, FILE *fp){
+int export_devices_make(device_node_t *node, FILE *fp){
 	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
-	driver_node_t *child;
+	device_node_t *child;
 
 
 	/* node attributes */
@@ -295,7 +295,7 @@ int export_driver_make(driver_node_t *node, FILE *fp){
 
 	/* export childs */
 	list_for_each(node->childs, child)
-		(void)export_driver_make(child, fp);
+		(void)export_devices_make(child, fp);
 
 	return 0;
 }

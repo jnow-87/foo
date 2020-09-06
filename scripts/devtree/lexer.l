@@ -43,7 +43,7 @@
 %}
 
 	/* sections */
-"driver"						{ return SEC_DRIVER; }
+"devices"						{ return SEC_DEVICES; }
 "memory"						{ return SEC_MEMORY; }
 
 	/* node attributes */
