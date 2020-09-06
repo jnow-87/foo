@@ -1,5 +1,6 @@
 [general]
 	uncovered = true
+	excluded = true
 	recursive = true
 	colour = true
 
@@ -8,9 +9,12 @@
 	line = 90.0, 100.0
 	branch = 90.0, 100.0
 
-[exclude-dirs]
+[excludes]
+	/* build related directories */
 	"build/"
 	"recent/"
+
+	/* temporary excluded until focused for coverage */
 	"scripts/"
 
 	"arch/"
@@ -18,3 +22,11 @@
 	"lib/"
 	"init/"
 	"driver/"
+
+	/* specific files */
+	"testing/main.c"		// un-coverable branches due to
+							// error handling
+
+	"sys/errno.c"			// no executable lines
+	"sys/memory.c"			// no executable lines
+	"sys/mutex.c"			// architecture dependent code

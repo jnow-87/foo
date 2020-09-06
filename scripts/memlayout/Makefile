@@ -9,8 +9,9 @@
 
 hostbin-y := memlayout
 
-memlayout-y := main.o $(build_tree)/sys/devicetree.o $(build_tree)/sys/devtree.o
+memlayout-y := main.o sys/
 
 
 hostcppflags-y := -I"include/"
 hostcflags-y := -fno-builtin
+hostldlibs-y += -fprofile-arcs

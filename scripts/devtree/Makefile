@@ -27,3 +27,6 @@ hostcppflags-y := \
 
 hostcflags-y := \
 	-fno-builtin
+
+dtc-hostldlibs += \
+	-fprofile-arcs
