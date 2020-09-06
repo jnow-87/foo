@@ -9,7 +9,7 @@
 
 hostbin-y := main
 
-main-y := main.o string.o stream.o list.o list1.o queue.o stack.o memblock.o vector.o sys/
+main-y := main.o string.o stream.o list.o list1.o queue.o stack.o memory.o memblock.o vector.o sys/
 
 main-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 main-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
