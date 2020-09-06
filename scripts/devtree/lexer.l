@@ -59,7 +59,7 @@
 <MULTI_LINE_COMMENT>\*\/		{ BEGIN INITIAL; }
 <MULTI_LINE_COMMENT>.			{ }
 <MULTI_LINE_COMMENT>\r?\n		{ devtree_col = 1; ++devtree_line; }
-tr
+
 	/* identifier */
 [a-zA-Z][a-zA-Z_\-0-9]+			{ devtreelval.str.s = devtreetext; devtreelval.str.len = devtreeleng; return IDFR; }
 
