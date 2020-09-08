@@ -24,7 +24,7 @@ static void complement_node(memory_node_t *node);
 int main(int argc, char **argv){
 	FILE *fp;
 	int r;
-	driver_node_t driver_root;
+	device_node_t devices_root;
 	memory_node_t memory_root;
 
 
@@ -32,14 +32,14 @@ int main(int argc, char **argv){
 	opt_parse(argc, argv);
 
 	/* parse device tree */
-	memset(&driver_root, 0, sizeof(driver_node_t));
-	driver_root.name = "driver_root";
-	driver_root.compatible = "";
+	memset(&devices_root, 0, sizeof(device_node_t));
+	devices_root.name = "devices_root";
+	devices_root.compatible = "";
 
 	memset(&memory_root, 0, sizeof(memory_node_t));
 	memory_root.name = "memory_root";
 
-	if(devtreeparse(options.ifile_name, &driver_root, &memory_root) != 0)
+	if(devtreeparse(options.ifile_name, &devices_root, &memory_root) != 0)
 		return 2;
 
 	/* complement node data */
@@ -65,22 +65,22 @@ int main(int argc, char **argv){
 	case FMT_C:
 		r |= export_c_header(fp);
 
-		if(options.export_sections & DT_DRIVER)	r |= export_driver_c(&driver_root, fp);
-		if(options.export_sections & DT_MEMORY)	r |= export_memory_c(&memory_root, fp);
+		if(options.export_sections & DT_DEVICES)	r |= export_devices_c(&devices_root, fp);
+		if(options.export_sections & DT_MEMORY)		r |= export_memory_c(&memory_root, fp);
 		break;
 
 	case FMT_HEADER:
 		r |= export_header_header(fp);
 
-		if(options.export_sections & DT_DRIVER)	r |= export_driver_header(&driver_root, fp);
-		if(options.export_sections & DT_MEMORY)	r |= export_memory_header(&memory_root, fp);
+		if(options.export_sections & DT_DEVICES)	r |= export_devices_header(&devices_root, fp);
+		if(options.export_sections & DT_MEMORY)		r |= export_memory_header(&memory_root, fp);
 		break;
 
 	case FMT_MAKE:
 		r |= export_make_header(fp);
 
-		if(options.export_sections & DT_DRIVER)	r |= export_driver_make(&driver_root, fp);
-		if(options.export_sections & DT_MEMORY)	r |= export_memory_make(&memory_root, fp);
+		if(options.export_sections & DT_DEVICES)	r |= export_devices_make(&devices_root, fp);
+		if(options.export_sections & DT_MEMORY)		r |= export_memory_make(&memory_root, fp);
 		break;
 	}
 

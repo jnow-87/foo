@@ -18,84 +18,70 @@
 #include <unistd.h>
 
 
-/* prototypes */
-// unable to include stdio.h due to conflicts with brickos
-// hence declare the required prototypes separately
-int dprintf(int fd, char const *format, ...);
-
-
 /* macros */
-#define test_case(_hdlr, _desc) \
-	static char const test_case_desc_##_hdlr[]  __used = _desc; \
-	static test_case_t test_case_##_hdlr __section("testcases") __used = { .hdlr = _hdlr, .desc = test_case_desc_##_hdlr, }
+#define TEST(_name, _desc) \
+	static int test_##_name(void); \
+	static char const test_case_desc_##_name[]  __used = _desc; \
+	static test_case_t test_case_##_name __section("testcases") __used = { \
+		.hdlr = test_##_name, \
+		.desc = test_case_desc_##_name, \
+	}; \
+	\
+	static int test_##_name(void)
 
-#define tlog(log, fmt, ...)	dprintf(log, __FILE__ ":%d " fmt, __LINE__, ##__VA_ARGS__);
+#define TEST_LOG(fmt, ...)	test_log(__FILE__ ":%d " fmt, __LINE__, ##__VA_ARGS__)
 
-#define exit_on_error(check_res)({ \
-	int _check_res; \
-	\
-	\
-	_check_res = check_res; \
-	\
-	if(_check_res != 0) \
-		return -1; \
-	\
-	_check_res; \
-})
+#define RES_OP(expr)		(((char *[]){ "!=", "==" })[expr])
 
-#define check_int(log, expr, ref)({ \
+#define CHECK_INT(expr, ref)({ \
 	typeof(ref) _res; \
 	\
 	\
 	_res = expr; \
-	if(_res == (ref)) \
-		tlog(log, "%s: res(%d) == ref(%d)\n", #expr, _res, ref) \
-	else \
-		tlog(log, "%s: res(%d) != ref(%d)\n", #expr, _res, ref) \
+	TEST_LOG("%s: res(%d) %s ref(%d)\n", #expr, _res, RES_OP(_res == (ref)), ref); \
 	\
 	(_res == (ref)) ? 0 : 1; \
 })
 
-#define check_ptr(log, expr, ref)({ \
-	void *_res; \
+#define CHECK_PTR(expr, ref)({ \
+	void const *_res; \
 	\
 	\
 	_res = expr; \
-	if(_res == (ref)) \
-		tlog(log, "%s: res(%#x) == ref(%#x)\n", #expr, _res, ref) \
-	else \
-		tlog(log, "%s: res(%#x) != ref(%#x)\n", #expr, _res, ref) \
+	TEST_LOG("%s: res(%p) %s ref(%p)\n", #expr, _res, RES_OP(_res == (ref)), (void*)ref); \
 	\
 	(_res == (ref)) ? 0 : 1; \
 })
 
-#define check_str(log, expr, s, ref)({ \
+#define CHECK_STR(expr, s, ref)({ \
 	expr; \
-	if(strcmp(s, ref) == 0) \
-		tlog(log, "%s: res('%s') == ref('%s')\n", #expr, s, ref) \
-	else \
-		tlog(log, "%s: res('%s') != ref('%s')\n", #expr, s, ref) \
+	TEST_LOG("%s: res('%s') %s ref('%s')\n", #expr, (char*)s, RES_OP(strcmp(s, ref) == 0), (char*)ref); \
 	\
 	(strcmp(s, ref) == 0) ? 0 : 1; \
 })
 
-#define check_strn(log, expr, s, ref, n)({ \
+#define CHECK_STRN(expr, s, ref, n)({ \
 	expr; \
-	if(strncmp(s, ref, n) == 0) \
-		tlog(log, "%s: res('%s') == ref('%s')\n", #expr, s, ref) \
-	else \
-		tlog(log, "%s: res('%s') != ref('%s')\n", #expr, s, ref) \
+	TEST_LOG("%s: res('%s') %s ref('%s')\n", #expr, (char*)s, RES_OP(strncmp(s, ref, n) == 0), (char*)ref); \
 	\
 	(strncmp(s, ref, n) == 0) ? 0 : 1; \
 })
 
 
 /* types */
-typedef int (*tc_hdlr_t)(int fd_log);
+typedef int (*tc_hdlr_t)(void);
+
 typedef struct{
 	tc_hdlr_t hdlr;
 	char const *desc;
 } test_case_t;
+
+
+/* prototypes */
+int test_init(char const *log_name);
+void test_close(void);
+
+void test_log(char const *fmt, ...);
 
 
 #endif // TESTCASE_H

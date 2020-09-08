@@ -88,20 +88,8 @@ int memblock_free(memblock_t **pool, void *addr){
 			break;
 	}
 
-	/* insert blk at head */
-	if(el == list_first(*pool)){
-		if((void*)blk + blk->len == el){
-			// merge with head
-			blk->len += el->len;
-			list_replace(*pool, el, blk);
-		}
-		else{
-			// do not merge with head
-			list_add_head(*pool, blk);
-		}
-	}
 	/* insert blk at tail */
-	else if(el == 0x0){
+	if(el == 0x0){
 		el = list_last(*pool);
 
 		if(el && (void*)el + el->len == blk){
@@ -111,6 +99,18 @@ int memblock_free(memblock_t **pool, void *addr){
 		else{
 			// do not merge with tail
 			list_add_tail(*pool, blk);
+		}
+	}
+	/* insert blk at head */
+	else if(el == list_first(*pool)){
+		if((void*)blk + blk->len == el){
+			// merge with head
+			blk->len += el->len;
+			list_replace(*pool, el, blk);
+		}
+		else{
+			// do not merge with head
+			list_add_head(*pool, blk);
 		}
 	}
 	/* insert blk in-between two list elements */

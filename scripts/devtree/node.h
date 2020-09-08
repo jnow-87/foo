@@ -39,8 +39,8 @@ typedef struct{
 	void *data;
 } member_t;
 
-typedef struct driver_node_t{
-	struct driver_node_t *prev,
+typedef struct device_node_t{
+	struct device_node_t *prev,
 						 *next,
 						 *parent,
 						 *childs;
@@ -49,7 +49,7 @@ typedef struct driver_node_t{
 			   *compatible;
 
 	vector_t data;			/**< vector of member_t elements */
-} driver_node_t;
+} device_node_t;
 
 typedef struct memory_node_t{
 	struct memory_node_t *prev,

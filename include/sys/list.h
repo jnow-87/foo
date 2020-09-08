@@ -138,9 +138,10 @@
 	_el; \
 })
 
-#define list_last(head) __list_last(head, prev)
-
-#define __list_last(head, prev_name) ((head) ? (head)->prev_name : 0)
+#define list_last(head)({ \
+	LIST_TYPE_COMPAT2(*head); \
+	(typeof(head))_list2_last((list2_t*)(head)); \
+})
 
 #define list_last_safe(head, mtx)({ \
 	typeof(head) _el; \
@@ -235,6 +236,7 @@ void _list2_add_tail(list2_t **head, list2_t *el);
 void _list2_add_in(list2_t *el, list2_t *front, list2_t *back);
 void _list2_replace(list2_t **head, list2_t *old, list2_t *new);
 void _list2_rm(list2_t **head, list2_t *el);
+list2_t *_list2_last(list2_t *head);
 bool _list2_contains(list2_t *head, list2_t *el);
 list2_t *_list2_find(list2_t *head, size_t mem_offset, void const *ref, size_t size);
 list2_t *_list2_find_str(list2_t *head, size_t mem_offset, char const *ref, size_t size, bool is_array);

@@ -25,11 +25,11 @@
 	#define YYDEBUG	1
 
 	// node allocate
-	#define NODE_ALLOC_DRIVER()({ \
-		driver_node_t *n; \
+	#define NODE_ALLOC_DEVICES()({ \
+		device_node_t *n; \
 		\
 		\
-		if((n = calloc(1, sizeof(driver_node_t))) == 0x0) \
+		if((n = calloc(1, sizeof(device_node_t))) == 0x0) \
 			PARSER_ERROR("allocating node\n"); \
 		\
 		if(vector_init(&n->data, sizeof(member_t), 16) != 0) \
@@ -49,7 +49,7 @@
 	})
 
 	// node validation
-	#define NODE_VALIDATE_DRIVER(node)({ \
+	#define NODE_VALIDATE_DEVICES(node)({ \
 		char const **name; \
 		\
 		\
@@ -146,7 +146,7 @@
 
 
 	/* prototypes */
-	static int devtreeerror(char const *file, driver_node_t *driver_root, memory_node_t *memory_root, char const *s);
+	static int devtreeerror(char const *file, device_node_t *devices_root, memory_node_t *memory_root, char const *s);
 	static void cleanup(void);
 	static char *stralloc(char *s, size_t len);
 %}
@@ -160,7 +160,7 @@
 
 /* parse paramters */
 %parse-param { char const *file }
-%parse-param { driver_node_t *driver_root }
+%parse-param { device_node_t *devices_root }
 %parse-param { memory_node_t *memory_root }
 
 /* init code */
@@ -189,7 +189,7 @@
 		unsigned int len;
 	} str;
 
-	driver_node_t *driver;
+	device_node_t *devices;
 	memory_node_t *memory;
 	vector_t *int_lst;
 }
@@ -201,7 +201,7 @@
 %token <str> IDFR
 
 // sections
-%token SEC_DRIVER
+%token SEC_DEVICES
 %token SEC_MEMORY
 
 // node attributes
@@ -212,8 +212,8 @@
 %token NA_SIZE
 
 /* non-terminals */
-%type <driver> driver
-%type <driver> driver-attr
+%type <devices> devices
+%type <devices> devices-attr
 %type <memory> memory
 %type <memory> memory-attr
 %type <int_lst> int-list
@@ -232,25 +232,25 @@ section-lst : %empty													{ }
 			| section-lst section ';'									{ }
 			;
 
-section : SEC_DRIVER '=' '{' driver-lst '}'								{ }
+section : SEC_DEVICES '=' '{' devices-lst '}'							{ }
 		| SEC_MEMORY '=' '{' memory-lst '}'								{ }
 		;
 
 /* node lists */
-driver-lst : %empty { } | driver-lst driver ';'							{ NODE_VALIDATE_DRIVER($2); $2->parent = driver_root; list_add_tail(driver_root->childs, $2); };
+devices-lst : %empty { } | devices-lst devices ';'						{ NODE_VALIDATE_DEVICES($2); $2->parent = devices_root; list_add_tail(devices_root->childs, $2); };
 memory-lst : %empty { } | memory-lst memory ';'							{ NODE_VALIDATE_MEMORY($2); $2->parent = memory_root; list_add_tail(memory_root->childs, $2); };
 
 /* nodes */
-driver : IDFR '=' '{' driver-attr '}'									{ $$ = $4; $$->name = stralloc($1.s, $1.len); };
+devices : IDFR '=' '{' devices-attr '}'									{ $$ = $4; $$->name = stralloc($1.s, $1.len); };
 memory : IDFR '=' '{' memory-attr '}'									{ $$ = $4; $$->name = stralloc($1.s, $1.len); };
 
 /* node attributes */
-driver-attr : %empty													{ $$ = NODE_ALLOC_DRIVER(); }
-			| driver-attr driver ';'									{ $$ = $1; NODE_VALIDATE_DRIVER($2); $2->parent = $$; list_add_tail($$->childs, $2); }
-			| driver-attr NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = stralloc($4.s, $4.len); }
-			| driver-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
-			| driver-attr NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
-			| driver-attr NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
+devices-attr : %empty													{ $$ = NODE_ALLOC_DEVICES(); }
+			| devices-attr devices ';'									{ $$ = $1; NODE_VALIDATE_DEVICES($2); $2->parent = $$; list_add_tail($$->childs, $2); }
+			| devices-attr NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = stralloc($4.s, $4.len); }
+			| devices-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
+			| devices-attr NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
+			| devices-attr NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
 			;
 
 memory-attr : %empty													{ $$ = NODE_ALLOC_MEMORY(); }
@@ -268,7 +268,7 @@ int-list : INT															{ $$ = VECTOR_ALLOC(&$1); }
 %%
 
 
-static int devtreeerror(char const *file, driver_node_t *driver_root, memory_node_t *memory_root, char const *s){
+static int devtreeerror(char const *file, device_node_t *devices_root, memory_node_t *memory_root, char const *s){
 	fprintf(stderr, FG_VIOLETT "%s" RESET_ATTR ":" FG_GREEN "%d:%d" RESET_ATTR " token \"%s\" -- %s\n", file, devtreelloc.first_line, devtreelloc.first_column, devtreetext, s);
 	return 0;
 }

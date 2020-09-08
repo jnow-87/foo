@@ -19,7 +19,7 @@ typedef enum{
 } output_file_type_t;
 
 typedef enum{
-	DT_DRIVER = 0x1,
+	DT_DEVICES = 0x1,
 	DT_MEMORY = 0x2,
 	DT_ALL = 0x3
 } devtree_section_t;

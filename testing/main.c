@@ -13,8 +13,6 @@
 
 /* host header */
 #include <stdio.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <string.h>
 
 
@@ -30,50 +28,35 @@ extern test_case_t __stop_testcases[];
 /* global functions */
 int main(int argc, char **argv){
 	char log_file[strlen(argv[0]) + strlen(RESULT_EXT) + 1];
-	int log_fd;
-	unsigned int passed, failed;
+	int r;
+	unsigned int cnt[2] = { 0 };
 	test_case_t *tc;
 
 
 	/* init */
-	passed = 0;
-	failed = 0;
-
 	strcpy(log_file, argv[0]);
 	strcpy(log_file + strlen(argv[0]), RESULT_EXT);
 
-	log_fd = open(log_file, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-
-	if(log_fd < 0){
-		printf("open log-file \"%s\" failed \"%s\"\n", log_file, strerror(errno));
+	if(test_init(log_file) != 0)
 		return 1;
-	}
 
 	/* iterate through test cases */
 	tc = __start_testcases;
 
 	while(tc != __stop_testcases){
-		printf("run test case: %s... ", tc->desc);
-		dprintf(log_fd, " === test case: %s ===\n\n", tc->desc);
+		printf("run test: %s... ", tc->desc);
+		test_log(" === test case: %s ===\n\n", tc->desc);
 
+		r = (tc->hdlr)();
 
-		if((tc->hdlr)(log_fd) == 0){
-			printf(FG_GREEN "passed\n" RESET_ATTR);
-			dprintf(log_fd, "\n === test case: %s passed ===\n\n\n", tc->desc);
-
-			passed++;
-		}
-		else{
-			printf(FG_RED "failed\n" RESET_ATTR);
-			dprintf(log_fd, "\n === test case: %s failed ===\n\n\n", tc->desc);
-
-			failed++;
-		}
+		printf("%s%s\n" RESET_ATTR, ((char *[]){ FG_GREEN, FG_RED }[r]), ((char *[]){ "passed", "failed" }[r]));
+		test_log("\n === test case: %s %s ===\n\n\n", tc->desc, ((char *[]){ "passed", "failed" }[r]));
+		cnt[r]++;
 
 		tc++;
 	}
 
-	close(log_fd);
+	test_close();
 
 	/* summary */
 	printf(FG_VIOLETT "\nsummary" RESET_ATTR " (cf. %s)\n"
@@ -82,10 +65,10 @@ int main(int argc, char **argv){
 		   FG_RED "    failed:" RESET_ATTR " %u\n\n"
 		   ,
 		   log_file,
-		   passed + failed,
-		   passed,
-		   failed
+		   cnt[0] + cnt[1],
+		   cnt[0],
+		   cnt[1]
 	);
 
-	return failed;
+	return cnt[1];
 }

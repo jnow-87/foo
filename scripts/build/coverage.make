@@ -7,13 +7,21 @@
 
 
 
-cov_deps := check_user_tools check_build_tools $(coverage_script)
+all_user_tools += gcovered
+cov_deps := check_user_tools check_build_tools
+
+gcovered_args := 
+
+ifneq ("$(gcovered_rc)","")
+  gcovered_args += -r $(gcovered_rc)
+endif
+
 coverage: $(cov_deps)
 	$(call cmd_run_script, \
 		rm -f $$(find $(build_tree) -name '*.gcda'); \
 		\
 		for bin in $(filter-out $(cov_deps), $^); do \
-			$${bin}; \
+			$${bin} || { echo "error executing $${bin}"; exit 1; }; \
 		done; \
 		\
 		gcda_files=$$(find $(build_tree) -name '*.gcda'); \
@@ -24,6 +32,5 @@ coverage: $(cov_deps)
 			mv *.gcov $${tgt_name}; \
 		done; \
 		\
-		gcov_files=$$(echo $${gcda_files} | sed -e 's/\.gcda/.gcov/g'); \
-		$(coverage_script) $${gcov_files}; \
+		gcovered $(gcovered_args) $(build_tree); \
 	)

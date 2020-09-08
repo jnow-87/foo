@@ -46,7 +46,7 @@ static tlist_t el0 = { .el = 0, .s_ptr = el_names[0], .s_arr = "0" },
 
 
 /* local functions */
-static int tc_list1_init(int log){
+TEST(list1_init, "list1 init"){
 	unsigned int n;
 	tlist_t *head,
 			*tail;
@@ -57,15 +57,12 @@ static int tc_list1_init(int log){
 
 	list1_init(head, tail);
 
-	n += check_ptr(log, head->next, 0x0);
+	n += CHECK_PTR(head->next, 0x0);
 
 	return -n;
 }
 
-test_case(tc_list1_init, "list1_init");
-
-
-static int tc_list1_add_head(int log){
+TEST(list2_add_head, "list1 add head"){
 	unsigned int n;
 	tlist_t *head,
 			*tail;
@@ -79,17 +76,14 @@ static int tc_list1_add_head(int log){
 	list1_add_head(head, tail, &el0);
 	list1_add_head(head, tail, &el1);
 
-	n += check_ptr(log, head, &el1);
-	n += check_ptr(log, el1.next, &el0);
-	n += check_ptr(log, el0.next, 0x0);
+	n += CHECK_PTR(head, &el1);
+	n += CHECK_PTR(el1.next, &el0);
+	n += CHECK_PTR(el0.next, 0x0);
 
 	return -n;
 }
 
-test_case(tc_list1_add_head, "list1_add_head");
-
-
-static int tc_list1_add_tail(int log){
+TEST(list1_add_tail, "list1 add tail"){
 	unsigned int n;
 	tlist_t *head,
 			*tail;
@@ -103,17 +97,14 @@ static int tc_list1_add_tail(int log){
 	list1_add_tail(head, tail, &el0);
 	list1_add_tail(head, tail, &el1);
 
-	n += check_ptr(log, head, &el0);
-	n += check_ptr(log, el0.next, &el1);
-	n += check_ptr(log, el1.next, 0x0);
+	n += CHECK_PTR(head, &el0);
+	n += CHECK_PTR(el0.next, &el1);
+	n += CHECK_PTR(el1.next, 0x0);
 
 	return -n;
 }
 
-test_case(tc_list1_add_tail, "list1_add_tail");
-
-
-static int tc_list1_rm(int log){
+TEST(list1_rm, "list1 rm"){
 	unsigned int n;
 	tlist_t *head,
 			*tail;
@@ -131,22 +122,20 @@ static int tc_list1_rm(int log){
 	// remove middle element
 	list1_rm_head(head, tail);
 
-	n += check_ptr(log, head, &el1);
-	n += check_ptr(log, el1.next, &el2);
-	n += check_ptr(log, el2.next, 0x0);
+	n += CHECK_PTR(head, &el1);
+	n += CHECK_PTR(el1.next, &el2);
+	n += CHECK_PTR(el2.next, 0x0);
 
 	// remove tail element
 	list1_rm_head(head, tail);
 
-	n += check_ptr(log, head, &el2);
-	n += check_ptr(log, el2.next, 0x0);
+	n += CHECK_PTR(head, &el2);
+	n += CHECK_PTR(el2.next, 0x0);
 
 	// remove head element
 	list1_rm_head(head, tail);
 
-	n += check_ptr(log, head, 0x0);
+	n += CHECK_PTR(head, 0x0);
 
 	return -n;
 }
-
-test_case(tc_list1_rm, "list1_rm");

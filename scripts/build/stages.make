@@ -58,28 +58,33 @@ ifneq ($(EXEC_PRESTAGE),$(prestage_key))
 
   # only call prestages if none of the following targets is called
   ifneq ($(filter-out $(skip_prestage_targets),$(MAKECMDGOALS)),)
-    # check if clean targets are mixed with other targets that require prestages to be executed
-    ifneq ($(filter clean% %clean,$(MAKECMDGOALS)),)
-      $(error Mixing clean with other targets is not supported by the build system)
+    # only call prestages if make is not called by bash-completion
+	# 	NOTE this check is only on best effort and can interfere with
+	# 	     other invocations of make
+    ifneq ($(MAKEFLAGS),npqw)
+      # check if clean targets are mixed with other targets that require prestages to be executed
+      ifneq ($(filter clean% %clean,$(MAKECMDGOALS)),)
+        $(error Mixing clean with other targets is not supported by the build system)
+      endif
+  
+      # stage0
+      # 	required to update the *.cmd files
+      # 	this cannot be done in a single run of make since that way variables, such as flags
+      # 	that are passed via indirect dependencies are not know
+      #
+      # 	for instance
+      # 		foo: cppflags-y += -DFOO
+      # 		foo:
+      # 			gcc $(cppflags-y)
+      $(call prestage,stage0,prepare_deps $(MAKECMDGOALS))
+  
+      # stage1
+      # 	required to build targets that for instance create makefiles
+      # 	since those generate files might alter the build they cannot be build in a single
+      # 	run of make
+      $(call prestage,stage1,prepare_deps)
+  
+      $(call pdebug0,prestage done)
     endif
-
-	# stage0
-	# 	required to update the *.cmd files
-	# 	this cannot be done in a single run of make since that way variables, such as flags
-	# 	that are passed via indirect dependencies are not know
-	#
-	# 	for instance
-	# 		foo: cppflags-y += -DFOO
-	# 		foo:
-	# 			gcc $(cppflags-y)
-    $(call prestage,stage0,prepare_deps $(MAKECMDGOALS))
-
-	# stage1
-	# 	required to build targets that for instance create makefiles
-	# 	since those generate files might alter the build they cannot be build in a single
-	# 	run of make
-    $(call prestage,stage1,prepare_deps)
-
-    $(call pdebug0,prestage done)
   endif
 endif

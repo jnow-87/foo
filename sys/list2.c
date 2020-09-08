@@ -36,6 +36,10 @@ void _list2_rm(list2_t **head, list2_t *el){
 	__list2_rm(*head, el, prev, next);
 }
 
+list2_t *_list2_last(list2_t *head){
+	return __list2_last(head, prev);
+}
+
 bool _list2_contains(list2_t *head, list2_t *el){
 	return __list2_contains(head, el, prev, next);
 }

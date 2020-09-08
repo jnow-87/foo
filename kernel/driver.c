@@ -21,22 +21,22 @@ extern device_driver_t __device_driver_base[],
 
 
 /* local/static prototypes */
-static void probe_childs(devtree_driver_t const * const *childs, void *itf);
-static void probe_interface(devtree_driver_t const *node, void *itf);
-static void probe_device(devtree_driver_t const *node, void *itf);
+static void probe_childs(devtree_device_t const * const *childs, void *itf);
+static void probe_interface(devtree_device_t const *node, void *itf);
+static void probe_device(devtree_device_t const *node, void *itf);
 
 
 /* global functions */
 int driver_load(void){
 	INFO("load drivers\n");
-	probe_childs(__dt_driver_root.childs, 0x0);
+	probe_childs(__dt_devices_root.childs, 0x0);
 
 	return -errno;
 }
 
 
 /* local functions */
-static void probe_childs(devtree_driver_t const * const *childs, void *itf){
+static void probe_childs(devtree_device_t const * const *childs, void *itf){
 	size_t i;
 
 
@@ -49,7 +49,7 @@ static void probe_childs(devtree_driver_t const * const *childs, void *itf){
 	}
 }
 
-static void probe_interface(devtree_driver_t const *node, void *itf){
+static void probe_interface(devtree_device_t const *node, void *itf){
 	interface_driver_t *e;
 
 
@@ -69,7 +69,7 @@ static void probe_interface(devtree_driver_t const *node, void *itf){
 	INFO("no compatible interface driver found for \"%s\"\n", node->name);
 }
 
-static void probe_device(devtree_driver_t const *node, void *itf){
+static void probe_device(devtree_device_t const *node, void *itf){
 	device_driver_t *e;
 
 

@@ -138,9 +138,9 @@ char const *strerror(errno_t errnum){
 		"Operation not supported",
 		"Already connected",
 		"No connection",
-		"Unkown",
+		"Unknown",
 	};
-	static char err_unknown[] = "Unkown error 0x....";
+	static char err_unknown[] = "Unknown error 0x....";
 	static char err_limit[] = "Error string too short to display errno";
 
 
@@ -148,7 +148,7 @@ char const *strerror(errno_t errnum){
 	if(errnum <= E_UNKNOWN)
 		return err_str[errnum];
 
-	if(itoa(errnum, 16, err_unknown + 15, 2) == 0x0)
+	if(itoa(errnum, 16, err_unknown + 16, 2) == 0x0)
 		return err_limit;
 
 	return err_unknown;

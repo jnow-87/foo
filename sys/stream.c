@@ -113,7 +113,8 @@ int snprintf(char *s, size_t n, char const *format, ...){
 
 
 	va_start(lst, format);
-	i = vsnprintf(s, n, format, lst);
+	i = vsnprintf(s, n - 1, format, lst);
+	s[i] = 0;
 	va_end(lst);
 
 	return i;
@@ -148,7 +149,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 #endif // CONFIG_NOFLOAT
 
 
-	if(stream == 0x0 || (stream->putc == 0x0 && stream->wbuf == 0x0))
+	if(stream == 0x0)
 		return 0;
 
 	n = 0;
@@ -161,7 +162,7 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 
 			continue;
 		}
-		else if(*format == '%' && *(format + 1) == '%'){
+		else if(*(format + 1) == '%'){
 			n += put_char(stream, '%');
 			format += 2;
 
@@ -231,8 +232,10 @@ spec_err:
 	}
 
 	// zero-terminate string streams
-	if(stream->putc == 0x0)
+	if(stream->putc == 0x0){
 		put_char(stream, 0);
+		stream->widx--;
+	}
 
 	return n;
 }
@@ -394,6 +397,9 @@ static int get_spec(char const *format, va_list lst, len_t len, fflag_t *flags, 
 	case 'n':
 		v->p = va_arg(lst, void*);
 		break;
+
+	default:
+		return -1;
 	}
 
 	return 0;
@@ -412,11 +418,6 @@ static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, valu
 	case LEN_SHORT:
 		v->i = va_arg(lst, int);
 		max = USHRT_MAX;
-		break;
-
-	case LEN_INT:
-		v->i = va_arg(lst, int);
-		max = UINT_MAX;
 		break;
 
 	case LEN_LONG:
@@ -469,8 +470,11 @@ static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, valu
 		return -1;
 #endif // CONFIG_PRINTF_INTMAX
 
+	case LEN_INT: // fall through
 	default:
-		return -1;
+		v->i = va_arg(lst, int);
+		max = UINT_MAX;
+		break;
 	}
 
 	if(!check_sign){
@@ -539,6 +543,9 @@ static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len,
 				prefix[0] = '0';
 				n_prefix = 1;
 			}
+			break;
+
+		default:
 			break;
 		}
 	}
@@ -615,10 +622,6 @@ static void put_len(len_t len, value_t *v, size_t n){
 		*((short int*)v->p) = n;
 		break;
 
-	case LEN_INT:
-		*((int*)v->p) = n;
-		break;
-
 #ifdef CONFIG_PRINTF_LONG
 	case LEN_LONG:
 		*((long int*)v->p) = n;
@@ -649,7 +652,9 @@ static void put_len(len_t len, value_t *v, size_t n){
 		break;
 #endif // CONFIG_PRINTF_INTMAX
 
+	case LEN_INT: // fall through
 	default:
+		*((int*)v->p) = n;
 		break;
 	}
 }
@@ -669,16 +674,7 @@ static size_t convert(char const *format, fflag_t flags, value_t *v, char *buf){
 	case 'u':
 		return utoa_inv(v->i, buf, 10, flags);
 
-	case 'f': // fall through
-	case 'F': // fall through
-	case 'e': // fall through
-	case 'E': // fall through
-	case 'g': // fall through
-	case 'G': // fall through
-	case 'a': // fall through
-	case 'A':
-		/* TODO */
-		return 0;
+	/* TODO add cases for f F e E g G a A */
 
 	case 'c':
 		buf[0] = (char)v->i;

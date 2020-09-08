@@ -59,7 +59,7 @@ memory = {
 	};
 };
 
-driver = {
+devices = {
 	uart0 = {
 		compatible = "avr,uart";
 
