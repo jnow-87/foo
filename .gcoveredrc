@@ -25,7 +25,7 @@
 
 	/* specific files */
 	"testing/main.c"		// un-coverable branches due to
-							// error handling
+	"testing/testcase.c"	// error handling
 
 	"sys/errno.c"			// no executable lines
 	"sys/memory.c"			// no executable lines

@@ -12,29 +12,36 @@
 #include <testing/memory.h>
 
 
+/* local/static prototypes */
+static void *test_malloc(size_t size);
+static void *test_calloc(size_t n, size_t size);
+
+
 /* global variables */
-size_t tmalloc_fail_at = 0;
+size_t test_malloc_fail_at = 0;
 
 
 /* global functions */
-void tmemory_init(void){
-	mallocp = tmalloc;
-	callocp = tcalloc;
+void test_memory_init(void){
+	mallocp = test_malloc;
+	callocp = test_calloc;
 }
 
-void tmemory_reset(void){
+void test_memory_reset(void){
 	mallocp = malloc;
 	callocp = calloc;
 }
 
-void *tmalloc(size_t size){
-	if(--tmalloc_fail_at == 0)
+
+/* local functions */
+static void *test_malloc(size_t size){
+	if(--test_malloc_fail_at == 0)
 		return 0x0;
 	return malloc(size);
 }
 
-void *tcalloc(size_t n, size_t size){
-	if(--tmalloc_fail_at == 0)
+static void *test_calloc(size_t n, size_t size){
+	if(--test_malloc_fail_at == 0)
 		return 0x0;
 	return calloc(n, size);
 }

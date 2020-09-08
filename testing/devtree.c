@@ -90,40 +90,38 @@ devtree_device_t const devroot = {
 
 
 /* local functions */
-static int tc_devtree(int log){
+TEST(devtree, "device-tree"){
 	int n;
 
 
 	n = 0;
 
 	/* devtree_find_memory_by_name() */
-	n += check_ptr(log, devtree_find_memory_by_name(&memroot, "memory-root"), &memroot);
-	n += check_ptr(log, devtree_find_memory_by_name(&memroot, "mem0"), &mem0);
-	n += check_ptr(log, devtree_find_memory_by_name(&memroot, "mem1"), &mem1);
-	n += check_ptr(log, devtree_find_memory_by_name(&memroot, "mem0-child"), &mem0_child);
+	n += CHECK_PTR(devtree_find_memory_by_name(&memroot, "memory-root"), &memroot);
+	n += CHECK_PTR(devtree_find_memory_by_name(&memroot, "mem0"), &mem0);
+	n += CHECK_PTR(devtree_find_memory_by_name(&memroot, "mem1"), &mem1);
+	n += CHECK_PTR(devtree_find_memory_by_name(&memroot, "mem0-child"), &mem0_child);
 
-	n += check_ptr(log, devtree_find_memory_by_name(&memroot, "invalid"), 0x0);
-	n += check_ptr(log, devtree_find_memory_by_name(&mem1, "zero-child"), 0x0);
+	n += CHECK_PTR(devtree_find_memory_by_name(&memroot, "invalid"), 0x0);
+	n += CHECK_PTR(devtree_find_memory_by_name(&mem1, "zero-child"), 0x0);
 
 	/* devtree_find_device_by_name() */
-	n += check_ptr(log, devtree_find_device_by_name(&devroot, "devory-root"), &devroot);
-	n += check_ptr(log, devtree_find_device_by_name(&devroot, "dev0"), &dev0);
-	n += check_ptr(log, devtree_find_device_by_name(&devroot, "dev1"), &dev1);
-	n += check_ptr(log, devtree_find_device_by_name(&devroot, "dev0-child"), &dev0_child);
+	n += CHECK_PTR(devtree_find_device_by_name(&devroot, "devory-root"), &devroot);
+	n += CHECK_PTR(devtree_find_device_by_name(&devroot, "dev0"), &dev0);
+	n += CHECK_PTR(devtree_find_device_by_name(&devroot, "dev1"), &dev1);
+	n += CHECK_PTR(devtree_find_device_by_name(&devroot, "dev0-child"), &dev0_child);
 
-	n += check_ptr(log, devtree_find_device_by_name(&devroot, "invalid"), 0x0);
-	n += check_ptr(log, devtree_find_device_by_name(&dev1, "zero-child"), 0x0);
+	n += CHECK_PTR(devtree_find_device_by_name(&devroot, "invalid"), 0x0);
+	n += CHECK_PTR(devtree_find_device_by_name(&dev1, "zero-child"), 0x0);
 
 	/* devtree_find_device_by_comp() */
-	n += check_ptr(log, devtree_find_device_by_comp(&devroot, ""), &devroot);
-	n += check_ptr(log, devtree_find_device_by_comp(&devroot, "driver-dev0"), &dev0);
-	n += check_ptr(log, devtree_find_device_by_comp(&devroot, "driver-dev1"), &dev1);
-	n += check_ptr(log, devtree_find_device_by_comp(&devroot, "driver-dev0-child"), &dev0_child);
+	n += CHECK_PTR(devtree_find_device_by_comp(&devroot, ""), &devroot);
+	n += CHECK_PTR(devtree_find_device_by_comp(&devroot, "driver-dev0"), &dev0);
+	n += CHECK_PTR(devtree_find_device_by_comp(&devroot, "driver-dev1"), &dev1);
+	n += CHECK_PTR(devtree_find_device_by_comp(&devroot, "driver-dev0-child"), &dev0_child);
 
-	n += check_ptr(log, devtree_find_device_by_comp(&devroot, "invalid"), 0x0);
-	n += check_ptr(log, devtree_find_device_by_comp(&dev1, "zero-child"), 0x0);
+	n += CHECK_PTR(devtree_find_device_by_comp(&devroot, "invalid"), 0x0);
+	n += CHECK_PTR(devtree_find_device_by_comp(&dev1, "zero-child"), 0x0);
 
 	return -n;
 }
-
-test_case(tc_devtree, "devtree");

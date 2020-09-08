@@ -15,15 +15,12 @@
 
 
 /* static variables */
-extern size_t tmalloc_fail_at;
+extern size_t test_malloc_fail_at;
 
 
 /* local/static prototypes */
-void tmemory_init(void);
-void tmemory_reset(void);
-
-void *tmalloc(size_t size);
-void *tcalloc(size_t n, size_t size);
+void test_memory_init(void);
+void test_memory_reset(void);
 
 
 #endif // TESTING_MEMORY_H
