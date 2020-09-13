@@ -250,29 +250,54 @@ distclean:
 ####
 ## documentation
 ####
-doxygen_config := doc/doxygen.conf
-graphicspath := doc/img
 
+manual := $(build_tree)/doc/brickos.pdf
+
+tex_tree := doc/latex
+tex_build_tree := $(build_tree)/$(tex_tree)
+tex_src := $(shell find doc/ $(tex_build_tree) -name \*.tex 2>/dev/null)
+
+doxygen_tex := $(tex_build_tree)/refman.tex
+doxygen_pdf := $(tex_build_tree)/refman.pdf
+doxygen_log := $(build_tree)/doc/doxygen.log
+doxygen_src_dirs := include arch driver init kernel lib sys
+doxygen_src_files := $(shell find $(doxygen_src_dirs) -name \*.[hc])
+
+doxygen_config_src := doc/doxygen.conf
+doxygen_config_tgt := $(build_tree)/doc/doxygen.conf
+
+graphicspath := doc/img
 svggraphics := $(shell find $(graphicspath) -name \*.svg)
-pdfgraphics := $(patsubst %.svg, $(build_tree)/%.pdf, $(svggraphics))
+pdfgraphics := $(patsubst doc/%.svg, $(tex_build_tree)/%.pdf, $(svggraphics))
 
 .PHONY: docu
-docu: fig_svg
-	@sed -i -e 's>OUTPUT_DIRECTORY[ \t]*=.*>OUTPUT_DIRECTORY=$(build_tree)/doc/>' $(doxygen_config)
-	@doxygen $(doxygen_config)
-	@cp -r doc/* $(build_tree)/doc/latex
-	@cp -r $(src_dirs) include $(build_tree)/doc/latex
-	@cp -ru $(build_tree)/$(graphicspath) $(build_tree)/doc/latex/
-	@make -C $(build_tree)/doc/latex
-	$(echo) "\n\ndocumentation generated at $(build_tree)/doc"
+docu: $(manual)
+	$(call cmd_run_script, $(echo) "documentation: $<")
 
-.PHONY: fig_svg
-fig_svg: fig_cp $(pdfgraphics)
+$(manual): $(doxygen_pdf)
+	$(call cmd_run_script, $(cp) $< $@)
 
-.PHONY: fig_cp
-fig_cp:
-	$(mkdir) $(build_tree)/doc
-	$(cp) -ru $(graphicspath) $(build_tree)/doc
+$(doxygen_pdf): $(pdfgraphics) $(doxygen_tex) $(tex_src)
+	$(call cmd_run_script, $(cp) -ru doc/* $(tex_build_tree))
+	$(call cmd_run_script, $(cp) -ru $(doxygen_src_dirs) $(tex_build_tree))
+	$(call cmd_run_script, $(echo) "executing pdflatex (log: $(tex_build_tree)/pdflatex.log)...")
+	$(call cmd_run_script, \
+		cd $(tex_build_tree) \
+		&& pdflatex -interaction=nonstopmode refman 1>pdflatex.log 2>&1 \
+		&& makeindex refman.idx 1>>pdflatex.log 2>&1 \
+		&& pdflatex -interaction=nonstopmode refman 1>pdflatex.log 2>&1 \
+	)
 
-$(pdfgraphics): %.pdf : %.svg
-	inkscape -D -z -f $< --export-pdf=$@
+$(doxygen_tex): $(doxygen_config_tgt) $(doxygen_src_files)
+	$(call cmd_run_script, $(echo) "executing doxygen (log: $(doxygen_log))...")
+	$(call cmd_run_script, doxygen $(doxygen_config_tgt) 1>$(doxygen_log) 2>&1)
+
+$(doxygen_config_tgt): $(doxygen_config_src)
+	$(call cmd_run_script, $(mkdir) $(dir $@))
+	$(call cmd_run_script, $(cp) -ru $< $@)
+	$(call cmd_run_script, sed -i -e 's:OUTPUT_DIRECTORY[ \t]*=.*:OUTPUT_DIRECTORY=$(build_tree)/doc/:' $@)
+	$(call cmd_run_script, sed -i -e 's:INPUT[ \t]*=.*:INPUT=$(doxygen_src_dirs):' $@)
+
+$(tex_build_tree)/%.pdf: doc/%.svg
+	$(call cmd_run_script, $(mkdir) $(dir $@))
+	$(call cmd_run_script, inkscape -D -z -f $< --export-pdf=$@)
