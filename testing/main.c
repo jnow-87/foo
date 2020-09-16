@@ -47,7 +47,7 @@ int main(int argc, char **argv){
 		printf("run test: %s... ", tc->desc);
 		test_log(" === test case: %s ===\n\n", tc->desc);
 
-		r = (tc->hdlr)();
+		r = (tc->hdlr)() != 0;
 
 		printf("%s%s\n" RESET_ATTR, ((char *[]){ FG_GREEN, FG_RED }[r]), ((char *[]){ "passed", "failed" }[r]));
 		test_log("\n === test case: %s %s ===\n\n\n", tc->desc, ((char *[]){ "passed", "failed" }[r]));

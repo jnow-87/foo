@@ -44,7 +44,7 @@ int dup2(int old_fd, int new_fd){
 
 
 	p.fd = new_fd;
-	p.data = (void*)old_fd;
+	p.data = &old_fd;
 
 	if(sc(SC_DUP, &p) != E_OK)
 		return -1;

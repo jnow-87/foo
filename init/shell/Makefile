@@ -7,6 +7,4 @@
 
 
 
-obj-y := shell.o readline.o cmd.o cmds/
-
-obj-$(CONFIG_INIT_HISTORY) += history.o
+obj-y := shell.o readline.o history.o cmd.o cmds/

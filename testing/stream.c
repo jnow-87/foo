@@ -107,6 +107,7 @@ TEST(vfprintf, "vfprintf"){
 	n += test("    d",					"%5.7c", 'd');
 
 	/* s */
+	n += test("(null)",					"%s", 0x0);
 	n += test("test",					"%s", "test");
 	n += test("  tes",					"%5.3s", "test");
 	n += test("tes  ",					"%-5.3s", "test");

@@ -19,13 +19,13 @@
 // error and warnings
 #define BUILD_ASSERT(cond)				((void)sizeof(char[1 - 2*!(cond)]))
 
-#define GCC_ERROR(s)					_Pragma(STRGIFY(GCC error s))
+#define GCC_ASSERT(s)					_Pragma(STRGIFY(GCC error s))
 #define GCC_WARNING(s)					_Pragma(STRGIFY(GCC warning s))
 
-#define CPP_ERROR(s)					GCC_ERROR(STRGIFY(s))
+#define CPP_ASSERT(s)					GCC_ASSERT(STRGIFY(s))
 #define CPP_WARNING(s)					GCC_WARNING(STRGIFY(s))
 
-#define CALL_DISABLED(_call, _option)	({ CPP_ERROR(function STRGIFY(_call()) disabled - check kernel configuration _option); 0x0; })
+#define CALL_DISABLED(_call, _option)	({ CPP_ASSERT(function STRGIFY(_call()) disabled - check kernel configuration _option); 0x0; })
 
 // suppress 'unused' compiler warning
 #define __used			__attribute__((used))

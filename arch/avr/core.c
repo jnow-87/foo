@@ -35,7 +35,7 @@ void avr_core_sleep(void){
 		(0x7 << SMCR_SM)
 #else
 
-GCC_ERROR(invalid sleep mode - check kernel config)
+CPP_ASSERT(invalid sleep mode - check kernel config)
 
 #endif // CONFIG_SLEEPMODE
 	);
@@ -47,7 +47,6 @@ GCC_ERROR(invalid sleep mode - check kernel config)
 	mreg_w(SMCR, 0x0);
 }
 
-#ifdef BUILD_KERNEL
 void avr_core_panic(thread_ctx_t const *tc){
 #ifdef CONFIG_KERNEL_PRINTF
 	uint8_t i,
@@ -106,11 +105,9 @@ void avr_core_panic(thread_ctx_t const *tc){
 	// send core to sleep
 	asm volatile("sleep");
 }
-#endif // BUILD_KERNEL
 
 
 /* local functions */
-#ifdef BUILD_KERNEL
 static int init(void){
 	/* set system clock prescaler */
 	mreg_w_sync(CLKPR, CONFIG_SYSTEM_CLOCK_PRESCALER, CLKPR_CLKPCE);
@@ -133,4 +130,3 @@ static int init(void){
 }
 
 core_init(init);
-#endif // BUILD_KERNEL

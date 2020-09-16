@@ -67,6 +67,32 @@ TEST(stack_init, "stack init"){
 	return -n;
 }
 
+TEST(stack_top, "stack top"){
+	unsigned int n;
+	stack_t *top;
+
+
+	n = 0;
+	top = 0;
+	INIT_EL();
+
+	n += CHECK_PTR(stack_top(top), 0x0);
+
+	stack_push(top, &el0);
+	n += CHECK_PTR(stack_top(top), &el0);
+
+	stack_push(top, &el1);
+	n += CHECK_PTR(stack_top(top), &el1);
+
+	(void)pop(&top);
+	n += CHECK_PTR(stack_top(top), &el0);
+
+	(void)pop(&top);
+	n += CHECK_PTR(stack_top(top), 0x0);
+
+	return -n;
+}
+
 TEST(stack_push, "stack push"){
 	unsigned int n;
 	stack_t *top;

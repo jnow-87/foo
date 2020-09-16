@@ -72,7 +72,7 @@ typedef long long int			ptrdiff_t;
 
 #else // CONFIG_REGISTER_WIDTH
 
-GCC_ERROR(invalid address width in configuration)
+CPP_ASSERT(invalid address width in configuration)
 
 #endif // CONFIG_REGISTER_WIDTH
 

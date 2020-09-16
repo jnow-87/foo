@@ -17,7 +17,7 @@ obj-$(CONFIG_IOVERFLOW_DET) += iovfl.o
 # libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := core.libsys.o lib.o syscall.libsys.o atomic.libsys.o
+libsys-y := lib.o syscall.libsys.o atomic.libsys.o
 
 
 # custom rules to generate separate object files for src files that are reuired by kernel and libsys

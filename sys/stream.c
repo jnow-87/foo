@@ -203,6 +203,9 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 			put_len(len, &v, n);
 		}
 		else if(*format == 's'){
+			if(v.p == 0x0)
+				v.p = "(null)";
+
 			blen = strlen(v.p);
 
 			if((flags & FFL_PRECISION) && prec < blen)

@@ -79,7 +79,7 @@
 
 #else
 
-GCC_ERROR(invalid address width in configuration)
+CPP_ASSERT(invalid address width in configuration)
 
 #endif // CONFIG_REGISTER_WIDTH
 

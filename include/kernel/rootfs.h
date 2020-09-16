@@ -24,13 +24,13 @@ typedef struct{
 } rootfs_file_t;
 
 
-/* external variables */
-extern fs_node_t *fs_root;
-
-
 /* prototypes */
 fs_node_t *rootfs_mkdir(char const *path, int fs_id);
 int rootfs_rmdir(fs_node_t *node);
+
+
+/* external variables */
+extern fs_node_t *fs_root;
 
 
 #endif // KERNEL_ROOTFS_H

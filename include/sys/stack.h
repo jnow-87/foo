@@ -11,26 +11,39 @@
 #define SYS_STACK_H
 
 
+#include <sys/compiler.h>
 #include <sys/list.h>
 
 
 /* static variables */
-static list1_t *dummy_tail = 0x0;	// a stack does not require a tail pointer
-									// hence a dummy is used when calling the
-									// list implementation
+static list1_t *dummy_tail __unused = 0x0;	// a stack does not require a tail pointer
+											// hence a dummy is used when calling the
+											// list implementation
 
 
 /* macros */
 /**
  * \brief	initialise the stack
  *
- * \param	top		pointer to the first stack element
- * 					(valid pointer target required)
+ * \param	top		pointer to the stack
  */
 #define stack_init(top){ \
 	LIST_TYPE_COMPAT(*top); \
 	_list1_init((list1_t*)top, &dummy_tail); \
 }
+
+/**
+ * \brief	get the top element on the stack without
+ * 			removing it
+ *
+ * \param	top		pointer to the stack
+ *
+ * \return	pointer to the top element
+ */
+#define stack_top(top)({ \
+	LIST_TYPE_COMPAT(*top); \
+	top; \
+})
 
 /**
  * \brief	add an element to the stack

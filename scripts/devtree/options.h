@@ -33,12 +33,12 @@ typedef struct{
 } opt_t;
 
 
-/* external variables */
-extern opt_t options;
-
-
 /* prototypes */
 void opt_parse(int argc, char **argv);
+
+
+/* external variables */
+extern opt_t options;
 
 
 #endif // OPTIONS_H

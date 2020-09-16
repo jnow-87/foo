@@ -57,6 +57,7 @@ int shell(char const *prompt, FILE *_stream){
 
 
 	/* init */
+	r = 0;
 	exec_err = 0;
 	stream = _stream;
 	streams = 0x0;

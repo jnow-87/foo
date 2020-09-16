@@ -17,7 +17,7 @@
 
 
 /* local/static prototypes */
-static void exec_init_call(init_call_t *base, init_call_t *end, bool p_err);
+static void exec_init_call(init_call_t *base, init_call_t *end);
 
 
 /* external variables */
@@ -34,18 +34,22 @@ extern init_call_t __core_init0_base[],
 /* global functions */
 int kinit(void){
 	/* core (stage: 0) */
-	exec_init_call(__core_init0_base, __platform_init0_base, false);
+	exec_init_call(__core_init0_base, __platform_init0_base);
 
 	if(PIR == 0){
 		/* platform (stage: 0, 1) */
-		exec_init_call(__platform_init0_base, __kernel_init0_base, false);
+		exec_init_call(__platform_init0_base, __kernel_init0_base);
 
-		kprintf(KMSG_ANY, "\n\t\t" FG_BLUE "::: brickos :::" RESET_ATTR "\n" VERSION "\n");
+		kprintf(KMSG_DEBUG | KMSG_INFO | KMSG_STAT,
+			"\n"
+			"\t\t" FG_BLUE "::: brickos :::" RESET_ATTR "\n"
+			VERSION "\n"
+		);
 
 		/* kernel (stage: 0, 1, 2)
 		 * driver (stage: 0)
 		 */
-		exec_init_call(__kernel_init0_base, __init_end, true);
+		exec_init_call(__kernel_init0_base, __init_end);
 	}
 
 	return -errno;
@@ -53,7 +57,7 @@ int kinit(void){
 
 
 /* local functions */
-static void exec_init_call(init_call_t *base, init_call_t *end, bool p_err){
+static void exec_init_call(init_call_t *base, init_call_t *end){
 	init_call_t *p;
 
 
@@ -61,10 +65,9 @@ static void exec_init_call(init_call_t *base, init_call_t *end, bool p_err){
 		if(errno != E_OK)
 			return;
 
-		if(p->call() != E_OK && p_err){
-			WARN("%s() failed \"%s\"\n", p->name, strerror(errno));
-		}
-		else
-			INFO("%s() succeed\n", p->name);
+		DEBUG("%s()...\n", p->name);
+
+		if(p->call() != E_OK)
+			FATAL("%s() failed \"%s\"\n", p->name, strerror(errno));
 	}
 }

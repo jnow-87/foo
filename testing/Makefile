@@ -9,10 +9,7 @@
 
 hostbin-y := main
 
-main-y := main.o testcase.o string.o stream.o list.o list1.o queue.o stack.o memory.o memblock.o vector.o inet.o devtree.o sys/
-
-main-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
-main-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
+main-y := main.o testcase.o string.o stream.o list.o list1.o queue.o stack.o memory.o memblock.o vector.o inet.o devtree.o ringbuf.o patmat.o sys/
 
 
 main-hostcppflags += -I$(src_tree) -I$(src_tree)/include -I/usr/include

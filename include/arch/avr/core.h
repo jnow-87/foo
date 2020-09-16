@@ -16,10 +16,7 @@
 
 /* prototypes */
 void avr_core_sleep(void);
-
-#ifdef BUILD_KERNEL
 void avr_core_panic(thread_ctx_t const *tc);
-#endif // BUILD_KERNEL
 
 
 #endif // AVR_CORE_H
