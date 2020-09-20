@@ -11,6 +11,7 @@
 function! s:get_arch(kernel_image)
 	let l:machine_id = {
 		\ "avr":["AVR"],
+		\ "x86":["x86", "X86" ],
 	\ }
 
 	let l:machine = system("readelf -h " . a:kernel_image . " | grep 'Machine' | cut -d ':' -f 2")

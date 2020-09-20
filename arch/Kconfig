@@ -18,11 +18,22 @@ choice
 		bool "AVR"
 		select NOFLOAT
 		select KERNEL_NO_VIRT_MEM
+
+	config X86
+		bool "x86 (host test)"
+		select NOFLOAT
+		select KERNEL_NO_VIRT_MEM
+		select ADDR_WIDTH_64
+		select REGISTER_WIDTH_64
 endchoice
 
 menu "Processor features"
 	if AVR
 		source "arch/avr/Kconfig"
+	endif
+
+	if X86
+		source "arch/x86/Kconfig"
 	endif
 endmenu
 
@@ -31,11 +42,13 @@ menu "Hidden"
 
 	config ARCH
 		string "Architecture"
-		default "avr" if AVR
+		default "avr"	if AVR
+		default "x86"	if X86
 	
 	config PROCESSOR
 		string "Processor"
-		default AVR_MCU if AVR
+		default AVR_MCU	if AVR
+		default "x86"	if X86
 
 	config ADDR_WIDTH_8
 		bool "8-bit"

@@ -1,0 +1,35 @@
+/**
+ * Copyright (C) 2020 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+memory = {
+	ram = {
+		baseaddr = 0x00400000;
+		size = 23072768;
+
+		text = {
+			baseaddr = 0x00400000;
+			size = 20971520;
+		};
+
+		kernel_heap = {
+			baseaddr = 0x01800000;
+			size = 1048576;
+		};
+
+		kernel_stack = {
+			baseaddr = 0x01900000;
+			size = 4096;
+		};
+
+		app_heap = {
+			baseaddr = 0x01901000;
+			size = 1048576;
+		};
+	};
+};
