@@ -28,13 +28,6 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_t
 ## linker scripts
 ####
 
-## memory layout
-lds_memory_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_memory
-lds_memory_file := $(loc_build_tree)/avr_memory.lds
-
-$(lds_memory_file): $(lds_memory_script)
-	$(call compile_file,$(lds_memory_script) $(lds_memory_file))
-
 ## plugin
 lds_plugin_script := $(build_tree)/scripts/arch/avr/linker/gen_lds_plugin
 lds_plugin_kernel_file := $(loc_build_tree)/avr_plugin_kernel.lds
@@ -47,7 +40,7 @@ $(lds_plugin_app_file): $(lds_plugin_script)
 	$(call compile_file,$(lds_plugin_script) $(lds_plugin_app_file) app)
 
 ## combined dependencies
-avr_lds: $(lds_memory_file) $(lds_plugin_kernel_file) $(lds_plugin_app_file)
+avr_lds: $(lds_plugin_kernel_file) $(lds_plugin_app_file)
 
 prepare_deps: avr_lds
 
@@ -86,17 +79,15 @@ ifeq ($(CONFIG_BUILD_RELEASE),y)
 endif
 
 ## kernel flags
-ldlibs-kernel-arch := \
+ldlibs-kernel-arch += \
 	-L$(loc_build_tree) \
-	-T$(lds_memory_file) \
 	-Wl,--section-start=.text=$(DEVTREE_KERNEL_FLASH_BASE) \
 	-Wl,--section-start=.data=$(DEVTREE_KERNEL_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/kernel.map,--cref
 
 ## init application flags
-ldlibs-app-arch := \
+ldlibs-app-arch += \
 	-L$(loc_build_tree) \
-	-T$(lds_memory_file) \
 	-Wl,--section-start=.text=$(DEVTREE_APP_FLASH_BASE) \
 	-Wl,--section-start=.data=$(DEVTREE_APP_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/init/init.map,--cref

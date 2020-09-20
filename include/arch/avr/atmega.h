@@ -19,8 +19,7 @@
 #endif // CONFIG_ATMEGA1284P
 
 #ifndef ASM
-#ifndef _x86_
-#ifndef __x86_64__
+#ifndef BUILD_HOST
 
 #include <config/avrconfig.h>
 #include <arch/arch.h>
@@ -37,8 +36,7 @@
 #include <arch/avr/lib.h>
 #include <sys/types.h>
 
-#endif // __x86_64__
-#endif // _x86_
+#endif // BUILD_HOST
 #endif // ASM
 
 
@@ -70,8 +68,7 @@
 
 /* static variables */
 #ifndef ASM
-#ifndef _x86_
-#ifndef __x86_64__
+#ifndef BUILD_HOST
 
 // kernel callbacks
 #ifdef BUILD_KERNEL
@@ -127,8 +124,7 @@ static arch_info_t const arch_info = {
 	.sched_timer_err_us = AVRCONFIG_SCHED_ERROR_US,
 };
 
-#endif // _x86_
-#endif // __x86_64__
+#endif // BUILD_HOST
 #endif // ASM
 
 

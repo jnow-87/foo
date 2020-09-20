@@ -19,6 +19,7 @@
 
 
 /* local/static prototypes */
+static void export_memory_node(devtree_memory_t const *node, FILE *file);
 static int overlap(char const *name0, size_t base0, size_t size0, char const *name1, size_t base1, size_t size1);
 
 
@@ -26,15 +27,6 @@ static int overlap(char const *name0, size_t base0, size_t size0, char const *na
 int main(int argc, char **argv){
 	char *ofile_name;
 	FILE *ofile;
-	unsigned int i;
-	int r;
-	devtree_memory_t const *node;
-	char const *sec_names[] = {
-		"kernel_flash",
-		"app_flash",
-		"kernel_data",
-		"app_data",
-	};
 
 
 	/* check arguments */
@@ -51,7 +43,7 @@ int main(int argc, char **argv){
 
 	ofile_name = argv[1];
 
-	printf("generating avr memory layout linker script \"%s\"\n", ofile_name);
+	printf("generating memory linker script \"%s\"\n", ofile_name);
 
 	/* generate output file */
 	ofile = fopen(ofile_name, "w");
@@ -62,27 +54,32 @@ int main(int argc, char **argv){
 	}
 
 	fprintf(ofile, "MEMORY {\n");
-
-	r = 0;
-
-	for(i=0; i<sizeof(sec_names)/sizeof(*sec_names); i++){
-		node = devtree_find_memory_by_name(&__dt_memory_root, sec_names[i]);
-
-		if(node == 0x0)
-			r = 1;
-
-		fprintf(ofile, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", sec_names[i], (unsigned long int)node->base, node->size);
-	}
-
+	export_memory_node(&__dt_memory_root, ofile);
 	fprintf(ofile, "}\n");
 
 	fclose(ofile);
 
-	return r;
+	return 0;
 }
 
 
 /* local functions */
+static void export_memory_node(devtree_memory_t const *node, FILE *file){
+	size_t i;
+	devtree_memory_t const *child;
+
+
+	if(node->childs == 0x0)
+		return;
+
+	for(i=0; node->childs[i]!=0x0; i++){
+		child = node->childs[i];
+
+		fprintf(file, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", child->name, (unsigned long int)child->base, child->size);
+		export_memory_node(child, file);
+	}
+}
+
 /**
  * \brief	check if two sections have some overlap
  * 			sections are defined by their base address and size

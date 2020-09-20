@@ -185,7 +185,9 @@ TEST(vfprintf, "vfprintf"){
 	n += test(" 0x0fe",					"% 5.3p", (void*)0xfe);
 	n += test("0x0fe",					"%#5.3p", (void*)0xfe);
 
-#if defined(CONFIG_PRINTF_LONG) || defined(CONFIG_PRINTF_SIZET)
+#if CONFIG_REGISTER_WIDTH >= 32 \
+ || defined(CONFIG_PRINTF_LONG) \
+ || defined(CONFIG_PRINTF_SIZET)
 	n += test("+0xffffffffffffff02",	"%+5.3p", (void*)-0xfe);
 #elif CONFIG_REGISTER_WIDTH == 8
 	n += test("+0xffffff02",			"%+5.3p", (void*)-0xfe);

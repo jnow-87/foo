@@ -9,7 +9,7 @@
 CONFIG_AVR=y
 
 #
-# AVR features
+# Processor features
 #
 CONFIG_ATMEGA1284P=y
 CONFIG_AVR_MCU=atmega1284p

@@ -20,9 +20,10 @@ choice
 		select KERNEL_NO_VIRT_MEM
 endchoice
 
-menu "AVR features"
-	visible if AVR
-	source "arch/avr/Kconfig"
+menu "Processor features"
+	if AVR
+		source "arch/avr/Kconfig"
+	endif
 endmenu
 
 menu "Hidden"
@@ -45,12 +46,16 @@ menu "Hidden"
 	config ADDR_WIDTH_32
 		bool "32-bit"
 
+	config ADDR_WIDTH_64
+		bool "64-bit"
+
 	config ADDR_WIDTH
 		int "Address width"
-		default 8 if ADDR_WIDTH_8
-		default 16 if ADDR_WIDTH_16
-		default 32 if ADDR_WIDTH_32
-		default 32
+		default 8	if ADDR_WIDTH_8
+		default 16	if ADDR_WIDTH_16
+		default 32	if ADDR_WIDTH_32
+		default 64	if ADDR_WIDTH_64
+		default 64
 
 	config REGISTER_WIDTH_8
 		bool "8-bit"
@@ -61,12 +66,16 @@ menu "Hidden"
 	config REGISTER_WIDTH_32
 		bool "32-bit"
 
+	config REGISTER_WIDTH_64
+		bool "64-bit"
+
 	config REGISTER_WIDTH
 		int "Address width"
-		default 8 if REGISTER_WIDTH_8
-		default 16 if REGISTER_WIDTH_16
-		default 32 if REGISTER_WIDTH_32
-		default 32
+		default 8	if REGISTER_WIDTH_8
+		default 16	if REGISTER_WIDTH_16
+		default 32	if REGISTER_WIDTH_32
+		default 64	if REGISTER_WIDTH_64
+		default 64
 
 	config NOFLOAT
 		bool "Enable floating point support"

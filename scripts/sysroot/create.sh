@@ -26,7 +26,7 @@ function copy(){
 	extra_flags=""
 	[ $VERBOSE -gt 0 ] && extra_flags+="--verbose"
 
-	cp ${extra_flags} -ur ${src} ${tgt}
+	cp ${extra_flags} -ur ${src} ${tgt} || { echo -e \"${src}\" \"${tgt}\"; }
 }
 
 
@@ -51,7 +51,9 @@ copy "include/sys/"						"${sysroot_inc}"
 copy "include/lib/"						"${sysroot_inc}"
 copy "include/arch/"					"${sysroot_inc}"
 copy "scripts/linker/"					"${sysroot_linker}"
-copy "$(find recent/arch -name \*.lds)"	"${sysroot_linker}/linker/"
+
+lds=$(find recent/arch -name \*.lds)
+[ "${lds}" != "" ] && copy "${lds}" "${sysroot_linker}/linker/"
 
 # replace BUILD_ARCH_HEADER macro by actual architecture header
 diff "include/arch/arch.h" "${sysroot_inc}/arch/arch.h" > /dev/null

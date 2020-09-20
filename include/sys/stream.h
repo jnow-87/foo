@@ -36,17 +36,11 @@
 	.putc = putchar, \
 }
 
-#ifndef _x86_
-#ifndef __x86_64__
-
 #if defined(BUILD_KERNEL) && !defined(CONFIG_KERNEL_PRINTF)
 #define vfprintf(stream, format, lst)	CALL_DISABLED(vfprintf, CONFIG_KERNEL_PRINTF)
 #elif !defined(BUILD_KERNEL) && !defined(CONFIG_LIB_STREAM)
 #define vfprintf(stream, format, lst)	CALL_DISABLED(vfprintf, CONFIG_LIB_STREAM)
 #endif
-
-#endif // __x86_64__
-#endif // _x86_
 
 
 /* types */
@@ -70,9 +64,7 @@ typedef struct FILE{
 
 /* prototypes */
 #if (defined(BUILD_KERNEL) && defined(CONFIG_KERNEL_PRINTF)) \
- || (!defined(BUILD_KERNEL) && defined(CONFIG_LIB_STREAM)) \
- || defined(_x86_) \
- || defined(__x86_64)
+ || (!defined(BUILD_KERNEL) && defined(CONFIG_LIB_STREAM))
 
 int vfprintf(FILE *stream, char const *format, va_list lst);
 int sprintf(char *s, char const *format, ...);
