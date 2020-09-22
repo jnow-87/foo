@@ -11,7 +11,7 @@
 #define X86_LINUX_H
 
 
-#include <arch/x86/argv.h>
+#include <arch/x86/opts.h>
 #include <kernel/panic.h>
 #include <sys/stdarg.h>
 #include <sys/types.h>

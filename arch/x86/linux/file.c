@@ -8,6 +8,7 @@
 
 
 #include <arch/x86/linux.h>
+#include <arch/x86/opts.h>
 #include <sys/stdarg.h>
 #include <sys/types.h>
 #include <sys/stream.h>

@@ -8,12 +8,12 @@
 
 
 # kernel
-obj-y := start.o memory.o linux/
+obj-y := hardware.o atomic.o opts.o kernel/ linux/
 
 # libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := lib.o
+libsys-y := hardware.libsys.o atomic.libsys.o opts.libsys.o lib/ $(loc_build_tree)/linux/libsys.o
 
 
 # custom rules to generate separate object files for src files that are reuired by kernel and libsys
