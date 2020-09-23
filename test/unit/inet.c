@@ -9,7 +9,7 @@
 
 #include <sys/inet.h>
 #include <sys/string.h>
-#include <testing/testcase.h>
+#include <testcase.h>
 
 
 /* local functions */

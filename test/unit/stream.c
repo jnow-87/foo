@@ -11,7 +11,7 @@
 #include <config/config.h>
 #include <sys/string.h>
 #include <sys/stream.h>
-#include <testing/testcase.h>
+#include <testcase.h>
 
 /* host header */
 #include <unistd.h>

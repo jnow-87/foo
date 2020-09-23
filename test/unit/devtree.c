@@ -8,7 +8,7 @@
 
 
 #include <sys/devtree.h>
-#include <testing/testcase.h>
+#include <testcase.h>
 
 
 /* static variables */

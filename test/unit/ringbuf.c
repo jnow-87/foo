@@ -9,7 +9,7 @@
 
 #include <sys/ringbuf.h>
 #include <sys/string.h>
-#include <testing/testcase.h>
+#include <testcase.h>
 
 
 /* macros */

@@ -11,7 +11,7 @@
 #include <sys/memblock.h>
 #include <sys/list.h>
 #include <sys/errno.h>
-#include <testing/testcase.h>
+#include <testcase.h>
 
 
 /* macros */

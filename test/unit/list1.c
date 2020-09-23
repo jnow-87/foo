@@ -10,7 +10,7 @@
 #include <sys/list.h>
 #include <sys/types.h>
 #include <sys/string.h>
-#include <testing/testcase.h>
+#include <testcase.h>
 
 
 /* macros */

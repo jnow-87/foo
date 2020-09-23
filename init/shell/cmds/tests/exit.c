@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <shell/cmds/test/test.h>
+#include <shell/cmds/tests/test.h>
 
 
 /* macros */

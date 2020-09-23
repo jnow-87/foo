@@ -9,7 +9,7 @@
 
 /* brickos header */
 #include <sys/escape.h>
-#include <testing/testcase.h>
+#include <testcase.h>
 
 /* host header */
 #include <stdio.h>

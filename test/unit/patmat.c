@@ -11,8 +11,8 @@
 #include <sys/memory.h>
 #include <sys/string.h>
 #include <sys/patmat.h>
-#include <testing/testcase.h>
-#include <testing/memory.h>
+#include <testcase.h>
+#include <memory.h>
 
 
 /* types */

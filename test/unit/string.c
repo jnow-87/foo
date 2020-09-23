@@ -10,7 +10,7 @@
 #include <sys/compiler.h>
 #include <sys/errno.h>
 #include <sys/string.h>
-#include <testing/testcase.h>
+#include <testcase.h>
 
 
 /* local functions */

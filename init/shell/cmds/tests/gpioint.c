@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sched.h>
-#include <shell/cmds/test/test.h>
+#include <shell/cmds/tests/test.h>
 
 
 /* macros */

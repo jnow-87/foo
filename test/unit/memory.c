@@ -9,7 +9,7 @@
 
 #include <sys/memory.h>
 #include <stdlib.h>
-#include <testing/memory.h>
+#include <memory.h>
 
 
 /* local/static prototypes */

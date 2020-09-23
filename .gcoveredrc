@@ -24,8 +24,8 @@
 	"driver/"
 
 	/* specific files */
-	"testing/main.c"		// un-coverable branches due to
-	"testing/testcase.c"	// error handling
+	"test/unit/main.c"		// un-coverable branches due to
+	"test/unit/testcase.c"	// error handling
 
 	"sys/errno.c"			// no executable lines
 	"sys/memory.c"			// no executable lines

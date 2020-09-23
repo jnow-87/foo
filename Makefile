@@ -29,7 +29,7 @@ gcovered_rc := .gcoveredrc
 
 # source- and build-tree
 default_build_tree := build/
-src_dirs := sys arch kernel lib init testing scripts/memlayout scripts/linker scripts/arch scripts/devtree
+src_dirs := sys arch kernel lib init test scripts/memlayout scripts/linker scripts/arch scripts/devtree
 
 
 ####

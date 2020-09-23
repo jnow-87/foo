@@ -9,8 +9,8 @@
 
 #include <sys/vector.h>
 #include <sys/types.h>
-#include <testing/testcase.h>
-#include <testing/memory.h>
+#include <testcase.h>
+#include <memory.h>
 
 
 /* macros */
