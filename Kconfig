@@ -64,6 +64,15 @@ endmenu
 # }}}
 
 #
+# test
+#
+# {{{
+menu "Test"
+	source test/integration/Kconfig
+endmenu
+# }}}
+
+#
 # build system
 #
 # {{{

@@ -7,7 +7,9 @@
 
 
 
-subdir-y := unit/ kernel/
+subdir-y := unit/
+
+subdir-$(CONFIG_X86) += integration/
 
 
 # test rules
