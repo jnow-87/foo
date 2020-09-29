@@ -8,7 +8,7 @@
 
 
 # kernel
-obj-y := start.o memory.o
+obj-y := start.o memory.o linux/
 
 # libsys
 obj-nobuiltin-y := libsys.o
