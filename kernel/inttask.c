@@ -6,7 +6,8 @@
  */
 
 
-#include <arch/interrupt.h>
+
+#include <kernel/interrupt.h>
 #include <kernel/critsec.h>
 #include <kernel/inttask.h>
 #include <kernel/ksignal.h>

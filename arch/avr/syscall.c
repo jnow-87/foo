@@ -9,7 +9,7 @@
 
 #include <config/config.h>
 #include <arch/arch.h>
-#include <arch/interrupt.h>
+#include <kernel/interrupt.h>
 
 #ifdef BUILD_KERNEL
 #include <kernel/init.h>

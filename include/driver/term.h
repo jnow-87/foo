@@ -11,7 +11,7 @@
 #define DRIVER_TERM_H
 
 
-#include <arch/interrupt.h>
+#include <kernel/interrupt.h>
 #include <sys/term.h>
 #include <sys/types.h>
 

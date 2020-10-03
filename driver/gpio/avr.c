@@ -11,6 +11,7 @@
 #include <arch/avr/atmega.h>
 #include <arch/interrupt.h>
 #include <kernel/driver.h>
+#include <kernel/interrupt.h>
 #include <kernel/devfs.h>
 #include <kernel/thread.h>
 #include <kernel/usignal.h>

@@ -12,7 +12,7 @@
 
 
 #include <config/config.h>
-#include <arch/interrupt.h>
+#include <kernel/interrupt.h>
 #include <kernel/inttask.h>
 #include <kernel/critsec.h>
 #include <sys/types.h>
