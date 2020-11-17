@@ -106,7 +106,7 @@ static int sc_hdlr_free(void *_p){
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	if(page == 0x0)
-		kpanic(this_t, "no page found to free\n");
+		kpanic("no page found to free\n");
 
 	/* free page */
 	page_free(this_p, page);

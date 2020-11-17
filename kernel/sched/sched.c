@@ -71,14 +71,13 @@ static thread_t kernel_threads[CONFIG_NCORES] = {
 static thread_t *running[CONFIG_NCORES] = { kernel_threads + 0 };
 
 
-
 /* global functions */
 void sched_yield(void){
 	char dummy;
 
 
 	if(int_enabled() == INT_NONE)
-		kpanic(sched_running(), "interrupts are disabled, syscall not allowed\n");
+		kpanic("interrupts are disabled, syscall not allowed\n");
 
 	// actual thread switches are only performed in interrupt
 	// service routines as it is required for syscalls
@@ -101,7 +100,7 @@ void sched_trigger(void){
 	this_t = list_first(sched_queues[READY])->thread;
 
 	if(this_t == 0x0)
-		kpanic(0x0, "no ready thread\n");
+		kpanic("no ready thread\n");
 
 	thread_transition_unsafe(this_t, RUNNING);
 
@@ -125,8 +124,12 @@ void sched_trigger(void){
 
 thread_t const *sched_running(void){
 	if(running[PIR] == 0x0)
-		kpanic(0x0, "no running thread\n");
+		kpanic("no running thread\n");
 
+	return running[PIR];
+}
+
+thread_t const *sched_running_nopanic(void){
 	return running[PIR];
 }
 
@@ -154,7 +157,7 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, siz
 		memcpy(ipi->data, data, size);
 
 		if(ipi_send(core, thread_modify, ipi, sizeof(sched_ipi_t) + size) != 0)
-			kpanic(this_t, "trigger ipi failed \"%s\"\n", strerror(errno));
+			kpanic("trigger ipi failed \"%s\"\n", strerror(errno));
 	}
 	else
 #endif // CONFIG_KERNEL_SMP
@@ -310,7 +313,7 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 	|| (queue == DEAD && s == CREATED)
 	|| (queue == DEAD && s == WAITING)
 	){
-		kpanic(this_t, "invalid scheduler transition %u -> %u\n", s, queue);
+		kpanic("invalid scheduler transition %u -> %u\n", s, queue);
 	}
 
 	/* perform transition */
@@ -318,7 +321,7 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 		e = kmalloc(sizeof(sched_queue_t));
 
 		if(e == 0x0)
-			kpanic(this_t, "out of memory\n");
+			kpanic("out of memory\n");
 
 		e->thread = this_t;
 	}
@@ -326,7 +329,7 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 		e = list_find(sched_queues[this_t->state], thread, this_t);
 
 		if(e == 0x0)
-			kpanic(this_t, "thread not found in supposed sched queue %d\n", this_t->state);
+			kpanic("thread not found in supposed sched queue %d\n", this_t->state);
 
 		list_rm(sched_queues[this_t->state], e);
 	}

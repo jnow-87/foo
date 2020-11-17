@@ -128,7 +128,7 @@ static void context_inject(thread_t *this_t, void *_p){
 	}
 
 	if(ctx == 0x0)
-		kpanic(this_t, "no user-context found\n");
+		kpanic("no user-context found\n");
 
 	/* save ctx to signal_ctx_stack */
 	sig_ctx = kmalloc(sizeof(usignal_ctx_t));

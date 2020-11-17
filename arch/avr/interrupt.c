@@ -60,7 +60,7 @@ void avr_int_call(int_num_t num){
 	imask = int_enable(INT_NONE);
 
 	if(num >= NUM_INT || int_hdlr[num] == 0x0)
-		kpanic(sched_running(), "unhandled or invalid interrupt %u", num);
+		kpanic("unhandled or invalid interrupt %u\n", num);
 
 	errno = E_OK;
 	int_hdlr[num](num, int_data[num]);
@@ -108,5 +108,5 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 }
 
 void avr_int_warm_reset_hdlr(void){
-	kpanic(0x0, "call reset handler without actual MCU reset");
+	kpanic("call reset handler without actual MCU reset\n");
 }

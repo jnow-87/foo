@@ -17,7 +17,7 @@
 
 /* local functions */
 static void iovfl_hdlr(int_num_t num, void *data){
-	kpanic(sched_running(), "instruction memory overflow");
+	kpanic("instruction memory overflow\n");
 }
 
 static int init(void){

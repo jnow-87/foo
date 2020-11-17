@@ -59,7 +59,7 @@ void kfree(void *addr){
 	critsec_lock(&kmem_lock);
 
 	if(memblock_free(&kernel_heap, addr) < 0)
-		kpanic(0x0, "double free at %p\n", addr);
+		kpanic("double free at %p\n", addr);
 
 	critsec_unlock(&kmem_lock);
 }

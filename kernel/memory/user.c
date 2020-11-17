@@ -38,7 +38,7 @@ void ufree(void *addr){
 	mutex_lock(&umem_mtx);
 
 	if(memblock_free(&process_mem, addr) < 0)
-		kpanic(0x0, "double free at %p\n", addr);
+		kpanic("double free at %p\n", addr);
 
 	mutex_unlock(&umem_mtx);
 }
