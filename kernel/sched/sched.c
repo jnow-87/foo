@@ -318,11 +318,7 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 
 	/* perform transition */
 	if(this_t->state == CREATED){
-		e = kmalloc(sizeof(sched_queue_t));
-
-		if(e == 0x0)
-			kpanic("out of memory\n");
-
+		e = kpalloc(sizeof(sched_queue_t));
 		e->thread = this_t;
 	}
 	else{

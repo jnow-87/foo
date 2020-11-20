@@ -41,6 +41,18 @@ void *kmalloc(size_t n){
 	return p;
 }
 
+void *kpalloc(size_t n){
+	void *p;
+
+
+	p = kmalloc(n);
+
+	if(p == 0x0)
+		kpanic("out of memory\n");
+
+	return p;
+}
+
 void *kcalloc(size_t n, size_t size){
 	void *p;
 	size_t x;
