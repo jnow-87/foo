@@ -7,6 +7,7 @@
 
 
 
+#include <sys/string.h>
 #include <sys/list.h>
 #include <sys/list2.h>
 

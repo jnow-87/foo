@@ -11,8 +11,9 @@
 #include <kernel/task.h>
 #include <kernel/sched.h>
 #include <sys/errno.h>
-#include <sys/mutex.h>
 #include <sys/types.h>
+#include <sys/string.h>
+#include <sys/mutex.h>
 #include <sys/list.h>
 #include <sys/list1.h>
 

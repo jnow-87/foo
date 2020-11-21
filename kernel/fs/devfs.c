@@ -14,6 +14,7 @@
 #include <kernel/process.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
+#include <sys/string.h>
 #include <sys/stat.h>
 #include <sys/list.h>
 

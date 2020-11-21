@@ -7,11 +7,6 @@
 
 
 
-#include <sys/syscall.h>
-#include <sys/signal.h>
-#include <sys/errno.h>
-#include <sys/list.h>
-#include <sys/stack.h>
 #include <kernel/init.h>
 #include <kernel/syscall.h>
 #include <kernel/kprintf.h>
@@ -19,6 +14,12 @@
 #include <kernel/sched.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>
+#include <sys/string.h>
+#include <sys/syscall.h>
+#include <sys/signal.h>
+#include <sys/errno.h>
+#include <sys/list.h>
+#include <sys/stack.h>
 
 
 /* local/static prototypes */

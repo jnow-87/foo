@@ -20,10 +20,6 @@
 #define SYS_LIST1_H
 
 
-#include <sys/string.h>
-#include <sys/mutex.h>
-
-
 /**
  * \brief	initialize the head of a list
  *
