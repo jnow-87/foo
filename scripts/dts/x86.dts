@@ -33,3 +33,30 @@ memory = {
 		};
 	};
 };
+
+devices = {
+	uart0 = {
+		compatible = "x86,uart";
+
+		tty0 = {
+			compatible = "terminal";
+
+			/**
+			 * terminal configuration
+			 * 	has to match the configuration data type of
+			 * 	the underlying device driver
+			 */
+			int<32> = [ 115200 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0					// flags (none)
+			];
+
+			klog = {
+				compatible = "kernel,log";
+			};
+		};
+	};
+};

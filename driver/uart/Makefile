@@ -8,3 +8,4 @@
 
 
 obj-$(CONFIG_AVR) += avr.o
+obj-$(CONFIG_X86) += x86.o
