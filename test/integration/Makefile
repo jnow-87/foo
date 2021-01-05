@@ -7,6 +7,7 @@
 
 
 
+subdir-y := tests/
 hostbin-y := itest
 
 itest-y := main.o hardware/ brickos/ user/
