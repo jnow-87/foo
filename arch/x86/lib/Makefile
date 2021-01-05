@@ -7,4 +7,4 @@
 
 
 
-obj-y := start.o syscall.o
+obj-y := start.o syscall.o user.o
