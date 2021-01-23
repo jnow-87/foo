@@ -92,8 +92,7 @@ vector 36
 .global __isr_reset
 __isr_reset:
 	/* ABI requirements */
-	// clear r1
-	clr		r1
+	clr		r1	// r1 as zero register
 
 	/* check if an interrupt source is present if not,
 	 * the reset vector is triggered due to an error
@@ -176,8 +175,7 @@ __isr_int:
 	push	r1
 
 	/* ABI requirements */
-	// clear r1
-	clr		r1
+	clr		r1	// r1 as zero register
 
 1:
 	XCALL	avr_int_hdlr

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016 Jan Nowotsch
+ * Copyright (C) 2020 Jan Nowotsch
  * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
  *
  * Released under the terms of the GNU GPL v2.0
@@ -8,21 +8,43 @@
 
 
 #include <config/config.h>
-#include <arch/arch.h>
+#include <arch/avr/atmega.h>
+
+
+/* external variables */
+.extern __bss_start
+.extern __bss_end
+.extern __data_load_start
+.extern __data_load_end
+.extern __data_start
+.extern __data_end
 
 
 /* global functions */
-.global avr_lib_crt0
-avr_lib_crt0:
-	push	r30
-	push	r31
-	push	r16
-	push	r28
-	push	r29
-	push	r1
+// .bss init
+//	NOTE function does not save register values
+.global avr_init_bss
+avr_init_bss:
+	ldi		r30, lo8(__bss_start)
+	ldi		r31, hi8(__bss_start)
+	ldi		r16, hi8(__bss_end)
 
-	/* load .data section */
-/*{{{*/
+	rjmp	2f
+
+1:
+	st		Z+, r1
+
+2:
+	cpi		r30, lo8(__bss_end)
+	cpc		r31, r16
+	brne	1b
+
+	ret
+
+// .data init
+//	NOTE function does not save register values
+.global avr_init_data
+avr_init_data:
 	//	Z = __data_load_start
 	ldi		r30, lo8(__data_load_start)
 	ldi		r31, hi8(__data_load_start)
@@ -45,56 +67,18 @@ avr_lib_crt0:
 1:
 	// load from flash
 #ifdef CONFIG_AVR_ISA_AVR51
-	elpm	r1, Z+
+	elpm	r0, Z+
 #else
-	lpm		r1, Z+
+	lpm		r0, Z+
 #endif
 
 	// store to ram
-	st		Y+, r1
+	st		Y+, r0
 
 2:
 	// check done (Y == __data_end)
 	cpi		r28, lo8(__data_end)
 	cpc		r29, r16
-
 	brne	1b
-
-#ifdef CONFIG_AVR_RAMPZ
-	clr		r16
-	sts		RAMPZ, r16
-#endif
-/*}}}*/
-
-	/* init .bss section */
-/*{{{*/
-	ldi		r30, lo8(__bss_start)
-	ldi		r31, hi8(__bss_start)
-	ldi		r16, hi8(__bss_end)
-
-	clr		r1
-
-	rjmp	2f
-
-1:
-	st		Z+, r1
-
-2:
-	cpi		r30, lo8(__bss_end)
-	cpc		r31, r16
-
-	brne	1b
-/*}}}*/
-
-	/* return 0 */
-	pop		r1
-	pop		r29
-	pop		r28
-	pop		r16
-	pop		r31
-	pop		r30
-
-	ldi		r24, 0
-	ldi		r25, 0
 
 	ret

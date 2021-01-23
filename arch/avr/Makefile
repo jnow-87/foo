@@ -8,7 +8,7 @@
 
 
 # kernel
-obj-y := start.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
+obj-y := start.o init.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
 
 obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o
@@ -17,7 +17,7 @@ obj-$(CONFIG_IOVERFLOW_DET) += iovfl.o
 # libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := lib.o syscall.libsys.o atomic.libsys.o
+libsys-y := libstart.o init.o syscall.libsys.o atomic.libsys.o
 
 
 # custom rules to generate separate object files for src files that are reuired by kernel and libsys

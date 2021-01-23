@@ -33,7 +33,6 @@
 #include <arch/avr/thread.h>
 #include <arch/avr/syscall.h>
 #include <arch/avr/atomic.h>
-#include <arch/avr/lib.h>
 #include <sys/types.h>
 
 #endif // BUILD_HOST
@@ -109,13 +108,6 @@ static arch_callbacks_common_t const arch_cbs_common = {
 
 	/* syscall */
 	.sc = avr_sc,
-
-	/* main entry */
-#ifdef BUILD_KERNEL
-	.lib_crt0 = 0x0,
-#else
-	.lib_crt0 = avr_lib_crt0,
-#endif // BUILD_KERNEL
 };
 
 // architecture info
