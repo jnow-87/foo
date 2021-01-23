@@ -69,7 +69,7 @@ static int exec(void){
 	/* wait for threads to finish */
 	to = 0;
 
-	while(finished != 3){
+	while(finished != NTHREADS){
 		msleep(PERIOD_MS * NTHREAD_ITER);
 
 		if(++to >= TIMEOUT){
