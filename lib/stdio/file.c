@@ -356,7 +356,7 @@ static int init(void){
 	return -errno;
 }
 
-lib_init(init);
+lib_init(1, init);
 
 static f_mode_t mode_parse(char const *mode){
 	f_mode_t fmode;

@@ -79,9 +79,6 @@ typedef struct{
 
 	/* syscall */
 	int (*sc)(sc_t num, void *param, size_t psize);
-
-	/* libsys functionality */
-	int (*lib_crt0)(void);
 } arch_callbacks_common_t;
 
 typedef struct{
