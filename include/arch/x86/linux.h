@@ -65,6 +65,7 @@ typedef enum{
 	LNX_SYS_WRITE = 1,
 	LNX_SYS_OPEN = 2,
 	LNX_SYS_CLOSE = 3,
+	LNX_SYS_LSEEK = 8,
 	LNX_SYS_SIGACTION = 13,
 	LNX_SYS_SIGRETURN_RT = 15,
 	LNX_SYS_PAUSE = 34,
@@ -82,8 +83,11 @@ long int lnx_syscall(unsigned long int num, unsigned long int args[6], int toler
 long int lnx_open(char const *path, int flags, int mode);
 void lnx_close(int fd);
 
-void lnx_read(int fd, void *buf, size_t n);
+ssize_t lnx_read(int fd, void *buf, size_t n);
+void lnx_read_fix(int fd, void *buf, size_t n);
 void lnx_write(int fd, void const *buf, size_t n);
+
+long int lnx_lseek(int fd, long int offset, int whence);
 
 void lnx_dprintf(int fd, char const *fmt, ...);
 void lnx_vdprintf(int fd, char const *fmt, va_list lst);

@@ -13,6 +13,10 @@
 
 
 /* global functions */
+char *strcpy(char *dest, char const *src){
+	return memcpy(dest, src, strlen(src) + 1);
+}
+
 size_t strlen(char const *s){
 	size_t i;
 

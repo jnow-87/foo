@@ -43,23 +43,27 @@ void lnx_close(int fd){
 		LNX_SYSCALL_ERROR_EXIT("%d != %d", r, 0);
 }
 
-void lnx_read(int fd, void *buf, size_t n){
+ssize_t lnx_read(int fd, void *buf, size_t n){
+	return lnx_syscall(LNX_SYS_READ,
+		(unsigned long int[6]){
+			fd,
+			(unsigned long int)buf,
+			n,
+			0,
+			0,
+			0
+		},
+		1
+	);
+}
+
+void lnx_read_fix(int fd, void *buf, size_t n){
 	size_t i;
 	ssize_t r;
 
 
 	for(i=0; i<n; i+=r){
-		r = lnx_syscall(LNX_SYS_READ,
-			(unsigned long int[6]){
-				fd,
-				(unsigned long int)buf + i,
-				n - i,
-				0,
-				0,
-				0
-			},
-			1
-		);
+		r = lnx_read(fd, buf + i, n - i);
 
 		if(r <= 0)
 			LNX_SYSCALL_ERROR_EXIT("%d != %d\n", r, n);
@@ -84,6 +88,20 @@ void lnx_write(int fd, void const *buf, size_t n){
 
 	if(r != n)
 		LNX_SYSCALL_ERROR_EXIT("%d != %d\n", r, n);
+}
+
+long int lnx_lseek(int fd, long int offset, int whence){
+	return lnx_syscall(LNX_SYS_LSEEK,
+		(unsigned long int[6]){
+			fd,
+			offset,
+			whence,
+			0,
+			0,
+			0
+		},
+		1
+	);
 }
 
 void lnx_dprintf(int fd, char const *fmt, ...){

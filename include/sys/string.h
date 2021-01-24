@@ -16,13 +16,13 @@
 
 
 /* macros */
-#define strcpy(d, s)		(char*)memcpy(d, s, strlen(s) + 1)
 #define strncpy(d, s, n)	(char*)memcpy(d, s, n)
 
 #define strncmp(d, s, n)	memcmp(d, s, n)
 
 
 /* prototypes */
+char *strcpy(char *dest, char const *src);
 size_t strlen(char const *s);
 int strcmp(char const *s0, char const *s1);
 size_t strcnt(char const *s, char c);

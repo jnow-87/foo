@@ -44,7 +44,7 @@
 #define __align(base)	__attribute__((aligned(base)))
 
 // declaration is alias for another symbol
-#define __alias(f)		__attribute__((alias (#f)))
+#define __alias(f)		__attribute__((alias(#f)))
 
 // specify width of a type
 // 	QI	integer that is as wide as the smallest addressable unit, usually 8 bits

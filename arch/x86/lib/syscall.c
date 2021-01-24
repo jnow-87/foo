@@ -165,7 +165,7 @@ static int event_copy_from_user(x86_hw_op_t *op){
 
 static int event_copy_to_user(x86_hw_op_t *op){
 	LNX_DEBUG("  [%u] copy-to: %#x %u\n", op->seq, op->copy.addr, op->copy.n);
-	lnx_read(CONFIG_TEST_INT_DATA_PIPE_RD, op->copy.addr, op->copy.n);
+	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, op->copy.addr, op->copy.n);
 
 	return 0;
 }

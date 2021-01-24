@@ -41,7 +41,7 @@ void x86_hw_op_write(x86_hw_op_t *op){
 
 	lnx_kill(lnx_getppid(), CONFIG_TEST_INT_DATA_SIG);
 
-	lnx_read(CONFIG_TEST_INT_DATA_PIPE_RD, &op->seq, sizeof(op->seq));
+	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, &op->seq, sizeof(op->seq));
 	CHECK_SEQ_NUM(op->seq, seq_num++);
 
 	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, op, sizeof(*op));
@@ -53,7 +53,7 @@ void x86_hw_op_write_writeback(x86_hw_op_t *op){
 
 	seq_num = op->seq;
 
-	lnx_read(CONFIG_TEST_INT_DATA_PIPE_RD, op, sizeof(*op));
+	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, op, sizeof(*op));
 	CHECK_SEQ_NUM(op->seq, seq_num);
 
 	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, &op->seq, sizeof(op->seq));
@@ -68,7 +68,7 @@ void x86_hw_op_read(x86_hw_op_t *op){
 
 	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, &seq_num, sizeof(seq_num));
 
-	lnx_read(CONFIG_TEST_INT_DATA_PIPE_RD, op, sizeof(*op));
+	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, op, sizeof(*op));
 	CHECK_SEQ_NUM(op->seq, seq_num++);
 }
 
@@ -78,6 +78,6 @@ void x86_hw_op_read_writeback(x86_hw_op_t *op){
 
 	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, op, sizeof(*op));
 
-	lnx_read(CONFIG_TEST_INT_DATA_PIPE_RD, &seq_num, sizeof(seq_num));
+	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, &seq_num, sizeof(seq_num));
 	CHECK_SEQ_NUM(seq_num, op->seq);
 }
