@@ -8,13 +8,25 @@
 
 
 # kernel
-obj-y := hardware.o atomic.o opts.o kernel/ linux/
+obj-y := hardware.o atomic.o opts.o kernel/ linux/ gcov/ gcov/libgcov.a
 
 # libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := hardware.libsys.o atomic.libsys.o opts.libsys.o lib/ $(loc_build_tree)/linux/libsys.o
+libsys-y := hardware.libsys.o atomic.libsys.o opts.libsys.o lib/ $(loc_build_tree)/linux/libsys.o $(loc_build_tree)/gcov/libsys.o $(loc_build_tree)/gcov/libgcov.a
 
 
 # custom rules to generate separate object files for src files that are reuired by kernel and libsys
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_tree)/%.c,)
+
+
+####
+## flags
+####
+
+## kernel flags
+ldlibs-kernel-arch += \
+	-L$(loc_build_tree)/gcov
+
+ldlibs-app-arch += \
+	-L$(loc_build_tree)/gcov

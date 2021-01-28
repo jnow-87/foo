@@ -17,13 +17,7 @@ utest-hostcppflags += \
 	-I$(src_tree)/include
 
 utest-hostcflags += \
-	-fno-builtin \
-	-fprofile-arcs \
-	-ftest-coverage \
-	--coverage
-
-utest-hostldlibs += \
-	-fprofile-arcs
+	-fno-builtin
 
 
 test: $(loc_build_tree)/utest

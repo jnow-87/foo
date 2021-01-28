@@ -16,5 +16,3 @@ hostcppflags-y := -I"include/"
 hostcflags-y := \
 	-Wno-unused-function \
 	-fno-builtin
-
-hostldlibs-y += -fprofile-arcs

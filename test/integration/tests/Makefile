@@ -14,6 +14,7 @@ app-y := main.o scripts/linker/app_$(CONFIG_ARCH).lds
 
 # ensure app is rebuild if libs are updated and
 # libs exist before build the app
+app-y += $(build_tree)/arch/x86/gcov/libgcov.a
 app-y += $(build_tree)/lib/libsys.a
 
 
