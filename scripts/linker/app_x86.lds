@@ -27,6 +27,9 @@ SECTIONS {
 		*(.data .data.* .gnu.linkonce.d.*)
 
 		. = ALIGN(16);
+		INCLUDE std_init.lds
+
+		. = ALIGN(16);
 		INCLUDE libsys_init.lds
 	} > text
 

@@ -37,11 +37,18 @@ _start:
 	lea		16(%rsp, %rdi, 8), %eax
 	mov		%eax, envp
 
-	/* call kernel */
-	// ABI requirement
+	/* ABI requirement */
 	xor		%rax, %rax
+
+	/* init */
+	call	x86_std_init
 	call	x86_opts_parse
+
+	/* kernel */
 	call	kernel
+
+	/* fini */
+	call	x86_std_fini
 
 	/* exit */
 	// trigger linux exit syscall

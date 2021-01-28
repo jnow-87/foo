@@ -7,4 +7,4 @@
 
 
 
-obj-y := start.o core.o interrupt.o thread.o memory.o syscall.o timer.o
+obj-y := start.o init.o core.o interrupt.o thread.o memory.o syscall.o timer.o

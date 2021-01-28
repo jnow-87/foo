@@ -13,11 +13,22 @@
 #include <sys/thread.h>
 
 
+/* types */
+typedef void (*std_init_call_t)(void);
+
+
 /* prototypes */
 int main();
 
 
 /* external variables */
+extern std_init_call_t __std_preinit_array_base[],
+					   __std_preinit_array_end[],
+					   __std_init_array_base[],
+					   __std_init_array_end[],
+					   __std_fini_array_base[],
+					   __std_fini_array_end[];
+
 extern lib_init_call_t __lib_init0_base[],
 					   __lib_init0_end[],
 					   __lib_init1_base[],
@@ -28,6 +39,7 @@ extern lib_init_call_t __lib_init0_base[],
 static int main_arg(int argc, char *args);
 static int args_split(char *args);
 
+static void exec_std_call(std_init_call_t *base, std_init_call_t *end);
 static void exec_lib_call(lib_init_call_t *base, lib_init_call_t *end);
 
 /* global functions */
@@ -52,11 +64,17 @@ void _start(thread_entry_t entry, void *arg){
 	/* call specified function */
 	if((void*)entry == (void*)_start){
 		// init
+		exec_std_call(__std_preinit_array_base, __std_preinit_array_end);
+		exec_std_call(__std_init_array_base, __std_init_array_end);
+
 		exec_lib_call(__lib_init0_base, __lib_init0_end);
 		exec_lib_call(__lib_init1_base, __lib_init1_end);
 
 		// main
 		r = main_arg(args_split(arg), arg);
+
+		// fini
+		exec_std_call(__std_fini_array_base, __std_fini_array_end);
 
 		_exit(r, true);
 	}
@@ -141,6 +159,12 @@ static int args_split(char *args){
 	}
 
 	return argc;
+}
+
+static void exec_std_call(std_init_call_t *base, std_init_call_t *end){
+	for(; base!=end; base++){
+		(*base)();
+	}
 }
 
 static void exec_lib_call(lib_init_call_t *base, lib_init_call_t *end){
