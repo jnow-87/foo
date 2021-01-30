@@ -22,7 +22,7 @@
 #define TEST(_name, _desc) \
 	static int test_##_name(void); \
 	static char const test_case_desc_##_name[]  __used = _desc; \
-	static test_case_t test_case_##_name __section("testcases") __used = { \
+	static test_case_t test_case_##_name __linker_array("testcases") = { \
 		.hdlr = test_##_name, \
 		.desc = test_case_desc_##_name, \
 	}; \

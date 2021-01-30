@@ -19,7 +19,8 @@ typedef int (*lib_init_call_t)(void);
 
 
 /* macros */
-#define lib_init(stage, call)	static lib_init_call_t init_call_##call __section(".lib_init_stage"#stage) __used = call
+#define lib_init(stage, call) \
+	static lib_init_call_t init_call_##call __linker_array(".lib_init_stage"#stage) = call
 
 
 #endif // LIB_INIT_H

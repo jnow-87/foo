@@ -17,7 +17,10 @@
 /* macros */
 #define command(_name, _exec) \
 	static char const cmd_name_##_exec[]  __used = _name; \
-	static cmd_t _cmd_call_##_exec __section(".commands") __used = { .name = cmd_name_##_exec, .exec = _exec }
+	static cmd_t _cmd_call_##_exec __linker_array(".commands") = { \
+		.name = cmd_name_##_exec, \
+		.exec = _exec, \
+	}
 
 
 /* types */

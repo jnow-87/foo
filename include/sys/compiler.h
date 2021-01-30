@@ -27,24 +27,13 @@
 
 #define CALL_DISABLED(_call, _option)	({ CPP_ASSERT(function STRGIFY(_call()) disabled - check kernel configuration _option); 0x0; })
 
-// suppress 'unused' compiler warning
-#define __used			__attribute__((used))
-
-// variables are meant to appear possibly unused
-#define __unused		__attribute__((unused))
-
-// for enu, struct, union types specify that the minimum required memory
-// be used to represent the type
-#define __packed		__attribute__((packed))
-
-// assign variable to specified section
-#define __section(sec)	__attribute__((section(sec)))
-
-// specify minimum alignment
-#define __align(base)	__attribute__((aligned(base)))
-
-// declaration is alias for another symbol
-#define __alias(f)		__attribute__((alias(#f)))
+// attributes
+#define __used							__attribute__((used))
+#define __unused						__attribute__((unused))
+#define __packed						__attribute__((packed))
+#define __section(sec)					__attribute__((section(sec)))
+#define __align(base)					__attribute__((aligned(base)))
+#define __alias(f)						__attribute__((alias(#f)))
 
 // specify width of a type
 // 	QI	integer that is as wide as the smallest addressable unit, usually 8 bits
@@ -53,14 +42,16 @@
 // 	DI	integer, eight times as wide as a QI mode integer, usually 64 bits
 // 	SF	float, as wide as a SI mode integer, usually 32 bits
 // 	DF	float, as wide as a DI mode integer, usually 64 bits
-#define __mode(m)		__attribute__((mode(m)))
+#define __mode(m)						__attribute__((mode(m)))
+
+#define __linker_array(sec)				__section(sec) __align(1) __used
 
 // offsetof
-#define offsetofvar(var, member)	((size_t)(&(((typeof((var))*)(0))->member)))
-#define offsetof(type, member)		((size_t)(&(((type*)(0))->member)))
+#define offsetofvar(var, member)		((size_t)(&(((typeof((var))*)(0))->member)))
+#define offsetof(type, member)			((size_t)(&(((type*)(0))->member)))
 
 // sizeof for arrays
-#define sizeof_array(a)	(sizeof(a) / sizeof((a)[0]))
+#define sizeof_array(a)					(sizeof(a) / sizeof((a)[0]))
 
 
 #endif // SYS_COMPILER_H
