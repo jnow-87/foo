@@ -10,6 +10,7 @@
 #include <arch/x86/linux.h>
 #include <arch/x86/init.h>
 #include <arch/x86/interrupt.h>
+#include <arch/x86/rootfs.h>
 #include <arch/memory.h>
 #include <kernel/init.h>
 #include <kernel/syscall.h>
@@ -78,6 +79,12 @@ static void overlay_exit(void *param){
 
 	LNX_DEBUG("application exit with %d\n", kparam.status);
 
+	if(x86_rootfs_dump() != 0){
+		LNX_ERROR("brickos file system dump failed\n");
+		kparam.status = -1;
+	}
+
 	x86_std_fini();
+
 	lnx_exit(kparam.status);
 }

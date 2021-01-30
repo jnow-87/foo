@@ -15,6 +15,10 @@ config TEST_INT_APP_BINARY
 	qstring "Default application binary"
 	default "recent/init/init.elf"
 
+config TEST_INT_FS_EXPORT_ROOT
+	qstring "Directory to export the brickos file system to"
+	default "recent/test/integration/brickos-fs-export"
+
 config TEST_INT_DATA_PIPE_RD
 	int "Host test data pipe input fileno"
 	default 17

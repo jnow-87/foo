@@ -73,6 +73,8 @@ typedef enum{
 	LNX_SYS_GETPID = 39,
 	LNX_SYS_EXIT = 60,
 	LNX_SYS_KILL = 62,
+	LNX_SYS_CHDIR = 80,
+	LNX_SYS_MKDIR = 83,
 	LNX_SYS_GETPPID = 110,
 } lnx_syscall_t;
 
@@ -88,6 +90,9 @@ void lnx_read_fix(int fd, void *buf, size_t n);
 void lnx_write(int fd, void const *buf, size_t n);
 
 long int lnx_lseek(int fd, long int offset, int whence);
+
+void lnx_chdir(char const *path);
+void lnx_mkdir(char const *path, int mode);
 
 void lnx_dprintf(int fd, char const *fmt, ...);
 void lnx_vdprintf(int fd, char const *fmt, va_list lst);

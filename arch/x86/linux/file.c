@@ -104,6 +104,52 @@ long int lnx_lseek(int fd, long int offset, int whence){
 	);
 }
 
+void lnx_chdir(char const *path){
+	long int r;
+
+
+	r = lnx_syscall(LNX_SYS_CHDIR,
+		(unsigned long int[6]){
+			(unsigned long int)path,
+			0,
+			0,
+			0,
+			0,
+			0
+		},
+		1
+	);
+
+	if(r != 0)
+		LNX_SYSCALL_ERROR_EXIT("%d != %d", r, 0);
+}
+
+void lnx_mkdir(char const *path, int mode){
+	long int r;
+
+
+	r = lnx_syscall(LNX_SYS_MKDIR,
+		(unsigned long int[6]){
+			(unsigned long int)path,
+			mode,
+			0,
+			0,
+			0,
+			0
+		},
+		1
+	);
+
+	switch(r){
+	case 0:		// fall through
+	case -17:	// EEXIST
+		return;
+
+	default:
+		LNX_SYSCALL_ERROR_EXIT("%d != %d", r, 0);
+	}
+}
+
 void lnx_dprintf(int fd, char const *fmt, ...){
 	va_list lst;
 

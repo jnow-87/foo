@@ -26,5 +26,5 @@ itest-hostldlibs += \
 	-lrt
 
 
-test: $(loc_build_tree)/itest
+test: $(loc_src_tree)/itest.sh
 coverage: $(loc_build_tree)/itest
