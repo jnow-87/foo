@@ -285,7 +285,7 @@ $(doxygen_pdf): $(pdfgraphics) $(doxygen_tex) $(tex_src)
 		cd $(tex_build_tree) \
 		&& pdflatex -interaction=nonstopmode refman 1>pdflatex.log 2>&1 \
 		&& makeindex refman.idx 1>>pdflatex.log 2>&1 \
-		&& pdflatex -interaction=nonstopmode refman 1>pdflatex.log 2>&1 \
+		&& pdflatex -interaction=nonstopmode refman 1>>pdflatex.log 2>&1 \
 	)
 
 $(doxygen_tex): $(doxygen_config_tgt) $(doxygen_src_files)
