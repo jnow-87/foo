@@ -11,7 +11,7 @@
 #define KERNEL_INTTASK_H
 
 
-#include <arch/interrupt.h>
+#include <kernel/interrupt.h>
 #include <kernel/ksignal.h>
 #include <kernel/critsec.h>
 #include <sys/types.h>

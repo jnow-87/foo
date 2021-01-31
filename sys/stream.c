@@ -15,10 +15,10 @@
 
 
 /* macros */
-#if defined(CONFIG_PRINTF_LONGLONG)
+#if CONFIG_REGISTER_WIDTH == 64 || defined(CONFIG_PRINTF_LONGLONG)
 #define INTTYPE		long long int
 #define UINTTYPE	unsigned long long int
-#elif defined(CONFIG_PRINTF_LONG)
+#elif CONFIG_REGISTER_WIDTH == 32 || defined(CONFIG_PRINTF_LONG)
 #define INTTYPE		long int
 #define UINTTYPE	unsigned long int
 #elif defined(CONFIG_PRINTF_INTMAX)
@@ -203,6 +203,9 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 			put_len(len, &v, n);
 		}
 		else if(*format == 's'){
+			if(v.p == 0x0)
+				v.p = "(null)";
+
 			blen = strlen(v.p);
 
 			if((flags & FFL_PRECISION) && prec < blen)

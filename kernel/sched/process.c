@@ -15,6 +15,7 @@
 #include <kernel/binloader.h>
 #include <sys/errno.h>
 #include <sys/list.h>
+#include <sys/string.h>
 #include <sys/mutex.h>
 
 

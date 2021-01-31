@@ -7,7 +7,7 @@
 
 
 #include <config/config.h>
-#include <arch/interrupt.h>
+#include <kernel/interrupt.h>
 #include <kernel/init.h>
 #include <kernel/fs.h>
 #include <kernel/devfs.h>

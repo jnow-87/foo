@@ -19,10 +19,10 @@
 #endif // CONFIG_ATMEGA1284P
 
 #ifndef ASM
-#ifndef _x86_
-#ifndef __x86_64__
+#ifndef BUILD_HOST
 
 #include <config/avrconfig.h>
+#include <arch/arch.h>
 #include <arch/avr/core.h>
 #include <arch/avr/register.h>
 
@@ -33,11 +33,9 @@
 #include <arch/avr/thread.h>
 #include <arch/avr/syscall.h>
 #include <arch/avr/atomic.h>
-#include <arch/avr/lib.h>
 #include <sys/types.h>
 
-#endif // __x86_64__
-#endif // _x86_
+#endif // BUILD_HOST
 #endif // ASM
 
 
@@ -69,8 +67,7 @@
 
 /* static variables */
 #ifndef ASM
-#ifndef _x86_
-#ifndef __x86_64__
+#ifndef BUILD_HOST
 
 // kernel callbacks
 #ifdef BUILD_KERNEL
@@ -91,11 +88,6 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	.copy_to_user = 0x0,
 
 	/* interrupts */
-	.int_register = avr_int_register,
-	.int_release = avr_int_release,
-
-	.int_call = avr_int_call,
-
 	.int_enable = avr_int_enable,
 	.int_enabled = avr_int_enabled,
 
@@ -116,13 +108,6 @@ static arch_callbacks_common_t const arch_cbs_common = {
 
 	/* syscall */
 	.sc = avr_sc,
-
-	/* main entry */
-#ifdef BUILD_KERNEL
-	.lib_crt0 = 0x0,
-#else
-	.lib_crt0 = avr_lib_crt0,
-#endif // BUILD_KERNEL
 };
 
 // architecture info
@@ -131,8 +116,7 @@ static arch_info_t const arch_info = {
 	.sched_timer_err_us = AVRCONFIG_SCHED_ERROR_US,
 };
 
-#endif // _x86_
-#endif // __x86_64__
+#endif // BUILD_HOST
 #endif // ASM
 
 

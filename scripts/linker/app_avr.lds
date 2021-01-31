@@ -10,18 +10,16 @@
 /** MEMORY sections are defined in a separate script depending on the
  *  configured target MCU, cf. scripts/linker/mem_*
  */
-ENTRY(_start)
+ENTRY(avr_start)
 
 SECTIONS {
 	/* code */
 	.text : {
-		/* ensure .app_start, i.e. _start will always be located at 0x2
-		 * this is used to have a fixed starting address, which in turn
-		 * can be used to configure the kernel, in particular
-		 * CONFIG_INIT_BINARY
+		/* ensure .avr_start has a fixed starting address which can be
+		 * used to configure the kernel through CONFIG_INIT_BINARY
 		 */
 		. = 0x0;
-		*(.app_start)
+		*(.avr_start)
 		*( .progmem.gcc*)
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.gnu.warning)
@@ -34,6 +32,7 @@ SECTIONS {
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
 		*(.rodata1)
 
+		INCLUDE std_init.lds
 		INCLUDE libsys_init.lds
 	} > app_data AT>app_flash
 

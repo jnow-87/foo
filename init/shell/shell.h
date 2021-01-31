@@ -20,13 +20,13 @@
 	fprintf(stderr, "%s:%u " msg, shell_file, shell_line, ##__VA_ARGS__);
 
 
+/* prototypes */
+int shell(char const *prompt, FILE *stream);
+
+
 /* external variables */
 extern char shell_file[];
 extern size_t shell_line;
-
-
-/* prototypes */
-int shell(char const *prompt, FILE *stream);
 
 
 #endif // INIT_SHELL_H

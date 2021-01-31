@@ -14,4 +14,3 @@ memlayout-y := main.o sys/
 
 hostcppflags-y := -I"include/"
 hostcflags-y := -fno-builtin
-hostldlibs-y += -fprofile-arcs

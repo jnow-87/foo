@@ -98,7 +98,7 @@ static int sc_hdlr_dup(void *_p){
 
 	/* initiali */
 	p = (sc_fs_t*)_p;
-	old_id = (int)p->data;
+	copy_from_user(&old_id, p->data, sizeof(int), this_p);
 	old_fd = fs_fd_acquire(old_id, this_p);
 
 	DEBUG("oldfd %d%s, newfd %d\n", old_id, (old_fd == 0x0 ? " (invalid)" : ""), p->fd);

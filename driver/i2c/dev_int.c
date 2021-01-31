@@ -8,6 +8,7 @@
 
 
 #include <kernel/driver.h>
+#include <kernel/interrupt.h>
 #include <kernel/fs.h>
 #include <kernel/devfs.h>
 #include <kernel/memory.h>

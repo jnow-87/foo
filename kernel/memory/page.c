@@ -89,7 +89,7 @@ void page_free(struct process_t *this_p, page_t *page){
 	/* free virtual block */
 #ifdef CONFIG_KERNEL_VIRT_MEM
 	if(memblock_free(&(this_p->memory_space), page->virt_addr) < 0)
-		kpanic(0x0, "double free at %p\n", page->virt_addr);
+		kpanic("double free at %p\n", page->virt_addr);
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	mutex_unlock(&this_p->mtx);

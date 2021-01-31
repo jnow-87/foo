@@ -25,8 +25,8 @@
 /* types */
 typedef struct{
 	uint32_t s;
-	size_t ms,
-		   us;
+	uint16_t ms,
+			 us;
 } time_t;
 
 

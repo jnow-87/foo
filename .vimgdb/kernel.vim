@@ -7,22 +7,51 @@
 
 
 
+" get the architecture of kernel_image
+function! s:get_arch(kernel_image)
+	let l:machine_id = {
+		\ "avr":["AVR"],
+		\ "x86":["x86", "X86" ],
+	\ }
+
+	let l:machine = system("readelf -h " . a:kernel_image . " | grep 'Machine' | cut -d ':' -f 2")
+
+	for l:id in keys(l:machine_id)
+		for l:m in l:machine_id[l:id]
+			if stridx(l:machine, l:m) != -1
+				return l:id
+			endif
+		endfor
+	endfor
+
+	return ""
+endfunction
+
+
+" get kernel image and related architecture
 if argc == 0
 	echoerr "no kernel image provided"
 	finish
 endif
 
-let kimg = argv[0]
+let s:kimg = argv[0]
+let s:arch = s:get_arch(s:kimg)
 
-silent !make debug
+if s:arch == ""
+	echoerr "unknown architecture"
+	finish
+endif
 
-let vimgdb_gdb_cmd = 'avr-gdb -ex \"target remote 127.0.0.1:1212\"'
+" source architecture dependent init
+exec "silent! source .vimgdb/" . s:arch . ".vim"
+
+" init vimgdb
 let vimgdb_gdblog_show = 0
 let vimgdb_callstack_show = 0
 
 Vimgdb start
 
-exec "Inferior " . kimg
+exec "Inferior " . s:kimg
 
 " open peripherals window
 rightbelow 60vsplit

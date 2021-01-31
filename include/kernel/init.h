@@ -30,15 +30,15 @@ typedef struct{
 #ifdef CONFIG_KERNEL_MSG_INIT
 
 #define init_call(_call, level, stage) \
-	static init_call_t init_call_##_call __section("."#level"_init_stage"#stage) __used = { \
+	static init_call_t init_call_##_call __linker_array("."#level"_init_stage"#stage) = { \
 		.call = _call, \
-		.name = __FILE__ ":" #_call \
+		.name = __FILE__ ":" #_call, \
 	}
 
 #else
 
 #define init_call(_call, level, stage) \
-	static init_call_t init_call_##_call __section("."#level"_init_stage"#stage) __used = { \
+	static init_call_t init_call_##_call __linker_array("."#level"_init_stage"#stage) = { \
 		.call = _call, \
 	}
 
@@ -47,13 +47,13 @@ typedef struct{
 /**
  * currently defined init levels, order according to calling sequence
  *
- *	core		-	core local initialisation, e.g. caches, mmu
- *	platform 0	-	platform basic initialisation
- *	platform 1	-	platform device initialisation, NOTE afterwards uart shall be usable
+ * 	core		-	core local initialisation, e.g. caches, mmu
+ * 	platform 0	-	platform basic initialisation
+ * 	platform 1	-	platform device initialisation
  * 	kernel 0	-	kernel basic services, e.g. kmalloc, umalloc
- *	kernel 1	-	kernel infrastructure, e.g. rootfs
- *	kernel 2	-	kernel higher services, e.g. devfs, scheduler
- *	driver		-	driver
+ * 	kernel 1	-	kernel infrastructure, e.g. rootfs
+ * 	kernel 2	-	kernel higher services, e.g. devfs, scheduler
+ * 	driver		-	driver
  */
 #define core_init(call)					init_call(call, core, 0)
 #define platform_init(stage, call)		init_call(call, platform, stage)

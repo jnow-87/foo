@@ -17,14 +17,14 @@
 /* macros */
 #define interface_probe(_compatible, _probe) \
 	static char const driver_comp_##_probe[] __used = _compatible; \
-	static interface_driver_t driver_##_probe __section(".interface_driver") __used = { \
+	static interface_driver_t driver_##_probe __linker_array(".interface_driver") = { \
 		.compatible = driver_comp_##_probe, \
 		.probe = _probe, \
 	}
 
 #define device_probe(_compatible, _probe) \
 	static char const driver_comp_##_probe[] __used = _compatible; \
-	static device_driver_t driver_##_probe __section(".device_driver") __used = { \
+	static device_driver_t driver_##_probe __linker_array(".device_driver") = { \
 		.compatible = driver_comp_##_probe, \
 		.probe = _probe, \
 	}

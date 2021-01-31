@@ -8,6 +8,6 @@
 
 
 # check if $(arch) is empty to avoid make infinite loop
-ifneq ($(CONFIG_ARCH),)
+ifneq ($(wildcard $(loc_src_tree)/$(CONFIG_ARCH)),)
   hostobj-y += $(CONFIG_ARCH)/
 endif

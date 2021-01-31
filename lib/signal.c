@@ -71,7 +71,7 @@ static int init(void){
 	return sc(SC_SIGREGISTER, &p);
 }
 
-lib_init(init);
+lib_init(1, init);
 
 static void signal_hdlr(thread_entry_t entry, void *arg){
 	signal_t sig;

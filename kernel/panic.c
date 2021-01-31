@@ -17,8 +17,9 @@
 
 
 /* global functions */
-void kpanic_ext(thread_t const *this_t, char const *file, char const *func, unsigned int line, char const *format, ...){
+void kpanic_ext(char const *file, char const *func, unsigned int line, char const *format, ...){
 	va_list lst;
+	thread_t const *this_t;
 
 
 	int_enable(INT_NONE);
@@ -28,6 +29,8 @@ void kpanic_ext(thread_t const *this_t, char const *file, char const *func, unsi
 	kprintf(KMSG_ANY, FG_RED "\n\nwoops!!" RESET_ATTR "\t");
 	kvprintf(KMSG_ANY, format, lst);
 	kprintf(KMSG_ANY, "%10.10s: %s:%u %s()\n", "location", file, line, func);
+
+	this_t = sched_running_nopanic();
 
 	if(this_t){
 		kprintf(KMSG_ANY, "%10.10s: %s(%u).%u\n\n",

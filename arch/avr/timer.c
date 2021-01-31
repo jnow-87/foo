@@ -10,7 +10,7 @@
 #include <config/config.h>
 #include <config/avrconfig.h>
 #include <arch/arch.h>
-#include <arch/interrupt.h>
+#include <kernel/interrupt.h>
 #include <kernel/init.h>
 #include <kernel/stat.h>
 #include <kernel/sched.h>

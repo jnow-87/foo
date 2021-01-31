@@ -18,11 +18,23 @@ choice
 		bool "AVR"
 		select NOFLOAT
 		select KERNEL_NO_VIRT_MEM
+
+	config X86
+		bool "x86 (host test)"
+		select NOFLOAT
+		select KERNEL_NO_VIRT_MEM
+		select ADDR_WIDTH_64
+		select REGISTER_WIDTH_64
 endchoice
 
-menu "AVR features"
-	visible if AVR
-	source "arch/avr/Kconfig"
+menu "Processor features"
+	if AVR
+		source "arch/avr/Kconfig"
+	endif
+
+	if X86
+		source "arch/x86/Kconfig"
+	endif
 endmenu
 
 menu "Hidden"
@@ -30,11 +42,13 @@ menu "Hidden"
 
 	config ARCH
 		string "Architecture"
-		default "avr" if AVR
+		default "avr"	if AVR
+		default "x86"	if X86
 	
 	config PROCESSOR
 		string "Processor"
-		default AVR_MCU if AVR
+		default AVR_MCU	if AVR
+		default "x86"	if X86
 
 	config ADDR_WIDTH_8
 		bool "8-bit"
@@ -45,12 +59,16 @@ menu "Hidden"
 	config ADDR_WIDTH_32
 		bool "32-bit"
 
+	config ADDR_WIDTH_64
+		bool "64-bit"
+
 	config ADDR_WIDTH
 		int "Address width"
-		default 8 if ADDR_WIDTH_8
-		default 16 if ADDR_WIDTH_16
-		default 32 if ADDR_WIDTH_32
-		default 32
+		default 8	if ADDR_WIDTH_8
+		default 16	if ADDR_WIDTH_16
+		default 32	if ADDR_WIDTH_32
+		default 64	if ADDR_WIDTH_64
+		default 64
 
 	config REGISTER_WIDTH_8
 		bool "8-bit"
@@ -61,12 +79,16 @@ menu "Hidden"
 	config REGISTER_WIDTH_32
 		bool "32-bit"
 
+	config REGISTER_WIDTH_64
+		bool "64-bit"
+
 	config REGISTER_WIDTH
 		int "Address width"
-		default 8 if REGISTER_WIDTH_8
-		default 16 if REGISTER_WIDTH_16
-		default 32 if REGISTER_WIDTH_32
-		default 32
+		default 8	if REGISTER_WIDTH_8
+		default 16	if REGISTER_WIDTH_16
+		default 32	if REGISTER_WIDTH_32
+		default 64	if REGISTER_WIDTH_64
+		default 64
 
 	config NOFLOAT
 		bool "Enable floating point support"

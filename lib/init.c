@@ -7,27 +7,40 @@
 
 
 
-#include <arch/lib.h>
 #include <lib/init.h>
 #include <lib/stdlib.h>
 #include <sys/compiler.h>
 #include <sys/thread.h>
 
 
+/* types */
+typedef void (*std_init_call_t)(void);
+
+
 /* prototypes */
 int main();
-void _start(thread_entry_t entry, void *arg) __section(".app_start");
 
 
-/* extern variables */
-extern init_call_t __lib_init_base[],
-				   __lib_init_end[];
+/* external variables */
+extern std_init_call_t __std_preinit_array_base[],
+					   __std_preinit_array_end[],
+					   __std_init_array_base[],
+					   __std_init_array_end[],
+					   __std_fini_array_base[],
+					   __std_fini_array_end[];
+
+extern lib_init_call_t __lib_init0_base[],
+					   __lib_init0_end[],
+					   __lib_init1_base[],
+					   __lib_init1_end[];
 
 
 /* local/static prototypes */
 static int main_arg(int argc, char *args);
 static int args_split(char *args);
 
+static void exec_std_call(std_init_call_t *base, std_init_call_t *end);
+static void exec_lib_call(lib_init_call_t *base, lib_init_call_t *end);
 
 /* global functions */
 /**
@@ -45,24 +58,25 @@ static int args_split(char *args);
  * 					otherwise arg is passed to the target function as is
  */
 void _start(thread_entry_t entry, void *arg){
-	int argc;
-	init_call_t *p;
+	int r;
 
 
 	/* call specified function */
 	if((void*)entry == (void*)_start){
-		// basic initialisation required for target
-		if(lib_crt0() != 0)
-			exit(-errno);
+		// init
+		exec_std_call(__std_preinit_array_base, __std_preinit_array_end);
+		exec_std_call(__std_init_array_base, __std_init_array_end);
 
-		// lib initialisation callbacks
-		for(p=__lib_init_base; p<__lib_init_end; p++){
-			if((*p)() != 0)
-				exit(-errno);
-		}
+		exec_lib_call(__lib_init0_base, __lib_init0_end);
+		exec_lib_call(__lib_init1_base, __lib_init1_end);
 
-		argc = args_split(arg);
-		_exit(main_arg(argc, arg), true);
+		// main
+		r = main_arg(args_split(arg), arg);
+
+		// fini
+		exec_std_call(__std_fini_array_base, __std_fini_array_end);
+
+		_exit(r, true);
 	}
 	else{
 		_exit((*entry)(arg), false);
@@ -145,4 +159,17 @@ static int args_split(char *args){
 	}
 
 	return argc;
+}
+
+static void exec_std_call(std_init_call_t *base, std_init_call_t *end){
+	for(; base!=end; base++){
+		(*base)();
+	}
+}
+
+static void exec_lib_call(lib_init_call_t *base, lib_init_call_t *end){
+	for(; base!=end; base++){
+		if((*base)() != 0)
+			exit(-errno);
+	}
 }

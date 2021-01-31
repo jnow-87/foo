@@ -18,12 +18,6 @@ obj-$(CONFIG_KERNEL_NET) += inet.o
 # host
 hostobj-y := errno.o string.o stream.o memblock.o memory.o ringbuf.o list1.o list2.o vector.o devtree.o devicetree.o patmat.o inet.o
 
-hostcflags-y += \
-	-fno-builtin \
-	-fprofile-arcs \
-	-ftest-coverage \
-	--coverage
-
 # libsys
 obj-nobuiltin-y := libsys.o
 
@@ -83,3 +77,27 @@ define include_devicetree
 		, \
 	)
 endef
+
+
+####
+## device tree memory linker script
+####
+
+lds_memory := $(build_tree)/scripts/linker/gen_lds_memory
+lds_memory_script := $(loc_build_tree)/memory.lds
+
+$(lds_memory_script): $(lds_memory)
+	$(call compile_file,$(lds_memory) $(lds_memory_script))
+
+prepare_deps: $(lds_memory_script)
+
+
+## kernel flags
+ldlibs-kernel-arch := \
+	-L$(loc_build_tree) \
+	-T$(lds_memory_script)
+
+## init application flags
+ldlibs-app-arch := \
+	-L$(loc_build_tree) \
+	-T$(lds_memory_script)

@@ -1,0 +1,17 @@
+#
+# Copyright (C) 2020 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+menu "Hidden"
+	visible if 0
+
+	# architecture defining header
+	config ARCH_HEADER
+		string "Arch Header"
+		default "<arch/$(CONFIG_ARCH)/x86.h>" if X86
+endmenu

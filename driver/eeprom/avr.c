@@ -9,6 +9,7 @@
 
 #include <arch/interrupt.h>
 #include <arch/avr/register.h>
+#include <kernel/interrupt.h>
 #include <kernel/driver.h>
 #include <kernel/devfs.h>
 #include <kernel/kprintf.h>

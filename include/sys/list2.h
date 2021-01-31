@@ -21,10 +21,6 @@
 #define SYS_LIST2_H
 
 
-#include <sys/string.h>
-#include <sys/mutex.h>
-
-
 /**
  * \brief	initialize the head of a list
  *

@@ -31,10 +31,10 @@ kopt_t kopt = KOPT_INITIALISER();
 void kernel(void){
 	/* init */
 	if(kinit() != E_OK)
-		kpanic(0x0, "kernel init error \"%s\"", strerror(errno));
+		kpanic("kernel init error \"%s\"\n", strerror(errno));
 
 	if(driver_load() != E_OK)
-		kpanic(0x0, "driver init error \"%s\"", strerror(errno));
+		kpanic("driver init error \"%s\"\n", strerror(errno));
 
 	/* kernel statistics */
 	kstat();

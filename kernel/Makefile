@@ -9,7 +9,7 @@
 
 bin-y := kimg.elf
 
-kimg-y := init.o kernel.o driver.o panic.o critsec.o task.o sched/ fs/ memory/ binloader/ arch/ driver/ sys/ scripts/linker/kernel_$(CONFIG_ARCH).lds
+kimg-y := init.o kernel.o driver.o panic.o critsec.o interrupt.o task.o sched/ fs/ memory/ binloader/ arch/ driver/ sys/ scripts/linker/kernel_$(CONFIG_ARCH).lds
 
 kimg-$(CONFIG_KERNEL_SYSCALL) += syscall.o
 kimg-$(CONFIG_KERNEL_TIMER) += timer.o
@@ -34,11 +34,15 @@ kimg-ldlibs-y += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
 kimg-ldlibs-y += -lgcc
 
 ## debug messages
-init-cppflags-$(CONFIG_KERNEL_MSG_INIT) := -DBUILD_KERNEL_MSG_WARN \
-										   -DBUILD_KERNEL_MSG_INFO
+init-cppflags-$(CONFIG_KERNEL_MSG_INIT) := -DBUILD_KERNEL_MSG_FATAL \
+										   -DBUILD_KERNEL_MSG_WARN \
+										   -DBUILD_KERNEL_MSG_INFO \
+										   -DBUILD_KERNEL_MSG_DEBUG
 
-init-cppflags-$(CONFIG_KERNEL_NO_MSG_INIT) := -DBUILD_KERNEL_MSG_WARN_DISABLE \
-											  -DBUILD_KERNEL_MSG_INFO_DISABLE
+init-cppflags-$(CONFIG_KERNEL_NO_MSG_INIT) := -DBUILD_KERNEL_MSG_FATAL_DISABLE \
+											  -DBUILD_KERNEL_MSG_WARN_DISABLE \
+											  -DBUILD_KERNEL_MSG_INFO_DISABLE \
+											  -DBUILD_KERNEL_MSG_DEBUG_DISABLE
 
 syscall-cppflags-$(CONFIG_SC_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
 usignal-cppflags-$(CONFIG_SC_SIGNAL_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG

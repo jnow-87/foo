@@ -19,7 +19,8 @@ typedef void (*stat_call_t)(void);
 
 
 /* macros */
-#define kernel_stat(call)	static stat_call_t stat_call_##call __section(".kernel_stat") __used = call;
+#define kernel_stat(call) \
+	static stat_call_t stat_call_##call __linker_array(".kernel_stat") = call;
 
 
 #endif // KERNEL_STAT_H

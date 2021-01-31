@@ -98,6 +98,7 @@ typedef struct page_t{
 
 /* prototypes */
 void *kmalloc(size_t n);
+void *kpalloc(size_t n);
 void *kcalloc(size_t n, size_t size);
 void kfree(void *addr);
 

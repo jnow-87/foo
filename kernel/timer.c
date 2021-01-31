@@ -36,7 +36,7 @@ static int sc_hdlr_sleep(void *p);
 static int sc_hdlr_time(void *p);
 
 static size_t to_ticks(uint32_t us);
-static void update_time(void);
+static void to_time(void);
 
 
 /* static variables */
@@ -54,8 +54,8 @@ void ktimer_tick(void){
 	/* increment time */
 	time_us += CYCLE_TIME_US;
 
-	if(time_us + CYCLE_TIME_US < time_us)
-		update_time();
+	if(time_us + CYCLE_TIME_US + 1001000 < time_us)
+		to_time();
 
 	/* update timer */
 	critsec_lock(&timer_lock);
@@ -123,7 +123,7 @@ static int sc_hdlr_time(void *_p){
 
 	p = (time_t*)_p;
 
-	update_time();
+	to_time();
 	*p = time;
 
 	return E_OK;
@@ -141,26 +141,14 @@ static size_t to_ticks(uint32_t us){
 	return ticks;
 }
 
-static void update_time(void){
-	uint32_t x;
-
-
+static void to_time(void){
 	critsec_lock(&timer_lock);
 
-	/* convert seconds */
-	x = time_us / 1000000;
-	time_us -= (x * 1000000);
+	time_us += time.ms * 1000 + time.us;
 
-	time.s += x;
-
-	/* convert milliseconds */
-	x = time_us / 1000;
-	time_us -= (x * 1000);
-
-	time.ms += x;
-
-	/* convert microseconds */
-	time.us += time_us;
+	time.us = time_us % 1000;
+	time.ms = (time_us / 1000) % 1000;
+	time.s += time_us / 1000000;
 
 	time_us = 0;
 

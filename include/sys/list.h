@@ -18,7 +18,6 @@
 
 #include <sys/types.h>
 #include <sys/compiler.h>
-#include <sys/string.h>
 
 
 /* macros */

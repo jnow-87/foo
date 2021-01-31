@@ -11,7 +11,7 @@
 #define KERNEL_CRITSEC_H
 
 
-#include <arch/interrupt.h>
+#include <kernel/interrupt.h>
 #include <sys/mutex.h>
 
 

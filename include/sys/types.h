@@ -48,7 +48,7 @@ typedef unsigned long long int	uintmax_t;
 typedef int16_t					ptrdiff_t;
 #define PTRDIFF_T				unsigned int
 
-#elif CONFIG_REGISTER_WIDTH == 32 // CONFIG_REGISTER_WIDTH
+#elif CONFIG_REGISTER_WIDTH == 32
 
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
@@ -70,9 +70,34 @@ typedef unsigned long long int	uintmax_t;
 typedef long long int			ptrdiff_t;
 #define PTRDIFF_T				unsigned long long int
 
+#elif CONFIG_REGISTER_WIDTH == 64
+
+typedef signed char				int8_t;
+typedef unsigned char			uint8_t;
+
+typedef signed short int		int16_t;
+typedef unsigned short int		uint16_t;
+
+typedef signed int				int32_t;
+typedef unsigned int			uint32_t;
+
+typedef signed long int			int64_t;
+typedef unsigned long int		uint64_t;
+
+typedef uint64_t				register_t;
+
+typedef unsigned int long		size_t;
+typedef long int				ssize_t;
+
+typedef long long int			intmax_t;
+typedef unsigned long long int	uintmax_t;
+
+typedef long long int			ptrdiff_t;
+#define PTRDIFF_T				unsigned long long int
+
 #else // CONFIG_REGISTER_WIDTH
 
-GCC_ERROR(invalid address width in configuration)
+CPP_ASSERT(invalid address width in configuration)
 
 #endif // CONFIG_REGISTER_WIDTH
 
