@@ -17,4 +17,4 @@ obj-$(CONFIG_INIT_PINSAMPLER) += pinsampler.o
 obj-$(CONFIG_INIT_PWMCTRL) += pwmctrl.o
 obj-$(CONFIG_INIT_I2CCFG) += i2ccfg.o
 obj-$(CONFIG_INIT_ETHERNET) += ethconfig.o ethserver.o ethclient.o
-obj-$(CONFIG_INIT_TEST) += test.o tests/
+obj-$(CONFIG_INIT_TEST) += test.o test/user/

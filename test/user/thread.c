@@ -7,14 +7,14 @@
 
 
 
-#include <sys/escape.h>
-#include <sys/mutex.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
 #include <sched.h>
-#include <shell/cmds/tests/test.h>
+#include <sys/escape.h>
+#include <sys/mutex.h>
+#include <test/test.h>
 
 
 /* macros */
@@ -46,7 +46,7 @@ static char args[NTHREADS][5];
  * \brief	test to verify thread_create() works and passes the correct arguments.
  * 			also sleep() and mutex functions are tested.
  */
-static int exec(void){
+TEST_LONG(thread_create, "test thread creation and sleep"){
 	size_t i;
 	unsigned int to;
 	tid_t tid;
@@ -59,7 +59,7 @@ static int exec(void){
 		tid = thread_create(thread, args[i]);
 
 		if(tid == 0){
-			ERROR("creating thread \"%s\"\n", strerror(errno));
+			printf(FG_RED "error " RESET_ATTR "creating thread \"%s\"\n", strerror(errno));
 			return -1;
 		}
 
@@ -73,16 +73,13 @@ static int exec(void){
 		msleep(PERIOD_MS * NTHREAD_ITER);
 
 		if(++to >= TIMEOUT){
-			ERROR("timeout detected, threads did not return in time\n");
+			printf(FG_RED "error " RESET_ATTR "timeout detected, threads did not return in time\n");
 			return -1;
 		}
 	}
 
 	return r;
 }
-
-test("thread-create", exec, "test thread creation and sleep");
-
 
 static int thread(void *arg){
 	int i;
@@ -97,7 +94,7 @@ static int thread(void *arg){
 	sprintf(ref, "%u", tinfo.tid);
 
 	if(strcmp(arg, ref) != 0){
-		ERROR("argument doesn't match thread id (%s != %s)\n", arg, ref);
+		printf(FG_RED "error " RESET_ATTR "argument doesn't match thread id (%s != %s)\n", arg, ref);
 		ATOMIC_INC(r, m);
 
 		goto end;

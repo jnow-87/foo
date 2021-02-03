@@ -7,21 +7,22 @@
 
 
 
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/term.h>
 #include <sys/uart.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <shell/cmds/tests/test.h>
+#include <sys/escape.h>
+#include <test/test.h>
 
 
 /* local functions */
 /**
  * \brief	test to demonstrate non/blocking operation of stdin
  */
-static int exec(void){
+TEST_LONG(tty, "test tty non/blocking io"){
 	size_t i,
 		   n;
 	char buf[20];
@@ -37,7 +38,7 @@ static int exec(void){
 
 	/* get stdin file mode */
 	if(fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t)) != 0){
-		ERROR("can't read stdin file mode \"%s\"\n", strerror(errno));
+		printf(FG_RED "error " RESET_ATTR "can't read stdin file mode \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -60,7 +61,7 @@ static int exec(void){
 
 		// error handling
 		if(errno){
-			ERROR("read \"%s\" -", strerror(errno));
+			printf(FG_RED "error " RESET_ATTR "read \"%s\" -", strerror(errno));
 			errno = E_OK;
 
 			ioctl(0, IOCTL_STATUS, &err, sizeof(err));
@@ -95,7 +96,7 @@ static int exec(void){
 			printf("toggle blocking mode (set mode: %#x)\n", f_mode);
 
 			if(fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t)) != 0)
-				ERROR("fcntl failed \"%s\"\n", strerror(errno));
+				printf(FG_RED "error " RESET_ATTR "fcntl failed \"%s\"\n", strerror(errno));
 		}
 		else if(buf[0] == 'q')
 			break;
@@ -107,5 +108,3 @@ static int exec(void){
 
 	return 0;
 }
-
-test("tty", exec, "tty non/blocking io");

@@ -15,9 +15,13 @@ SECTIONS {
 		__cmds_end = .;
 
 		/* array of tests */
-		__tests_start = .;
-		*(.tests*)
-		__tests_end = .;
+		__start_tests_user_interactive = .;
+		*(tests_user_interactive)
+		__stop_tests_user_interactive = .;
+
+		__start_tests_user_noninteractive = .;
+		*(tests_user_noninteractive)
+		__stop_tests_user_noninteractive = .;
 	}
 }
 

@@ -7,12 +7,13 @@
 
 
 
-#include <sys/errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <shell/cmds/tests/test.h>
+#include <sys/errno.h>
+#include <sys/escape.h>
+#include <test/test.h>
 
 
 /* macros */
@@ -21,6 +22,9 @@
 
 /* local/static prototypes */
 static int thread(void *arg);
+
+
+/* static variables */
 static char args[NTHREADS][5];
 
 
@@ -28,7 +32,7 @@ static char args[NTHREADS][5];
 /**
  *	\brief	test to verify user-space signals
  */
-static int exec(void){
+TEST_LONG(exit, "test process and thread termination"){
 	unsigned int i;
 	tid_t tid;
 
@@ -39,7 +43,7 @@ static int exec(void){
 
 		tid = thread_create(thread, args[i]);
 
-		if(tid == 0)	ERROR("creating thread \"%s\"\n", strerror(errno));
+		if(tid == 0)	printf(FG_RED "error " RESET_ATTR "creating thread \"%s\"\n", strerror(errno));
 		else			printf("created thread with id: %u, args: %x \"%s\"\n", tid, args[i], args[i]);
 	}
 
@@ -49,14 +53,12 @@ static int exec(void){
 	return 0;
 }
 
-test("exit", exec, "terminate process and all threads");
-
 static int thread(void *arg){
 	thread_info_t info;
 
 
 	if(thread_info(&info) != 0){
-		ERROR("retrieving thread info\n");
+		printf(FG_RED "error " RESET_ATTR "retrieving thread info\n");
 		return -1;
 	}
 

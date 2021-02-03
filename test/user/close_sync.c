@@ -7,12 +7,13 @@
 
 
 
-#include <sys/errno.h>
-#include <sys/fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <shell/cmds/tests/test.h>
+#include <sys/errno.h>
+#include <sys/fcntl.h>
+#include <sys/escape.h>
+#include <test/test.h>
 
 
 /* local functions */
@@ -20,7 +21,7 @@
  * \brief	test to verify that close() finishes all outstanding operations
  * 			for the given file descriptor
  */
-static int exec(void){
+TEST_LONG(close_sync, "test if close() syncs all outstanding file operations"){
 	FILE *fp;
 	int e;
 	char buf[20];
@@ -70,5 +71,3 @@ static int exec(void){
 
 	return 0;
 }
-
-test("close-sync", exec, "test if close() syncs all outstanding file operations");

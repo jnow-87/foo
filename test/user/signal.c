@@ -7,14 +7,15 @@
 
 
 
-#include <sys/errno.h>
-#include <sys/types.h>
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <sched.h>
-#include <shell/cmds/tests/test.h>
+#include <sys/errno.h>
+#include <sys/types.h>
+#include <sys/escape.h>
+#include <test/test.h>
 
 
 /* macros */
@@ -35,7 +36,7 @@ static bool volatile done = false;
 /**
  *	\brief	test to verify user-space signals
  */
-static int exec(void){
+TEST_LONG(signal, "test user-space signals"){
 	int r;
 	unsigned int i;
 	tid_t tid;
@@ -48,13 +49,13 @@ static int exec(void){
 	/* prepare */
 	// get process info
 	if(process_info(&pinfo) != 0){
-		ERROR("acquiring process info \"%s\"\n", strerror(errno));
+		printf(FG_RED "error " RESET_ATTR "acquiring process info \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
 	// register signal handler
 	if(signal(SIG_INT, hdlr) != hdlr){
-		ERROR("registering signal handler \"%s\"\n", strerror(errno));
+		printf(FG_RED "error " RESET_ATTR "registering signal handler \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -62,7 +63,7 @@ static int exec(void){
 	tid = thread_create(thread, "foo");
 
 	if(tid == 0){
-		ERROR("creating thread \"%s\"\n", strerror(errno));
+		printf(FG_RED "error " RESET_ATTR "creating thread \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -80,19 +81,17 @@ static int exec(void){
 
 	/* check result */
 	if(r){
-		ERROR("sending signal \"%s\"\n", strerror(errno));
+		printf(FG_RED "error " RESET_ATTR "sending signal \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
 	if(nsigs != NSIGS){
-		ERROR("%u/%u signals received by thread\n", nsigs, NSIGS);
+		printf(FG_RED "error " RESET_ATTR "%u/%u signals received by thread\n", nsigs, NSIGS);
 		return -1;
 	}
 
 	return 0;
 }
-
-test("signal", exec, "test user-space signals");
 
 static void hdlr(signal_t sig){
 	thread_info_t info;

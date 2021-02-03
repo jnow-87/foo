@@ -7,19 +7,20 @@
 
 
 
-#include <sys/errno.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <shell/cmds/tests/test.h>
+#include <sys/errno.h>
+#include <sys/stat.h>
+#include <sys/escape.h>
+#include <test/test.h>
 
 
 /* local functions */
 /**
  * \brief	test to verify stat()
  */
-static int exec(void){
+TEST_LONG(stat, "test syscall stat"){
 	int r;
 	FILE *fp;
 	stat_t f_stat;
@@ -38,12 +39,12 @@ static int exec(void){
 		goto err;
 
 	if(f_stat.type != FT_REG){
-		ERROR("type mismatch, having %d\n", f_stat.type);
+		printf(FG_RED "error " RESET_ATTR "type mismatch, having %d\n", f_stat.type);
 		goto err;
 	}
 
 	if(f_stat.size != 3){
-		ERROR("file size mismatch, having %u\n", f_stat.size);
+		printf(FG_RED "error " RESET_ATTR "file size mismatch, having %u\n", f_stat.size);
 		goto err;
 	}
 
@@ -52,7 +53,7 @@ static int exec(void){
 		goto err;
 
 	if(f_stat.type != FT_CHR){
-		ERROR("type mismatch, having %d\n", f_stat.type);
+		printf(FG_RED "error " RESET_ATTR "type mismatch, having %d\n", f_stat.type);
 		goto err;
 	}
 
@@ -65,5 +66,3 @@ err:
 	return r;
 
 }
-
-test("stat", exec, "test the stat() syscall");

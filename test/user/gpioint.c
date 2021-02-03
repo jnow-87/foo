@@ -7,17 +7,18 @@
 
 
 
-#include <sys/errno.h>
-#include <sys/types.h>
-#include <sys/signal.h>
-#include <sys/ioctl.h>
-#include <sys/fcntl.h>
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <sched.h>
-#include <shell/cmds/tests/test.h>
+#include <sys/errno.h>
+#include <sys/types.h>
+#include <sys/signal.h>
+#include <sys/ioctl.h>
+#include <sys/fcntl.h>
+#include <sys/escape.h>
+#include <test/test.h>
 
 
 /* macros */
@@ -37,7 +38,7 @@ static int dev_fd;
 /**
  *	\brief	test to verify the interrupt feature of gpio devices
  */
-static int exec(void){
+TEST_LONG(gpioint, "test gpio device interrupts"){
 	char c;
 	f_mode_t f_mode;
 	signal_t sig;
@@ -48,7 +49,7 @@ static int exec(void){
 	dev_fd = open(GPIO_DEV, O_RDWR);
 
 	if(dev_fd < 0){
-		ERROR("opening device \"%s\" \"%s\"\n", GPIO_DEV, strerror(errno));
+		printf(FG_RED "error " RESET_ATTR "opening device \"%s\" \"%s\"\n", GPIO_DEV, strerror(errno));
 		return -1;
 	}
 
@@ -56,13 +57,13 @@ static int exec(void){
 	sig = SIGNAL;
 
 	if(ioctl(dev_fd, IOCTL_CFGWR, &sig, sizeof(signal_t)) != 0){
-		ERROR("registering signal to device \"%s\"\n", strerror(errno));
+		printf(FG_RED "error " RESET_ATTR "registering signal to device \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
 	// register signal handler
 	if(signal(SIGNAL, hdlr) != hdlr){
-		ERROR("registering signal handler \"%s\"\n", strerror(errno));
+		printf(FG_RED "error " RESET_ATTR "registering signal handler \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -93,8 +94,6 @@ static int exec(void){
 
 	return 0;
 }
-
-test("gpioint", exec, "test gpio device interrupts");
 
 static void hdlr(signal_t sig){
 	char c;
