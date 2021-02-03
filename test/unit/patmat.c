@@ -11,8 +11,8 @@
 #include <sys/memory.h>
 #include <sys/string.h>
 #include <sys/patmat.h>
-#include <testcase.h>
-#include <memory.h>
+#include <test/test.h>
+#include <test/memory.h>
 
 
 /* types */
@@ -31,7 +31,7 @@ static int test(patmat_t *pm, char const *input, ssize_t retval, size_t nexpect,
 
 
 /* local functions */
-TEST(patmat, "pattern matcher"){
+TEST(patmat){
 	unsigned int n;
 	char const *patterns[] = {
 		"%d ",
@@ -55,7 +55,7 @@ TEST(patmat, "pattern matcher"){
 	pm = patmat_init(patterns, sizeof_array(patterns));
 
 	/* special cases */
-	n += CHECK_INT(test(pm, "19 ", 0, 1, (expect_t[]){{ .type = -1, .result.i = 19 }}), -1);
+	n += TEST_INT_EQ(test(pm, "19 ", 0, 1, (expect_t[]){{ .type = -1, .result.i = 19 }}), -1);
 	n += test(pm, "1+", PM_NOMATCH, 0, 0x0);
 	n += test(pm, "", PM_NOMATCH, 0, 0x0);
 
@@ -116,7 +116,7 @@ TEST(patmat, "pattern matcher"){
 	return -n;
 }
 
-TEST(patmat_error, "pattern matcher error"){
+TEST(patmat_error){
 	int n;
 	char const *patterns[] = {
 		"%d ",
@@ -130,34 +130,34 @@ TEST(patmat_error, "pattern matcher error"){
 
 	n = 0;
 
-	n += CHECK_INT(test(0x0, "", 0, 0, 0x0), -1);
+	n += TEST_INT_EQ(test(0x0, "", 0, 0, 0x0), -1);
 
 	/* invalid characters */
-	n += CHECK_INT(patmat_match_char(0x0, -1), PM_NOMATCH);
+	n += TEST_INT_EQ(patmat_match_char(0x0, -1), PM_NOMATCH);
 
 	/* invalid specifier */
-	n += CHECK_PTR(patmat_init(patterns_invalid, 1), 0x0);
-	n += CHECK_PTR(patmat_init(patterns_invalid + 1, 1), 0x0);
-	n += CHECK_PTR(patmat_init(patterns_invalid + 2, 1), 0x0);
+	n += TEST_PTR_EQ(patmat_init(patterns_invalid, 1), 0x0);
+	n += TEST_PTR_EQ(patmat_init(patterns_invalid + 1, 1), 0x0);
+	n += TEST_PTR_EQ(patmat_init(patterns_invalid + 2, 1), 0x0);
 
 	/* malloc fails */
 	test_memory_init();
 
 	// fail patmat_init
 	test_malloc_fail_at = 1;
-	n += CHECK_PTR(patmat_init(0x0, 0), 0x0);
+	n += TEST_PTR_EQ(patmat_init(0x0, 0), 0x0);
 
 	// fail pattern_init 1st
 	test_malloc_fail_at = 2;
-	n += CHECK_PTR(patmat_init(patterns, 1), 0x0);
+	n += TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
 
 	// fail pattern_init 2nd
 	test_malloc_fail_at = 3;
-	n += CHECK_PTR(patmat_init(patterns, 1), 0x0);
+	n += TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
 
 	// fail pattern_init 3rd
 	test_malloc_fail_at = 4;
-	n += CHECK_PTR(patmat_init(patterns, 1), 0x0);
+	n += TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
 
 	test_memory_reset();
 
@@ -181,14 +181,14 @@ static int test(patmat_t *pm, char const *input, ssize_t retval, size_t nexpect,
 	TEST_LOG("match \"%s\"\n", input);
 
 	n = 0;
-	n += CHECK_INT(patmat_match_string(pm, input), retval);
-	n += CHECK_INT(patmat_get_results(pm, results), index);
+	n += TEST_INT_EQ(patmat_match_string(pm, input), retval);
+	n += TEST_INT_EQ(patmat_get_results(pm, results), index);
 
 	for(i=0; index>=0 && i<nexpect; i++){
 		switch(expect[i].type){
-		case PMS_INT:	n += CHECK_INT(PATMAT_RESULT_INT(results, i), expect[i].result.i); break;
-		case PMS_CHAR:	n += CHECK_INT(PATMAT_RESULT_CHAR(results, i), expect[i].result.c); break;
-		case PMS_STR:	n += CHECK_STR(, PATMAT_RESULT_STR(results, i), expect[i].result.s); break;
+		case PMS_INT:	n += TEST_INT_EQ(PATMAT_RESULT_INT(results, i), expect[i].result.i); break;
+		case PMS_CHAR:	n += TEST_INT_EQ(PATMAT_RESULT_CHAR(results, i), expect[i].result.c); break;
+		case PMS_STR:	n += TEST_STR_EQ(PATMAT_RESULT_STR(results, i), expect[i].result.s); break;
 		default:		n += 1; break;
 		}
 	}

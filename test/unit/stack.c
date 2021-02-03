@@ -10,7 +10,7 @@
 #include <sys/stack.h>
 #include <sys/types.h>
 #include <sys/string.h>
-#include <testcase.h>
+#include <test/test.h>
 
 
 /* macros */
@@ -42,7 +42,7 @@ static stack_t el0 = { .el = 0, .s = "0" },
 
 
 /* local functions */
-TEST(stack_print, "stack print"){
+TEST(stack_print){
 	TEST_LOG("list element addresses\n");
 	TEST_LOG("el0 addr: %#x\n", &el0);
 	TEST_LOG("el1 addr: %#x\n", &el1);
@@ -52,7 +52,7 @@ TEST(stack_print, "stack print"){
 	return 0;
 }
 
-TEST(stack_init, "stack init"){
+TEST(stack_init){
 	unsigned int n;
 	stack_t *top;
 
@@ -62,12 +62,12 @@ TEST(stack_init, "stack init"){
 
 	stack_init(top);
 
-	n += CHECK_PTR(top->next, 0);
+	n += TEST_PTR_EQ(top->next, 0);
 
 	return -n;
 }
 
-TEST(stack_top, "stack top"){
+TEST(stack_top){
 	unsigned int n;
 	stack_t *top;
 
@@ -76,24 +76,24 @@ TEST(stack_top, "stack top"){
 	top = 0;
 	INIT_EL();
 
-	n += CHECK_PTR(stack_top(top), 0x0);
+	n += TEST_PTR_EQ(stack_top(top), 0x0);
 
 	stack_push(top, &el0);
-	n += CHECK_PTR(stack_top(top), &el0);
+	n += TEST_PTR_EQ(stack_top(top), &el0);
 
 	stack_push(top, &el1);
-	n += CHECK_PTR(stack_top(top), &el1);
+	n += TEST_PTR_EQ(stack_top(top), &el1);
 
 	(void)pop(&top);
-	n += CHECK_PTR(stack_top(top), &el0);
+	n += TEST_PTR_EQ(stack_top(top), &el0);
 
 	(void)pop(&top);
-	n += CHECK_PTR(stack_top(top), 0x0);
+	n += TEST_PTR_EQ(stack_top(top), 0x0);
 
 	return -n;
 }
 
-TEST(stack_push, "stack push"){
+TEST(stack_push){
 	unsigned int n;
 	stack_t *top;
 
@@ -105,20 +105,20 @@ TEST(stack_push, "stack push"){
 	// push to empty stack
 	stack_push(top, &el0);
 
-	n += CHECK_PTR(top, &el0);
-	n += CHECK_PTR(el0.next, 0);
+	n += TEST_PTR_EQ(top, &el0);
+	n += TEST_PTR_EQ(el0.next, 0);
 
 	// push to non-empty stack
 	stack_push(top, &el1);
 
-	n += CHECK_PTR(top, &el1);
-	n += CHECK_PTR(el1.next, &el0);
-	n += CHECK_PTR(el0.next, 0);
+	n += TEST_PTR_EQ(top, &el1);
+	n += TEST_PTR_EQ(el1.next, &el0);
+	n += TEST_PTR_EQ(el0.next, 0);
 
 	return -n;
 }
 
-TEST(stack_pop, "stack pop"){
+TEST(stack_pop){
 	unsigned int n;
 	stack_t *top,
 			*el;
@@ -135,20 +135,20 @@ TEST(stack_pop, "stack pop"){
 	// pop from non-empty stack
 	el = pop(&top);
 
-	n += CHECK_PTR(top, &el0);
-	n += CHECK_PTR(el, &el1);
+	n += TEST_PTR_EQ(top, &el0);
+	n += TEST_PTR_EQ(el, &el1);
 
 	// pop last element
 	el = pop(&top);
 
-	n += CHECK_PTR(top, 0);
-	n += CHECK_PTR(el, &el0);
+	n += TEST_PTR_EQ(top, 0);
+	n += TEST_PTR_EQ(el, &el0);
 
 	// pop from empty stack
 	el = pop(&top);
 
-	n += CHECK_PTR(top, 0);
-	n += CHECK_PTR(el, 0);
+	n += TEST_PTR_EQ(top, 0);
+	n += TEST_PTR_EQ(el, 0);
 
 	return -n;
 }

@@ -10,7 +10,7 @@
 #include <sys/queue.h>
 #include <sys/types.h>
 #include <sys/string.h>
-#include <testcase.h>
+#include <test/test.h>
 
 
 /* macros */
@@ -42,7 +42,7 @@ static queue_t el0 = { .el = 0, .s = "0" },
 
 
 /* local functions */
-TEST(queue_print, "queue print"){
+TEST(queue_print){
 	TEST_LOG("list element addresses\n");
 	TEST_LOG("el0 addr: %#x\n", &el0);
 	TEST_LOG("el1 addr: %#x\n", &el1);
@@ -52,7 +52,7 @@ TEST(queue_print, "queue print"){
 	return 0;
 }
 
-TEST(queue_init, "queue init"){
+TEST(queue_init){
 	unsigned int n;
 	queue_t *head,
 			*tail;
@@ -63,13 +63,13 @@ TEST(queue_init, "queue init"){
 
 	queue_init(head, tail);
 
-	n += CHECK_PTR(head->next, 0);
-	n += CHECK_PTR(tail, head);
+	n += TEST_PTR_EQ(head->next, 0);
+	n += TEST_PTR_EQ(tail, head);
 
 	return -n;
 }
 
-TEST(queue_enqueue, "queue enqueue"){
+TEST(queue_enqueue){
 	unsigned int n;
 	queue_t *head,
 			*tail;
@@ -83,22 +83,22 @@ TEST(queue_enqueue, "queue enqueue"){
 	// enqueue to empty queue
 	queue_enqueue(head, tail, &el0);
 
-	n += CHECK_PTR(head, &el0);
-	n += CHECK_PTR(tail, &el0);
-	n += CHECK_PTR(el0.next, 0);
+	n += TEST_PTR_EQ(head, &el0);
+	n += TEST_PTR_EQ(tail, &el0);
+	n += TEST_PTR_EQ(el0.next, 0);
 
 	// enqueue in non-empty queue
 	queue_enqueue(head, tail, &el1);
 
-	n += CHECK_PTR(head, &el0);
-	n += CHECK_PTR(tail, &el1);
-	n += CHECK_PTR(el0.next, &el1);
-	n += CHECK_PTR(el1.next, 0);
+	n += TEST_PTR_EQ(head, &el0);
+	n += TEST_PTR_EQ(tail, &el1);
+	n += TEST_PTR_EQ(el0.next, &el1);
+	n += TEST_PTR_EQ(el1.next, 0);
 
 	return -n;
 }
 
-TEST(queue_dequeue, "queue dequeue"){
+TEST(queue_dequeue){
 	unsigned int n;
 	queue_t *head,
 			*tail,
@@ -117,23 +117,23 @@ TEST(queue_dequeue, "queue dequeue"){
 	// dequeue from non-empty queue
 	el = dequeue(&head, &tail);
 
-	n += CHECK_PTR(head, &el1);
-	n += CHECK_PTR(tail, &el1);
-	n += CHECK_PTR(el, &el0);
+	n += TEST_PTR_EQ(head, &el1);
+	n += TEST_PTR_EQ(tail, &el1);
+	n += TEST_PTR_EQ(el, &el0);
 
 	// dequeue last element
 	el = dequeue(&head, &tail);
 
-	n += CHECK_PTR(head, 0);
-	n += CHECK_PTR(tail, 0);
-	n += CHECK_PTR(el, &el1);
+	n += TEST_PTR_EQ(head, 0);
+	n += TEST_PTR_EQ(tail, 0);
+	n += TEST_PTR_EQ(el, &el1);
 
 	// dequeue from empty empty queue
 	el = dequeue(&head, &tail);
 
-	n += CHECK_PTR(head, 0);
-	n += CHECK_PTR(tail, 0);
-	n += CHECK_PTR(el, 0);
+	n += TEST_PTR_EQ(head, 0);
+	n += TEST_PTR_EQ(tail, 0);
+	n += TEST_PTR_EQ(el, 0);
 
 	return -n;
 }

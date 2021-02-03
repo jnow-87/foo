@@ -15,6 +15,7 @@
 
 
 /* macros */
+#ifndef BUILD_HOST
 #ifdef CONFIG_AVR
 
 #define va_start(ap, last)	__builtin_va_start(ap[0], last)
@@ -31,7 +32,14 @@
 
 #endif // CONFIG_AVR
 
+#else // BUILD_HOST
+
+#include <stdarg.h>
+
+#endif // BUILD_HOST
+
 /* types */
+#ifndef BUILD_HOST
 #ifdef CONFIG_AVR
 
 // NOTE __builtin_va_list seems to be defined as void pointer. To allow
@@ -45,6 +53,7 @@ typedef __builtin_va_list va_list[1];
 typedef __builtin_va_list va_list;
 
 #endif // CONFIG_AVR
+#endif // BUILD_HOST
 
 
 #endif // SYS_STDARG_H

@@ -7,9 +7,9 @@
 
 
 
-#include <sys/memory.h>
 #include <stdlib.h>
-#include <memory.h>
+#include <sys/memory.h>
+#include <test/memory.h>
 
 
 /* local/static prototypes */

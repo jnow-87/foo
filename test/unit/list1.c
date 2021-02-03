@@ -10,7 +10,7 @@
 #include <sys/list.h>
 #include <sys/types.h>
 #include <sys/string.h>
-#include <testcase.h>
+#include <test/test.h>
 
 
 /* macros */
@@ -46,7 +46,7 @@ static tlist_t el0 = { .el = 0, .s_ptr = el_names[0], .s_arr = "0" },
 
 
 /* local functions */
-TEST(list1_init, "list1 init"){
+TEST(list1_init){
 	unsigned int n;
 	tlist_t *head,
 			*tail;
@@ -57,12 +57,12 @@ TEST(list1_init, "list1 init"){
 
 	list1_init(head, tail);
 
-	n += CHECK_PTR(head->next, 0x0);
+	n += TEST_PTR_EQ(head->next, 0x0);
 
 	return -n;
 }
 
-TEST(list2_add_head, "list1 add head"){
+TEST(list1_add_head){
 	unsigned int n;
 	tlist_t *head,
 			*tail;
@@ -76,14 +76,14 @@ TEST(list2_add_head, "list1 add head"){
 	list1_add_head(head, tail, &el0);
 	list1_add_head(head, tail, &el1);
 
-	n += CHECK_PTR(head, &el1);
-	n += CHECK_PTR(el1.next, &el0);
-	n += CHECK_PTR(el0.next, 0x0);
+	n += TEST_PTR_EQ(head, &el1);
+	n += TEST_PTR_EQ(el1.next, &el0);
+	n += TEST_PTR_EQ(el0.next, 0x0);
 
 	return -n;
 }
 
-TEST(list1_add_tail, "list1 add tail"){
+TEST(list1_add_tail){
 	unsigned int n;
 	tlist_t *head,
 			*tail;
@@ -97,14 +97,14 @@ TEST(list1_add_tail, "list1 add tail"){
 	list1_add_tail(head, tail, &el0);
 	list1_add_tail(head, tail, &el1);
 
-	n += CHECK_PTR(head, &el0);
-	n += CHECK_PTR(el0.next, &el1);
-	n += CHECK_PTR(el1.next, 0x0);
+	n += TEST_PTR_EQ(head, &el0);
+	n += TEST_PTR_EQ(el0.next, &el1);
+	n += TEST_PTR_EQ(el1.next, 0x0);
 
 	return -n;
 }
 
-TEST(list1_rm, "list1 rm"){
+TEST(list1_rm){
 	unsigned int n;
 	tlist_t *head,
 			*tail;
@@ -122,20 +122,20 @@ TEST(list1_rm, "list1 rm"){
 	// remove middle element
 	list1_rm_head(head, tail);
 
-	n += CHECK_PTR(head, &el1);
-	n += CHECK_PTR(el1.next, &el2);
-	n += CHECK_PTR(el2.next, 0x0);
+	n += TEST_PTR_EQ(head, &el1);
+	n += TEST_PTR_EQ(el1.next, &el2);
+	n += TEST_PTR_EQ(el2.next, 0x0);
 
 	// remove tail element
 	list1_rm_head(head, tail);
 
-	n += CHECK_PTR(head, &el2);
-	n += CHECK_PTR(el2.next, 0x0);
+	n += TEST_PTR_EQ(head, &el2);
+	n += TEST_PTR_EQ(el2.next, 0x0);
 
 	// remove head element
 	list1_rm_head(head, tail);
 
-	n += CHECK_PTR(head, 0x0);
+	n += TEST_PTR_EQ(head, 0x0);
 
 	return -n;
 }

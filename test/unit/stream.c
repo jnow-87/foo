@@ -11,7 +11,7 @@
 #include <config/config.h>
 #include <sys/string.h>
 #include <sys/stream.h>
-#include <testcase.h>
+#include <test/test.h>
 
 /* host header */
 #include <unistd.h>
@@ -31,19 +31,19 @@ static char putc(char c, struct FILE *stream);
 
 
 /* local functions */
-TEST(snprintf, "snprintf"){
+TEST(snprintf){
 	int n;
 	char s[16];
 
 
 	n = 0;
-	n += CHECK_INT(snprintf(s, 2, "%d", 100), 1);
-	n += CHECK_STR(, s, "1");
+	n += TEST_INT_EQ(snprintf(s, 2, "%d", 100), 1);
+	n += TEST_STR_EQ(s, "1");
 
 	return -n;
 }
 
-TEST(vfprintf, "vfprintf"){
+TEST(vfprintf){
 	unsigned int n;
 	char tmp[3];
 	long long int len;
@@ -289,7 +289,7 @@ TEST(vfprintf, "vfprintf"){
 	return -n;
 };
 
-TEST(vfprintf_inval, "vfprintf invalid"){
+TEST(vfprintf_inval){
 	FILE fp = FILE_INITIALISER(0x0, 0x0, 0, 0x0);
 	int n;
 
@@ -298,14 +298,14 @@ TEST(vfprintf_inval, "vfprintf invalid"){
 
 	n += test("12", "%#u", 12);
 
-	n += CHECK_INT(fprintf(0x0, ""), 0);
-	n += CHECK_INT(fprintf(&fp, ""), 0);
-	n += CHECK_INT(fprintf(&fp, " "), 0);
+	n += TEST_INT_EQ(fprintf(0x0, ""), 0);
+	n += TEST_INT_EQ(fprintf(&fp, ""), 0);
+	n += TEST_INT_EQ(fprintf(&fp, " "), 0);
 
 	fp.putc = putc;
-	n += CHECK_INT(fprintf(&fp, ""), 0);
+	n += TEST_INT_EQ(fprintf(&fp, ""), 0);
 
-	n += CHECK_INT(fprintf(&fp, "%5s", "1"), 0);
+	n += TEST_INT_EQ(fprintf(&fp, "%5s", "1"), 0);
 
 
 	return -n;
@@ -329,8 +329,8 @@ static int test(char const *ref, char const *s, ...){
 	va_end(lst);
 
 	n = 0;
-	n += CHECK_INT(len, strlen(ref_ext));
-	n += CHECK_STR({}, f.wbuf, ref_ext);
+	n += TEST_INT_EQ(len, strlen(ref_ext));
+	n += TEST_STR_EQ(f.wbuf, ref_ext);
 
 	return n;
 }

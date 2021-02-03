@@ -9,8 +9,8 @@
 
 #include <sys/vector.h>
 #include <sys/types.h>
-#include <testcase.h>
-#include <memory.h>
+#include <test/test.h>
+#include <test/memory.h>
 
 
 /* macros */
@@ -22,45 +22,45 @@
 
 
 /* local functions */
-TEST(vector_init, "vector init"){
+TEST(vector_init){
 	int n;
 	vector_t v;
 
 
 	n = 0;
 
-	n += CHECK_INT(vector_init(&v, sizeof(int), 20), 0);
-	n += CHECK_INT(v.capacity, 20);
-	n += CHECK_INT(v.size, 0);
-	n += CHECK_INT(v.dt_size, sizeof(int));
+	n += TEST_INT_EQ(vector_init(&v, sizeof(int), 20), 0);
+	n += TEST_INT_EQ(v.capacity, 20);
+	n += TEST_INT_EQ(v.size, 0);
+	n += TEST_INT_EQ(v.dt_size, sizeof(int));
 
 	vector_destroy(&v);
 
 	test_memory_init();
 
 	test_malloc_fail_at = 1;
-	n += CHECK_INT(vector_init(&v, 0, 0), -1);
+	n += TEST_INT_EQ(vector_init(&v, 0, 0), -1);
 
 	return -n;
 }
 
-TEST(vector_destroy, "vector destroy"){
+TEST(vector_destroy){
 	int n;
 	vector_t v;
 
 
 	n = 0;
-	n += CHECK_INT(vector_init(&v, sizeof(int), 20), 0);
+	n += TEST_INT_EQ(vector_init(&v, sizeof(int), 20), 0);
 	vector_destroy(&v);
 
-	n += CHECK_INT(v.capacity, 0);
-	n += CHECK_INT(v.size, 0);
-	n += CHECK_INT(v.dt_size, sizeof(int));
+	n += TEST_INT_EQ(v.capacity, 0);
+	n += TEST_INT_EQ(v.size, 0);
+	n += TEST_INT_EQ(v.dt_size, sizeof(int));
 
 	return -n;
 }
 
-TEST(vector_add, "vector add"){
+TEST(vector_add){
 	int n;
 	int r;
 	vector_t v;
@@ -69,35 +69,35 @@ TEST(vector_add, "vector add"){
 	r = vector_init(&v, sizeof(int), 2);
 
 	n = 0;
-	n += CHECK_INT(r, 0);
+	n += TEST_INT_EQ(r, 0);
 
 	r = 10;
 	r = vector_add(&v, &r);
-	n += CHECK_INT(r, 0);
-	n += CHECK_INT(v.capacity, 2);
-	n += CHECK_INT(v.size, 1);
+	n += TEST_INT_EQ(r, 0);
+	n += TEST_INT_EQ(v.capacity, 2);
+	n += TEST_INT_EQ(v.size, 1);
 
 	r = 20;
 	r = vector_add(&v, &r);
-	n += CHECK_INT(r, 0);
-	n += CHECK_INT(v.capacity, 2);
-	n += CHECK_INT(v.size, 2);
+	n += TEST_INT_EQ(r, 0);
+	n += TEST_INT_EQ(v.capacity, 2);
+	n += TEST_INT_EQ(v.size, 2);
 
 	r = 30;
 	r = vector_add(&v, &r);
-	n += CHECK_INT(r, 0);
-	n += CHECK_INT(v.capacity, 4);
-	n += CHECK_INT(v.size, 3);
+	n += TEST_INT_EQ(r, 0);
+	n += TEST_INT_EQ(v.capacity, 4);
+	n += TEST_INT_EQ(v.size, 3);
 
-	n += CHECK_INT(((int*)v.data)[0], 10);
-	n += CHECK_INT(((int*)v.data)[1], 20);
-	n += CHECK_INT(((int*)v.data)[2], 30);
+	n += TEST_INT_EQ(((int*)v.data)[0], 10);
+	n += TEST_INT_EQ(((int*)v.data)[1], 20);
+	n += TEST_INT_EQ(((int*)v.data)[2], 30);
 
 	test_memory_init();
 
 	test_malloc_fail_at = 1;
-	n += CHECK_INT(vector_add(&v, &r), 0);
-	n += CHECK_INT(vector_add(&v, &r), -1);
+	n += TEST_INT_EQ(vector_add(&v, &r), 0);
+	n += TEST_INT_EQ(vector_add(&v, &r), -1);
 
 	test_memory_reset();
 
@@ -106,7 +106,7 @@ TEST(vector_add, "vector add"){
 	return -n;
 }
 
-TEST(vector_rm, "vector rm"){
+TEST(vector_rm){
 	int n;
 	int r;
 	vector_t v;
@@ -115,7 +115,7 @@ TEST(vector_rm, "vector rm"){
 	r = vector_init(&v, sizeof(int), 20);
 
 	n = 0;
-	n += CHECK_INT(r, 0);
+	n += TEST_INT_EQ(r, 0);
 
 	r = 10; r = vector_add(&v, &r);
 	r = 20; r = vector_add(&v, &r);
@@ -124,25 +124,25 @@ TEST(vector_rm, "vector rm"){
 	r = 50; r = vector_add(&v, &r);
 
 	vector_rm(&v, 0);
-	n += CHECK_INT(v.capacity, 20);
-	n += CHECK_INT(v.size, 4);
-	n += CHECK_INT(((int*)v.data)[0], 20);
-	n += CHECK_INT(((int*)v.data)[1], 30);
-	n += CHECK_INT(((int*)v.data)[2], 40);
-	n += CHECK_INT(((int*)v.data)[3], 50);
+	n += TEST_INT_EQ(v.capacity, 20);
+	n += TEST_INT_EQ(v.size, 4);
+	n += TEST_INT_EQ(((int*)v.data)[0], 20);
+	n += TEST_INT_EQ(((int*)v.data)[1], 30);
+	n += TEST_INT_EQ(((int*)v.data)[2], 40);
+	n += TEST_INT_EQ(((int*)v.data)[3], 50);
 
 	vector_rm(&v, 3);
-	n += CHECK_INT(v.capacity, 20);
-	n += CHECK_INT(v.size, 3);
-	n += CHECK_INT(((int*)v.data)[0], 20);
-	n += CHECK_INT(((int*)v.data)[1], 30);
-	n += CHECK_INT(((int*)v.data)[2], 40);
+	n += TEST_INT_EQ(v.capacity, 20);
+	n += TEST_INT_EQ(v.size, 3);
+	n += TEST_INT_EQ(((int*)v.data)[0], 20);
+	n += TEST_INT_EQ(((int*)v.data)[1], 30);
+	n += TEST_INT_EQ(((int*)v.data)[2], 40);
 
 	vector_rm(&v, 1);
-	n += CHECK_INT(v.capacity, 20);
-	n += CHECK_INT(v.size, 2);
-	n += CHECK_INT(((int*)v.data)[0], 20);
-	n += CHECK_INT(((int*)v.data)[1], 40);
+	n += TEST_INT_EQ(v.capacity, 20);
+	n += TEST_INT_EQ(v.size, 2);
+	n += TEST_INT_EQ(((int*)v.data)[0], 20);
+	n += TEST_INT_EQ(((int*)v.data)[1], 40);
 
 	vector_rm(&v, 3);
 
@@ -151,7 +151,7 @@ TEST(vector_rm, "vector rm"){
 	return -n;
 }
 
-TEST(vector_get, "vector get"){
+TEST(vector_get){
 	int n;
 	int r;
 	vector_t v;
@@ -159,7 +159,7 @@ TEST(vector_get, "vector get"){
 
 	n = 0;
 
-	n += CHECK_INT(vector_init(&v, sizeof(int), 20), 0);
+	n += TEST_INT_EQ(vector_init(&v, sizeof(int), 20), 0);
 
 	r = 10; r = vector_add(&v, &r);
 	r = 20; r = vector_add(&v, &r);
@@ -167,18 +167,18 @@ TEST(vector_get, "vector get"){
 	r = 40; r = vector_add(&v, &r);
 	r = 50; r = vector_add(&v, &r);
 
-	n += CHECK_INT(*((int*)vector_get(&v, 0)), 10);
-	n += CHECK_INT(*((int*)vector_get(&v, 2)), 30);
-	n += CHECK_INT(*((int*)vector_get(&v, 4)), 50);
+	n += TEST_INT_EQ(*((int*)vector_get(&v, 0)), 10);
+	n += TEST_INT_EQ(*((int*)vector_get(&v, 2)), 30);
+	n += TEST_INT_EQ(*((int*)vector_get(&v, 4)), 50);
 
-	n += CHECK_PTR(vector_get(&v, 5), 0x0);
+	n += TEST_PTR_EQ(vector_get(&v, 5), 0x0);
 
 	vector_destroy(&v);
 
 	return -n;
 }
 
-TEST(vector_foreach, "vector for-each"){
+TEST(vector_foreach){
 	int n;
 	int r;
 	int *p;
@@ -188,18 +188,18 @@ TEST(vector_foreach, "vector for-each"){
 	r = vector_init(&v, sizeof(int), 20);
 
 	n = 0;
-	n += CHECK_INT(r, 0);
+	n += TEST_INT_EQ(r, 0);
 
-	r = 10; r = vector_add(&v, &r); n += CHECK_INT(r, 0);
-	r = 20; r = vector_add(&v, &r); n += CHECK_INT(r, 0);
-	r = 30; r = vector_add(&v, &r); n += CHECK_INT(r, 0);
-	r = 40; r = vector_add(&v, &r); n += CHECK_INT(r, 0);
-	r = 50; r = vector_add(&v, &r); n += CHECK_INT(r, 0);
+	r = 10; r = vector_add(&v, &r); n += TEST_INT_EQ(r, 0);
+	r = 20; r = vector_add(&v, &r); n += TEST_INT_EQ(r, 0);
+	r = 30; r = vector_add(&v, &r); n += TEST_INT_EQ(r, 0);
+	r = 40; r = vector_add(&v, &r); n += TEST_INT_EQ(r, 0);
+	r = 50; r = vector_add(&v, &r); n += TEST_INT_EQ(r, 0);
 
 	r = 10;
 
 	vector_for_each(&v, p){
-		n += CHECK_INT(r, *p);
+		n += TEST_INT_EQ(r, *p);
 		r += 10;
 	}
 
