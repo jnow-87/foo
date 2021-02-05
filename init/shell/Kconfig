@@ -29,6 +29,9 @@ menu "Commands"
 	config INIT_RM
 		bool "rm"
 
+	config INIT_EXIT
+		bool "exit"
+
 	config INIT_PINSAMPLER
 		bool "pinsampler"
 		select SYS_RINGBUFFER
@@ -43,7 +46,7 @@ menu "Commands"
 		bool "ethernet"
 
 	config INIT_TEST
-		bool test
+		bool "test"
 endmenu
 
 config LINE_MAX
