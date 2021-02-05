@@ -149,8 +149,7 @@ TEST(strerror){
 	n = 0;
 	n += TEST_STR_EQ(strerror(E_OK), "Success");
 	n += TEST_STR_EQ(strerror(E_UNKNOWN), "Unknown");
-	n += TEST_STR_EQ(strerror(0xfe), "Unknown error 0xfe");
-	n += TEST_STR_EQ(strerror(0xfefe), "Error string too short to display errno");
+	n += TEST_STR_EQ(strerror(0xfe), "Invalid errno");
 
 	return -n;
 }

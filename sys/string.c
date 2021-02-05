@@ -143,19 +143,14 @@ char const *strerror(errno_t errnum){
 		"Already connected",
 		"No connection",
 		"Unknown",
+		"Invalid errno"
 	};
-	static char err_unknown[] = "Unknown error 0x....";
-	static char err_limit[] = "Error string too short to display errno";
 
 
-	/* handle unknown errors */
-	if(errnum <= E_UNKNOWN)
-		return err_str[errnum];
+	if(errnum > E_UNKNOWN)
+		errnum = E_UNKNOWN + 1;
 
-	if(itoa(errnum, 16, err_unknown + 16, 2) == 0x0)
-		return err_limit;
-
-	return err_unknown;
+	return err_str[errnum];
 }
 
 char *itoa(int v, unsigned int base, char *s, size_t len){
