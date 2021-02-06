@@ -16,8 +16,8 @@ hostbin-y := utest
 # utest
 utest-y := main.utest.o memory.o sys/ unit/
 
-utest-hostcppflags += -I$(src_tree)/include
-utest-hostcflags += -fno-builtin
+utest-hostcppflags := -I$(src_tree)/include
+utest-hostcflags := -fno-builtin
 
 main.utest-hostcppflags := -DTESTS=unit
 
@@ -27,20 +27,16 @@ itest-y := main.itest.o user/ scripts/linker/app_$(CONFIG_ARCH).lds
 
 # ensure itest is rebuild if libs are updated and
 # libs exist before building itest
-itest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
 itest-y += $(build_tree)/lib/libsys.a
+itest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
 
-itest-cppflags += \
-	-I"include/lib" \
-	-I"/include" \
-	-I$(loc_build_tree)
+itest-cppflags := -I"include/lib"
 
-itest-ldlibs += \
-	$(ldlibs-app-arch) \
+itest-ldlibs := \
+	$(ldlibs-app) \
+	-Tapp_$(CONFIG_ARCH).lds \
 	-lsys \
-	-lgcc \
-	-Lscripts/linker \
-	-Tapp_$(CONFIG_ARCH).lds
+	-lgcc
 
 main.itest-cppflags := -DTESTS=user_noninteractive
 

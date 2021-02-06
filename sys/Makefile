@@ -93,11 +93,9 @@ prepare_deps: $(lds_memory_script)
 
 
 ## kernel flags
-ldlibs-kernel-arch := \
-	-L$(loc_build_tree) \
+ldlibs-kernel += \
 	-T$(lds_memory_script)
 
 ## init application flags
-ldlibs-app-arch := \
-	-L$(loc_build_tree) \
+ldlibs-app += \
 	-T$(lds_memory_script)

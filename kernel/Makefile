@@ -30,7 +30,7 @@ kimg-$(CONFIG_KERNEL_NET) += net/
 kimg-cppflags-y += -DBUILD_KERNEL
 
 kimg-ldlibs-y := \
-	$(ldlibs-kernel-arch) \
+	$(ldlibs-kernel) \
 	-Lscripts/linker \
 	-Tkernel_$(CONFIG_ARCH).lds \
 	-lgcc

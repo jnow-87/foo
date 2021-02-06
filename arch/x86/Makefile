@@ -24,9 +24,5 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_t
 ## flags
 ####
 
-## kernel flags
-ldlibs-kernel-arch += \
-	-L$(loc_build_tree)/gcov
-
-ldlibs-app-arch += \
-	-L$(loc_build_tree)/gcov
+ldlibs-kernel += -L$(loc_build_tree)/gcov
+ldlibs-app += -L$(loc_build_tree)/gcov

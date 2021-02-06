@@ -20,16 +20,13 @@ init-y += $(build_tree)/lib/libsys.a
 # flags
 ####
 
-init-cppflags-y += \
+init-cppflags-y := \
 	-I"include/lib" \
-	-I$(loc_src_tree) \
-	-I$(loc_build_tree) \
-	-DBUILD_INIT
+	-I$(loc_src_tree)
 
 init-ldlibs-y += \
-	$(ldlibs-app-arch) \
+	$(ldlibs-app) \
 	-T$(loc_src_tree)/lists.lds \
+	-Tapp_$(CONFIG_ARCH).lds \
 	-lsys \
-	-lgcc \
-	-Lscripts/linker \
-	-Tapp_$(CONFIG_ARCH).lds
+	-lgcc

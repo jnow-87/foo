@@ -33,6 +33,14 @@ src_dirs := sys arch kernel lib init test scripts/memlayout scripts/linker scrip
 
 
 ####
+## flags (init values)
+####
+
+ldlibs-kernel :=
+ldlibs-app :=
+
+
+####
 ## include build system Makefile
 ####
 
@@ -43,17 +51,21 @@ include $(scripts_dir)/main.make
 ## flags
 ####
 
-# init default target flags
-cflags := \
-	$(CFLAGS) \
-	$(CONFIG_CFLAGS) \
-	$(cflags) \
+# warning flags
+warnflags := \
 	-Wall \
 	-Wextra \
 	-Wshadow \
 	-Wno-unused-parameter \
 	-Wno-unused-label \
-	-Wno-unknown-pragmas \
+	-Wno-unknown-pragmas
+
+# target flags
+cflags := \
+	$(CFLAGS) \
+	$(CONFIG_CFLAGS) \
+	$(cflags) \
+	$(warnflags) \
 	-nostdinc \
 	-fno-builtin \
 	-fshort-enums \
@@ -63,12 +75,7 @@ cxxflags := \
 	$(CXXFLAGS) \
 	$(CONFIG_CXXFLAGS) \
 	$(cxxflags) \
-	-Wall \
-	-Wextra \
-	-Wshadow \
-	-Wno-unused-parameter \
-	-Wno-unused-label \
-	-Wno-unknown-pragmas \
+	$(warnflags) \
 	-nostdinc \
 	-fno-builtin \
 	-fshort-enums \
@@ -90,7 +97,8 @@ ldlibs := \
 	-nostartfiles \
 	-nostdlib \
 	-static \
-	-L$(build_tree)/lib/
+	-L$(build_tree)/lib/ \
+	-Lscripts/linker
 
 ldflags := \
 	$(LDFLAGS) \
@@ -107,17 +115,12 @@ archflags := \
 	$(CONFIG_ARCHFLAGS) \
 	$(archflags)
 
-# init default host flags
+# host flags
 hostcflags := \
 	$(HOSTCFLAGS) \
 	$(CONFIG_HOSTCFLAGS) \
 	$(hostcflags) \
-	-Wall \
-	-Wextra \
-	-Wshadow \
-	-Wno-unused-parameter \
-	-Wno-unused-label \
-	-Wno-unknown-pragmas \
+	$(warnflags) \
 	-O2 \
 	-flto
 
@@ -125,12 +128,7 @@ hostcxxflags := \
 	$(HOSTCXXFLAGS) \
 	$(CONFIG_HOSTCCCFLAGS) \
 	$(hostcxxflags) \
-	-Wall \
-	-Wextra \
-	-Wshadow \
-	-Wno-unused-parameter \
-	-Wno-unused-label \
-	-Wno-unknown-pragmas \
+	$(warnflags) \
 	-O2 \
 	-flto
 

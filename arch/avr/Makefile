@@ -79,14 +79,14 @@ ifeq ($(CONFIG_BUILD_RELEASE),y)
 endif
 
 ## kernel flags
-ldlibs-kernel-arch += \
+ldlibs-kernel += \
 	-L$(loc_build_tree) \
 	-Wl,--section-start=.text=$(DEVTREE_KERNEL_FLASH_BASE) \
 	-Wl,--section-start=.data=$(DEVTREE_KERNEL_DATA_BASE) \
 	-Wl,-Map=$(build_tree)/kernel.map,--cref
 
 ## init application flags
-ldlibs-app-arch += \
+ldlibs-app += \
 	-L$(loc_build_tree) \
 	-Wl,--section-start=.text=$(DEVTREE_APP_FLASH_BASE) \
 	-Wl,--section-start=.data=$(DEVTREE_APP_DATA_BASE) \
