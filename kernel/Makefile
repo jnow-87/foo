@@ -15,7 +15,7 @@ kimg-$(CONFIG_KERNEL_SYSCALL) += syscall.o
 kimg-$(CONFIG_KERNEL_TIMER) += timer.o
 kimg-$(CONFIG_KERNEL_SIGNAL) += ksignal.o
 kimg-$(CONFIG_KERNEL_STAT) += stat.o
-kimg-$(CONFIG_KERNEL_TEST) += test.o
+kimg-$(CONFIG_KERNEL_TEST) += test.o test/kernel/
 kimg-$(CONFIG_KERNEL_PRINTF) += kprintf.o
 kimg-$(CONFIG_SC_SIGNAL) += usignal.o
 kimg-$(CONFIG_KERNEL_IPI) += ipi.o
@@ -29,9 +29,11 @@ kimg-$(CONFIG_KERNEL_NET) += net/
 
 kimg-cppflags-y += -DBUILD_KERNEL
 
-kimg-ldlibs-y += $(ldlibs-kernel-arch)
-kimg-ldlibs-y += -Lscripts/linker -Tkernel_$(CONFIG_ARCH).lds
-kimg-ldlibs-y += -lgcc
+kimg-ldlibs-y := \
+	$(ldlibs-kernel-arch) \
+	-Lscripts/linker \
+	-Tkernel_$(CONFIG_ARCH).lds \
+	-lgcc
 
 ## debug messages
 init-cppflags-$(CONFIG_KERNEL_MSG_INIT) := -DBUILD_KERNEL_MSG_FATAL \

@@ -14,19 +14,25 @@
 #include <config/config.h>
 
 
+/* macros */
+#ifndef CONFIG_KERNEL_STAT
+#define kstat()
+#endif // CONFIG_KERNEL_STAT
+
+#ifndef CONFIG_KERNEL_TEST
+#define ktest()
+#endif // CONFIG_KERNEL_TEST
+
+
 /* prototypes */
 int kinit(void);
 
 #ifdef CONFIG_KERNEL_STAT
 void kstat(void);
-#else
-#define kstat()
 #endif // CONFIG_KERNEL_STAT
 
 #ifdef CONFIG_KERNEL_TEST
 void ktest(void);
-#else
-#define ktest()
 #endif // CONFIG_KERNEL_TEST
 
 

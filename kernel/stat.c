@@ -7,7 +7,6 @@
 
 
 
-#include <kernel/opt.h>
 #include <kernel/stat.h>
 
 
@@ -20,9 +19,6 @@ extern stat_call_t __kernel_stat_base[],
 void kstat(){
 	stat_call_t *p;
 
-
-	if(!kopt.kernel_stat)
-		return;
 
 	for(p=__kernel_stat_base; p<__kernel_stat_end; p++)
 		(*p)();

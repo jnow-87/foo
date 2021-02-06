@@ -52,8 +52,7 @@
 
 // kernel option initializer
 #define KOPT_INITIALISER(){ \
-	.kernel_test = true, \
-	.kernel_stat = true, \
+	.verbose_test = false, \
 	.init_bin = (void*)CONFIG_INIT_BINARY, \
 	.init_type = CONFIG_INIT_BINTYPE, \
 	.init_arg = CONFIG_INIT_ARGS, \
@@ -63,9 +62,7 @@
 
 /* types */
 typedef struct{
-	/* kernel general */
-	bool kernel_test,			// define wether to call kernel_test() (true - enabled, false - disabled)
-		 kernel_stat;			// print kernel statistics
+	bool verbose_test;			// print kernel test verbose output
 
 	void *init_bin;				// memory address to init file
 	bin_type_t init_type;		// binary type of init
