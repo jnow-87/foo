@@ -7,7 +7,7 @@
 
 
 
-obj-y := string.o stream.o list.o list1.o queue.o stack.o memblock.o vector.o inet.o devtree.o ringbuf.o patmat.o
+obj-y := memmock.o string.o stream.o list.o list1.o queue.o stack.o memblock.o vector.o inet.o devtree.o ringbuf.o patmat.o
 hostobj-y := $(obj-y)
 
 

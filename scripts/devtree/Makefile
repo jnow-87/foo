@@ -10,7 +10,7 @@
 hostbin-y := dtc
 
 
-dtc-y := main.o options.o export.o lexer.lex.o parser.tab.o $(build_tree)/sys/memory.o $(build_tree)/sys/vector.o $(build_tree)/sys/list2.o
+dtc-y := main.o options.o export.o lexer.lex.o parser.tab.o $(build_tree)/sys/vector.o $(build_tree)/sys/list2.o
 
 ## additional dependencies for generated headers
 $(loc_build_tree)/parser.tab.host.o: $(loc_build_tree)/lexer.lex.host.o

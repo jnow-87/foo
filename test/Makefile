@@ -14,7 +14,7 @@ hostbin-y := utest
 
 
 # utest
-utest-y := main.utest.o memory.o sys/ unit/
+utest-y := main.utest.o mock/ sys/ unit/
 
 utest-hostcppflags := -I$(src_tree)/include
 utest-hostcflags := -fno-builtin

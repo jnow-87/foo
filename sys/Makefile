@@ -16,7 +16,7 @@ obj-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
 obj-$(CONFIG_KERNEL_NET) += inet.o
 
 # host
-hostobj-y := errno.o string.o stream.o memblock.o memory.o ringbuf.o list1.o list2.o vector.o devtree.o devicetree.o patmat.o inet.o
+hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o vector.o devtree.o devicetree.o patmat.o inet.o
 
 # libsys
 obj-nobuiltin-y := libsys.o

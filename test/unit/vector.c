@@ -36,9 +36,7 @@ TEST(vector_init){
 
 	vector_destroy(&v);
 
-	test_memory_init();
-
-	test_malloc_fail_at = 1;
+	memmock_alloc_fail = 0;
 	n += TEST_INT_EQ(vector_init(&v, 0, 0), -1);
 
 	return -n;
@@ -93,13 +91,10 @@ TEST(vector_add){
 	n += TEST_INT_EQ(((int*)v.data)[1], 20);
 	n += TEST_INT_EQ(((int*)v.data)[2], 30);
 
-	test_memory_init();
-
-	test_malloc_fail_at = 1;
 	n += TEST_INT_EQ(vector_add(&v, &r), 0);
-	n += TEST_INT_EQ(vector_add(&v, &r), -1);
 
-	test_memory_reset();
+	memmock_alloc_fail = 0;
+	n += TEST_INT_EQ(vector_add(&v, &r), -1);
 
 	vector_destroy(&v);
 

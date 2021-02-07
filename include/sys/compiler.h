@@ -34,6 +34,7 @@
 #define __section(sec)					__attribute__((section(sec)))
 #define __align(base)					__attribute__((aligned(base)))
 #define __alias(f)						__attribute__((alias(#f)))
+#define __weak_alias(f)					__attribute__((weak, alias(#f)))
 
 // specify width of a type
 // 	QI	integer that is as wide as the smallest addressable unit, usually 8 bits

@@ -27,5 +27,4 @@
 	"test/main.c"			// un-coverable branches due to
 
 	"sys/errno.c"			// no executable lines
-	"sys/memory.c"			// no executable lines
 	"sys/mutex.c"			// architecture dependent code

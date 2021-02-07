@@ -10,6 +10,7 @@
 #include <config/config.h>
 #include <arch/syscall.h>
 #include <lib/stdlib.h>
+#include <sys/compiler.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/list.h>
@@ -39,7 +40,7 @@ static mutex_t mem_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-void *malloc(size_t size){
+void *__malloc(size_t size){
 	void *addr;
 	sc_malloc_t p;
 
@@ -97,6 +98,8 @@ clean:
 
 	return addr;
 }
+
+void *malloc(size_t size) __weak_alias(__malloc);
 
 void *calloc(size_t n, size_t size){
 	void *p;
