@@ -21,7 +21,7 @@ hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o vect
 # libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := errno.libsys.o string.libsys.o list1.libsys.o list2.libsys.o vector.libsys.o
+libsys-y := errno.libsys.o string.libsys.o list1.libsys.o list2.libsys.o vector.libsys.o devtree.o
 
 libsys-$(CONFIG_SC_DYNMEM) += memblock.libsys.o
 libsys-$(CONFIG_LIB_MUTEX) += mutex.libsys.o

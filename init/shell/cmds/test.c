@@ -20,6 +20,7 @@
 /* macros */
 #define NUM_INT_TESTS		((size_t)(__stop_tests_user_interactive - __start_tests_user_interactive))
 #define NUM_NONINT_TESTS	((size_t)(__stop_tests_user_noninteractive - __start_tests_user_noninteractive))
+#define NUM_UNIT_TESTS		((size_t)(__stop_tests_unit - __start_tests_unit))
 
 
 /* local/static prototypes */
@@ -32,6 +33,11 @@ extern test_t __start_tests_user_interactive[],
 			  __stop_tests_user_interactive[],
 			  __start_tests_user_noninteractive[],
 			  __stop_tests_user_noninteractive[];
+
+#ifdef CONFIG_INIT_TEST_UNIT
+extern test_t __start_tests_unit[],
+			  __stop_tests_unit[];
+#endif // CONFIG_INIT_TEST_UNIT
 
 
 /* static variables */
@@ -88,7 +94,12 @@ static int exec(int argc, char **argv){
 	if(n == NUM_INT_TESTS)
 		return run(__start_tests_user_noninteractive, NUM_NONINT_TESTS, true, log_name);
 
-	printf("Invalid test number\n\n");
+#ifdef CONFIG_INIT_TEST_UNIT
+	if(n == NUM_INT_TESTS + 1)
+		return run(__start_tests_unit, NUM_UNIT_TESTS, true, log_name);
+#endif // CONFIG_INIT_TEST_UNIT
+
+printf("Invalid test number\n\n");
 
 	return 1;
 }
@@ -169,6 +180,10 @@ static int help(char const *cmd_name, char const *msg, ...){
 		printf("\t%6d    %15.15s    %s\n", i++, test->name, test->descr);
 
 	printf("\t%6d    %15.15s    %s\n", i++, "non-int", "non-interactive tests");
+
+#ifdef CONFIG_INIT_TEST_UNIT
+	printf("\t%6d    %15.15s    %s\n", i++, "unit", "unit tests");
+#endif // CONFIG_INIT_TEST_UNIT
 
 	return 0;
 }

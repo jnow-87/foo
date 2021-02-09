@@ -47,6 +47,10 @@ menu "Commands"
 
 	config INIT_TEST
 		bool "test"
+
+	config INIT_TEST_UNIT
+		bool "Include unit tests"
+		depends on INIT_TEST
 endmenu
 
 config LINE_MAX
