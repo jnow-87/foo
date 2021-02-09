@@ -57,8 +57,3 @@ config LINE_MAX
 	int "Max. length of input lines"
 	default 32	if AVR
 	default 256
-
-config FILE_MAX
-	int "Max. length of file names"
-	default 8	if AVR
-	default 32

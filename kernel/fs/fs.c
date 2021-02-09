@@ -239,7 +239,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 
 	fs_lock();
 
-	if(name_len + 1 > CONFIG_FILE_NAME_LEN)
+	if(name_len + 1 > CONFIG_FILE_NAME_MAX)
 		goto_errno(err_0, E_LIMIT);
 
 	/* identify file system */

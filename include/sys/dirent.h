@@ -18,7 +18,7 @@
 /* types */
 typedef struct{
 	file_type_t type;
-	char name[CONFIG_FILE_NAME_LEN];
+	char name[CONFIG_FILE_NAME_MAX];
 } dir_ent_t;
 
 
