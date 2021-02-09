@@ -15,27 +15,27 @@
 #include <sys/const.h>
 
 #ifdef CONFIG_ATMEGA1284P
-#include <arch/avr/atmega1284.h>
+# include <arch/avr/atmega1284.h>
 #endif // CONFIG_ATMEGA1284P
 
 #ifndef ASM
-#ifndef BUILD_HOST
+# ifndef BUILD_HOST
 
-#include <config/avrconfig.h>
-#include <arch/arch.h>
-#include <arch/avr/core.h>
-#include <arch/avr/register.h>
+#  include <config/avrconfig.h>
+#  include <arch/arch.h>
+#  include <arch/avr/core.h>
+#  include <arch/avr/register.h>
 
-#ifdef BUILD_KERNEL
-#include <arch/avr/interrupt.h>
-#endif // BUILD_KERNEL
+#  ifdef BUILD_KERNEL
+#   include <arch/avr/interrupt.h>
+#  endif // BUILD_KERNEL
 
-#include <arch/avr/thread.h>
-#include <arch/avr/syscall.h>
-#include <arch/avr/atomic.h>
-#include <sys/types.h>
+#  include <arch/avr/thread.h>
+#  include <arch/avr/syscall.h>
+#  include <arch/avr/atomic.h>
+#  include <sys/types.h>
 
-#endif // BUILD_HOST
+# endif // BUILD_HOST
 #endif // ASM
 
 
@@ -51,27 +51,21 @@
 #define NUM_INT				(NUM_HW_INT + 2)	// +2 for the pseude interrupts (syscall, instruction overflow)
 
 #if defined(CONFIG_AVR_ISA_AVR51) || defined(CONFIG_AVR_XMEGA)
-
-#define XCALL				call
-#define XJMP				jmp
-#define INT_VEC_SIZE		4
-
+# define XCALL				call
+# define XJMP				jmp
+# define INT_VEC_SIZE		4
 #else
-
-#define XCALL				rcall
-#define XJMP				rjmp
-#define INT_VEC_SIZE		2
-
+# define XCALL				rcall
+# define XJMP				rjmp
+# define INT_VEC_SIZE		2
 #endif
 
 
 /* static variables */
 #ifndef ASM
-#ifndef BUILD_HOST
-
+# ifndef BUILD_HOST
+#  ifdef BUILD_KERNEL
 // kernel callbacks
-#ifdef BUILD_KERNEL
-
 static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	/* core */
 	.core_id = 0x0,
@@ -97,8 +91,7 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	.thread_context_init = avr_thread_context_init,
 	.thread_context_type = avr_thread_context_type,
 };
-
-#endif // BUILD_KERNEL
+#  endif // BUILD_KERNEL
 
 // common callbacks
 static arch_callbacks_common_t const arch_cbs_common = {
@@ -115,8 +108,7 @@ static arch_info_t const arch_info = {
 	.kernel_timer_err_us = AVRCONFIG_KTIMER_ERROR_US,
 	.sched_timer_err_us = AVRCONFIG_SCHED_ERROR_US,
 };
-
-#endif // BUILD_HOST
+# endif // BUILD_HOST
 #endif // ASM
 
 

@@ -16,11 +16,11 @@
 
 /* macros */
 #ifndef CONFIG_KERNEL_STAT
-#define kstat()
+# define kstat()
 #endif // CONFIG_KERNEL_STAT
 
 #ifndef CONFIG_KERNEL_TEST
-#define ktest()
+# define ktest()
 #endif // CONFIG_KERNEL_TEST
 
 

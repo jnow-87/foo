@@ -19,7 +19,7 @@
 /* macros */
 // test definition
 #ifndef TEST_TYPE
-#define TEST_TYPE	""
+# define TEST_TYPE	""
 #endif // TEST_TYPE
 
 #define TEST_LONG(_name, _descr) \
@@ -50,10 +50,10 @@
 
 // logging
 #ifndef TEST_NO_LOG
-#define TEST_LOG(fmt, ...) \
+# define TEST_LOG(fmt, ...) \
 	test_log("%s:%d:%s():\t" fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__);
 #else
-#define TEST_LOG(fmt, ...)
+# define TEST_LOG(fmt, ...)
 #endif // TEST_NO_LOG
 
 

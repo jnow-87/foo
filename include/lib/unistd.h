@@ -79,40 +79,37 @@ int sleep(size_t ms, size_t us);
 /* disabled-call macros */
 // sleep
 #ifndef CONFIG_SC_TIME
+# undef msleep
+# define msleep(ms)							CALL_DISABLED(msleep, CONFIG_SC_TIME)
 
-#undef msleep
-#define msleep(ms)		CALL_DISABLED(msleep, CONFIG_SC_TIME)
-#undef usleep
-#define usleep(us)		CALL_DISABLED(usleep, CONFIG_SC_TIME)
-#undef sleep
-#define sleep(ms, us)	CALL_DISABLED(sleep, CONFIG_SC_TIME)
+# undef usleep
+# define usleep(us)							CALL_DISABLED(usleep, CONFIG_SC_TIME)
 
+# undef sleep
+# define sleep(ms, us)						CALL_DISABLED(sleep, CONFIG_SC_TIME)
 #endif // CONFIG_SC_TIME
 
 // file system
 #ifndef CONFIG_SC_FILESYSTEM
-
-#define open(path, mode)					CALL_DISABLED(open, CONFIG_SC_FILESYSTEM)
-#define close(fd)							CALL_DISABLED(close, CONFIG_SC_FILESYSTEM)
-#define read(fd, buf, n)					CALL_DISABLED(read, CONFIG_SC_FILESYSTEM)
-#define write(fd, buf, n)					CALL_DISABLED(write, CONFIG_SC_FILESYSTEM)
-#define ioctl(fd, cmd, data, data_len)		CALL_DISABLED(ioctl, CONFIG_SC_FILESYSTEM)
-#define fcntl(fd, request, data, data_len)	CALL_DISABLED(fcntl, CONFIG_SC_FILESYSTEM)
-#define chdir(path)							CALL_DISABLED(chdir, CONFIG_SC_FILESYSTEM)
-#define rmdir(path)							CALL_DISABLED(rmdir, CONFIG_SC_FILESYSTEM)
-
+# define open(path, mode)					CALL_DISABLED(open, CONFIG_SC_FILESYSTEM)
+# define close(fd)							CALL_DISABLED(close, CONFIG_SC_FILESYSTEM)
+# define read(fd, buf, n)					CALL_DISABLED(read, CONFIG_SC_FILESYSTEM)
+# define write(fd, buf, n)					CALL_DISABLED(write, CONFIG_SC_FILESYSTEM)
+# define ioctl(fd, cmd, data, data_len)		CALL_DISABLED(ioctl, CONFIG_SC_FILESYSTEM)
+# define fcntl(fd, request, data, data_len)	CALL_DISABLED(fcntl, CONFIG_SC_FILESYSTEM)
+# define chdir(path)						CALL_DISABLED(chdir, CONFIG_SC_FILESYSTEM)
+# define rmdir(path)						CALL_DISABLED(rmdir, CONFIG_SC_FILESYSTEM)
 #endif // CONFIG_SC_FILESYSTEM
 
 // process and thread control
 #ifndef CONFIG_SC_SCHED
+# define process_create(binary, bin_type, name, args) \
+											CALL_DISABLED(process_create, CONFIG_SC_SCHED)
+# define process_info(info)					CALL_DISABLED(process_info, CONFIG_SC_SCHED)
 
-#define process_create(binary, bin_type, name, args)	CALL_DISABLED(process_create, CONFIG_SC_SCHED)
-#define process_info(info)								CALL_DISABLED(process_info, CONFIG_SC_SCHED)
-
-#define thread_create(enry, arg)	CALL_DISABLED(thread_create, CONFIG_SC_SCHED)
-#define thread_info(info)			CALL_DISABLED(thread_info, CONFIG_SC_SCHED)
-#define nice(inc)					CALL_DISABLED(nice, CONFIG_SC_SCHED)
-
+# define thread_create(enry, arg)			CALL_DISABLED(thread_create, CONFIG_SC_SCHED)
+# define thread_info(info)					CALL_DISABLED(thread_info, CONFIG_SC_SCHED)
+# define nice(inc)							CALL_DISABLED(nice, CONFIG_SC_SCHED)
 #endif // CONFIG_SC_SCHED
 
 

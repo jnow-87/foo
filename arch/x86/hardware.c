@@ -15,9 +15,9 @@
 
 /* macros */
 #if defined(BUILD_KERNEL)
-#define HW_OP_SRC	HWS_KERNEL
+# define HW_OP_SRC	HWS_KERNEL
 #elif defined(BUILD_LIBSYS)
-#define HW_OP_SRC	HWS_USER
+# define HW_OP_SRC	HWS_USER
 #else
 CPP_ASSERT(invalid build config)
 #endif // BUILD_KERNEL

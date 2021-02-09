@@ -13,14 +13,17 @@
 #include <sys/errno.h>
 #include <sys/compiler.h>
 
+#ifdef BUILD_KERNEL
+# include <kernel/sched.h>
+#else
+# include <lib/unistd.h>
+#endif // BUILD_KERNEL
+
 
 /* macros */
 #ifdef BUILD_KERNEL
-
-#include <kernel/sched.h>
-
-
-#define LOCK_ID	({ \
+# define LOCK_ID_EQ(id0, id1)	((id0).pid == (id1).pid && (id0).tid == (id1).tid)
+# define LOCK_ID ({ \
 	thread_t const *_this_t; \
 	lock_id_t _id; \
 	\
@@ -31,24 +34,15 @@
 	\
 	_id; \
 })
-
-#define LOCK_ID_EQ(id0, id1)	((id0).pid == (id1).pid && (id0).tid == (id1).tid)
-
 #else
-
-#include <lib/unistd.h>
-
-
-#define LOCK_ID	({ \
+# define LOCK_ID_EQ(id0, id1)	((id0) == (id1))
+# define LOCK_ID ({ \
 	thread_info_t _tinfo; \
 	\
 	\
 	(void)thread_info(&_tinfo); \
 	_tinfo.tid; \
 })
-
-#define LOCK_ID_EQ(id0, id1)	((id0) == (id1))
-
 #endif // BUILD_KERNEL
 
 

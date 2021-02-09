@@ -17,7 +17,6 @@
 
 /* macros */
 #define strncpy(d, s, n)	(char*)memcpy(d, s, n)
-
 #define strncmp(d, s, n)	memcmp(d, s, n)
 
 

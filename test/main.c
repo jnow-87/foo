@@ -8,22 +8,18 @@
 
 
 #ifdef BUILD_HOST
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
-
+# include <stdio.h>
+# include <stdarg.h>
+# include <errno.h>
+# include <string.h>
+# include <fcntl.h>
 #else
-
-#include <sys/stdarg.h>
-#include <sys/errno.h>
-#include <sys/string.h>
-#include <sys/fcntl.h>
-#include <lib/stdio.h>
-
-#endif
+# include <sys/stdarg.h>
+# include <sys/errno.h>
+# include <sys/string.h>
+# include <sys/fcntl.h>
+# include <lib/stdio.h>
+#endif // BUILD_HOST
 
 #include <sys/compiler.h>
 #include <sys/escape.h>

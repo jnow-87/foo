@@ -181,7 +181,6 @@ void sched_thread_bury(thread_t *this_t){
 
 /* local functions */
 #if CONFIG_NCORES > 1
-
 static int init_shallow(void){
 	size_t i;
 
@@ -195,7 +194,6 @@ static int init_shallow(void){
 }
 
 kernel_init(0, init_shallow);
-
 #endif // CONFIG_NCORES
 
 static int init_deep(void){

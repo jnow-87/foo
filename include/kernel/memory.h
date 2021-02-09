@@ -25,7 +25,6 @@ struct process_t;
 
 /* types */
 #ifdef CONFIG_KERNEL_VIRT_MEM
-
 typedef enum{
 	PAGE_R = 0x1,
 	PAGE_W = 0x2,
@@ -59,13 +58,10 @@ typedef enum{
 	PAGESIZE_1G,
 	PAGESIZE_MAX = PAGESIZE_1G
 } page_size_t;
-
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 #ifdef CONFIG_KERNEL_NO_VIRT_MEM
-
 typedef size_t page_size_t;
-
 #endif // CONFIG_KERNEL_NO_VIRT_MEM
 
 typedef struct page_t{
@@ -109,10 +105,8 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize);
 void page_free(struct process_t *this_p, page_t *page);
 
 #ifdef CONFIG_KERNEL_VIRT_MEM
-
 void *addr_virt_to_phys(void *va);
 void *addr_phys_to_virt(void *pa);
-
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 

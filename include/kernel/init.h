@@ -28,20 +28,17 @@ typedef struct{
 
 /* macros */
 #ifdef CONFIG_KERNEL_MSG_INIT
-
-#define init_call(_call, level, stage) \
+# define init_call(_call, level, stage) \
 	static init_call_t init_call_##_call __linker_array("."#level"_init_stage"#stage) = { \
 		.call = _call, \
 		.name = __FILE__ ":" #_call, \
 	}
 
 #else
-
-#define init_call(_call, level, stage) \
+# define init_call(_call, level, stage) \
 	static init_call_t init_call_##_call __linker_array("."#level"_init_stage"#stage) = { \
 		.call = _call, \
 	}
-
 #endif // CONFIG_KERNEL_MSG_INIT
 
 /**

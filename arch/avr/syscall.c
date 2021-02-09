@@ -12,9 +12,9 @@
 #include <kernel/interrupt.h>
 
 #ifdef BUILD_KERNEL
-#include <kernel/init.h>
-#include <kernel/syscall.h>
-#include <kernel/sched.h>
+# include <kernel/init.h>
+# include <kernel/syscall.h>
+# include <kernel/sched.h>
 #endif // BUILD_KERNEL
 
 #include <sys/types.h>
@@ -28,18 +28,14 @@
 #define INT_VEC_SC		(DEVTREE_KERNEL_FLASH_BASE + INT_VEC_SIZE * NUM_HW_INT)
 
 #ifdef CONFIG_AVR_ISA_AVR4
-
-#define SYSCALL(addr)	\
+# define SYSCALL(addr)	\
 	asm volatile( \
 		"ldi	r30, lo8(" STRGIFY(addr) ")" \
 		"ldi	r31, hi8(" STRGIFY(addr) ")" \
 		"icall" \
 	);
-
 #else
-
-#define SYSCALL(addr)	asm volatile("call " STRGIFY(addr));
-
+# define SYSCALL(addr)	asm volatile("call " STRGIFY(addr));
 #endif // CONFIG_AVR_ISA_AVR4
 
 

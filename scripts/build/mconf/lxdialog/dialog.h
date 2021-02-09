@@ -32,7 +32,7 @@
 # define gettext(Msgid) ((const char *) (Msgid))
 
 #ifdef __sun__
-#define CURS_MACROS
+# define CURS_MACROS
 #endif
 #include CURSES_LOC
 
@@ -45,11 +45,11 @@
  * Turn it off if we're building with 1.9.9e, since it just confuses things.
  */
 #if defined(NCURSES_VERSION) && defined(_NEED_WRAP) && !defined(GCC_PRINTFLIKE)
-#define OLD_NCURSES 1
-#undef  wbkgdset
-#define wbkgdset(w,p)		/*nothing */
+# define OLD_NCURSES 1
+# undef  wbkgdset
+# define wbkgdset(w,p)		/*nothing */
 #else
-#define OLD_NCURSES 0
+# define OLD_NCURSES 0
 #endif
 
 #define TR(params) _tracef params
@@ -62,34 +62,34 @@
 #define MAX(x,y) (x > y ? x : y)
 
 #ifndef ACS_ULCORNER
-#define ACS_ULCORNER '+'
+# define ACS_ULCORNER '+'
 #endif
 #ifndef ACS_LLCORNER
-#define ACS_LLCORNER '+'
+# define ACS_LLCORNER '+'
 #endif
 #ifndef ACS_URCORNER
-#define ACS_URCORNER '+'
+# define ACS_URCORNER '+'
 #endif
 #ifndef ACS_LRCORNER
-#define ACS_LRCORNER '+'
+# define ACS_LRCORNER '+'
 #endif
 #ifndef ACS_HLINE
-#define ACS_HLINE '-'
+# define ACS_HLINE '-'
 #endif
 #ifndef ACS_VLINE
-#define ACS_VLINE '|'
+# define ACS_VLINE '|'
 #endif
 #ifndef ACS_LTEE
-#define ACS_LTEE '+'
+# define ACS_LTEE '+'
 #endif
 #ifndef ACS_RTEE
-#define ACS_RTEE '+'
+# define ACS_RTEE '+'
 #endif
 #ifndef ACS_UARROW
-#define ACS_UARROW '^'
+# define ACS_UARROW '^'
 #endif
 #ifndef ACS_DARROW
-#define ACS_DARROW 'v'
+# define ACS_DARROW 'v'
 #endif
 
 /* error return codes */

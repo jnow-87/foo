@@ -16,29 +16,29 @@
 
 /* macros */
 #if CONFIG_REGISTER_WIDTH == 64 || defined(CONFIG_PRINTF_LONGLONG)
-#define INTTYPE		long long int
-#define UINTTYPE	unsigned long long int
+# define INTTYPE	long long int
+# define UINTTYPE	unsigned long long int
 #elif CONFIG_REGISTER_WIDTH == 32 || defined(CONFIG_PRINTF_LONG)
-#define INTTYPE		long int
-#define UINTTYPE	unsigned long int
+# define INTTYPE	long int
+# define UINTTYPE	unsigned long int
 #elif defined(CONFIG_PRINTF_INTMAX)
-#define INTTYPE		intmax_t
-#define UINTTYPE	uintmax_t
+# define INTTYPE	intmax_t
+# define UINTTYPE	uintmax_t
 #elif defined(CONFIG_PRINTF_SIZET)
-#define INTTYPE		ssize_t
-#define UINTTYPE	size_t
+# define INTTYPE	ssize_t
+# define UINTTYPE	size_t
 #elif defined(CONFIG_PRINTF_PTRDIFF)
-#define INTTYPE		long int
-#define UINTTYPE	unsigned long int
+# define INTTYPE	long int
+# define UINTTYPE	unsigned long int
 #else
-#define INTTYPE		int
-#define UINTTYPE	unsigned int
+# define INTTYPE	int
+# define UINTTYPE	unsigned int
 #endif // CONFIG_PRINTF_* - INTTYPE
 
 #if defined(CONFIG_PRINTF_LONGDOUBLE)
-#define FLOATTYPE	long double
+# define FLOATTYPE	long double
 #elif !defined(CONFIG_NOFLOAT)
-#define FLOATTYPE	double
+# define FLOATTYPE	double
 #endif // CONFIG_PRINT_* - FLOATTYPE
 
 

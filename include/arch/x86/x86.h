@@ -12,23 +12,19 @@
 
 
 #ifndef ASM
-
-#include <arch/x86/atomic.h>
-#include <arch/x86/syscall.h>
-#include <arch/x86/core.h>
-#include <arch/x86/memory.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/thread.h>
-
+# include <arch/x86/atomic.h>
+# include <arch/x86/syscall.h>
+# include <arch/x86/core.h>
+# include <arch/x86/memory.h>
+# include <arch/x86/interrupt.h>
+# include <arch/x86/thread.h>
 #endif // ASM
 
 
 /* static variables */
 #ifndef ASM
-
+# ifdef BUILD_KERNEL
 // kernel callbacks
-#ifdef BUILD_KERNEL
-
 static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	/* core */
 	.core_id = 0x0,
@@ -54,8 +50,7 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	.thread_context_init = x86_thread_context_init,
 	.thread_context_type = x86_thread_context_type,
 };
-
-#endif // BUILD_KERNEL
+# endif // BUILD_KERNEL
 
 // common callbacks
 static arch_callbacks_common_t const arch_cbs_common = {
@@ -72,7 +67,6 @@ static arch_info_t const arch_info = {
 	.kernel_timer_err_us = 0,
 	.sched_timer_err_us = 0,
 };
-
 #endif // ASM
 
 
