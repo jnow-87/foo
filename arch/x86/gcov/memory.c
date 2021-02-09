@@ -7,13 +7,11 @@
 
 
 
+#include <config/config.h>
 #include <arch/x86/linux.h>
 #include <sys/types.h>
 #include <sys/compiler.h>
-
-
-/* macros */
-#define GCOV_HEAP_SIZE	512
+#include <sys/memblock.h>
 
 
 /* prototypes */
@@ -24,23 +22,31 @@ void gc_f(void *ptr) __alias(gcov_free);
 
 
 /* static variables */
-static uint8_t gcov_heap[GCOV_HEAP_SIZE];
-static bool gcov_heap_inuse = false;
+static uint8_t gcov_blob[CONFIG_X86_GCOV_HEAP_SIZE];
+static memblock_t *gcov_heap = 0x0;
 
 
 /* global functions */
 void *gcov_malloc(size_t size){
-	if(gcov_heap_inuse)
-		LNX_EEXIT("supporting at most one allocation\n");
+	static int initialised = 0;
+	void *p;
 
-	if(size > GCOV_HEAP_SIZE)
-		LNX_EEXIT("heap too small, %u > %u\n", size, GCOV_HEAP_SIZE);
 
-	gcov_heap_inuse = true;
+	if(!initialised){
+		gcov_heap = (void*)gcov_blob;
+		memblock_init(gcov_heap, CONFIG_X86_GCOV_HEAP_SIZE);
 
-	return gcov_heap;
+		initialised = 1;
+	}
+
+	p = memblock_alloc(&gcov_heap, size, 8);
+
+	if(p == 0x0)
+		LNX_EEXIT("out of gcov heap\n");
+
+	return p;
 }
 
 void gcov_free(void *ptr){
-	gcov_heap_inuse = false;
+	memblock_free(&gcov_heap, ptr);
 }
