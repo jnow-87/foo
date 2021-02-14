@@ -119,6 +119,10 @@ void hw_op_read(x86_hw_op_t *op, child_t *src){
 	CHECK_SEQ_NUM(op->seq, seq_num[idx]++);
 }
 
+void hw_op_read_ack(child_t *src, int ack){
+	child_write(src, 0, &ack, sizeof(ack));
+}
+
 void hw_op_read_writeback(x86_hw_op_t *op, child_t *src){
 	unsigned int seq_num;
 
@@ -130,6 +134,7 @@ void hw_op_read_writeback(x86_hw_op_t *op, child_t *src){
 }
 
 void hw_event_process(void){
+	bool handle;
 	x86_hw_op_t op;
 	child_t *src,
 			*op_src;
@@ -138,16 +143,19 @@ void hw_event_process(void){
 	src = hw_event_dequeue();
 
 	hw_state_lock();
+	child_lock(src);
+
+	hw_op_read(&op, src);
 
 	// ensure hardware events are only processed for the appropriate
 	// priviledge level in order to prevent confusing the kernel
 	// scheduler by e.g. triggering a syscall from user space
 	// while a kernel thread is active according to the scheduler
-	if(hw_state.priviledge == (src == KERNEL ? HWS_KERNEL : HWS_USER)){
-		child_lock(src);
+	handle = (hw_state.priviledge == (src == KERNEL ? HWS_KERNEL : HWS_USER));
 
-		hw_op_read(&op, src);
+	hw_op_read_ack(src, (handle ? 1 : 0));
 
+	if(handle){
 		DEBUG("[%u] hardware event from %s\n", op.seq, src->name);
 
 		if(op.num >= HWO_NOPS)
@@ -168,12 +176,11 @@ void hw_event_process(void){
 		hw_op_read_writeback(&op, src);
 
 		DEBUG("  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
-
-		child_unlock(src);
 	}
 	else
 		hw_event_enqueue(src);
 
+	child_unlock(src);
 	hw_state_unlock();
 }
 

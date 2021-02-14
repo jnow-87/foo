@@ -35,6 +35,7 @@ void hw_state_wait(void);
 void hw_op_write(x86_hw_op_t *op, child_t *tgt);
 void hw_op_write_writeback(x86_hw_op_t *op, child_t *tgt);
 void hw_op_read(x86_hw_op_t *op, child_t *src);
+void hw_op_read_ack(child_t *src, int ack);
 void hw_op_read_writeback(x86_hw_op_t *op, child_t *src);
 
 // hardware event handling

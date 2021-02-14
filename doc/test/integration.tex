@@ -43,6 +43,8 @@
 
 		An operation is initiated by the requester sending one of the \gls{ipc} signals to the target. For synchronisation and to acknowledge the request the target sends a sequence number. The requester blocks until the sequence number is available. Once synchronised the actual operation data are exchanged.
 
+		As an additional step for either kernel or application, the acknowledge phase is used to postpone an operation. If an operation is not acknowledged the sender has to restart the operation by waiting for the transmission of the sequence number.
+
 		During processing further data might be exchanged.
 
 		Once processing is complete the operation's write-back phase is again used for synchronisation. The requester blocks while waiting for the results being transfered. The target writes the results. To acknowledge the reception of the results, the requester responds with a sequence number which is read by target.
