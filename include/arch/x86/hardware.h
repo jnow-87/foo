@@ -16,10 +16,11 @@
 
 /* macros */
 // interrupts
-#define NUM_INT		2
+#define NUM_INT		3
 
 #define INT_TIMER	0
-#define INT_SYSCALL	1
+#define INT_SCHED	1
+#define INT_SYSCALL	2
 
 
 /* types */

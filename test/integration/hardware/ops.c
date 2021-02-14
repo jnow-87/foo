@@ -238,9 +238,6 @@ static int event_exit(x86_hw_op_t *op){
 }
 
 static int event_int_trigger(x86_hw_op_t *op){
-	if(op->src == HWS_KERNEL)
-		EEXIT("int requests from kernel are not supposed to happen\n");
-
 	hw_int_request(op->int_ctrl.num, op->int_ctrl.data, op->src);
 
 	return 0;

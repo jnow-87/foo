@@ -26,10 +26,25 @@ static void overlay_exit(void *param);
 
 /* global functions */
 int x86_sc(sc_t num, void *param, size_t psize){
+	x86_hw_op_t op;
+
+
 	if(num != SC_SCHEDYIELD)
 		LNX_EEXIT("kernel assumed to only use SC_SCHEDYIELD\n");
 
-	lnx_pause();
+	op.num = HWO_INT_TRIGGER;
+	op.int_ctrl.num = INT_SCHED;
+	op.int_ctrl.data = 0x0;
+
+	x86_hw_op_write(&op);
+	x86_hw_op_write_writeback(&op);
+
+	while(1){
+		lnx_pause();
+
+		if(sched_running()->parent->pid == 0)
+			break;
+	}
 
 	return 0;
 }
