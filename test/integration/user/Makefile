@@ -7,4 +7,4 @@
 
 
 
-hostobj-y := opts.o user.o
+hostobj-y := opts.o user.o term.o
