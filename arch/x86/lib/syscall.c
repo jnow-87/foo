@@ -12,6 +12,8 @@
 #include <arch/x86/hardware.h>
 #include <arch/atomic.h>
 #include <lib/init.h>
+#include <lib/stdlib.h>
+#include <lib/sched.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/devicetree.h>
@@ -41,6 +43,8 @@ static int event_inval(x86_hw_op_t *op);
 // syscall overlays
 static int overlay_malloc(sc_malloc_t *p);
 static void overlay_free(sc_malloc_t *p);
+
+static void overlay_thread_create(sc_thread_t *p);
 
 
 /* static variables */
@@ -115,6 +119,9 @@ int x86_sc(sc_t num, void *param, size_t psize){
 	if(num == SC_MALLOC)
 		return overlay_malloc(param);
 
+	if(num == SC_THREADCREATE)
+		overlay_thread_create(param);
+
 	return E_OK;
 }
 
@@ -137,6 +144,7 @@ static void hw_event_hdlr(int sig){
 
 	x86_hw_op_read(&op);
 	LNX_DEBUG("[%u] hardware-op\n", op.seq);
+	LNX_DEBUG("  [%u] tid: %u\n", op.seq, op.tid);
 	LNX_DEBUG("  [%u] event: %s (%d)\n", op.seq, ops[op.num].name, op.num);
 
 	if(op.num >= HWO_NOPS)
@@ -206,4 +214,12 @@ static void overlay_free(sc_malloc_t *p){
 		LNX_EEXIT("double free at %p\n", p->p);
 
 	p->p = brickos_addr;
+}
+
+static void overlay_thread_create(sc_thread_t *p){
+	sched_yield();
+
+	x86_hw_op_active_tid = p->tid;
+	_exit(p->entry(p->arg), false);
+	x86_hw_op_active_tid = 0;
 }

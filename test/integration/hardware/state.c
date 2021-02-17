@@ -14,6 +14,7 @@
 /* global variables */
 hw_state_t hw_state = {
 	.priviledge = HWS_KERNEL,
+	.tid = 0,
 	.int_enabled = false,
 	.syscall_pending = false,
 };

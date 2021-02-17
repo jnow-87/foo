@@ -32,6 +32,10 @@ CPP_ASSERT(invalid build config)
 }
 
 
+/* global variables */
+unsigned int x86_hw_op_active_tid = 0;
+
+
 /* global functions */
 void x86_hw_op_write(x86_hw_op_t *op){
 	static unsigned int seq_num = 0;
@@ -39,6 +43,7 @@ void x86_hw_op_write(x86_hw_op_t *op){
 
 
 	op->src = HW_OP_SRC;
+	op->tid = x86_hw_op_active_tid;
 
 	lnx_kill(lnx_getppid(), CONFIG_TEST_INT_DATA_SIG);
 

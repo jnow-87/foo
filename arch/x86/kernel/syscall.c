@@ -92,6 +92,9 @@ static void overlay_exit(void *param){
 
 	copy_from_user(&kparam, param, sizeof(kparam), sched_running()->parent);
 
+	if(!kparam.kill_siblings)
+		return;
+
 	LNX_DEBUG("application exit with %d\n", kparam.status);
 
 	if(x86_rootfs_dump() != 0){

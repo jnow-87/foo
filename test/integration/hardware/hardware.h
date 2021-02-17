@@ -19,6 +19,7 @@
 /* types */
 typedef struct{
 	x86_hw_op_src_t priviledge;
+	unsigned int tid;
 	bool int_enabled;
 	bool syscall_pending;
 } hw_state_t;
@@ -45,8 +46,8 @@ child_t *hw_event_dequeue(void);
 
 // interrupt handling
 void hw_int_process(void);
-void hw_int_request(int num, void *data, x86_hw_op_src_t src);
-void hw_int_return(x86_hw_op_src_t target);
+void hw_int_request(int num, void *data, x86_hw_op_src_t src, unsigned int tid);
+void hw_int_return(x86_hw_op_src_t target, unsigned int tid);
 
 // interrupt timer
 void hw_timer(void);
