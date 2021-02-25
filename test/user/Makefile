@@ -10,10 +10,12 @@
 obj-y := interactive.o non-interactive.o
 hostobj-y := $(obj-y)
 
-interactive-y := tty.o gpioint.o
-non-interactive-y := close_sync.o thread.o stat.o signal.o kill.o exit.o
+interactive-y := tty.o gpioint.o exit.o
+non-interactive-y := close.o thread.o stat.o signal.o
+non-interactive-$(if $(CONFIG_X86),n,y) += sigthread.o kill.o
 
 
+# flags
 interactive-cppflags := -DTEST_TYPE=\"user_interactive\"
 interactive-hostcppflags := $(interactive-cppflags)
 

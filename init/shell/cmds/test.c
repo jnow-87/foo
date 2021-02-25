@@ -99,9 +99,9 @@ static int exec(int argc, char **argv){
 		return run(__start_tests_unit, NUM_UNIT_TESTS, true, log_name);
 #endif // CONFIG_INIT_TEST_UNIT
 
-printf("Invalid test number\n\n");
+	printf("Invalid test number\n\n");
 
-	return 1;
+	return -1;
 }
 
 command("test", exec);

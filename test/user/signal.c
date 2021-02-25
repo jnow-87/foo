@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Jan Nowotsch
+ * Copyright (C) 2020 Jan Nowotsch
  * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
  *
  * Released under the terms of the GNU GPL v2.0
@@ -8,115 +8,50 @@
 
 
 #include <signal.h>
-#include <string.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <sched.h>
-#include <sys/errno.h>
-#include <sys/types.h>
-#include <sys/escape.h>
 #include <test/test.h>
 
 
 /* macros */
-#define NSIGS	3
+#define NSIG	3
+#define SIGNAL	SIG_INT
 
 
 /* local/static prototypes */
 static void hdlr(signal_t sig);
-static int thread(void *arg);
 
 
 /* static variables */
-static unsigned int nsigs = 0;
-static bool volatile done = false;
+static unsigned int sig_recv;
 
 
 /* local functions */
 /**
  *	\brief	test to verify user-space signals
  */
-TEST_LONG(signal, "test user-space signals"){
+TEST(sigself){
 	int r;
 	unsigned int i;
-	tid_t tid;
 	process_info_t pinfo;
+	thread_info_t tinfo;
 
 
-	done = false;
-	nsigs = 0;
-
-	/* prepare */
-	// get process info
-	if(process_info(&pinfo) != 0){
-		printf(FG_RED "error " RESET_ATTR "acquiring process info \"%s\"\n", strerror(errno));
-		return -1;
-	}
-
-	// register signal handler
-	if(signal(SIG_INT, hdlr) != hdlr){
-		printf(FG_RED "error " RESET_ATTR "registering signal handler \"%s\"\n", strerror(errno));
-		return -1;
-	}
-
-	// create thread
-	tid = thread_create(thread, "foo");
-
-	if(tid == 0){
-		printf(FG_RED "error " RESET_ATTR "creating thread \"%s\"\n", strerror(errno));
-		return -1;
-	}
-
-	sleep(500, 0);
-
-	/* send signals */
 	r = 0;
+	sig_recv = 0;
 
-	for(i=0; i<NSIGS; i++)
-		r |= signal_send(SIG_INT, pinfo.pid, tid);
+	r += TEST_INT_EQ(process_info(&pinfo), 0);
+	r += TEST_INT_EQ(thread_info(&tinfo), 0);
+	r += TEST_PTR_EQ(signal(SIGNAL, 0x0), 0x0);
+	r += TEST_PTR_EQ(signal(SIGNAL, hdlr), hdlr);
 
-	/* wait for thread to terminate */
-	while(!done)
-		sleep(250, 0);
+	for(i=0; i<NSIG; i++)
+		r += TEST_INT_EQ(signal_send(SIGNAL, pinfo.pid, tinfo.tid), 0);
 
-	/* check result */
-	if(r){
-		printf(FG_RED "error " RESET_ATTR "sending signal \"%s\"\n", strerror(errno));
-		return -1;
-	}
+	r += TEST_INT_EQ(sig_recv, NSIG);
 
-	if(nsigs != NSIGS){
-		printf(FG_RED "error " RESET_ATTR "%u/%u signals received by thread\n", nsigs, NSIGS);
-		return -1;
-	}
-
-	return 0;
+	return -r;
 }
 
 static void hdlr(signal_t sig){
-	thread_info_t info;
-
-
-	thread_info(&info);
-
-	printf("%d caught signal %d\n", info.tid, sig);
-	nsigs++;
-}
-
-static int thread(void *arg){
-	unsigned int i;
-	thread_info_t info;
-
-
-	thread_info(&info);
-
-	printf("started thread %d with %s\n", info.tid, arg);
-
-	for(i=0; i<20 && nsigs!=NSIGS; i++)
-		sleep(250, 0);
-
-	printf("thread done\n");
-	done = true;
-
-	return 0;
+	sig_recv++;
 }

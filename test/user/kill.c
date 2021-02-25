@@ -8,13 +8,8 @@
 
 
 #include <signal.h>
-#include <string.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <sched.h>
-#include <sys/errno.h>
-#include <sys/types.h>
-#include <sys/escape.h>
+#include <sys/mutex.h>
 #include <test/test.h>
 
 
@@ -22,52 +17,51 @@
 static int thread(void *arg);
 
 
+/* static variables */
+static mutex_t mtx = MUTEX_INITIALISER();
+static int volatile thread_cnt;
+
+
 /* local functions */
 /**
- *	\brief	test to verify user-space signals
+ *	\brief	test to SIG_KILL
  */
-TEST_LONG(thread_kill, "test SIG_KILL"){
+TEST(thread_kill){
+	int r;
 	process_info_t pinfo;
 	tid_t tid;
 
 
+	r = 0;
+	thread_cnt = 0;
+
 	/* prepare */
-	// get process info
-	if(process_info(&pinfo) != 0){
-		printf(FG_RED "error " RESET_ATTR "acquiring process info \"%s\"\n", strerror(errno));
-		return -1;
-	}
+	r += TEST_INT_EQ(process_info(&pinfo), 0);
+	r += TEST_INT_NEQ(tid = thread_create(thread, 0x0), 0);
 
-	// create thread
-	tid = thread_create(thread, "foo");
-
-	if(tid == 0){
-		printf(FG_RED "error " RESET_ATTR "creating thread \"%s\"\n", strerror(errno));
-		return -1;
-	}
-
-	sleep(2000, 0);
+	while(thread_cnt == 0);
 
 	/* send signal */
-	if(signal_send(SIG_KILL, pinfo.pid, tid) != 0){
-		printf(FG_RED "error " RESET_ATTR "sending signal \"%s\"\n", strerror(errno));
-		return -1;
-	}
+	mutex_lock(&mtx);
 
-	return 0;
+	r += TEST_INT_EQ(signal_send(SIG_KILL, pinfo.pid, tid), 0);
+	thread_cnt = 0;
+
+	mutex_unlock(&mtx);
+
+	r += TEST_INT_EQ(sleep(1000, 0), 0);
+	r += TEST_INT_EQ(thread_cnt, 0);
+
+	return -r;
 }
 
 static int thread(void *arg){
-	thread_info_t info;
-
-
-	thread_info(&info);
-
-	printf("started thread %d with %s\n", info.tid, arg);
-
 	while(1){
-		printf("%d still running\n", info.tid);
-		sleep(500, 0);
+		mutex_lock(&mtx);
+		thread_cnt++;
+		mutex_unlock(&mtx);
+
+		sleep(100, 0);
 	}
 
 	return 0;

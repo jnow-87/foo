@@ -7,17 +7,15 @@
 
 
 
+#include <arch/atomic.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <string.h>
-#include <sys/errno.h>
-#include <sys/escape.h>
 #include <test/test.h>
 
 
 /* macros */
-#define NTHREADS		2
+#define NTHREAD		2
 
 
 /* local/static prototypes */
@@ -25,57 +23,44 @@ static int thread(void *arg);
 
 
 /* static variables */
-static char args[NTHREADS][5];
+static int volatile ecode;
 
 
 /* local functions */
 /**
- *	\brief	test to verify user-space signals
+ *	\brief	test process and thread termination
  */
-TEST_LONG(exit, "test process and thread termination"){
-	unsigned int i;
-	tid_t tid;
+TEST_LONG(exit, "exit"){
+	size_t i;
 
 
-	/* create threads */
-	for(i=0; i<NTHREADS; i++){
-		sprintf(args[i], "%d", i + 1);
+	ecode = 0;
 
-		tid = thread_create(thread, args[i]);
-
-		if(tid == 0)	printf(FG_RED "error " RESET_ATTR "creating thread \"%s\"\n", strerror(errno));
-		else			printf("created thread with id: %u, args: %x \"%s\"\n", tid, args[i], args[i]);
+	for(i=0; i<NTHREAD; i++){
+		atomic_inc(&ecode, TEST_INT_NEQ(thread_create(thread, 0x0), 0));
 	}
 
-	/* exit */
-	thread("main");
-
-	return 0;
+	return thread(0x0);
 }
 
 static int thread(void *arg){
 	thread_info_t info;
 
 
-	if(thread_info(&info) != 0){
-		printf(FG_RED "error " RESET_ATTR "retrieving thread info\n");
-		return -1;
-	}
-
-	printf("started thread %d with %s\n", info.tid, arg);
+	atomic_inc(&ecode, TEST_INT_EQ(thread_info(&info), 0));
+	atomic_inc(&ecode, TEST_PTR_EQ(arg, 0x0));
 
 	if(info.tid == 1){
 		sleep(2000, 0);
 
-		printf("%d exit, this should terminate the entire process\n", info.tid);
-		exit(1);
+		printf("exit, this should terminate the entire process\n");
+		exit(ecode);
 	}
-
 
 	while(1){
 		printf("%d still running\n", info.tid);
 		sleep(500, 0);
 	}
 
-	return 0;
+	return -1;
 }

@@ -9,10 +9,7 @@
 
 #include <unistd.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/errno.h>
 #include <sys/stat.h>
-#include <sys/escape.h>
 #include <test/test.h>
 
 
@@ -20,49 +17,32 @@
 /**
  * \brief	test to verify stat()
  */
-TEST_LONG(stat, "test syscall stat"){
+TEST(stat){
 	int r;
 	FILE *fp;
-	stat_t f_stat;
+	stat_t s;
 
-
-	r = -1;
-
-	/* prepare test file */
-	unlink("dummy");
-	fp = fopen("dummy", "w");
-	fwrite("foo", 3, fp);
-	fclose(fp);
-
-	/* check stat for test file */
-	if(stat("dummy", &f_stat) != 0)
-		goto err;
-
-	if(f_stat.type != FT_REG){
-		printf(FG_RED "error " RESET_ATTR "type mismatch, having %d\n", f_stat.type);
-		goto err;
-	}
-
-	if(f_stat.size != 3){
-		printf(FG_RED "error " RESET_ATTR "file size mismatch, having %u\n", f_stat.size);
-		goto err;
-	}
-
-	/* check stat of /dev/tty0 */
-	if(stat("/dev/tty0", &f_stat) != 0)
-		goto err;
-
-	if(f_stat.type != FT_CHR){
-		printf(FG_RED "error " RESET_ATTR "type mismatch, having %d\n", f_stat.type);
-		goto err;
-	}
 
 	r = 0;
 
-
-err:
+	/* prepare test file */
 	unlink("dummy");
 
-	return r;
+	r += TEST_PTR_NEQ(fp = fopen("dummy", "w"), 0x0);
+	r += TEST_INT_EQ(fwrite("foo", 3, fp), 3);
+	r += TEST_INT_EQ(fclose(fp), 0);
 
+	/* check stat of test file */
+	r += TEST_INT_EQ(stat("dummy", &s), 0);
+	r += TEST_INT_EQ(s.type, FT_REG);
+	r += TEST_INT_EQ(s.size, 3);
+
+	/* check stat of /dev/tty0 */
+	r += TEST_INT_EQ(stat("/dev/tty0", &s), 0);
+	r += TEST_INT_EQ(s.type, FT_CHR);
+
+	/* cleanup */
+	r += TEST_INT_EQ(unlink("dummy"), 0);
+
+	return -r;
 }

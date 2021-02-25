@@ -7,27 +7,16 @@
 
 
 
+#include <arch/atomic.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
-#include <string.h>
-#include <sched.h>
-#include <sys/escape.h>
-#include <sys/mutex.h>
 #include <test/test.h>
 
 
 /* macros */
-#define NTHREADS		3
-#define NTHREAD_ITER	3
-#define TIMEOUT			5
-#define PERIOD_MS		500
-
-#define ATOMIC_INC(var, mtx){ \
-	mutex_lock(&mtx); \
-	var++; \
-	mutex_unlock(&mtx); \
-}
+#define NTHREAD	1
+#define RETRIES	5
 
 
 /* local/static prototypes */
@@ -35,10 +24,10 @@ static int thread(void *arg);
 
 
 /* static variables */
-static mutex_t m = MUTEX_INITIALISER();
-static int volatile r = 0;
-static int volatile finished = 0;
-static char args[NTHREADS][5];
+static int volatile errors;
+static int volatile finished;
+static tid_t volatile tids_ref[NTHREAD],
+					  tids_info[NTHREAD];
 
 
 /* local functions */
@@ -46,68 +35,55 @@ static char args[NTHREADS][5];
  * \brief	test to verify thread_create() works and passes the correct arguments.
  * 			also sleep() and mutex functions are tested.
  */
-TEST_LONG(thread_create, "test thread creation and sleep"){
+TEST(thread_create){
+	int r;
 	size_t i;
-	unsigned int to;
 	tid_t tid;
 
 
+	r = 0;
+	errors = 0;
+	finished = 0;
+
 	/* create threads */
-	for(i=0; i<NTHREADS; i++){
-		sprintf(args[i], "%d", i + 1);
-
-		tid = thread_create(thread, args[i]);
-
-		if(tid == 0){
-			printf(FG_RED "error " RESET_ATTR "creating thread \"%s\"\n", strerror(errno));
-			return -1;
-		}
-
-		printf("created thread with id: %u, args: %x \"%s\"\n", tid, args[i], args[i]);
+	for(i=0; i<NTHREAD; i++){
+		r += TEST_INT_NEQ(tid = thread_create(thread, (void*)(tids_info + i)), 0);
+		tids_ref[i] = tid;
 	}
 
-	/* wait for threads to finish */
-	to = 0;
+	/* sync threads */
+	i = 0;
 
-	while(finished != NTHREADS){
-		msleep(PERIOD_MS * NTHREAD_ITER);
-
-		if(++to >= TIMEOUT){
-			printf(FG_RED "error " RESET_ATTR "timeout detected, threads did not return in time\n");
-			return -1;
-		}
+	while(finished != NTHREAD && i++ < RETRIES){
+		msleep(500);
 	}
 
-	return r;
+	/* check tids */
+	r += TEST_INT_NEQ(i, RETRIES);
+	r += TEST_INT_EQ(errors, 0);
+
+	for(i=0; i<NTHREAD; i++){
+		r += TEST_INT_EQ(tids_info[i], tids_ref[i]);
+	}
+
+	return -r;
 }
 
 static int thread(void *arg){
-	int i;
-	char ref[5];
-	thread_info_t tinfo;
+	int r;
+	thread_info_t info;
+	unsigned int *tid;
 
 
-	thread_info(&tinfo);
-	printf("thread %u started with args %x \"%s\"\n", tinfo.tid, arg, arg);
+	tid = (unsigned int*)arg;
 
-	/* check argument */
-	sprintf(ref, "%u", tinfo.tid);
+	r = 0;
+	r += TEST_INT_EQ(thread_info(&info), 0);
 
-	if(strcmp(arg, ref) != 0){
-		printf(FG_RED "error " RESET_ATTR "argument doesn't match thread id (%s != %s)\n", arg, ref);
-		ATOMIC_INC(r, m);
+	*tid = info.tid;
 
-		goto end;
-	}
+	atomic_inc(&errors, r);
+	atomic_inc(&finished, 1);
 
-	/* test sleep */
-	for(i=NTHREAD_ITER; i>=0; i--){
-		printf("thread %u %d\n", tinfo.tid, i);
-		msleep(PERIOD_MS);
-	}
-
-end:
-	ATOMIC_INC(finished, m);
-
-	return 20 + tinfo.tid;
+	return -r;
 }
