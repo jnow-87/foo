@@ -74,6 +74,7 @@ static int init(void){
 lib_init(1, init);
 
 static void signal_hdlr(thread_entry_t entry, void *arg){
+	char dummy;
 	signal_t sig;
 
 
@@ -81,7 +82,7 @@ static void signal_hdlr(thread_entry_t entry, void *arg){
 
 	if(hdlrs[sig] != 0x0){
 		hdlrs[sig](sig);
-		(void)sc(SC_SIGRETURN, arg);
+		(void)sc(SC_SIGRETURN, &dummy);
 
 		// SC_SIGRETURN should never return
 		// just in case, fall through to exit
