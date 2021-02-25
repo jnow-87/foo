@@ -18,6 +18,7 @@
 #include <sys/errno.h>
 #include <sys/devicetree.h>
 #include <sys/memblock.h>
+#include <sys/thread.h>
 #include <sys/syscall.h>
 #include <sys/string.h>
 
@@ -30,6 +31,17 @@ typedef struct{
 	unsigned int cnt;
 } ops_t;
 
+typedef enum{
+	OLOC_NONE = 0x0,
+	OLOC_PRE = 0x1,
+	OLOC_POST = 0x2,
+} overlay_location_t;
+
+typedef struct{
+	int (*call)(void *);
+	overlay_location_t loc;
+} overlay_t;
+
 
 /* local/static prototypes */
 // hardware event handling
@@ -41,10 +53,15 @@ static int event_copy_to_user(x86_hw_op_t *op);
 static int event_inval(x86_hw_op_t *op);
 
 // syscall overlays
-static int overlay_malloc(sc_malloc_t *p);
-static void overlay_free(sc_malloc_t *p);
+static int overlay_call(sc_t num, void *param, overlay_location_t loc);
 
-static void overlay_thread_create(sc_thread_t *p);
+static int overlay_malloc(void *p);
+static int overlay_free(void *p);
+
+static int overlay_thread_create(void *p);
+
+static int overlay_sigregister(void *p);
+static int overlay_sigsend(void *p);
 
 
 /* static variables */
@@ -62,9 +79,43 @@ static ops_t ops[] = {
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
+// syscall overlays
+static overlay_t overlays[] = {
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = overlay_malloc,			.loc = OLOC_POST },
+	{ .call = overlay_free,				.loc = OLOC_PRE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = overlay_thread_create,	.loc = OLOC_POST },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = overlay_sigregister,		.loc = OLOC_POST },
+	{ .call = overlay_sigsend,			.loc = OLOC_POST },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = 0x0,						.loc = OLOC_NONE },
+};
+
 // memory/heap overlay data
 static uint8_t mem_blob[DEVTREE_APP_HEAP_SIZE];
 static memblock_t *app_heap = 0x0;
+
+// signal overlay data
+static user_entry_t sig_hdlr = 0x0;
+static bool ignore_exit = false;
 
 
 /* global functions */
@@ -76,9 +127,11 @@ int x86_sc(sc_t num, void *param, size_t psize){
 	x86_hw_op_t op;
 
 
-	/* handle required overlays */
-	if(num == SC_FREE)
-		overlay_free(param);
+	if(ignore_exit && num == SC_EXIT)
+		return E_OK;
+
+	if(overlay_call(num, param, OLOC_PRE) != 0)
+		return -errno;
 
 	/* trigger syscall */
 	// set pending flag
@@ -115,14 +168,7 @@ int x86_sc(sc_t num, void *param, size_t psize){
 	if(sc_data.errno != 0)
 		return_errno(sc_data.errno);
 
-	/* handle required overlays */
-	if(num == SC_MALLOC)
-		return overlay_malloc(param);
-
-	if(num == SC_THREADCREATE)
-		overlay_thread_create(param);
-
-	return E_OK;
+	return overlay_call(num, param, OLOC_POST);
 }
 
 
@@ -184,9 +230,19 @@ static int event_inval(x86_hw_op_t *op){
 	return -1;
 }
 
-static int overlay_malloc(sc_malloc_t *p){
-	void *brickos_addr;
+static int overlay_call(sc_t num, void *param, overlay_location_t loc){
+	if(overlays[num].call == 0x0 || (overlays[num].loc & loc) == 0)
+		return 0;
 
+	return overlays[num].call(param);
+}
+
+static int overlay_malloc(void *_p){
+	void *brickos_addr;
+	sc_malloc_t *p;
+
+
+	p = (sc_malloc_t*)_p;
 
 	if(p->size == 0)
 		return E_OK;
@@ -200,12 +256,16 @@ static int overlay_malloc(sc_malloc_t *p){
 
 	if(p->p == 0x0)
 		return_errno(E_NOMEM);
+
 	return E_OK;
 }
 
-static void overlay_free(sc_malloc_t *p){
+static int overlay_free(void *_p){
 	void *brickos_addr;
+	sc_malloc_t *p;
 
+
+	p = (sc_malloc_t*)_p;
 
 	p->p -= sizeof(brickos_addr);
 	memcpy(&brickos_addr, p->p, sizeof(brickos_addr));
@@ -214,12 +274,47 @@ static void overlay_free(sc_malloc_t *p){
 		LNX_EEXIT("double free at %p\n", p->p);
 
 	p->p = brickos_addr;
+
+	return E_OK;
 }
 
-static void overlay_thread_create(sc_thread_t *p){
+static int overlay_thread_create(void *_p){
+	sc_thread_t *p;
+
+
+	p = (sc_thread_t*)_p;
+
 	sched_yield();
 
 	x86_hw_op_active_tid = p->tid;
 	_exit(p->entry(p->arg), false);
 	x86_hw_op_active_tid = 0;
+
+	return E_OK;
+}
+
+static int overlay_sigregister(void *p){
+	sig_hdlr = ((sc_signal_t*)p)->hdlr;
+
+	return E_OK;
+}
+
+static int overlay_sigsend(void *_p){
+	sc_signal_t *p;
+
+
+	p = (sc_signal_t*)_p;
+
+	if(sig_hdlr == 0x0)
+		LNX_EEXIT("signal handler not set\n");
+
+	ignore_exit = true;
+	x86_hw_op_active_tid = p->tid;
+
+	sig_hdlr(0x0, (void*)p->sig);
+
+	x86_hw_op_active_tid = 0;
+	ignore_exit = false;
+
+	return E_OK;
 }
