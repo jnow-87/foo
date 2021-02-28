@@ -13,11 +13,11 @@
 
 
 /* types */
-typedef int (*binloader)(void *binary, process_t *this_p, void **entry);
+typedef int (*binloader)(void *binary, process_t *this_p);
 
 
 /* external prototypes */
-int bin_load_raw(void *binary, process_t *this_p, void **entry);
+int bin_load_raw(void *binary, process_t *this_p);
 
 
 /* static variables */
@@ -28,7 +28,7 @@ static const binloader loader_cbs[] = {
 
 
 /* global functions */
-int bin_load(void *binary, bin_type_t bin_type, process_t *this_p, void **entry){
+int bin_load(void *binary, bin_type_t bin_type, process_t *this_p){
 	/* check for invalid loader type */
 	if(bin_type >= NBINLOADER)
 		return_errno(E_INVAL);
@@ -38,5 +38,5 @@ int bin_load(void *binary, bin_type_t bin_type, process_t *this_p, void **entry)
 		return_errno(E_INVAL);
 
 	/* call loader */
-	return loader_cbs[bin_type](binary, this_p, entry);
+	return loader_cbs[bin_type](binary, this_p);
 }

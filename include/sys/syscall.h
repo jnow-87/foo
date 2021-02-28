@@ -108,7 +108,7 @@ typedef struct{
 	tid_t tid;
 
 	signal_t sig;
-	user_entry_t hdlr;
+	thread_entry_t hdlr;
 } sc_signal_t;
 
 typedef struct{

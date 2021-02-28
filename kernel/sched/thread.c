@@ -22,7 +22,6 @@
 thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entry, void *thread_arg){
 	thread_t *this_t;
 	thread_ctx_t *ctx;
-	void *user_entry;
 	devtree_memory_t const *stack;
 
 
@@ -54,16 +53,11 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 		goto_errno(err_1, E_NOMEM);
 
 	/* init thread context */
-	user_entry = entry;
-
-	if(tid != 0)
-		user_entry = list_first(this_p->threads)->entry;
-
 	this_t->signal_ctx_stack = 0x0;
 	this_t->ctx_stack = 0x0;
 
 	ctx = (thread_ctx_t*)(this_t->stack->phys_addr + stack->size - sizeof(thread_ctx_t));
-	thread_context_init(ctx, this_t, user_entry, entry, thread_arg);
+	thread_context_init(ctx, this_t, entry, thread_arg);
 
 	stack_push(this_t->ctx_stack, ctx);
 

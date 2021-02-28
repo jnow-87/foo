@@ -41,7 +41,7 @@ typedef struct thread_ctx_t{
 
 
 /* prototypes */
-void avr_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
+void avr_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg);
 enum thread_ctx_type_t avr_thread_context_type(thread_ctx_t *ctx);
 
 

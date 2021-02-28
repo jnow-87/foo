@@ -26,7 +26,6 @@ static mutex_t ptable_mtx = MUTEX_INITIALISER();
 
 /* global functions */
 process_t *process_create(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd){
-	void *entry;
 	char *argp;
 	process_t *this_p;
 	thread_t *this_t;
@@ -95,14 +94,12 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	cwd->ref_cnt++;
 
 	/* load binary */
-	entry = 0x0;
-
-	if(bin_load(binary, bin_type, this_p, &entry) != E_OK)
+	if(bin_load(binary, bin_type, this_p) != E_OK)
 		goto err_3;
 
 	/* create first thread */
 	this_p->threads = 0x0;
-	this_t = thread_create(this_p, 0, entry, argp);
+	this_t = thread_create(this_p, 0, 0x0, argp);
 
 	if(this_t == 0x0)
 		goto err_3;

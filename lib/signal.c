@@ -20,7 +20,7 @@
 
 
 /* local/static prototypes */
-static void signal_hdlr(thread_entry_t entry, void *arg);
+static int signal_hdlr(void *arg);
 
 
 /* static variables */
@@ -73,7 +73,7 @@ static int init(void){
 
 lib_init(1, init);
 
-static void signal_hdlr(thread_entry_t entry, void *arg){
+static int signal_hdlr(void *arg){
 	char dummy;
 	signal_t sig;
 
@@ -91,5 +91,5 @@ static void signal_hdlr(thread_entry_t entry, void *arg){
 	if(sig == SIG_KILL)
 		_exit(SIG_KILL, false);
 
-	exit(E_INVAL);
+	return_errno(E_INVAL);
 }

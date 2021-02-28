@@ -13,7 +13,7 @@
 
 
 /* global functions */
-void x86_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg){
+void x86_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg){
 	memset(ctx, 0, sizeof(thread_ctx_t));
 
 	ctx->type = CTX_UNKNOWN;

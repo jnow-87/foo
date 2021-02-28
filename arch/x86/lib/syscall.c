@@ -114,7 +114,7 @@ static uint8_t mem_blob[DEVTREE_APP_HEAP_SIZE];
 static memblock_t *app_heap = 0x0;
 
 // signal overlay data
-static user_entry_t sig_hdlr = 0x0;
+static thread_entry_t sig_hdlr = 0x0;
 static bool ignore_exit = false;
 
 
@@ -311,7 +311,7 @@ static int overlay_sigsend(void *_p){
 	ignore_exit = true;
 	x86_hw_op_active_tid = p->tid;
 
-	sig_hdlr(0x0, (void*)p->sig);
+	(void)sig_hdlr((void*)p->sig);
 
 	x86_hw_op_active_tid = 0;
 	ignore_exit = false;

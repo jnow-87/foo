@@ -144,7 +144,7 @@ static void context_inject(thread_t *this_t, void *_p){
 	stack_push(this_t->signal_ctx_stack, sig_ctx);
 
 	/* inject signal handler */
-	thread_context_init(ctx, this_t, this_t->parent->sig_hdlr, 0x0, (void*)p->sig);
+	thread_context_init(ctx, this_t, this_t->parent->sig_hdlr, (void*)p->sig);
 	ctx->next = sig_ctx->ctx.next;
 }
 

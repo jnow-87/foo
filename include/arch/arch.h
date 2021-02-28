@@ -60,7 +60,7 @@ typedef struct{
 	void (*int_ipi)(unsigned int core, bool bcast);
 
 	/* threading */
-	void (*thread_context_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
+	void (*thread_context_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg);
 	enum thread_ctx_type_t (*thread_context_type)(struct thread_ctx_t *ctx);
 } arch_callbacks_kernel_t;
 # endif // BUILD_KERNEL

@@ -38,7 +38,7 @@ x86_start:
 
 	/* _start */
 	// prepare args
-	mov		$_start, %rdi
+	mov		$0, %rdi
 	mov		8(%rsp), %rsi
 
 	call	_start

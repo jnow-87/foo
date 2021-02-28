@@ -28,7 +28,7 @@ typedef enum{
 typedef unsigned int tid_t;
 
 typedef int (*thread_entry_t)(void *arg);
-typedef void (*user_entry_t)(thread_entry_t cb, void *arg);
+typedef void (*process_entry_t)(thread_entry_t cb, void *arg);
 
 
 #endif // SYS_THREAD_H
