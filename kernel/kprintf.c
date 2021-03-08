@@ -12,6 +12,7 @@
 #include <kernel/kprintf.h>
 #include <kernel/driver.h>
 #include <kernel/opt.h>
+#include <kernel/critsec.h>
 #include <driver/klog.h>
 #include <sys/types.h>
 #include <sys/stream.h>
@@ -32,6 +33,8 @@ typedef struct{
 	char buf[CONFIG_KERNEL_LOG_SIZE];
 	size_t idx;
 	bool overflow;
+
+	critsec_lock_t lock;
 } log_t;
 
 
@@ -41,7 +44,13 @@ static void flush(void);
 
 
 /* static variables */
-log_t log = { 0 };
+log_t log = {
+	.dev = 0x0,
+	.buf = { 0 },
+	.idx = 0,
+	.overflow = false,
+	.lock = CRITSEC_INITIALISER(),
+};
 
 
 /* global functions */
@@ -95,6 +104,8 @@ static char putc(char c, FILE *stream){
 }
 
 static void flush(void){
+	critsec_lock(&log.lock);
+
 	log.dev->puts(log.buf, log.idx, log.dev->data);
 
 	if(log.overflow)
@@ -102,4 +113,6 @@ static void flush(void){
 
 	log.overflow = false;
 	log.idx = 0;
+
+	critsec_unlock(&log.lock);
 }
