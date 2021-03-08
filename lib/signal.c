@@ -32,7 +32,7 @@ signal_hdlr_t signal(signal_t sig, signal_hdlr_t hdlr){
 	if(sig >= SIG_MAX || sig == SIG_KILL)
 		goto_errno(err, E_INVAL);
 
-	if(hdlrs[sig] == 0x0)
+	if(hdlrs[sig] == 0x0 || hdlr == 0x0)
 		hdlrs[sig] = hdlr;
 
 	return hdlrs[sig];
