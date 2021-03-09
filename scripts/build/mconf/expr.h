@@ -17,7 +17,7 @@ extern "C" {
 #include <stdio.h>
 #include "list.h"
 #ifndef __cplusplus
-#include <stdbool.h>
+# include <stdbool.h>
 #endif
 
 struct file {

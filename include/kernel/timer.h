@@ -16,17 +16,13 @@
 
 /* macros */
 #ifndef CONFIG_SC_TIME
-
-#define ktimer_tick()	{}
-
+# define ktimer_tick()	{}
 #endif // CONFIG_SC_TIME
 
 
 /* prototypes */
 #ifdef CONFIG_SC_TIME
-
 void ktimer_tick(void);
-
 #endif // CONFIG_SC_TIME
 
 

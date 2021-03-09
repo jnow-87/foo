@@ -22,9 +22,7 @@ int time(time_t *t);
 
 /* disabled-call macros */
 #ifndef CONFIG_SC_TIME
-
-#define time(t)	CALL_DISABLED(time, CONFIG_SC_TIME)
-
+# define time(t)	CALL_DISABLED(time, CONFIG_SC_TIME)
 #endif // CONFIG_SC_TIME
 
 

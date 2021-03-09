@@ -30,5 +30,5 @@ void hw_timer(void){
 	while(nanosleep(&ts, &ts) && errno == EINTR);
 
 	DEBUG("enqueue timer interrupt\n");
-	hw_int_request(INT_TIMER, 0x0, HWS_HARDWARE);
+	hw_int_request(INT_TIMER, 0x0, HWS_HARDWARE, 0);
 }

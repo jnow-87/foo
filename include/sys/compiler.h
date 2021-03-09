@@ -34,6 +34,7 @@
 #define __section(sec)					__attribute__((section(sec)))
 #define __align(base)					__attribute__((aligned(base)))
 #define __alias(f)						__attribute__((alias(#f)))
+#define __weak_alias(f)					__attribute__((weak, alias(#f)))
 
 // specify width of a type
 // 	QI	integer that is as wide as the smallest addressable unit, usually 8 bits
@@ -47,8 +48,8 @@
 #define __linker_array(sec)				__section(sec) __align(1) __used
 
 // offsetof
-#define offsetofvar(var, member)		((size_t)(&(((typeof((var))*)(0))->member)))
 #define offsetof(type, member)			((size_t)(&(((type*)(0))->member)))
+#define offsetofvar(var, member)		offsetof(typeof(var), member)
 
 // sizeof for arrays
 #define sizeof_array(a)					(sizeof(a) / sizeof((a)[0]))

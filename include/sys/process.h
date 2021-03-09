@@ -11,15 +11,14 @@
 #define SYS_PROCESS_H
 
 
-#ifndef BUILD_HOST
-
 /* macros */
-#define PID_MAX	((pid_t)(~0))
-
+#ifndef BUILD_HOST
+# define PID_MAX	((pid_t)(~0))
+#endif // BUILD_HOST
 
 /* types */
+#ifndef BUILD_HOST
 typedef unsigned int pid_t;
-
 #endif // BUILD_HOST
 
 

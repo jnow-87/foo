@@ -31,4 +31,5 @@ typedef struct{
 			target_addr;
 } i2c_cfg_t;
 
+
 #endif // SYS_I2C_H

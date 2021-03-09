@@ -95,11 +95,12 @@ static void int_hdlr(int sig){
 	if(op.num != HWO_INT_TRIGGER)
 		LNX_EEXIT("[%u] invalid hardware-op %d to kernel\n", op.seq, op.num);
 
-	LNX_DEBUG("[%u] interrupt %d interrupting %s(pid %d)\n",
+	LNX_DEBUG("[%u] interrupt %d interrupting %s(pid %u, tid %u)\n",
 		op.seq,
 		op.int_ctrl.num,
 		this_t->parent->name,
-		this_t->parent->pid
+		this_t->parent->pid,
+		this_t->tid
 	);
 
 	// push thread context
@@ -129,7 +130,8 @@ static void int_hdlr(int sig){
 
 	// signal completion
 	op.num = HWO_INT_RETURN;
-	op.int_ctrl.ret_to = (this_t->parent->pid == 0) ? HWS_KERNEL : HWS_USER;
+	op.int_return.to = (this_t->parent->pid == 0) ? HWS_KERNEL : HWS_USER;
+	op.int_return.tid = this_t->tid;
 
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);

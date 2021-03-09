@@ -19,6 +19,7 @@
 #include <user/debug.h>
 #include <user/opts.h>
 #include <user/user.h>
+#include <user/term.h>
 #include <hardware/hardware.h>
 #include <brickos/brickos.h>
 
@@ -95,6 +96,10 @@ int main(int argc, char **argv){
 
 	if(r != 0 || sig_fd == -1)
 		EEXIT("signal initialisation failed with %s\n", strerror(errno));
+
+	/* terminal settings */
+	if(opts.app_mode == AM_NONINTERACTIVE)
+		term_noncanon();
 
 	/* create brickos child proceses */
 	if(brickos_init_childs() != 0)
@@ -203,4 +208,5 @@ static void cleanup(void){
 	brickos_destroy_childs();
 
 	user_input_cleanup();
+	term_default();
 }

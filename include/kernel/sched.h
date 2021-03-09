@@ -17,9 +17,9 @@
 
 /* macros */
 #ifdef CONFIG_SCHED_PREEMPTIVE
-#define sched_tick()	sched_trigger()
+# define sched_tick()	sched_trigger()
 #else
-#define sched_tick()
+# define sched_tick()
 #endif // CONFIG_SCHED_PREEMPTIVE
 
 

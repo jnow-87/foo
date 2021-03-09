@@ -14,13 +14,8 @@
 #include <sys/types.h>
 
 
-/* static variables */
-extern size_t test_malloc_fail_at;
-
-
-/* local/static prototypes */
-void test_memory_init(void);
-void test_memory_reset(void);
+/* external variables */
+extern ssize_t memmock_alloc_fail;
 
 
 #endif // TESTING_MEMORY_H

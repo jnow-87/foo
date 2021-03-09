@@ -26,6 +26,7 @@ typedef struct int_req_t{
 	void *data;
 
 	x86_hw_op_src_t src;
+	unsigned int tid;
 } int_req_t;
 
 
@@ -56,10 +57,12 @@ void hw_int_process(void){
 	hw_state_lock();
 
 	// ensure interrupts are only triggered for the appropriate
-	// priviledge level in order to prevent confusing the kernel
-	// scheduler by e.g. triggering a syscall from user space
+	// priviledge level and thread in order to prevent confusing the
+	// kernel scheduler by e.g. triggering a syscall from user space
 	// while a kernel thread is active according to the scheduler
-	if(hw_state.priviledge == HWS_USER || req->src == hw_state.priviledge){
+	if(req->src == HWS_HARDWARE
+	|| ((hw_state.priviledge == HWS_USER || req->src == hw_state.priviledge) && hw_state.tid == req->tid)
+	){
 		while(!hw_state.int_enabled){
 			hw_state_wait();
 		}
@@ -73,7 +76,7 @@ void hw_int_process(void){
 	hw_state_unlock();
 }
 
-void hw_int_request(int num, void *data, x86_hw_op_src_t src){
+void hw_int_request(int num, void *data, x86_hw_op_src_t src, unsigned int tid){
 	int_req_t *req;
 
 
@@ -84,13 +87,16 @@ void hw_int_request(int num, void *data, x86_hw_op_src_t src){
 
 	req->num = num;
 	req->data = data;
-	req->src = (src == HWS_HARDWARE ? HWS_KERNEL : src);
+	req->src = src;
+	req->tid = tid;
 
 	req_enqueue(req);
 }
 
-void hw_int_return(x86_hw_op_src_t target){
+void hw_int_return(x86_hw_op_src_t target, unsigned int tid){
 	int_return(target);
+
+	hw_state.tid = tid;
 }
 
 

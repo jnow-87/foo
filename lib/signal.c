@@ -32,7 +32,7 @@ signal_hdlr_t signal(signal_t sig, signal_hdlr_t hdlr){
 	if(sig >= SIG_MAX || sig == SIG_KILL)
 		goto_errno(err, E_INVAL);
 
-	if(hdlrs[sig] == 0x0)
+	if(hdlrs[sig] == 0x0 || hdlr == 0x0)
 		hdlrs[sig] = hdlr;
 
 	return hdlrs[sig];
@@ -74,6 +74,7 @@ static int init(void){
 lib_init(1, init);
 
 static void signal_hdlr(thread_entry_t entry, void *arg){
+	char dummy;
 	signal_t sig;
 
 
@@ -81,7 +82,7 @@ static void signal_hdlr(thread_entry_t entry, void *arg){
 
 	if(hdlrs[sig] != 0x0){
 		hdlrs[sig](sig);
-		(void)sc(SC_SIGRETURN, arg);
+		(void)sc(SC_SIGRETURN, &dummy);
 
 		// SC_SIGRETURN should never return
 		// just in case, fall through to exit

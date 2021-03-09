@@ -27,7 +27,7 @@ extern "C" {
 #define SRCTREE "srctree"
 
 #ifndef PACKAGE
-#define PACKAGE "linux"
+# define PACKAGE "linux"
 #endif
 
 #define LOCALEDIR "/usr/share/locale"
@@ -36,7 +36,7 @@ extern "C" {
 #define N_(text) (text)
 
 #ifndef CONFIG_
-#define CONFIG_ "CONFIG_"
+# define CONFIG_ "CONFIG_"
 #endif
 static inline const char *CONFIG_prefix(void)
 {

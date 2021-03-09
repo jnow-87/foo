@@ -9,6 +9,7 @@
 
 #include <config/config.h>
 #include <arch/x86/linux.h>
+#include <arch/x86/hardware.h>
 #include <kernel/init.h>
 #include <kernel/interrupt.h>
 #include <kernel/sched.h>

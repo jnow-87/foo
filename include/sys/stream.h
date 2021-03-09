@@ -37,9 +37,9 @@
 }
 
 #if defined(BUILD_KERNEL) && !defined(CONFIG_KERNEL_PRINTF)
-#define vfprintf(stream, format, lst)	CALL_DISABLED(vfprintf, CONFIG_KERNEL_PRINTF)
+# define vfprintf(stream, format, lst)	CALL_DISABLED(vfprintf, CONFIG_KERNEL_PRINTF)
 #elif !defined(BUILD_KERNEL) && !defined(CONFIG_LIB_STREAM)
-#define vfprintf(stream, format, lst)	CALL_DISABLED(vfprintf, CONFIG_LIB_STREAM)
+# define vfprintf(stream, format, lst)	CALL_DISABLED(vfprintf, CONFIG_LIB_STREAM)
 #endif
 
 
@@ -65,13 +65,11 @@ typedef struct FILE{
 /* prototypes */
 #if (defined(BUILD_KERNEL) && defined(CONFIG_KERNEL_PRINTF)) \
  || (!defined(BUILD_KERNEL) && defined(CONFIG_LIB_STREAM))
-
 int vfprintf(FILE *stream, char const *format, va_list lst);
 int sprintf(char *s, char const *format, ...);
 int snprintf(char *s, size_t n, char const *format, ...);
 int vsprintf(char *s, char const *format, va_list lst);
 int vsnprintf(char *s, size_t n, char const *format, va_list lst);
-
 #endif
 
 

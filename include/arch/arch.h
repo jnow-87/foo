@@ -12,37 +12,31 @@
 
 
 #ifndef ASM
-#ifdef BUILD_KERNEL
+# ifdef BUILD_KERNEL
+#  include <kernel/interrupt.h>
+#  include <kernel/memory.h>
+# endif // BUILD_KERNEL
 
-#include <kernel/interrupt.h>
-#include <kernel/memory.h>
-
-#endif // BUILD_KERNEL
-
-#include <sys/syscall.h>
-#include <sys/thread.h>
-#include <sys/types.h>
-
+# include <sys/syscall.h>
+# include <sys/thread.h>
+# include <sys/types.h>
 #endif // ASM
 
 
 /* incomplete types */
 #ifndef ASM
-#ifdef BUILD_KERNEL
-
+# ifdef BUILD_KERNEL
 struct process_t;
 struct thread_t;
 struct thread_ctx_t;
 enum thread_ctx_type_t;
-
-#endif // BUILD_KERNEL
+# endif // BUILD_KERNEL
 #endif //ASM
 
 
 /* types */
 #ifndef ASM
-#ifdef BUILD_KERNEL
-
+# ifdef BUILD_KERNEL
 typedef struct{
 	/* core */
 	int (*core_id)(void);
@@ -69,8 +63,7 @@ typedef struct{
 	void (*thread_context_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, user_entry_t user_entry, thread_entry_t thread_entry, void *thread_arg);
 	enum thread_ctx_type_t (*thread_context_type)(struct thread_ctx_t *ctx);
 } arch_callbacks_kernel_t;
-
-#endif // BUILD_KERNEL
+# endif // BUILD_KERNEL
 
 typedef struct{
 	/* atomics */
@@ -85,17 +78,14 @@ typedef struct{
 	int kernel_timer_err_us,
 		sched_timer_err_us;
 } arch_info_t;
-
 #endif // ASM
 
 
 /* macros */
-#ifdef BUILD_KERNEL
-
-#define arch_kernel_call(p, err_ret) \
+# ifdef BUILD_KERNEL
+#  define arch_kernel_call(p, err_ret) \
 	(arch_cbs_kernel.p == 0x0) ? (err_ret) : arch_cbs_kernel.p
-
-#endif // BUILD_KERNEL
+# endif // BUILD_KERNEL
 
 #define arch_common_call(p, err_ret) \
 	(arch_cbs_common.p == 0x0) ? (err_ret) : arch_cbs_common.p

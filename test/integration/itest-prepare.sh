@@ -15,5 +15,5 @@ fs_export_root=$(cat .config | grep "${CONFIG_VAR}" | cut -d '=' -f 2 | sed -e '
 [ "${fs_export_root}" != "" ] || { echo "undefined config variable \"${CONFIG_VAR}\""; exit 1; }
 
 
+echo "removing brickos file system export at ${fs_export_root}"
 rm -rf ${fs_export_root}
-recent/test/integration/itest

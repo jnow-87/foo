@@ -7,6 +7,10 @@
 
 
 
+config X86_GCOV_HEAP_SIZE
+	int "libgcov heap size"
+	default 512
+
 menu "Hidden"
 	visible if 0
 

@@ -12,10 +12,10 @@
 
 
 #ifndef BUILD_HOST
-#include <sys/types.h>
+# include <sys/types.h>
 #else
-#include <stdint.h>
-#include <stdio.h>
+# include <stdint.h>
+# include <stdio.h>
 #endif // BUILD_HOST
 
 

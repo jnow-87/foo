@@ -36,6 +36,7 @@ SECTIONS {
 
 		INCLUDE kernel_init.lds
 		INCLUDE kernel_stat.lds
+		INCLUDE kernel_test.lds
 	} > kernel_data AT>kernel_flash
 
 	__data_start = ADDR(.data);

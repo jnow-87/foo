@@ -40,16 +40,12 @@
 
 /* types */
 #ifdef BUILD_KERNEL
-
 typedef struct{
 	pid_t pid;
 	tid_t tid;
 } lock_id_t;
-
 #else
-
 typedef tid_t lock_id_t;
-
 #endif // BUILD_KERNEL
 
 typedef enum{
@@ -81,12 +77,10 @@ void mutex_unlock(mutex_t *m);
 
 /* disabled-call macros */
 #if defined(BUILD_LIBSYS) && !defined(CONFIG_LIB_MUTEX)
-
-#define mutex_init(m, attr)		CALL_DISABLED(mutex_init, CONFIG_LIB_MUTEX)
-#define mutex_lock(m)			CALL_DISABLED(mutex_lock, CONFIG_LIB_MUTEX)
-#define mutex_trylock(m)		CALL_DISABLED(mutex_trylock, CONFIG_LIB_MUTEX)
-#define mutex_unlock(m)			CALL_DISABLED(mutex_unlock, CONFIG_LIB_MUTEX)
-
+# define mutex_init(m, attr)	CALL_DISABLED(mutex_init, CONFIG_LIB_MUTEX)
+# define mutex_lock(m)			CALL_DISABLED(mutex_lock, CONFIG_LIB_MUTEX)
+# define mutex_trylock(m)		CALL_DISABLED(mutex_trylock, CONFIG_LIB_MUTEX)
+# define mutex_unlock(m)		CALL_DISABLED(mutex_unlock, CONFIG_LIB_MUTEX)
 #endif // CONFIG_LIB_MUTEX
 
 

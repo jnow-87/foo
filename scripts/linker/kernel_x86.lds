@@ -34,6 +34,9 @@ SECTIONS {
 
 		. = ALIGN(16);
 		INCLUDE kernel_stat.lds
+
+		. = ALIGN(16);
+		INCLUDE kernel_test.lds
 	} > text
 
 	.rodata : {

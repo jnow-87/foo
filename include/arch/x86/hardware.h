@@ -16,10 +16,11 @@
 
 /* macros */
 // interrupts
-#define NUM_INT		2
+#define NUM_INT		3
 
 #define INT_TIMER	0
-#define INT_SYSCALL	1
+#define INT_SCHED	1
+#define INT_SYSCALL	2
 
 
 /* types */
@@ -44,6 +45,7 @@ typedef struct{
 	unsigned int num;	/**< cf. x86_hw_op_num_t */
 	unsigned int src;	/**< cf. x86_hw_op_src_t */
 	unsigned int seq;
+	unsigned int tid;
 
 	int retval;
 
@@ -55,9 +57,13 @@ typedef struct{
 		struct{
 			int num;
 			int en;
-			int ret_to;	/**< cf. x86_hw_op_src_t */
 			void *data;
 		} int_ctrl;
+
+		struct{
+			int to;		/**< cf. x86_hw_op_src_t */
+			unsigned int tid;
+		} int_return;
 
 		struct{
 			void *addr;
@@ -73,6 +79,10 @@ void x86_hw_op_write_writeback(x86_hw_op_t *op);
 
 void x86_hw_op_read(x86_hw_op_t *op);
 void x86_hw_op_read_writeback(x86_hw_op_t *op);
+
+
+/* external variables */
+extern unsigned int x86_hw_op_active_tid;
 
 
 #endif // X86_HARDWARE_H

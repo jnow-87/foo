@@ -16,12 +16,12 @@ obj-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
 obj-$(CONFIG_KERNEL_NET) += inet.o
 
 # host
-hostobj-y := errno.o string.o stream.o memblock.o memory.o ringbuf.o list1.o list2.o vector.o devtree.o devicetree.o patmat.o inet.o
+hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o vector.o devtree.o devicetree.o patmat.o inet.o
 
 # libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := errno.libsys.o string.libsys.o list1.libsys.o list2.libsys.o vector.libsys.o
+libsys-y := errno.libsys.o string.libsys.o list1.libsys.o list2.libsys.o vector.libsys.o devtree.o
 
 libsys-$(CONFIG_SC_DYNMEM) += memblock.libsys.o
 libsys-$(CONFIG_LIB_MUTEX) += mutex.libsys.o
@@ -93,11 +93,9 @@ prepare_deps: $(lds_memory_script)
 
 
 ## kernel flags
-ldlibs-kernel-arch := \
-	-L$(loc_build_tree) \
+ldlibs-kernel += \
 	-T$(lds_memory_script)
 
 ## init application flags
-ldlibs-app-arch := \
-	-L$(loc_build_tree) \
+ldlibs-app += \
 	-T$(lds_memory_script)

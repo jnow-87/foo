@@ -27,8 +27,7 @@ typedef void					*addr_t;
 
 /* fixed-width types */
 #ifndef BUILD_HOST
-#if CONFIG_REGISTER_WIDTH == 8
-
+# if CONFIG_REGISTER_WIDTH == 8
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
 
@@ -46,10 +45,8 @@ typedef long long int			intmax_t;
 typedef unsigned long long int	uintmax_t;
 
 typedef int16_t					ptrdiff_t;
-#define PTRDIFF_T				unsigned int
-
-#elif CONFIG_REGISTER_WIDTH == 32
-
+#  define PTRDIFF_T				unsigned int
+# elif CONFIG_REGISTER_WIDTH == 32
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
 
@@ -68,10 +65,8 @@ typedef long long int			intmax_t;
 typedef unsigned long long int	uintmax_t;
 
 typedef long long int			ptrdiff_t;
-#define PTRDIFF_T				unsigned long long int
-
-#elif CONFIG_REGISTER_WIDTH == 64
-
+#  define PTRDIFF_T				unsigned long long int
+# elif CONFIG_REGISTER_WIDTH == 64
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
 
@@ -93,22 +88,15 @@ typedef long long int			intmax_t;
 typedef unsigned long long int	uintmax_t;
 
 typedef long long int			ptrdiff_t;
-#define PTRDIFF_T				unsigned long long int
-
-#else // CONFIG_REGISTER_WIDTH
-
+#  define PTRDIFF_T				unsigned long long int
+# else // CONFIG_REGISTER_WIDTH
 CPP_ASSERT(invalid address width in configuration)
-
-#endif // CONFIG_REGISTER_WIDTH
-
+# endif // CONFIG_REGISTER_WIDTH
 #else // BUILD_HOST
-
-#include <inttypes.h>
-#include <stddef.h>
-
+# include <inttypes.h>
+# include <stddef.h>
 typedef long int				ssize_t;
-#define PTRDIFF_T				unsigned long long int
-
+# define PTRDIFF_T				unsigned long long int
 #endif // BUILD_HOST
 
 

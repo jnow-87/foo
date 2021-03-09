@@ -7,24 +7,19 @@
 
 
 
-subdir-y := tests/
-hostbin-y := itest
+hostbin-y := itestfw
 
-itest-y := main.o hardware/ brickos/ user/
+itestfw-y := main.o hardware/ brickos/ user/
 
 
-itest-hostcppflags += \
+itestfw-hostcppflags += \
 	-I$(loc_src_tree) \
 	-I$(src_tree)
 
-itest-hostcflags += \
+itestfw-hostcflags += \
 	-fno-builtin
 
-itest-hostldlibs += \
+itestfw-hostldlibs += \
 	-lpthread \
 	-lreadline \
 	-lrt
-
-
-test: $(loc_src_tree)/itest.sh
-coverage: $(loc_build_tree)/itest

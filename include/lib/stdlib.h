@@ -28,10 +28,8 @@ void _exit(int status, bool kill_sibl);
 
 /* disabled-call macros */
 #ifndef CONFIG_SC_DYNMEM
-
-#define malloc(size)	(void*)CALL_DISABLED(malloc, CONFIG_SC_DYNMEM)
-#define free(addr)		CALL_DISABLED(free, CONFIG_SC_DYNMEM)
-
+# define malloc(size)	(void*)CALL_DISABLED(malloc, CONFIG_SC_DYNMEM)
+# define free(addr)		CALL_DISABLED(free, CONFIG_SC_DYNMEM)
 #endif // CONFIG_SC_DYNMEM
 
 

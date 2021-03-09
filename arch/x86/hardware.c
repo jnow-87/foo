@@ -15,9 +15,9 @@
 
 /* macros */
 #if defined(BUILD_KERNEL)
-#define HW_OP_SRC	HWS_KERNEL
+# define HW_OP_SRC	HWS_KERNEL
 #elif defined(BUILD_LIBSYS)
-#define HW_OP_SRC	HWS_USER
+# define HW_OP_SRC	HWS_USER
 #else
 CPP_ASSERT(invalid build config)
 #endif // BUILD_KERNEL
@@ -32,19 +32,30 @@ CPP_ASSERT(invalid build config)
 }
 
 
+/* global variables */
+unsigned int x86_hw_op_active_tid = 0;
+
+
 /* global functions */
 void x86_hw_op_write(x86_hw_op_t *op){
 	static unsigned int seq_num = 0;
+	int ack;
 
 
 	op->src = HW_OP_SRC;
+	op->tid = x86_hw_op_active_tid;
 
 	lnx_kill(lnx_getppid(), CONFIG_TEST_INT_DATA_SIG);
 
-	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, &op->seq, sizeof(op->seq));
-	CHECK_SEQ_NUM(op->seq, seq_num++);
+	ack = 0;
 
-	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, op, sizeof(*op));
+	while(!ack){
+		lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, &op->seq, sizeof(op->seq));
+		CHECK_SEQ_NUM(op->seq, seq_num++);
+
+		lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, op, sizeof(*op));
+		lnx_read(CONFIG_TEST_INT_DATA_PIPE_RD, &ack, sizeof(ack));
+	}
 }
 
 void x86_hw_op_write_writeback(x86_hw_op_t *op){
