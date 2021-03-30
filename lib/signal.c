@@ -21,6 +21,7 @@
 
 /* local/static prototypes */
 static int signal_hdlr(void *arg);
+static void action_exit(signal_t sig);
 
 
 /* static variables */
@@ -65,6 +66,10 @@ static int init(void){
 	if(process_info(&pinfo) != 0)
 		return -errno;
 
+	hdlrs[SIG_INT] = action_exit;
+	hdlrs[SIG_KILL] = action_exit;
+	hdlrs[SIG_TERM] = action_exit;
+
 	p.pid = pinfo.pid;
 	p.hdlr = signal_hdlr;
 
@@ -88,8 +93,9 @@ static int signal_hdlr(void *arg){
 		// just in case, fall through to exit
 	}
 
-	if(sig == SIG_KILL)
-		_exit(SIG_KILL, false);
-
 	return_errno(E_INVAL);
+}
+
+static void action_exit(signal_t sig){
+	_exit(-sig, false);
 }
