@@ -47,7 +47,7 @@ TEST(thread_create){
 
 	/* create threads */
 	for(i=0; i<NTHREAD; i++){
-		r += TEST_INT_NEQ(tid = thread_create(thread, (void*)(tids_info + i)), 0);
+		ASSERT_INT_NEQ(tid = thread_create(thread, (void*)(tids_info + i)), 0);
 		tids_ref[i] = tid;
 	}
 
