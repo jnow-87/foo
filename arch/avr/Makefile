@@ -99,13 +99,10 @@ ldlibs-app += \
 
 # open a xterm window using the specified command
 #
-# 	$(call term,<cmd>,<bg-exec>)
+# 	$(call term,<cmd>,<bg-exec>,<ack-error>)
 define term
-  @xterm -fg white -bg black -geometry 70x10+0+0 -fa 'dejavu sans mono' -fs 7 -T CONFIG_AVR_DEBUGGER -e " \
-  	$(1) || \
-		(echo -e '\n\n\033[35mpress any key to continue\033[0m'; read -n1) \
-	" \
-	$(2)
+  xterm -fg white -bg black -geometry 70x10+0+0 -fa 'dejavu sans mono' -fs 7 -T CONFIG_AVR_DEBUGGER \
+  	-e "$(1) || { [ $(3) -eq 1 ] && read -p 'press any key to continue' -n1; }" $(2)
 endef
 
 # asking for user input, exiting with error if not 'y'
@@ -120,11 +117,13 @@ endef
 ## debug
 ####
 
+debug_ack_error := 0
+
 .PHONY: debug
 debug:
 ifneq ($(findstring debugwire,$(CONFIG_AVR_PROG_DEBUG_ARGS)),)
-	$(call cmd_run_script,
-		$(call yesno,use debug-wire for debugging?)
+	$(call cmd_run_script, \
+		$(call yesno,use debug-wire for debugging?) && \
 		$(call term, \
 			echo -e '\033[35menabling debug-wire on the target...\033[0m'; \
 			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U hfuse:w:0x9f:m; \
@@ -132,10 +131,18 @@ ifneq ($(findstring debugwire,$(CONFIG_AVR_PROG_DEBUG_ARGS)),)
 			echo -e '\n\n\033[35mdisabling debug-wire on the target...\033[0m'; \
 			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE); \
 			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) | grep -C 1000 'Waiting for connection' \
-		, &)
+			, & \
+			, $(debug_ack_error) \
+		) \
 	)
 else
-	$(call cmd_run_script,$(call term, $(CONFIG_AVR_DEBUGGER) -R -P $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_DEBUG_ARGS) :1212, &))
+	$(call cmd_run_script, \
+		$(call term, \
+			$(CONFIG_AVR_DEBUGGER) -R -P $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_DEBUG_ARGS) :1212 \
+			, & \
+			, $(debug_ack_error) \
+		) \
+	)
 endif
 
 ####

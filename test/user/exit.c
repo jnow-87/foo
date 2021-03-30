@@ -36,9 +36,8 @@ TEST_LONG(exit, "exit"){
 
 	ecode = 0;
 
-	for(i=0; i<NTHREAD; i++){
-		atomic_inc(&ecode, TEST_INT_NEQ(thread_create(thread, 0x0), 0));
-	}
+	for(i=0; i<NTHREAD; i++)
+		ASSERT_INT_NEQ(thread_create(thread, 0x0), 0);
 
 	return thread(0x0);
 }

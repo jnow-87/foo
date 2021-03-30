@@ -53,7 +53,7 @@ static int event_copy_to_user(x86_hw_op_t *op);
 static int event_inval(x86_hw_op_t *op);
 
 // syscall overlays
-static int overlay_call(sc_t num, void *param, overlay_location_t loc);
+static int overlay_call(sc_num_t num, void *param, overlay_location_t loc);
 
 static int overlay_malloc(void *p);
 static int overlay_free(void *p);
@@ -114,16 +114,13 @@ static uint8_t mem_blob[DEVTREE_APP_HEAP_SIZE];
 static memblock_t *app_heap = 0x0;
 
 // signal overlay data
-static user_entry_t sig_hdlr = 0x0;
+static thread_entry_t sig_hdlr = 0x0;
 static bool ignore_exit = false;
 
 
 /* global functions */
-int x86_sc(sc_t num, void *param, size_t psize){
-	union{
-		sc_arg_t arg;
-		errno_t errno;
-	} sc_data;
+int x86_sc(sc_num_t num, void *param, size_t psize){
+	sc_t sc;
 	x86_hw_op_t op;
 
 
@@ -139,18 +136,19 @@ int x86_sc(sc_t num, void *param, size_t psize){
 		LNX_EEXIT("there must not be any pending syscalls\n");
 
 	// trigger syscall interrupt
-	sc_data.arg.num = num;
-	sc_data.arg.param = param;
-	sc_data.arg.size = psize;
+	sc.num = num;
+	sc.param = param;
+	sc.size = psize;
+	sc.errno = E_UNKNOWN;
 
 	op.num = HWO_INT_TRIGGER;
 	op.int_ctrl.num = INT_SYSCALL;
-	op.int_ctrl.data = &sc_data;
+	op.int_ctrl.data = &sc;
 
 	LNX_DEBUG("syscall %d\n", num);
 	LNX_DEBUG("  param: %p\n", param);
 	LNX_DEBUG("  psize: %u\n", psize);
-	LNX_DEBUG("   data: %p\n", &sc_data);
+	LNX_DEBUG("   data: %p\n", &sc);
 
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);
@@ -163,10 +161,10 @@ int x86_sc(sc_t num, void *param, size_t psize){
 	}
 
 	/* post processing */
-	LNX_DEBUG("syscall errno: %d\n", sc_data.errno);
+	LNX_DEBUG("syscall errno: %d\n", sc.errno);
 
-	if(sc_data.errno != 0)
-		return_errno(sc_data.errno);
+	if(sc.errno)
+		return_errno(sc.errno);
 
 	return overlay_call(num, param, OLOC_POST);
 }
@@ -230,7 +228,7 @@ static int event_inval(x86_hw_op_t *op){
 	return -1;
 }
 
-static int overlay_call(sc_t num, void *param, overlay_location_t loc){
+static int overlay_call(sc_num_t num, void *param, overlay_location_t loc){
 	if(overlays[num].call == 0x0 || (overlays[num].loc & loc) == 0)
 		return 0;
 
@@ -311,7 +309,7 @@ static int overlay_sigsend(void *_p){
 	ignore_exit = true;
 	x86_hw_op_active_tid = p->tid;
 
-	sig_hdlr(0x0, (void*)p->sig);
+	(void)sig_hdlr((void*)p->sig);
 
 	x86_hw_op_active_tid = 0;
 	ignore_exit = false;

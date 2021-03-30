@@ -12,6 +12,7 @@
 #include <arch/avr/thread.h>
 #include <kernel/interrupt.h>
 #include <kernel/sched.h>
+#include <kernel/thread.h>
 #include <kernel/panic.h>
 #include <sys/types.h>
 #include <sys/compiler.h>
@@ -21,6 +22,15 @@
 
 /* external prototypes */
 extern void int_vectors(void);
+
+
+/* external variables */
+extern void (*__kernel_start_wa[])(void);
+extern void (*__kernel_end_wa[])(void);
+
+
+/* local/static prototypes */
+static thread_ctx_type_t ctx_type(thread_ctx_t *ctx);
 
 
 /* global functions */
@@ -42,27 +52,46 @@ int_type_t avr_int_enabled(void){
 	return INT_NONE;
 }
 
-struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
-	uint8_t num;
+struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *ctx){
+	int_num_t num;
 
 
-	/* save thread context of active thread*/
-	stack_push(sched_running()->ctx_stack, tc);
+	/* check sizes for thread_ctx_t members with non-basic types */
+	BUILD_ASSERT(sizeof(ctx->next) == (CONFIG_ADDR_WIDTH == 16 ? 2 : 1));
+	BUILD_ASSERT(sizeof(ctx->type) == 1);
 
-	/* compute interrupt number */
-	// INT_VEC_SIZE / 2 is used since the flash is word-addressed
-	num = (lo8(tc->int_vec_addr) << 8 | hi8(tc->int_vec_addr));
+	/* save context */
+	ctx->this = ctx;
+	ctx->type = ctx_type(ctx);
+
+	thread_ctx_push(ctx);
+
+	/* call handler */
+	// compute interrupt number
+	// 	INT_VEC_SIZE / 2 is used since the flash is word-addressed
+	num = (lo8(ctx->int_vec_addr) << 8 | hi8(ctx->int_vec_addr));
 	num = ((num - (unsigned int)int_vectors) / (INT_VEC_SIZE / 2)) - 1;
 
-	/* call interrupt handler */
 	int_call(num);
 
-	/* return context of active thread */
-	BUILD_ASSERT(sizeof(errno_t) == 1);	// check sizeof thread_ctx_t::errno
-
-	return stack_pop(((thread_t*)sched_running())->ctx_stack);
+	/* restore context */
+	return thread_ctx_pop();
 }
 
 void avr_int_warm_reset_hdlr(void){
 	kpanic("call reset handler without actual MCU reset\n");
+}
+
+
+/* local functions */
+static thread_ctx_type_t ctx_type(thread_ctx_t *ctx){
+	void *ret_addr;
+
+
+	ret_addr = (void*)((lo8(ctx->ret_addr) << 8) | hi8(ctx->ret_addr));
+
+	if(ret_addr >= (void*)__kernel_start_wa && ret_addr <= (void*)__kernel_end_wa)
+		return CTX_KERNEL;
+
+	return CTX_USER;
 }

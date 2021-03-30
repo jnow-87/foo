@@ -37,7 +37,7 @@ TEST(thread_kill){
 
 	/* prepare */
 	r += TEST_INT_EQ(process_info(&pinfo), 0);
-	r += TEST_INT_NEQ(tid = thread_create(thread, 0x0), 0);
+	ASSERT_INT_NEQ(tid = thread_create(thread, 0x0), 0);
 
 	while(thread_cnt == 0);
 

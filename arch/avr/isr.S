@@ -26,10 +26,6 @@
 .endm
 
 
-/* external variables */
-.extern errno
-
-
 /* external functions */
 .extern __start
 .extern avr_int_hdlr
@@ -157,27 +153,35 @@ __isr_int:
 	lds		r16, SREG
 	push	r16
 
-	lds		r16, errno
-	push	r16
+	/* reserve space for thread_ctx_t control data
+	 * and prepare interrupt hander arguments
+	 */
+	// push dummies to reserve space for
+	//	thread_ctx_t::next
+	//	thread_ctx_t::this
+	//	thread_ctx_t::type
+	//
+	//	the last dummy is pushed once the thread_ctx_t pointer has
+	//	been saved, this is required due to the post-decrement of
+	//	the push instruction
+	push	r1
+	push	r1
 
-	/* reserve space for thread_ctx_t::next and prepare interrupt hander arguments */
-	// push dummy to reserve space for next member of thread_ctx_t
 #if (CONFIG_ADDR_WIDTH == 16)
+	push	r1
 	push	r1
 #endif
 
-	// avr_sys_int_hdlr argument: stack pointer aka thread_ctx_t pointer
+	// avr int hdlr arg: stack pointer aka thread_ctx_t pointer
 	lds		r24, SPL
 	lds		r25, SPH
 
-	// push last dummy byte for next, prev members of thread_ctx_t
-	// thread_context pointer needs to be saved earlier due to post-decrement of push
+	// push last thread_ctx_t dummy byte
 	push	r1
 
 	/* ABI requirements */
 	clr		r1	// r1 as zero register
 
-1:
 	XCALL	avr_int_hdlr
 
 	// restore thread stack pointer from return value
@@ -185,18 +189,17 @@ __isr_int:
 	sts		SPL, r24
 	sts		SPH, r25
 
-1:
-	/* pop dummy bytes used to reserve space for next member of thread_ctx_t */
+	/* pop thread_ctx_t dummy bytes */
 #if (CONFIG_ADDR_WIDTH == 16)
+	pop		r16
 	pop		r16
 #endif
 
 	pop		r16
+	pop		r16
+	pop		r16
 
 	/* restore regsiters */
-	pop		r16
-	sts		errno, r16
-
 	pop		r16
 	sts		SREG, r16
 	pop		r16

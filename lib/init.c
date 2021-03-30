@@ -62,7 +62,7 @@ void _start(thread_entry_t entry, void *arg){
 
 
 	/* call specified function */
-	if((void*)entry == (void*)_start){
+	if(entry == 0x0){
 		// init
 		exec_std_call(__std_preinit_array_base, __std_preinit_array_end);
 		exec_std_call(__std_init_array_base, __std_init_array_end);

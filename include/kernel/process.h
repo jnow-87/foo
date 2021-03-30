@@ -52,7 +52,9 @@ typedef struct process_t{
 	struct thread_t *threads;
 	fs_filed_t *fds;
 	fs_node_t *cwd;
-	user_entry_t sig_hdlr;
+
+	process_entry_t entry;
+	thread_entry_t sig_hdlr;
 
 	mutex_t mtx;
 } process_t;

@@ -16,6 +16,7 @@
 #include <sys/thread.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/errno.h>
 #include <sys/fcntl.h>
 #include <sys/signal.h>
 #include <sys/net.h>
@@ -51,14 +52,16 @@ typedef enum{
 	SC_RECV,
 	SC_SEND,
 	NSYSCALLS
-} sc_t;
+} sc_num_t;
 
 typedef struct{
-	sc_t num;
+	sc_num_t num;
 
 	void *param;
 	size_t size;
-} sc_arg_t;
+
+	errno_t errno;
+} sc_t;
 
 // syscall specific arguments
 typedef struct{
@@ -108,7 +111,7 @@ typedef struct{
 	tid_t tid;
 
 	signal_t sig;
-	user_entry_t hdlr;
+	thread_entry_t hdlr;
 } sc_signal_t;
 
 typedef struct{

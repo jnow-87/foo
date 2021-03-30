@@ -117,6 +117,24 @@
 #define TEST_STRN_EQ(expr, ref, n)			TEST_EVAL_STRN(1, expr, ref, n)
 #define TEST_STRN_NEQ(expr, ref, n)			TEST_EVAL_STRN(0, expr, ref, n)
 
+#define _ASSERT_EVAL(eq, cmp, n, fmt, expr, ref){ \
+	if(_TEST_EVAL(eq, cmp, n, fmt, expr, ref) != 0) \
+		return -1; \
+}
+
+#define ASSERT_EVAL(eq, fmt, expr, ref)		_ASSERT_EVAL(eq, TEST_CMP, 0, fmt, expr, ref)
+#define ASSERT_EVAL_STR(eq, expr, ref)		_ASSERT_EVAL(eq, TEST_CMP_STR, 0, "%s", expr, (char const*)ref)
+#define ASSERT_EVAL_STRN(eq, expr, ref, n)	_ASSERT_EVAL(eq, TEST_CMP_STRN, n, "%s", expr, (char const*)ref)
+
+#define ASSERT_INT_EQ(expr, ref)			ASSERT_EVAL(1, "%ld", expr, (long int)ref)
+#define ASSERT_INT_NEQ(expr, ref)			ASSERT_EVAL(0, "%ld", expr, (long int)ref)
+#define ASSERT_PTR_EQ(expr, ref)			ASSERT_EVAL(1, "%p", expr, (void const *)(ref))
+#define ASSERT_PTR_NEQ(expr, ref)			ASSERT_EVAL(0, "%p", expr, (void const *)(ref))
+#define ASSERT_STR_EQ(expr, ref)			ASSERT_EVAL_STR(1, expr, ref)
+#define ASSERT_STR_NEQ(expr, ref)			ASSERT_EVAL_STR(0, expr, ref)
+#define ASSERT_STRN_EQ(expr, ref, n)		ASSERT_EVAL_STRN(1, expr, ref, n)
+#define ASSERT_STRN_NEQ(expr, ref, n)		ASSERT_EVAL_STRN(0, expr, ref, n)
+
 
 /* types */
 typedef struct{

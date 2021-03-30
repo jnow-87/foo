@@ -16,7 +16,7 @@
 
 
 /* prototypes */
-int x86_sc(sc_t num, void *param, size_t psize);
+int x86_sc(sc_num_t num, void *param, size_t psize);
 
 
 #endif // X86_SYSCALL_H

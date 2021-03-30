@@ -25,7 +25,7 @@ static void overlay_exit(void *param);
 
 
 /* global functions */
-int x86_sc(sc_t num, void *param, size_t psize){
+int x86_sc(sc_num_t num, void *param, size_t psize){
 	x86_hw_op_t op;
 
 
@@ -53,7 +53,7 @@ int x86_sc(sc_t num, void *param, size_t psize){
 /* local functions */
 static void sc_hdlr(int_num_t num, void *data){
 	x86_hw_op_t *op;
-	sc_arg_t arg;
+	sc_t sc;
 	thread_t const *this_t;
 
 
@@ -62,22 +62,23 @@ static void sc_hdlr(int_num_t num, void *data){
 
 	LNX_DEBUG("   data: %p\n", op->int_ctrl.data);
 
-	copy_from_user(&arg, op->int_ctrl.data, sizeof(arg), this_t->parent);
+	copy_from_user(&sc, op->int_ctrl.data, sizeof(sc), this_t->parent);
 
-	LNX_DEBUG("syscall %d\n", arg.num);
-	LNX_DEBUG("  param: %p\n", arg.param);
-	LNX_DEBUG("  psize: %u\n", arg.size);
+	LNX_DEBUG("syscall %d\n", sc.num);
+	LNX_DEBUG("  param: %p\n", sc.param);
+	LNX_DEBUG("  psize: %u\n", sc.size);
 
-	if(arg.num == SC_EXIT)
-		overlay_exit(arg.param);
+	if(sc.num == SC_EXIT)
+		overlay_exit(sc.param);
 
 	/* call kernel syscall handler */
-	ksc_hdlr(arg.num, arg.param, arg.size);
+	ksc_hdlr(sc.num, sc.param, sc.size);
 
 	/* set errno */
 	LNX_DEBUG("errno: %d\n", errno);
+	sc.errno = errno;
 
-	copy_to_user(op->int_ctrl.data, &errno, sizeof(errno), this_t->parent);
+	copy_to_user(op->int_ctrl.data, &sc, sizeof(sc), this_t->parent);
 }
 
 static int init(void){

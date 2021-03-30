@@ -43,16 +43,16 @@ void int_release(int_num_t num){
 }
 
 void int_call(int_num_t num){
-	int_type_t imask;
+	errno_t e;
 
 
-	imask = int_enable(INT_NONE);
+	e = errno;
+	errno = E_OK;
 
 	if(num >= NUM_INT || int_hdlr[num] == 0x0)
 		kpanic("unhandled or invalid interrupt %u\n", num);
 
-	errno = E_OK;
 	int_hdlr[num](num, int_data[num]);
 
-	int_enable(imask);
+	errno = e;
 }
