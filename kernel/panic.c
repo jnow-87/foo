@@ -13,7 +13,7 @@
 #include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <sys/stdarg.h>
-#include <sys/list.h>
+#include <sys/stack.h>
 
 
 /* global functions */
@@ -45,5 +45,5 @@ void kpanic_ext(char const *file, char const *func, unsigned int line, char cons
 
 	va_end(lst);
 
-	core_panic((this_t == 0x0 || this_t->ctx_stack == 0x0) ? 0x0 : list_first(this_t->ctx_stack));
+	core_panic(this_t ? stack_top(this_t->ctx_stack) : 0x0);
 }

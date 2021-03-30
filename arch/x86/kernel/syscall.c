@@ -76,8 +76,9 @@ static void sc_hdlr(int_num_t num, void *data){
 
 	/* set errno */
 	LNX_DEBUG("errno: %d\n", errno);
+	sc.errno = errno;
 
-	copy_to_user(op->int_ctrl.data, &errno, sizeof(errno), this_t->parent);
+	copy_to_user(op->int_ctrl.data, &sc, sizeof(sc), this_t->parent);
 }
 
 static int init(void){

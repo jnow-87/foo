@@ -211,17 +211,20 @@ static int init_deep(void){
 	for(i=0; i<CONFIG_NCORES; i++){
 		this_t = kernel_threads + i;
 
+		// having the entry, stack and context points for kernel
+		// threads set to zero is since:
+		// 	- kernel threads are already running
+		// 	- stack pages are only relevant for user space, since
+		// 	  the kernel has a separate memory management
+		// 	- kernel thread context is set automatically once the
+		// 	  thread is interrupted for the first time
+		memset(this_t, 0x0, sizeof(thread_t));
+
 		this_t->tid = i;
 		this_t->state = CREATED;
 		this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
 		this_t->affinity = (0x1 << i);
 		this_t->parent = this_p;
-
-		this_t->entry = 0x0;		// kernel threads are already running
-		this_t->ctx_stack = 0x0;	// kernel thread context is set automatically once
-									// the thread is interrupted for the first time
-		this_t->stack = 0x0;		// stack pages are only relevant for user space,
-									// since the kernel has a separate memory management
 
 		list_add_tail(this_p->threads, this_t);
 	}

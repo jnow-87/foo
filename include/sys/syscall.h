@@ -16,6 +16,7 @@
 #include <sys/thread.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/errno.h>
 #include <sys/fcntl.h>
 #include <sys/signal.h>
 #include <sys/net.h>
@@ -58,6 +59,8 @@ typedef struct{
 
 	void *param;
 	size_t size;
+
+	errno_t errno;
 } sc_t;
 
 // syscall specific arguments

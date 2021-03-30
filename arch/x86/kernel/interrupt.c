@@ -106,9 +106,10 @@ static void int_hdlr(int sig){
 	// push thread context
 	ctx = kpalloc(sizeof(thread_ctx_t));
 
+	ctx->this = ctx;
 	ctx->type = (this_t->parent->pid == 0) ? CTX_KERNEL : CTX_USER;
 
-	stack_push(this_t->ctx_stack, ctx);
+	thread_ctx_push(ctx);
 
 	/* handle interrupt */
 	int_call(op.int_ctrl.num);
@@ -117,7 +118,7 @@ static void int_hdlr(int sig){
 	this_t = sched_running();
 
 	// pop thread context
-	ctx = stack_pop(((thread_t*)this_t)->ctx_stack);
+	ctx = thread_ctx_pop();
 
 	// CTX_UNKNOWN is used by the x86 implementation to mark
 	// the initial init process ctx, since it resides on the

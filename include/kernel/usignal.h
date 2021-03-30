@@ -12,23 +12,26 @@
 
 
 #include <arch/thread.h>
-#include <kernel/memory.h>
 #include <kernel/thread.h>
-#include <sys/thread.h>
 #include <sys/signal.h>
 
 
 /* types */
-typedef struct usignal_ctx_t{
-	struct usignal_ctx_t *next;
+typedef struct usignal_t{
+	struct usignal_t *prev,
+					 *next;
 
-	thread_ctx_t *ctx_addr;
-	thread_ctx_t ctx;
-} usignal_ctx_t;
+	signal_t num;
+	bool pending;
+} usignal_t;
 
 
 /* prototypes */
-int usignal_send(struct thread_t *this_t, signal_t sig);
+int usignal_send(struct thread_t *this_t, signal_t num);
+void usignal_destroy(struct thread_t *this_t);
+
+thread_ctx_t *usignal_entry(usignal_t *sig, struct thread_t *this_t, thread_ctx_t *ctx);
+thread_ctx_t *usignal_return(usignal_t *sig, struct thread_t *this_t, thread_ctx_t *ctx);
 
 
 #endif // KERNEL_USIGNAL_H

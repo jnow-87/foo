@@ -51,6 +51,7 @@ int avr_sc(sc_num_t num, void *param, size_t psize){
 	sc.num = num;
 	sc.param = param;
 	sc.size = psize;
+	sc.errno = E_UNKNOWN;
 
 	// copy address to GPIO registers 0/1
 	mreg_w(GPIOR0, lo8(&sc));
@@ -59,10 +60,9 @@ int avr_sc(sc_num_t num, void *param, size_t psize){
 	/* trigger syscall */
 	SYSCALL(INT_VEC_SC);
 
-	BUILD_ASSERT(sizeof(errno_t) == 1);
+	if(sc.errno)
+		return_errno(sc.errno);
 
-	if(mreg_r(GPIOR0))
-		return_errno(mreg_r(GPIOR0));
 	return E_OK;
 }
 
@@ -71,22 +71,12 @@ int avr_sc(sc_num_t num, void *param, size_t psize){
 #ifdef BUILD_KERNEL
 static void sc_hdlr(int_num_t num, void *data){
 	sc_t *sc;
-	thread_ctx_t *ctx;
 
 
-	/* get address from GPIO registers 0/1 */
 	sc = (sc_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
 
-	/* get context early as the running thread might change during the call */
-	ctx = sched_running()->ctx_stack;
-
-	/* call kernel syscall handler */
 	ksc_hdlr(sc->num, sc->param, sc->size);
-
-	BUILD_ASSERT(sizeof(errno_t) == 1);
-
-	/* set errno */
-	ctx->gpior[0] = errno;
+	sc->errno = errno;
 }
 #endif // BUILD_KERNEL
 

@@ -120,10 +120,7 @@ static bool ignore_exit = false;
 
 /* global functions */
 int x86_sc(sc_num_t num, void *param, size_t psize){
-	union{
-		sc_t sc;
-		errno_t errno;
-	} sc;
+	sc_t sc;
 	x86_hw_op_t op;
 
 
@@ -139,9 +136,10 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 		LNX_EEXIT("there must not be any pending syscalls\n");
 
 	// trigger syscall interrupt
-	sc.sc.num = num;
-	sc.sc.param = param;
-	sc.sc.size = psize;
+	sc.num = num;
+	sc.param = param;
+	sc.size = psize;
+	sc.errno = E_UNKNOWN;
 
 	op.num = HWO_INT_TRIGGER;
 	op.int_ctrl.num = INT_SYSCALL;

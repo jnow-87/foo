@@ -22,6 +22,8 @@ struct thread_t;
 typedef struct thread_ctx_t{
 	struct thread_ctx_t *next;
 
+	struct thread_ctx_t *this;
+
 	int type;	/**< cf. thread_ctx_type_t */
 } thread_ctx_t;
 
