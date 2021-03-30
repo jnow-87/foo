@@ -37,7 +37,7 @@ static tid_t tid;
  *	\brief	test to verify user-space signals
  *			on a target thread
  */
-TEST(sigthread){
+TEST_LONG(sigthread, "sigthread"){
 	int r;
 	unsigned int i;
 	process_info_t pinfo;
@@ -84,7 +84,10 @@ TEST(sigthread){
 	return -r;
 }
 
+#include <stdio.h>
+#include <unistd.h>
 static void hdlr(signal_t sig){
+	char s[32];
 	thread_info_t info;
 
 
@@ -93,6 +96,8 @@ static void hdlr(signal_t sig){
 
 	sig_order[sig_recv % NSIG] += sig;
 	sig_recv++;
+	snprintf(s, 32, "sig %d %u\n", sig, sig_recv);
+	write(1, s, strlen(s));
 }
 
 static int thread(void *arg){
@@ -105,6 +110,7 @@ static int thread(void *arg){
 		errors += TEST_INT_EQ(sleep(200, 0), 0);
 	}
 
+	printf("thread done %u %u\n", i, sig_recv);
 	finished = true;
 
 	return 0;

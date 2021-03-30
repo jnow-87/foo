@@ -10,9 +10,8 @@
 obj-y := interactive.o non-interactive.o
 hostobj-y := $(obj-y)
 
-interactive-y := tty.o gpioint.o exit.o
-non-interactive-y := close.o thread.o stat.o signal.o
-non-interactive-$(if $(CONFIG_X86),n,y) += sigthread.o kill.o
+interactive-y := tty.o gpioint.o exit.o signal.o sigthread.o kill.o
+non-interactive-y := close.o thread.o stat.o
 
 
 # flags

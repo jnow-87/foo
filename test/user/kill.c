@@ -26,7 +26,7 @@ static int volatile thread_cnt;
 /**
  *	\brief	test to SIG_KILL
  */
-TEST(thread_kill){
+TEST_LONG(thread_kill, "kill"){
 	int r;
 	process_info_t pinfo;
 	tid_t tid;

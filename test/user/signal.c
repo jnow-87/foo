@@ -29,7 +29,7 @@ static unsigned int sig_recv;
 /**
  *	\brief	test to verify user-space signals
  */
-TEST(sigself){
+TEST_LONG(sigself, "sigself"){
 	int r;
 	unsigned int i;
 	process_info_t pinfo;
