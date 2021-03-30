@@ -15,8 +15,8 @@
 
 /* macros */
 #define NSIG	3
-#define SIGNAL	SIG_INT
-#define RETRIES	5
+#define SIGNAL	SIG_USR0
+#define RETRIES	10
 
 
 /* local/static prototypes */
@@ -26,6 +26,7 @@ static int thread(void *arg);
 
 /* static variables */
 static size_t volatile sig_recv;
+static signal_t sig_order[NSIG];
 static bool volatile finished;
 static int volatile errors;
 static tid_t tid;
@@ -48,26 +49,37 @@ TEST(sigthread){
 	errors = 0;
 	tid = 0;
 
+	memset(sig_order, 0, sizeof(signal_t) * NSIG);
+
 	r += TEST_INT_EQ(process_info(&pinfo), 0);
 
-	r += TEST_PTR_EQ(signal(SIGNAL, 0x0), 0x0);
-	r += TEST_PTR_EQ(signal(SIGNAL, hdlr), hdlr);
+	for(i=0; i<NSIG; i++){
+		r += TEST_PTR_EQ(signal(SIGNAL + i, 0x0), 0x0);
+		r += TEST_PTR_EQ(signal(SIGNAL + i, hdlr), hdlr);
+	}
 
-	r += TEST_INT_NEQ(tid = thread_create(thread, "foo"), 0);
-	r += TEST_INT_EQ(sleep(500, 0), 0);
+	ASSERT_INT_NEQ(tid = thread_create(thread, "foo"), 0);
+
+	for(i=0; i<NSIG; i++){
+		r += TEST_INT_EQ(signal_send(SIGNAL + i, pinfo.pid, tid), 0);
+		r += TEST_INT_EQ(sleep(300, 0), 0);
+	}
 
 	for(i=0; i<NSIG; i++)
-		r += TEST_INT_EQ(signal_send(SIGNAL, pinfo.pid, tid), 0);
+		r += TEST_INT_EQ(signal_send(SIGNAL + i, pinfo.pid, tid), 0);
 
 	i = 0;
 
-	while(i++ < RETRIES){
+	while(!finished && i++ < RETRIES){
 		r += TEST_INT_EQ(sleep(500, 0), 0);
 	}
 
 	r += TEST_INT_NEQ(i, RETRIES);
-	r += TEST_INT_EQ(sig_recv, NSIG);
+	r += TEST_INT_EQ(sig_recv, NSIG * 2);
 	r += TEST_INT_EQ(errors, 0);
+
+	for(i=0; i<NSIG; i++)
+		r += TEST_INT_EQ(sig_order[i], (SIGNAL + i) * 2);
 
 	return -r;
 }
@@ -79,12 +91,18 @@ static void hdlr(signal_t sig){
 	errors += TEST_INT_EQ(thread_info(&info), 0);
 	errors += TEST_INT_EQ(info.tid, tid);
 
+	sig_order[sig_recv % NSIG] += sig;
 	sig_recv++;
 }
 
 static int thread(void *arg){
-	while(sig_recv != NSIG){
-		errors += TEST_INT_EQ(sleep(500, 0), 0);
+	size_t i;
+
+
+	i = 0;
+
+	while(sig_recv < NSIG * 2 && i++ < RETRIES){
+		errors += TEST_INT_EQ(sleep(200, 0), 0);
 	}
 
 	finished = true;
