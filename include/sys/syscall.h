@@ -51,14 +51,14 @@ typedef enum{
 	SC_RECV,
 	SC_SEND,
 	NSYSCALLS
-} sc_t;
+} sc_num_t;
 
 typedef struct{
-	sc_t num;
+	sc_num_t num;
 
 	void *param;
 	size_t size;
-} sc_arg_t;
+} sc_t;
 
 // syscall specific arguments
 typedef struct{

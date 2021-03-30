@@ -25,7 +25,7 @@ static mutex_t sc_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-int sc_register(sc_t num, sc_hdlr_t hdlr){
+int sc_register(sc_num_t num, sc_hdlr_t hdlr){
 	mutex_lock(&sc_mtx);
 
 	if(num >= NSYSCALLS)
@@ -47,7 +47,7 @@ err:
 	return -errno;
 }
 
-int sc_release(sc_t num){
+int sc_release(sc_num_t num){
 	if(num >= NSYSCALLS)
 		return_errno(E_INVAL);
 
@@ -69,7 +69,7 @@ int sc_release(sc_t num){
  *
  * \pre		errno is reset to E_OK
  */
-void ksc_hdlr(sc_t num, void *param, size_t psize){
+void ksc_hdlr(sc_num_t num, void *param, size_t psize){
 	int r;
 	char kparam[psize];
 	sc_hdlr_t hdlr;

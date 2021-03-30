@@ -69,7 +69,7 @@ typedef struct{
 	void (*atomic_inc)(volatile int *v, int inc);
 
 	/* syscall */
-	int (*sc)(sc_t num, void *param, size_t psize);
+	int (*sc)(sc_num_t num, void *param, size_t psize);
 } arch_callbacks_common_t;
 
 typedef struct{

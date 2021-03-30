@@ -40,21 +40,21 @@
 
 
 /* global functions */
-int avr_sc(sc_t num, void *param, size_t psize){
-	sc_arg_t volatile arg;
+int avr_sc(sc_num_t num, void *param, size_t psize){
+	sc_t volatile sc;
 
 
 	/* clear interrupts */
 	asm volatile("cli");
 
 	/* prepare paramter */
-	arg.num = num;
-	arg.param = param;
-	arg.size = psize;
+	sc.num = num;
+	sc.param = param;
+	sc.size = psize;
 
 	// copy address to GPIO registers 0/1
-	mreg_w(GPIOR0, lo8(&arg));
-	mreg_w(GPIOR1, hi8(&arg));
+	mreg_w(GPIOR0, lo8(&sc));
+	mreg_w(GPIOR1, hi8(&sc));
 
 	/* trigger syscall */
 	SYSCALL(INT_VEC_SC);
@@ -70,18 +70,18 @@ int avr_sc(sc_t num, void *param, size_t psize){
 /* local functions */
 #ifdef BUILD_KERNEL
 static void sc_hdlr(int_num_t num, void *data){
-	sc_arg_t *arg;
+	sc_t *sc;
 	thread_ctx_t *ctx;
 
 
 	/* get address from GPIO registers 0/1 */
-	arg = (sc_arg_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
+	sc = (sc_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
 
 	/* get context early as the running thread might change during the call */
 	ctx = sched_running()->ctx_stack;
 
 	/* call kernel syscall handler */
-	ksc_hdlr(arg->num, arg->param, arg->size);
+	ksc_hdlr(sc->num, sc->param, sc->size);
 
 	BUILD_ASSERT(sizeof(errno_t) == 1);
 
