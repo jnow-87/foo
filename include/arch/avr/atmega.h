@@ -88,8 +88,7 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 	.int_ipi = 0x0,
 
 	/* threading */
-	.thread_context_init = avr_thread_context_init,
-	.thread_context_type = avr_thread_context_type,
+	.thread_ctx_init = avr_thread_ctx_init,
 };
 #  endif // BUILD_KERNEL
 

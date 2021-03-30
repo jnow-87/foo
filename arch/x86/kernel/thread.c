@@ -13,12 +13,8 @@
 
 
 /* global functions */
-void x86_thread_context_init(thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg){
+void x86_thread_ctx_init(thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg){
 	memset(ctx, 0, sizeof(thread_ctx_t));
 
 	ctx->type = CTX_UNKNOWN;
-}
-
-enum thread_ctx_type_t x86_thread_context_type(thread_ctx_t *ctx){
-	return ctx->type;
 }

@@ -29,7 +29,6 @@
 struct process_t;
 struct thread_t;
 struct thread_ctx_t;
-enum thread_ctx_type_t;
 # endif // BUILD_KERNEL
 #endif //ASM
 
@@ -60,8 +59,7 @@ typedef struct{
 	void (*int_ipi)(unsigned int core, bool bcast);
 
 	/* threading */
-	void (*thread_context_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg);
-	enum thread_ctx_type_t (*thread_context_type)(struct thread_ctx_t *ctx);
+	void (*thread_ctx_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg);
 } arch_callbacks_kernel_t;
 # endif // BUILD_KERNEL
 

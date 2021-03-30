@@ -57,7 +57,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 	this_t->ctx_stack = 0x0;
 
 	ctx = (thread_ctx_t*)(this_t->stack->phys_addr + stack->size - sizeof(thread_ctx_t));
-	thread_context_init(ctx, this_t, entry, thread_arg);
+	thread_ctx_init(ctx, this_t, entry, thread_arg);
 
 	stack_push(this_t->ctx_stack, ctx);
 

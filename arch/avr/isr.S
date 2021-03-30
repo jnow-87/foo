@@ -162,6 +162,8 @@ __isr_int:
 
 	/* reserve space for thread_ctx_t::next and prepare interrupt hander arguments */
 	// push dummy to reserve space for next member of thread_ctx_t
+	push	r1
+
 #if (CONFIG_ADDR_WIDTH == 16)
 	push	r1
 #endif
@@ -191,6 +193,7 @@ __isr_int:
 	pop		r16
 #endif
 
+	pop		r16
 	pop		r16
 
 	/* restore regsiters */

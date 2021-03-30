@@ -12,6 +12,7 @@
 #include <arch/avr/thread.h>
 #include <kernel/interrupt.h>
 #include <kernel/sched.h>
+#include <kernel/thread.h>
 #include <kernel/panic.h>
 #include <sys/types.h>
 #include <sys/compiler.h>
@@ -21,6 +22,15 @@
 
 /* external prototypes */
 extern void int_vectors(void);
+
+
+/* external variables */
+extern void (*__kernel_start_wa[])(void);
+extern void (*__kernel_end_wa[])(void);
+
+
+/* local/static prototypes */
+static thread_ctx_type_t ctx_type(thread_ctx_t *ctx);
 
 
 /* global functions */
@@ -47,6 +57,8 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 
 
 	/* save thread context of active thread*/
+	tc->type = ctx_type(ctx);
+
 	stack_push(sched_running()->ctx_stack, tc);
 
 	/* compute interrupt number */
@@ -65,4 +77,18 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *tc){
 
 void avr_int_warm_reset_hdlr(void){
 	kpanic("call reset handler without actual MCU reset\n");
+}
+
+
+/* local functions */
+static thread_ctx_type_t ctx_type(thread_ctx_t *ctx){
+	void *ret_addr;
+
+
+	ret_addr = (void*)((lo8(ctx->ret_addr) << 8) | hi8(ctx->ret_addr));
+
+	if(ret_addr >= (void*)__kernel_start_wa && ret_addr <= (void*)__kernel_end_wa)
+		return CTX_KERNEL;
+
+	return CTX_USER;
 }
