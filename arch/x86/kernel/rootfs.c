@@ -80,7 +80,7 @@ static int dump_file(fs_node_t *node){
 	if(bos_id < 0 || fd == 0x0)
 		return -1;
 
-	lnx_id = lnx_open(node->name, 66, 438);
+	lnx_id = lnx_open(node->name, LNX_O_RDWR | LNX_O_CREAT, 0666);
 
 	if(lnx_id < 0)
 		return -1;

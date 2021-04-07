@@ -12,10 +12,13 @@
 
 
 #include <arch/x86/opts.h>
-#include <kernel/panic.h>
 #include <sys/stdarg.h>
 #include <sys/types.h>
 #include <sys/escape.h>
+
+#ifdef BUILD_KERNEL
+# include <kernel/panic.h>
+#endif // BUILD_KERNEL
 
 
 /* macros */
@@ -72,6 +75,13 @@ typedef enum{
 	LNX_SYS_MKDIR = 83,
 	LNX_SYS_GETPPID = 110,
 } lnx_syscall_t;
+
+typedef enum{
+	LNX_O_RDONLY = 0x0,
+	LNX_O_WRONLY = 0x1,
+	LNX_O_RDWR = 0x2,
+	LNX_O_CREAT = 0x40,
+} lnx_f_mode_t;
 
 
 /* prototypes */

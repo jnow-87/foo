@@ -9,7 +9,7 @@
 
 hostbin-y := itestfw
 
-itestfw-y := main.o hardware/ brickos/ user/
+itestfw-y := main.o linux.o hardware/ brickos/ user/
 
 
 itestfw-hostcppflags += \
