@@ -10,7 +10,7 @@
 #include <config/config.h>
 #include <time.h>
 #include <errno.h>
-#include <include/sys/math.h>
+#include <sys/math.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 

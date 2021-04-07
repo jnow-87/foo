@@ -15,7 +15,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <sys/signalfd.h>
-#include <include/sys/compiler.h>
+#include <sys/compiler.h>
 #include <user/debug.h>
 #include <user/opts.h>
 #include <user/user.h>
@@ -73,6 +73,7 @@ static thread_cfg_t threads[] = {
 	THREAD("hardware-event",	AM_ALWAYS,			0x0,				hw_event_process,	0x0),
 	THREAD("timer",				AM_NONINTERACTIVE,	0x0,				hw_timer,			0x0),
 	THREAD("user-input",		AM_INTERACTIVE,		user_input_help,	user_input_process,	user_input_cleanup),
+	THREAD("uart",				AM_ALWAYS,			uart_init,			uart_poll,			uart_cleanup),
 };
 
 
@@ -98,6 +99,7 @@ int main(int argc, char **argv){
 	r |= sigaddset(&sig_lst, SIGPIPE);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_DATA_SIG);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_CTRL_SIG);
+	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
 
 	// ensure none of the threads gets any of the above signals
 	r |= pthread_sigmask(SIG_BLOCK, &sig_lst, 0x0);

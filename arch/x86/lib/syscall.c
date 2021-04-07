@@ -77,6 +77,7 @@ static ops_t ops[] = {
 	{ .name = "int state",		.hdlr = event_inval },
 	{ .name = "copy from user",	.hdlr = event_copy_from_user },
 	{ .name = "copy to user",	.hdlr = event_copy_to_user },
+	{ .name = "uart config",	.hdlr = event_inval },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 

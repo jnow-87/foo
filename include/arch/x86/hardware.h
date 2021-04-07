@@ -11,6 +11,7 @@
 #define X86_HARDWARE_H
 
 
+#include <sys/uart.h>
 #include <sys/types.h>
 
 
@@ -38,6 +39,7 @@ typedef enum{
 	HWO_INT_STATE,
 	HWO_COPY_FROM_USER,
 	HWO_COPY_TO_USER,
+	HWO_UART_CFG,
 	HWO_NOPS
 } x86_hw_op_num_t;
 
@@ -69,6 +71,12 @@ typedef struct{
 			void *addr;
 			ssize_t n;
 		} copy;
+
+		struct{
+			char path[64];
+			int int_num;
+			uart_cfg_t cfg;
+		} uart;
 	};
 } x86_hw_op_t;
 

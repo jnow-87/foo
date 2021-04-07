@@ -9,8 +9,9 @@
 
 #include <stdlib.h>
 #include <pthread.h>
-#include <include/sys/list2.h>
-#include <include/arch/x86/hardware.h>
+#include <sys/types.h>
+#include <sys/list2.h>
+#include <arch/x86/hardware.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/brickos.h>

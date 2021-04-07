@@ -46,5 +46,9 @@ config TEST_INT_CTRL_SIG
 	default 35
 
 config TEST_INT_CONT_SIG
-	int "Host continue signal SIGCONT"
+	int "Host test continue signal SIGCONT"
 	default 18
+
+config TEST_INT_UART_SIG
+	int "Host test uart signal"
+	default 10

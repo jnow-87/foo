@@ -14,7 +14,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <include/sys/escape.h>
+#include <sys/escape.h>
 #include <user/opts.h>
 
 

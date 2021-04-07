@@ -11,8 +11,9 @@
 #define TEST_INT_HARDWARE_H
 
 
-#include <stdbool.h>
-#include <include/arch/x86/hardware.h>
+#include <arch/x86/hardware.h>
+#include <sys/types.h>
+#include <sys/uart.h>
 #include <brickos/child.h>
 
 
@@ -63,6 +64,13 @@ void hw_int_return(x86_hw_op_src_t target, unsigned int tid);
 
 // interrupt timer
 void hw_timer(void);
+
+// uart
+int uart_init(void);
+void uart_cleanup(void);
+
+void uart_poll(void);
+int uart_configure(char const *path, int int_num, uart_cfg_t *cfg);
 
 
 /* external variables */

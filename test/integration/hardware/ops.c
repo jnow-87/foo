@@ -9,7 +9,7 @@
 
 #include <stdlib.h>
 #include <pthread.h>
-#include <include/arch/x86/hardware.h>
+#include <arch/x86/hardware.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/child.h>
@@ -46,6 +46,8 @@ static int event_int_state(x86_hw_op_t *op);
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
 
+static int event_uart_config(x86_hw_op_t *op);
+
 static int event_inval(x86_hw_op_t *op);
 
 static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op);
@@ -64,6 +66,7 @@ static ops_cfg_t hw_ops[] = {
 	{ .name = "int_state",		.hdlr = event_int_state },
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
+	{ .name = "uart_config",	.hdlr = event_uart_config },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
@@ -277,6 +280,10 @@ static int event_copy_from_user(x86_hw_op_t *op){
 
 static int event_copy_to_user(x86_hw_op_t *op){
 	return copy_op(APP, KERNEL, op);
+}
+
+static int event_uart_config(x86_hw_op_t *op){
+	return uart_configure(op->uart.path, op->uart.int_num, &op->uart.cfg);
 }
 
 static int event_inval(x86_hw_op_t *op){

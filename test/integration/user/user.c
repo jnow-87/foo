@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <include/sys/compiler.h>
+#include <sys/compiler.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/child.h>

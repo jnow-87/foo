@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <string.h>
-#include <include/sys/escape.h>
-#include <include/sys/compiler.h>
+#include <sys/escape.h>
+#include <sys/compiler.h>
 #include <user/opts.h>
 
 
@@ -98,6 +98,7 @@ static int help(char const *err, ...){
 		"        data signal: %d (%s)\n"
 		"        control read/write fileno: %d/%d\n"
 		"        control signal: %d (%s)\n"
+		"        uart signal: %d\n"
 		"\n"
 		"Options:\n"
 		"    %-25.25s    %s\n"
@@ -115,6 +116,7 @@ static int help(char const *err, ...){
 		, CONFIG_TEST_INT_CTRL_PIPE_RD
 		, CONFIG_TEST_INT_CTRL_PIPE_WR
 		, CONFIG_TEST_INT_CTRL_SIG, strsignal(CONFIG_TEST_INT_CTRL_SIG)
+		, CONFIG_TEST_INT_UART_SIG
 		, "-k, --kernel=<image>", "use <image> as kernel " DEFAULT(DEFAULT_KERNEL_IMAGE)
 		, "-a, --application=<image>", "use <image> as application binary " DEFAULT(DEFAULT_APP_BINARY)
 		, "-i, --interactive", "test execution is under user control " DEFAULT(DEFAULT_APP_MODE)
