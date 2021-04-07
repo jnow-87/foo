@@ -14,6 +14,7 @@
 #include <lib/init.h>
 #include <lib/stdlib.h>
 #include <lib/sched.h>
+#include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/devicetree.h>
@@ -229,6 +230,8 @@ static int event_inval(x86_hw_op_t *op){
 }
 
 static int overlay_call(sc_num_t num, void *param, overlay_location_t loc){
+	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
+
 	if(overlays[num].call == 0x0 || (overlays[num].loc & loc) == 0)
 		return 0;
 
