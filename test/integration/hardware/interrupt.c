@@ -152,7 +152,7 @@ static void int_trigger(int_req_t *req){
 
 	child_lock(KERNEL);
 
-	DEBUG("trigger interrupt %d\n", req->num);
+	DEBUG(0, "trigger interrupt %d\n", req->num);
 
 	hw_op_write(&op, KERNEL);
 	hw_op_write_writeback(&op, KERNEL);

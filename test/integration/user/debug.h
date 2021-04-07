@@ -19,7 +19,7 @@
 
 
 /* macros */
-#define DEBUG(fmt, ...)	((opts.verbosity < 2) ? (void)0 : \
+#define DEBUG(lvl, fmt, ...) ((opts.verbosity < lvl + 2) ? (void)0 : \
 	fprintf(stderr, \
 		FG_YELLOW "[" PROGNAME "] " FG_VIOLETT " %25.25s:%-5u " FG_YELLOW "%-20.20s " RESET_ATTR fmt, \
 		__FILE__, \

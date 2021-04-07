@@ -110,7 +110,7 @@ int main(int argc, char **argv){
 		if((threads[i].when & opts.app_mode) == 0)
 			continue;
 
-		DEBUG("create %s thread\n", threads[i].name);
+		DEBUG(1, "create %s thread\n", threads[i].name);
 
 		if(pthread_create(&threads[i].tid, 0, thread_wrapper, threads + i) != 0)
 			EEXIT("creating thread %s failed with %s\n", threads[i].name, strerror(errno));
@@ -154,17 +154,17 @@ int signal_hdlr(int fd){
 		switch(info.ssi_signo){
 		case SIGINT:
 		case SIGPIPE: // fall through
-			DEBUG("initiate shutdown\n");
+			DEBUG(1, "initiate shutdown\n");
 			cleanup();
 
-			DEBUG("exit with error code %d\n", exit_status);
+			DEBUG(1, "exit with error code %d\n", exit_status);
 			_exit(exit_status);
 			break;
 
 		case CONFIG_TEST_INT_DATA_SIG:
 			src = ((pid_t)info.ssi_pid == KERNEL->pid) ? KERNEL : APP;
 
-			DEBUG("enqueue hardware event from %s\n", src->name);
+			DEBUG(2, "enqueue hardware event from %s\n", src->name);
 			hw_event_enqueue(src);
 			break;
 
@@ -178,7 +178,7 @@ int signal_hdlr(int fd){
 static void exit_hdlr(int status, void *arg){
 	exit_status = status;
 
-	DEBUG("trigger program cleanup\n");
+	DEBUG(1, "trigger program cleanup\n");
 	kill(getpid(), SIGINT);
 	pthread_exit(0x0);
 }
@@ -188,7 +188,7 @@ static void cleanup(void){
 
 
 	for(i=0; i<sizeof_array(threads); i++){
-		DEBUG("terminating %s thread\n", threads[i].name);
+		DEBUG(1, "terminating %s thread\n", threads[i].name);
 
 		/**
 		 * NOTE Do not join threads.
@@ -204,7 +204,7 @@ static void cleanup(void){
 		pthread_cancel(threads[i].tid);
 	}
 
-	DEBUG("terminating child processes\n");
+	DEBUG(1, "terminating child processes\n");
 	brickos_destroy_childs();
 
 	user_input_cleanup();

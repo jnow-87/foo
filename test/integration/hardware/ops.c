@@ -157,13 +157,16 @@ void hw_event_process(void){
 	hw_op_read_ack(src, (handle ? 1 : 0));
 
 	if(handle){
-		DEBUG("[%u] hardware event from %s\n", op.seq, src->name);
+		DEBUG(2, "[%u] %s(src = %s, tid = %u, num = %d)\n",
+			op.seq,
+			hw_ops[op.num].name,
+			src->name,
+			op.tid,
+			op.num
+		);
 
 		if(op.num >= HWO_NOPS)
 			EEXIT("  [%u] invalid hardware-op %d from %s\n", op.seq, op.num, src->name);
-
-		DEBUG("  [%u] tid: %u\n", op.tid);
-		DEBUG("  [%u] event: %s (%d)\n", op.seq, hw_ops[op.num].name, op.num);
 
 		if(op.src != HWS_KERNEL && op.src != HWS_USER)
 			EEXIT("  [%u] invalid hardware-op src: %d\n", op.seq, op.src);
@@ -177,7 +180,7 @@ void hw_event_process(void){
 
 		hw_op_read_writeback(&op, src);
 
-		DEBUG("  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
+		DEBUG(2, "  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
 	}
 	else
 		hw_event_enqueue(src);
@@ -234,7 +237,7 @@ child_t *hw_event_dequeue(void){
 
 /* local functions */
 static int event_exit(x86_hw_op_t *op){
-	DEBUG("  [%u] exit code: %d\n", op->seq, op->exit.retval);
+	DEBUG(0, "  [%u] exit code: %d\n", op->seq, op->exit.retval);
 
 	if(op->exit.retval != 0){
 		ERROR("unexpected exit from %s, exit code %d\n",
@@ -256,7 +259,7 @@ static int event_int_return(x86_hw_op_t *op){
 	if(op->src != HWS_KERNEL)
 		EEXIT("int return only supposed to be triggered by kernel\n");
 
-	DEBUG("  [%u] return to %s space, tid %u\n",
+	DEBUG(0, "  [%u] return to %s space, tid %u\n",
 		op->seq,
 		(op->int_return.to == HWS_USER) ? "user" : "kernel",
 		op->int_return.tid
@@ -268,15 +271,19 @@ static int event_int_return(x86_hw_op_t *op){
 }
 
 static int event_int_set(x86_hw_op_t *op){
+	DEBUG(2, "  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
+
+	if(hw_state.int_enabled != op->int_ctrl.en)
+		DEBUG(0, "  [%u] change int state: %d\n", op->seq, op->int_ctrl.en);
+
 	hw_state.int_enabled = op->int_ctrl.en;
-	DEBUG("  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
 
 	return op->int_ctrl.en == hw_state.int_enabled ? 0 : -1;
 }
 
 static int event_int_state(x86_hw_op_t *op){
 	op->int_ctrl.en = hw_state.int_enabled;
-	DEBUG("  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
+	DEBUG(2, "  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
 
 	return 0;
 }
@@ -290,7 +297,7 @@ static int event_copy_to_user(x86_hw_op_t *op){
 }
 
 static int event_inval(x86_hw_op_t *op){
-	DEBUG("  [%u] invalid\n", op->seq);
+	DEBUG(0, "  [%u] invalid\n", op->seq);
 	return -1;
 }
 
