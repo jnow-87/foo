@@ -14,16 +14,16 @@
 #include <sys/types.h>
 
 
-/* macros */
-// interrupts
-#define NUM_INT		3
-
-#define INT_TIMER	0
-#define INT_SCHED	1
-#define INT_SYSCALL	2
-
-
 /* types */
+typedef enum{
+	INT_TIMER = 0,
+	INT_SCHED,
+	INT_SYSCALL,
+	INT_UART0,
+	INT_UART1,
+	NUM_INT
+} x86_int_num_t;
+
 typedef enum{
 	HWS_KERNEL = 0,
 	HWS_USER,
