@@ -210,6 +210,7 @@
 %token NA_REG
 %token NA_INT
 %token NA_SIZE
+%token NA_STRING
 
 /* non-terminals */
 %type <devices> devices
@@ -251,6 +252,7 @@ devices-attr : %empty													{ $$ = NODE_ALLOC_DEVICES(); }
 			| devices-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
 			| devices-attr NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
 			| devices-attr NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
+			| devices-attr NA_STRING '=' STRING ';'						{ $$ = $1; MEMBER_ADD($$, MT_STRING, stralloc($4.s, $4.len)); }
 			;
 
 memory-attr : %empty													{ $$ = NODE_ALLOC_MEMORY(); }

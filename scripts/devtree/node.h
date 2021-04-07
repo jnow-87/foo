@@ -27,6 +27,7 @@ typedef enum{
 	MT_REG_LIST,
 	MT_INT_LIST,
 	MT_SIZE,
+	MT_STRING,
 } member_type_t;
 
 typedef struct{
