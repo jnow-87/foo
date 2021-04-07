@@ -12,7 +12,7 @@
 
 
 /* prototypes */
-void user_input_help(void);
+int user_input_help(void);
 void user_input_process(void);
 void user_input_cleanup(void);
 

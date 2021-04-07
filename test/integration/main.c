@@ -35,6 +35,14 @@
 	} \
 }
 
+#define THREAD(_name, _when, _init, _call, _cleanup){ \
+	.tid = 0, \
+	.name = _name, \
+	.when = _when, \
+	.init = _init, \
+	.call = _call, \
+	.cleanup = _cleanup, \
+}
 
 /* types */
 typedef struct{
@@ -42,7 +50,9 @@ typedef struct{
 	char const *name;
 	app_mode_t when;
 
+	int (*init)(void);
 	void (*call)(void);
+	void (*cleanup)(void);
 } thread_cfg_t;
 
 
@@ -59,10 +69,10 @@ static void cleanup(void);
 static int volatile exit_status = 7;
 
 static thread_cfg_t threads[] = {
-	{ .tid = 0,	.name = "interrupt controller",		.when = AM_ALWAYS,			.call = hw_int_process },
-	{ .tid = 0,	.name = "hardware event processor",	.when = AM_ALWAYS,			.call = hw_event_process },
-	{ .tid = 0,	.name = "timer",					.when = AM_NONINTERACTIVE,	.call = hw_timer },
-	{ .tid = 0,	.name = "user input",				.when = AM_INTERACTIVE,		.call = user_input_process },
+	THREAD("interrupts",		AM_ALWAYS,			0x0,				hw_int_process,		0x0),
+	THREAD("hardware-event",	AM_ALWAYS,			0x0,				hw_event_process,	0x0),
+	THREAD("timer",				AM_NONINTERACTIVE,	0x0,				hw_timer,			0x0),
+	THREAD("user-input",		AM_INTERACTIVE,		user_input_help,	user_input_process,	user_input_cleanup),
 };
 
 
@@ -116,10 +126,6 @@ int main(int argc, char **argv){
 			EEXIT("creating thread %s failed with %s\n", threads[i].name, strerror(errno));
 	}
 
-	/* help message */
-	if(opts.app_mode == AM_INTERACTIVE)
-		user_input_help();
-
 	/* signal handler */
 	if(on_exit(exit_hdlr, 0x0) != 0)
 		EEXIT("register exit handler failed with %s\n", strerror(errno));
@@ -134,6 +140,9 @@ static void *thread_wrapper(void *arg){
 
 
 	cfg = (thread_cfg_t*)arg;
+
+	if(cfg->init && cfg->init() != 0)
+		EEXIT("%s thread init failed %s\n", cfg->name, strerror(errno));
 
 	while(1){
 		cfg->call();
@@ -207,6 +216,14 @@ static void cleanup(void){
 	DEBUG(1, "terminating child processes\n");
 	brickos_destroy_childs();
 
-	user_input_cleanup();
+	for(i=0; i<sizeof_array(threads); i++){
+		if((threads[i].when & opts.app_mode) == 0 || threads[i].cleanup == 0x0)
+			continue;
+
+		DEBUG(1, "cleanup %s thread\n", threads[i].name);
+
+		threads[i].cleanup();
+	}
+
 	term_default();
 }

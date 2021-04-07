@@ -48,7 +48,7 @@ static user_cmd_t cmds[] = {
 
 
 /* global functions */
-void user_input_help(void){
+int user_input_help(void){
 	printf(
 		"Starting %s in interactive mode.\n"
 		"  In interactive mode both kernel and application are halted\n"
@@ -67,6 +67,8 @@ void user_input_help(void){
 	);
 
 	cmd_help("");
+
+	return 0;
 }
 
 void user_input_process(void){
