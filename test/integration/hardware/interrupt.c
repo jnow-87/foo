@@ -33,13 +33,14 @@ typedef struct int_req_t{
 /* local/static prototypes */
 static void req_enqueue(int_req_t *req);
 static int_req_t *req_dequeue(void);
+static int_req_t *req_lookup(void);
 
 static void int_trigger(int_req_t *req);
 static void int_return(x86_hw_op_src_t target);
 
 
 /* static variables */
-int_req_t *requests = 0x0;
+int_req_t *requests[3] = { 0x0 };
 pthread_mutex_t request_mtx = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t request_sig = PTHREAD_COND_INITIALIZER;
 
@@ -108,7 +109,7 @@ void hw_int_return(x86_hw_op_src_t target, unsigned int tid){
 static void req_enqueue(int_req_t *req){
 	pthread_mutex_lock(&request_mtx);
 
-	__list2_add_tail(requests, req, prev, next);
+	__list2_add_tail(requests[hw_state.privilege], req, prev, next);
 	pthread_cond_signal(&request_sig);
 
 	pthread_mutex_unlock(&request_mtx);
@@ -120,18 +121,29 @@ static int_req_t *req_dequeue(void){
 
 	pthread_mutex_lock(&request_mtx);
 
-	while(1){
-		req = requests;
-
-		if(req != 0x0){
-			__list2_rm(requests, req, prev, next);
-			break;
-		}
-
+	while((req = req_lookup()) == 0x0){
 		pthread_cond_wait(&request_sig, &request_mtx);
 	}
 
 	pthread_mutex_unlock(&request_mtx);
+
+	return req;
+}
+
+static int_req_t *req_lookup(void){
+	size_t i;
+	int_req_t *req;
+	x86_hw_op_src_t srcs[] = { HWS_HARDWARE, hw_state.privilege };
+
+
+	for(i=0; i<sizeof_array(srcs); i++){
+		req = requests[srcs[i]];
+
+		if(req != 0x0){
+			__list2_rm(requests[srcs[i]], req, prev, next);
+			break;
+		}
+	}
 
 	return req;
 }
