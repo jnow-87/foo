@@ -18,10 +18,20 @@
 
 /* types */
 typedef struct{
-	x86_hw_op_src_t priviledge;
+	size_t event_ack,
+		   event_nack,
+		   int_ack,
+		   int_nack;
+} hw_stats_t;
+
+typedef struct{
+	x86_hw_op_src_t privilege;
 	unsigned int tid;
-	bool int_enabled;
-	bool syscall_pending;
+	bool int_enabled,
+		 locked,
+		 syscall_pending;
+
+	hw_stats_t stats;
 } hw_state_t;
 
 
@@ -31,6 +41,8 @@ void hw_state_lock(void);
 void hw_state_unlock(void);
 
 void hw_state_wait(void);
+
+void hw_state_print(void);
 
 // hardware ops
 void hw_op_write(x86_hw_op_t *op, child_t *tgt);

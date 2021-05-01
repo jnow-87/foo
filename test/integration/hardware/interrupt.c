@@ -57,11 +57,11 @@ void hw_int_process(void){
 	hw_state_lock();
 
 	// ensure interrupts are only triggered for the appropriate
-	// priviledge level and thread in order to prevent confusing the
+	// privilege level and thread in order to prevent confusing the
 	// kernel scheduler by e.g. triggering a syscall from user space
 	// while a kernel thread is active according to the scheduler
 	if(req->src == HWS_HARDWARE
-	|| ((hw_state.priviledge == HWS_USER || req->src == hw_state.priviledge) && hw_state.tid == req->tid)
+	|| ((hw_state.privilege == HWS_USER || req->src == hw_state.privilege) && hw_state.tid == req->tid)
 	){
 		while(!hw_state.int_enabled){
 			hw_state_wait();
@@ -69,9 +69,13 @@ void hw_int_process(void){
 
 		int_trigger(req);
 		free(req);
+
+		hw_state.stats.int_ack++;
 	}
-	else
+	else{
 		req_enqueue(req);
+		hw_state.stats.int_nack++;
+	}
 
 	hw_state_unlock();
 }
@@ -138,7 +142,7 @@ static void int_trigger(int_req_t *req){
 
 	/* update hardware state */
 	hw_state.int_enabled = false;
-	hw_state.priviledge = HWS_KERNEL;
+	hw_state.privilege = HWS_KERNEL;
 
 	if(req->num == INT_SYSCALL)
 		hw_state.syscall_pending = true;
@@ -173,7 +177,7 @@ static void int_return(x86_hw_op_src_t target){
 
 	/* restore hardware state */
 	hw_state.int_enabled = true;
-	hw_state.priviledge = target;
+	hw_state.privilege = target;
 
 	/* signal interrupt return */
 	pthread_mutex_lock(&return_mtx);

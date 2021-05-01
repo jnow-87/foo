@@ -45,6 +45,7 @@
 // cursor
 #define STORE_POS	"\033[s"
 #define RESTORE_POS	"\033[u"
+#define SET_POS		"\033[%d;%dH"
 
 
 #endif // SYS_ESCAPE_H

@@ -148,10 +148,10 @@ void hw_event_process(void){
 	hw_op_read(&op, src);
 
 	// ensure hardware events are only processed for the appropriate
-	// priviledge level and thread in order to prevent confusing the
+	// privilege level and thread in order to prevent confusing the
 	// kernel scheduler by e.g. triggering a syscall from user space
 	// while a kernel thread is active according to the scheduler
-	handle = (hw_state.priviledge == (src == KERNEL ? HWS_KERNEL : HWS_USER))
+	handle = (hw_state.privilege == (src == KERNEL ? HWS_KERNEL : HWS_USER))
 		   && (hw_state.tid == op.tid || src == KERNEL);
 
 	hw_op_read_ack(src, (handle ? 1 : 0));
@@ -181,9 +181,12 @@ void hw_event_process(void){
 		hw_op_read_writeback(&op, src);
 
 		DEBUG(2, "  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
+		hw_state.stats.event_ack++;
 	}
-	else
+	else{
 		hw_event_enqueue(src);
+		hw_state.stats.event_nack++;
+	}
 
 	child_unlock(src);
 	hw_state_unlock();
