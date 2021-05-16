@@ -89,16 +89,16 @@ int main(int argc, char **argv){
 		return 1;
 
 	/* init signal handling */
-	CHECK_RTSIG(CONFIG_TEST_INT_DATA_SIG);
-	CHECK_RTSIG(CONFIG_TEST_INT_CTRL_SIG);
+	CHECK_RTSIG(CONFIG_TEST_INT_HW_SIG);
+	CHECK_RTSIG(CONFIG_TEST_INT_USR_SIG);
 
 	r = 0;
 
 	r |= sigemptyset(&sig_lst);
 	r |= sigaddset(&sig_lst, SIGINT);
 	r |= sigaddset(&sig_lst, SIGPIPE);
-	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_DATA_SIG);
-	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_CTRL_SIG);
+	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_USR_SIG);
+	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_HW_SIG);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
 
 	// ensure none of the threads gets any of the above signals
@@ -172,14 +172,14 @@ int signal_hdlr(int fd){
 			_exit(exit_status);
 			break;
 
-		case CONFIG_TEST_INT_DATA_SIG:
+		case CONFIG_TEST_INT_HW_SIG:
 			src = ((pid_t)info.ssi_pid == KERNEL->pid) ? KERNEL : APP;
 
 			DEBUG(2, "enqueue hardware event from %s\n", src->name);
 			hw_event_enqueue(src);
 			break;
 
-		case CONFIG_TEST_INT_CTRL_SIG: // fall through
+		case CONFIG_TEST_INT_USR_SIG: // fall through
 		default:
 			EEXIT("invalid signal\n");
 		}

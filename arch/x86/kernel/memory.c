@@ -34,7 +34,7 @@ void x86_copy_from_user(void *target, void const *src, unsigned int n, struct pr
 	LNX_DEBUG("copy-from: %p %d\n", src, n);
 
 	x86_hw_op_write(&op);
-	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, target, n);
+	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, target, n);
 	x86_hw_op_write_writeback(&op);
 
 	LNX_DEBUG("  status: %d\n", op.retval);
@@ -51,7 +51,7 @@ void x86_copy_to_user(void *target, void const *src, unsigned int n, struct proc
 	LNX_DEBUG("copy-to: %p %d\n", target, n);
 
 	x86_hw_op_write(&op);
-	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, src, n);
+	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, src, n);
 	x86_hw_op_write_writeback(&op);
 
 	LNX_DEBUG("  status: %d\n", op.retval);

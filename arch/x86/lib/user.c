@@ -44,7 +44,7 @@ static int init(void){
 	if(!x86_opts.interactive)
 		return 0;
 
-	lnx_sigset(CONFIG_TEST_INT_CTRL_SIG, user_hdlr);
+	lnx_sigset(CONFIG_TEST_INT_USR_SIG, user_hdlr);
 	lnx_sigset(CONFIG_TEST_INT_CONT_SIG, cont_hdlr);
 
 	LNX_DEBUG("waiting for start signal\n");
@@ -127,7 +127,7 @@ static char *readline(void){
 
 
 	for(i=0; i<63; i++){
-		lnx_read(CONFIG_TEST_INT_CTRL_PIPE_RD, line + i, 1);
+		lnx_read(CONFIG_TEST_INT_USR_PIPE_RD, line + i, 1);
 
 		if(line[i] == '\r')
 			i--;

@@ -149,8 +149,8 @@ void child_fork(child_t *child, char **argv){
 
 		// ensure communication signals are not blocked
 		r |= sigemptyset(&sigs);
-		r |= sigaddset(&sigs, CONFIG_TEST_INT_DATA_SIG);
-		r |= sigaddset(&sigs, CONFIG_TEST_INT_CTRL_SIG);
+		r |= sigaddset(&sigs, CONFIG_TEST_INT_USR_SIG);
+		r |= sigaddset(&sigs, CONFIG_TEST_INT_HW_SIG);
 
 		r |= pthread_sigmask(SIG_UNBLOCK, &sigs, 0x0);
 

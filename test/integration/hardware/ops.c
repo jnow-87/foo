@@ -78,7 +78,7 @@ void hw_op_write(x86_hw_op_t *op, child_t *tgt){
 
 	op->src = HWS_HARDWARE;
 
-	child_signal(tgt, CONFIG_TEST_INT_DATA_SIG);
+	child_signal(tgt, CONFIG_TEST_INT_HW_SIG);
 
 	child_read(tgt, 0, &op->seq, sizeof(op->seq));
 	CHECK_SEQ_NUM(op->seq, seq_num[(tgt == KERNEL) ? HWS_KERNEL : HWS_USER]++);

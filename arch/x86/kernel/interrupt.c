@@ -66,7 +66,7 @@ x86_hw_op_t *x86_int_op(void){
 
 /* local functions */
 static int init(void){
-	lnx_sigset(CONFIG_TEST_INT_DATA_SIG, int_hdlr);
+	lnx_sigset(CONFIG_TEST_INT_HW_SIG, int_hdlr);
 
 	return E_OK;
 }
