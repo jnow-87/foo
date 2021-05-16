@@ -107,7 +107,7 @@ void uart_poll(void){
 
 	for(i=0; i<nfd; i++){
 		if(fds[i].revents & POLLIN)
-			hw_int_request(uarts[i].int_num, 0x0, HWS_HARDWARE, 0);
+			hw_int_request(uarts[i].int_num, 0x0, PRIV_HARDWARE, 0);
 	}
 }
 

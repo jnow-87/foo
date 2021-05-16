@@ -37,12 +37,12 @@ void hw_timer(void){
 	sched++;
 
 	if(timer == TIMER_FACTOR){
-		hw_int_request(INT_TIMER, 0x0, HWS_HARDWARE, 0);
+		hw_int_request(INT_TIMER, 0x0, PRIV_HARDWARE, 0);
 		timer = 0;
 	}
 
 	if(sched == SCHED_FACTOR){
-		hw_int_request(INT_SCHED, 0x0, HWS_HARDWARE, 0);
+		hw_int_request(INT_SCHED, 0x0, PRIV_HARDWARE, 0);
 		sched = 0;
 	}
 }

@@ -58,7 +58,7 @@ int_type_t x86_int_enable(int_type_t mask){
 
 x86_hw_op_t *x86_int_op(void){
 	if(int_op == 0x0)
-		LNX_EEXIT("no hardware-op\n");
+		LNX_EEXIT("no ongoing hardware-op\n");
 
 	return int_op;
 }
@@ -95,9 +95,9 @@ static void int_hdlr(int sig){
 	if(op.num != HWO_INT_TRIGGER)
 		LNX_EEXIT("[%u] invalid hardware-op %d to kernel\n", op.seq, op.num);
 
-	LNX_DEBUG("[%u] interrupt %d interrupting %s(pid %u, tid %u)\n",
+	LNX_DEBUG("[%u] %s interrupt on %s(pid = %u, tid = %u)\n",
 		op.seq,
-		op.int_ctrl.num,
+		X86_INT_NAME(op.int_ctrl.num),
 		this_t->parent->name,
 		this_t->parent->pid,
 		this_t->tid
@@ -130,8 +130,15 @@ static void int_hdlr(int sig){
 	int_op = 0x0;
 
 	// signal completion
+	LNX_DEBUG("[%u] return to %s(pid = %u, tid = %u)\n",
+		op.seq,
+		this_t->parent->name,
+		this_t->parent->pid,
+		this_t->tid
+	);
+
 	op.num = HWO_INT_RETURN;
-	op.int_return.to = (this_t->parent->pid == 0) ? HWS_KERNEL : HWS_USER;
+	op.int_return.to = (this_t->parent->pid == 0) ? PRIV_KERNEL : PRIV_USER;
 	op.int_return.tid = this_t->tid;
 
 	x86_hw_op_write(&op);

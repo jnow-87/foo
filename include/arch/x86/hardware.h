@@ -14,6 +14,23 @@
 #include <sys/uart.h>
 #include <sys/types.h>
 
+/* macros */
+#define X86_INT_NAME(num) \
+	(((char*[]){ \
+		"timer", \
+		"scheduler", \
+		"syscall", \
+		"uart0", \
+		"uart1", \
+	})[num])
+
+#define X86_PRIV_NAME(priv) \
+	(((char*[]){ \
+		"kernel", \
+		"user", \
+		"hardware", \
+	})[priv])
+
 
 /* types */
 typedef enum{
@@ -26,10 +43,10 @@ typedef enum{
 } x86_int_num_t;
 
 typedef enum{
-	HWS_KERNEL = 0,
-	HWS_USER,
-	HWS_HARDWARE
-} x86_hw_op_src_t;
+	PRIV_KERNEL = 0,
+	PRIV_USER,
+	PRIV_HARDWARE
+} x86_priv_t;
 
 typedef enum{
 	HWO_EXIT = 0,
@@ -45,7 +62,7 @@ typedef enum{
 
 typedef struct{
 	unsigned int num;	/**< cf. x86_hw_op_num_t */
-	unsigned int src;	/**< cf. x86_hw_op_src_t */
+	unsigned int src;	/**< cf. x86_priv_t */
 	unsigned int seq;
 	unsigned int tid;
 
@@ -63,7 +80,7 @@ typedef struct{
 		} int_ctrl;
 
 		struct{
-			int to;		/**< cf. x86_hw_op_src_t */
+			int to;		/**< cf. x86_priv_t */
 			unsigned int tid;
 		} int_return;
 

@@ -94,10 +94,10 @@ static int help(char const *err, ...){
 		"usage: %s [options]\n"
 		"\n"
 		"    fork kernel and application binary simulating a hardware between both\n"
-		"        data read/write fileno: %d/%d\n"
-		"        data signal: %d (%s)\n"
-		"        control read/write fileno: %d/%d\n"
-		"        control signal: %d (%s)\n"
+		"        hardware-op read/write fileno: %d/%d\n"
+		"        hardware-op signals: %d\n"
+		"        user read/write fileno: %d/%d\n"
+		"        user signal: %d\n"
 		"        uart signal: %d\n"
 		"\n"
 		"Options:\n"
@@ -112,10 +112,10 @@ static int help(char const *err, ...){
 		, PROGNAME
 		, CONFIG_TEST_INT_HW_PIPE_RD
 		, CONFIG_TEST_INT_HW_PIPE_WR
-		, CONFIG_TEST_INT_HW_SIG, strsignal(CONFIG_TEST_INT_HW_SIG)
+		, CONFIG_TEST_INT_HW_SIG
 		, CONFIG_TEST_INT_USR_PIPE_RD
 		, CONFIG_TEST_INT_USR_PIPE_WR
-		, CONFIG_TEST_INT_USR_SIG, strsignal(CONFIG_TEST_INT_USR_SIG)
+		, CONFIG_TEST_INT_USR_SIG
 		, CONFIG_TEST_INT_UART_SIG
 		, "-k, --kernel=<image>", "use <image> as kernel " DEFAULT(DEFAULT_KERNEL_IMAGE)
 		, "-a, --application=<image>", "use <image> as application binary " DEFAULT(DEFAULT_APP_BINARY)

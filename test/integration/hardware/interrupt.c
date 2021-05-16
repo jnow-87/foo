@@ -26,7 +26,7 @@ typedef struct int_req_t{
 	int num;
 	void *data;
 
-	x86_hw_op_src_t src;
+	x86_priv_t src;
 	unsigned int tid;
 } int_req_t;
 
@@ -62,8 +62,8 @@ void hw_int_process(void){
 	// privilege level and thread in order to prevent confusing the
 	// kernel scheduler by e.g. triggering a syscall from user space
 	// while a kernel thread is active according to the scheduler
-	if(req->src == HWS_HARDWARE
-	|| ((hw_state.privilege == HWS_USER || req->src == hw_state.privilege) && hw_state.tid == req->tid)
+	if(req->src == PRIV_HARDWARE
+	|| ((hw_state.privilege == PRIV_USER || req->src == hw_state.privilege) && hw_state.tid == req->tid)
 	){
 		while(!hw_state.int_enabled){
 			hw_state_wait();
@@ -82,7 +82,7 @@ void hw_int_process(void){
 	hw_state_unlock();
 }
 
-void hw_int_request(int num, void *data, x86_hw_op_src_t src, unsigned int tid){
+void hw_int_request(int num, void *data, x86_priv_t src, unsigned int tid){
 	int_req_t *req;
 
 
@@ -134,7 +134,7 @@ static int_req_t *req_dequeue(void){
 static int_req_t *req_lookup(void){
 	size_t i;
 	int_req_t *req;
-	x86_hw_op_src_t srcs[] = { HWS_HARDWARE, hw_state.privilege };
+	x86_hw_op_src_t srcs[] = { PRIV_HARDWARE, hw_state.privilege };
 
 
 	for(i=0; i<sizeof_array(srcs); i++){
@@ -155,7 +155,7 @@ static void int_trigger(int_req_t *req){
 
 	/* update hardware state */
 	hw_state.int_enabled = false;
-	hw_state.privilege = HWS_KERNEL;
+	hw_state.privilege = PRIV_KERNEL;
 
 	if(req->num == INT_SYSCALL)
 		hw_state.syscall_pending = true;
@@ -169,7 +169,7 @@ static void int_trigger(int_req_t *req){
 
 	child_lock(KERNEL);
 
-	DEBUG(0, "trigger interrupt %d\n", req->num);
+	DEBUG(0, "trigger %s interrupt requested by %s\n", X86_INT_NAME(req->num), X86_PRIV_NAME(req->src));
 
 	hw_op_write(&op, KERNEL);
 	hw_op_write_writeback(&op, KERNEL);
@@ -198,7 +198,7 @@ static void int_return(x86_hw_op_src_t target){
 	pthread_mutex_unlock(&return_mtx);
 
 	/* signal return to user-space */
-	if(target != HWS_USER || !hw_state.syscall_pending)
+	if(target != PRIV_USER || !hw_state.syscall_pending)
 		return;
 
 	hw_state.syscall_pending = false;

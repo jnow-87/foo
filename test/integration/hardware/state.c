@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <pthread.h>
+#include <arch/x86/hardware.h>
 #include <sys/escape.h>
 #include <hardware/hardware.h>
 #include <user/opts.h>
@@ -16,7 +17,7 @@
 
 /* global variables */
 hw_state_t hw_state = {
-	.privilege = HWS_KERNEL,
+	.privilege = PRIV_KERNEL,
 	.tid = 0,
 	.int_enabled = false,
 	.locked = false,
@@ -57,23 +58,22 @@ void hw_state_print(void){
 	dprintf(opts.stats_fd,
 		CLEAR
 		SET_POS
-		"events ack:  %zu\n"
-		"evants nack: %zu\n"
+		"events n/ack:     %zu/%zu\n"
+		"interrupts n/ack: %zu/%zu\n"
 		"\n"
-		"int ack:  %zu\n"
-		"int nack: %zu\n"
-		"\n"
+		"hardware: %s\n"
+		"interrupts: %s\n"
 		"privilege: %s\n"
 		"tid: %u\n"
-		"locked: %d\n"
 		,
 		1, 1,
-		hw_state.stats.event_ack,
 		hw_state.stats.event_nack,
-		hw_state.stats.int_ack,
+		hw_state.stats.event_ack,
 		hw_state.stats.int_nack,
-		(hw_state.privilege == HWS_KERNEL) ? "kernel" : "user",
-		hw_state.tid,
-		hw_state.locked
+		hw_state.stats.int_ack,
+		hw_state.locked ? "locked" : "unlocked",
+		hw_state.int_enabled ? "enabled" : "disabled",
+		X86_PRIV_NAME(hw_state.privilege),
+		hw_state.tid
 	);
 }

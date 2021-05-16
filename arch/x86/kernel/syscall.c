@@ -60,13 +60,17 @@ static void sc_hdlr(int_num_t num, void *data){
 	this_t = sched_running();
 	op = x86_int_op();
 
-	LNX_DEBUG("   data: %p\n", op->int_ctrl.data);
+	if(op->int_ctrl.num != INT_SYSCALL)
+		LNX_EEXIT("hardware-op not a syscall\n");
+
+	LNX_DEBUG("syscall(thread = %s.%u, data = %p)\n",
+		this_t->parent->name, this_t->tid,
+		op->int_ctrl.data
+	);
 
 	copy_from_user(&sc, op->int_ctrl.data, sizeof(sc), this_t->parent);
 
-	LNX_DEBUG("syscall %d\n", sc.num);
-	LNX_DEBUG("  param: %p\n", sc.param);
-	LNX_DEBUG("  psize: %u\n", sc.size);
+	LNX_DEBUG("syscall(num = %u, param = %p, psize = %u)\n", sc.num, sc.param, sc.size);
 
 	if(sc.num == SC_EXIT)
 		overlay_exit(sc.param);

@@ -76,12 +76,12 @@ void hw_op_write(x86_hw_op_t *op, child_t *tgt){
 	static unsigned int seq_num[2] = { 0 };
 
 
-	op->src = HWS_HARDWARE;
+	op->src = PRIV_HARDWARE;
 
 	child_signal(tgt, CONFIG_TEST_INT_HW_SIG);
 
 	child_read(tgt, 0, &op->seq, sizeof(op->seq));
-	CHECK_SEQ_NUM(op->seq, seq_num[(tgt == KERNEL) ? HWS_KERNEL : HWS_USER]++);
+	CHECK_SEQ_NUM(op->seq, seq_num[(tgt == KERNEL) ? PRIV_KERNEL : PRIV_USER]++);
 
 	child_write(tgt, 0, op, sizeof(*op));
 }
@@ -103,10 +103,10 @@ void hw_op_write_writeback(x86_hw_op_t *op, child_t *tgt){
 
 void hw_op_read(x86_hw_op_t *op, child_t *src){
 	static unsigned int seq_num[2] = { 0 };
-	x86_hw_op_src_t idx;
+	x86_priv_t idx;
 
 
-	idx = (src == KERNEL) ? HWS_KERNEL : HWS_USER;
+	idx = (src == KERNEL) ? PRIV_KERNEL : PRIV_USER;
 
 	child_write(src, 0, seq_num + idx, sizeof(seq_num[0]));
 
@@ -145,7 +145,7 @@ void hw_event_process(void){
 	// privilege level and thread in order to prevent confusing the
 	// kernel scheduler by e.g. triggering a syscall from user space
 	// while a kernel thread is active according to the scheduler
-	if((hw_state.privilege == (src == KERNEL ? HWS_KERNEL : HWS_USER))
+	if((hw_state.privilege == (src == KERNEL ? PRIV_KERNEL : PRIV_USER))
 	&& (hw_state.tid == op.tid || src == KERNEL)
 	){
 		DEBUG(2, "[%u] %s(src = %s, tid = %u, num = %d)\n",
@@ -161,10 +161,10 @@ void hw_event_process(void){
 		if(op.num >= HWO_NOPS)
 			EEXIT("  [%u] invalid hardware-op %d from %s\n", op.seq, op.num, src->name);
 
-		if(op.src != HWS_KERNEL && op.src != HWS_USER)
+		if(op.src != PRIV_KERNEL && op.src != PRIV_USER)
 			EEXIT("  [%u] invalid hardware-op src: %d\n", op.seq, op.src);
 
-		op_src = (op.src == HWS_KERNEL) ? KERNEL : APP;
+		op_src = (op.src == PRIV_KERNEL) ? KERNEL : APP;
 
 		if(src != op_src)
 			EEXIT("  [%u] hardware-op src mismatch: have %s expect %s\n", op.seq, op_src->name, src->name);
@@ -206,7 +206,7 @@ child_t *hw_event_dequeue(void){
 	while(1){
 		if(events[hw_state.privilege] != 0){
 			events[hw_state.privilege]--;
-			src = (hw_state.privilege == HWS_KERNEL) ? KERNEL : APP;
+			src = (hw_state.privilege == PRIV_KERNEL) ? KERNEL : APP;
 
 			break;
 		}
@@ -226,7 +226,7 @@ static int event_exit(x86_hw_op_t *op){
 
 	if(op->exit.retval != 0){
 		ERROR("unexpected exit from %s, exit code %d\n",
-			(op->src == HWS_KERNEL) ? KERNEL->name : APP->name,
+			(op->src == PRIV_KERNEL) ? KERNEL->name : APP->name,
 			op->exit.retval
 		);
 	}
@@ -241,12 +241,12 @@ static int event_int_trigger(x86_hw_op_t *op){
 }
 
 static int event_int_return(x86_hw_op_t *op){
-	if(op->src != HWS_KERNEL)
+	if(op->src != PRIV_KERNEL)
 		EEXIT("int return only supposed to be triggered by kernel\n");
 
 	DEBUG(0, "  [%u] return to %s space, tid %u\n",
 		op->seq,
-		(op->int_return.to == HWS_USER) ? "user" : "kernel",
+		X86_PRIV_NAME(op->int_return.to),
 		op->int_return.tid
 	);
 
@@ -297,7 +297,7 @@ static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op){
 
 	app_op = *op;
 
-	if(op->src != HWS_KERNEL)
+	if(op->src != PRIV_KERNEL)
 		EEXIT("copy from/to user only supposed to be triggered by kernel\n");
 
 	child_lock(APP);
