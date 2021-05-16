@@ -8,3 +8,6 @@
 
 
 obj-y := start.o init.o core.o interrupt.o thread.o memory.o syscall.o timer.o sched.o rootfs.o
+
+obj-$(CONFIG_KERNEL_TIMER) += timer.o
+obj-$(CONFIG_SCHED_PREEMPTIVE) += sched.o
