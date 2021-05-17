@@ -21,7 +21,6 @@ hw_state_t hw_state = {
 	.tid = 0,
 	.int_enabled = false,
 	.locked = false,
-	.syscall_pending = false,
 	.stats = { 0 },
 };
 

@@ -48,7 +48,7 @@ typedef struct{
 // hardware event handling
 static void hw_event_hdlr(int sig);
 
-static int event_int_return(x86_hw_op_t *op);
+static int event_syscall_return(x86_hw_op_t *op);
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
 static int event_inval(x86_hw_op_t *op);
@@ -72,9 +72,10 @@ static int volatile syscall_return_pending = 0;
 static ops_t ops[] = {
 	{ .name = "exit",			.hdlr = event_inval },
 	{ .name = "int_trigger",	.hdlr = event_inval },
-	{ .name = "int_return",		.hdlr = event_int_return },
+	{ .name = "int_return",		.hdlr = event_inval },
 	{ .name = "int_set",		.hdlr = event_inval },
 	{ .name = "int_state",		.hdlr = event_inval },
+	{ .name = "syscall_return",	.hdlr = event_syscall_return },
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
 	{ .name = "uart_config",	.hdlr = event_inval },
@@ -158,7 +159,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 	x86_hw_op_write_writeback(&op);
 
 	// wait for interrupt return
-	LNX_DEBUG("waiting for int return\n");
+	LNX_DEBUG("waiting for syscall return\n");
 
 	while(syscall_return_pending){
 		lnx_nanosleep(500000);
@@ -203,7 +204,7 @@ static void hw_event_hdlr(int sig){
 	x86_hw_op_read_writeback(&op);
 }
 
-static int event_int_return(x86_hw_op_t *op){
+static int event_syscall_return(x86_hw_op_t *op){
 	if(cas((int*)(&syscall_return_pending), 1, 0) != 0)
 		LNX_EEXIT("no pending syscall\n");
 

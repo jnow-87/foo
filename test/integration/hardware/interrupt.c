@@ -9,9 +9,9 @@
 
 #include <stdlib.h>
 #include <pthread.h>
+#include <arch/x86/hardware.h>
 #include <sys/types.h>
 #include <sys/list2.h>
-#include <arch/x86/hardware.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/brickos.h>
@@ -157,9 +157,6 @@ static void int_trigger(int_req_t *req){
 	hw_state.int_enabled = false;
 	hw_state.privilege = PRIV_KERNEL;
 
-	if(req->num == INT_SYSCALL)
-		hw_state.syscall_pending = true;
-
 	/* interrupt kernel */
 	pthread_mutex_lock(&return_mtx);
 
@@ -196,23 +193,4 @@ static void int_return(x86_hw_op_src_t target){
 	pthread_mutex_lock(&return_mtx);
 	pthread_cond_signal(&return_sig);
 	pthread_mutex_unlock(&return_mtx);
-
-	/* signal return to user-space */
-	if(target != PRIV_USER || !hw_state.syscall_pending)
-		return;
-
-	hw_state.syscall_pending = false;
-
-	op.num = HWO_INT_RETURN;
-	op.retval = 0;
-
-	child_lock(APP);
-
-	hw_op_write(&op, APP);
-	hw_op_write_writeback(&op, APP);
-
-	child_unlock(APP);
-
-	if(op.retval != 0)
-		EEXIT("int return to user failed with %d\n", op.retval);
 }

@@ -29,8 +29,7 @@ typedef struct{
 	x86_priv_t privilege;
 	unsigned int tid;
 	bool int_enabled,
-		 locked,
-		 syscall_pending;
+		 locked;
 
 	hw_stats_t stats;
 } hw_state_t;

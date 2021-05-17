@@ -43,6 +43,8 @@ static int event_int_return(x86_hw_op_t *op);
 static int event_int_set(x86_hw_op_t *op);
 static int event_int_state(x86_hw_op_t *op);
 
+static int event_syscall_return(x86_hw_op_t *op);
+
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
 
@@ -64,6 +66,7 @@ static ops_cfg_t hw_ops[] = {
 	{ .name = "int_return",		.hdlr = event_int_return },
 	{ .name = "int_set",		.hdlr = event_int_set },
 	{ .name = "int_state",		.hdlr = event_int_state },
+	{ .name = "syscall_return",	.hdlr = event_syscall_return },
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
 	{ .name = "uart_config",	.hdlr = event_uart_config },
@@ -270,6 +273,28 @@ static int event_int_set(x86_hw_op_t *op){
 static int event_int_state(x86_hw_op_t *op){
 	op->int_ctrl.en = hw_state.int_enabled;
 	DEBUG(2, "  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
+
+	return 0;
+}
+
+static int event_syscall_return(x86_hw_op_t *op){
+	x86_hw_op_t app_op;
+
+
+	app_op = *op;
+
+	if(app_op.src != PRIV_KERNEL)
+		EEXIT("syscall return only supposed to be triggered by kernel\n");
+
+	child_lock(APP);
+
+	hw_op_write(&app_op, APP);
+	hw_op_write_writeback(&app_op, APP);
+
+	child_unlock(APP);
+
+	if(app_op.retval != 0)
+		EEXIT("syscall return failed with %d\n", app_op.retval);
 
 	return 0;
 }

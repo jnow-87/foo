@@ -8,6 +8,7 @@
 
 
 #include <arch/x86/linux.h>
+#include <arch/x86/hardware.h>
 #include <arch/x86/init.h>
 #include <arch/x86/interrupt.h>
 #include <arch/x86/rootfs.h>
@@ -15,6 +16,7 @@
 #include <kernel/init.h>
 #include <kernel/syscall.h>
 #include <kernel/interrupt.h>
+#include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
@@ -83,6 +85,11 @@ static void sc_hdlr(int_num_t num, void *data){
 	sc.errno = errno;
 
 	copy_to_user(op->int_ctrl.data, &sc, sizeof(sc), this_t->parent);
+
+	op.num = HWO_SYSCALL_RETURN;
+
+	x86_hw_op_write(&op);
+	x86_hw_op_write_writeback(&op);
 }
 
 static int init(void){
