@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <string.h>
+#include <arch/x86/hardware.h>
 #include <sys/escape.h>
 #include <sys/compiler.h>
 #include <user/opts.h>
@@ -95,7 +96,7 @@ static int help(char const *err, ...){
 		"\n"
 		"    fork kernel and application binary simulating a hardware between both\n"
 		"        hardware-op read/write fileno: %d/%d\n"
-		"        hardware-op signals: %d\n"
+		"        hardware-op signals: %d - %d\n"
 		"        user read/write fileno: %d/%d\n"
 		"        user signal: %d\n"
 		"        uart signal: %d\n"
@@ -112,7 +113,7 @@ static int help(char const *err, ...){
 		, PROGNAME
 		, CONFIG_TEST_INT_HW_PIPE_RD
 		, CONFIG_TEST_INT_HW_PIPE_WR
-		, CONFIG_TEST_INT_HW_SIG
+		, CONFIG_TEST_INT_HW_SIG, CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - 1
 		, CONFIG_TEST_INT_USR_PIPE_RD
 		, CONFIG_TEST_INT_USR_PIPE_WR
 		, CONFIG_TEST_INT_USR_SIG

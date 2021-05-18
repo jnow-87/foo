@@ -14,6 +14,7 @@
 #include <string.h>
 #include <signal.h>
 #include <pthread.h>
+#include <arch/x86/hardware.h>
 #include <sys/signalfd.h>
 #include <sys/compiler.h>
 #include <user/debug.h>
@@ -25,16 +26,6 @@
 
 
 /* macros */
-#define CHECK_RTSIG(sig){ \
-	if(sig < SIGRTMIN || sig > SIGRTMAX){ \
-		EEXIT("%s is not a real-time signal, i.e. in the range of %u - %u\n", \
-			#sig, \
-			SIGRTMIN, \
-			SIGRTMAX \
-		); \
-	} \
-}
-
 #define THREAD(_name, _when, _init, _call, _cleanup){ \
 	.tid = 0, \
 	.name = _name, \
@@ -43,6 +34,7 @@
 	.call = _call, \
 	.cleanup = _cleanup, \
 }
+
 
 /* types */
 typedef struct{
@@ -60,6 +52,7 @@ typedef struct{
 static void *thread_wrapper(void *arg);
 
 static int signal_hdlr(int fd);
+static void verify_signals(void);
 
 static void exit_hdlr(int status, void *arg);
 static void cleanup(void);
@@ -89,8 +82,7 @@ int main(int argc, char **argv){
 		return 1;
 
 	/* init signal handling */
-	CHECK_RTSIG(CONFIG_TEST_INT_HW_SIG);
-	CHECK_RTSIG(CONFIG_TEST_INT_USR_SIG);
+	verify_signals();
 
 	r = 0;
 
@@ -98,8 +90,10 @@ int main(int argc, char **argv){
 	r |= sigaddset(&sig_lst, SIGINT);
 	r |= sigaddset(&sig_lst, SIGPIPE);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_USR_SIG);
-	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_HW_SIG);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
+
+	for(i=0; i<X86_INT_PRIOS; i++)
+		r |= sigaddset(&sig_lst, CONFIG_TEST_INT_HW_SIG + i);
 
 	// ensure none of the threads gets any of the above signals
 	r |= pthread_sigmask(SIG_BLOCK, &sig_lst, 0x0);
@@ -153,7 +147,7 @@ static void *thread_wrapper(void *arg){
 	return 0x0;
 }
 
-int signal_hdlr(int fd){
+static int signal_hdlr(int fd){
 	struct signalfd_siginfo info;
 	child_t *src;
 
@@ -182,6 +176,28 @@ int signal_hdlr(int fd){
 		case CONFIG_TEST_INT_USR_SIG: // fall through
 		default:
 			EEXIT("invalid signal\n");
+		}
+	}
+}
+
+static void verify_signals(){
+	size_t i,
+		   j;
+	int rt_sigs[X86_INT_PRIOS + 1];
+
+
+	rt_sigs[X86_INT_PRIOS] = CONFIG_TEST_INT_USR_SIG;
+
+	for(i=0; i<X86_INT_PRIOS; i++)
+		rt_sigs[i] = CONFIG_TEST_INT_HW_SIG + i;
+
+	for(i=0; i<X86_INT_PRIOS + 1; i++){
+		if(rt_sigs[i] < SIGRTMIN || rt_sigs[i] > SIGRTMAX)
+			EEXIT("%d is not a real-time signal (%d - %d\n", rt_sigs[i], SIGRTMIN, SIGRTMAX);
+
+		for(j=0; j<X86_INT_PRIOS + 1; j++){
+			if(i != j && rt_sigs[i] == rt_sigs[j])
+				EEXIT("signal %u used multiple times\n", rt_sigs[i])
 		}
 	}
 }

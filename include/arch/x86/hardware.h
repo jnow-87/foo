@@ -15,6 +15,8 @@
 #include <sys/types.h>
 
 /* macros */
+#define X86_INT_PRIOS	2
+
 #define X86_INT_NAME(num) \
 	(((char*[]){ \
 		"timer", \
@@ -81,6 +83,7 @@ typedef struct{
 		} int_ctrl;
 
 		struct{
+			int num;
 			int to;		/**< cf. x86_priv_t */
 			unsigned int tid;
 		} int_return;

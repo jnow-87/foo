@@ -54,23 +54,23 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 /* local functions */
 static void sc_hdlr(int_num_t num, void *data){
-	x86_hw_op_t *op;
+	x86_hw_op_t op;
 	sc_t sc;
 	thread_t const *this_t;
 
 
 	this_t = sched_running();
-	op = x86_int_op();
+	op = *x86_int_op();
 
-	if(op->int_ctrl.num != INT_SYSCALL)
+	if(op.int_ctrl.num != INT_SYSCALL)
 		LNX_EEXIT("hardware-op not a syscall\n");
 
 	LNX_DEBUG("syscall(thread = %s.%u, data = %p)\n",
 		this_t->parent->name, this_t->tid,
-		op->int_ctrl.data
+		op.int_ctrl.data
 	);
 
-	copy_from_user(&sc, op->int_ctrl.data, sizeof(sc), this_t->parent);
+	copy_from_user(&sc, op.int_ctrl.data, sizeof(sc), this_t->parent);
 
 	LNX_DEBUG("syscall(num = %u, param = %p, psize = %u)\n", sc.num, sc.param, sc.size);
 
@@ -84,7 +84,7 @@ static void sc_hdlr(int_num_t num, void *data){
 	LNX_DEBUG("errno: %d\n", errno);
 	sc.errno = errno;
 
-	copy_to_user(op->int_ctrl.data, &sc, sizeof(sc), this_t->parent);
+	copy_to_user(op.int_ctrl.data, &sc, sizeof(sc), this_t->parent);
 
 	op.num = HWO_SYSCALL_RETURN;
 

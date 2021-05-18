@@ -177,7 +177,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 /* local functions */
 static int init(void){
-	lnx_sigset(CONFIG_TEST_INT_HW_SIG, hw_event_hdlr);
+	lnx_sigaction(CONFIG_TEST_INT_HW_SIG, hw_event_hdlr, 0x0);
 
 	app_heap = (void*)mem_blob;
 	memblock_init(app_heap, DEVTREE_APP_HEAP_SIZE);

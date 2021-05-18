@@ -28,8 +28,11 @@ typedef struct{
 typedef struct{
 	x86_priv_t privilege;
 	unsigned int tid;
-	bool int_enabled,
-		 locked;
+
+	bool int_enabled;
+	size_t ints_active;
+
+	bool locked;
 
 	hw_stats_t stats;
 } hw_state_t;
@@ -46,6 +49,7 @@ void hw_state_print(void);
 
 // hardware ops
 void hw_op_write(x86_hw_op_t *op, child_t *tgt);
+void hw_op_write_sig(x86_hw_op_t *op, child_t *tgt, int sig);
 void hw_op_write_writeback(x86_hw_op_t *op, child_t *tgt);
 void hw_op_read(x86_hw_op_t *op, child_t *src);
 void hw_op_read_ack(child_t *src, int ack);
@@ -59,7 +63,7 @@ child_t *hw_event_dequeue(void);
 // interrupt handling
 void hw_int_process(void);
 void hw_int_request(int num, void *data, x86_priv_t src, unsigned int tid);
-void hw_int_return(x86_priv_t target, unsigned int tid);
+void hw_int_return(int num, x86_priv_t target, unsigned int tid);
 
 // interrupt timer
 void hw_timer(void);

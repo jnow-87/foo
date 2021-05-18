@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
+#include <arch/x86/hardware.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <pthread.h>
@@ -150,7 +151,9 @@ void child_fork(child_t *child, char **argv){
 		// ensure communication signals are not blocked
 		r |= sigemptyset(&sigs);
 		r |= sigaddset(&sigs, CONFIG_TEST_INT_USR_SIG);
-		r |= sigaddset(&sigs, CONFIG_TEST_INT_HW_SIG);
+
+		for(i=0; i<X86_INT_PRIOS; i++)
+			r |= sigaddset(&sigs, CONFIG_TEST_INT_HW_SIG + i);
 
 		r |= pthread_sigmask(SIG_UNBLOCK, &sigs, 0x0);
 

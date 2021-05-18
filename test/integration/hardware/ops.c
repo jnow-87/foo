@@ -76,12 +76,16 @@ static ops_cfg_t hw_ops[] = {
 
 /* global functions */
 void hw_op_write(x86_hw_op_t *op, child_t *tgt){
+	hw_op_write_sig(op, tgt, CONFIG_TEST_INT_HW_SIG);
+}
+
+void hw_op_write_sig(x86_hw_op_t *op, child_t *tgt, int sig){
 	static unsigned int seq_num[2] = { 0 };
 
 
 	op->src = PRIV_HARDWARE;
 
-	child_signal(tgt, CONFIG_TEST_INT_HW_SIG);
+	child_signal(tgt, sig);
 
 	child_read(tgt, 0, &op->seq, sizeof(op->seq));
 	CHECK_SEQ_NUM(op->seq, seq_num[(tgt == KERNEL) ? PRIV_KERNEL : PRIV_USER]++);
@@ -253,7 +257,7 @@ static int event_int_return(x86_hw_op_t *op){
 		op->int_return.tid
 	);
 
-	hw_int_return(op->int_return.to, op->int_return.tid);
+	hw_int_return(op->int_return.num, op->int_return.to, op->int_return.tid);
 	pthread_cond_signal(&event_sig);
 
 	return 0;

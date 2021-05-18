@@ -15,8 +15,8 @@
 #include <kernel/memory.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
-#include <sys/stack.h>
-
+#include <sys/types.h>
+#include <sys/string.h>
 
 
 /* local/static prototypes */
@@ -66,7 +66,26 @@ x86_hw_op_t *x86_int_op(void){
 
 /* local functions */
 static int init(void){
-	lnx_sigset(CONFIG_TEST_INT_HW_SIG, int_hdlr);
+	size_t i;
+	lnx_sigset_t blocked;
+
+
+	memset(&blocked, 0x0, sizeof(lnx_sigset_t));
+
+	// NOTE Ensure signals for higher priority interrupt cannot be interrupted by
+	// 		signals of lower priority interrupts.
+	//		Without this protection the signal handler for a lower priority interrupt
+	//		can be called if the higher priority interrupt already completed the
+	//		HWO_INT_RETURN hardware-op but did not yet return from the signal. Since
+	//		lower priority signals shall by design be interruptible by higher priority
+	//		ones, this could lead to a deadlock with the integration test framework
+	//		awaiting the hardware-op acknowledgement for the higher priority interrupt
+	//		while the kernel is unable to send it, since the signal handler for the
+	//		higher priority interrupt cannot be called-
+	for(i=1; i<=X86_INT_PRIOS; i++){
+		lnx_sigaction(CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - i, int_hdlr, &blocked);
+		lnx_sigaddset(&blocked, CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - i);
+	}
 
 	return E_OK;
 }
@@ -80,20 +99,16 @@ static void int_hdlr(int sig){
 
 
 	/* preamble */
-	this_t = sched_running();
-
-	// get interrupt data
+	// acknowledge request
 	x86_hw_op_read(&op);
 	op.retval = 0;
 	x86_hw_op_read_writeback(&op);
 
-	if(int_op)
-		LNX_EEXIT("[%u] hardware-op in progress\n", op.seq);
-
-	int_op = &op;
-
 	if(op.num != HWO_INT_TRIGGER)
 		LNX_EEXIT("[%u] invalid hardware-op %d to kernel\n", op.seq, op.num);
+
+	int_op = &op;
+	this_t = sched_running();
 
 	LNX_DEBUG("[%u] %s interrupt on %s(pid = %u, tid = %u)\n",
 		op.seq,
@@ -116,6 +131,7 @@ static void int_hdlr(int sig){
 
 	/* epilogue */
 	this_t = sched_running();
+	int_op = 0x0;
 
 	// pop thread context
 	ctx = thread_ctx_pop();
@@ -126,9 +142,6 @@ static void int_hdlr(int sig){
 	if(ctx->type != CTX_UNKNOWN)
 		kfree(ctx);
 
-	// reset interrupt op
-	int_op = 0x0;
-
 	// signal completion
 	LNX_DEBUG("[%u] return to %s(pid = %u, tid = %u)\n",
 		op.seq,
@@ -138,6 +151,7 @@ static void int_hdlr(int sig){
 	);
 
 	op.num = HWO_INT_RETURN;
+	op.int_return.num = op.int_ctrl.num;
 	op.int_return.to = (this_t->parent->pid == 0) ? PRIV_KERNEL : PRIV_USER;
 	op.int_return.tid = this_t->tid;
 

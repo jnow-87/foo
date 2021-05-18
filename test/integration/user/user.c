@@ -153,7 +153,6 @@ static void cmd_tick(char const *line){
 	for(i=0; i<n; i++){
 		printf("tick %u/%u\n", i + 1, n);
 		hw_int_request(INT_TIMER, 0x0, PRIV_HARDWARE, 0);
-		usleep(5);
 	}
 }
 

@@ -20,6 +20,7 @@ hw_state_t hw_state = {
 	.privilege = PRIV_KERNEL,
 	.tid = 0,
 	.int_enabled = false,
+	.ints_active = 0,
 	.locked = false,
 	.stats = { 0 },
 };
@@ -62,6 +63,7 @@ void hw_state_print(void){
 		"\n"
 		"hardware: %s\n"
 		"interrupts: %s\n"
+		"active interrupts: %zu\n"
 		"privilege: %s\n"
 		"tid: %u\n"
 		,
@@ -72,6 +74,7 @@ void hw_state_print(void){
 		hw_state.stats.int_ack,
 		hw_state.locked ? "locked" : "unlocked",
 		hw_state.int_enabled ? "enabled" : "disabled",
+		hw_state.ints_active,
 		X86_PRIV_NAME(hw_state.privilege),
 		hw_state.tid
 	);
