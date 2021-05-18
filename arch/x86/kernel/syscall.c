@@ -12,6 +12,7 @@
 #include <arch/x86/init.h>
 #include <arch/x86/interrupt.h>
 #include <arch/x86/rootfs.h>
+#include <arch/interrupt.h>
 #include <arch/memory.h>
 #include <kernel/init.h>
 #include <kernel/syscall.h>
@@ -23,30 +24,30 @@
 
 
 /* local/static prototypes */
+static void yield_user(thread_t const *this_t);
+static void yield_kernel(void);
+
 static void overlay_exit(void *param);
 
 
 /* global functions */
 int x86_sc(sc_num_t num, void *param, size_t psize){
-	x86_hw_op_t op;
+	thread_t const *this_t;
 
 
 	if(num != SC_SCHEDYIELD)
 		LNX_EEXIT("kernel assumed to only use SC_SCHEDYIELD\n");
 
-	op.num = HWO_INT_TRIGGER;
-	op.int_ctrl.num = INT_SCHED;
-	op.int_ctrl.data = 0x0;
+	this_t = sched_running();
 
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
-
-	while(1){
-		lnx_pause();
-
-		if(sched_running()->parent->pid == 0)
-			break;
-	}
+	// Kernel and user thread yield calls need to be differentiated since the
+	// kernel thread yields from the kernel main loop while a user thread
+	// yields from within a syscall, i.e. from within a signal context. To
+	// prevent issues with the active thread, scheduler and syscall interrupts
+	// need to have the same priority, i.e. use the same x86 signal. Hence an
+	// active syscall cannot be interrupted by a scheduler interrupt.
+	if(this_t->parent->pid != 0)	yield_user(this_t);
+	else							yield_kernel();
 
 	return 0;
 }
@@ -97,6 +98,51 @@ static int init(void){
 }
 
 platform_init(0, init);
+
+static void yield_user(thread_t const *this_t){
+	int_type_t imask;
+
+
+	/* wait for an interrupt */
+	imask = int_enabled();
+
+	// re-schdule
+	sched_trigger();
+	int_enable(imask);	// disabled by sched_trigger()
+
+	// wait for this_t to become ready
+	while(this_t->state != READY){
+		lnx_pause();
+	}
+
+	/* re-schedule this_t */
+	while(sched_running() != this_t){
+		sched_trigger();
+	}
+
+	int_enable(imask);	// disabled by sched_trigger()
+}
+
+static void yield_kernel(void){
+	x86_hw_op_t op;
+
+
+	/* trigger scheduler interrupt */
+	op.num = HWO_INT_TRIGGER;
+	op.int_ctrl.num = INT_SCHED;
+	op.int_ctrl.data = 0x0;
+
+	x86_hw_op_write(&op);
+	x86_hw_op_write_writeback(&op);
+
+	/* suspend till kernel is scheduled again */
+	while(1){
+		lnx_pause();
+
+		if(sched_running()->parent->pid == 0)
+			break;
+	}
+}
 
 static void overlay_exit(void *param){
 	sc_exit_t kparam;
