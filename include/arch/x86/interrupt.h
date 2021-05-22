@@ -20,6 +20,7 @@ int_type_t x86_int_enabled(void);
 int_type_t x86_int_enable(int_type_t mask);
 
 x86_hw_op_t *x86_int_op(void);
+void x86_int_trigger(int_num_t num);
 
 
 #endif // X86_INTERRUPT_H

@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <arch/x86/hardware.h>
 #include <sys/types.h>
+#include <sys/compiler.h>
 #include <sys/list2.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
@@ -57,8 +58,10 @@ static size_t priorities[] = {
 	// and syscall interrupts need to have the same priority
 	1,	// INT_SCHED
 	1,	// INT_SYSCALL
-	0,	// INT_UART0
-	0,	// INT_UART1
+	0,	// INT_UART0_RX
+	0,	// INT_UART0_TX
+	0,	// INT_UART1_RX
+	0,	// INT_UART1_TX
 };
 
 

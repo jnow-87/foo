@@ -63,6 +63,18 @@ x86_hw_op_t *x86_int_op(void){
 	return int_op;
 }
 
+void x86_int_trigger(int_num_t num){
+	x86_hw_op_t op;
+
+
+	op.num = HWO_INT_TRIGGER;
+	op.int_ctrl.num = num;
+	op.int_ctrl.data = 0x0;
+
+	x86_hw_op_write(&op);
+	x86_hw_op_write_writeback(&op);
+}
+
 
 /* local functions */
 static int init(void){

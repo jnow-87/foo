@@ -124,16 +124,7 @@ static void yield_user(thread_t const *this_t){
 }
 
 static void yield_kernel(void){
-	x86_hw_op_t op;
-
-
-	/* trigger scheduler interrupt */
-	op.num = HWO_INT_TRIGGER;
-	op.int_ctrl.num = INT_SCHED;
-	op.int_ctrl.data = 0x0;
-
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
+	x86_int_trigger(INT_SCHED);
 
 	/* suspend till kernel is scheduled again */
 	while(1){

@@ -87,7 +87,7 @@ static int server(int sock){
 		return ERROR("bind(): %s\n", strerror(errno));
 
 	if(opts.type == SOCK_STREAM && listen(sock, 2) != 0)
-		return ERROR("liste(): %s\n", strerror(errno));
+		return ERROR("listen(): %s\n", strerror(errno));
 
 	printf("server awaiting connection\n");
 
