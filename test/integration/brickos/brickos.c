@@ -43,13 +43,13 @@ int brickos_init_childs(void){
 	}
 
 	argv[0] = opts.kernel_image;
-	child_add_pipe(KERNEL, CONFIG_TEST_INT_DATA_PIPE_RD, CONFIG_TEST_INT_DATA_PIPE_WR);
-	child_add_pipe(KERNEL, CONFIG_TEST_INT_CTRL_PIPE_RD, CONFIG_TEST_INT_CTRL_PIPE_WR);
+	child_add_pipe(KERNEL, CONFIG_TEST_INT_HW_PIPE_RD, CONFIG_TEST_INT_HW_PIPE_WR);
+	child_add_pipe(KERNEL, CONFIG_TEST_INT_USR_PIPE_RD, CONFIG_TEST_INT_USR_PIPE_WR);
 	child_fork(KERNEL, argv);
 
 	argv[0] = opts.app_binary;
-	child_add_pipe(APP, CONFIG_TEST_INT_DATA_PIPE_RD, CONFIG_TEST_INT_DATA_PIPE_WR);
-	child_add_pipe(APP, CONFIG_TEST_INT_CTRL_PIPE_RD, CONFIG_TEST_INT_CTRL_PIPE_WR);
+	child_add_pipe(APP, CONFIG_TEST_INT_HW_PIPE_RD, CONFIG_TEST_INT_HW_PIPE_WR);
+	child_add_pipe(APP, CONFIG_TEST_INT_USR_PIPE_RD, CONFIG_TEST_INT_USR_PIPE_WR);
 	child_fork(APP, argv);
 
 	return 0;

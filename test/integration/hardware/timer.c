@@ -10,25 +10,39 @@
 #include <config/config.h>
 #include <time.h>
 #include <errno.h>
-#include <include/sys/math.h>
+#include <sys/math.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 
 
 /* macros */
-#define TIMER_US	MIN(CONFIG_KTIMER_CYCLETIME_US, CONFIG_SCHED_CYCLETIME_US)
+#define CYCLE_TIME_US	MIN(CONFIG_KTIMER_CYCLETIME_US, CONFIG_SCHED_CYCLETIME_US)
+#define TIMER_FACTOR 	(CONFIG_KTIMER_CYCLETIME_US / CYCLE_TIME_US)
+#define SCHED_FACTOR	(CONFIG_SCHED_CYCLETIME_US / CYCLE_TIME_US)
 
 
 /* global functions */
 void hw_timer(void){
+	static size_t timer = 0,
+				  sched = 0;
 	struct timespec ts;
 
 
-	ts.tv_sec = TIMER_US / 1000000;
-	ts.tv_nsec = (TIMER_US % 1000000) * 1000;
+	ts.tv_sec = CYCLE_TIME_US / 1000000;
+	ts.tv_nsec = (CYCLE_TIME_US % 1000000) * 1000;
 
 	while(nanosleep(&ts, &ts) && errno == EINTR);
 
-	DEBUG("enqueue timer interrupt\n");
-	hw_int_request(INT_TIMER, 0x0, HWS_HARDWARE, 0);
+	timer++;
+	sched++;
+
+	if(timer == TIMER_FACTOR){
+		hw_int_request(INT_TIMER, 0x0, PRIV_HARDWARE, 0);
+		timer = 0;
+	}
+
+	if(sched == SCHED_FACTOR){
+		hw_int_request(INT_SCHED, 0x0, PRIV_HARDWARE, 0);
+		sched = 0;
+	}
 }

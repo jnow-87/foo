@@ -25,7 +25,7 @@
 /* types */
 // syscall common
 typedef enum{
-	SC_OPEN,
+	SC_OPEN = 0,
 	SC_DUP,
 	SC_CLOSE,
 	SC_READ,

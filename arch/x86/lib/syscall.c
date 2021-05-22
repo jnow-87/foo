@@ -14,6 +14,7 @@
 #include <lib/init.h>
 #include <lib/stdlib.h>
 #include <lib/sched.h>
+#include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/devicetree.h>
@@ -47,7 +48,7 @@ typedef struct{
 // hardware event handling
 static void hw_event_hdlr(int sig);
 
-static int event_int_return(x86_hw_op_t *op);
+static int event_syscall_return(x86_hw_op_t *op);
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
 static int event_inval(x86_hw_op_t *op);
@@ -70,12 +71,14 @@ static int volatile syscall_return_pending = 0;
 
 static ops_t ops[] = {
 	{ .name = "exit",			.hdlr = event_inval },
-	{ .name = "int trigger",	.hdlr = event_inval },
-	{ .name = "int return",		.hdlr = event_int_return },
-	{ .name = "int set",		.hdlr = event_inval },
-	{ .name = "int state",		.hdlr = event_inval },
-	{ .name = "copy from user",	.hdlr = event_copy_from_user },
-	{ .name = "copy to user",	.hdlr = event_copy_to_user },
+	{ .name = "int_trigger",	.hdlr = event_inval },
+	{ .name = "int_return",		.hdlr = event_inval },
+	{ .name = "int_set",		.hdlr = event_inval },
+	{ .name = "int_state",		.hdlr = event_inval },
+	{ .name = "syscall_return",	.hdlr = event_syscall_return },
+	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
+	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
+	{ .name = "uart_config",	.hdlr = event_inval },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
@@ -145,16 +148,18 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 	op.int_ctrl.num = INT_SYSCALL;
 	op.int_ctrl.data = &sc;
 
-	LNX_DEBUG("syscall %d\n", num);
-	LNX_DEBUG("  param: %p\n", param);
-	LNX_DEBUG("  psize: %u\n", psize);
-	LNX_DEBUG("   data: %p\n", &sc);
+	LNX_DEBUG("syscall(num = %d, param = %p, psize = %u, data = %p)\n",
+		num,
+		param,
+		psize,
+		&sc
+	);
 
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);
 
 	// wait for interrupt return
-	LNX_DEBUG("waiting for int return\n");
+	LNX_DEBUG("waiting for syscall return\n");
 
 	while(syscall_return_pending){
 		lnx_nanosleep(500000);
@@ -172,7 +177,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 /* local functions */
 static int init(void){
-	lnx_sigset(CONFIG_TEST_INT_DATA_SIG, hw_event_hdlr);
+	lnx_sigaction(CONFIG_TEST_INT_HW_SIG, hw_event_hdlr, 0x0);
 
 	app_heap = (void*)mem_blob;
 	memblock_init(app_heap, DEVTREE_APP_HEAP_SIZE);
@@ -187,9 +192,7 @@ static void hw_event_hdlr(int sig){
 
 
 	x86_hw_op_read(&op);
-	LNX_DEBUG("[%u] hardware-op\n", op.seq);
-	LNX_DEBUG("  [%u] tid: %u\n", op.seq, op.tid);
-	LNX_DEBUG("  [%u] event: %s (%d)\n", op.seq, ops[op.num].name, op.num);
+	LNX_DEBUG("[%u] %s(tid = %u, num = %d)\n", op.seq, ops[op.num].name, op.tid, op.num);
 
 	if(op.num >= HWO_NOPS)
 		op.num = HWO_NOPS;
@@ -201,7 +204,7 @@ static void hw_event_hdlr(int sig){
 	x86_hw_op_read_writeback(&op);
 }
 
-static int event_int_return(x86_hw_op_t *op){
+static int event_syscall_return(x86_hw_op_t *op){
 	if(cas((int*)(&syscall_return_pending), 1, 0) != 0)
 		LNX_EEXIT("no pending syscall\n");
 
@@ -209,15 +212,15 @@ static int event_int_return(x86_hw_op_t *op){
 }
 
 static int event_copy_from_user(x86_hw_op_t *op){
-	LNX_DEBUG("  [%u] copy-from: %#x %u\n", op->seq, op->copy.addr, op->copy.n);
-	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, op->copy.addr, op->copy.n);
+	LNX_DEBUG("  [%u] addr = %p, size = %u\n", op->seq, op->copy.addr, op->copy.n);
+	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, op->copy.addr, op->copy.n);
 
 	return 0;
 }
 
 static int event_copy_to_user(x86_hw_op_t *op){
-	LNX_DEBUG("  [%u] copy-to: %#x %u\n", op->seq, op->copy.addr, op->copy.n);
-	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, op->copy.addr, op->copy.n);
+	LNX_DEBUG("  [%u] addr = %p, size = %u\n", op->seq, op->copy.addr, op->copy.n);
+	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, op->copy.addr, op->copy.n);
 
 	return 0;
 }
@@ -229,6 +232,8 @@ static int event_inval(x86_hw_op_t *op){
 }
 
 static int overlay_call(sc_num_t num, void *param, overlay_location_t loc){
+	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
+
 	if(overlays[num].call == 0x0 || (overlays[num].loc & loc) == 0)
 		return 0;
 

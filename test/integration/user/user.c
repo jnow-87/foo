@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <include/sys/compiler.h>
+#include <sys/compiler.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/child.h>
@@ -48,7 +48,7 @@ static user_cmd_t cmds[] = {
 
 
 /* global functions */
-void user_input_help(void){
+int user_input_help(void){
 	printf(
 		"Starting %s in interactive mode.\n"
 		"  In interactive mode both kernel and application are halted\n"
@@ -67,6 +67,8 @@ void user_input_help(void){
 	);
 
 	cmd_help("");
+
+	return 0;
 }
 
 void user_input_process(void){
@@ -150,8 +152,7 @@ static void cmd_tick(char const *line){
 
 	for(i=0; i<n; i++){
 		printf("tick %u/%u\n", i + 1, n);
-		hw_int_request(INT_TIMER, 0x0, HWS_HARDWARE, 0);
-		usleep(5);
+		hw_int_request(INT_TIMER, 0x0, PRIV_HARDWARE, 0);
 	}
 }
 
@@ -176,7 +177,7 @@ static void cmd_signal(char const *line){
 static void cmd_app(char const *line){
 	child_lock(APP);
 
-	child_signal(APP, CONFIG_TEST_INT_CTRL_SIG);
+	child_signal(APP, CONFIG_TEST_INT_USR_SIG);
 	child_write(APP, 1, (char*)line, strlen(line));
 	child_write(APP, 1, "\n", 1);
 

@@ -9,6 +9,7 @@
 
 #include <arch/x86/linux.h>
 #include <sys/types.h>
+#include <sys/string.h>
 
 
 /* macros */
@@ -22,7 +23,7 @@ typedef struct{
 
 	void (*sigreturn)(void);
 
-	uint64_t mask[16];
+	lnx_sigset_t mask;
 } lnx_sigaction_t;
 
 
@@ -31,7 +32,7 @@ static void sigreturn_rt(void) __attribute__((naked));
 
 
 /* global functions */
-void lnx_sigset(int sig, lnx_sig_hdlr_t hdlr){
+void lnx_sigaction(int sig, lnx_sig_hdlr_t hdlr, lnx_sigset_t *blocked){
 	long int r;
 	lnx_sigaction_t act = { 0x0 };
 
@@ -39,6 +40,9 @@ void lnx_sigset(int sig, lnx_sig_hdlr_t hdlr){
 	act.hdlr = hdlr;
 	act.sigreturn = &sigreturn_rt;
 	act.flags |= SIG_FL_USE_SIGRETURN;
+
+	if(blocked)
+		memcpy(&act.mask, blocked, sizeof(lnx_sigset_t));
 
 	r = lnx_syscall(LNX_SYS_SIGACTION,
 		(unsigned long int[6]){
@@ -54,6 +58,14 @@ void lnx_sigset(int sig, lnx_sig_hdlr_t hdlr){
 
 	if(r != 0)
 		LNX_SYSCALL_ERROR_EXIT("%d\n", r);
+}
+
+void lnx_sigaddset(lnx_sigset_t *set, int sig){
+	size_t i;
+
+
+	i = --sig / 64;
+	set->data[i] |= ((uint64_t)0x1) << (sig % 64);
 }
 
 void lnx_kill(int pid, int sig){

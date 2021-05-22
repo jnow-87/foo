@@ -38,6 +38,16 @@ devices = {
 	uart0 = {
 		compatible = "x86,uart";
 
+		/**
+		 * uart hardware description
+		 * 	has to match the device tree data type
+		 *	of the x86 uart driver
+		 */
+		string = "/dev/stdin";		// path
+		int<8> = [
+			3						// rx interrupt
+		];
+
 		tty0 = {
 			compatible = "terminal";
 

@@ -11,17 +11,30 @@
 #define TEST_INT_HARDWARE_H
 
 
-#include <stdbool.h>
-#include <include/arch/x86/hardware.h>
+#include <arch/x86/hardware.h>
+#include <sys/types.h>
+#include <sys/uart.h>
 #include <brickos/child.h>
 
 
 /* types */
 typedef struct{
-	x86_hw_op_src_t priviledge;
+	size_t event_ack,
+		   event_nack,
+		   int_ack,
+		   int_nack;
+} hw_stats_t;
+
+typedef struct{
+	x86_priv_t privilege;
 	unsigned int tid;
+
 	bool int_enabled;
-	bool syscall_pending;
+	size_t ints_active;
+
+	bool locked;
+
+	hw_stats_t stats;
 } hw_state_t;
 
 
@@ -32,8 +45,11 @@ void hw_state_unlock(void);
 
 void hw_state_wait(void);
 
+void hw_state_print(void);
+
 // hardware ops
 void hw_op_write(x86_hw_op_t *op, child_t *tgt);
+void hw_op_write_sig(x86_hw_op_t *op, child_t *tgt, int sig);
 void hw_op_write_writeback(x86_hw_op_t *op, child_t *tgt);
 void hw_op_read(x86_hw_op_t *op, child_t *src);
 void hw_op_read_ack(child_t *src, int ack);
@@ -46,11 +62,18 @@ child_t *hw_event_dequeue(void);
 
 // interrupt handling
 void hw_int_process(void);
-void hw_int_request(int num, void *data, x86_hw_op_src_t src, unsigned int tid);
-void hw_int_return(x86_hw_op_src_t target, unsigned int tid);
+void hw_int_request(int num, void *data, x86_priv_t src, unsigned int tid);
+void hw_int_return(int num, x86_priv_t target, unsigned int tid);
 
 // interrupt timer
 void hw_timer(void);
+
+// uart
+int uart_init(void);
+void uart_cleanup(void);
+
+void uart_poll(void);
+int uart_configure(char const *path, int int_num, uart_cfg_t *cfg);
 
 
 /* external variables */

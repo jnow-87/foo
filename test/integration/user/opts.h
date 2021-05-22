@@ -19,6 +19,7 @@
 #define DEFAULT_APP_BINARY		CONFIG_TEST_INT_APP_BINARY
 #define DEFAULT_VERBOSITY		0
 #define DEFAULT_APP_MODE		AM_NONINTERACTIVE
+#define DEFAULT_STATS_FD		-1
 
 #define PROGNAME				"itest"
 
@@ -35,6 +36,8 @@ typedef struct{
 		 *app_binary;
 
 	unsigned int verbosity;
+	int stats_fd;
+
 	app_mode_t app_mode;
 } opts_t;
 

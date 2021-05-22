@@ -9,8 +9,7 @@
 
 #include <stdlib.h>
 #include <pthread.h>
-#include <include/arch/x86/hardware.h>
-#include <include/sys/list2.h>
+#include <arch/x86/hardware.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/child.h>
@@ -29,13 +28,6 @@
 
 
 /* types */
-typedef struct event_t{
-	struct event_t *prev,
-				   *next;
-
-	child_t *src;
-} event_t;
-
 typedef struct{
 	char const *name;
 	int (*hdlr)(x86_hw_op_t *op);
@@ -51,8 +43,12 @@ static int event_int_return(x86_hw_op_t *op);
 static int event_int_set(x86_hw_op_t *op);
 static int event_int_state(x86_hw_op_t *op);
 
+static int event_syscall_return(x86_hw_op_t *op);
+
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
+
+static int event_uart_config(x86_hw_op_t *op);
 
 static int event_inval(x86_hw_op_t *op);
 
@@ -60,33 +56,39 @@ static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op);
 
 
 /* static variables */
-static event_t *event_lst = 0x0;
+static size_t events[2] = { 0 };
 static pthread_mutex_t event_mtx = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t event_sig = PTHREAD_COND_INITIALIZER;
 
 static ops_cfg_t hw_ops[] = {
 	{ .name = "exit",			.hdlr = event_exit },
-	{ .name = "int trigger",	.hdlr = event_int_trigger },
-	{ .name = "int return",		.hdlr = event_int_return },
-	{ .name = "int set",		.hdlr = event_int_set },
-	{ .name = "int state",		.hdlr = event_int_state },
-	{ .name = "copy from user",	.hdlr = event_copy_from_user },
-	{ .name = "copy to user",	.hdlr = event_copy_to_user },
+	{ .name = "int_trigger",	.hdlr = event_int_trigger },
+	{ .name = "int_return",		.hdlr = event_int_return },
+	{ .name = "int_set",		.hdlr = event_int_set },
+	{ .name = "int_state",		.hdlr = event_int_state },
+	{ .name = "syscall_return",	.hdlr = event_syscall_return },
+	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
+	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
+	{ .name = "uart_config",	.hdlr = event_uart_config },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
 
 /* global functions */
 void hw_op_write(x86_hw_op_t *op, child_t *tgt){
+	hw_op_write_sig(op, tgt, CONFIG_TEST_INT_HW_SIG);
+}
+
+void hw_op_write_sig(x86_hw_op_t *op, child_t *tgt, int sig){
 	static unsigned int seq_num[2] = { 0 };
 
 
-	op->src = HWS_HARDWARE;
+	op->src = PRIV_HARDWARE;
 
-	child_signal(tgt, CONFIG_TEST_INT_DATA_SIG);
+	child_signal(tgt, sig);
 
 	child_read(tgt, 0, &op->seq, sizeof(op->seq));
-	CHECK_SEQ_NUM(op->seq, seq_num[(tgt == KERNEL) ? HWS_KERNEL : HWS_USER]++);
+	CHECK_SEQ_NUM(op->seq, seq_num[(tgt == KERNEL) ? PRIV_KERNEL : PRIV_USER]++);
 
 	child_write(tgt, 0, op, sizeof(*op));
 }
@@ -108,10 +110,10 @@ void hw_op_write_writeback(x86_hw_op_t *op, child_t *tgt){
 
 void hw_op_read(x86_hw_op_t *op, child_t *src){
 	static unsigned int seq_num[2] = { 0 };
-	x86_hw_op_src_t idx;
+	x86_priv_t idx;
 
 
-	idx = (src == KERNEL) ? HWS_KERNEL : HWS_USER;
+	idx = (src == KERNEL) ? PRIV_KERNEL : PRIV_USER;
 
 	child_write(src, 0, seq_num + idx, sizeof(seq_num[0]));
 
@@ -134,7 +136,6 @@ void hw_op_read_writeback(x86_hw_op_t *op, child_t *src){
 }
 
 void hw_event_process(void){
-	bool handle;
 	x86_hw_op_t op;
 	child_t *src,
 			*op_src;
@@ -148,27 +149,29 @@ void hw_event_process(void){
 	hw_op_read(&op, src);
 
 	// ensure hardware events are only processed for the appropriate
-	// priviledge level and thread in order to prevent confusing the
+	// privilege level and thread in order to prevent confusing the
 	// kernel scheduler by e.g. triggering a syscall from user space
 	// while a kernel thread is active according to the scheduler
-	handle = (hw_state.priviledge == (src == KERNEL ? HWS_KERNEL : HWS_USER))
-		   && (hw_state.tid == op.tid || src == KERNEL);
+	if((hw_state.privilege == (src == KERNEL ? PRIV_KERNEL : PRIV_USER))
+	&& (hw_state.tid == op.tid || src == KERNEL)
+	){
+		DEBUG(2, "[%u] %s(src = %s, tid = %u, num = %d)\n",
+			op.seq,
+			hw_ops[op.num].name,
+			src->name,
+			op.tid,
+			op.num
+		);
 
-	hw_op_read_ack(src, (handle ? 1 : 0));
-
-	if(handle){
-		DEBUG("[%u] hardware event from %s\n", op.seq, src->name);
+		hw_op_read_ack(src, 1);
 
 		if(op.num >= HWO_NOPS)
 			EEXIT("  [%u] invalid hardware-op %d from %s\n", op.seq, op.num, src->name);
 
-		DEBUG("  [%u] tid: %u\n", op.tid);
-		DEBUG("  [%u] event: %s (%d)\n", op.seq, hw_ops[op.num].name, op.num);
-
-		if(op.src != HWS_KERNEL && op.src != HWS_USER)
+		if(op.src != PRIV_KERNEL && op.src != PRIV_USER)
 			EEXIT("  [%u] invalid hardware-op src: %d\n", op.seq, op.src);
 
-		op_src = (op.src == HWS_KERNEL) ? KERNEL : APP;
+		op_src = (op.src == PRIV_KERNEL) ? KERNEL : APP;
 
 		if(src != op_src)
 			EEXIT("  [%u] hardware-op src mismatch: have %s expect %s\n", op.seq, op_src->name, src->name);
@@ -177,46 +180,41 @@ void hw_event_process(void){
 
 		hw_op_read_writeback(&op, src);
 
-		DEBUG("  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
+		DEBUG(2, "  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
+		hw_state.stats.event_ack++;
 	}
-	else
+	else{
+		hw_op_read_ack(src, 0);
+		hw_state.stats.event_nack++;
+
 		hw_event_enqueue(src);
+	}
 
 	child_unlock(src);
 	hw_state_unlock();
 }
 
 void hw_event_enqueue(child_t *src){
-	event_t *e;
-
-
-	e = malloc(sizeof(event_t));
-
-	if(e == 0x0)
-		EEXIT("out of memory\n");
-
-	e->src = src;
-
 	pthread_mutex_lock(&event_mtx);
 
-	__list2_add_tail(event_lst, e, prev, next);
-	pthread_cond_signal(&event_sig);
+	if(++events[src == KERNEL ? 0 : 1] == 0)
+		EEXIT("event overflow\n");
 
+	pthread_cond_signal(&event_sig);
 	pthread_mutex_unlock(&event_mtx);
 }
 
 child_t *hw_event_dequeue(void){
-	event_t *e;
 	child_t *src;
 
 
 	pthread_mutex_lock(&event_mtx);
 
 	while(1){
-		e = event_lst;
+		if(events[hw_state.privilege] != 0){
+			events[hw_state.privilege]--;
+			src = (hw_state.privilege == PRIV_KERNEL) ? KERNEL : APP;
 
-		if(e != 0x0){
-			__list2_rm(event_lst, e, prev, next);
 			break;
 		}
 
@@ -225,20 +223,17 @@ child_t *hw_event_dequeue(void){
 
 	pthread_mutex_unlock(&event_mtx);
 
-	src = e->src;
-	free(e);
-
 	return src;
 }
 
 
 /* local functions */
 static int event_exit(x86_hw_op_t *op){
-	DEBUG("  [%u] exit code: %d\n", op->seq, op->exit.retval);
+	DEBUG(0, "  [%u] exit code: %d\n", op->seq, op->exit.retval);
 
 	if(op->exit.retval != 0){
 		ERROR("unexpected exit from %s, exit code %d\n",
-			(op->src == HWS_KERNEL) ? KERNEL->name : APP->name,
+			(op->src == PRIV_KERNEL) ? KERNEL->name : APP->name,
 			op->exit.retval
 		);
 	}
@@ -253,30 +248,57 @@ static int event_int_trigger(x86_hw_op_t *op){
 }
 
 static int event_int_return(x86_hw_op_t *op){
-	if(op->src != HWS_KERNEL)
+	if(op->src != PRIV_KERNEL)
 		EEXIT("int return only supposed to be triggered by kernel\n");
 
-	DEBUG("  [%u] return to %s space, tid %u\n",
+	DEBUG(0, "  [%u] return to %s space, tid %u\n",
 		op->seq,
-		(op->int_return.to == HWS_USER) ? "user" : "kernel",
+		X86_PRIV_NAME(op->int_return.to),
 		op->int_return.tid
 	);
 
-	hw_int_return(op->int_return.to, op->int_return.tid);
+	hw_int_return(op->int_return.num, op->int_return.to, op->int_return.tid);
+	pthread_cond_signal(&event_sig);
 
 	return 0;
 }
 
 static int event_int_set(x86_hw_op_t *op){
+	DEBUG(2, "  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
+
+	if(hw_state.int_enabled != op->int_ctrl.en)
+		DEBUG(0, "  [%u] change int state: %d\n", op->seq, op->int_ctrl.en);
+
 	hw_state.int_enabled = op->int_ctrl.en;
-	DEBUG("  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
 
 	return op->int_ctrl.en == hw_state.int_enabled ? 0 : -1;
 }
 
 static int event_int_state(x86_hw_op_t *op){
 	op->int_ctrl.en = hw_state.int_enabled;
-	DEBUG("  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
+	DEBUG(2, "  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
+
+	return 0;
+}
+
+static int event_syscall_return(x86_hw_op_t *op){
+	x86_hw_op_t app_op;
+
+
+	app_op = *op;
+
+	if(app_op.src != PRIV_KERNEL)
+		EEXIT("syscall return only supposed to be triggered by kernel\n");
+
+	child_lock(APP);
+
+	hw_op_write(&app_op, APP);
+	hw_op_write_writeback(&app_op, APP);
+
+	child_unlock(APP);
+
+	if(app_op.retval != 0)
+		EEXIT("syscall return failed with %d\n", app_op.retval);
 
 	return 0;
 }
@@ -289,8 +311,12 @@ static int event_copy_to_user(x86_hw_op_t *op){
 	return copy_op(APP, KERNEL, op);
 }
 
+static int event_uart_config(x86_hw_op_t *op){
+	return uart_configure(op->uart.path, op->uart.int_num, &op->uart.cfg);
+}
+
 static int event_inval(x86_hw_op_t *op){
-	DEBUG("  [%u] invalid\n", op->seq);
+	DEBUG(0, "  [%u] invalid\n", op->seq);
 	return -1;
 }
 
@@ -300,7 +326,7 @@ static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op){
 
 	app_op = *op;
 
-	if(op->src != HWS_KERNEL)
+	if(op->src != PRIV_KERNEL)
 		EEXIT("copy from/to user only supposed to be triggered by kernel\n");
 
 	child_lock(APP);

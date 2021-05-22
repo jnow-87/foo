@@ -10,13 +10,13 @@
 #define _GNU_SOURCE
 
 #include <config/config.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
+#include <arch/x86/hardware.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <pthread.h>
@@ -61,7 +61,7 @@ void child_destroy(child_t *child){
 	child_pipe_t *pipe;
 
 
-	DEBUG("terminating child %s (pid: %d)\n", child->name, child->pid);
+	DEBUG(1, "terminating child %s (pid: %d)\n", child->name, child->pid);
 
 	if(child->pid != -1){
 		(void)child_signal(child, SIGKILL);
@@ -125,7 +125,7 @@ void child_fork(child_t *child, char **argv){
 	sigset_t sigs;
 
 
-	DEBUG("forking %s \"%s\"\n", child->name, argv[0]);
+	DEBUG(1, "forking %s \"%s\"\n", child->name, argv[0]);
 
 	/* create fork-check */
 	if(pipe(fork_check_pipe) < 0)
@@ -150,8 +150,10 @@ void child_fork(child_t *child, char **argv){
 
 		// ensure communication signals are not blocked
 		r |= sigemptyset(&sigs);
-		r |= sigaddset(&sigs, CONFIG_TEST_INT_DATA_SIG);
-		r |= sigaddset(&sigs, CONFIG_TEST_INT_CTRL_SIG);
+		r |= sigaddset(&sigs, CONFIG_TEST_INT_USR_SIG);
+
+		for(i=0; i<X86_INT_PRIOS; i++)
+			r |= sigaddset(&sigs, CONFIG_TEST_INT_HW_SIG + i);
 
 		r |= pthread_sigmask(SIG_UNBLOCK, &sigs, 0x0);
 
@@ -204,7 +206,7 @@ void child_fork(child_t *child, char **argv){
 		(void)close(p->pipe_wr[0]);
 	}
 
-	DEBUG("%s pid: %u\n", child->name, child->pid);
+	DEBUG(1, "%s pid: %u\n", child->name, child->pid);
 
 	return;
 
@@ -281,7 +283,7 @@ static int io_wrapper(int fd, void *buf, ssize_t n, io_call_t call){
 		if(r < 0){
 			switch(errno){
 			case EINTR:
-				DEBUG("tolerated i/o error %s\n", strerror(errno));
+				DEBUG(2, "tolerated i/o error %s\n", strerror(errno));
 				break;
 
 			default:

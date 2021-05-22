@@ -15,9 +15,9 @@
 
 /* macros */
 #if defined(BUILD_KERNEL)
-# define HW_OP_SRC	HWS_KERNEL
+# define HW_OP_SRC	PRIV_KERNEL
 #elif defined(BUILD_LIBSYS)
-# define HW_OP_SRC	HWS_USER
+# define HW_OP_SRC	PRIV_USER
 #else
 CPP_ASSERT(invalid build config)
 #endif // BUILD_KERNEL
@@ -45,16 +45,16 @@ void x86_hw_op_write(x86_hw_op_t *op){
 	op->src = HW_OP_SRC;
 	op->tid = x86_hw_op_active_tid;
 
-	lnx_kill(lnx_getppid(), CONFIG_TEST_INT_DATA_SIG);
+	lnx_kill(lnx_getppid(), CONFIG_TEST_INT_HW_SIG);
 
 	ack = 0;
 
 	while(!ack){
-		lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, &op->seq, sizeof(op->seq));
+		lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, &op->seq, sizeof(op->seq));
 		CHECK_SEQ_NUM(op->seq, seq_num++);
 
-		lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, op, sizeof(*op));
-		lnx_read(CONFIG_TEST_INT_DATA_PIPE_RD, &ack, sizeof(ack));
+		lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, op, sizeof(*op));
+		lnx_read(CONFIG_TEST_INT_HW_PIPE_RD, &ack, sizeof(ack));
 	}
 }
 
@@ -64,10 +64,10 @@ void x86_hw_op_write_writeback(x86_hw_op_t *op){
 
 	seq_num = op->seq;
 
-	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, op, sizeof(*op));
+	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, op, sizeof(*op));
 	CHECK_SEQ_NUM(op->seq, seq_num);
 
-	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, &op->seq, sizeof(op->seq));
+	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, &op->seq, sizeof(op->seq));
 
 	if(op->retval != 0)
 		LNX_EEXIT("[%u] hardware-op %d returned failure %d\n", op->seq, op->num, op->retval);
@@ -77,9 +77,9 @@ void x86_hw_op_read(x86_hw_op_t *op){
 	static unsigned int seq_num = 0;
 
 
-	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, &seq_num, sizeof(seq_num));
+	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, &seq_num, sizeof(seq_num));
 
-	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, op, sizeof(*op));
+	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, op, sizeof(*op));
 	CHECK_SEQ_NUM(op->seq, seq_num++);
 }
 
@@ -87,8 +87,8 @@ void x86_hw_op_read_writeback(x86_hw_op_t *op){
 	unsigned int seq_num;
 
 
-	lnx_write(CONFIG_TEST_INT_DATA_PIPE_WR, op, sizeof(*op));
+	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, op, sizeof(*op));
 
-	lnx_read_fix(CONFIG_TEST_INT_DATA_PIPE_RD, &seq_num, sizeof(seq_num));
+	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, &seq_num, sizeof(seq_num));
 	CHECK_SEQ_NUM(seq_num, op->seq);
 }

@@ -7,4 +7,4 @@
 
 
 
-hostobj-y := state.o ops.o interrupt.o timer.o
+hostobj-y := state.o ops.o interrupt.o timer.o uart.o

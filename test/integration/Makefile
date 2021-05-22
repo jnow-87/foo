@@ -9,12 +9,12 @@
 
 hostbin-y := itestfw
 
-itestfw-y := main.o hardware/ brickos/ user/
+itestfw-y := main.o linux.o hardware/ brickos/ user/
 
 
 itestfw-hostcppflags += \
-	-I$(loc_src_tree) \
-	-I$(src_tree)
+	-I"$(src_tree)/include/" \
+	-I$(loc_src_tree)
 
 itestfw-hostcflags += \
 	-fno-builtin

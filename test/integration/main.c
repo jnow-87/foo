@@ -14,8 +14,9 @@
 #include <string.h>
 #include <signal.h>
 #include <pthread.h>
+#include <arch/x86/hardware.h>
 #include <sys/signalfd.h>
-#include <include/sys/compiler.h>
+#include <sys/compiler.h>
 #include <user/debug.h>
 #include <user/opts.h>
 #include <user/user.h>
@@ -25,14 +26,13 @@
 
 
 /* macros */
-#define CHECK_RTSIG(sig){ \
-	if(sig < SIGRTMIN || sig > SIGRTMAX){ \
-		EEXIT("%s is not a real-time signal, i.e. in the range of %u - %u\n", \
-			#sig, \
-			SIGRTMIN, \
-			SIGRTMAX \
-		); \
-	} \
+#define THREAD(_name, _when, _init, _call, _cleanup){ \
+	.tid = 0, \
+	.name = _name, \
+	.when = _when, \
+	.init = _init, \
+	.call = _call, \
+	.cleanup = _cleanup, \
 }
 
 
@@ -42,7 +42,9 @@ typedef struct{
 	char const *name;
 	app_mode_t when;
 
+	int (*init)(void);
 	void (*call)(void);
+	void (*cleanup)(void);
 } thread_cfg_t;
 
 
@@ -50,6 +52,7 @@ typedef struct{
 static void *thread_wrapper(void *arg);
 
 static int signal_hdlr(int fd);
+static void verify_signals(void);
 
 static void exit_hdlr(int status, void *arg);
 static void cleanup(void);
@@ -59,10 +62,11 @@ static void cleanup(void);
 static int volatile exit_status = 7;
 
 static thread_cfg_t threads[] = {
-	{ .tid = 0,	.name = "interrupt controller",		.when = AM_ALWAYS,			.call = hw_int_process },
-	{ .tid = 0,	.name = "hardware event processor",	.when = AM_ALWAYS,			.call = hw_event_process },
-	{ .tid = 0,	.name = "timer",					.when = AM_NONINTERACTIVE,	.call = hw_timer },
-	{ .tid = 0,	.name = "user input",				.when = AM_INTERACTIVE,		.call = user_input_process },
+	THREAD("interrupts",		AM_ALWAYS,			0x0,				hw_int_process,		0x0),
+	THREAD("hardware-event",	AM_ALWAYS,			0x0,				hw_event_process,	0x0),
+	THREAD("timer",				AM_NONINTERACTIVE,	0x0,				hw_timer,			0x0),
+	THREAD("user-input",		AM_INTERACTIVE,		user_input_help,	user_input_process,	user_input_cleanup),
+	THREAD("uart",				AM_ALWAYS,			uart_init,			uart_poll,			uart_cleanup),
 };
 
 
@@ -78,16 +82,18 @@ int main(int argc, char **argv){
 		return 1;
 
 	/* init signal handling */
-	CHECK_RTSIG(CONFIG_TEST_INT_DATA_SIG);
-	CHECK_RTSIG(CONFIG_TEST_INT_CTRL_SIG);
+	verify_signals();
 
 	r = 0;
 
 	r |= sigemptyset(&sig_lst);
 	r |= sigaddset(&sig_lst, SIGINT);
 	r |= sigaddset(&sig_lst, SIGPIPE);
-	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_DATA_SIG);
-	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_CTRL_SIG);
+	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_USR_SIG);
+	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
+
+	for(i=0; i<X86_INT_PRIOS; i++)
+		r |= sigaddset(&sig_lst, CONFIG_TEST_INT_HW_SIG + i);
 
 	// ensure none of the threads gets any of the above signals
 	r |= pthread_sigmask(SIG_BLOCK, &sig_lst, 0x0);
@@ -110,15 +116,11 @@ int main(int argc, char **argv){
 		if((threads[i].when & opts.app_mode) == 0)
 			continue;
 
-		DEBUG("create %s thread\n", threads[i].name);
+		DEBUG(1, "create %s thread\n", threads[i].name);
 
 		if(pthread_create(&threads[i].tid, 0, thread_wrapper, threads + i) != 0)
 			EEXIT("creating thread %s failed with %s\n", threads[i].name, strerror(errno));
 	}
-
-	/* help message */
-	if(opts.app_mode == AM_INTERACTIVE)
-		user_input_help();
 
 	/* signal handler */
 	if(on_exit(exit_hdlr, 0x0) != 0)
@@ -135,6 +137,9 @@ static void *thread_wrapper(void *arg){
 
 	cfg = (thread_cfg_t*)arg;
 
+	if(cfg->init && cfg->init() != 0)
+		EEXIT("%s thread init failed %s\n", cfg->name, strerror(errno));
+
 	while(1){
 		cfg->call();
 	}
@@ -142,7 +147,7 @@ static void *thread_wrapper(void *arg){
 	return 0x0;
 }
 
-int signal_hdlr(int fd){
+static int signal_hdlr(int fd){
 	struct signalfd_siginfo info;
 	child_t *src;
 
@@ -154,23 +159,45 @@ int signal_hdlr(int fd){
 		switch(info.ssi_signo){
 		case SIGINT:
 		case SIGPIPE: // fall through
-			DEBUG("initiate shutdown\n");
+			DEBUG(1, "initiate shutdown\n");
 			cleanup();
 
-			DEBUG("exit with error code %d\n", exit_status);
+			DEBUG(1, "exit with error code %d\n", exit_status);
 			_exit(exit_status);
 			break;
 
-		case CONFIG_TEST_INT_DATA_SIG:
+		case CONFIG_TEST_INT_HW_SIG:
 			src = ((pid_t)info.ssi_pid == KERNEL->pid) ? KERNEL : APP;
 
-			DEBUG("enqueue hardware event from %s\n", src->name);
+			DEBUG(2, "enqueue hardware event from %s\n", src->name);
 			hw_event_enqueue(src);
 			break;
 
-		case CONFIG_TEST_INT_CTRL_SIG: // fall through
+		case CONFIG_TEST_INT_USR_SIG: // fall through
 		default:
 			EEXIT("invalid signal\n");
+		}
+	}
+}
+
+static void verify_signals(){
+	size_t i,
+		   j;
+	int rt_sigs[X86_INT_PRIOS + 1];
+
+
+	rt_sigs[X86_INT_PRIOS] = CONFIG_TEST_INT_USR_SIG;
+
+	for(i=0; i<X86_INT_PRIOS; i++)
+		rt_sigs[i] = CONFIG_TEST_INT_HW_SIG + i;
+
+	for(i=0; i<X86_INT_PRIOS + 1; i++){
+		if(rt_sigs[i] < SIGRTMIN || rt_sigs[i] > SIGRTMAX)
+			EEXIT("%d is not a real-time signal (%d - %d\n", rt_sigs[i], SIGRTMIN, SIGRTMAX);
+
+		for(j=0; j<X86_INT_PRIOS + 1; j++){
+			if(i != j && rt_sigs[i] == rt_sigs[j])
+				EEXIT("signal %u used multiple times\n", rt_sigs[i])
 		}
 	}
 }
@@ -178,7 +205,7 @@ int signal_hdlr(int fd){
 static void exit_hdlr(int status, void *arg){
 	exit_status = status;
 
-	DEBUG("trigger program cleanup\n");
+	DEBUG(1, "trigger program cleanup\n");
 	kill(getpid(), SIGINT);
 	pthread_exit(0x0);
 }
@@ -188,7 +215,7 @@ static void cleanup(void){
 
 
 	for(i=0; i<sizeof_array(threads); i++){
-		DEBUG("terminating %s thread\n", threads[i].name);
+		DEBUG(1, "terminating %s thread\n", threads[i].name);
 
 		/**
 		 * NOTE Do not join threads.
@@ -204,9 +231,17 @@ static void cleanup(void){
 		pthread_cancel(threads[i].tid);
 	}
 
-	DEBUG("terminating child processes\n");
+	DEBUG(1, "terminating child processes\n");
 	brickos_destroy_childs();
 
-	user_input_cleanup();
+	for(i=0; i<sizeof_array(threads); i++){
+		if((threads[i].when & opts.app_mode) == 0 || threads[i].cleanup == 0x0)
+			continue;
+
+		DEBUG(1, "cleanup %s thread\n", threads[i].name);
+
+		threads[i].cleanup();
+	}
+
 	term_default();
 }

@@ -52,6 +52,7 @@
 "reg"							{ return NA_REG; }
 "int"							{ return NA_INT; }
 "size"							{ return NA_SIZE; }
+"string"						{ return NA_STRING; }
 
 	/* comments */
 \/\/.*\r?\n						{ devtree_col = 1; ++devtree_line; }

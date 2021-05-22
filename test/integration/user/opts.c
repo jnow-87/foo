@@ -12,8 +12,9 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <string.h>
-#include <include/sys/escape.h>
-#include <include/sys/compiler.h>
+#include <arch/x86/hardware.h>
+#include <sys/escape.h>
+#include <sys/compiler.h>
 #include <user/opts.h>
 
 
@@ -30,6 +31,7 @@ opts_t opts = {
 	.kernel_image = DEFAULT_KERNEL_IMAGE,
 	.app_binary = DEFAULT_APP_BINARY,
 	.verbosity = DEFAULT_VERBOSITY,
+	.stats_fd = DEFAULT_STATS_FD,
 	.app_mode = DEFAULT_APP_MODE,
 };
 
@@ -43,18 +45,20 @@ int opts_parse(int argc, char **argv){
 		{ .name = "application",	.has_arg = required_argument,	.flag = 0,	.val = 'a' },
 		{ .name = "verbose",		.has_arg = no_argument,			.flag = 0,	.val = 'v' },
 		{ .name = "interactive",	.has_arg = no_argument,			.flag = 0,	.val = 'i' },
+		{ .name = "stats",			.has_arg = required_argument,	.flag = 0,	.val = 's' },
 		{ .name = "help",			.has_arg = no_argument,			.flag = 0,	.val = 'h' },
 		{ 0, 0, 0, 0}
 	};
 
 
 	/* parse arguments */
-	while((opt = getopt_long(argc, argv, ":k:a:v::ih", long_opt, &long_optind)) != -1){
+	while((opt = getopt_long(argc, argv, ":k:a:v::is:h", long_opt, &long_optind)) != -1){
 		switch(opt){
 		case 'k':	opts.kernel_image = optarg; break;
 		case 'a':	opts.app_binary = optarg; break;
 		case 'v':	opts.verbosity = (optarg ? atoi(optarg) : 1); break;
 		case 'i':	opts.app_mode = AM_INTERACTIVE; break;
+		case 's':	opts.stats_fd = atoi(optarg); break;
 		case 'h':	(void)help(0x0); return argc;
 
 		case ':':	return help("missing argument to \"%s\"", argv[optind - 1]);
@@ -91,10 +95,11 @@ static int help(char const *err, ...){
 		"usage: %s [options]\n"
 		"\n"
 		"    fork kernel and application binary simulating a hardware between both\n"
-		"        data read/write fileno: %d/%d\n"
-		"        data signal: %d (%s)\n"
-		"        control read/write fileno: %d/%d\n"
-		"        control signal: %d (%s)\n"
+		"        hardware-op read/write fileno: %d/%d\n"
+		"        hardware-op signals: %d - %d\n"
+		"        user read/write fileno: %d/%d\n"
+		"        user signal: %d\n"
+		"        uart signal: %d\n"
 		"\n"
 		"Options:\n"
 		"    %-25.25s    %s\n"
@@ -102,19 +107,22 @@ static int help(char const *err, ...){
 		"\n"
 		"    %-25.25s    %s\n"
 		"    %-25.25s    %s\n"
+		"    %-25.25s    %s\n"
 		"\n"
 		"    %-25.25s    %s\n"
 		, PROGNAME
-		, CONFIG_TEST_INT_DATA_PIPE_RD
-		, CONFIG_TEST_INT_DATA_PIPE_WR
-		, CONFIG_TEST_INT_DATA_SIG, strsignal(CONFIG_TEST_INT_DATA_SIG)
-		, CONFIG_TEST_INT_CTRL_PIPE_RD
-		, CONFIG_TEST_INT_CTRL_PIPE_WR
-		, CONFIG_TEST_INT_CTRL_SIG, strsignal(CONFIG_TEST_INT_CTRL_SIG)
+		, CONFIG_TEST_INT_HW_PIPE_RD
+		, CONFIG_TEST_INT_HW_PIPE_WR
+		, CONFIG_TEST_INT_HW_SIG, CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - 1
+		, CONFIG_TEST_INT_USR_PIPE_RD
+		, CONFIG_TEST_INT_USR_PIPE_WR
+		, CONFIG_TEST_INT_USR_SIG
+		, CONFIG_TEST_INT_UART_SIG
 		, "-k, --kernel=<image>", "use <image> as kernel " DEFAULT(DEFAULT_KERNEL_IMAGE)
 		, "-a, --application=<image>", "use <image> as application binary " DEFAULT(DEFAULT_APP_BINARY)
 		, "-i, --interactive", "test execution is under user control " DEFAULT(DEFAULT_APP_MODE)
 		, "-v, --verbose[=<level>]", "enable verbose output"
+		, "-s, --stats=<fd>", "enable hardware statistics being printed to file descriptor <fd> " DEFAULT(DEFAULT_STATS_FD)
 		, "-h, --help", "print this help message"
 	);
 

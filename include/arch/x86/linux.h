@@ -12,10 +12,13 @@
 
 
 #include <arch/x86/opts.h>
-#include <kernel/panic.h>
 #include <sys/stdarg.h>
 #include <sys/types.h>
 #include <sys/escape.h>
+
+#ifdef BUILD_KERNEL
+# include <kernel/panic.h>
+#endif // BUILD_KERNEL
 
 
 /* macros */
@@ -55,6 +58,10 @@
 /* types */
 typedef void (*lnx_sig_hdlr_t)(int sig);
 
+typedef struct{
+	uint64_t data[16];
+} lnx_sigset_t;
+
 typedef enum{
 	LNX_SYS_READ = 0,
 	LNX_SYS_WRITE = 1,
@@ -72,6 +79,13 @@ typedef enum{
 	LNX_SYS_MKDIR = 83,
 	LNX_SYS_GETPPID = 110,
 } lnx_syscall_t;
+
+typedef enum{
+	LNX_O_RDONLY = 0x0,
+	LNX_O_WRONLY = 0x1,
+	LNX_O_RDWR = 0x2,
+	LNX_O_CREAT = 0x40,
+} lnx_f_mode_t;
 
 
 /* prototypes */
@@ -92,7 +106,8 @@ void lnx_mkdir(char const *path, int mode);
 void lnx_dprintf(int fd, char const *fmt, ...);
 void lnx_vdprintf(int fd, char const *fmt, va_list lst);
 
-void lnx_sigset(int sig, lnx_sig_hdlr_t hdlr);
+void lnx_sigaction(int sig, lnx_sig_hdlr_t hdlr, lnx_sigset_t *blocked);
+void lnx_sigaddset(lnx_sigset_t *set, int sig);
 void lnx_kill(int pid, int sig);
 
 void lnx_pause(void);

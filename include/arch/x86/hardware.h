@@ -11,24 +11,44 @@
 #define X86_HARDWARE_H
 
 
+#include <sys/uart.h>
 #include <sys/types.h>
 
-
 /* macros */
-// interrupts
-#define NUM_INT		3
+#define X86_INT_PRIOS	2
 
-#define INT_TIMER	0
-#define INT_SCHED	1
-#define INT_SYSCALL	2
+#define X86_INT_NAME(num) \
+	(((char*[]){ \
+		"timer", \
+		"scheduler", \
+		"syscall", \
+		"uart0", \
+		"uart1", \
+	})[num])
+
+#define X86_PRIV_NAME(priv) \
+	(((char*[]){ \
+		"kernel", \
+		"user", \
+		"hardware", \
+	})[priv])
 
 
 /* types */
 typedef enum{
-	HWS_KERNEL = 0,
-	HWS_USER,
-	HWS_HARDWARE
-} x86_hw_op_src_t;
+	INT_TIMER = 0,
+	INT_SCHED,
+	INT_SYSCALL,
+	INT_UART0,
+	INT_UART1,
+	NUM_INT
+} x86_int_num_t;
+
+typedef enum{
+	PRIV_KERNEL = 0,
+	PRIV_USER,
+	PRIV_HARDWARE
+} x86_priv_t;
 
 typedef enum{
 	HWO_EXIT = 0,
@@ -36,14 +56,16 @@ typedef enum{
 	HWO_INT_RETURN,
 	HWO_INT_SET,
 	HWO_INT_STATE,
+	HWO_SYSCALL_RETURN,
 	HWO_COPY_FROM_USER,
 	HWO_COPY_TO_USER,
+	HWO_UART_CFG,
 	HWO_NOPS
 } x86_hw_op_num_t;
 
 typedef struct{
 	unsigned int num;	/**< cf. x86_hw_op_num_t */
-	unsigned int src;	/**< cf. x86_hw_op_src_t */
+	unsigned int src;	/**< cf. x86_priv_t */
 	unsigned int seq;
 	unsigned int tid;
 
@@ -61,7 +83,8 @@ typedef struct{
 		} int_ctrl;
 
 		struct{
-			int to;		/**< cf. x86_hw_op_src_t */
+			int num;
+			int to;		/**< cf. x86_priv_t */
 			unsigned int tid;
 		} int_return;
 
@@ -69,6 +92,12 @@ typedef struct{
 			void *addr;
 			ssize_t n;
 		} copy;
+
+		struct{
+			char path[64];
+			int int_num;
+			uart_cfg_t cfg;
+		} uart;
 	};
 } x86_hw_op_t;
 

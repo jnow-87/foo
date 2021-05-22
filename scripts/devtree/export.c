@@ -108,6 +108,10 @@ int export_devices_c(device_node_t *node, FILE *fp){
 				fprintf(fp, "\tvoid *base%zu;\n", n_base++);
 				break;
 
+			case MT_STRING:
+				fprintf(fp, "\tchar *string%zu;\n", n_base++);
+				break;
+
 			case MT_SIZE:
 			default:
 				fprintf(stderr, FG_RED "error" RESET_ATTR ": unexpected member type (%d) in node \"%s\"\n", m->type, node->name);
@@ -140,6 +144,10 @@ int export_devices_c(device_node_t *node, FILE *fp){
 
 			case MT_BASE_ADDR:
 				fprintf(fp, "\t.base%zu = (void*)%#x,\n", n_base++, m->data);
+				break;
+
+			case MT_STRING:
+				fprintf(fp, "\t.string%zu = \"%s\",\n", n_base++, m->data);
 				break;
 
 			case MT_SIZE:
