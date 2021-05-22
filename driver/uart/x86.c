@@ -9,8 +9,10 @@
 
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
+#include <arch/x86/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/driver.h>
+#include <kernel/interrupt.h>
 #include <driver/term.h>
 #include <sys/compiler.h>
 #include <sys/types.h>
@@ -22,7 +24,8 @@
 /* types */
 typedef struct{
 	char const *path;
-	uint8_t const rx_int;
+	uint8_t const rx_int,
+				  tx_int;
 } dt_data_t;
 
 typedef struct{
@@ -61,7 +64,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->gets = gets;
 	itf->data = uart;
 	itf->rx_int = dtd->rx_int;
-	itf->tx_int = 0;
+	itf->tx_int = dtd->tx_int;;
 	itf->cfg_size = sizeof(uart_cfg_t);
 	itf->cfg_flags_offset = offsetof(uart_cfg_t, iflags);
 
@@ -98,18 +101,24 @@ static int configure(void *cfg, void *data){
 }
 
 static char putc(char c, void *data){
-	lnx_write(((dev_data_t*)data)->fd, &c, 1);
-
-	return c;
+	return putsn(&c, 1, data);
 }
 
-static size_t putsn(char const *s, size_t n, void *data){
+static size_t putsn(char const *s, size_t n, void *_data){
+	dev_data_t *uart;
+
+
 	if(s == 0x0){
 		errno = E_INVAL;
 		return 0;
 	}
 
-	lnx_write(((dev_data_t*)data)->fd, s, n);
+	uart = (dev_data_t*)_data;
+
+	lnx_write(uart->fd, s, n);
+
+	if(uart->dtd->tx_int)
+		x86_int_trigger(uart->dtd->tx_int);
 
 	return n;
 }

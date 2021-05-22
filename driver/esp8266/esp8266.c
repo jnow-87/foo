@@ -144,7 +144,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 
 	hw = (term_itf_t*)dt_itf;
 
-	if(hw->rx_int == 0 || hw->tx_int == 0){
+	if(hw->rx_int == 0){
 		WARN("uart does not support interrupts\n");
 		goto_errno(err_0, E_NOSUP);
 	}
@@ -193,8 +193,10 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(int_register(hw->rx_int, rx_hdlr, esp) != 0)
 		goto err_4;
 
-	if(int_register(hw->tx_int, tx_hdlr, esp) != 0)
-		goto err_4;
+	if(hw->tx_int){
+		if(int_register(hw->tx_int, tx_hdlr, esp) != 0)
+			goto err_4;
+	}
 
 	if(hw->configure(dt_data, hw->data) != 0)
 		goto err_5;
@@ -423,6 +425,7 @@ static void rx_hdlr(int_num_t num, void *_esp){
 	critsec_lock(&esp->lock);
 
 	len = esp->hw->gets(buf, 16, &err, esp->hw->data);
+	DEBUG("read %*.*s\n", len, len, buf);
 	ringbuf_write(&esp->rx.line, buf, len);
 
 	critsec_unlock(&esp->lock);
@@ -660,14 +663,16 @@ static void tx_hdlr(int_num_t num, void *_esp){
 
 	/* output character */
 	critsec_lock(&esp->lock);
+
 	while(esp->hw->putc(*data->s, esp->hw->data) != *data->s);
-	critsec_unlock(&esp->lock);
 
 	data->s++;
 	data->len--;
 
 	if(data->len == 0)
 		itask_complete(&esp->tx_queue, E_OK);
+
+	critsec_unlock(&esp->lock);
 }
 
 // command handling
@@ -762,10 +767,14 @@ static int putsn(char const *s, size_t len, esp_t *esp){
 	tx_data_t data;
 
 
-	data.s = s;
-	data.len = len;
+	if(esp->hw->tx_int){
+		data.s = s;
+		data.len = len;
 
-	(void)itask_issue(&esp->tx_queue, &data, esp->hw->tx_int);
+		(void)itask_issue(&esp->tx_queue, &data, esp->hw->tx_int);
+	}
+	else
+		data.len = esp->hw->puts(s, len, esp->hw->data);
 
 	return data.len;
 }

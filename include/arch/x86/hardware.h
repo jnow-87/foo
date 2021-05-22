@@ -22,8 +22,10 @@
 		"timer", \
 		"scheduler", \
 		"syscall", \
-		"uart0", \
-		"uart1", \
+		"uart0rx", \
+		"uart0tx", \
+		"uart1rx", \
+		"uart1tx", \
 	})[num])
 
 #define X86_PRIV_NAME(priv) \
@@ -39,8 +41,10 @@ typedef enum{
 	INT_TIMER = 0,
 	INT_SCHED,
 	INT_SYSCALL,
-	INT_UART0,
-	INT_UART1,
+	INT_UART0_RX,
+	INT_UART0_TX,
+	INT_UART1_RX,
+	INT_UART1_TX,
 	NUM_INT
 } x86_int_num_t;
 

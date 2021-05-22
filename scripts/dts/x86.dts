@@ -50,7 +50,8 @@ devices = {
 		 */
 		string = "/dev/stdin";		// path
 		int<8> = [
-			3						// rx interrupt
+			0,						// rx interrupt
+			0						// tx interrupt
 		];
 
 		tty0 = {
@@ -59,7 +60,7 @@ devices = {
 			/**
 			 * terminal configuration
 			 * 	has to match the configuration data type of
-			 * 	the underlying device driver, i.e. uart_cfg_t
+			 * 	the x86 uart driver, i.e. uart_cfg_t
 			 */
 			int<32> = [ 115200 ];	// baudrate
 			int<8> = [
@@ -74,6 +75,38 @@ devices = {
 			klog = {
 				compatible = "kernel,log";
 			};
+		};
+	};
+
+	uart1 = {
+		compatible = "x86,uart";
+
+		/**
+		 * uart hardware description
+		 * 	has to match the device tree data type
+		 *	of the x86 uart driver
+		 */
+		string = "/dev/pts/4";	// path
+		int<8> = [
+			3,						// rx interrupt
+			0						// tx interrupt
+		];
+
+		eth0 = {
+			compatible = "esp8266";
+
+			/**
+			 * uart configuration
+			 * 	has to match the configuration data type of
+			 * 	the x86 uart driver, i.e. uart_cfg_t
+			 */
+			int<32> = [ 2400 ];		// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0					// flags (none)
+			];
 		};
 	};
 
