@@ -13,7 +13,7 @@
 
 /* macros */
 .macro	vector num
-	.if (\num < NUM_INT)
+	.if (\num < ARCH_NUM_INTS)
 		.if(\num == 0)					// reset
 			.global __vector_\num
 			XJMP	__isr_reset

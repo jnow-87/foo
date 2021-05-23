@@ -21,7 +21,7 @@ static void iovfl_hdlr(int_num_t num, void *data){
 }
 
 static int init(void){
-	return int_register(NUM_HW_INT + 1, iovl_hdlr, 0x0);
+	return int_register(AVR_NUM_HW_INTS + 1, iovl_hdlr, 0x0);
 }
 
 platform_init(0, init);

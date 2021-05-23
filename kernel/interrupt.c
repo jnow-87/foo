@@ -7,6 +7,7 @@
 
 
 
+#include <config/config.h>
 #include <arch/arch.h>
 #include <arch/interrupt.h>
 #include <kernel/interrupt.h>
@@ -15,14 +16,18 @@
 #include <sys/errno.h>
 
 
+/* macros */
+#define NUM_INTS	(ARCH_NUM_INTS + CONFIG_INT_VIRTUALS)
+
+
 /* static variables */
-static int_hdlr_t int_hdlr[NUM_INT] = { 0x0 };
-static void *int_data[NUM_INT] = { 0x0 };
+static int_hdlr_t int_hdlr[NUM_INTS] = { 0x0 };
+static void *int_data[NUM_INTS] = { 0x0 };
 
 
 /* global functions */
 int int_register(int_num_t num, int_hdlr_t hdlr, void *data){
-	if(num >= NUM_INT)
+	if(num >= NUM_INTS)
 		return_errno(E_INVAL);
 
 	if(int_hdlr[num] != 0x0)
@@ -35,7 +40,7 @@ int int_register(int_num_t num, int_hdlr_t hdlr, void *data){
 }
 
 void int_release(int_num_t num){
-	if(num >= NUM_INT)
+	if(num >= NUM_INTS)
 		return;
 
 	int_hdlr[num] = 0x0;
@@ -49,7 +54,7 @@ void int_call(int_num_t num){
 	e = errno;
 	errno = E_OK;
 
-	if(num >= NUM_INT || int_hdlr[num] == 0x0)
+	if(num >= NUM_INTS || int_hdlr[num] == 0x0)
 		kpanic("unhandled or invalid interrupt %u\n", num);
 
 	int_hdlr[num](num, int_data[num]);

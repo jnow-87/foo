@@ -88,7 +88,7 @@ static int plugin_ioverflow_det(FILE *ofile, char *bin_type){
 	if(node == 0x0)
 		return -1;
 
-	filler.i = 0x940e0000 | ((ptrdiff_t)(node->base + (NUM_HW_INT + 1) * INT_VEC_SIZE) / 2);
+	filler.i = 0x940e0000 | ((ptrdiff_t)(node->base + (AVR_NUM_HW_INTS + 1) * INT_VEC_SIZE) / 2);
 	filler.i = htonl(filler.i);
 
 	c = filler.c[1];
