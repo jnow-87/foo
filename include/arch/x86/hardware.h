@@ -43,7 +43,7 @@ typedef enum{
 	INT_SYSCALL,
 	INT_UART0,
 	INT_UART1,
-	NUM_INT
+	ARCH_NUM_INTS
 } x86_int_num_t;
 
 typedef enum{
