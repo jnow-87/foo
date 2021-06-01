@@ -16,3 +16,4 @@ obj-$(CONFIG_DRIVER_SPI) += spi/
 obj-$(CONFIG_DRIVER_EEPROM) += eeprom/
 obj-$(CONFIG_DRIVER_I2C) += i2c/
 obj-$(CONFIG_DRIVER_ESP8266) += esp8266/
+obj-$(CONFIG_DRIVER_BRIDGE) += bridge/

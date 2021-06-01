@@ -14,11 +14,12 @@
 /* types */
 typedef enum{
 	TERR_NONE = 0x0,
-	TERR_DATA_OVERRUN = 0x1,
-	TERR_PARITY = 0x2,
-	TERR_FRAME = 0x4,
-	TERR_RX_FULL = 0x8,
-	TERR_WRITE_COLL = 0x10,
+	TERR_UNKNOWN = 0x1,
+	TERR_DATA_OVERRUN = 0x2,
+	TERR_PARITY = 0x4,
+	TERR_FRAME = 0x8,
+	TERR_RX_FULL = 0x10,
+	TERR_WRITE_COLL = 0x20,
 } term_err_t;
 
 typedef enum{
