@@ -342,4 +342,29 @@ devices = {
 			 ];
 		};
 	};
+
+	loop0 = {
+		compatible = "loop,term";
+
+		/**
+		 * loop config
+		 *	has to match loop_dt_data_t
+		 */
+		int<16> = [ 256 ];			// buffer size
+
+		looptty0 = {
+			compatible = "terminal";
+
+			/**
+			 * terminal configuration
+			 *	has to match the configuration data type of
+			 *	the underlying device driver, i.e. loop_cfg_t
+			 */
+			int<8> = [
+				0x0,				// iflags (none)
+				0x0,				// oflags (none)
+				0x0					// lflags (none)
+			];
+		};
+	};
 };
