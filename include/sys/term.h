@@ -13,16 +13,32 @@
 
 /* types */
 typedef enum{
-	TERM_ERR_NONE = 0x0,
-	TERM_ERR_DATA_OVERRUN = 0x1,
-	TERM_ERR_PARITY = 0x2,
-	TERM_ERR_FRAME = 0x4,
-	TERM_ERR_RX_FULL = 0x8,
-	TERM_ERR_WRITE_COLL = 0x10,
+	TERR_NONE = 0x0,
+	TERR_DATA_OVERRUN = 0x1,
+	TERR_PARITY = 0x2,
+	TERR_FRAME = 0x4,
+	TERR_RX_FULL = 0x8,
+	TERR_WRITE_COLL = 0x10,
 } term_err_t;
 
 typedef enum{
-	TERM_FLAG_ECHO = 0x1,
+	TIFL_CRNL = 0x1,
+	TIFL_NLCR = 0x2,
+} term_iflags_t;
+
+typedef enum{
+	TOFL_CRNL = 0x1,
+	TOFL_NLCR = 0x2,
+} term_oflags_t;
+
+typedef enum{
+	TLFL_ECHO = 0x1,
+} term_lflags_t;
+
+typedef struct{
+	term_iflags_t iflags;
+	term_oflags_t oflags;
+	term_lflags_t lflags;
 } term_flags_t;
 
 

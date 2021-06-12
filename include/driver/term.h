@@ -20,7 +20,7 @@
 typedef struct{
 	int (*configure)(void *cfg, void *data);
 
-	term_flags_t (*get_flags)(void *cfg);
+	term_flags_t *(*get_flags)(void *cfg);
 
 	char (*putc)(char c, void *data);
 	size_t (*puts)(char const *s, size_t n, void *data);

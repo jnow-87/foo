@@ -15,6 +15,7 @@
 #include <sys/escape.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <shell/history.h>
 
@@ -91,6 +92,10 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 			i = end;
 			continue;
 		}
+
+		// ctrl-c
+		if(c == 3)
+			exit(1);
 
 		// skip windows line ending
 		if(c == '\r')

@@ -171,7 +171,8 @@ void lnx_vdprintf(int fd, char const *fmt, va_list lst){
 
 /* local functions */
 static char lnx_putc(char c, struct FILE *stream){
-	lnx_write(stream->fileno, &c, 1);
+	if(c == '\n')	lnx_write(stream->fileno, "\r\n", 2);
+	else			lnx_write(stream->fileno, &c, 1);
 
 	return c;
 }

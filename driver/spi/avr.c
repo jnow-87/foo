@@ -61,7 +61,7 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(void *cfg, void *data);
-static term_flags_t get_flags(void *cfg);
+static term_flags_t *get_flags(void *cfg);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, term_err_t *err, void *data);
@@ -131,8 +131,8 @@ static int configure(void *_cfg, void *data){
 	return E_OK;
 }
 
-static term_flags_t get_flags(void *cfg){
-	return ((spi_cfg_t*)cfg)->flags;
+static term_flags_t *get_flags(void *cfg){
+	return (term_flags_t*)(&((spi_cfg_t*)cfg)->iflags);
 }
 
 static char putc(char c, void *data){
@@ -183,7 +183,7 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *data){
 	*s = regs->spdr;
 
 	if(regs->spsr & (0x1 << SPSR_WCOL)){
-		*err |= TERM_ERR_WRITE_COLL;
+		*err |= TERR_WRITE_COLL;
 		DEBUG("rx error, read %c (%#x)\n", *s, (int)*s);
 
 		return 0;

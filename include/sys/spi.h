@@ -54,7 +54,9 @@ typedef struct{
 	uint8_t data_order;		/**< cf. spi_data_order_t */
 	uint8_t prescaler;		/**< cf. spi_pres_t */
 
-	uint8_t flags;			/**< cf. term_flags_t */
+	uint8_t iflags,			/**< cf. term_flags_t */
+			oflags,
+			lflags;
 } spi_cfg_t;
 
 
