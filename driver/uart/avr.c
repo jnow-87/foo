@@ -79,7 +79,7 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(void *cfg, void *data);
-static term_flags_t get_flags(void *cfg);
+static term_flags_t *get_flags(void *cfg);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, term_err_t *err, void *data);
@@ -165,8 +165,8 @@ static int configure(void *_cfg, void *data){
 	return E_OK;
 }
 
-static term_flags_t get_flags(void *cfg){
-	return ((uart_cfg_t*)cfg)->flags;
+static term_flags_t *get_flags(void *cfg){
+	return (term_flags_t*)(&((uart_cfg_t*)cfg)->iflags);
 }
 
 static char putc(char c, void *data){
@@ -218,10 +218,10 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *data){
 		s[i] = regs->udr;
 
 		if(e){
-			*err |= (bits(e, UCSRA_FE, 0x1) ? TERM_ERR_FRAME : 0)
-				 |  (bits(e, UCSRA_DOR, 0x1) ? TERM_ERR_DATA_OVERRUN : 0)
-				 |  (bits(e, UCSRA_UPE, 0x1) ? TERM_ERR_PARITY : 0)
-				 |  (bits(e, UCSRA_RXC, 0x1) ? TERM_ERR_RX_FULL : 0)
+			*err |= (bits(e, UCSRA_FE, 0x1) ? TERR_FRAME : 0)
+				 |  (bits(e, UCSRA_DOR, 0x1) ? TERR_DATA_OVERRUN : 0)
+				 |  (bits(e, UCSRA_UPE, 0x1) ? TERR_PARITY : 0)
+				 |  (bits(e, UCSRA_RXC, 0x1) ? TERR_RX_FULL : 0)
 				 ;
 		}
 

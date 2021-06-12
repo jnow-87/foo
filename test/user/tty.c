@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Jan Nowotsch
+ * Copyright (C) 2021 Jan Nowotsch
  * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
  *
  * Released under the terms of the GNU GPL v2.0
@@ -8,103 +8,132 @@
 
 
 #include <unistd.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/ioctl.h>
-#include <sys/fcntl.h>
-#include <sys/term.h>
-#include <sys/uart.h>
-#include <sys/escape.h>
+#include <sys/loop.h>
 #include <test/test.h>
+
+
+/* macros */
+#define DEVICE	"/dev/looptty0"
+
+
+/* local/static prototypes */
+static int test(int fd, char const *in, char const *out);
+static int configure(int fd, term_iflags_t iflags, term_oflags_t oflags, term_lflags_t lflags);
+
 
 
 /* local functions */
 /**
- * \brief	test to demonstrate non/blocking operation of stdin
+ * \brief	test to verify terminal iflags
  */
-TEST_LONG(tty, "test tty non/blocking io"){
-	size_t i,
-		   n;
-	char buf[20];
-	uart_cfg_t cfg;
-	term_err_t err;
-	f_mode_t f_mode;
+TEST(tty_iflags){
+	int fd;
+	int r;
 
 
-	/* disable terminal echo */
-	ioctl(0, IOCTL_CFGRD, &cfg, sizeof(uart_cfg_t));
-	cfg.flags &= ~TERM_FLAG_ECHO;
-	ioctl(0, IOCTL_CFGWR, &cfg, sizeof(uart_cfg_t));
+	r = 0;
 
-	/* get stdin file mode */
-	if(fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t)) != 0){
-		printf(FG_RED "error " RESET_ATTR "can't read stdin file mode \"%s\"\n", strerror(errno));
+	ASSERT_INT_NEQ(fd = open(DEVICE, O_RDWR), -1);
+
+	// TIFL_CRNL
+	ASSERT_INT_EQ(configure(fd, TIFL_CRNL, 0, 0), 0);
+	r += test(fd, "\r", "\n");
+	r += test(fd, "a\rb\rc", "a\nb\nc");
+
+	// TIFL_NLCR
+	ASSERT_INT_EQ(configure(fd, TIFL_NLCR, 0, 0), 0);
+	r += test(fd, "\n", "\r");
+	r += test(fd, "a\nb\nc", "a\rb\rc");
+
+	r += TEST_INT_EQ(close(fd), 0);
+
+	return -r;
+}
+
+/**
+ * \brief	test to verify terminal oflags
+ */
+TEST(tty_oflags){
+	int fd;
+	int r;
+
+
+	r = 0;
+
+	ASSERT_INT_NEQ(fd = open(DEVICE, O_RDWR), -1);
+
+	// TOFL_CRNL
+	ASSERT_INT_EQ(configure(fd, 0, TOFL_CRNL, 0), 0);
+	r += test(fd, "\r", "\n");
+	r += test(fd, "a\rb\rc", "a\nb\nc");
+
+	// TOFL_NLCR
+	ASSERT_INT_EQ(configure(fd, 0, TOFL_NLCR, 0), 0);
+	r += test(fd, "\n", "\r\n");
+	r += test(fd, "a\nb\nc", "a\r\nb\r\nc");
+
+	r += TEST_INT_EQ(close(fd), 0);
+
+	return -r;
+}
+
+/**
+ * \brief	test to verify terminal lflags
+ */
+TEST(tty_lflags){
+	int fd;
+	int r;
+	char buf[4];
+
+
+	r = 0;
+
+	ASSERT_INT_NEQ(fd = open(DEVICE, O_RDWR), -1);
+
+	// TLFL_ECHO
+	ASSERT_INT_EQ(configure(fd, 0, 0, TLFL_ECHO), 0);
+	r += test(fd, "foo", "foo");
+	r += TEST_INT_EQ(configure(fd, 0, 0, 0), 0);
+	r += TEST_INT_EQ(read(fd, buf, 4), 3);
+	r += TEST_STRN_EQ(buf, "foo", 3);
+
+	r += TEST_INT_EQ(close(fd), 0);
+
+	return -r;
+}
+
+static int test(int fd, char const *in, char const *out){
+	int r;
+	size_t ilen,
+		   olen;
+	char buf[strlen(out)];
+
+
+	r = 0;
+	ilen = strlen(in);
+	olen = strlen(out);
+
+	r += TEST_INT_EQ(write(fd, (void*)in, ilen), ilen);
+	r += TEST_INT_EQ(read(fd, buf, olen), olen);
+	r += TEST_STRN_EQ(buf, out, olen);
+
+	return -r;
+}
+
+static int configure(int fd, term_iflags_t iflags, term_oflags_t oflags, term_lflags_t lflags){
+	loop_cfg_t cfg;
+
+
+	if(ioctl(fd, IOCTL_CFGRD, &cfg, sizeof(loop_cfg_t)) != 0)
 		return -1;
-	}
 
-	/* main loop */
-	printf(
-		"use 'b' to toggle between blocking and non-blocking input\n"
-		"use 'q' to quit the test\n"
-	);
+	cfg.iflags = iflags;
+	cfg.oflags = oflags;
+	cfg.lflags = lflags;
 
-	buf[0] = 'i';
-	errno = E_OK;
-	i = 0;
-	n = 0;
-
-	while(1){
-		// read
-		errno = E_OK;
-		n = fread(buf, 1, stdin);
-		i++;
-
-		// error handling
-		if(errno){
-			printf(FG_RED "error " RESET_ATTR "read \"%s\" -", strerror(errno));
-			errno = E_OK;
-
-			ioctl(0, IOCTL_STATUS, &err, sizeof(err));
-
-			if(errno == E_OK){
-				fprintf(stderr, "%s%s%s%s\n",
-					(err & TERM_ERR_DATA_OVERRUN ? " data overrun" : ""),
-					(err & TERM_ERR_PARITY ? " parity error" : ""),
-					(err & TERM_ERR_FRAME ? " frame error" : ""),
-					(err & TERM_ERR_RX_FULL ? " rx queue full" : "")
-				);
-			}
-			else
-				fprintf(stderr, "\nioctl error \"%s\"\n", strerror(errno));
-
-			errno = E_OK;
-			continue;
-		}
-
-		if(n == 0)
-			continue;
-
-		// echo
-		buf[n] = 0;
-		printf("%u read: \"%s\" %u\n", i, buf, n);
-
-		// special character handling
-		if(buf[0] == 'b'){
-			i = 0;
-			f_mode ^= O_NONBLOCK;
-
-			printf("toggle blocking mode (set mode: %#x)\n", f_mode);
-
-			if(fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t)) != 0)
-				printf(FG_RED "error " RESET_ATTR "fcntl failed \"%s\"\n", strerror(errno));
-		}
-		else if(buf[0] == 'q')
-			break;
-	}
-
-	/* restore blocking mode */
-	f_mode &= ~O_NONBLOCK;
-	(void)fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t));
+	if(ioctl(fd, IOCTL_CFGWR, &cfg, sizeof(loop_cfg_t)) != 0)
+		return -1;
 
 	return 0;
 }

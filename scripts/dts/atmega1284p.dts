@@ -91,7 +91,9 @@ devices = {
 				1,					// stop bits (1)
 				0,					// parity (TPARITY_NONE)
 				3,					// csize (TCS_8)
-				0					// flags (none)
+				0x0,				// iflags (none)
+				0x2,				// oflags (TOFL_NLCR)
+				0x0					// lflags (none)
 			];
 
 			klog = {
@@ -131,7 +133,9 @@ devices = {
 				1,					// stop bits (1)
 				0,					// parity (TPARITY_NONE)
 				3,					// csize (TCS_8)
-				0					// flags (none)
+				0x0,				// iflags (none)
+				0x0,				// oflags (none)
+				0x0					// lflags (none)
 			];
 		};
 	};
@@ -304,7 +308,9 @@ devices = {
 				0,					// sample mode (CPOL = 0, CPHA = 0)
 				0,					// data order (MSB first)
 				1,					// prescaler (4)
-				0					// flags (none)
+				0,					// iflags (none)
+				0,					// oflags (none)
+				0					// lflags (none)
 			];
 		};
 	};

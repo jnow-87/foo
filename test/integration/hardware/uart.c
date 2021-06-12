@@ -20,6 +20,7 @@
 #include <termios.h>
 #include <pthread.h>
 #include <hardware/hardware.h>
+#include <user/debug.h>
 
 
 /* types */
@@ -116,6 +117,8 @@ int uart_configure(char const *path, int int_num, uart_cfg_t *cfg){
 	int fd;
 
 
+	DEBUG(0, "configure uart on %s\n", path);
+
 	fd = add(path, int_num);
 
 	if(fd < 0)
@@ -169,6 +172,8 @@ err_1:
 	close(fd);
 
 err_0:
+	DEBUG(0, "adding uart failed with %d\n");
+
 	return -1;
 }
 
@@ -184,10 +189,9 @@ static int configure(int fd, uart_cfg_t *cfg){
 	if(tcgetattr(fd, &attr) != 0)
 		return -1;
 
-	attr.c_oflag = ONLCR | OPOST;
-	attr.c_lflag = IEXTEN | ECHOCTL | ECHOK | ECHOE | ISIG
-				 | ((cfg->flags & TERM_FLAG_ECHO) ? ECHO : 0)
-				 ;
+	attr.c_iflag = 0;
+	attr.c_oflag = 0;
+	attr.c_lflag = 0;
 
 	attr.c_cflag = CBAUDEX | CLOCAL | HUPCL | CREAD
 				 | (cs[cfg->csize])
