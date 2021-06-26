@@ -216,3 +216,30 @@ TEST(strtol){
 
 	return -n;
 }
+
+TEST(strupr){
+	int n;
+
+
+	n = 0;
+
+	n += TEST_STR_EQ(strupr("foo"), "FOO");
+	n += TEST_STR_EQ(strupr("FOO"), "FOO");
+	n += TEST_STR_EQ(strupr("123"), "123");
+	n += TEST_STR_EQ(strupr("fOo123"), "FOO123");
+
+	return -n;
+}
+
+TEST(strcidtf){
+	int n;
+
+
+	n = 0;
+
+	n += TEST_STR_EQ(strcidtf("foobar"), "foobar");
+	n += TEST_STR_EQ(strcidtf("foo_bar"), "foo_bar");
+	n += TEST_STR_EQ(strcidtf("foo-bar"), "foo_bar");
+
+	return -n;
+}

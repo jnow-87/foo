@@ -39,6 +39,12 @@ char *itoa(int v, unsigned int base, char *s, size_t len);
 int atoi(char const *s);
 long int strtol(char const *p, char **endp, int base);
 
+char *strupr(char const *s);
+char *strupr_r(char const *s, char *buf, size_t len);
+
+char *strcidtf(char const *s);
+char *strcidtf_r(char const *s, char *buf, size_t len);
+
 
 #endif // SYS_STRING_H
 #endif // _STRING_H
