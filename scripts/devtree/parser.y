@@ -285,10 +285,12 @@ static char *stralloc(char *_s, size_t len){
 	char *s;
 
 
-	s = malloc(len);
+	s = malloc(len + 1);
 
-	if(s != 0x0)
+	if(s != 0x0){
 		memcpy(s, _s, len);
+		s[len] = 0;
+	}
 
 	return s;
 }
