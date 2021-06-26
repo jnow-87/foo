@@ -40,19 +40,14 @@ endif # KERNEL_PRINTF || LIB_STREAM
 # }}}
 
 #
-# file system
-#
-# {{{
-config FILE_NAME_MAX
-	int "Maximum file name length"
-	default 16
-	range 4 4096
-# }}}
-
-#
 # miscellaneous
 #
 # {{{
+config NAME_MAX
+	int "Maximum name length"
+	default 16
+	range 4 4096
+
 menu "Hidden"
 	visible if 0
 

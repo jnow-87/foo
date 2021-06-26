@@ -11,14 +11,14 @@
 #define SYS_DIRENT_H
 
 
-#include <config/config.h>
+#include <sys/limits.h>
 #include <sys/stat.h>
 
 
 /* types */
 typedef struct{
 	file_type_t type;
-	char name[CONFIG_FILE_NAME_MAX];
+	char name[NAME_MAX];
 } dir_ent_t;
 
 

@@ -7,12 +7,12 @@
 
 
 
-#include <config/config.h>
 #include <arch/core.h>
 #include <kernel/fs.h>
 #include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <kernel/ksignal.h>
+#include <sys/limits.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/stat.h>
@@ -239,7 +239,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 
 	fs_lock();
 
-	if(name_len + 1 > CONFIG_FILE_NAME_MAX)
+	if(name_len + 1 > NAME_MAX)
 		goto_errno(err_0, E_LIMIT);
 
 	/* identify file system */
