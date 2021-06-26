@@ -49,7 +49,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	/* prepare stack */
 	// NOTE the memory stack is ensured to exist by the build system
-	stack = devtree_find_memory_by_name(&__dt_memory_root, "kernel_stack");
+	stack = devtree_find_memory_by_name(&__dt_memory_root, "kernel-stack");
 
 	this_t->stack = page_alloc(this_p, stack->size);
 

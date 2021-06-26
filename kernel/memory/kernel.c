@@ -96,7 +96,7 @@ static int init(void){
 
 
 	// NOTE the memory node is ensured to exist by the build system
-	node = devtree_find_memory_by_name(&__dt_memory_root, "kernel_heap");
+	node = devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
 
 	kernel_heap = node->base;
 	memblock_init(kernel_heap, node->size);
