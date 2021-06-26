@@ -83,7 +83,7 @@ static int plugin_ioverflow_det(FILE *ofile, char *bin_type){
 	devtree_memory_t const *node;
 
 
-	node = devtree_find_memory_by_name(&__dt_memory_root, "kernel_flash");
+	node = devtree_find_memory_by_name(&__dt_memory_root, "kernel-flash");
 
 	if(node == 0x0)
 		return -1;

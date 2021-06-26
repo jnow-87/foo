@@ -17,17 +17,17 @@ memory = {
 			size = 20971520;
 		};
 
-		kernel_heap = {
+		kernel-heap = {
 			baseaddr = 0x01800000;
 			size = 1048576;
 		};
 
-		kernel_stack = {
+		kernel-stack = {
 			baseaddr = 0x01900000;
 			size = 4096;
 		};
 
-		app_heap = {
+		app-heap = {
 			baseaddr = 0x01901000;
 			size = 1048576;
 		};

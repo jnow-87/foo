@@ -12,12 +12,12 @@ memory = {
 		baseaddr = 0x0;
 		size = 131072;
 
-		kernel_flash = {
+		kernel-flash = {
 			baseaddr = 0x0;
 			size = 49152;
 		};
 
-		app_flash = {
+		app-flash = {
 			baseaddr = 0x0000c000;
 			size = 81920;
 		};
@@ -32,27 +32,27 @@ memory = {
 			size = 256;
 		};
 
-		kernel_data = {
+		kernel-data = {
 			baseaddr = 0x00800100;
 			size = 4864;
 		};
 
-		kernel_heap = {
+		kernel-heap = {
 			baseaddr = 0x00801400;
 			size = 2560;
 		};
 
-		kernel_stack = {
+		kernel-stack = {
 			baseaddr = 0x00801e00;
 			size = 768;
 		};
 
-		app_heap = {
+		app-heap = {
 			baseaddr = 0x00802100;
 			size = 2560;
 		};
 
-		app_data = {
+		app-data = {
 			baseaddr = 0x00802b00;
 			size = 5632;
 		};

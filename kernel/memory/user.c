@@ -50,7 +50,7 @@ static int init(void){
 
 
 	// NOTE the memory node is ensured to exist by the build system
-	node = devtree_find_memory_by_name(&__dt_memory_root, "app_heap");
+	node = devtree_find_memory_by_name(&__dt_memory_root, "app-heap");
 
 	process_mem = node->base;
 	memblock_init(process_mem, node->size);

@@ -8,6 +8,7 @@
 
 
 #include <sys/types.h>
+#include <sys/limits.h>
 #include <sys/string.h>
 #include <sys/errno.h>
 
@@ -242,4 +243,48 @@ long int strtol(char const *p, char **endp, int base){
 		*endp = (char*)p;
 
 	return r * sign;
+}
+
+char *strupr(char const *s){
+	static char _s[NAME_MAX + 1];
+
+
+	return strupr_r(s, _s, NAME_MAX + 1);
+}
+
+char *strupr_r(char const *s, char *buf, size_t len){
+	size_t i;
+
+
+	for(i=0; s[i]!=0 && i<len; i++){
+		if(s[i] >= 'a' && s[i] <= 'z')	buf[i] = s[i] - 32;
+		else							buf[i] = s[i];
+	}
+
+	buf[i] = 0;
+
+	return buf;
+}
+
+char *strcidtf(char const *s){
+	static char _s[NAME_MAX + 1];
+
+
+	return strcidtf_r(s, _s, NAME_MAX + 1);
+}
+
+char *strcidtf_r(char const *s, char *buf, size_t len){
+	size_t i;
+
+
+	for(i=0; s[i]!=0 && i<len; i++){
+		switch(s[i]){
+		case '-':	buf[i] = '_'; break;
+		default:	buf[i] = s[i]; break;
+		}
+	}
+
+	buf[i] = 0;
+
+	return buf;
 }

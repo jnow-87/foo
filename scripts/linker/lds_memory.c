@@ -11,10 +11,10 @@
 #include <config/config.h>
 #include <sys/devtree.h>
 #include <sys/escape.h>
+#include <sys/string.h>
 
 /* host header */
 #include <stdio.h>
-#include <string.h>
 #include <errno.h>
 
 
@@ -75,7 +75,7 @@ static void export_memory_node(devtree_memory_t const *node, FILE *file){
 	for(i=0; node->childs[i]!=0x0; i++){
 		child = node->childs[i];
 
-		fprintf(file, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", child->name, (unsigned long int)child->base, child->size);
+		fprintf(file, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", strcidtf(child->name), (unsigned long int)child->base, child->size);
 		export_memory_node(child, file);
 	}
 }

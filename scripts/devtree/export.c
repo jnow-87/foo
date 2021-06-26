@@ -7,17 +7,14 @@
 
 
 
+#include <stdio.h>
+#include <sys/limits.h>
 #include <sys/string.h>
 #include <sys/vector.h>
 #include <sys/list.h>
 #include <sys/escape.h>
 #include <options.h>
 #include <node.h>
-#include <stdio.h>
-
-
-/* local/static prototypes */
-static char *strupr(char const *src, char *dst);
 
 
 /* global functions */
@@ -49,30 +46,33 @@ int export_devices_c(device_node_t *node, FILE *fp){
 		   n_reg,
 		   n_base;
 	unsigned int *p;
+	char node_cname[NAME_MAX + 1];
 	member_int_t *int_lst;
 	member_t *m;
 	device_node_t *child;
 
 
-	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node->name);
+	strcidtf_r(node->name, node_cname, NAME_MAX + 1);
+
+	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node_cname);
 
 	/* child list */
 	if(!list_empty(node->childs)){
 		// child declarations
-		fprintf(fp, "// __dt_%s child declarations\n", node->name);
+		fprintf(fp, "// __dt_%s child declarations\n", node_cname);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "devtree_device_t const __dt_%s;\n", child->name);
+			fprintf(fp, "devtree_device_t const __dt_%s;\n", strcidtf(child->name));
 
 		fprintf(fp, "\n");
 
 		// child array
-		fprintf(fp, "// __dt_%s child list\n", node->name);
+		fprintf(fp, "// __dt_%s child list\n", node_cname);
 
-		fprintf(fp, "devtree_device_t const * const __dt_%s_childs[] = {\n", node->name);
+		fprintf(fp, "devtree_device_t const * const __dt_%s_childs[] = {\n", node_cname);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "\t&__dt_%s,\n", child->name);
+			fprintf(fp, "\t&__dt_%s,\n", strcidtf(child->name));
 
 		fprintf(fp, "\t0x0\n};\n\n");
 	}
@@ -85,7 +85,7 @@ int export_devices_c(device_node_t *node, FILE *fp){
 		n_reg = 0;
 		n_base = 0;
 
-		fprintf(fp, "// __dt_%s data\n", node->name);
+		fprintf(fp, "// __dt_%s data\n", node_cname);
 
 		// struct definition
 		fprintf(fp, "struct{\n");
@@ -126,7 +126,7 @@ int export_devices_c(device_node_t *node, FILE *fp){
 		n_base = 0;
 
 		// data
-		fprintf(fp, " const __dt_%s_data = {\n", node->name);
+		fprintf(fp, " const __dt_%s_data = {\n", node_cname);
 
 		vector_for_each(&node->data, m){
 			switch(m->type){
@@ -161,8 +161,8 @@ int export_devices_c(device_node_t *node, FILE *fp){
 	}
 
 	/* node definition */
-	fprintf(fp, "// __dt_%s definition\n", node->name);
-	fprintf(fp, "devtree_device_t const __dt_%s = {\n", node->name);
+	fprintf(fp, "// __dt_%s definition\n", node_cname);
+	fprintf(fp, "devtree_device_t const __dt_%s = {\n", node_cname);
 
 	fprintf(fp, "\t.name = \"%s\",\n", node->name);
 	fprintf(fp, "\t.compatible = \"%s\",\n", node->compatible);
@@ -171,12 +171,12 @@ int export_devices_c(device_node_t *node, FILE *fp){
 
 	if(node->data.size == 1 && m->type == MT_BASE_ADDR)	fprintf(fp, "\t.data = %p,\n", m->data);
 	else if(m == 0x0 || m->data == 0x0)					fprintf(fp, "\t.data = 0x0,\n");
-	else												fprintf(fp, "\t.data = &__dt_%s_data,\n", node->name);
+	else												fprintf(fp, "\t.data = &__dt_%s_data,\n", node_cname);
 
-	if(node->parent)									fprintf(fp, "\t.parent = &__dt_%s,\n", node->parent->name);
+	if(node->parent)									fprintf(fp, "\t.parent = &__dt_%s,\n", strcidtf(node->parent->name));
 	else												fprintf(fp, "\t.parent = 0x0,\n");
 
-	if(!list_empty(node->childs))						fprintf(fp, "\t.childs = __dt_%s_childs,\n", node->name);
+	if(!list_empty(node->childs))						fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_cname);
 	else												fprintf(fp, "\t.childs = 0x0,\n");
 
 	fprintf(fp, "};\n\n\n");
@@ -192,44 +192,47 @@ int export_devices_c(device_node_t *node, FILE *fp){
 
 int export_memory_c(memory_node_t *node, FILE *fp){
 	int r;
+	char node_cname[NAME_MAX + 1];
 	memory_node_t *child;
 
 
-	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node->name);
+	strcidtf_r(node->name, node_cname, NAME_MAX + 1);
+
+	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node_cname);
 
 	/* child list */
 	if(!list_empty(node->childs)){
 		// child declarations
-		fprintf(fp, "// __dt_%s child declarations\n", node->name);
+		fprintf(fp, "// __dt_%s child declarations\n", node_cname);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "devtree_memory_t const __dt_%s;\n", child->name);
+			fprintf(fp, "devtree_memory_t const __dt_%s;\n", strcidtf(child->name));
 
 		fprintf(fp, "\n");
 
 		// child array
-		fprintf(fp, "// __dt_%s child list\n", node->name);
+		fprintf(fp, "// __dt_%s child list\n", node_cname);
 
-		fprintf(fp, "devtree_memory_t const * const __dt_%s_childs[] = {\n", node->name);
+		fprintf(fp, "devtree_memory_t const * const __dt_%s_childs[] = {\n", node_cname);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "\t&__dt_%s,\n", child->name);
+			fprintf(fp, "\t&__dt_%s,\n", strcidtf(child->name));
 
 		fprintf(fp, "\t0x0\n};\n\n");
 	}
 
 	/* node definition */
-	fprintf(fp, "// __dt_%s definition\n", node->name);
-	fprintf(fp, "devtree_memory_t const __dt_%s = {\n", node->name);
+	fprintf(fp, "// __dt_%s definition\n", node_cname);
+	fprintf(fp, "devtree_memory_t const __dt_%s = {\n", node_cname);
 
 	fprintf(fp, "\t.name = \"%s\",\n", node->name);
 	fprintf(fp, "\t.base = (void*)%#x,\n", node->base);
 	fprintf(fp, "\t.size = %zu,\n", node->size);
 
-	if(node->parent)				fprintf(fp, "\t.parent = &__dt_%s,\n", node->parent->name);
+	if(node->parent)				fprintf(fp, "\t.parent = &__dt_%s,\n", strcidtf(node->parent->name));
 	else							fprintf(fp, "\t.parent = 0x0,\n");
 
-	if(!list_empty(node->childs))	fprintf(fp, "\t.childs = __dt_%s_childs,\n", node->name);
+	if(!list_empty(node->childs))	fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_cname);
 	else							fprintf(fp, "\t.childs = 0x0,\n");
 
 	fprintf(fp, "};\n\n\n");
@@ -254,12 +257,11 @@ int export_header_header(FILE *fp){
 }
 
 int export_devices_header(device_node_t *node, FILE *fp){
-	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
 	device_node_t *child;
 
 
 	/* node attributes */
-	fprintf(fp, "#define DEVTREE_%s_COMPATIBLE %zu\n", strupr(node->name, name), node->compatible);
+	fprintf(fp, "#define DEVTREE_%s_COMPATIBLE %zu\n", strupr(strcidtf(node->name)), node->compatible);
 
 	/* export childs */
 	list_for_each(node->childs, child)
@@ -269,13 +271,15 @@ int export_devices_header(device_node_t *node, FILE *fp){
 }
 
 int export_memory_header(memory_node_t *node, FILE *fp){
-	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
+	char *name;
 	memory_node_t *child;
 
 
 	/* node attributes */
-	fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", strupr(node->name, name), node->base);
-	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", strupr(node->name, name), node->size);
+	name = strupr(strcidtf(node->name));
+
+	fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", name, node->base);
+	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", name, node->size);
 
 	/* export childs */
 	list_for_each(node->childs, child)
@@ -295,12 +299,11 @@ int export_make_header(FILE *fp){
 }
 
 int export_devices_make(device_node_t *node, FILE *fp){
-	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
 	device_node_t *child;
 
 
 	/* node attributes */
-	fprintf(fp, "DEVTREE_%s_COMPATIBLE := %zu\n", strupr(node->name, name), node->compatible);
+	fprintf(fp, "DEVTREE_%s_COMPATIBLE := %zu\n", strupr(strcidtf(node->name)), node->compatible);
 
 	/* export childs */
 	list_for_each(node->childs, child)
@@ -310,41 +313,19 @@ int export_devices_make(device_node_t *node, FILE *fp){
 }
 
 int export_memory_make(memory_node_t *node, FILE *fp){
-	char name[node != 0x0 ? strlen(node->name) + 1 : 1];
+	char *name;
 	memory_node_t *child;
 
 
 	/* node attributes */
-	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", strupr(node->name, name), node->base);
-	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", strupr(node->name, name), node->size);
+	name = strupr(strcidtf(node->name));
+
+	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", name, node->base);
+	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", name, node->size);
 
 	/* export childs */
 	list_for_each(node->childs, child)
 		(void)export_memory_make(child, fp);
 
 	return 0;
-}
-
-
-/* local functions */
-/**
- * \brief	convert src string to upper case
- *
- * \param	src		source string
- * \param	dst		destination string
- *
- * \return	destiantion string
- */
-static char *strupr(char const *src, char *dst){
-	size_t i;
-
-
-	for(i=0; src[i]!=0; i++){
-		if(src[i] >= 'a' && src[i] <= 'z')	dst[i] = src[i] - 32;
-		else								dst[i] = src[i];
-	}
-
-	dst[i] = 0;
-
-	return dst;
 }

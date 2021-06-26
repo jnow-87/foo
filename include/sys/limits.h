@@ -104,6 +104,9 @@
 # else
 CPP_ASSERT(invalid address width in configuration)
 # endif // CONFIG_REGISTER_WIDTH
+
+# define NAME_MAX		CONFIG_NAME_MAX
+# define FILENAME_MAX	CONFIG_NAME_MAX
 #else // BUILD_HOST
 # include <limits.h>
 #endif // BUILD_HOST

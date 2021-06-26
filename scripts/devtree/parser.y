@@ -12,11 +12,12 @@
 
 /* header */
 %{
+	#include <stdio.h>
+	#include <limits.h>
+	#include <string.h>
 	#include <sys/compiler.h>
 	#include <lexer.lex.h>
 	#include <node.h>
-	#include <stdio.h>
-	#include <string.h>
 
 
 	/* macros */
@@ -134,9 +135,28 @@
 			PARSER_ERROR("adding member \"" STR(mem_type) "\"\n"); \
 	}
 
+	// string alloc
+	#define STRALLOC(_s, len)({ \
+		char *s; \
+		\
+		\
+		if(len + 1 > NAME_MAX) \
+			PARSER_ERROR("identifier \"%*.*s\" too long, maximum length %u\n", len, len, _s, NAME_MAX); \
+		\
+		s = malloc(len + 1); \
+		\
+		if(s == 0x0) \
+			PARSER_ERROR("out of memory allocating string\n"); \
+		\
+		memcpy(s, _s, len); \
+		s[len] = 0; \
+		\
+		s; \
+	})
+
 	// parser error message
 	#define PARSER_ERROR(s, ...){ \
-		fprintf(stderr, FG_VIOLETT "%s" RESET_ATTR ":" FG_GREEN "%d:%d " RESET_ATTR "error " s, file, devtreelloc.first_line, devtreelloc.first_column, ##__VA_ARGS__); \
+		fprintf(stderr, FG_VIOLETT "%s" RESET_ATTR ":" FG_GREEN "%d:%d" RESET_ATTR " token \"%s\" -- " s, file, devtreelloc.first_line, devtreelloc.first_column, devtreetext, ##__VA_ARGS__); \
 		YYERROR; \
 	}
 
@@ -148,7 +168,6 @@
 	/* prototypes */
 	static int devtreeerror(char const *file, device_node_t *devices_root, memory_node_t *memory_root, char const *s);
 	static void cleanup(void);
-	static char *stralloc(char *s, size_t len);
 %}
 
 %code requires{
@@ -242,17 +261,17 @@ devices-lst : %empty { } | devices-lst devices ';'						{ NODE_VALIDATE_DEVICES(
 memory-lst : %empty { } | memory-lst memory ';'							{ NODE_VALIDATE_MEMORY($2); $2->parent = memory_root; list_add_tail(memory_root->childs, $2); };
 
 /* nodes */
-devices : IDFR '=' '{' devices-attr '}'									{ $$ = $4; $$->name = stralloc($1.s, $1.len); };
-memory : IDFR '=' '{' memory-attr '}'									{ $$ = $4; $$->name = stralloc($1.s, $1.len); };
+devices : IDFR '=' '{' devices-attr '}'									{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); };
+memory : IDFR '=' '{' memory-attr '}'									{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); };
 
 /* node attributes */
 devices-attr : %empty													{ $$ = NODE_ALLOC_DEVICES(); }
 			| devices-attr devices ';'									{ $$ = $1; NODE_VALIDATE_DEVICES($2); $2->parent = $$; list_add_tail($$->childs, $2); }
-			| devices-attr NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = stralloc($4.s, $4.len); }
+			| devices-attr NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = STRALLOC($4.s, $4.len); }
 			| devices-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
 			| devices-attr NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
 			| devices-attr NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
-			| devices-attr NA_STRING '=' STRING ';'						{ $$ = $1; MEMBER_ADD($$, MT_STRING, stralloc($4.s, $4.len)); }
+			| devices-attr NA_STRING '=' STRING ';'						{ $$ = $1; MEMBER_ADD($$, MT_STRING, STRALLOC($4.s, $4.len)); }
 			;
 
 memory-attr : %empty													{ $$ = NODE_ALLOC_MEMORY(); }
@@ -271,7 +290,9 @@ int-list : INT															{ $$ = VECTOR_ALLOC(&$1); }
 
 
 static int devtreeerror(char const *file, device_node_t *devices_root, memory_node_t *memory_root, char const *s){
-	fprintf(stderr, FG_VIOLETT "%s" RESET_ATTR ":" FG_GREEN "%d:%d" RESET_ATTR " token \"%s\" -- %s\n", file, devtreelloc.first_line, devtreelloc.first_column, devtreetext, s);
+	PARSER_ERROR("%s\n", s);
+
+yyerrorlab:
 	return 0;
 }
 
@@ -279,16 +300,4 @@ static void cleanup(void){
 	devtreelex_destroy();
 	vector_destroy(&node_names);
 	fclose(fp);
-}
-
-static char *stralloc(char *_s, size_t len){
-	char *s;
-
-
-	s = malloc(len);
-
-	if(s != 0x0)
-		memcpy(s, _s, len);
-
-	return s;
 }

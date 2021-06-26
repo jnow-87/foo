@@ -8,6 +8,7 @@
 
 
 #include <config/config.h>
+#include <sys/limits.h>
 #include <sys/errno.h>
 #include <sys/stat.h>
 #include <sys/term.h>
@@ -29,7 +30,7 @@ typedef struct stream_stack{
 	struct stream_stack *next;
 	FILE *stream;
 	size_t line;
-	char file[CONFIG_FILE_NAME_MAX];
+	char file[NAME_MAX];
 } stream_stack;
 
 
@@ -38,7 +39,7 @@ static int strsplit(char *line, int *_argc, char ***_argv);
 
 
 /* global variables */
-char shell_file[CONFIG_FILE_NAME_MAX];
+char shell_file[NAME_MAX];
 size_t shell_line = 0;
 
 
@@ -62,7 +63,7 @@ int shell(char const *prompt, FILE *_stream){
 	stream = _stream;
 	streams = 0x0;
 	shell_line = 0;
-	strncpy(shell_file, "stdin", CONFIG_FILE_NAME_MAX);
+	strncpy(shell_file, "stdin", NAME_MAX);
 
 	// enable terminal echo
 	ioctl(0, IOCTL_CFGRD, &cfg, sizeof(uart_cfg_t));
@@ -97,7 +98,7 @@ int shell(char const *prompt, FILE *_stream){
 				fclose(stream);
 
 				stream = stackp->stream;
-				strncpy(shell_file, stackp->file, CONFIG_FILE_NAME_MAX);
+				strncpy(shell_file, stackp->file, NAME_MAX);
 				shell_line = stackp->line;
 
 				free(stackp);
@@ -126,7 +127,7 @@ int shell(char const *prompt, FILE *_stream){
 			}
 
 			stackp->stream = stream;
-			strncpy(stackp->file, shell_file, CONFIG_FILE_NAME_MAX);
+			strncpy(stackp->file, shell_file, NAME_MAX);
 			stackp->line = shell_line;
 
 			stack_push(streams, stackp);
@@ -138,7 +139,7 @@ int shell(char const *prompt, FILE *_stream){
 				SHELL_ERROR("open script %s failed, %s\n", argv[0], strerror(errno));
 
 			// update globals
-			strncpy(shell_file, argv[0], CONFIG_FILE_NAME_MAX);
+			strncpy(shell_file, argv[0], NAME_MAX);
 			shell_line = 0;
 		}
 		else
