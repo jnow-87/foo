@@ -47,8 +47,8 @@ long int strtol(char const *p, char **endp, int base);
 char *strupr(char const *s);
 char *strupr_r(char const *s, char *buf, size_t len);
 
-char *strcidtf(char const *s);
-char *strcidtf_r(char const *s, char *buf, size_t len);
+char *strcident(char const *s);
+char *strcident_r(char const *s, char *buf, size_t len);
 
 
 #endif // SYS_STRING_H
