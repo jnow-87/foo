@@ -52,7 +52,7 @@ int export_devices_c(device_node_t *node, FILE *fp){
 	device_node_t *child;
 
 
-	strcidtf_r(node->name, node_cname, NAME_MAX + 1);
+	strcident_r(node->name, node_cname, NAME_MAX + 1);
 
 	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node_cname);
 
@@ -62,7 +62,7 @@ int export_devices_c(device_node_t *node, FILE *fp){
 		fprintf(fp, "// __dt_%s child declarations\n", node_cname);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "devtree_device_t const __dt_%s;\n", strcidtf(child->name));
+			fprintf(fp, "devtree_device_t const __dt_%s;\n", strcident(child->name));
 
 		fprintf(fp, "\n");
 
@@ -72,7 +72,7 @@ int export_devices_c(device_node_t *node, FILE *fp){
 		fprintf(fp, "devtree_device_t const * const __dt_%s_childs[] = {\n", node_cname);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "\t&__dt_%s,\n", strcidtf(child->name));
+			fprintf(fp, "\t&__dt_%s,\n", strcident(child->name));
 
 		fprintf(fp, "\t0x0\n};\n\n");
 	}
@@ -173,7 +173,7 @@ int export_devices_c(device_node_t *node, FILE *fp){
 	else if(m == 0x0 || m->data == 0x0)					fprintf(fp, "\t.data = 0x0,\n");
 	else												fprintf(fp, "\t.data = &__dt_%s_data,\n", node_cname);
 
-	if(node->parent)									fprintf(fp, "\t.parent = &__dt_%s,\n", strcidtf(node->parent->name));
+	if(node->parent)									fprintf(fp, "\t.parent = &__dt_%s,\n", strcident(node->parent->name));
 	else												fprintf(fp, "\t.parent = 0x0,\n");
 
 	if(!list_empty(node->childs))						fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_cname);
@@ -196,7 +196,7 @@ int export_memory_c(memory_node_t *node, FILE *fp){
 	memory_node_t *child;
 
 
-	strcidtf_r(node->name, node_cname, NAME_MAX + 1);
+	strcident_r(node->name, node_cname, NAME_MAX + 1);
 
 	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node_cname);
 
@@ -206,7 +206,7 @@ int export_memory_c(memory_node_t *node, FILE *fp){
 		fprintf(fp, "// __dt_%s child declarations\n", node_cname);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "devtree_memory_t const __dt_%s;\n", strcidtf(child->name));
+			fprintf(fp, "devtree_memory_t const __dt_%s;\n", strcident(child->name));
 
 		fprintf(fp, "\n");
 
@@ -216,7 +216,7 @@ int export_memory_c(memory_node_t *node, FILE *fp){
 		fprintf(fp, "devtree_memory_t const * const __dt_%s_childs[] = {\n", node_cname);
 
 		list_for_each(node->childs, child)
-			fprintf(fp, "\t&__dt_%s,\n", strcidtf(child->name));
+			fprintf(fp, "\t&__dt_%s,\n", strcident(child->name));
 
 		fprintf(fp, "\t0x0\n};\n\n");
 	}
@@ -229,7 +229,7 @@ int export_memory_c(memory_node_t *node, FILE *fp){
 	fprintf(fp, "\t.base = (void*)%#x,\n", node->base);
 	fprintf(fp, "\t.size = %zu,\n", node->size);
 
-	if(node->parent)				fprintf(fp, "\t.parent = &__dt_%s,\n", strcidtf(node->parent->name));
+	if(node->parent)				fprintf(fp, "\t.parent = &__dt_%s,\n", strcident(node->parent->name));
 	else							fprintf(fp, "\t.parent = 0x0,\n");
 
 	if(!list_empty(node->childs))	fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_cname);
@@ -261,7 +261,7 @@ int export_devices_header(device_node_t *node, FILE *fp){
 
 
 	/* node attributes */
-	fprintf(fp, "#define DEVTREE_%s_COMPATIBLE %zu\n", strupr(strcidtf(node->name)), node->compatible);
+	fprintf(fp, "#define DEVTREE_%s_COMPATIBLE %zu\n", strupr(strcident(node->name)), node->compatible);
 
 	/* export childs */
 	list_for_each(node->childs, child)
@@ -276,7 +276,7 @@ int export_memory_header(memory_node_t *node, FILE *fp){
 
 
 	/* node attributes */
-	name = strupr(strcidtf(node->name));
+	name = strupr(strcident(node->name));
 
 	fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", name, node->base);
 	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", name, node->size);
@@ -303,7 +303,7 @@ int export_devices_make(device_node_t *node, FILE *fp){
 
 
 	/* node attributes */
-	fprintf(fp, "DEVTREE_%s_COMPATIBLE := %zu\n", strupr(strcidtf(node->name)), node->compatible);
+	fprintf(fp, "DEVTREE_%s_COMPATIBLE := %zu\n", strupr(strcident(node->name)), node->compatible);
 
 	/* export childs */
 	list_for_each(node->childs, child)
@@ -318,7 +318,7 @@ int export_memory_make(memory_node_t *node, FILE *fp){
 
 
 	/* node attributes */
-	name = strupr(strcidtf(node->name));
+	name = strupr(strcident(node->name));
 
 	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", name, node->base);
 	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", name, node->size);

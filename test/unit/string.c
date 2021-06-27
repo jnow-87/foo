@@ -231,15 +231,15 @@ TEST(strupr){
 	return -n;
 }
 
-TEST(strcidtf){
+TEST(strcident){
 	int n;
 
 
 	n = 0;
 
-	n += TEST_STR_EQ(strcidtf("foobar"), "foobar");
-	n += TEST_STR_EQ(strcidtf("foo_bar"), "foo_bar");
-	n += TEST_STR_EQ(strcidtf("foo-bar"), "foo_bar");
+	n += TEST_STR_EQ(strcident("foobar"), "foobar");
+	n += TEST_STR_EQ(strcident("foo_bar"), "foo_bar");
+	n += TEST_STR_EQ(strcident("foo-bar"), "foo_bar");
 
 	return -n;
 }
