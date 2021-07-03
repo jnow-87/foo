@@ -297,6 +297,10 @@ TEST(list_find){
 
 	n = 0;
 	head = 0x0;
+
+	/* list_find() */
+	n += TEST_PTR_EQ(list_find(head, el, 2), 0x0);
+
 	INIT_EL();
 
 	list_add_tail(head, &el0);
