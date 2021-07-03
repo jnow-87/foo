@@ -24,8 +24,8 @@
 /* static variables */
 #ifndef ASM
 # ifdef BUILD_KERNEL
-// kernel callbacks
-static arch_callbacks_kernel_t const arch_cbs_kernel = {
+// kernel ops
+static arch_ops_kernel_t const arch_ops_kernel = {
 	/* core */
 	.core_id = 0x0,
 	.core_sleep = x86_core_sleep,
@@ -51,8 +51,8 @@ static arch_callbacks_kernel_t const arch_cbs_kernel = {
 };
 # endif // BUILD_KERNEL
 
-// common callbacks
-static arch_callbacks_common_t const arch_cbs_common = {
+// common ops
+static arch_ops_common_t const arch_ops_common = {
 	/* atomics */
 	.cas = x86_cas,
 	.atomic_inc = x86_atomic_add,
