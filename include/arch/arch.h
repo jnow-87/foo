@@ -60,7 +60,7 @@ typedef struct{
 
 	/* threading */
 	void (*thread_ctx_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg);
-} arch_callbacks_kernel_t;
+} arch_ops_kernel_t;
 # endif // BUILD_KERNEL
 
 typedef struct{
@@ -70,7 +70,7 @@ typedef struct{
 
 	/* syscall */
 	int (*sc)(sc_num_t num, void *param, size_t psize);
-} arch_callbacks_common_t;
+} arch_ops_common_t;
 
 typedef struct{
 	int kernel_timer_err_us,
@@ -82,11 +82,11 @@ typedef struct{
 /* macros */
 # ifdef BUILD_KERNEL
 #  define arch_kernel_call(p, err_ret) \
-	(arch_cbs_kernel.p == 0x0) ? (err_ret) : arch_cbs_kernel.p
+	(arch_ops_kernel.p == 0x0) ? (err_ret) : arch_ops_kernel.p
 # endif // BUILD_KERNEL
 
 #define arch_common_call(p, err_ret) \
-	(arch_cbs_common.p == 0x0) ? (err_ret) : arch_cbs_common.p
+	(arch_ops_common.p == 0x0) ? (err_ret) : arch_ops_common.p
 
 #define arch_info(c) \
 	arch_info.c
