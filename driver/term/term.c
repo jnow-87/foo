@@ -130,6 +130,10 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 	return n - data.len;
 }
 
+term_flags_t *term_flags(term_t *term){
+	return (term_flags_t*)(term->cfg + term->hw->cfg_flags_offset);
+}
+
 void term_rx_hdlr(int_num_t num, void *_term){
 	char buf[16];
 	size_t n;

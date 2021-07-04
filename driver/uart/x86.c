@@ -12,6 +12,7 @@
 #include <kernel/memory.h>
 #include <kernel/driver.h>
 #include <driver/term.h>
+#include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/string.h>
 #include <sys/errno.h>
@@ -32,7 +33,6 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(void *cfg, void *data);
-static term_flags_t *get_flags(void *cfg);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, term_err_t *err, void *data);
@@ -56,7 +56,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	uart->fd = lnx_open(dtd->path, LNX_O_RDWR, 0666);
 
 	itf->configure = configure;
-	itf->get_flags = get_flags;
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
@@ -64,6 +63,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->rx_int = dtd->rx_int;
 	itf->tx_int = 0;
 	itf->cfg_size = sizeof(uart_cfg_t);
+	itf->cfg_flags_offset = offsetof(uart_cfg_t, iflags);
 
 	return itf;
 
@@ -95,10 +95,6 @@ static int configure(void *cfg, void *data){
 	x86_hw_op_write_writeback(&op);
 
 	return E_OK;
-}
-
-static term_flags_t *get_flags(void *cfg){
-	return (term_flags_t*)(&((uart_cfg_t*)cfg)->iflags);
 }
 
 static char putc(char c, void *data){

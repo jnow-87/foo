@@ -30,8 +30,6 @@ typedef enum{
 typedef struct{
 	int (*configure)(void *cfg, void *data);
 
-	term_flags_t *(*get_flags)(void *cfg);
-
 	char (*putc)(char c, void *data);
 	size_t (*puts)(char const *s, size_t n, void *data);
 	size_t (*gets)(char *s, size_t n, term_err_t *err, void *data);
@@ -40,7 +38,8 @@ typedef struct{
 	int_num_t rx_int,
 			  tx_int;
 
-	uint8_t cfg_size;
+	uint8_t cfg_size,
+			cfg_flags_offset;
 } term_itf_t;
 
 typedef struct{
