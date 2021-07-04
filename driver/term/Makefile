@@ -7,4 +7,4 @@
 
 
 
-obj-y := term.o
+obj-y := term.o flags.o dev.o
