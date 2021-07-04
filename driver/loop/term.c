@@ -10,6 +10,7 @@
 #include <kernel/driver.h>
 #include <kernel/memory.h>
 #include <driver/term.h>
+#include <sys/compiler.h>
 #include <sys/errno.h>
 #include <sys/loop.h>
 #include "loop.h"
@@ -17,7 +18,6 @@
 
 /* local/static prototypes */
 static int configure(void *cfg, void *data);
-static term_flags_t *get_flags(void *cfg);
 static char putc(char c, void *data);
 static size_t puts(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, term_err_t *err, void *data);
@@ -36,7 +36,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		goto err;
 
 	itf->configure = configure;
-	itf->get_flags = get_flags;
 	itf->putc = putc;
 	itf->puts = puts;
 	itf->gets = gets;
@@ -45,6 +44,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->rx_int = 0;
 	itf->tx_int = 0;
 	itf->cfg_size = sizeof(loop_cfg_t);
+	itf->cfg_flags_offset = offsetof(loop_cfg_t, iflags);
 
 	return itf;
 
@@ -60,10 +60,6 @@ interface_probe("loop,term", probe);
 
 static int configure(void *cfg, void *data){
 	return E_OK;
-}
-
-static term_flags_t *get_flags(void *cfg){
-	return cfg;
 }
 
 static char putc(char c, void *data){

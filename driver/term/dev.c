@@ -144,7 +144,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	n = term_gets(term, buf, n);
 
 	/* handle terminal flags */
-	flags = term->hw->get_flags(term->cfg);
+	flags = term_flags(term);
 
 	if(term_flags_apply(term, buf, n, 1, TFT_I, flags->iflags) == 0x0)
 		goto_errno(err, E_IO);
@@ -217,7 +217,7 @@ static size_t flputs(char const *_s, size_t n, void *_term){
 	memcpy(s, _s, n);
 
 	/* handle terminal iflags */
-	flags = term->hw->get_flags(term->cfg);
+	flags = term_flags(term);
 
 	_s = term_flags_apply(term, s, n, 1, TFT_O, flags->oflags);
 	n_put = _s - s;
