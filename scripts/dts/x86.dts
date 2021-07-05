@@ -63,7 +63,7 @@ devices = {
 				3,					// csize (TCS_8)
 				0x1,				// iflags (TIFL_CRNL)
 				0x2,				// oflags (TOFL_NLCR)
-				0					// lflags (none)
+				0x0					// lflags (none)
 			];
 
 			klog = {
@@ -90,9 +90,97 @@ devices = {
 			 *	the underlying device driver, i.e. loop_cfg_t
 			 */
 			int<8> = [
-				0,					// iflags (none)
-				0,					// oflags (none)
-				0					// lflags (none)
+				0x0,				// iflags (none)
+				0x0,				// oflags (none)
+				0x0					// lflags (none)
+			];
+		};
+	};
+
+	uart1 = {
+		compatible = "x86,uart";
+
+		/**
+		 * uart hardware description
+		 * 	has to match the device tree data type
+		 *	of the x86 uart driver
+		 */
+/* 		string = "/dev/ttyUSB1";	// path */
+		string = "/dev/pts/6";		// path
+		int<8> = [
+			0						// rx interrupt
+		];
+
+		bridge0-left = {
+			compatible = "bridge,uart";
+
+			/**
+			 * bridge hardware description
+			 *	has to match bridge_cfg_t
+			 */
+			/* bridge config */
+			int<8> = [
+				0,					// id
+				1,					// chunksize_e
+				0,					// rx interrupt
+				0					// tx interrupt
+			];
+
+			/* terminal config */
+			int<32> = [ 115200 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0x0,				// iflags (none)
+				0x0,				// oflags (none)
+				0x0					// lflags (none)
+			];
+		};
+	};
+
+	bridge0-right = {
+		compatible = "bridge,terminal";
+
+		/**
+		 * bridge hardware description
+		 *	has to match bridge_cfg_t
+		 */
+		/* bridge config */
+		int<8> = [
+			0,					// id
+			1,					// chunksize_e
+			0,					// rx interrupt
+			0					// tx interrupt
+		];
+
+		/* terminal config */
+		int<32> = [ 115200 ];	// baudrate
+		int<8> = [
+			1,					// stop bits (1)
+			0,					// parity (TPARITY_NONE)
+			3,					// csize (TCS_8)
+			0x0,				// iflags (none)
+			0x0,				// oflags (none)
+			0x0					// lflags (none)
+		];
+
+		b0 = {
+			compatible = "terminal";
+
+			/**
+			 * terminal configuration
+			 * 	has to match the configuration data type of
+			 * 	the underlying device driver uart_cfg_t
+			 */
+			int<32> = [ 115200 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0x0,				// iflags (none)
+				0x0,				// oflags (none)
+				0x0					// lflags (none)
 			];
 		};
 	};

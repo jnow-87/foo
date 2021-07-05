@@ -111,6 +111,13 @@ int main(int argc, char **argv){
 	if(brickos_init_childs() != 0)
 		EEXIT("creating child processes failed\n");
 
+	printf(
+		"kimg pid: %u\n"
+		"app pid: %u\n"
+		, KERNEL->pid
+		, APP->pid
+	);
+
 	/* create threads */
 	for(i=0; i<sizeof_array(threads); i++){
 		if((threads[i].when & opts.app_mode) == 0)
