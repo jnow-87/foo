@@ -10,6 +10,7 @@
 #include <config/config.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
+#include <kernel/interrupt.h>
 #include <sys/compiler.h>
 
 
@@ -91,4 +92,16 @@ void x86_hw_op_read_writeback(x86_hw_op_t *op){
 
 	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, &seq_num, sizeof(seq_num));
 	CHECK_SEQ_NUM(seq_num, op->seq);
+}
+
+void x86_hw_int_trigger(int_num_t num, void *data){
+	x86_hw_op_t op;
+
+
+	op.num = HWO_INT_TRIGGER;
+	op.int_ctrl.num = num;
+	op.int_ctrl.data = data;
+
+	x86_hw_op_write(&op);
+	x86_hw_op_write_writeback(&op);
 }

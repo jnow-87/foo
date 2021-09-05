@@ -124,7 +124,6 @@ static bool ignore_exit = false;
 /* global functions */
 int x86_sc(sc_num_t num, void *param, size_t psize){
 	sc_t sc;
-	x86_hw_op_t op;
 
 
 	if(ignore_exit && num == SC_EXIT)
@@ -144,10 +143,6 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 	sc.size = psize;
 	sc.errno = E_UNKNOWN;
 
-	op.num = HWO_INT_TRIGGER;
-	op.int_ctrl.num = INT_SYSCALL;
-	op.int_ctrl.data = &sc;
-
 	LNX_DEBUG("syscall(num = %d, param = %p, psize = %u, data = %p)\n",
 		num,
 		param,
@@ -155,8 +150,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 		&sc
 	);
 
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
+	x86_hw_int_trigger(INT_SYSCALL, &sc);
 
 	// wait for interrupt return
 	LNX_DEBUG("waiting for syscall return\n");
