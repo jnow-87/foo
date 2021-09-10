@@ -9,8 +9,7 @@
 
 # variables that contain ' ' and ',' required for some replacements, that
 # do not work with the characters used literally 
-space :=
-space +=
+space := $(subst ,, )
 comma := ,
 
 # check if a file exists
