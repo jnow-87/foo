@@ -7,6 +7,8 @@
 
 
 
+obj-y := pinctrl.o
+
 obj-$(CONFIG_INIT_CD) += cd.o
 obj-$(CONFIG_INIT_LS) += ls.o
 obj-$(CONFIG_INIT_ECHO) += echo.o
