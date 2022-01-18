@@ -29,8 +29,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-# define gettext(Msgid) ((const char *) (Msgid))
-
 #ifdef __sun__
 # define CURS_MACROS
 #endif

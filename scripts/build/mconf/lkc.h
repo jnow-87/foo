@@ -11,11 +11,6 @@
 
 #include "expr.h"
 
-static inline const char *gettext(const char *txt) { return txt; }
-static inline void textdomain(const char *domainname) {}
-static inline void bindtextdomain(const char *name, const char *dir) {}
-static inline char *bind_textdomain_codeset(const char *dn, char *c) { return c; }
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,15 +20,6 @@ extern "C" {
 #undef P
 
 #define SRCTREE "srctree"
-
-#ifndef PACKAGE
-# define PACKAGE "linux"
-#endif
-
-#define LOCALEDIR "/usr/share/locale"
-
-#define _(text) gettext(text)
-#define N_(text) (text)
 
 #ifndef CONFIG_
 # define CONFIG_ "CONFIG_"
