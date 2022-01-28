@@ -69,7 +69,6 @@ cflags := \
 	-nostdinc \
 	-fno-builtin \
 	-fshort-enums \
-	-flto
 
 cxxflags := \
 	$(CXXFLAGS) \
@@ -79,7 +78,6 @@ cxxflags := \
 	-nostdinc \
 	-fno-builtin \
 	-fshort-enums \
-	-flto
 
 cppflags := \
 	$(CPPFLAGS) \
