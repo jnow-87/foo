@@ -44,8 +44,8 @@ static void print_buttons(WINDOW * dialog, int height, int width, int selected)
 /*
  * Display a dialog box for inputing a string
  */
-int dialog_inputbox(const char *title, const char *prompt, int height, int width,
-                    const char *init)
+int dialog_inputbox(char const *title, char const *prompt, int height, int width,
+                    char const *init)
 {
 	int i, x, y, box_y, box_x, box_width;
 	int input_x = 0, key = 0, button = -1;

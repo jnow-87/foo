@@ -25,7 +25,7 @@
 #include "lkc.h"
 #include "lxdialog/dialog.h"
 
-static const char mconf_readme[] =
+static char const mconf_readme[] =
 "Overview\n"
 "--------\n"
 "This interface let you select features and parameters for the build.\n"
@@ -290,15 +290,15 @@ static void conf_choice(struct menu *menu);
 static void conf_string(struct menu *menu);
 static void conf_load(void);
 static void conf_save(void);
-static int show_textbox_ext(const char *title, char *text, int r, int c,
+static int show_textbox_ext(char const *title, char *text, int r, int c,
 			    int *keys, int *vscroll, int *hscroll,
 			    update_text_fn update_text, void *data);
-static void show_textbox(const char *title, const char *text, int r, int c);
-static void show_helptext(const char *title, const char *text);
+static void show_textbox(char const *title, char const *text, int r, int c);
+static void show_helptext(char const *title, char const *text);
 static void show_help(struct menu *menu);
 
 static char filename[PATH_MAX+1];
-static void set_config_filename(const char *config_filename)
+static void set_config_filename(char const *config_filename)
 {
 	static char menu_backtitle[PATH_MAX+128];
 	int size;
@@ -436,7 +436,7 @@ static void build_conf(struct menu *menu)
 	prop = menu->prompt;
 	if (!sym) {
 		if (prop && menu != current_menu) {
-			const char *prompt = menu_get_prompt(menu);
+			char const *prompt = menu_get_prompt(menu);
 			switch (prop->type) {
 			case P_MENU:
 				child_count++;
@@ -603,7 +603,7 @@ conf_childs:
 static void conf(struct menu *menu, struct menu *active_menu)
 {
 	struct menu *submenu;
-	const char *prompt = menu_get_prompt(menu);
+	char const *prompt = menu_get_prompt(menu);
 	struct symbol *sym;
 	int res;
 	int s_scroll = 0;
@@ -696,7 +696,7 @@ static void conf(struct menu *menu, struct menu *active_menu)
 	}
 }
 
-static int show_textbox_ext(const char *title, char *text, int r, int c, int
+static int show_textbox_ext(char const *title, char *text, int r, int c, int
 			    *keys, int *vscroll, int *hscroll, update_text_fn
 			    update_text, void *data)
 {
@@ -705,18 +705,18 @@ static int show_textbox_ext(const char *title, char *text, int r, int c, int
 			      update_text, data);
 }
 
-static void show_textbox(const char *title, const char *text, int r, int c)
+static void show_textbox(char const *title, char const *text, int r, int c)
 {
 	show_textbox_ext(title, (char *) text, r, c, (int []) {0}, NULL, NULL,
 			 NULL, NULL);
 }
 
-static void show_helptext(const char *title, const char *text)
+static void show_helptext(char const *title, char const *text)
 {
 	show_textbox(title, text, 0, 0);
 }
 
-static void conf_message_callback(const char *fmt, va_list ap)
+static void conf_message_callback(char const *fmt, va_list ap)
 {
 	char buf[PATH_MAX+1];
 
@@ -740,7 +740,7 @@ static void show_help(struct menu *menu)
 
 static void conf_choice(struct menu *menu)
 {
-	const char *prompt = menu_get_prompt(menu);
+	char const *prompt = menu_get_prompt(menu);
 	struct menu *child;
 	struct symbol *active;
 
@@ -799,11 +799,11 @@ static void conf_choice(struct menu *menu)
 
 static void conf_string(struct menu *menu)
 {
-	const char *prompt = menu_get_prompt(menu);
+	char const *prompt = menu_get_prompt(menu);
 
 	while (1) {
 		int res;
-		const char *heading;
+		char const *heading;
 
 		switch (sym_get_type(menu->sym)) {
 		case S_INT:

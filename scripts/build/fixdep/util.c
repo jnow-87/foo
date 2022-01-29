@@ -23,7 +23,7 @@
 #include "util.h"
 
 
-int file_map(const char *filename, int *_fd, void **_map, unsigned int *_size){
+int file_map(char const *filename, int *_fd, void **_map, unsigned int *_size){
 	int fd;
 	void *map;
 	struct stat st;

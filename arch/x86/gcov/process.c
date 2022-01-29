@@ -12,8 +12,8 @@
 
 
 /* prototypes */
-char *gcov_getenv(const char *name);
-char *gc_gev(const char *name) __alias(gcov_getenv);
+char *gcov_getenv(char const *name);
+char *gc_gev(char const *name) __alias(gcov_getenv);
 
 int gcov_getpid(void);
 int gc_pid(void) __alias(gcov_getpid);
@@ -24,6 +24,6 @@ int gcov_getpid(void){
 	return lnx_getpid();
 }
 
-char *gcov_getenv(const char *name){
+char *gcov_getenv(char const *name){
 	return 0x0;
 }

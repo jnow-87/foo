@@ -13,7 +13,7 @@
 
 #include "lkc.h"
 
-static const char nohelp_text[] = "There is no help available for this option.";
+static char const nohelp_text[] = "There is no help available for this option.";
 
 struct menu rootmenu;
 static struct menu **last_entry_ptr;
@@ -21,7 +21,7 @@ static struct menu **last_entry_ptr;
 struct file *file_list;
 struct file *current_file;
 
-void menu_warn(struct menu *menu, const char *fmt, ...)
+void menu_warn(struct menu *menu, char const *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -31,7 +31,7 @@ void menu_warn(struct menu *menu, const char *fmt, ...)
 	va_end(ap);
 }
 
-static void prop_warn(struct property *prop, const char *fmt, ...)
+static void prop_warn(struct property *prop, char const *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -471,7 +471,7 @@ bool menu_is_visible(struct menu *menu)
 	return false;
 }
 
-const char *menu_get_prompt(struct menu *menu)
+char const *menu_get_prompt(struct menu *menu)
 {
 	if (menu->prompt)
 		return menu->prompt->text;
@@ -502,7 +502,7 @@ bool menu_has_help(struct menu *menu)
 	return menu->help != NULL;
 }
 
-const char *menu_get_help(struct menu *menu)
+char const *menu_get_help(struct menu *menu)
 {
 	if (menu->help)
 		return menu->help;
@@ -634,7 +634,7 @@ struct gstr get_relations_str(struct symbol **sym_arr, struct list_head *head)
 void menu_get_ext_help(struct menu *menu, struct gstr *help)
 {
 	struct symbol *sym = menu->sym;
-	const char *help_text = nohelp_text;
+	char const *help_text = nohelp_text;
 
 	if (menu_has_help(menu)) {
 		if (sym->name)

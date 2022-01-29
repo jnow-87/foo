@@ -42,7 +42,7 @@ static void print_buttons(WINDOW * dialog, int height, int width, int selected)
 /*
  * Display a dialog box with two buttons - Yes and No
  */
-int dialog_yesno(const char *title, const char *prompt, int height, int width)
+int dialog_yesno(char const *title, char const *prompt, int height, int width)
 {
 	int i, x, y, key = 0, button = 0;
 	WINDOW *dialog;

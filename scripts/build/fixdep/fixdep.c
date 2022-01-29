@@ -118,8 +118,8 @@
 
 /* static prototypes */
 static void parse_dep_file(void *map, size_t len);
-static void parse_prereq(const char *map, size_t len);
-static void update_prereq(const char *m, int slen);
+static void parse_prereq(char const *map, size_t len);
+static void update_prereq(char const *m, int slen);
 
 
 /* global variables */
@@ -235,10 +235,10 @@ static void parse_dep_file(void *dmap, size_t len){
 }
 
 /* parse prerequisite file for 'CONFIG_' occurences */
-static void parse_prereq(const char *map, size_t len){
+static void parse_prereq(char const *map, size_t len){
 	const int *end = (const int *)(map + len);
 	const int *m   = (const int *)map + 1; 	// start at +1, so that p can never be < map
-	const char *p, *q;
+	char const *p, *q;
 
 
 	for(; m < end; m++){
@@ -265,7 +265,7 @@ static void parse_prereq(const char *map, size_t len){
 }
 
 /* print CONFIG_ prerequisite */
-static void update_prereq(const char *m, int slen){
+static void update_prereq(char const *m, int slen){
 	int i;
 
 	// return if already hashed

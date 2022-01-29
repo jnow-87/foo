@@ -22,7 +22,7 @@
 
 
 /* static prototypes */
-static unsigned int strhash(const char *str, unsigned int sz);
+static unsigned int strhash(char const *str, unsigned int sz);
 
 
 /* global variables */
@@ -33,7 +33,7 @@ static struct item *hashtab[HASHSZ];
 /*
  * Lookup a value in the configuration string.
  */
-int hashtbl_lookup(const char *name, int len, unsigned int hash){
+int hashtbl_lookup(char const *name, int len, unsigned int hash){
 	struct item *aux;
 
 	for(aux = hashtab[hash % HASHSZ]; aux; aux = aux->next){
@@ -48,7 +48,7 @@ int hashtbl_lookup(const char *name, int len, unsigned int hash){
 /*
  * Add a new value to the configuration string.
  */
-int hashtbl_add(const char *name, int len){
+int hashtbl_add(char const *name, int len){
 	struct item *aux;
 	unsigned int hash = strhash(name, len);
 
@@ -90,7 +90,7 @@ void hashtbl_clear(void){
 
 
 /* local functions */
-unsigned int strhash(const char *str, unsigned int sz){
+unsigned int strhash(char const *str, unsigned int sz){
 	/* fnv32 hash */
 	unsigned int i, hash = 2166136261U;
 

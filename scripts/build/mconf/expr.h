@@ -23,7 +23,7 @@ extern "C" {
 struct file {
 	struct file *next;
 	struct file *parent;
-	const char *name;
+	char const *name;
 	int lineno;
 };
 
@@ -141,7 +141,7 @@ struct property {
 	struct property *next;     /* next property - null if last */
 	struct symbol *sym;        /* the symbol for which the property is associated */
 	enum prop_type type;       /* type of property */
-	const char *text;          /* the prompt value - P_PROMPT, P_MENU, P_COMMENT */
+	char const *text;          /* the prompt value - P_PROMPT, P_MENU, P_COMMENT */
 	struct expr_value visible;
 	struct expr *expr;         /* the optional conditional part of the property */
 	struct menu *menu;         /* the menu the property are associated with
@@ -189,7 +189,7 @@ struct jump_key {
 
 extern struct file *file_list;
 extern struct file *current_file;
-struct file *lookup_file(const char *name);
+struct file *lookup_file(char const *name);
 
 extern struct symbol symbol_yes, symbol_no, symbol_mod;
 extern struct symbol *modules_sym;

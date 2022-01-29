@@ -19,21 +19,21 @@
 
 #include "lkc.h"
 
-static void conf_error(const char *fmt, ...)
+static void conf_error(char const *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
 
-static void conf_warning(const char *fmt, ...)
+static void conf_warning(char const *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
 
-static void conf_message(const char *fmt, ...)
+static void conf_message(char const *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
 
-static const char *conf_filename;
+static char const *conf_filename;
 static int conf_lineno, conf_errors, conf_warnings, conf_unsaved;
 
-const char conf_defname[] = "arch/$ARCH/defconfig";
+char const conf_defname[] = "arch/$ARCH/defconfig";
 
-static void conf_error(const char *fmt, ...)
+static void conf_error(char const *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -44,7 +44,7 @@ static void conf_error(const char *fmt, ...)
 	conf_errors++;
 }
 
-static void conf_warning(const char *fmt, ...)
+static void conf_warning(char const *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -55,21 +55,21 @@ static void conf_warning(const char *fmt, ...)
 	conf_warnings++;
 }
 
-static void conf_default_message_callback(const char *fmt, va_list ap)
+static void conf_default_message_callback(char const *fmt, va_list ap)
 {
 	printf("#\n# ");
 	vprintf(fmt, ap);
 	printf("\n#\n");
 }
 
-static void (*conf_message_callback) (const char *fmt, va_list ap) =
+static void (*conf_message_callback) (char const *fmt, va_list ap) =
 	conf_default_message_callback;
-void conf_set_message_callback(void (*fn) (const char *fmt, va_list ap))
+void conf_set_message_callback(void (*fn) (char const *fmt, va_list ap))
 {
 	conf_message_callback = fn;
 }
 
-static void conf_message(const char *fmt, ...)
+static void conf_message(char const *fmt, ...)
 {
 	va_list ap;
 
@@ -78,17 +78,17 @@ static void conf_message(const char *fmt, ...)
 		conf_message_callback(fmt, ap);
 }
 
-const char *conf_get_configname(void)
+char const *conf_get_configname(void)
 {
 	char *name = getenv("KCONFIG_CONFIG");
 
 	return name ? name : "config";
 }
 
-static char *conf_expand_value(const char *in)
+static char *conf_expand_value(char const *in)
 {
 	struct symbol *sym;
-	const char *src;
+	char const *src;
 	static char res_value[SYMBOL_MAXLENGTH];
 	char *dst, name[SYMBOL_MAXLENGTH];
 
@@ -248,7 +248,7 @@ e_out:
 	return -1;
 }
 
-int conf_read_simple(const char *name, int def)
+int conf_read_simple(char const *name, int def)
 {
 	FILE *in = NULL;
 	char   *line = NULL;
@@ -411,7 +411,7 @@ setsym:
 	return 0;
 }
 
-int conf_read(const char *name)
+int conf_read(char const *name)
 {
 	struct symbol *sym;
 	int i;
@@ -487,7 +487,7 @@ int conf_read(const char *name)
  *
  */
 static void
-kconfig_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
+kconfig_print_symbol(FILE *fp, struct symbol *sym, char const *value, void *arg)
 {
 
 	switch (sym->type) {
@@ -510,9 +510,9 @@ kconfig_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
 }
 
 static void
-kconfig_print_comment(FILE *fp, const char *value, void *arg)
+kconfig_print_comment(FILE *fp, char const *value, void *arg)
 {
-	const char *p = value;
+	char const *p = value;
 	size_t l;
 
 	for (;;) {
@@ -541,13 +541,13 @@ static struct conf_printer kconfig_printer_cb =
  * This printer is used when generating the `include/generated/autoconf.h' file.
  */
 static void
-header_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
+header_print_symbol(FILE *fp, struct symbol *sym, char const *value, void *arg)
 {
 
 	switch (sym->type) {
 	case S_BOOLEAN:
 	case S_TRISTATE: {
-		const char *suffix = "";
+		char const *suffix = "";
 
 		switch (*value) {
 		case 'n':
@@ -562,7 +562,7 @@ header_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
 		break;
 	}
 	case S_HEX: {
-		const char *prefix = "";
+		char const *prefix = "";
 
 		if (value[0] != '0' || (value[1] != 'x' && value[1] != 'X'))
 			prefix = "0x";
@@ -587,9 +587,9 @@ header_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
 }
 
 static void
-header_print_comment(FILE *fp, const char *value, void *arg)
+header_print_comment(FILE *fp, char const *value, void *arg)
 {
-	const char *p = value;
+	char const *p = value;
 	size_t l;
 
 	fprintf(fp, "/*\n");
@@ -620,7 +620,7 @@ static struct conf_printer header_printer_cb =
  * This printer is used when generating the `include/config/tristate.conf' file.
  */
 /*static void
-tristate_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg)
+tristate_print_symbol(FILE *fp, struct symbol *sym, char const *value, void *arg)
 {
 
 	if (sym->type == S_TRISTATE && *value != 'n')
@@ -636,7 +636,7 @@ static struct conf_printer tristate_printer_cb =
 static void conf_write_symbol(FILE *fp, struct symbol *sym,
 			      struct conf_printer *printer, void *printer_arg)
 {
-	const char *str;
+	char const *str;
 
 	switch (sym->type) {
 	case S_OTHER:
@@ -677,7 +677,7 @@ conf_write_heading(FILE *fp, struct conf_printer *printer, void *printer_arg)
  * Write out a minimal config.
  * All values that has default values are skipped as this is redundant.
  */
-int conf_write_defconfig(const char *filename)
+int conf_write_defconfig(char const *filename)
 {
 	struct symbol *sym;
 	struct menu *menu;
@@ -750,13 +750,13 @@ next_menu:
 	return 0;
 }
 
-int conf_write(const char *name)
+int conf_write(char const *name)
 {
 	FILE *out;
 	struct symbol *sym;
 	struct menu *menu;
-	const char *basename;
-	const char *str;
+	char const *basename;
+	char const *str;
 	char dirname[PATH_MAX + 1], tmpname[PATH_MAX * 2 + 1], newname[PATH_MAX * 2 + 1];
 	char *env;
 
@@ -850,7 +850,7 @@ next:
 	return 0;
 }
 
-int conf_write_autoconf(const char *conf_header)
+int conf_write_autoconf(char const *conf_header)
 {
 	struct symbol *sym;
 	FILE *out_h;

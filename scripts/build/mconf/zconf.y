@@ -24,9 +24,9 @@
 int cdebug = PRINTD;
 
 extern int zconflex(void);
-static void zconfprint(const char *err, ...);
-static void zconf_error(const char *err, ...);
-static void zconferror(const char *err);
+static void zconfprint(char const *err, ...);
+static void zconf_error(char const *err, ...);
+static void zconferror(char const *err);
 static bool zconf_endtoken(const struct kconf_id *id, int starttoken, int endtoken);
 
 struct symbol *symbol_hash[SYMBOL_HASHSIZE];
@@ -494,7 +494,7 @@ word_opt: /* empty */			{ $$ = NULL; }
 
 %%
 
-void conf_parse(const char *name)
+void conf_parse(char const *name)
 {
 	struct symbol *sym;
 	int i;
@@ -533,7 +533,7 @@ void conf_parse(const char *name)
 	sym_set_change_count(1);
 }
 
-static const char *zconf_tokenname(int token)
+static char const *zconf_tokenname(int token)
 {
 	switch (token) {
 	case T_MENU:		return "menu";
@@ -568,7 +568,7 @@ static bool zconf_endtoken(const struct kconf_id *id, int starttoken, int endtok
 	return true;
 }
 
-static void zconfprint(const char *err, ...)
+static void zconfprint(char const *err, ...)
 {
 	va_list ap;
 
@@ -579,7 +579,7 @@ static void zconfprint(const char *err, ...)
 	fprintf(stderr, "\n");
 }
 
-static void zconf_error(const char *err, ...)
+static void zconf_error(char const *err, ...)
 {
 	va_list ap;
 
@@ -591,14 +591,14 @@ static void zconf_error(const char *err, ...)
 	fprintf(stderr, "\n");
 }
 
-static void zconferror(const char *err)
+static void zconferror(char const *err)
 {
 	fprintf(stderr, "%s:%d: %s\n", zconf_curname(), zconf_lineno() + 1, err);
 }
 
-static void print_quoted_string(FILE *out, const char *str)
+static void print_quoted_string(FILE *out, char const *str)
 {
-	const char *p;
+	char const *p;
 	int len;
 
 	putc('"', out);

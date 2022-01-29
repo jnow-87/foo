@@ -117,7 +117,7 @@ static void print_buttons(WINDOW * dialog, int height, int width, int selected)
  * Display a dialog box with a list of options that can be turned on or off
  * in the style of radiolist (only one option turned on at a time).
  */
-int dialog_checklist(const char *title, const char *prompt, int height,
+int dialog_checklist(char const *title, char const *prompt, int height,
 		     int width, int list_height)
 {
 	int i, x, y, box_x, box_y;
