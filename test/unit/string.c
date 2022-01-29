@@ -63,6 +63,84 @@ TEST(strcnt){
 	return -n;
 }
 
+TEST(strcat){
+	int n;
+	char s[16];
+
+
+	n = 0;
+	strcpy(s, "foo");
+
+	s[3] = 0; n += TEST_STR_EQ(strcat(s, "bar"), s);
+	s[3] = 0; n += TEST_STR_EQ(strcat(s, "bar"), "foobar");
+	s[3] = 0; n += TEST_STR_EQ(strcat(s, s), "foofoo");
+	s[3] = 0; n += TEST_STR_EQ(strcat(s, ""), "foo");
+	s[0] = 0; n += TEST_STR_EQ(strcat(s, "foo"), "foo");
+
+	strcpy(s, "foo");
+
+	s[3] = 0; n += TEST_STR_EQ(strncat(s, "bar", 2), s);
+	s[3] = 0; n += TEST_STR_EQ(strncat(s, "bar", 2), "fooba");
+	s[3] = 0; n += TEST_STR_EQ(strncat(s, "bar", 5), "foobar");
+	s[3] = 0; n += TEST_STR_EQ(strncat(s, s, 2), "foofo");
+	s[3] = 0; n += TEST_STR_EQ(strncat(s, "", 2), "foo");
+	s[0] = 0; n += TEST_STR_EQ(strncat(s, "foo", 2), "fo");
+
+	return -n;
+}
+
+TEST(strchr){
+	int n;
+	char s[32];
+
+
+	n = 0;
+	strcpy(s, "1590 ahz\tAHZ1590 ahz\tAHZ");
+
+	n += TEST_STR_EQ(strchr(s, '1'), s + 0);
+	n += TEST_STR_EQ(strchr(s, ' '), s + 4);
+	n += TEST_STR_EQ(strchr(s, '9'), s + 2);
+	n += TEST_STR_EQ(strchr(s, 'a'), s + 5);
+	n += TEST_STR_EQ(strchr(s, 'A'), s + 9);
+	n += TEST_STR_EQ(strchr(s, '\t'), s + 8);
+	n += TEST_STR_EQ(strchr(s, '0'), s + 3);
+	n += TEST_STR_EQ(strchr(s, 'z'), s + 7);
+	n += TEST_STR_EQ(strchr(s, 'Z'), s + 11);
+	n += TEST_STR_EQ(strchr(s, '5'), s + 1);
+	n += TEST_STR_EQ(strchr(s, 'h'), s + 6);
+	n += TEST_STR_EQ(strchr(s, 'H'), s + 10);
+	n += TEST_STR_EQ(strchr(s, 0), s + 24);
+	n += TEST_PTR_EQ(strchr(s, 'x'), 0x0);
+
+	return -n;
+}
+
+TEST(strrchr){
+	int n;
+	char s[32];
+
+
+	n = 0;
+	strcpy(s, "1590 ahz\tAHZ1590 ahz\tAHZ");
+
+	n += TEST_STR_EQ(strrchr(s, '1'), s + 12);
+	n += TEST_STR_EQ(strrchr(s, ' '), s + 16);
+	n += TEST_STR_EQ(strrchr(s, '9'), s + 14);
+	n += TEST_STR_EQ(strrchr(s, 'a'), s + 17);
+	n += TEST_STR_EQ(strrchr(s, 'A'), s + 21);
+	n += TEST_STR_EQ(strrchr(s, '\t'), s + 20);
+	n += TEST_STR_EQ(strrchr(s, '0'), s + 15);
+	n += TEST_STR_EQ(strrchr(s, 'z'), s + 19);
+	n += TEST_STR_EQ(strrchr(s, 'Z'), s + 23);
+	n += TEST_STR_EQ(strrchr(s, '5'), s + 13);
+	n += TEST_STR_EQ(strrchr(s, 'h'), s + 18);
+	n += TEST_STR_EQ(strrchr(s, 'H'), s + 22);
+	n += TEST_STR_EQ(strrchr(s, 0), s + 24);
+	n += TEST_PTR_EQ(strrchr(s, 'x'), 0x0);
+
+	return -n;
+}
+
 TEST(isoneof){
 	int n;
 

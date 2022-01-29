@@ -13,6 +13,10 @@
 #include <sys/errno.h>
 
 
+/* local/static prototypes */
+static char const *strchr_base(char const *s, int c, char const *end);
+
+
 /* global functions */
 char *strcpy(char *dest, char const *src){
 	return memcpy(dest, src, strlen(src) + 1);
@@ -55,6 +59,35 @@ size_t strcnt(char const *s, char c){
 	}
 
 	return n;
+}
+
+char *strcat(char *dest, char const *src){
+	size_t dlen;
+
+
+	dlen = strlen(dest);
+	strcpy(dest + dlen, src);
+
+	return dest;
+}
+
+char *strncat(char *dest, char const *src, size_t n){
+	size_t dlen;
+
+
+	dlen = strlen(dest);
+	strncpy(dest + dlen, src, n);
+	dest[dlen + n] = 0;
+
+	return dest;
+}
+
+char const *strchr(char const *s, int c){
+	return strchr_base(s, c, 0x0);
+}
+
+char const *strrchr(char const *s, int c){
+	return strchr_base(s + strlen(s) + 1, c, s);
 }
 
 bool isoneof(char c, char const *s){
@@ -287,4 +320,23 @@ char *strcidtf_r(char const *s, char *buf, size_t len){
 	buf[i] = 0;
 
 	return buf;
+}
+
+
+/* local functions */
+static char const *strchr_base(char const *s, int c, char const *end){
+	int dir;
+
+
+	dir = end ? -1 : 1;
+
+	while(1){
+		if(*s == c)
+			return s;
+
+		if(s == end || (!end && *s == 0))
+			return 0x0;
+
+		s += dir;
+	}
 }

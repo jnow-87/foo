@@ -7,10 +7,11 @@
 
 
 
-obj-y := file.o process.o math.o fs.o error.o memory.o
+obj-y := file.o process.o math.o fs.o error.o memory.o kernel.o
 obj-nobuiltin-y := libsys.o
 
-libsys-y := $(patsubst %.o,%.libsys.o,$(obj-y))
+libsys-y := file.o process.o math.o fs.o error.o memory.o
+libsys-y := $(patsubst %.o,%.libsys.o,$(libsys-y))
 
 
 # libgcov symbol rename
