@@ -66,14 +66,14 @@ do
 		continue
 	fi
 
-	# parse alias line accoring to the following pattern
+	# parse alias line according to the following pattern
 	#	<comment>(optional)<type>[*]<pat>.*alias("<repl>").*
 	alias=$(echo ${line} | sed -e "s:^[/ ]*[^ ]*[ \*]\+\([a-zA-Z0-9_-]\+\).*__alias[ (]\+\([^) ]*\)[ )]\+.*:\1=\2:")
-	pat=$(echo ${alias} | cut -d '=' -f 2 | sed -e "s:gcov_::g")
+	pat=$(echo ${alias} | cut -d '=' -f 2 | sed -e "s:\<${sym_prefix}::g")
 	repl=$(echo ${alias} | cut -d '=' -f 1)
 
 	if [ ! ${#pat} -eq ${#repl} ];then
-		echo "length of \"${pat}\" and \"${repl}\" differ, pattern and replacemant must have the same size"
+		echo "length of \"${pat}\" and \"${repl}\" differ, pattern and replacement must have the same size"
 		exit 1
 	fi
 
@@ -92,12 +92,12 @@ cp ${lib} ${lib_tgt}
 # rename symbols in library
 #
 
-# ensure long symbols are renamed before shorter ones to avoid
-# breaking the longer symbols, such as close vs. fclose
+# ensure longer symbols are renamed before shorter ones to avoid
+# breaking the longer symbols, e.g. close vs. fclose
 pairs=$(echo -e ${pairs} | sort -rh | cut -d " " -f 2-)
 
 for pair in $(echo ${pairs});do
-	pat=$(echo ${pair} | cut -d '=' -f 1 | sed -e "s:${sym_prefix}::g")
+	pat=$(echo ${pair} | cut -d '=' -f 1)
 	repl=$(echo ${pair} | cut -d '=' -f 2)
 
 	sed -i -e  "s:${pat}:${repl}:g" ${lib_tgt}
