@@ -121,6 +121,8 @@ TEST(strrchr){
 
 
 	n = 0;
+
+	memset(s, '1', 32);
 	strcpy(s, "1590 ahz\tAHZ1590 ahz\tAHZ");
 
 	n += TEST_STR_EQ(strrchr(s, '1'), s + 12);
@@ -297,27 +299,35 @@ TEST(strtol){
 
 TEST(strupr){
 	int n;
+	char s[8];
 
 
 	n = 0;
 
+	n += TEST_STR_EQ(strupr(""), "");
 	n += TEST_STR_EQ(strupr("foo"), "FOO");
 	n += TEST_STR_EQ(strupr("FOO"), "FOO");
 	n += TEST_STR_EQ(strupr("123"), "123");
 	n += TEST_STR_EQ(strupr("fOo123"), "FOO123");
+
+	n += TEST_STR_EQ(strupr_r("foo", s, 2), "FO");
 
 	return -n;
 }
 
 TEST(strcidtf){
 	int n;
+	char s[8];
 
 
 	n = 0;
 
+	n += TEST_STR_EQ(strcidtf(""), "");
 	n += TEST_STR_EQ(strcidtf("foobar"), "foobar");
 	n += TEST_STR_EQ(strcidtf("foo_bar"), "foo_bar");
 	n += TEST_STR_EQ(strcidtf("foo-bar"), "foo_bar");
+
+	n += TEST_STR_EQ(strcidtf_r("foo_bar", s, 5), "foo_b");
 
 	return -n;
 }

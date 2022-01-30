@@ -87,7 +87,7 @@ char const *strchr(char const *s, int c){
 }
 
 char const *strrchr(char const *s, int c){
-	return strchr_base(s + strlen(s) + 1, c, s);
+	return strchr_base(s + strlen(s), c, s);
 }
 
 bool isoneof(char c, char const *s){
