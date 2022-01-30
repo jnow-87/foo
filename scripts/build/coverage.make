@@ -16,16 +16,6 @@ ifneq ("$(gcovered_rc)","")
 endif
 
 
-.PHONY: test
-test: all coverage-clean
-	$(foreach test,$^, \
-		$(call cmd_run_script, \
-			[ ! -e $(test) ] || { \
-				$(test) || { echo "$(test) failed"; exit 1; }; \
-			} \
-		) \
-	)
-
 .PHONY: coverage
 coverage: test
 	$(call cmd_run_script, \
@@ -43,3 +33,5 @@ coverage: test
 .PHONY: coverage-clean
 coverage-clean:
 	$(call cmd_run_script, rm -f $$(find $(build_tree) -name '*.gcda'))
+
+test: coverage-clean

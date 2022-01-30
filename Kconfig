@@ -171,6 +171,10 @@ menu "Build system"
 		string "build tree"
 		default "build/$(CONFIG_PROCESSOR)/$(CONFIG_BUILD_TYPE)"
 
+	config CODE_COVERAGE
+		bool "Code coverage support"
+		default n
+
 	# toolchain prefixes
 	config TOOLCHAIN_PREFIX
 		string "Target toolchain prefix"
