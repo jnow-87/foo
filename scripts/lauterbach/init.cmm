@@ -1,0 +1,32 @@
+sys.cpu atsamv71q21
+sys.RESetTarget
+mode.hll
+setup.var %spotlight
+
+// window config
+B::
+
+TOOLBAR   ON
+STATUSBAR ON
+CmdPOS 0.0 79.923 114. 12.
+WinPAGE.RESet
+
+WinPAGE.Create P000
+WinCLEAR
+
+WinPOS 0.14286 0.0 95. 93. 16. 1. W000
+WinTABS 16. 10. 25.
+ws.List
+
+WinPOS 85.143 0.0 72. 19. 0. 0. W001
+ws.Register
+
+WinPOS 85.143 16.0 72. 30. 5. 0. W002
+ws.Frame /Locals /Caller
+
+WinPOS 150.43 0.0 140. 130. 0. 0. W003
+ws.PER
+
+WinPAGE.select P000
+
+ENDDO
