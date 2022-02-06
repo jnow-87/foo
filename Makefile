@@ -317,4 +317,4 @@ $(doxygen_config_tgt): $(doxygen_config_src)
 
 $(tex_build_tree)/%.pdf: doc/%.svg
 	$(call cmd_run_script, $(mkdir) $(dir $@))
-	$(call cmd_run_script, inkscape -D -z -f $< --export-pdf=$@)
+	$(call cmd_run_script, inkscape --export-area-drawing --export-filename=$@ $<)
