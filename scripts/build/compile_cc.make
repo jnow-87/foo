@@ -29,24 +29,26 @@ define gen_dep_file
 	)
 endef
 
-# compile function wrapping some use output and the command file generation
+# compile function wrapping some user output and the command file generation
+# if the <log> argument is given, it is interpreted as file with compile commands
+# stdout and stderr being redirected to it
 #
-#	$(call compile_base,<compiler>,<args>)
+#	$(call compile_base,<compiler>,<args>[,<log>])
 define compile_base
 	$(if $(call is_prestage,stage0),
 		$(call update_cmd_file,check,$($(1)) $(2))
 		,
 		$(call update_cmd_file,build,$($(1)) $(2))
 		$(echo) [$(call upper_case,$(1))] $@ $(if $(WHATCHANGED),\($?\))
-		$($(1)) $(filter-out %.cmd,$(2))
+		$($(1)) $(filter-out %.cmd,$(2)) $(if $(3),2>&1 | tee $(3))
 	)
 endef
 
 # compile function extending $(compile_base) by dependency file generation
 #
-#	$(call compile_with_deps,<compiler>,<compile-flags>,<mode-flags>)
+#	$(call compile_with_deps,<compiler>,<compile-flags>,<mode-flags>[,<log>])
 define compile_with_deps
-	$(call compile_base,$(1),$(2) $(3) $< -o $@)
+	$(call compile_base,$(1),$(2) $(3) $< -o $@,$(4))
 	$(call gen_dep_file,$(1),$(2))
 endef
 
@@ -96,15 +98,15 @@ define compile_s_cxx
 endef
 
 define compile_o_s
-	$(call compile_base,$(1)as,$($(1)asflags) $($(1)archflags) $< -o $@)
+	$(call compile_base,$(1)as,$($(1)asflags) $($(1)archflags) $< -o $@,,$@.log)
 endef
 
 define compile_o_c
-	$(call compile_with_deps,$(1)cc,$($(1)cflags) $($(1)cppflags) $($(1)archflags),-c)
+	$(call compile_with_deps,$(1)cc,$($(1)cflags) $($(1)cppflags) $($(1)archflags),-c,$@.log)
 endef
 
 define compile_o_cxx
-	$(call compile_with_deps,$(1)cxx,$($(1)cxxflags) $($(1)cppflags) $($(1)archflags),-c)
+	$(call compile_with_deps,$(1)cxx,$($(1)cxxflags) $($(1)cppflags) $($(1)archflags),-c,$@.log)
 endef
 
 ifeq ($(project_type),c)
