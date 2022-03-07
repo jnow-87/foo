@@ -40,7 +40,7 @@ int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
 	critsec_unlock(&queue->lock);
 
 	if(is_first)
-		int_call(num);
+		int_foretell(num);
 
 	ksignal_wait(&task.sig);
 

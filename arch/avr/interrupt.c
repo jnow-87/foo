@@ -72,7 +72,7 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *ctx){
 	num = (lo8(ctx->int_vec_addr) << 8 | hi8(ctx->int_vec_addr));
 	num = ((num - (unsigned int)int_vectors) / (INT_VEC_SIZE / 2)) - 1;
 
-	int_call(num);
+	int_khdlr(num);
 
 	/* restore context */
 	return thread_ctx_pop();
