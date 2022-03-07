@@ -12,7 +12,6 @@
 #include <kernel/fs.h>
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
-#include <kernel/critsec.h>
 #include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>

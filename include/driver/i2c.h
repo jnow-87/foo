@@ -14,8 +14,8 @@
 #include <config/config.h>
 #include <kernel/interrupt.h>
 #include <kernel/inttask.h>
-#include <kernel/critsec.h>
 #include <sys/types.h>
+#include <sys/mutex.h>
 #include <sys/i2c.h>
 #include <sys/ringbuf.h>
 
@@ -82,7 +82,7 @@ typedef struct{
 				  slave_cmds;
 	ringbuf_t rx_buf;
 
-	critsec_lock_t lock;
+	mutex_t mtx;
 } i2c_int_data_t;
 
 typedef struct{

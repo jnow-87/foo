@@ -21,10 +21,10 @@
 #include <kernel/syscall.h>
 #include <kernel/panic.h>
 #include <kernel/task.h>
-#include <kernel/critsec.h>
 #include <kernel/ipi.h>
 #include <sys/errno.h>
 #include <sys/list.h>
+#include <sys/mutex.h>
 
 
 /* types */
@@ -59,7 +59,7 @@ static void cleanup(void *p);
 
 /* static variables */
 static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
-static critsec_lock_t sched_lock = CRITSEC_INITIALISER();
+static mutex_t sched_mtx = NOINT_MUTEX_INITIALISER();
 
 static process_t kernel_process = { 0 };
 static thread_t kernel_threads[CONFIG_NCORES] = {
@@ -89,7 +89,7 @@ void sched_trigger(void){
 
 
 	int_enable(INT_NONE);
-	critsec_lock(&sched_lock);
+	mutex_lock(&sched_mtx);
 
 	// NOTE The running thread might have already transitioned to a
 	// 		different state, e.g. through the kernel signal mechanism
@@ -106,7 +106,7 @@ void sched_trigger(void){
 
 	running[PIR] = this_t;
 
-	critsec_unlock(&sched_lock);
+	mutex_unlock(&sched_mtx);
 
 	// NOTE Do not re-enable interrupts to prevent interrupts from occurring until
 	// 		the end of the current interrupt routine. This would otherwise cause
@@ -141,7 +141,7 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, siz
 #endif // CONFIG_KERNEL_SMP
 
 
-	critsec_lock(&sched_lock);
+	mutex_lock(&sched_mtx);
 
 #ifdef CONFIG_KERNEL_SMP
 	/* identify core for current thread */
@@ -163,7 +163,7 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, siz
 #endif // CONFIG_KERNEL_SMP
 		op(this_t, data);
 
-	critsec_unlock(&sched_lock);
+	mutex_unlock(&sched_mtx);
 }
 
 void sched_thread_pause(thread_t *this_t){
@@ -374,7 +374,7 @@ static void cleanup(void *p){
 	 */
 	while(1){
 		/* remove thread scheduler queue entry */
-		critsec_lock(&sched_lock);
+		mutex_lock(&sched_mtx);
 
 		e = list_first(sched_queues[DEAD]);
 
@@ -386,7 +386,7 @@ static void cleanup(void *p){
 		list_rm(sched_queues[this_t->state], e);
 		kfree(e);
 
-		critsec_unlock(&sched_lock);
+		mutex_unlock(&sched_mtx);
 
 		/* wait for thread being removed as running thread */
 		while(thread_core(this_t) != -1)
@@ -403,5 +403,5 @@ static void cleanup(void *p){
 		}
 	}
 
-	critsec_unlock(&sched_lock);
+	mutex_unlock(&sched_mtx);
 }

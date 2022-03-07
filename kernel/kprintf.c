@@ -12,7 +12,6 @@
 #include <kernel/kprintf.h>
 #include <kernel/driver.h>
 #include <kernel/opt.h>
-#include <kernel/critsec.h>
 #include <driver/klog.h>
 #include <sys/types.h>
 #include <sys/stream.h>
@@ -20,6 +19,7 @@
 #include <sys/errno.h>
 #include <sys/string.h>
 #include <sys/escape.h>
+#include <sys/mutex.h>
 
 
 /* macros */
@@ -34,7 +34,7 @@ typedef struct{
 	size_t idx;
 	bool overflow;
 
-	critsec_lock_t lock;
+	mutex_t mtx;
 } log_t;
 
 
@@ -49,7 +49,7 @@ log_t log = {
 	.buf = { 0 },
 	.idx = 0,
 	.overflow = false,
-	.lock = CRITSEC_INITIALISER(),
+	.mtx = NOINT_MUTEX_INITIALISER(),
 };
 
 
@@ -104,7 +104,7 @@ static char putc(char c, FILE *stream){
 }
 
 static void flush(void){
-	critsec_lock(&log.lock);
+	mutex_lock(&log.mtx);
 
 	log.dev->puts(log.buf, log.idx, log.dev->data);
 
@@ -114,5 +114,5 @@ static void flush(void){
 	log.overflow = false;
 	log.idx = 0;
 
-	critsec_unlock(&log.lock);
+	mutex_unlock(&log.mtx);
 }

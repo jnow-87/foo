@@ -17,19 +17,41 @@
 #include <sys/thread.h>
 #include <sys/types.h>
 
+#ifdef BUILD_KERNEL
+# include <kernel/interrupt.h>
+#endif // BUILD_KERNEL
+
 
 /* macros */
 #define LOCK_CLEAR	0
 #define LOCK_SET	1
 
-#define _MUTEX_INITIALISER(_attr){ \
+#ifdef BUILD_KERNEL
+# define _MUTEX_INITIALISER(_attr) (mutex_t){ \
+	.attr = (_attr), \
+	.nest_cnt = 0, \
+	.lock = LOCK_CLEAR, \
+	.imask = 0, \
+}
+
+# define NOINT_MUTEX_INITIALISER() _MUTEX_INITIALISER(MTX_NOINT)
+#else
+# define _MUTEX_INITIALISER(_attr) (mutex_t){ \
 	.attr = (_attr), \
 	.nest_cnt = 0, \
 	.lock = LOCK_CLEAR, \
 }
+#endif // BUILD_KERNEL
 
 #define MUTEX_INITIALISER()			_MUTEX_INITIALISER(MTX_NONE)
 #define NESTED_MUTEX_INITIALISER()	_MUTEX_INITIALISER(MTX_NESTED)
+
+// mutex lock alignment to a cache line
+#ifdef ARCH_CACHELINE_SIZE
+# define LOCK_ALIGN	__align(ARCH_CACHELINE_SIZE)
+#else
+# define LOCK_ALIGN
+#endif // ARCH_CACHELINE_SIZE
 
 #define LOCK_SECTION(mtx, expr){ \
 	mutex_lock(mtx); \
@@ -51,20 +73,23 @@ typedef tid_t lock_id_t;
 typedef enum{
 	MTX_NONE = 0x0,
 	MTX_NESTED = 0x1,
+#ifdef BUILD_KERNEL
+	MTX_NOINT = 0x2,
+#endif // BUILD_KERNEL
 } mutex_attr_t;
 
 typedef struct{
-	int volatile lock					// indicates if the mutex is locked
-#ifdef ARCH_CACHELINE_SIZE
-		__align(ARCH_CACHELINE_SIZE) 	// force alignment of lock to a cache line
-#endif
-		;
+	int volatile lock LOCK_ALIGN;	// indicates if the mutex is locked
 
 	mutex_attr_t attr;
 
 	uint8_t nest_cnt;
-	lock_id_t lock_id;					// contains the lock id for locked, nested mutexes
-										// it is undefined for non-nested and unlocked mutexes
+	lock_id_t lock_id;				// contains the lock id for locked, nested mutexes
+									// it is undefined for non-nested and unlocked mutexes
+
+#ifdef BUILD_KERNEL
+	int_type_t imask;
+#endif // BUILD_KERNEL
 } mutex_t;
 
 

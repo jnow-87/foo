@@ -11,7 +11,6 @@
 #define KERNEL_SIGNAL_H
 
 
-#include <kernel/critsec.h>
 #include <sys/mutex.h>
 #include <sys/types.h>
 
@@ -40,7 +39,6 @@ void ksignal_init(ksignal_t *sig);
 
 void ksignal_wait(ksignal_t *sig);
 void ksignal_wait_mtx(ksignal_t *sig, mutex_t *mtx);
-void ksignal_wait_crit(ksignal_t *sig, critsec_lock_t *lock);
 
 void ksignal_send(ksignal_t *sig);
 void ksignal_bcast(ksignal_t *sig);

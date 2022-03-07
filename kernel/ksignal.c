@@ -11,14 +11,13 @@
 #include <kernel/ksignal.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
-#include <kernel/critsec.h>
 #include <sys/queue.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
 
 
 /* static variables */
-static critsec_lock_t ksignal_lock = CRITSEC_INITIALISER();
+static mutex_t ksignal_mtx = NOINT_MUTEX_INITIALISER();
 
 
 /* global functions */
@@ -34,19 +33,19 @@ void ksignal_wait(ksignal_t *sig){
 
 	e.thread = sched_running();
 
-	critsec_lock(&ksignal_lock);
+	mutex_lock(&ksignal_mtx);
 
 	if(!sig->interim){
 		queue_enqueue(sig->head, sig->tail, &e);
 		sched_thread_pause((thread_t*)e.thread);
 
-		critsec_unlock(&ksignal_lock);
+		mutex_unlock(&ksignal_mtx);
 
 		sched_yield();
 	}
 	else{
 		sig->interim = false;
-		critsec_unlock(&ksignal_lock);
+		mutex_unlock(&ksignal_mtx);
 	}
 }
 
@@ -56,31 +55,25 @@ void ksignal_wait_mtx(ksignal_t *sig, mutex_t *mtx){
 	mutex_lock(mtx);
 }
 
-void ksignal_wait_crit(ksignal_t *sig, critsec_lock_t *lock){
-	critsec_unlock(lock);
-	ksignal_wait(sig);
-	critsec_lock(lock);
-}
-
 void ksignal_send(ksignal_t *sig){
 	ksignal_queue_t *e;
 
 
-	critsec_lock(&ksignal_lock);
+	mutex_lock(&ksignal_mtx);
 
 	e = queue_dequeue(sig->head, sig->tail);
 
 	if(e != 0x0)	sched_thread_wake((thread_t*)e->thread);
 	else			sig->interim = true;
 
-	critsec_unlock(&ksignal_lock);
+	mutex_unlock(&ksignal_mtx);
 }
 
 void ksignal_bcast(ksignal_t *sig){
 	ksignal_queue_t *e;
 
 
-	critsec_lock(&ksignal_lock);
+	mutex_lock(&ksignal_mtx);
 
 	if(list_empty(sig->head))
 		sig->interim = true;
@@ -94,5 +87,5 @@ void ksignal_bcast(ksignal_t *sig){
 		sched_thread_wake((thread_t*)e->thread);
 	}
 
-	critsec_unlock(&ksignal_lock);
+	mutex_unlock(&ksignal_mtx);
 }

@@ -11,10 +11,10 @@
 #define DRIVER_TERM_H
 
 
-#include <kernel/critsec.h>
 #include <kernel/interrupt.h>
 #include <kernel/inttask.h>
 #include <kernel/ksignal.h>
+#include <sys/mutex.h>
 #include <sys/ringbuf.h>
 #include <sys/term.h>
 #include <sys/types.h>
@@ -51,7 +51,7 @@ typedef struct{
 	term_err_t rx_err;
 
 	itask_queue_t tx_queue;
-	critsec_lock_t lock;
+	mutex_t mtx;
 } term_t;
 
 

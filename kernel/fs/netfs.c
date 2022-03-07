@@ -17,8 +17,8 @@
 #include <kernel/net.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
-#include <kernel/critsec.h>
 #include <kernel/ksignal.h>
+#include <sys/mutex.h>
 #include <sys/syscall.h>
 #include <sys/ioctl.h>
 #include <sys/net.h>

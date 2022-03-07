@@ -12,9 +12,9 @@
 #include <kernel/memory.h>
 #include <kernel/syscall.h>
 #include <kernel/ksignal.h>
-#include <kernel/critsec.h>
 #include <sys/types.h>
 #include <sys/list.h>
+#include <sys/mutex.h>
 
 
 /* macros */
@@ -41,7 +41,7 @@ static void to_time(void);
 
 /* static variables */
 static timer_t *timer_lst = 0x0;
-static critsec_lock_t timer_lock = CRITSEC_INITIALISER();
+static mutex_t timer_mtx = NOINT_MUTEX_INITIALISER();
 static uint32_t time_us = 0;
 static time_t time = { 0 };
 
@@ -58,7 +58,7 @@ void ktimer_tick(void){
 		to_time();
 
 	/* update timer */
-	critsec_lock(&timer_lock);
+	mutex_lock(&timer_mtx);
 
 	list_for_each(timer_lst, t){
 		t->ticks--;
@@ -67,7 +67,7 @@ void ktimer_tick(void){
 			ksignal_send(&t->sig);
 	}
 
-	critsec_unlock(&timer_lock);
+	mutex_unlock(&timer_mtx);
 }
 
 
@@ -106,13 +106,13 @@ static int sc_hdlr_sleep(void *_p){
 	t.ticks = ticks;
 	ksignal_init(&t.sig);
 
-	critsec_lock(&timer_lock);
+	mutex_lock(&timer_mtx);
 
 	list_add_tail(timer_lst, &t);
-	ksignal_wait_crit(&t.sig, &timer_lock);
+	ksignal_wait_mtx(&t.sig, &timer_mtx);
 	list_rm(timer_lst, &t);
 
-	critsec_unlock(&timer_lock);
+	mutex_unlock(&timer_mtx);
 
 	return E_OK;
 }
@@ -142,7 +142,7 @@ static size_t to_ticks(uint32_t us){
 }
 
 static void to_time(void){
-	critsec_lock(&timer_lock);
+	mutex_lock(&timer_mtx);
 
 	time_us += time.ms * 1000 + time.us;
 
@@ -152,5 +152,5 @@ static void to_time(void){
 
 	time_us = 0;
 
-	critsec_unlock(&timer_lock);
+	mutex_unlock(&timer_mtx);
 }

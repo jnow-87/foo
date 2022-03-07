@@ -7,7 +7,6 @@
 
 
 #include <kernel/memory.h>
-#include <kernel/critsec.h>
 #include <kernel/interrupt.h>
 #include <kernel/driver.h>
 #include <kernel/fs.h>
@@ -16,6 +15,7 @@
 #include <driver/klog.h>
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <sys/mutex.h>
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/string.h>
@@ -183,9 +183,9 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		critsec_lock(&term->lock);
+		mutex_lock(&term->mtx);
 		r = term->hw->configure(data, term->hw->data);
-		critsec_unlock(&term->lock);
+		mutex_unlock(&term->mtx);
 
 		if(r != E_OK)
 			return -errno;

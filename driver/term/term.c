@@ -10,12 +10,12 @@
 #include <config/config.h>
 #include <arch/interrupt.h>
 #include <kernel/memory.h>
-#include <kernel/critsec.h>
 #include <kernel/interrupt.h>
 #include <kernel/inttask.h>
 #include <kernel/ksignal.h>
 #include <driver/term.h>
 #include <sys/types.h>
+#include <sys/mutex.h>
 #include <sys/ringbuf.h>
 
 
@@ -75,7 +75,7 @@ term_t *term_create(term_itf_t *hw, void *cfg){
 
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 	itask_queue_init(&term->tx_queue);
-	critsec_init(&term->lock);
+	mutex_init(&term->mtx, MTX_NOINT);
 
 	return term;
 
@@ -96,12 +96,12 @@ void term_destroy(term_t *term){
 }
 
 size_t term_gets(term_t *term, char *s, size_t n){
-	critsec_lock(&term->lock);
+	mutex_lock(&term->mtx);
 
 	if(term->hw->rx_int)	n = ringbuf_read(&term->rx_buf, s, n);
 	else					n = term->hw->gets(s, n, &term->rx_err, term->hw->data);
 
-	critsec_unlock(&term->lock);
+	mutex_unlock(&term->mtx);
 
 	return n;
 }
@@ -115,9 +115,9 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 		return 0;
 
 	if(n == 1 || int_enabled() == INT_NONE || term->hw->tx_int == 0){
-		critsec_lock(&term->lock);
+		mutex_lock(&term->mtx);
 		r = term->hw->puts(s, n, term->hw->data);
-		critsec_unlock(&term->lock);
+		mutex_unlock(&term->mtx);
 
 		return r;
 	}
@@ -142,14 +142,14 @@ void term_rx_hdlr(int_num_t num, void *_term){
 
 	term = (term_t*)_term;
 
-	critsec_lock(&term->lock);
+	mutex_lock(&term->mtx);
 
 	n = term->hw->gets(buf, 16, &term->rx_err, term->hw->data);
 
 	if(ringbuf_write(&term->rx_buf, buf, n) != n)
 		term->rx_err |= TERR_RX_FULL;
 
-	critsec_unlock(&term->lock);
+	mutex_unlock(&term->mtx);
 
 	if(term->rx_rdy != 0x0)
 		ksignal_send(term->rx_rdy);
@@ -167,9 +167,9 @@ void term_tx_hdlr(int_num_t num, void *_term){
 	if(data == 0x0)
 		return;
 
-	critsec_lock(&term->lock);
+	mutex_lock(&term->mtx);
 	while(term->hw->putc(*data->s, term->hw->data) != *data->s);
-	critsec_unlock(&term->lock);
+	mutex_unlock(&term->mtx);
 
 	data->s++;
 	data->len--;

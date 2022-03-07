@@ -17,12 +17,12 @@
 #include <kernel/usignal.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
-#include <kernel/critsec.h>
 #include <kernel/kprintf.h>
 #include <sys/register.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/list.h>
+#include <sys/mutex.h>
 
 
 /* types */
@@ -66,7 +66,7 @@ typedef struct{
 	dt_data_t *dtd;
 
 	sig_tgt_t *sig_tgt_lst;
-	critsec_lock_t lock;
+	mutex_t mtx;
 } dev_data_t;
 
 
@@ -108,7 +108,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	port->dtd = dt_data;
 	port->sig_tgt_lst = 0x0;
 
-	critsec_init(&port->lock);
+	mutex_init(&port->mtx, MTX_NOINT);
 
 	dev = devfs_dev_register(name, &ops, 0x0, port);
 
@@ -158,9 +158,9 @@ static int close(struct devfs_dev_t *dev, fs_filed_t *fd){
 
 		DEBUG("remove %s.%d from signal list for \"%s\"\n", tgt->thread->parent->name, tgt->thread->tid, dev->node->name);
 
-		critsec_lock(&port->lock);
+		mutex_lock(&port->mtx);
 		list_rm(port->sig_tgt_lst, tgt);
-		critsec_unlock(&port->lock);
+		mutex_unlock(&port->mtx);
 
 		kfree(tgt);
 	}
@@ -228,9 +228,9 @@ static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *dat
 		tgt->thread = (thread_t*)sched_running();
 		tgt->fd = fd;
 
-		critsec_lock(&port->lock);
+		mutex_lock(&port->mtx);
 		list_add_tail(port->sig_tgt_lst, tgt);
-		critsec_unlock(&port->lock);
+		mutex_unlock(&port->mtx);
 
 		DEBUG("add %s.%d to signal list for \"%s\"\n", tgt->thread->parent->name, tgt->thread->tid, dev->node->name);
 
@@ -252,12 +252,12 @@ static void int_hdlr(int_num_t num, void *data){
 
 	DEBUG("int %d on \"%s\"\n", num, dev->node->name);
 
-	critsec_lock(&port->lock);
+	mutex_lock(&port->mtx);
 
 	list_for_each(port->sig_tgt_lst, tgt)
 		usignal_send(tgt->thread, tgt->signal);
 
-	critsec_unlock(&port->lock);
+	mutex_unlock(&port->mtx);
 }
 
 static uint8_t rightmost_bit(uint8_t v){

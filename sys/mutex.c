@@ -14,6 +14,7 @@
 #include <sys/compiler.h>
 
 #ifdef BUILD_KERNEL
+# include <arch/interrupt.h>
 # include <kernel/sched.h>
 #else
 # include <lib/unistd.h>
@@ -53,9 +54,7 @@
  * \param	m	mutex to initialise
  */
 void mutex_init(mutex_t *m, mutex_attr_t attr){
-	m->attr = attr;
-	m->nest_cnt = 0;
-	m->lock = LOCK_CLEAR;
+	*m = _MUTEX_INITIALISER(attr);
 }
 
 /**
@@ -65,6 +64,11 @@ void mutex_init(mutex_t *m, mutex_attr_t attr){
  * \param	m	mutex to lock
  */
 void mutex_lock(mutex_t *m){
+#ifdef BUILD_KERNEL
+	if(m->attr & MTX_NOINT)
+		m->imask = int_enable(INT_NONE);
+#endif // BUILD_KERNEL
+
 	while(1){
 		if(mutex_trylock(m) == 0)
 			break;
@@ -120,4 +124,9 @@ int mutex_trylock(mutex_t *m){
 void mutex_unlock(mutex_t *m){
 	if(m->nest_cnt == 0)	m->lock = LOCK_CLEAR;
 	else					m->nest_cnt--;
+
+#ifdef BUILD_KERNEL
+	if(m->attr & MTX_NOINT)
+		int_enable(m->imask);
+#endif // BUILD_KERNEL
 }
