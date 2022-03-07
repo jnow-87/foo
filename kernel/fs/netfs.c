@@ -188,7 +188,7 @@ static int sc_hdlr_recv(void *_p){
 		if(r || errno || (fd->mode & O_NONBLOCK))
 			break;
 
-		ksignal_wait_mtx(&node->datain_sig, &node->mtx);
+		ksignal_wait(&node->datain_sig, &node->mtx);
 	}
 
 	p->data_len = r;
@@ -302,12 +302,14 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 
 static int ioctl(fs_filed_t *fd, int request, void *_data){
 	int r;
+	fs_node_t *node;
 	socket_t *sock;
 	socket_ioctl_t *data;
 
 
 	data = (socket_ioctl_t*)_data;
-	sock = (socket_t*)fd->node->data;
+	node = fd->node;
+	sock = (socket_t*)node->data;
 
 	switch(request){
 	case IOCTL_CONNECT:
@@ -329,7 +331,7 @@ static int ioctl(fs_filed_t *fd, int request, void *_data){
 			if(data->fd >= 0 || errno || (fd->mode & O_NONBLOCK))
 				break;
 
-			ksignal_wait(&fd->node->datain_sig);
+			ksignal_wait(&node->datain_sig, &node->mtx);
 		}
 
 		r = (data->fd >= 0) ? E_OK : -errno;

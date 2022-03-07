@@ -187,7 +187,7 @@ static int sc_hdlr_read(void *_p){
 		if(r || errno || (fd->mode & O_NONBLOCK))
 			break;
 
-		ksignal_wait_mtx(&node->datain_sig, &node->mtx);
+		ksignal_wait(&node->datain_sig, &node->mtx);
 	}
 
 	p->data_len = r;

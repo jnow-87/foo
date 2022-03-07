@@ -149,10 +149,10 @@ void term_rx_hdlr(int_num_t num, void *_term){
 	if(ringbuf_write(&term->rx_buf, buf, n) != n)
 		term->rx_err |= TERR_RX_FULL;
 
-	mutex_unlock(&term->mtx);
-
 	if(term->rx_rdy != 0x0)
 		ksignal_send(term->rx_rdy);
+
+	mutex_unlock(&term->mtx);
 }
 
 void term_tx_hdlr(int_num_t num, void *_term){

@@ -724,7 +724,7 @@ static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...){
 	if(r != 0)
 		goto_errno(end, E_IO);
 
-	ksignal_wait_mtx(&esp->sig, &esp->mtx);
+	ksignal_wait(&esp->sig, &esp->mtx);
 
 	if(esp->resp != resp){
 		r = 1;
@@ -745,10 +745,11 @@ end:
 
 static void cmd_resp(esp_t *esp, ssize_t resp){
 	mutex_lock(&esp->mtx);
-	esp->resp = resp;
-	mutex_unlock(&esp->mtx);
 
+	esp->resp = resp;
 	ksignal_send(&esp->sig);
+
+	mutex_unlock(&esp->mtx);
 }
 
 static int puts(char const *s, esp_t *esp){

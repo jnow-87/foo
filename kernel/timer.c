@@ -109,7 +109,7 @@ static int sc_hdlr_sleep(void *_p){
 	mutex_lock(&timer_mtx);
 
 	list_add_tail(timer_lst, &t);
-	ksignal_wait_mtx(&t.sig, &timer_mtx);
+	ksignal_wait(&t.sig, &timer_mtx);
 	list_rm(timer_lst, &t);
 
 	mutex_unlock(&timer_mtx);

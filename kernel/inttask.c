@@ -37,12 +37,11 @@ int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
 	list1_add_tail(queue->head, queue->tail, &task);
 	is_first = (list_first(queue->head) == &task);
 
-	mutex_unlock(&queue->mtx);
-
 	if(is_first)
 		int_foretell(num);
 
-	ksignal_wait(&task.sig);
+	ksignal_wait(&task.sig, &queue->mtx);
+	mutex_unlock(&queue->mtx);
 
 	return_errno(task.errno);
 }
@@ -57,9 +56,9 @@ void itask_complete(itask_queue_t *queue, errno_t e_code){
 	list1_rm_head(queue->head, queue->tail);
 	task->errno = e_code;
 
-	mutex_unlock(&queue->mtx);
-
 	ksignal_send(&task->sig);
+
+	mutex_unlock(&queue->mtx);
 }
 
 void *itask_query_data(itask_queue_t *queue){
