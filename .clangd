@@ -1,0 +1,95 @@
+{
+	"CompileFlags": {
+# 		"CompilationDatabase": "build/",
+		"Add": [
+			"-Iinclude/",
+			"-Irecent/",
+			"-DBUILD_ARCH_HEADER=<arch/x86/x86.h>",
+		],
+	},
+	"Diagnostics": {
+		"Suppress": "*",
+		"ClangTidy": {
+			"Remove": "*",
+		},
+	},
+}
+
+# arch/avr/
+{
+	"If": {
+		"PathMatch": "arch/avr/.*"
+	},
+
+	"CompileFlags": {
+		"Add": [
+			"-DBUILD_ARCH_HEADER=<arch/avr/atmega.h>",
+		],
+	},
+}
+
+# kernel/
+{
+	"If": {
+		"PathMatch": "kernel/.*"
+	},
+
+	"CompileFlags": {
+		"Add": [
+			"-DBUILD_KERNEL",
+		],
+	},
+}
+
+# lib/
+{
+	"If": {
+		"PathMatch": "lib/.*"
+	},
+
+	"CompileFlags": {
+		"Add": [
+			"-DBUILD_LIBSYS",
+		],
+	},
+}
+
+# init/
+{
+	"If": {
+		"PathMatch": "init/.*"
+	},
+
+	"CompileFlags": {
+		"Add": [
+			"-Iinclude/lib/",
+			"-Iinit/",
+		],
+	},
+}
+
+# test/
+{
+	"If": {
+		"PathMatch": "test/.*"
+	},
+
+	"CompileFlags": {
+		"Add": [
+			"-Iinclude/lib/",
+		],
+	},
+}
+
+# test/integration/
+{
+	"If": {
+		"PathMatch": "test/integration/.*"
+	},
+
+	"CompileFlags": {
+		"Add": [
+			"-Itest/integration/",
+		],
+	},
+}

@@ -299,14 +299,14 @@ char *strupr_r(char const *s, char *buf, size_t len){
 	return buf;
 }
 
-char *strcidtf(char const *s){
+char *strcident(char const *s){
 	static char _s[NAME_MAX + 1];
 
 
-	return strcidtf_r(s, _s, NAME_MAX + 1);
+	return strcident_r(s, _s, NAME_MAX + 1);
 }
 
-char *strcidtf_r(char const *s, char *buf, size_t len){
+char *strcident_r(char const *s, char *buf, size_t len){
 	size_t i;
 
 

@@ -315,19 +315,19 @@ TEST(strupr){
 	return -n;
 }
 
-TEST(strcidtf){
+TEST(strcident){
 	int n;
 	char s[8];
 
 
 	n = 0;
 
-	n += TEST_STR_EQ(strcidtf(""), "");
-	n += TEST_STR_EQ(strcidtf("foobar"), "foobar");
-	n += TEST_STR_EQ(strcidtf("foo_bar"), "foo_bar");
-	n += TEST_STR_EQ(strcidtf("foo-bar"), "foo_bar");
+	n += TEST_STR_EQ(strcident(""), "");
+	n += TEST_STR_EQ(strcident("foobar"), "foobar");
+	n += TEST_STR_EQ(strcident("foo_bar"), "foo_bar");
+	n += TEST_STR_EQ(strcident("foo-bar"), "foo_bar");
 
-	n += TEST_STR_EQ(strcidtf_r("foo_bar", s, 5), "foo_b");
+	n += TEST_STR_EQ(strcident_r("foo_bar", s, 5), "foo_b");
 
 	return -n;
 }

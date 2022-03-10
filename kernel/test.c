@@ -32,8 +32,8 @@ void ktest(){
 		failed += r;
 
 		kprintf(KMSG_ANY, "%s%s" RESET_ATTR "\n",
-			((char *[]){ FG_GREEN, FG_RED }[r]),
-			((char *[]){ "passed", "failed" }[r])
+			((char const *[]){ FG_GREEN, FG_RED }[r]),
+			((char const *[]){ "passed", "failed" }[r])
 		);
 	}
 
