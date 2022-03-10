@@ -90,6 +90,8 @@ ifneq ("$(githooks_tree)","")
   include $(scripts_dir)/githooks.make
 endif
 
+include $(scripts_dir)/test.make
+
 ifeq ("$(use_coverage_sys)","y")
   include $(scripts_dir)/coverage.make
  endif

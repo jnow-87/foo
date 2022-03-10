@@ -21,15 +21,16 @@ hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o vect
 # libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := errno.libsys.o string.libsys.o list1.libsys.o list2.libsys.o vector.libsys.o devtree.o
+libsys-y := errno.o string.o list1.o list2.o vector.o devtree.o
 
-libsys-$(CONFIG_SC_DYNMEM) += memblock.libsys.o
-libsys-$(CONFIG_LIB_MUTEX) += mutex.libsys.o
-libsys-$(CONFIG_LIB_STREAM) += stream.libsys.o
-libsys-$(CONFIG_SYS_RINGBUFFER) += ringbuf.libsys.o
-libsys-$(CONFIG_SYS_PATTERN_MATCH) += patmat.libsys.o
-libsys-$(CONFIG_KERNEL_NET) += inet.libsys.o
+libsys-$(CONFIG_SC_DYNMEM) += memblock.o
+libsys-$(CONFIG_LIB_MUTEX) += mutex.o
+libsys-$(CONFIG_LIB_STREAM) += stream.o
+libsys-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
+libsys-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
+libsys-$(CONFIG_KERNEL_NET) += inet.o
 
+libsys-y := $(patsubst %.o,%.libsys.o,$(libsys-y))
 
 # custom rules to generate separate objects files for src files that are reuired by kernel and libsys
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_tree)/%.c,)

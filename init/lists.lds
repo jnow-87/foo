@@ -22,7 +22,7 @@ SECTIONS {
 		__start_tests_user_noninteractive = .;
 		*(tests_user_noninteractive)
 		__stop_tests_user_noninteractive = .;
-	}
+	} > app_data
 }
 
 INSERT AFTER .text;

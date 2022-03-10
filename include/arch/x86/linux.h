@@ -68,6 +68,7 @@ typedef enum{
 	LNX_SYS_OPEN = 2,
 	LNX_SYS_CLOSE = 3,
 	LNX_SYS_LSEEK = 8,
+	LNX_SYS_MMAP = 9,
 	LNX_SYS_SIGACTION = 13,
 	LNX_SYS_SIGRETURN_RT = 15,
 	LNX_SYS_PAUSE = 34,
@@ -102,6 +103,8 @@ long int lnx_lseek(int fd, long int offset, int whence);
 
 void lnx_chdir(char const *path);
 void lnx_mkdir(char const *path, int mode);
+
+void *lnx_mmap(void *addr, size_t len, int prot, int flags, int fd, unsigned long int offset);
 
 void lnx_dprintf(int fd, char const *fmt, ...);
 void lnx_vdprintf(int fd, char const *fmt, va_list lst);

@@ -10,7 +10,7 @@
 memory = {
 	ram = {
 		baseaddr = 0x00400000;
-		size = 23072768;
+		size = 44044288;
 
 		text = {
 			baseaddr = 0x00400000;
@@ -30,6 +30,11 @@ memory = {
 		app-heap = {
 			baseaddr = 0x01901000;
 			size = 1048576;
+		};
+
+		app-data = {
+			baseaddr = 0x1a01000;
+			size = 20971520;
 		};
 	};
 };

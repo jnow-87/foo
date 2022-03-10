@@ -54,7 +54,7 @@ typedef enum{
 } mutex_attr_t;
 
 typedef struct{
-	volatile int lock					// indicates if the mutex is locked
+	int volatile lock					// indicates if the mutex is locked
 #ifdef ARCH_CACHELINE_SIZE
 		__align(ARCH_CACHELINE_SIZE) 	// force alignment of lock to a cache line
 #endif

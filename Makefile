@@ -24,7 +24,7 @@ config_tree := scripts/config
 use_config_sys := y
 config_ftype := Kconfig
 githooks_tree := .githooks
-use_coverage_sys := y
+use_coverage_sys = $(CONFIG_CODE_COVERAGE)
 gcovered_rc := .gcoveredrc
 
 # source- and build-tree
@@ -69,7 +69,6 @@ cflags := \
 	-nostdinc \
 	-fno-builtin \
 	-fshort-enums \
-	-flto
 
 cxxflags := \
 	$(CXXFLAGS) \
@@ -79,7 +78,6 @@ cxxflags := \
 	-nostdinc \
 	-fno-builtin \
 	-fshort-enums \
-	-flto
 
 cppflags := \
 	$(CPPFLAGS) \
@@ -173,6 +171,17 @@ gperfflags := \
 	$(GPERFFLAGS) \
 	$(gperfflags)
 
+# coverage flags
+ifeq ($(CONFIG_CODE_COVERAGE),y)
+  cflags += -fprofile-arcs -ftest-coverage --coverage
+  cxxflags += -fprofile-arcs -ftest-coverage --coverage
+  ldlibs += -lgcov
+
+  hostcflags += -fprofile-arcs -ftest-coverage --coverage
+  hostcxxflags += -fprofile-arcs -ftest-coverage --coverage
+  hostldlibs += -lgcov
+endif
+
 
 ####
 ## brickos specific variables
@@ -224,6 +233,16 @@ all: check_config check_memlayout $(lib) $(hostlib) $(bin) $(hostbin)
 		[ ! $$? -eq 0 ] && echo -e '\033[31munable to create symbolic link "recent"\n\033[0m'; \
 		$(sysroot_create) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(kernel) $(libsys) \
 	)
+
+####
+## coverage
+####
+
+ifneq ($(CONFIG_CODE_COVERAGE),y)
+.PHONY: coverage
+coverage:
+	$(call cmd_run_script, echo -e 'code coverage has been disabled through \033[33mCONFIG_CODE_COVERAGE\033[0m')
+endif
 
 ####
 ## cleanup

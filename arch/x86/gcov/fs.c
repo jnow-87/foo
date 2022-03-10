@@ -12,12 +12,12 @@
 
 
 /* prototypes */
-int gcov_mkdir(const char *path, int mode);
-int gc_md(const char *path, int mode) __alias(gcov_mkdir);
+int gcov_mkdir(char const *path, int mode);
+int gc_md(char const *path, int mode) __alias(gcov_mkdir);
 
 
 /* global functions */
-int gcov_mkdir(const char *path, int mode){
+int gcov_mkdir(char const *path, int mode){
 	lnx_mkdir(path, mode);
 
 	return 0;

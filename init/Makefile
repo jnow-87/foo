@@ -10,7 +10,7 @@
 bin-y := init.elf
 
 
-init-y := main.o shell/ scripts/linker/app_$(CONFIG_ARCH).lds
+init-y := main.o shell/ scripts/linker/app_$(CONFIG_ARCH).lds $(loc_src_tree)/lists.lds
 
 # ensure init is rebuild if libsys is updated
 init-y += $(build_tree)/lib/libsys.a

@@ -38,7 +38,7 @@ tristate modules_val;
 
 struct expr *sym_env_list;
 
-static void sym_add_default(struct symbol *sym, const char *def)
+static void sym_add_default(struct symbol *sym, char const *def)
 {
 	struct property *prop = prop_alloc(P_DEFAULT, sym);
 
@@ -67,7 +67,7 @@ enum symbol_type sym_get_type(struct symbol *sym)
 	return type;
 }
 
-const char *sym_type_name(enum symbol_type type)
+char const *sym_type_name(enum symbol_type type)
 {
 	switch (type) {
 	case S_BOOLEAN:
@@ -535,7 +535,7 @@ tristate sym_toggle_tristate_value(struct symbol *sym)
 	return newval;
 }
 
-bool sym_string_valid(struct symbol *sym, const char *str)
+bool sym_string_valid(struct symbol *sym, char const *str)
 {
 	signed char ch;
 
@@ -579,7 +579,7 @@ bool sym_string_valid(struct symbol *sym, const char *str)
 	}
 }
 
-bool sym_string_within_range(struct symbol *sym, const char *str)
+bool sym_string_within_range(struct symbol *sym, char const *str)
 {
 	struct property *prop;
 	int val;
@@ -622,9 +622,9 @@ bool sym_string_within_range(struct symbol *sym, const char *str)
 	}
 }
 
-bool sym_set_string_value(struct symbol *sym, const char *newval)
+bool sym_set_string_value(struct symbol *sym, char const *newval)
 {
-	const char *oldval;
+	char const *oldval;
 	char *val;
 	int size;
 
@@ -678,11 +678,11 @@ bool sym_set_string_value(struct symbol *sym, const char *newval)
  * If the symbol does not have any default then fallback
  * to the fixed default values.
  */
-const char *sym_get_string_default(struct symbol *sym)
+char const *sym_get_string_default(struct symbol *sym)
 {
 	struct property *prop;
 	struct symbol *ds;
-	const char *str;
+	char const *str;
 	tristate val;
 
 	sym_calc_visibility(sym);
@@ -708,7 +708,7 @@ const char *sym_get_string_default(struct symbol *sym)
 			ds = prop_get_symbol(prop);
 			if (ds != NULL) {
 				sym_calc_value(ds);
-				str = (const char *)ds->curr.val;
+				str = (char const *)ds->curr.val;
 			}
 		}
 	}
@@ -746,7 +746,7 @@ const char *sym_get_string_default(struct symbol *sym)
 	return "";
 }
 
-const char *sym_get_string_value(struct symbol *sym)
+char const *sym_get_string_value(struct symbol *sym)
 {
 	tristate val;
 
@@ -767,7 +767,7 @@ const char *sym_get_string_value(struct symbol *sym)
 	default:
 		;
 	}
-	return (const char *)sym->curr.val;
+	return (char const *)sym->curr.val;
 }
 
 bool sym_is_changable(struct symbol *sym)
@@ -775,7 +775,7 @@ bool sym_is_changable(struct symbol *sym)
 	return sym->visible > sym->rev_dep.tri;
 }
 
-static unsigned strhash(const char *s)
+static unsigned strhash(char const *s)
 {
 	/* fnv32 hash */
 	unsigned hash = 2166136261U;
@@ -784,7 +784,7 @@ static unsigned strhash(const char *s)
 	return hash;
 }
 
-struct symbol *sym_lookup(const char *name, int flags)
+struct symbol *sym_lookup(char const *name, int flags)
 {
 	struct symbol *symbol;
 	char *new_name;
@@ -825,7 +825,7 @@ struct symbol *sym_lookup(const char *name, int flags)
 	return symbol;
 }
 
-struct symbol *sym_find(const char *name)
+struct symbol *sym_find(char const *name)
 {
 	struct symbol *symbol = NULL;
 	int hash = 0;
@@ -857,9 +857,9 @@ struct symbol *sym_find(const char *name)
  * name to be expanded shall be prefixed by a '$'. Unknown symbol expands to
  * the empty string.
  */
-const char *sym_expand_string_value(const char *in)
+char const *sym_expand_string_value(char const *in)
 {
-	const char *src;
+	char const *src;
 	char *res;
 	size_t reslen;
 
@@ -869,7 +869,7 @@ const char *sym_expand_string_value(const char *in)
 
 	while ((src = strchr(in, '$'))) {
 		char *p, name[SYMBOL_MAXLENGTH];
-		const char *symval = "";
+		char const *symval = "";
 		struct symbol *sym;
 		size_t newlen;
 
@@ -901,9 +901,9 @@ const char *sym_expand_string_value(const char *in)
 	return res;
 }
 
-const char *sym_escape_string_value(const char *in)
+char const *sym_escape_string_value(char const *in)
 {
-	const char *p;
+	char const *p;
 	size_t reslen;
 	char *res;
 	size_t l;
@@ -944,7 +944,7 @@ const char *sym_escape_string_value(const char *in)
 	return res;
 }
 
-struct symbol **sym_re_search(const char *pattern)
+struct symbol **sym_re_search(char const *pattern)
 {
 	struct symbol *sym, **sym_arr = NULL;
 	int i, cnt, size;
@@ -1254,7 +1254,7 @@ struct symbol *prop_get_symbol(struct property *prop)
 	return NULL;
 }
 
-const char *prop_get_type_name(enum prop_type type)
+char const *prop_get_type_name(enum prop_type type)
 {
 	switch (type) {
 	case P_PROMPT:
@@ -1283,7 +1283,7 @@ const char *prop_get_type_name(enum prop_type type)
 	return "unknown";
 }
 
-static void prop_add_env(const char *env)
+static void prop_add_env(char const *env)
 {
 	struct symbol *sym, *sym2;
 	struct property *prop;

@@ -162,7 +162,7 @@ static void set_bluetitle_theme(void)
 /*
  * Select color theme
  */
-static int set_theme(const char *theme)
+static int set_theme(char const *theme)
 {
 	int use_color = 1;
 	if (!theme)
@@ -227,7 +227,7 @@ static void init_dialog_colors(void)
 /*
  * Setup for color display
  */
-static void color_setup(const char *theme)
+static void color_setup(char const *theme)
 {
 	int use_color;
 
@@ -274,7 +274,7 @@ void dialog_clear(void)
 /*
  * Do some initialization for dialog
  */
-int init_dialog(const char *backtitle)
+int init_dialog(char const *backtitle)
 {
 	int height, width;
 
@@ -300,7 +300,7 @@ int init_dialog(const char *backtitle)
 	return 0;
 }
 
-void set_dialog_backtitle(const char *backtitle)
+void set_dialog_backtitle(char const *backtitle)
 {
 	dlg.backtitle = backtitle;
 }
@@ -319,7 +319,7 @@ void end_dialog(int x, int y)
 /* Print the title of the dialog. Center the title and truncate
  * tile if wider than dialog (- 2 chars).
  **/
-void print_title(WINDOW *dialog, const char *title, int width)
+void print_title(WINDOW *dialog, char const *title, int width)
 {
 	if (title) {
 		int tlen = MIN(width - 2, strlen(title));
@@ -336,7 +336,7 @@ void print_title(WINDOW *dialog, const char *title, int width)
  * characters '\n' are replaced by spaces.  We start on a new line
  * if there is no room for at least 4 nonblanks following a double-space.
  */
-void print_autowrap(WINDOW * win, const char *prompt, int width, int y, int x)
+void print_autowrap(WINDOW * win, char const *prompt, int width, int y, int x)
 {
 	int newl, cur_x, cur_y;
 	int i, prompt_len, room, wlen;
@@ -398,7 +398,7 @@ void print_autowrap(WINDOW * win, const char *prompt, int width, int y, int x)
 /*
  * Print a button
  */
-void print_button(WINDOW * win, const char *label, int y, int x, int selected)
+void print_button(WINDOW * win, char const *label, int y, int x, int selected)
 {
 	int i, temp;
 
@@ -483,7 +483,7 @@ void draw_shadow(WINDOW * win, int y, int x, int height, int width)
 /*
  *  Return the position of the first alphabetic character in a string.
  */
-int first_alpha(const char *string, const char *exempt)
+int first_alpha(char const *string, char const *exempt)
 {
 	int i, in_paren = 0, c;
 
@@ -557,7 +557,7 @@ void item_reset(void)
 	item_cur = &item_nil;
 }
 
-void item_make(const char *fmt, ...)
+void item_make(char const *fmt, ...)
 {
 	va_list ap;
 	struct dialog_list *p = malloc(sizeof(*p));
@@ -574,7 +574,7 @@ void item_make(const char *fmt, ...)
 	va_end(ap);
 }
 
-void item_add_str(const char *fmt, ...)
+void item_add_str(char const *fmt, ...)
 {
 	va_list ap;
         size_t avail;
@@ -651,7 +651,7 @@ int item_n(void)
 	return 0;
 }
 
-const char *item_str(void)
+char const *item_str(void)
 {
 	return item_cur->node.str;
 }

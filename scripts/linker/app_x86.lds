@@ -31,7 +31,7 @@ SECTIONS {
 
 		. = ALIGN(16);
 		INCLUDE libsys_init.lds
-	} > text
+	} > app_data
 
 	.rodata : {
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
@@ -49,7 +49,7 @@ SECTIONS {
 		*(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 		*(.scommon)
 		*(COMMON)
-	} > text
+	} > app_data
 
 	/* discard sections */
 	/DISCARD/ : {

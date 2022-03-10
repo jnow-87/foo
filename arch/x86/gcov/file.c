@@ -22,15 +22,15 @@
 
 
 /* prototypes */
-int gcov_open(const char *path, int flags, int mode);
-int gc_o(const char *path, int flags, int mode) __alias(gcov_open);
+int gcov_open(char const *path, int flags, int mode);
+int gc_o(char const *path, int flags, int mode) __alias(gcov_open);
 int gcov_close(int fd);
 int gc_cl(int fd) __alias(gcov_close);
 
-FILE *gcov_fdopen(int fd, const char *mode);
-FILE *gc_fdo(int fd, const char *mode) __alias(gcov_fdopen);
-FILE *gcov_fopen(const char *path, const char *mode);
-FILE *gc_fo(const char *path, const char *mode) __alias(gcov_fopen);
+FILE *gcov_fdopen(int fd, char const *mode);
+FILE *gc_fdo(int fd, char const *mode) __alias(gcov_fdopen);
+FILE *gcov_fopen(char const *path, char const *mode);
+FILE *gc_fo(char const *path, char const *mode) __alias(gcov_fopen);
 int gcov_fclose(FILE *stream);
 int gc_fcl(FILE *stream) __alias(gcov_fclose);
 
@@ -45,16 +45,16 @@ long gcov_ftell(FILE *stream);
 long gc_ft(FILE *stream) __alias(gcov_ftell);
 int gcov_fcntl(int fd, int cmd, ...);
 int gc_fc(int fd, int cmd, ...) __alias(gcov_fcntl);
-int gcov_access(const char *path, int mode);
-int gc_acc(const char *path, int mode) __alias(gcov_access);
+int gcov_access(char const *path, int mode);
+int gc_acc(char const *path, int mode) __alias(gcov_access);
 
 void gcov_setbuf(FILE *stream, char *buf);
 void gc_sbf(FILE *stream, char *buf) __alias(gcov_setbuf);
 
-int gcov_fprintf(FILE *stream, const char *format, ...);
-int gc_fptf(FILE *stream, const char *format, ...) __alias(gcov_fprintf);
-int gcov_vfprintf(FILE *stream, const char *format, va_list ap);
-int vgc_fptf(FILE *stream, const char *format, va_list ap) __alias(gcov_vfprintf);
+int gcov_fprintf(FILE *stream, char const *format, ...);
+int gc_fptf(FILE *stream, char const *format, ...) __alias(gcov_fprintf);
+int gcov_vfprintf(FILE *stream, char const *format, va_list ap);
+int vgc_fptf(FILE *stream, char const *format, va_list ap) __alias(gcov_vfprintf);
 
 
 /* global variables */
@@ -71,7 +71,7 @@ static bool gcov_fp_inuse = false;
 
 
 /* global functions */
-int gcov_open(const char *path, int flags, int mode){
+int gcov_open(char const *path, int flags, int mode){
 	return lnx_open(path, flags, mode);
 }
 
@@ -81,7 +81,7 @@ int gcov_close(int fd){
 	return 0;
 }
 
-FILE *gcov_fdopen(int fd, const char *mode){
+FILE *gcov_fdopen(int fd, char const *mode){
 	if(gcov_fp_inuse)
 		LNX_EEXIT("expecting no nested gcov_fdopen calls\n");
 
@@ -91,7 +91,7 @@ FILE *gcov_fdopen(int fd, const char *mode){
 	return &gcov_fp;
 }
 
-FILE *gcov_fopen(const char *path, const char *mode){
+FILE *gcov_fopen(char const *path, char const *mode){
 	LNX_EEXIT("not expected to be called\n");
 
 	return 0x0;
@@ -153,7 +153,7 @@ int gcov_fcntl(int fd, int cmd, ...){
 	return 0;
 }
 
-int gcov_access(const char *path, int mode){
+int gcov_access(char const *path, int mode){
 	LNX_EEXIT("not expected to be called\n");
 
 	return -1;
@@ -166,13 +166,13 @@ void gcov_setbuf(FILE *stream, char *buf){
 		LNX_EEXIT("expecting unbuffered mode\n");
 }
 
-int gcov_fprintf(FILE *stream, const char *format, ...){
+int gcov_fprintf(FILE *stream, char const *format, ...){
 	LNX_EEXIT("not expected to be called\n");
 
 	return -1;
 }
 
-int gcov_vfprintf(FILE *stream, const char *format, va_list ap){
+int gcov_vfprintf(FILE *stream, char const *format, va_list ap){
 	LNX_EEXIT("not expected to be called\n");
 
 	return -1;

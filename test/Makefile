@@ -26,7 +26,10 @@ main.utest-cppflags := -DTESTS=unit
 # ensure itest is rebuild if libs are updated and
 # libs exist before building itest
 uttest-y += $(build_tree)/lib/libsys.a
-uttest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
+
+ifeq ($(CONFIG_CODE_COVERAGE),y)
+  uttest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
+endif
 
 uttest-ldlibs := \
 	$(ldlibs-app) \
@@ -47,7 +50,10 @@ itest-y := main.itest.o user/ scripts/linker/app_$(CONFIG_ARCH).lds
 # ensure itest is rebuild if libs are updated and
 # libs exist before building itest
 itest-y += $(build_tree)/lib/libsys.a
-itest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
+
+ifeq ($(CONFIG_CODE_COVERAGE),y)
+  itest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
+endif
 
 itest-cppflags := -I"include/lib"
 

@@ -23,7 +23,7 @@
 
 
 /* local prototypes */
-static int conf_write_confheader(const char *path);
+static int conf_write_confheader(char const *path);
 
 
 /* global functions */
@@ -68,7 +68,7 @@ int main(int argc, char **argv){
 
 
 /* local functions */
-int conf_write_confheader(const char *path){
+int conf_write_confheader(char const *path){
 	char fname[strlen(path) + PATH_MAX + 1],
 		 b[PATH_MAX + 1],
 		 c;
