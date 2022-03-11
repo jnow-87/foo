@@ -13,6 +13,7 @@
 #include <kernel/memory.h>
 #include <kernel/driver.h>
 #include <driver/term.h>
+#include <sys/compiler.h>
 #include <sys/register.h>
 #include <sys/term.h>
 #include <sys/uart.h>
@@ -79,7 +80,6 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(void *cfg, void *data);
-static term_flags_t get_flags(void *cfg);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, term_err_t *err, void *data);
@@ -98,7 +98,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		return 0x0;
 
 	itf->configure = configure;
-	itf->get_flags = get_flags;
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
@@ -106,6 +105,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->rx_int = dtd->rx_int;
 	itf->tx_int = dtd->tx_int;
 	itf->cfg_size = sizeof(uart_cfg_t);
+	itf->cfg_flags_offset = offsetof(uart_cfg_t, iflags);
 
 	return itf;
 }
@@ -165,10 +165,6 @@ static int configure(void *_cfg, void *data){
 	return E_OK;
 }
 
-static term_flags_t get_flags(void *cfg){
-	return ((uart_cfg_t*)cfg)->flags;
-}
-
 static char putc(char c, void *data){
 	uart_regs_t *regs;
 
@@ -218,10 +214,10 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *data){
 		s[i] = regs->udr;
 
 		if(e){
-			*err |= (bits(e, UCSRA_FE, 0x1) ? TERM_ERR_FRAME : 0)
-				 |  (bits(e, UCSRA_DOR, 0x1) ? TERM_ERR_DATA_OVERRUN : 0)
-				 |  (bits(e, UCSRA_UPE, 0x1) ? TERM_ERR_PARITY : 0)
-				 |  (bits(e, UCSRA_RXC, 0x1) ? TERM_ERR_RX_FULL : 0)
+			*err |= (bits(e, UCSRA_FE, 0x1) ? TERR_FRAME : 0)
+				 |  (bits(e, UCSRA_DOR, 0x1) ? TERR_DATA_OVERRUN : 0)
+				 |  (bits(e, UCSRA_UPE, 0x1) ? TERR_PARITY : 0)
+				 |  (bits(e, UCSRA_RXC, 0x1) ? TERR_RX_FULL : 0)
 				 ;
 		}
 

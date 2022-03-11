@@ -12,6 +12,7 @@
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
 #include <driver/term.h>
+#include <sys/compiler.h>
 #include <sys/register.h>
 #include <sys/term.h>
 #include <sys/spi.h>
@@ -61,7 +62,6 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(void *cfg, void *data);
-static term_flags_t get_flags(void *cfg);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, term_err_t *err, void *data);
@@ -80,7 +80,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		return 0x0;
 
 	itf->configure = configure;
-	itf->get_flags = get_flags;
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
@@ -88,6 +87,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->rx_int = dtd->int_num;
 	itf->tx_int = 0;
 	itf->cfg_size = sizeof(spi_cfg_t);
+	itf->cfg_flags_offset = offsetof(spi_cfg_t, iflags);
 
 	return itf;
 }
@@ -129,10 +129,6 @@ static int configure(void *_cfg, void *data){
 			   ;
 
 	return E_OK;
-}
-
-static term_flags_t get_flags(void *cfg){
-	return ((spi_cfg_t*)cfg)->flags;
 }
 
 static char putc(char c, void *data){
@@ -183,7 +179,7 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *data){
 	*s = regs->spdr;
 
 	if(regs->spsr & (0x1 << SPSR_WCOL)){
-		*err |= TERM_ERR_WRITE_COLL;
+		*err |= TERR_WRITE_COLL;
 		DEBUG("rx error, read %c (%#x)\n", *s, (int)*s);
 
 		return 0;

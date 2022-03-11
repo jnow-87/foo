@@ -9,5 +9,8 @@
 
 obj-y := loop.o
 
+obj-$(CONFIG_LOOP_DEV) += dev.o
+obj-$(CONFIG_LOOP_TERM) += term.o
+
 
 cppflags-$(CONFIG_LOOP_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG

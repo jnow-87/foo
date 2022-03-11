@@ -63,7 +63,9 @@ typedef struct{
 	uint8_t parity;		/**< cf. uart_parity_t */
 	uint8_t csize;		/**< cf. uart_csize_t */
 
-	uint8_t flags;		/**< cf. term_flags_t */
+	uint8_t iflags,		/**< cf. term_flags_t */
+			oflags,
+			lflags;
 } uart_cfg_t;
 
 

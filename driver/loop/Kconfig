@@ -8,14 +8,16 @@
 
 
 menuconfig DRIVER_LOOPBACK
-	bool "Loopback device"
-	select KERNEL_DEVFS
+	bool "Loopback"
 	select SYS_RINGBUFFER
 
 if DRIVER_LOOPBACK
-	config LOOP_BUF_SIZE
-		int "Loop device buffer size"
-		default 16
+	config LOOP_DEV
+		bool "Loopback device"
+		select KERNEL_DEVFS
+
+	config LOOP_TERM
+		bool "Loopback terminal"
 
 	config LOOP_DEBUG
 		bool "Enable debug messages"
