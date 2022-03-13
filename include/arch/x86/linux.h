@@ -106,8 +106,8 @@ void lnx_mkdir(char const *path, int mode);
 
 void *lnx_mmap(void *addr, size_t len, int prot, int flags, int fd, unsigned long int offset);
 
-void lnx_dprintf(int fd, char const *fmt, ...);
-void lnx_vdprintf(int fd, char const *fmt, va_list lst);
+int lnx_dprintf(int fd, char const *fmt, ...);
+int lnx_vdprintf(int fd, char const *fmt, va_list lst);
 
 void lnx_sigaction(int sig, lnx_sig_hdlr_t hdlr, lnx_sigset_t *blocked);
 void lnx_sigaddset(lnx_sigset_t *set, int sig);

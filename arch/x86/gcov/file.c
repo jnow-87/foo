@@ -167,13 +167,17 @@ void gcov_setbuf(FILE *stream, char *buf){
 }
 
 int gcov_fprintf(FILE *stream, char const *format, ...){
-	LNX_EEXIT("not expected to be called\n");
+	int r;
+	va_list lst;
 
-	return -1;
+
+	va_start(lst, format);
+	r = lnx_vdprintf(2, format, lst);
+	va_end(lst);
+
+	return r;
 }
 
 int gcov_vfprintf(FILE *stream, char const *format, va_list ap){
-	LNX_EEXIT("not expected to be called\n");
-
-	return -1;
+	return lnx_vdprintf(2, format, ap);
 }
