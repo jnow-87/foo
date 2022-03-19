@@ -239,7 +239,8 @@ endif
 # {{{
 config KERNEL_SIGNAL
 	bool "Kernel signal support"
-	default y
+	select KERNEL_TIMER
+	default n
 
 config KERNEL_INTTASK
 	bool "Kernel interrupt tasks"

@@ -12,6 +12,7 @@
 
 
 #include <config/config.h>
+#include <sys/time.h>
 
 
 /* types */
@@ -33,6 +34,8 @@ void ktimer_tick(void);
 
 void ktimer_register(ktimer_t *timer, uint32_t period_us, ktimer_hdlr_t hdlr, void *data);
 void ktimer_release(ktimer_t *timer);
+
+void ktimer_time(time_t *t);
 
 
 /* disabled calls */

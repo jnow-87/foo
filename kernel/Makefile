@@ -12,7 +12,7 @@ bin-y := kimg.elf
 kimg-y := init.o kernel.o driver.o panic.o interrupt.o task.o sched/ fs/ memory/ binloader/ arch/ driver/ sys/ scripts/linker/kernel_$(CONFIG_ARCH).lds
 
 kimg-$(CONFIG_KERNEL_SYSCALL) += syscall.o
-kimg-$(CONFIG_KERNEL_TIMER) += timer.o
+kimg-$(CONFIG_KERNEL_TIMER) += timer/
 kimg-$(CONFIG_KERNEL_SIGNAL) += ksignal.o
 kimg-$(CONFIG_KERNEL_STAT) += stat.o
 kimg-$(CONFIG_KERNEL_TEST) += test.o test/kernel/

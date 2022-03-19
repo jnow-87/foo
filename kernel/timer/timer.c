@@ -8,10 +8,7 @@
 
 
 #include <config/config.h>
-#include <kernel/init.h>
-#include <kernel/memory.h>
-#include <kernel/syscall.h>
-#include <kernel/ksignal.h>
+#include <arch/arch.h>
 #include <kernel/timer.h>
 #include <sys/types.h>
 #include <sys/list.h>
@@ -23,9 +20,6 @@
 
 
 /* local/static prototypes */
-static int sc_hdlr_sleep(void *p);
-static int sc_hdlr_time(void *p);
-
 static size_t to_ticks(uint32_t us);
 static void to_time(void);
 
@@ -33,6 +27,7 @@ static void to_time(void);
 /* static variables */
 static ktimer_t *timer_lst = 0x0;
 static mutex_t timer_mtx = NOINT_MUTEX_INITIALISER();
+
 static uint32_t time_us = 0;
 static time_t time = { 0 };
 
@@ -80,52 +75,13 @@ void ktimer_release(ktimer_t *timer){
 	mutex_unlock(&timer_mtx);
 }
 
+void ktimer_time(time_t *t){
+	to_time();
+	*t = time;
+}
+
 
 /* local functions */
-static int init(void){
-	int r;
-
-
-	r = E_OK;
-
-	r |= sc_register(SC_SLEEP, sc_hdlr_sleep);
-	r |= sc_register(SC_TIME, sc_hdlr_time);
-
-	return r;
-}
-
-kernel_init(0, init);
-
-static int sc_hdlr_sleep(void *_p){
-	int r;
-	ksignal_t sig;
-	mutex_t mtx;
-	time_t *p;
-
-
-	p = (time_t*)_p;
-	ksignal_init(&sig);
-	mutex_init(&mtx, MTX_NOINT);
-
-	mutex_lock(&mtx);
-	r = ksignal_timedwait(&sig, &mtx, p->us ? p->us : ((uint32_t)p->ms * 1000));
-	mutex_unlock(&mtx);
-
-	return r;
-}
-
-static int sc_hdlr_time(void *_p){
-	time_t *p;
-
-
-	p = (time_t*)_p;
-
-	to_time();
-	*p = time;
-
-	return E_OK;
-}
-
 static size_t to_ticks(uint32_t us){
 	size_t ticks;
 
