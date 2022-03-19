@@ -9,11 +9,23 @@
 
 #include <arch/interrupt.h>
 #include <kernel/ksignal.h>
+#include <kernel/timer.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
 #include <sys/list.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
+
+
+/* types */
+typedef struct{
+	ksignal_t *sig;
+	mutex_t *mtx;
+} timeout_data_t;
+
+
+/* local/static prototypes */
+static void timeout_hdlr(void *data);
 
 
 /* global functions */
@@ -35,6 +47,24 @@ void ksignal_wait(ksignal_t *sig, mutex_t *mtx){
 	mutex_lock(mtx);
 }
 
+int ksignal_timedwait(ksignal_t *sig, mutex_t *mtx, uint32_t timeout_us){
+	ktimer_t timer;
+	timeout_data_t to;
+
+
+	to.sig = sig;
+	to.mtx = mtx;
+
+	if(!(mtx->attr & MTX_NOINT))
+		return_errno(E_INVAL);
+
+	ktimer_register(&timer, timeout_us, timeout_hdlr, &to);
+	ksignal_wait(sig, mtx);
+	ktimer_release(&timer);
+
+	return E_OK;
+}
+
 void ksignal_send(ksignal_t *sig){
 	_ksignal_t *e;
 
@@ -52,4 +82,17 @@ void ksignal_bcast(ksignal_t *sig){
 	while(list_first(*sig)){
 		ksignal_send(sig);
 	}
+}
+
+
+/* local functions */
+static void timeout_hdlr(void *_data){
+	timeout_data_t *data;
+
+
+	data = (timeout_data_t*)_data;
+
+	mutex_lock(data->mtx);
+	ksignal_send(data->sig);
+	mutex_unlock(data->mtx);
 }

@@ -34,6 +34,7 @@ typedef _ksignal_t *ksignal_t;
 void ksignal_init(ksignal_t *sig);
 
 void ksignal_wait(ksignal_t *sig, mutex_t *mtx);
+int ksignal_timedwait(ksignal_t *sig, mutex_t *mtx, uint32_t timeout_us);
 
 void ksignal_send(ksignal_t *sig);
 void ksignal_bcast(ksignal_t *sig);

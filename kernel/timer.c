@@ -12,6 +12,7 @@
 #include <kernel/memory.h>
 #include <kernel/syscall.h>
 #include <kernel/ksignal.h>
+#include <kernel/timer.h>
 #include <sys/types.h>
 #include <sys/list.h>
 #include <sys/mutex.h>
@@ -19,16 +20,6 @@
 
 /* macros */
 #define CYCLE_TIME_US	((uint32_t)(CONFIG_KTIMER_CYCLETIME_US + arch_info(kernel_timer_err_us)))
-
-
-/* types */
-typedef struct timer_t{
-	struct timer_t *prev,
-				   *next;
-
-	size_t ticks;
-	ksignal_t sig;
-} timer_t;
 
 
 /* local/static prototypes */
@@ -40,7 +31,7 @@ static void to_time(void);
 
 
 /* static variables */
-static timer_t *timer_lst = 0x0;
+static ktimer_t *timer_lst = 0x0;
 static mutex_t timer_mtx = NOINT_MUTEX_INITIALISER();
 static uint32_t time_us = 0;
 static time_t time = { 0 };
@@ -48,7 +39,7 @@ static time_t time = { 0 };
 
 /* global functions */
 void ktimer_tick(void){
-	timer_t *t;
+	ktimer_t *t;
 
 
 	/* increment time */
@@ -61,11 +52,30 @@ void ktimer_tick(void){
 	mutex_lock(&timer_mtx);
 
 	list_for_each(timer_lst, t){
-		t->ticks--;
-
-		if(t->ticks == 0)
-			ksignal_send(&t->sig);
+		if(--t->ticks == 0){
+			t->hdlr(t->data);
+			list_rm(timer_lst, t);
+		}
 	}
+
+	mutex_unlock(&timer_mtx);
+}
+
+void ktimer_register(ktimer_t *timer, uint32_t period_us, ktimer_hdlr_t hdlr, void *data){
+	timer->hdlr = hdlr;
+	timer->data = data;
+	timer->ticks = to_ticks(period_us);
+
+	mutex_lock(&timer_mtx);
+	list_add_tail(timer_lst, timer);
+	mutex_unlock(&timer_mtx);
+}
+
+void ktimer_release(ktimer_t *timer){
+	mutex_lock(&timer_mtx);
+
+	if(timer->ticks != 0)
+		list_rm(timer_lst, timer);
 
 	mutex_unlock(&timer_mtx);
 }
@@ -87,34 +97,21 @@ static int init(void){
 kernel_init(0, init);
 
 static int sc_hdlr_sleep(void *_p){
-	size_t ticks;
-	timer_t t;
+	int r;
+	ksignal_t sig;
+	mutex_t mtx;
 	time_t *p;
 
 
 	p = (time_t*)_p;
+	ksignal_init(&sig);
+	mutex_init(&mtx, MTX_NOINT);
 
-	/* compute ticks */
-	if(p->us)		ticks = to_ticks(p->us);
-	else if(p->ms)	ticks = to_ticks((uint32_t)p->ms * 1000);
-	else			return_errno(E_INVAL);
+	mutex_lock(&mtx);
+	r = ksignal_timedwait(&sig, &mtx, p->us ? p->us : ((uint32_t)p->ms * 1000));
+	mutex_unlock(&mtx);
 
-	if(ticks == 0)
-		return_errno(E_LIMIT);
-
-	/* init timer */
-	t.ticks = ticks;
-	ksignal_init(&t.sig);
-
-	mutex_lock(&timer_mtx);
-
-	list_add_tail(timer_lst, &t);
-	ksignal_wait(&t.sig, &timer_mtx);
-	list_rm(timer_lst, &t);
-
-	mutex_unlock(&timer_mtx);
-
-	return E_OK;
+	return r;
 }
 
 static int sc_hdlr_time(void *_p){
@@ -135,7 +132,7 @@ static size_t to_ticks(uint32_t us){
 
 	ticks = us / CYCLE_TIME_US;
 
-	if(us - ticks * CYCLE_TIME_US > CYCLE_TIME_US / 10)
+	if(ticks == 0 || us - ticks * CYCLE_TIME_US > 0)
 		ticks++;
 
 	return ticks;
