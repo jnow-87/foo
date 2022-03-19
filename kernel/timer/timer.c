@@ -97,7 +97,7 @@ static size_t to_ticks(uint32_t us){
 static void to_time(void){
 	mutex_lock(&timer_mtx);
 
-	time_us += time.ms * 1000 + time.us;
+	time_us += (uint32_t)time.ms * 1000 + time.us;
 
 	time.us = time_us % 1000;
 	time.ms = (time_us / 1000) % 1000;
