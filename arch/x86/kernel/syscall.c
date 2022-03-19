@@ -79,7 +79,7 @@ static void sc_hdlr(int_num_t num, void *data){
 		overlay_exit(sc.param);
 
 	/* call kernel syscall handler */
-	ksc_hdlr(sc.num, sc.param, sc.size);
+	sc_khdlr(sc.num, sc.param, sc.size);
 
 	/* set errno */
 	LNX_DEBUG("errno: %d\n", errno);

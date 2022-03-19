@@ -75,7 +75,7 @@ static void sc_hdlr(int_num_t num, void *data){
 
 	sc = (sc_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
 
-	ksc_hdlr(sc->num, sc->param, sc->size);
+	sc_khdlr(sc->num, sc->param, sc->size);
 	sc->errno = errno;
 }
 #endif // BUILD_KERNEL

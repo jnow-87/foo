@@ -69,7 +69,7 @@ int sc_release(sc_num_t num){
  *
  * \pre		errno is reset to E_OK
  */
-void ksc_hdlr(sc_num_t num, void *param, size_t psize){
+void sc_khdlr(sc_num_t num, void *param, size_t psize){
 	int r;
 	char kparam[psize];
 	sc_hdlr_t hdlr;
