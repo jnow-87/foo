@@ -32,6 +32,9 @@ menu "Commands"
 	config INIT_EXIT
 		bool "exit"
 
+	config INIT_SLEEP
+		bool "sleep"
+
 	config INIT_PINSAMPLER
 		bool "pinsampler"
 		select SYS_RINGBUFFER
