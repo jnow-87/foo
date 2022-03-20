@@ -66,11 +66,6 @@ static int probe(char const *name, void *dt_data, term_itf_t *hw, term_t **_term
 	f_mode_t fmode_mask;
 
 
-	term = term_create(hw, dt_data);
-
-	if(term == 0x0)
-		goto err_0;
-
 	/* register device */
 	fmode_mask = 0;
 
@@ -88,12 +83,18 @@ static int probe(char const *name, void *dt_data, term_itf_t *hw, term_t **_term
 	dev_ops.ioctl = ioctl;
 	dev_ops.fcntl = 0x0;
 
-	dev = devfs_dev_register(name, &dev_ops, fmode_mask, term);
+	dev = devfs_dev_register(name, &dev_ops, fmode_mask, 0x0);
 
 	if(dev == 0x0)
+		goto err_0;
+
+	/* create terminal */
+	term = term_create(hw, dt_data, dev->node);
+
+	if(term == 0x0)
 		goto err_1;
 
-	term->rx_rdy = &dev->node->datain_sig;
+	dev->data = term;
 
 	/* register interrupt */
 	if(hw->rx_int && int_register(hw->rx_int, term_rx_hdlr, term) != 0)
@@ -121,10 +122,10 @@ err_3:
 		int_release(hw->rx_int);
 
 err_2:
-	devfs_dev_release(dev);
+	term_destroy(term);
 
 err_1:
-	term_destroy(term);
+	devfs_dev_release(dev);
 
 err_0:
 	return -errno;
@@ -183,9 +184,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		mutex_lock(&term->mtx);
 		r = term->hw->configure(data, term->hw->data);
-		mutex_unlock(&term->mtx);
 
 		if(r != E_OK)
 			return -errno;

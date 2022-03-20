@@ -20,6 +20,10 @@
 #include <sys/math.h>
 
 
+/* local/static prototypes */
+static void notify_node(fs_node_t *node);
+
+
 /* global functions */
 socket_t *socket_alloc(sock_type_t type, net_family_t domain, size_t addr_len){
 	void *rx_data;
@@ -117,8 +121,7 @@ void socket_unlink(socket_t *sock){
 	node = sock->node;
 	sock->node = 0x0;
 
-	if(node)
-		ksignal_send(&node->datain_sig);
+	notify_node(node);
 
 	mutex_unlock(&sock->mtx);
 }
@@ -166,8 +169,8 @@ socket_t *socket_add_client_socket(socket_t *sock, socket_t *client, bool notify
 	node = sock->node;
 	(void)ringbuf_write(&sock->clients, &client, sizeof(socket_t*));
 
-	if(notify && node)
-		ksignal_send(&node->datain_sig);
+	if(notify)
+		notify_node(node);
 
 	mutex_unlock(&sock->mtx);
 
@@ -253,15 +256,15 @@ int socket_datain_stream(socket_t *sock, uint8_t *data, size_t len, bool signal)
 		if(node == 0x0)
 			break;
 
-		ksignal_send(&node->datain_sig);
+		notify_node(node);
 
 		mutex_unlock(&sock->mtx);
 		sched_yield();
 		mutex_lock(&sock->mtx);
 	}
 
-	if(node && signal)
-		ksignal_send(&node->datain_sig);
+	if(signal)
+		notify_node(node);
 
 	mutex_unlock(&sock->mtx);
 
@@ -303,8 +306,7 @@ int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint
 	list_add_tail(sock->dgrams, dgram);
 	node = sock->node;
 
-	if(node)
-		ksignal_send(&node->datain_sig);
+	notify_node(node);
 
 	mutex_unlock(&sock->mtx);
 
@@ -343,4 +345,15 @@ end:
 	mutex_unlock(&sock->mtx);
 
 	return n;
+}
+
+
+/* local functions */
+static void notify_node(fs_node_t *node){
+	if(node == 0x0)
+		return;
+
+	mutex_lock(&node->mtx);
+	ksignal_send(&node->datain_sig);
+	mutex_unlock(&node->mtx);
 }

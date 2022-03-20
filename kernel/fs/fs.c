@@ -270,7 +270,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 	node->childs = 0x0;
 	node->data = data;
 
-	mutex_init(&node->mtx, MTX_NONE);
+	mutex_init(&node->mtx, MTX_NOINT);
 	ksignal_init(&node->datain_sig);
 
 	/* add node to file system */
