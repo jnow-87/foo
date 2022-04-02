@@ -185,10 +185,8 @@ static int sc_hdlr_recv(void *_p){
 	while(1){
 		r = recvfrom(fd, buf, p->data_len, addr, (addr ? &p->addr_len : 0x0));
 
-		if(r || errno || (fd->mode & O_NONBLOCK))
+		if(r || errno || fs_fd_wait(fd, &node->datain_sig, &node->mtx) != 0)
 			break;
-
-		ksignal_wait(&node->datain_sig, &node->mtx);
 	}
 
 	p->data_len = r;

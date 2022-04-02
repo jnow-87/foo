@@ -163,6 +163,7 @@ typedef struct fs_node_t{
 
 	mutex_t mtx;
 	ksignal_t datain_sig;
+	uint32_t timeout_us;
 
 	struct fs_node_t *childs,
 					 *parent;
@@ -197,8 +198,11 @@ void fs_unlock(void);
 fs_filed_t *fs_fd_alloc(fs_node_t *node, struct process_t *this_p, f_mode_t mode);
 int fs_fd_dup(fs_filed_t *fd, int id, struct process_t *this_p);
 void fs_fd_free(fs_filed_t *fd, struct process_t *this_p);
+
 fs_filed_t *fs_fd_acquire(int id, struct process_t *this_p);
 void fs_fd_release(fs_filed_t *fd);
+
+int fs_fd_wait(fs_filed_t *fd, ksignal_t *sig, mutex_t *mtx);
 
 // file node operations
 fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *data, int fs_id);
