@@ -511,7 +511,7 @@ static fs_filed_t *create_filed(process_t *this_p){
 		goto err_0;
 
 	/* create file descriptor */
-	fd = fs_fd_alloc(node, this_p, O_RDWR, 0x0);
+	fd = fs_fd_alloc(node, this_p, O_RDWR);
 
 	if(fd == 0x0)
 		goto err_1;

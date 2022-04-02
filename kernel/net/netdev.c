@@ -68,7 +68,7 @@ devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t
 	dev_ops.ioctl = ioctl;
 	dev_ops.fcntl = 0x0;
 
-	dev = devfs_dev_register(name, &dev_ops, 0, netdev);
+	dev = devfs_dev_register(name, &dev_ops, netdev);
 
 	if(dev == 0x0)
 		goto err_1;

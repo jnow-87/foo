@@ -54,7 +54,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	ops.write = write;
 	ops.ioctl = ioctl;
 
-	if(devfs_dev_register(name, &ops, O_NONBLOCK, i2c) == 0x0)
+	if(devfs_dev_register(name, &ops, i2c) == 0x0)
 		goto err_1;
 
 	return E_OK;

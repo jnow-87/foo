@@ -110,7 +110,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 
 	mutex_init(&port->mtx, MTX_NOINT);
 
-	dev = devfs_dev_register(name, &ops, 0x0, port);
+	dev = devfs_dev_register(name, &ops, port);
 
 	if(dev == 0x0)
 		goto err_1;

@@ -101,7 +101,7 @@ void fs_unlock(void){
 	mutex_unlock(&fs_ro_mtx);
 }
 
-fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mode_t mode_mask){
+fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
 	int id;
 	fs_filed_t *fd;
 
@@ -127,8 +127,7 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mod
 	fd->id = id;
 	fd->node = node;
 	fd->fp = 0;
-	fd->mode = (mode & ~mode_mask) | (FMODE_DEFAULT & mode_mask);
-	fd->mode_mask = mode_mask;
+	fd->mode = mode;
 	mutex_init(&fd->mtx, MTX_NONE);
 
 	list_add_tail(this_p->fds, fd);

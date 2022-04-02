@@ -43,7 +43,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	ops.ioctl = ioctl;
 	ops.fcntl = fcntl;
 
-	if(devfs_dev_register(name, &ops, 0, loop) == 0x0)
+	if(devfs_dev_register(name, &ops, loop) == 0x0)
 		goto err;
 
 	return E_OK;

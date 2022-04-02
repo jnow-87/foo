@@ -430,10 +430,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p){
 		break;
 
 	case F_MODE_SET:
-		fd->mode = (*mode & ~fd->mode_mask) | (fd->mode & fd->mode_mask);
-
-		if(fd->mode != *mode)
-			return_errno(E_NOSUP);
+		fd->mode = *mode;
 		break;
 
 	default:

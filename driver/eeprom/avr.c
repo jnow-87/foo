@@ -102,7 +102,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	ops.ioctl = 0x0;
 	ops.fcntl = fcntl;
 
-	if(devfs_dev_register(name, &ops, 0, eeprom) == 0x0)
+	if(devfs_dev_register(name, &ops, eeprom) == 0x0)
 		goto err_2;
 
 	/* configure hardware */

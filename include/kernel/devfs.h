@@ -107,13 +107,13 @@ typedef struct{
 typedef struct devfs_dev_t{
 	devfs_ops_t ops;
 	fs_node_t *node;
-	f_mode_t mode_mask;
+
 	void *data;
 } devfs_dev_t;
 
 
 /* prototypes */
-devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, f_mode_t mode_mask, void *data);
+devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data);
 int devfs_dev_release(devfs_dev_t *dev);
 
 

@@ -198,7 +198,7 @@ static int open_unsafe(fs_node_t *start, char const *path, f_mode_t mode, proces
 		switch(n){
 		case 0:
 			/* target node found, so create file descriptor */
-			fd = fs_fd_alloc(start, this_p, mode, 0);
+			fd = fs_fd_alloc(start, this_p, mode);
 
 			if(fd == 0x0)
 				return -errno;
