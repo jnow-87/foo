@@ -50,10 +50,14 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	uart = kmalloc(sizeof(dev_data_t));
 
 	if(itf == 0x0 || uart == 0x0)
-		goto err;
+		goto err_0;
 
 	uart->dtd = dtd;
 	uart->fd = lnx_open(dtd->path, LNX_O_RDWR, 0666);
+
+	// make file operations non-blocking to ensure gets() doesn't block
+	if(lnx_fcntl(uart->fd, LNX_F_SETFL, LNX_O_NONBLOCK) != 0)
+		goto err_1;
 
 	itf->configure = configure;
 	itf->putc = putc;
@@ -68,7 +72,10 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	return itf;
 
 
-err:
+err_1:
+	lnx_close(uart->fd);
+
+err_0:
 	kfree(uart);
 	kfree(itf);
 
@@ -115,5 +122,10 @@ static size_t putsn(char const *s, size_t n, void *data){
 }
 
 static size_t gets(char *s, size_t n, term_err_t *err, void *data){
-	return lnx_read(((dev_data_t*)data)->fd, s, n);
+	ssize_t r;
+
+
+	r = lnx_read(((dev_data_t*)data)->fd, s, n);
+
+	return (r < 0) ? 0 : r;
 }

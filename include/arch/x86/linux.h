@@ -76,6 +76,7 @@ typedef enum{
 	LNX_SYS_GETPID = 39,
 	LNX_SYS_EXIT = 60,
 	LNX_SYS_KILL = 62,
+	LNX_SYS_FCNTL = 72,
 	LNX_SYS_CHDIR = 80,
 	LNX_SYS_MKDIR = 83,
 	LNX_SYS_GETPPID = 110,
@@ -86,7 +87,12 @@ typedef enum{
 	LNX_O_WRONLY = 0x1,
 	LNX_O_RDWR = 0x2,
 	LNX_O_CREAT = 0x40,
+	LNX_O_NONBLOCK = 0x800,
 } lnx_f_mode_t;
+
+typedef enum{
+	LNX_F_SETFL = 0x4,
+} lnx_fcntl_cmd_t;
 
 
 /* prototypes */
@@ -100,6 +106,7 @@ void lnx_read_fix(int fd, void *buf, size_t n);
 void lnx_write(int fd, void const *buf, size_t n);
 
 long int lnx_lseek(int fd, long int offset, int whence);
+long int lnx_fcntl(int fd, long int cmd, long int arg);
 
 void lnx_chdir(char const *path);
 void lnx_mkdir(char const *path, int mode);

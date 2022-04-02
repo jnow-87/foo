@@ -104,6 +104,20 @@ long int lnx_lseek(int fd, long int offset, int whence){
 	);
 }
 
+long int lnx_fcntl(int fd, long int cmd, long int arg){
+	return lnx_syscall(LNX_SYS_FCNTL,
+		(unsigned long int[6]){
+			fd,
+			cmd,
+			arg,
+			0,
+			0,
+			0
+		},
+		1
+	);
+}
+
 void lnx_chdir(char const *path){
 	long int r;
 

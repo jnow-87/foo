@@ -106,7 +106,7 @@ static void yield_user(thread_t const *this_t){
 	/* wait for an interrupt */
 	imask = int_enabled();
 
-	// re-schdule
+	// re-schedule
 	sched_trigger();
 	int_enable(imask);	// disabled by sched_trigger()
 
