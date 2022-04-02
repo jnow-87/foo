@@ -43,7 +43,7 @@ int opts_parse(int argc, char **argv){
 	struct option const long_opt[] = {
 		{ .name = "kernel",			.has_arg = required_argument,	.flag = 0,	.val = 'k' },
 		{ .name = "application",	.has_arg = required_argument,	.flag = 0,	.val = 'a' },
-		{ .name = "verbose",		.has_arg = no_argument,			.flag = 0,	.val = 'v' },
+		{ .name = "verbose",		.has_arg = optional_argument,	.flag = 0,	.val = 'v' },
 		{ .name = "interactive",	.has_arg = no_argument,			.flag = 0,	.val = 'i' },
 		{ .name = "stats",			.has_arg = required_argument,	.flag = 0,	.val = 's' },
 		{ .name = "help",			.has_arg = no_argument,			.flag = 0,	.val = 'h' },
