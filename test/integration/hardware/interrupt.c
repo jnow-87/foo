@@ -121,7 +121,6 @@ void hw_int_request(int num, void *data, x86_priv_t src, unsigned int tid){
 	req->id = req_id++;
 	DEBUG(0, "[%u] enqueue %s interrupt requested by %s\n", req->id, X86_INT_NAME(num), X86_PRIV_NAME(src));
 
-
 	__list2_add_tail(requests[priorities[req->num]], req, prev, next);
 	pthread_cond_signal(&req_sig);
 

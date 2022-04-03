@@ -104,6 +104,20 @@ long int lnx_lseek(int fd, long int offset, int whence){
 	);
 }
 
+long int lnx_fcntl(int fd, long int cmd, long int arg){
+	return lnx_syscall(LNX_SYS_FCNTL,
+		(unsigned long int[6]){
+			fd,
+			cmd,
+			arg,
+			0,
+			0,
+			0
+		},
+		1
+	);
+}
+
 void lnx_chdir(char const *path){
 	long int r;
 
@@ -150,22 +164,25 @@ void lnx_mkdir(char const *path, int mode){
 	}
 }
 
-void lnx_dprintf(int fd, char const *fmt, ...){
+int lnx_dprintf(int fd, char const *fmt, ...){
+	int r;
 	va_list lst;
 
 
 	va_start(lst, fmt);
-	lnx_vdprintf(fd, fmt, lst);
+	r = lnx_vdprintf(fd, fmt, lst);
 	va_end(lst);
+
+	return r;
 }
 
-void lnx_vdprintf(int fd, char const *fmt, va_list lst){
+int lnx_vdprintf(int fd, char const *fmt, va_list lst){
 	static FILE fp = FILE_INITIALISER(0x0, 0x0, 0, lnx_putc);
 
 
 	fp.fileno = fd;
 
-	(void)vfprintf(&fp, fmt, lst);
+	return vfprintf(&fp, fmt, lst);
 }
 
 

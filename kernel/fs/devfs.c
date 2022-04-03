@@ -34,7 +34,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data);
 
 
 /* global functions */
-devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, f_mode_t mode_mask, void *data){
+devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 	devfs_dev_t *dev;
 	fs_node_t *node;
 
@@ -54,7 +54,6 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, f_mode_t mod
 	dev->ops = *ops;
 	dev->data = data;
 	dev->node = node;
-	dev->mode_mask = mode_mask;
 
 	return dev;
 
@@ -138,7 +137,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 
 
 	dev = (devfs_dev_t*)start->data;
-	fd = fs_fd_alloc(start, this_p, mode, dev->mode_mask);
+	fd = fs_fd_alloc(start, this_p, mode);
 
 	if(fd == 0x0)
 		return -errno;

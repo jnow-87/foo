@@ -56,9 +56,9 @@ size_t i2c_int_cmd(i2c_cmd_t cmd, i2c_int_data_t *data, uint8_t remote, void *bu
 
 
 	if(cmd == (I2C_CMD_SLAVE | I2C_CMD_READ)){
-		critsec_lock(&data->lock);
+		mutex_lock(&data->mtx);
 		n = ringbuf_read(&data->rx_buf, buf, n);
-		critsec_unlock(&data->lock);
+		mutex_unlock(&data->mtx);
 
 		return n;
 	}

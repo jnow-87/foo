@@ -23,8 +23,7 @@
 
 /* global functions */
 void hw_timer(void){
-	static size_t timer = 0,
-				  sched = 0;
+	static size_t timer = 0;
 	struct timespec ts;
 
 
@@ -33,16 +32,24 @@ void hw_timer(void){
 
 	while(nanosleep(&ts, &ts) && errno == EINTR);
 
-	timer++;
-	sched++;
-
-	if(timer == TIMER_FACTOR){
+	if(++timer == TIMER_FACTOR){
 		hw_int_request(INT_TIMER, 0x0, PRIV_HARDWARE, 0);
 		timer = 0;
 	}
+}
 
-	if(sched == SCHED_FACTOR){
+void hw_sched_timer(void){
+	static size_t timer = 0;
+	struct timespec ts;
+
+
+	ts.tv_sec = CYCLE_TIME_US / 1000000;
+	ts.tv_nsec = (CYCLE_TIME_US % 1000000) * 1000;
+
+	while(nanosleep(&ts, &ts) && errno == EINTR);
+
+	if(++timer == SCHED_FACTOR){
 		hw_int_request(INT_SCHED, 0x0, PRIV_HARDWARE, 0);
-		sched = 0;
+		timer = 0;
 	}
 }

@@ -11,10 +11,11 @@
 #define DRIVER_TERM_H
 
 
-#include <kernel/critsec.h>
 #include <kernel/interrupt.h>
 #include <kernel/inttask.h>
 #include <kernel/ksignal.h>
+#include <kernel/fs.h>
+#include <sys/mutex.h>
 #include <sys/ringbuf.h>
 #include <sys/term.h>
 #include <sys/types.h>
@@ -45,18 +46,17 @@ typedef struct{
 typedef struct{
 	void *cfg;
 	term_itf_t *hw;
+	fs_node_t *node;
 
 	ringbuf_t rx_buf;
-	ksignal_t *rx_rdy;
 	term_err_t rx_err;
 
 	itask_queue_t tx_queue;
-	critsec_lock_t lock;
 } term_t;
 
 
 /* prototypes */
-term_t *term_create(term_itf_t *hw, void *cfg);
+term_t *term_create(term_itf_t *hw, void *cfg, fs_node_t *node);
 void term_destroy(term_t *term);
 
 size_t term_gets(term_t *term, char *s, size_t n);

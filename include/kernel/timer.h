@@ -12,18 +12,36 @@
 
 
 #include <config/config.h>
+#include <sys/time.h>
 
 
-/* macros */
-#ifndef CONFIG_SC_TIME
-# define ktimer_tick()	{}
-#endif // CONFIG_SC_TIME
+/* types */
+typedef void (*ktimer_hdlr_t)(void *data);
+
+typedef struct ktimer_t{
+	struct ktimer_t *prev,
+					*next;
+
+	size_t ticks;
+	ktimer_hdlr_t hdlr;
+	void *data;
+} ktimer_t;
+
 
 
 /* prototypes */
-#ifdef CONFIG_SC_TIME
 void ktimer_tick(void);
-#endif // CONFIG_SC_TIME
+
+void ktimer_register(ktimer_t *timer, uint32_t period_us, ktimer_hdlr_t hdlr, void *data);
+void ktimer_release(ktimer_t *timer);
+
+void ktimer_time(time_t *t);
+
+
+/* disabled calls */
+#ifndef CONFIG_KERNEL_TIMER
+#define ktimer_tick()
+#endif
 
 
 #endif // KERNEL_TIMER_H

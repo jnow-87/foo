@@ -9,90 +9,90 @@
 
 #include <arch/interrupt.h>
 #include <kernel/ksignal.h>
+#include <kernel/timer.h>
 #include <kernel/sched.h>
 #include <kernel/memory.h>
-#include <kernel/critsec.h>
-#include <sys/queue.h>
+#include <sys/list.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
 
 
-/* static variables */
-static critsec_lock_t ksignal_lock = CRITSEC_INITIALISER();
+/* types */
+typedef struct{
+	ksignal_t *sig;
+	mutex_t *mtx;
+} timeout_data_t;
+
+
+/* local/static prototypes */
+static void timeout_hdlr(void *data);
 
 
 /* global functions */
 void ksignal_init(ksignal_t *sig){
-	sig->head = 0x0;
-	sig->tail = 0x0;
-	sig->interim = false;
+	*sig = 0x0;
 }
 
-void ksignal_wait(ksignal_t *sig){
-	ksignal_queue_t e;
+void ksignal_wait(ksignal_t *sig, mutex_t *mtx){
+	_ksignal_t e;
 
 
 	e.thread = sched_running();
 
-	critsec_lock(&ksignal_lock);
+	list_add_tail(*sig, &e);
+	sched_thread_pause((thread_t*)e.thread);
 
-	if(!sig->interim){
-		queue_enqueue(sig->head, sig->tail, &e);
-		sched_thread_pause((thread_t*)e.thread);
-
-		critsec_unlock(&ksignal_lock);
-
-		sched_yield();
-	}
-	else{
-		sig->interim = false;
-		critsec_unlock(&ksignal_lock);
-	}
-}
-
-void ksignal_wait_mtx(ksignal_t *sig, mutex_t *mtx){
 	mutex_unlock(mtx);
-	ksignal_wait(sig);
+	sched_yield();
 	mutex_lock(mtx);
 }
 
-void ksignal_wait_crit(ksignal_t *sig, critsec_lock_t *lock){
-	critsec_unlock(lock);
-	ksignal_wait(sig);
-	critsec_lock(lock);
+int ksignal_timedwait(ksignal_t *sig, mutex_t *mtx, uint32_t timeout_us){
+	ktimer_t timer;
+	timeout_data_t to;
+
+
+	to.sig = sig;
+	to.mtx = mtx;
+
+	if(!(mtx->attr & MTX_NOINT))
+		return_errno(E_INVAL);
+
+	ktimer_register(&timer, timeout_us, timeout_hdlr, &to);
+	ksignal_wait(sig, mtx);
+	ktimer_release(&timer);
+
+	return E_OK;
 }
 
 void ksignal_send(ksignal_t *sig){
-	ksignal_queue_t *e;
+	_ksignal_t *e;
 
 
-	critsec_lock(&ksignal_lock);
+	e = list_first(*sig);
 
-	e = queue_dequeue(sig->head, sig->tail);
+	if(e == 0x0)
+		return;
 
-	if(e != 0x0)	sched_thread_wake((thread_t*)e->thread);
-	else			sig->interim = true;
-
-	critsec_unlock(&ksignal_lock);
+	sched_thread_wake((thread_t*)e->thread);
+	list_rm(*sig, e);
 }
 
 void ksignal_bcast(ksignal_t *sig){
-	ksignal_queue_t *e;
-
-
-	critsec_lock(&ksignal_lock);
-
-	if(list_empty(sig->head))
-		sig->interim = true;
-
-	while(1){
-		e = queue_dequeue(sig->head, sig->tail);
-
-		if(e == 0x0)
-			break;
-
-		sched_thread_wake((thread_t*)e->thread);
+	while(list_first(*sig)){
+		ksignal_send(sig);
 	}
+}
 
-	critsec_unlock(&ksignal_lock);
+
+/* local functions */
+static void timeout_hdlr(void *_data){
+	timeout_data_t *data;
+
+
+	data = (timeout_data_t*)_data;
+
+	mutex_lock(data->mtx);
+	ksignal_send(data->sig);
+	mutex_unlock(data->mtx);
 }

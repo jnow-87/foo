@@ -109,14 +109,14 @@ static int probe(char const *_name, void *dt_data, void *dt_itf){
 	ops.read = read_a;
 	ops.write = write_a;
 
-	if((dev = devfs_dev_register(name, &ops, 0x0, dt_data)) == 0x0)
+	if((dev = devfs_dev_register(name, &ops, dt_data)) == 0x0)
 		goto err_0;
 
 	name[name_len] = 'b';
 	ops.read = read_b;
 	ops.write = write_b;
 
-	if(devfs_dev_register(name, &ops, 0x0, dt_data) == 0x0)
+	if(devfs_dev_register(name, &ops, dt_data) == 0x0)
 		goto err_1;
 
 	return E_OK;

@@ -17,8 +17,8 @@
 #include <kernel/net.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
-#include <kernel/critsec.h>
 #include <kernel/ksignal.h>
+#include <sys/mutex.h>
 #include <sys/syscall.h>
 #include <sys/ioctl.h>
 #include <sys/net.h>
@@ -185,10 +185,8 @@ static int sc_hdlr_recv(void *_p){
 	while(1){
 		r = recvfrom(fd, buf, p->data_len, addr, (addr ? &p->addr_len : 0x0));
 
-		if(r || errno || (fd->mode & O_NONBLOCK))
+		if(r || errno || fs_fd_wait(fd, &node->datain_sig, &node->mtx) != 0)
 			break;
-
-		ksignal_wait_mtx(&node->datain_sig, &node->mtx);
 	}
 
 	p->data_len = r;
@@ -302,12 +300,14 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 
 static int ioctl(fs_filed_t *fd, int request, void *_data){
 	int r;
+	fs_node_t *node;
 	socket_t *sock;
 	socket_ioctl_t *data;
 
 
 	data = (socket_ioctl_t*)_data;
-	sock = (socket_t*)fd->node->data;
+	node = fd->node;
+	sock = (socket_t*)node->data;
 
 	switch(request){
 	case IOCTL_CONNECT:
@@ -329,7 +329,7 @@ static int ioctl(fs_filed_t *fd, int request, void *_data){
 			if(data->fd >= 0 || errno || (fd->mode & O_NONBLOCK))
 				break;
 
-			ksignal_wait(&fd->node->datain_sig);
+			ksignal_wait(&node->datain_sig, &node->mtx);
 		}
 
 		r = (data->fd >= 0) ? E_OK : -errno;
@@ -509,7 +509,7 @@ static fs_filed_t *create_filed(process_t *this_p){
 		goto err_0;
 
 	/* create file descriptor */
-	fd = fs_fd_alloc(node, this_p, O_RDWR, 0x0);
+	fd = fs_fd_alloc(node, this_p, O_RDWR);
 
 	if(fd == 0x0)
 		goto err_1;

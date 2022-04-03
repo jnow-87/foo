@@ -127,7 +127,7 @@ static void int_hdlr(int sig){
 	thread_ctx_push(ctx);
 
 	/* handle interrupt */
-	int_call(op.int_ctrl.num);
+	int_khdlr(op.int_ctrl.num);
 
 	/* epilogue */
 	this_t = sched_running();

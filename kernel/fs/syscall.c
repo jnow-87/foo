@@ -184,10 +184,8 @@ static int sc_hdlr_read(void *_p){
 	while(1){
 		r = node->ops->read(fd, buf, p->data_len);
 
-		if(r || errno || (fd->mode & O_NONBLOCK))
+		if(r || errno || fs_fd_wait(fd, &node->datain_sig, &node->mtx) != 0)
 			break;
-
-		ksignal_wait_mtx(&node->datain_sig, &node->mtx);
 	}
 
 	p->data_len = r;
@@ -430,10 +428,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p){
 		break;
 
 	case F_MODE_SET:
-		fd->mode = (*mode & ~fd->mode_mask) | (fd->mode & fd->mode_mask);
-
-		if(fd->mode != *mode)
-			return_errno(E_NOSUP);
+		fd->mode = *mode;
 		break;
 
 	default:

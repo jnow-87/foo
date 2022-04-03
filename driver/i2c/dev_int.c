@@ -12,7 +12,6 @@
 #include <kernel/fs.h>
 #include <kernel/devfs.h>
 #include <kernel/memory.h>
-#include <kernel/critsec.h>
 #include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>
@@ -42,6 +41,7 @@ static void int_hdlr(int_num_t num, void *data);
 /* local functions */
 static int probe(char const *name, void *dt_data, void *dt_itf){
 	devfs_ops_t ops;
+	devfs_dev_t *dev;
 	i2c_t *i2c;
 	i2c_primitives_t *prim;
 
@@ -72,8 +72,12 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	ops.write = write;
 	ops.ioctl = ioctl;
 
-	if(devfs_dev_register(name, &ops, O_NONBLOCK, i2c) == 0x0)
+	dev = devfs_dev_register(name, &ops, i2c);
+
+	if(dev == 0x0)
 		goto err_2;
+
+	dev->node->timeout_us = 0;
 
 	return E_OK;
 

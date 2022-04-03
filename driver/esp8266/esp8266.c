@@ -12,7 +12,6 @@
 #include <kernel/driver.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
-#include <kernel/critsec.h>
 #include <kernel/ksignal.h>
 #include <kernel/inttask.h>
 #include <kernel/net.h>
@@ -54,7 +53,6 @@ typedef struct{
 
 typedef struct esp_t{
 	term_itf_t *hw;
-	critsec_lock_t lock;
 
 	inetdev_cfg_t cfg;
 
@@ -172,8 +170,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	esp->resp = RESP_INVAL;
 
 	ksignal_init(&esp->sig);
-	mutex_init(&esp->mtx, MTX_NONE);
-	critsec_init(&esp->lock);
+	mutex_init(&esp->mtx, MTX_NOINT);
 	itask_queue_init(&esp->tx_queue);
 
 	itf.configure = configure;
@@ -195,6 +192,9 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 
 	if(int_register(hw->tx_int, tx_hdlr, esp) != 0)
 		goto err_4;
+
+	if(hw->rx_int)
+		dev->node->timeout_us = 0;
 
 	if(hw->configure(dt_data, hw->data) != 0)
 		goto err_5;
@@ -420,12 +420,12 @@ static void rx_hdlr(int_num_t num, void *_esp){
 
 	esp = (esp_t*)_esp;
 
-	critsec_lock(&esp->lock);
+	mutex_lock(&esp->mtx);
 
 	len = esp->hw->gets(buf, 16, &err, esp->hw->data);
 	ringbuf_write(&esp->rx.line, buf, len);
 
-	critsec_unlock(&esp->lock);
+	mutex_unlock(&esp->mtx);
 }
 
 static void rx_task(void *_esp){
@@ -437,9 +437,9 @@ static void rx_task(void *_esp){
 	esp = *((esp_t**)_esp);
 
 	while(1){
-		critsec_lock(&esp->lock);
+		mutex_lock(&esp->mtx);
 		n = ringbuf_read(&esp->rx.line, &c, 1);
-		critsec_unlock(&esp->lock);
+		mutex_unlock(&esp->mtx);
 
 		if(n == 0)
 			break;
@@ -659,9 +659,9 @@ static void tx_hdlr(int_num_t num, void *_esp){
 		return;
 
 	/* output character */
-	critsec_lock(&esp->lock);
+	mutex_lock(&esp->mtx);
 	while(esp->hw->putc(*data->s, esp->hw->data) != *data->s);
-	critsec_unlock(&esp->lock);
+	mutex_unlock(&esp->mtx);
 
 	data->s++;
 	data->len--;
@@ -727,7 +727,7 @@ static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...){
 	if(r != 0)
 		goto_errno(end, E_IO);
 
-	ksignal_wait_mtx(&esp->sig, &esp->mtx);
+	ksignal_wait(&esp->sig, &esp->mtx);
 
 	if(esp->resp != resp){
 		r = 1;
@@ -748,10 +748,11 @@ end:
 
 static void cmd_resp(esp_t *esp, ssize_t resp){
 	mutex_lock(&esp->mtx);
-	esp->resp = resp;
-	mutex_unlock(&esp->mtx);
 
+	esp->resp = resp;
 	ksignal_send(&esp->sig);
+
+	mutex_unlock(&esp->mtx);
 }
 
 static int puts(char const *s, esp_t *esp){

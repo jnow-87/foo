@@ -64,7 +64,7 @@ int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *data, size_t size){
 	return 0;
 }
 
-void kipi_hdlr(void){
+void ipi_khdlr(void){
 	ipi_msg_t *msg;
 
 

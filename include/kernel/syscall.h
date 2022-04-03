@@ -19,7 +19,7 @@
 
 /* macors */
 #ifndef CONFIG_KERNEL_SYSCALL
-# define ksc_hdlr(num, param, psize)	E_OK
+# define sc_khdlr(num, param, psize)	E_OK
 #endif // CONFIG_KERNEL_SYSCALL
 
 
@@ -42,7 +42,7 @@ int sc_register(sc_num_t num, sc_hdlr_t hdlr);
 int sc_release(sc_num_t num);
 
 #ifdef CONFIG_KERNEL_SYSCALL
-void ksc_hdlr(sc_num_t num, void *param, size_t psize);
+void sc_khdlr(sc_num_t num, void *param, size_t psize);
 #endif // CONFIG_KERNEL_SYSCALL
 
 

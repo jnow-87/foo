@@ -11,7 +11,6 @@
 #define KERNEL_SIGNAL_H
 
 
-#include <kernel/critsec.h>
 #include <sys/mutex.h>
 #include <sys/types.h>
 
@@ -21,26 +20,21 @@ struct kthread_t;
 
 
 /* types */
-typedef struct ksignal_queue_t{
-	struct ksignal_queue_t *next;
+typedef struct _ksignal_t{
+	struct _ksignal_t *prev,
+					  *next;
 
 	struct thread_t const *thread;
-} ksignal_queue_t;
+} _ksignal_t;
 
-typedef struct{
-	ksignal_queue_t *head,
-					*tail;
-
-	bool interim;
-} ksignal_t;
+typedef _ksignal_t *ksignal_t;
 
 
 /* prototypes */
 void ksignal_init(ksignal_t *sig);
 
-void ksignal_wait(ksignal_t *sig);
-void ksignal_wait_mtx(ksignal_t *sig, mutex_t *mtx);
-void ksignal_wait_crit(ksignal_t *sig, critsec_lock_t *lock);
+void ksignal_wait(ksignal_t *sig, mutex_t *mtx);
+int ksignal_timedwait(ksignal_t *sig, mutex_t *mtx, uint32_t timeout_us);
 
 void ksignal_send(ksignal_t *sig);
 void ksignal_bcast(ksignal_t *sig);

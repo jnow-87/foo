@@ -7,6 +7,10 @@
 
 
 
+config FS_OP_TIMEOUT_US
+	int "File node timeout [us]"
+	default 1000000
+
 config ROOTFS_INIT_FILE_SIZE
 	int "Initial file size of rootfs files"
 	default 512

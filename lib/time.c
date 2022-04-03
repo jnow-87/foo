@@ -16,3 +16,13 @@
 int time(time_t *t){
 	return sc(SC_TIME, t);
 }
+
+uint32_t time_ms(void){
+	time_t t;
+
+
+	if(time(&t) != 0)
+		return 0;
+
+	return t.s * 1000 + t.ms;
+}

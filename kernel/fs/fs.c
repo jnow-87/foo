@@ -101,7 +101,7 @@ void fs_unlock(void){
 	mutex_unlock(&fs_ro_mtx);
 }
 
-fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mode_t mode_mask){
+fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
 	int id;
 	fs_filed_t *fd;
 
@@ -127,8 +127,7 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode, f_mod
 	fd->id = id;
 	fd->node = node;
 	fd->fp = 0;
-	fd->mode = (mode & ~mode_mask) | (FMODE_DEFAULT & mode_mask);
-	fd->mode_mask = mode_mask;
+	fd->mode = mode;
 	mutex_init(&fd->mtx, MTX_NONE);
 
 	list_add_tail(this_p->fds, fd);
@@ -232,6 +231,21 @@ void fs_fd_release(fs_filed_t *fd){
 	mutex_unlock(&fd->mtx);
 }
 
+int fs_fd_wait(fs_filed_t *fd, ksignal_t *sig, mutex_t *mtx){
+	fs_node_t *node;
+
+
+	node = fd->node;
+
+	if(fd->mode & O_NONBLOCK)
+		return -1;
+
+	if(node->timeout_us > 0)	ksignal_timedwait(sig, mtx, node->timeout_us);
+	else						ksignal_wait(sig, mtx);
+
+	return 0;
+}
+
 fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *data, int fs_id){
 	fs_t *fs;
 	fs_node_t *node;
@@ -270,8 +284,9 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 	node->childs = 0x0;
 	node->data = data;
 
-	mutex_init(&node->mtx, MTX_NONE);
+	mutex_init(&node->mtx, MTX_NOINT);
 	ksignal_init(&node->datain_sig);
+	node->timeout_us = CONFIG_FS_OP_TIMEOUT_US;
 
 	/* add node to file system */
 	rw_lock();

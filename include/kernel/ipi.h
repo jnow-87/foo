@@ -17,7 +17,7 @@ typedef void (*ipi_hdlr_t)(void *data);
 
 /* prototypes */
 int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *data, size_t size);
-void kipi_hdlr(void);
+void ipi_khdlr(void);
 
 
 #endif // KERNEL_IPI_H
