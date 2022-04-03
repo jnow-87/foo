@@ -93,6 +93,9 @@ static int probe(char const *name, void *dt_data, term_itf_t *hw, term_t **_term
 	if(hw->tx_int && int_register(hw->tx_int, term_tx_hdlr, term) != 0)
 		goto err_3;
 
+	if(hw->rx_int)
+		term->node->timeout_us = 0;
+
 	/* init term */
 	if(term->hw->configure(term->cfg, term->hw->data) != 0)
 		goto err_4;

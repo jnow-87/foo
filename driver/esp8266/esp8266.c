@@ -193,6 +193,9 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(int_register(hw->tx_int, tx_hdlr, esp) != 0)
 		goto err_4;
 
+	if(hw->rx_int)
+		dev->node->timeout_us = 0;
+
 	if(hw->configure(dt_data, hw->data) != 0)
 		goto err_5;
 

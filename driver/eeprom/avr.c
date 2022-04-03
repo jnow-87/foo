@@ -105,6 +105,9 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(devfs_dev_register(name, &ops, eeprom) == 0x0)
 		goto err_2;
 
+	if(dtd->int_num)
+		dev->node->timeout_us = 0;
+
 	/* configure hardware */
 	dtd->regs->eecr = 0x0;
 
