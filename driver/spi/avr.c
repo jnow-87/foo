@@ -92,7 +92,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	return itf;
 }
 
-interface_probe("avr,spi", probe);
+driver_probe("avr,spi", probe);
 
 static int configure(void *_cfg, void *data){
 	uint8_t const pres_bits[] = { 0b100, 0b000, 0b101, 0b001, 0b110, 0b010, 0b011 };

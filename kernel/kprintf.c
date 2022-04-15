@@ -75,18 +75,18 @@ void kvprintf(kmsg_t lvl, char const *format, va_list lst){
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
-	if(((klog_itf_t*)dt_itf)->puts == 0x0)
-		return_errno(E_INVAL);
+static void *probe(char const *name, void *dt_data, void *dt_itf){
+	if(((klog_itf_t*)dt_itf)->puts != 0x0){
+		log.dev = dt_itf;
+		flush();
+	}
+	else
+		set_errno(E_INVAL);
 
-	log.dev = dt_itf;
-
-	flush();
-
-	return E_OK;
+	return 0x0;
 }
 
-device_probe("kernel,log", probe);
+driver_probe("kernel,log", probe);
 
 static char putc(char c, FILE *stream){
 	if(!log.overflow)

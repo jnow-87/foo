@@ -24,7 +24,7 @@ static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	devfs_ops_t ops;
 	loop_t *loop;
 
@@ -46,16 +46,16 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(devfs_dev_register(name, &ops, loop) == 0x0)
 		goto err;
 
-	return E_OK;
+	return 0x0;
 
 
 err:
 	loop_destroy(loop);
 
-	return -errno;
+	return 0x0;
 }
 
-device_probe("loop", probe);
+driver_probe("loop", probe);
 
 static int open(devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode){
 	DEBUG("dummy callback for loop device\n");

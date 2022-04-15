@@ -56,7 +56,7 @@ err:
 	return 0x0;
 }
 
-interface_probe("loop,term", probe);
+driver_probe("loop,term", probe);
 
 static int configure(void *cfg, void *data){
 	return E_OK;

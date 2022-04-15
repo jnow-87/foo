@@ -39,7 +39,7 @@ static void int_hdlr(int_num_t num, void *data);
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	devfs_ops_t ops;
 	devfs_dev_t *dev;
 	i2c_t *i2c;
@@ -49,7 +49,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	prim = dt_itf;
 
 	if(prim->int_num == 0)
-		return_errno(E_INVAL);
+		goto_errno(err_0, E_INVAL);
 
 	/* allocate eeprom */
 	i2c = kmalloc(sizeof(i2c_t));
@@ -79,7 +79,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 
 	dev->node->timeout_us = 0;
 
-	return E_OK;
+	return 0x0;
 
 
 err_2:
@@ -89,10 +89,10 @@ err_1:
 	kfree(i2c);
 
 err_0:
-	return -errno;
+	return 0x0;
 }
 
-device_probe("i2c,int", probe);
+driver_probe("i2c,int", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	return int_cmd(I2C_CMD_READ, buf, n, dev->data);

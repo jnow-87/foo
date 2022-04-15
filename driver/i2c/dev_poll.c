@@ -33,7 +33,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	devfs_ops_t ops;
 	i2c_t *i2c;
 
@@ -57,17 +57,17 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(devfs_dev_register(name, &ops, i2c) == 0x0)
 		goto err_1;
 
-	return E_OK;
+	return 0x0;
 
 
 err_1:
 	kfree(i2c);
 
 err_0:
-	return -errno;
+	return 0x0;
 }
 
-device_probe("i2c,poll", probe);
+driver_probe("i2c,poll", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	i2c_cfg_t *cfg;

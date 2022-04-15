@@ -82,7 +82,7 @@ err_0:
 	return 0x0;
 }
 
-interface_probe("x86,uart", probe);
+driver_probe("x86,uart", probe);
 
 static int configure(void *cfg, void *data){
 	dev_data_t *uart;

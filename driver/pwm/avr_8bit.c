@@ -71,7 +71,7 @@ static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs);
 
 
 /* local functions */
-static int probe(char const *_name, void *dt_data, void *dt_itf){
+static void *probe(char const *_name, void *dt_data, void *dt_itf){
 	size_t name_len = strlen(_name);
 	char name[name_len + 2];
 	devfs_dev_t *dev;
@@ -85,7 +85,7 @@ static int probe(char const *_name, void *dt_data, void *dt_itf){
 	cfg.prescaler = PWM_PRES_0;
 
 	if(config_set(&cfg, dt_data) != 0)
-		return -errno;
+		goto err_0;
 
 	/* register device */
 	strcpy(name, _name);
@@ -110,16 +110,17 @@ static int probe(char const *_name, void *dt_data, void *dt_itf){
 	if(devfs_dev_register(name, &ops, dt_data) == 0x0)
 		goto err_1;
 
-	return E_OK;
+	return 0x0;
+
 
 err_1:
 	devfs_dev_release(dev);
 
 err_0:
-	return -errno;
+	return 0x0;
 }
 
-device_probe("avr,pwm8", probe);
+driver_probe("avr,pwm8", probe);
 
 static size_t read_a(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	return read(buf, n, &((dt_data_t*)dev->data)->regs->ocra);
