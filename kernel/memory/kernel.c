@@ -21,6 +21,8 @@
 
 
 /* static variables */
+static devtree_memory_t const *kmem_dt_node;
+
 static memblock_t *kernel_heap = 0x0;
 static mutex_t kmem_mtx = NOINT_MUTEX_INITIALISER();
 
@@ -75,6 +77,9 @@ void kfree(void *addr){
 	mutex_unlock(&kmem_mtx);
 }
 
+bool iskheap(void *addr){
+	return addr >= kmem_dt_node->base && addr < kmem_dt_node->base + kmem_dt_node->size;
+}
 
 #ifdef CONFIG_KERNEL_VIRT_MEM
 void *addr_virt_to_phys(void *va){
@@ -91,14 +96,11 @@ void *addr_phys_to_virt(void *pa){
 
 /* local functions */
 static int init(void){
-	devtree_memory_t const *node;
-
-
 	// NOTE the memory node is ensured to exist by the build system
-	node = devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
+	kmem_dt_node = devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
 
-	kernel_heap = node->base;
-	memblock_init(kernel_heap, node->size);
+	kernel_heap = kmem_dt_node->base;
+	memblock_init(kernel_heap, kmem_dt_node->size);
 
 	return -errno;
 }

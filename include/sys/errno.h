@@ -12,8 +12,9 @@
 
 
 /* macros */
-#define return_errno(e_code)		{ errno = e_code; return (-e_code); }
-#define goto_errno(label, e_code)	{ errno = e_code; goto label; }
+#define set_errno(e_code)			{ errno = e_code; }
+#define return_errno(e_code)		{ set_errno(e_code); return (-e_code); }
+#define goto_errno(label, e_code)	{ set_errno(e_code); goto label; }
 
 
 /* types */

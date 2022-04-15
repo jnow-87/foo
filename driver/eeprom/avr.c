@@ -73,8 +73,9 @@ static void write_hdlr(int_num_t num, void *eeprom);
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd;
+	devfs_dev_t *dev;
 	devfs_ops_t ops;
 	dev_data_t *eeprom;
 
@@ -102,7 +103,9 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	ops.ioctl = 0x0;
 	ops.fcntl = fcntl;
 
-	if(devfs_dev_register(name, &ops, eeprom) == 0x0)
+	dev = devfs_dev_register(name, &ops, eeprom);
+
+	if(dev == 0x0)
 		goto err_2;
 
 	if(dtd->int_num)
@@ -111,7 +114,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	/* configure hardware */
 	dtd->regs->eecr = 0x0;
 
-	return E_OK;
+	return 0x0;
 
 
 err_2:
@@ -121,10 +124,10 @@ err_1:
 	kfree(eeprom);
 
 err_0:
-	return -errno;
+	return 0x0;
 }
 
-device_probe("avr,eeprom", probe);
+driver_probe("avr,eeprom", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
 	size_t i;

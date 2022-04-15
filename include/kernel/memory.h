@@ -98,6 +98,8 @@ void *kpalloc(size_t n);
 void *kcalloc(size_t n, size_t size);
 void kfree(void *addr);
 
+bool iskheap(void *addr);
+
 void *umalloc(size_t n);
 void ufree(void *addr);
 

@@ -22,8 +22,6 @@
 
 
 /* local/static prototypes */
-static int probe(char const *name, void *dt_data, term_itf_t *hw, term_t **_term);
-
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
@@ -32,38 +30,15 @@ static size_t flputs(char const *s, size_t n, void *term);
 
 
 /* local functions */
-static int probe_dev(char const *name, void *dt_data, void *dt_itf){
-	return probe(name, dt_data, dt_itf, 0x0);
-}
-
-device_probe("terminal", probe_dev);
-
-static void *probe_itf(char const *name, void *dt_data, void *dt_itf){
-	term_t *term;
-	klog_itf_t *itf;
-
-
-	if(probe(name, dt_data, dt_itf, &term))
-		return 0x0;
-
-	itf = kmalloc(sizeof(klog_itf_t));
-
-	if(itf == 0x0)
-		return 0x0;
-
-	itf->puts = flputs;
-	itf->data = term;
-
-	return itf;
-}
-
-interface_probe("terminal", probe_itf);
-
-static int probe(char const *name, void *dt_data, term_itf_t *hw, term_t **_term){
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	term_t *term;
+	term_itf_t *hw;
+	klog_itf_t *itf;
 
+
+	hw = (term_itf_t*)dt_itf;
 
 	/* register device */
 	dev_ops.open = 0x0;
@@ -100,10 +75,16 @@ static int probe(char const *name, void *dt_data, term_itf_t *hw, term_t **_term
 	if(term->hw->configure(term->cfg, term->hw->data) != 0)
 		goto err_4;
 
-	if(_term)
-		*_term = term;
+	/* create terminal interface */
+	itf = kmalloc(sizeof(klog_itf_t));
 
-	return E_OK;
+	if(itf == 0x0)
+		goto err_4;
+
+	itf->puts = flputs;
+	itf->data = term;
+
+	return itf;
 
 
 err_4:
@@ -121,8 +102,10 @@ err_1:
 	devfs_dev_release(dev);
 
 err_0:
-	return -errno;
+	return 0x0;
 }
+
+driver_probe("terminal", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	term_t *term;

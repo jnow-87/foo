@@ -81,7 +81,7 @@ static void int_hdlr(int_num_t num, void *data);
 static uint8_t rightmost_bit(uint8_t v);
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd;
 	devfs_ops_t ops;
 	devfs_dev_t *dev;
@@ -130,7 +130,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 			goto err_2;
 	}
 
-	return E_OK;
+	return 0x0;
 
 
 err_2:
@@ -140,10 +140,10 @@ err_1:
 	kfree(port);
 
 err_0:
-	return -errno;
+	return 0x0;
 }
 
-device_probe("avr,gpio", probe);
+driver_probe("avr,gpio", probe);
 
 static int close(struct devfs_dev_t *dev, fs_filed_t *fd){
 	dev_data_t *port;

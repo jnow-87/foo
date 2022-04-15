@@ -132,7 +132,7 @@ static char const *rx_patterns[] = {
 
 
 /* local functions */
-static int probe(char const *name, void *dt_data, void *dt_itf){
+static void *probe(char const *name, void *dt_data, void *dt_itf){
 	void *rxbuf;
 	esp_t *esp;
 	devfs_dev_t *dev;
@@ -202,7 +202,7 @@ static int probe(char const *name, void *dt_data, void *dt_itf){
 	if(ktask_create(rx_task, &esp, sizeof(esp_t*), 0x0, true) != 0)
 		goto err_5;
 
-	return E_OK;
+	return 0x0;
 
 
 err_5:
@@ -222,10 +222,10 @@ err_1:
 	kfree(esp);
 
 err_0:
-	return -errno;
+	return 0x0;
 }
 
-device_probe("esp8266", probe);
+driver_probe("esp8266", probe);
 
 // socket callbacks
 static int configure(netdev_t *dev){

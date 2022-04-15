@@ -105,7 +105,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	return prim;
 }
 
-interface_probe("avr,i2c", probe);
+driver_probe("avr,i2c", probe);
 
 static int configure(i2c_cfg_t *cfg, bool int_en, void *data){
 	uint8_t brate;

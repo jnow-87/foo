@@ -110,7 +110,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	return itf;
 }
 
-interface_probe("avr,uart", probe);
+driver_probe("avr,uart", probe);
 
 static int configure(void *_cfg, void *data){
 	uint8_t const parity_bits[] = { 0b00, 0b11, 0b10 };
