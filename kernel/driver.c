@@ -9,80 +9,84 @@
 
 #include <kernel/driver.h>
 #include <kernel/kprintf.h>
+#include <kernel/memory.h>
 #include <sys/devtree.h>
 #include <sys/string.h>
+#include <sys/errno.h>
 
 
 /* external variables */
-extern interface_driver_t __interface_driver_base[],
-						  __interface_driver_end[];
-extern device_driver_t __device_driver_base[],
-					   __device_driver_end[];
+extern driver_t __driver_base[],
+				__driver_end[];
 
 
 /* local/static prototypes */
-static void probe_childs(devtree_device_t const * const *childs, void *itf);
-static void probe_interface(devtree_device_t const *node, void *itf);
-static void probe_device(devtree_device_t const *node, void *itf);
+static int probe_childs(devtree_device_t const * const *childs, void *itf);
+static int probe(devtree_device_t const *node, void *itf);
 
 
 /* global functions */
 int driver_load(void){
-	INFO("load drivers\n");
-	probe_childs(__dt_devices_root.childs, 0x0);
+	if(errno){
+		FATAL("pre-driver-load error %s\n", strerror(errno));
+		return -errno;
+	}
 
-	return -errno;
+	INFO("load drivers\n");
+
+	return probe_childs(__dt_devices_root.childs, 0x0);
 }
 
 
 /* local functions */
-static void probe_childs(devtree_device_t const * const *childs, void *itf){
+static int probe_childs(devtree_device_t const * const *childs, void *itf){
 	size_t i;
 
 
-	if(childs == 0x0)
-		return;
+	if(childs == 0x0){
+		if(itf && iskheap(itf))
+			kfree(itf);
+
+		return E_OK;
+	}
 
 	for(i=0; childs[i]!=0x0; i++){
-		if(childs[i]->childs != 0x0)	probe_interface(childs[i], itf);
-		else							probe_device(childs[i], itf);
-	}
-}
-
-static void probe_interface(devtree_device_t const *node, void *itf){
-	interface_driver_t *e;
-
-
-	for(e=__interface_driver_base; e!=__interface_driver_end; e++){
-		if(strcmp(e->compatible, node->compatible) == 0){
-			INFO("probe driver \"%s\" for \"%s\"\n", e->compatible, node->name);
-
-			itf = e->probe(node->name, (void*)node->data, itf);
-
-			if(itf)	probe_childs(node->childs, itf);
-			else	INFO("probe error \"%s\"\n", strerror(errno));
-
-			return;
+		if(probe(childs[i], itf) != E_OK){
+			FATAL("driver probe error for \"%s\": %s\n", childs[i]->name, strerror(errno));
+			return -errno;
 		}
 	}
 
-	INFO("no compatible interface driver found for \"%s\"\n", node->name);
+	return E_OK;
 }
 
-static void probe_device(devtree_device_t const *node, void *itf){
-	device_driver_t *e;
+static int probe(devtree_device_t const *node, void *itf){
+	driver_t *e;
 
 
-	for(e=__device_driver_base; e!=__device_driver_end; e++){
-		if(strcmp(e->compatible, node->compatible) == 0){
-			INFO("probe driver \"%s\" for \"%s\"\n", e->compatible, node->name);
+	for(e=__driver_base; e!=__driver_end; e++){
+		if(strcmp(e->compatible, node->compatible) != 0)
+			continue;
 
-			if(e->probe(node->name, (void*)node->data, itf) != 0)
-				INFO("failed\n");
+		INFO("probe driver \"%s\" for \"%s\"\n", e->compatible, node->name);
 
-			return;
-		}
+		itf = e->probe(node->name, (void*)node->data, itf);
+
+		if(errno)
+			return -errno;
+
+		if(itf != 0x0)
+			return probe_childs(node->childs, itf);
+
+		if(node->childs == 0x0)
+			return E_OK;
+
+		FATAL("no driver interface for \"%s\" childs\n", node->name);
+
+		return_errno(E_UNAVAIL);
 	}
 
-	INFO("no compatible device driver found for \"%s\"\n", node->name);
+	INFO("no compatible driver found for \"%s\"\n", node->name);
+
+	return E_OK;
 }

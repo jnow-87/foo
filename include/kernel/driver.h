@@ -15,16 +15,9 @@
 
 
 /* macros */
-#define interface_probe(_compatible, _probe) \
+#define driver_probe(_compatible, _probe) \
 	static char const driver_comp_##_probe[] __used = _compatible; \
-	static interface_driver_t driver_##_probe __linker_array(".interface_driver") = { \
-		.compatible = driver_comp_##_probe, \
-		.probe = _probe, \
-	}
-
-#define device_probe(_compatible, _probe) \
-	static char const driver_comp_##_probe[] __used = _compatible; \
-	static device_driver_t driver_##_probe __linker_array(".device_driver") = { \
+	static driver_t driver_##_probe __linker_array(".driver") = { \
 		.compatible = driver_comp_##_probe, \
 		.probe = _probe, \
 	}
@@ -34,12 +27,7 @@
 typedef struct{
 	char const *compatible;
 	void * (*probe)(char const *name, void *data, void *itf);
-} interface_driver_t;
-
-typedef struct{
-	char const *compatible;
-	int (*probe)(char const *name, void *data, void *itf);
-} device_driver_t;
+} driver_t;
 
 
 /* prototypes */
