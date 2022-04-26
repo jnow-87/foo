@@ -11,6 +11,7 @@
 #include <arch/x86/hardware.h>
 #include <kernel/memory.h>
 #include <kernel/driver.h>
+#include <kernel/interrupt.h>
 #include <driver/term.h>
 #include <sys/compiler.h>
 #include <sys/types.h>
@@ -22,7 +23,8 @@
 /* types */
 typedef struct{
 	char const *path;
-	uint8_t const rx_int;
+	uint8_t const rx_int,
+				  tx_int;
 } dt_data_t;
 
 typedef struct{
@@ -66,7 +68,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->error = 0x0;
 	itf->data = uart;
 	itf->rx_int = dtd->rx_int;
-	itf->tx_int = 0;
+	itf->tx_int = dtd->tx_int;
 	itf->cfg_size = sizeof(uart_cfg_t);
 	itf->cfg_flags_offset = offsetof(uart_cfg_t, iflags);
 
@@ -106,16 +108,24 @@ static int configure(void *cfg, void *data){
 }
 
 static char putc(char c, void *data){
-	lnx_write(((dev_data_t*)data)->fd, &c, 1);
-
-	return c;
+	return (putsn(&c, 1, data) != 1) ? ~c : c;
 }
 
-static size_t putsn(char const *s, size_t n, void *data){
+static size_t putsn(char const *s, size_t n, void *_data){
+	dev_data_t *data;
+
+
+	data = (dev_data_t*)_data;
+
 	if(s == 0x0)
 		goto_errno(err, E_INVAL);
 
-	lnx_write(((dev_data_t*)data)->fd, s, n);
+	lnx_write(data->fd, s, n);
+
+	// the x86 hardware simulated by the test framework doesn't support
+	// tx interrupts, hence a fake interrupt is produced here
+	if(data->dtd->tx_int)
+		int_foretell(data->dtd->tx_int);
 
 	return n;
 
