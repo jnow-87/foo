@@ -13,6 +13,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <arch/x86/hardware.h>
+#include <sys/types.h>
 #include <sys/escape.h>
 #include <sys/compiler.h>
 #include <user/opts.h>
@@ -30,6 +31,7 @@ static int help(char const *err, ...);
 opts_t opts = {
 	.kernel_image = DEFAULT_KERNEL_IMAGE,
 	.app_binary = DEFAULT_APP_BINARY,
+	.info = DEFAULT_INFO,
 	.verbosity = DEFAULT_VERBOSITY,
 	.stats_fd = DEFAULT_STATS_FD,
 	.app_mode = DEFAULT_APP_MODE,
@@ -44,6 +46,7 @@ int opts_parse(int argc, char **argv){
 		{ .name = "kernel",			.has_arg = required_argument,	.flag = 0,	.val = 'k' },
 		{ .name = "application",	.has_arg = required_argument,	.flag = 0,	.val = 'a' },
 		{ .name = "verbose",		.has_arg = optional_argument,	.flag = 0,	.val = 'v' },
+		{ .name = "info",			.has_arg = no_argument,			.flag = 0,	.val = 'I' },
 		{ .name = "interactive",	.has_arg = no_argument,			.flag = 0,	.val = 'i' },
 		{ .name = "stats",			.has_arg = required_argument,	.flag = 0,	.val = 's' },
 		{ .name = "help",			.has_arg = no_argument,			.flag = 0,	.val = 'h' },
@@ -57,6 +60,7 @@ int opts_parse(int argc, char **argv){
 		case 'k':	opts.kernel_image = optarg; break;
 		case 'a':	opts.app_binary = optarg; break;
 		case 'v':	opts.verbosity = (optarg ? atoi(optarg) : 1); break;
+		case 'I':	opts.info = true; break;
 		case 'i':	opts.app_mode = AM_INTERACTIVE; break;
 		case 's':	opts.stats_fd = atoi(optarg); break;
 		case 'h':	(void)help(0x0); return argc;
@@ -120,6 +124,7 @@ static int help(char const *err, ...){
 		, CONFIG_TEST_INT_UART_SIG
 		, "-k, --kernel=<image>", "use <image> as kernel " DEFAULT(DEFAULT_KERNEL_IMAGE)
 		, "-a, --application=<image>", "use <image> as application binary " DEFAULT(DEFAULT_APP_BINARY)
+		, "--info", "print runtime information during startup " DEFAULT(DEFAULT_INFO)
 		, "-i, --interactive", "test execution is under user control " DEFAULT(DEFAULT_APP_MODE)
 		, "-v, --verbose[=<level>]", "enable verbose output"
 		, "-s, --stats=<fd>", "enable hardware statistics being printed to file descriptor <fd> " DEFAULT(DEFAULT_STATS_FD)

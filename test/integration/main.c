@@ -57,6 +57,8 @@ static void verify_signals(void);
 static void exit_hdlr(int status, void *arg);
 static void cleanup(void);
 
+static void process_info(void);
+
 
 /* static variables */
 static int volatile exit_status = 7;
@@ -127,6 +129,11 @@ int main(int argc, char **argv){
 	if(on_exit(exit_hdlr, 0x0) != 0)
 		EEXIT("register exit handler failed with %s\n", strerror(errno));
 
+	/* print process info */
+	if(opts.info)
+		process_info();
+
+	/* main event loop */
 	return signal_hdlr(sig_fd);
 }
 
@@ -245,4 +252,16 @@ static void cleanup(void){
 	}
 
 	term_default();
+}
+
+static void process_info(void){
+	printf(
+		"Process information\n"
+		"  %s pid: %u\n"
+		"  kernel pid: %u\n"
+		"  app pid: %u\n"
+		, PROGNAME, getpid()
+		, KERNEL->pid
+		, APP->pid
+	);
 }

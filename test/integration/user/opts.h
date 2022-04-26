@@ -11,12 +11,14 @@
 #define OPT_H
 
 
+#include <sys/types.h>
 #include <config/config.h>
 
 
 /* macros */
 #define DEFAULT_KERNEL_IMAGE	CONFIG_TEST_INT_KERNEL_IMAGE
 #define DEFAULT_APP_BINARY		CONFIG_TEST_INT_APP_BINARY
+#define DEFAULT_INFO			false
 #define DEFAULT_VERBOSITY		0
 #define DEFAULT_APP_MODE		AM_NONINTERACTIVE
 #define DEFAULT_STATS_FD		-1
@@ -35,6 +37,7 @@ typedef struct{
 	char *kernel_image,
 		 *app_binary;
 
+	bool info;
 	unsigned int verbosity;
 	int stats_fd;
 
