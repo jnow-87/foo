@@ -172,6 +172,7 @@ char const *strerror(errno_t errnum){
 		"Function not implemented",
 		"Resource busy",
 		"Resource unavailable",
+		"Try again",
 		"End of resource",
 		"Operation not supported",
 		"Already connected",

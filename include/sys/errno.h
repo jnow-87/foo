@@ -27,6 +27,7 @@ typedef enum{
 	E_NOIMP,	/**< function not implemented */
 	E_INUSE,	/**< resource in use */
 	E_UNAVAIL,	/**< resource is not available */
+	E_AGAIN,	/**< no data available, try again */
 	E_END,		/**< end of resource reached */
 	E_NOSUP,	/**< operation not supported */
 	E_CONN,		/**< connection already established */
