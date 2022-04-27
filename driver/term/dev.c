@@ -115,10 +115,10 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	term = (term_t*)dev->data;
 
 	/* read */
-	if(term->rx_err)
-		goto_errno(err, E_IO);
-
 	n = term_gets(term, buf, n);
+
+	if(term->errno)
+		goto_errno(err, term->errno);
 
 	/* handle terminal flags */
 	flags = term_flags(term);
@@ -133,17 +133,26 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 
 err:
+	term->errno = E_OK;
+
 	return 0;
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	if(flputs(buf, n, dev->data) == 0 && n != 0)
-		goto_errno(err, E_IO);
+	term_t *term;
+
+
+	term = (term_t*)dev->data;
+
+	if(flputs(buf, n, term) == 0 && n != 0)
+		goto_errno(err, term->errno);
 
 	return n;
 
 
 err:
+	term->errno = E_OK;
+
 	return 0;
 }
 
@@ -166,13 +175,6 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 			return -errno;
 
 		memcpy(term->cfg, data, term->hw->cfg_size);
-		return E_OK;
-
-	case IOCTL_STATUS:
-		memcpy(data, &term->rx_err, sizeof(term_err_t));
-
-		// reset error flags
-		term->rx_err = TERR_NONE;
 		return E_OK;
 
 	default:

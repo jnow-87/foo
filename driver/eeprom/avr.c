@@ -67,9 +67,12 @@ static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 
 static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
 static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
+
 static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd);
 static char read_byte(size_t offset, dt_data_t *dtd);
+
 static void write_hdlr(int_num_t num, void *eeprom);
+static int write_complete(void *data);
 
 
 /* local functions */
@@ -289,18 +292,19 @@ static void write_hdlr(int_num_t num, void *_eeprom){
 	// 		as long as EECR_EEPE is zero, i.e. always except
 	// 		during ongoing write operations
 	eeprom->dtd->regs->eecr &= ~(0x1 << EECR_EERIE);
-	data = itask_query_data(&eeprom->write_queue);
+	data = itask_query_data(&eeprom->write_queue, write_complete);
 
 	if(data == 0x0)
 		return;
 
 	/* write data */
 	write_byte(*data->buf, data->offset, eeprom->dtd);
+
 	data->buf++;
 	data->offset++;
 	data->len--;
+}
 
-	/* signal write completion */
-	if(data->len == 0)
-		itask_complete(&eeprom->write_queue, E_OK);
+static int write_complete(void *data){
+	return (((write_data_t*)data)->len == 0) ? E_OK : -1;
 }

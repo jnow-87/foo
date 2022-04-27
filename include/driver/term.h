@@ -15,6 +15,7 @@
 #include <kernel/inttask.h>
 #include <kernel/ksignal.h>
 #include <kernel/fs.h>
+#include <sys/errno.h>
 #include <sys/mutex.h>
 #include <sys/ringbuf.h>
 #include <sys/term.h>
@@ -33,7 +34,9 @@ typedef struct{
 
 	char (*putc)(char c, void *data);
 	size_t (*puts)(char const *s, size_t n, void *data);
-	size_t (*gets)(char *s, size_t n, term_err_t *err, void *data);
+	size_t (*gets)(char *s, size_t n, void *data);
+
+	errno_t (*error)(void *data);
 
 	void *data;
 	int_num_t rx_int,
@@ -49,9 +52,9 @@ typedef struct{
 	fs_node_t *node;
 
 	ringbuf_t rx_buf;
-	term_err_t rx_err;
-
 	itask_queue_t tx_queue;
+
+	errno_t errno;
 } term_t;
 
 

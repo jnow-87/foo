@@ -49,6 +49,8 @@ typedef enum{
 typedef struct{
 	char const *s;
 	size_t len;
+
+	term_itf_t *hw;
 } tx_data_t;
 
 typedef struct esp_t{
@@ -105,6 +107,7 @@ static void rx_act_ip_info(esp_t *esp);
 
 // tx interrupt handling
 static void tx_hdlr(int_num_t num, void *esp);
+static int tx_complete(void *data);
 
 // command handling
 static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...);
@@ -415,15 +418,16 @@ static void rx_hdlr(int_num_t num, void *_esp){
 	size_t len;
 	char buf[16];
 	esp_t *esp;
-	term_err_t err;
 
 
 	esp = (esp_t*)_esp;
 
 	mutex_lock(&esp->mtx);
 
-	len = esp->hw->gets(buf, 16, &err, esp->hw->data);
-	ringbuf_write(&esp->rx.line, buf, len);
+	len = esp->hw->gets(buf, 16, esp->hw->data);
+
+	if(len > 0)
+		ringbuf_write(&esp->rx.line, buf, len);
 
 	mutex_unlock(&esp->mtx);
 }
@@ -653,7 +657,7 @@ static void tx_hdlr(int_num_t num, void *_esp){
 
 	esp = (esp_t*)_esp;
 
-	data = itask_query_data(&esp->tx_queue);
+	data = itask_query_data(&esp->tx_queue, tx_complete);
 
 	if(data == 0x0)
 		return;
@@ -665,9 +669,22 @@ static void tx_hdlr(int_num_t num, void *_esp){
 
 	data->s++;
 	data->len--;
+}
 
-	if(data->len == 0)
-		itask_complete(&esp->tx_queue, E_OK);
+static int tx_complete(void *_data){
+	tx_data_t *data;
+	term_itf_t *itf;
+	errno_t ecode;
+
+
+	data = (tx_data_t*)_data;
+	itf = data->hw;
+	ecode = itf->error ? itf->error(itf->data) : E_OK;
+
+	if(ecode != E_OK)
+		return ecode;
+
+	return (data->len == 0) ? E_OK : -1;
 }
 
 // command handling
@@ -765,6 +782,7 @@ static int putsn(char const *s, size_t len, esp_t *esp){
 
 	data.s = s;
 	data.len = len;
+	data.hw = esp->hw;
 
 	(void)itask_issue(&esp->tx_queue, &data, esp->hw->tx_int);
 

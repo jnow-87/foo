@@ -23,7 +23,13 @@
 typedef struct{
 	char const *s;
 	size_t len;
+
+	term_t *term;
 } tx_data_t;
+
+
+/* local/static prototypes */
+static int tx_complete(void *data);
 
 
 /* global functions */
@@ -68,7 +74,7 @@ term_t *term_create(term_itf_t *hw, void *cfg, fs_node_t *node){
 	term->cfg = cfg;
 	term->hw = hw;
 	term->node = node;
-	term->rx_err = TERR_NONE;
+	term->errno = E_OK;
 
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 	itask_queue_init(&term->tx_queue);
@@ -92,26 +98,40 @@ void term_destroy(term_t *term){
 }
 
 size_t term_gets(term_t *term, char *s, size_t n){
-	if(term->hw->rx_int)	return ringbuf_read(&term->rx_buf, s, n);
-	else					return term->hw->gets(s, n, &term->rx_err, term->hw->data);
+	size_t r;
+
+
+	r = term->hw->rx_int ? ringbuf_read(&term->rx_buf, s, n) : term->hw->gets(s, n, term->hw->data);
+
+	if(r == 0)
+		term->errno = errno;
+
+	return r;
 }
 
 size_t term_puts(term_t *term, char const *s, size_t n){
+	size_t r;
 	tx_data_t data;
 
 
 	if(n == 0)
 		return 0;
 
-	if(n == 1 || int_enabled() == INT_NONE || term->hw->tx_int == 0)
-		return term->hw->puts(s, n, term->hw->data);
+	if(int_enabled() != INT_NONE && term->hw->tx_int){
+		data.s = s;
+		data.len = n;
+		data.term = term;
 
-	data.s = s;
-	data.len = n;
+		term->errno = itask_issue(&term->tx_queue, &data, term->hw->tx_int);
+		r = n - data.len;
+	}
+	else
+		r = term->hw->puts(s, n, term->hw->data);
 
-	(void)itask_issue(&term->tx_queue, &data, term->hw->tx_int);
+	if(r == 0)
+		term->errno = errno;
 
-	return n - data.len;
+	return term->errno ? 0 : r;
 }
 
 term_flags_t *term_flags(term_t *term){
@@ -128,10 +148,13 @@ void term_rx_hdlr(int_num_t num, void *_term){
 
 	mutex_lock(&term->node->mtx);
 
-	n = term->hw->gets(buf, 16, &term->rx_err, term->hw->data);
+	n = term->hw->gets(buf, 16, term->hw->data);
+
+	if(n == 0)
+		term->errno = errno;
 
 	if(ringbuf_write(&term->rx_buf, buf, n) != n)
-		term->rx_err |= TERR_RX_FULL;
+		term->errno = E_LIMIT;
 
 	ksignal_send(&term->node->datain_sig);
 
@@ -139,24 +162,44 @@ void term_rx_hdlr(int_num_t num, void *_term){
 }
 
 void term_tx_hdlr(int_num_t num, void *_term){
+	char c;
 	term_t *term;
 	tx_data_t *data;
 
 
 	term = (term_t*)_term;
 
-	data = itask_query_data(&term->tx_queue);
+	data = itask_query_data(&term->tx_queue, tx_complete);
 
 	if(data == 0x0)
 		return;
 
 	mutex_lock(&term->node->mtx);
-	while(term->hw->putc(*data->s, term->hw->data) != *data->s);
+	c = term->hw->putc(*data->s, term->hw->data);
 	mutex_unlock(&term->node->mtx);
 
-	data->s++;
-	data->len--;
+	if(c == *data->s){
+		data->s++;
+		data->len--;
+	}
+	else
+		itask_complete(&term->tx_queue, errno ? errno : E_IO);
+}
 
-	if(data->len == 0)
-		itask_complete(&term->tx_queue, E_OK);
+
+/* local functions */
+static int tx_complete(void *_data){
+	tx_data_t *data;
+	term_itf_t *itf;
+	errno_t ecode;
+
+
+	data = (tx_data_t*)_data;
+	itf = data->term->hw;
+	ecode = itf->error ? itf->error(itf->data) : E_OK;
+
+	if(ecode != E_OK)
+		return ecode;
+
+	return (data->len == 0) ? E_OK : -1;
 }

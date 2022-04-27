@@ -50,7 +50,8 @@ devices = {
 		 */
 		string = "/dev/stdin";		// path
 		int<8> = [
-			3						// rx interrupt
+			3,						// rx interrupt
+			0						// tx interrupt
 		];
 
 		tty0 = {

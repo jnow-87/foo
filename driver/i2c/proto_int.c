@@ -94,7 +94,7 @@ static i2c_state_t int_master(i2c_state_t state, i2c_int_data_t *data, i2c_primi
 	cmd_data_t *cmd;
 
 
-	cmd = itask_query_data(&data->master_cmds);
+	cmd = itask_query_data(&data->master_cmds, 0x0);
 
 	if(cmd == 0x0)
 		return I2C_STATE_NONE;
@@ -179,7 +179,7 @@ static i2c_state_t int_slave(i2c_state_t state, i2c_int_data_t *data, i2c_primit
 	cmd_data_t *cmd;
 
 
-	cmd = itask_query_data(&data->slave_cmds);
+	cmd = itask_query_data(&data->slave_cmds, 0x0);
 
 	switch(state){
 	/* slave read */
@@ -232,7 +232,7 @@ static i2c_state_t int_slave(i2c_state_t state, i2c_int_data_t *data, i2c_primit
 	case I2C_STATE_SLA_SLAR_ADDR_MATCH:
 		DEBUG("match (%#hhx)\n", state);
 
-		cmd = itask_query_data(&data->slave_cmds);	// last cmd might be finished
+		cmd = itask_query_data(&data->slave_cmds, 0x0);	// last cmd might be finished
 		prim->byte_write((cmd ? *cmd->data : 0xff), (cmd && cmd->len > 1), prim->data);
 		break;
 
@@ -251,10 +251,10 @@ static i2c_state_t int_slave(i2c_state_t state, i2c_int_data_t *data, i2c_primit
 static i2c_state_t int_special(i2c_state_t state, i2c_int_data_t *data, i2c_primitives_t *prim){
 	switch(state){
 	case I2C_STATE_ERROR:
-		if(itask_query_data(&data->master_cmds) != 0x0)
+		if(itask_query_data(&data->master_cmds) != 0x0, 0x0)
 			return complete_task(&data->master_cmds, E_IO, true, prim);
 
-		if(itask_query_data(&data->slave_cmds) != 0x0)
+		if(itask_query_data(&data->slave_cmds) != 0x0, 0x0)
 			return complete_task(&data->slave_cmds, E_IO, false, prim);
 
 		return reset(false, prim);

@@ -27,7 +27,6 @@ TEST_LONG(tty, "test tty non/blocking io"){
 		   n;
 	char buf[20];
 	uart_cfg_t cfg;
-	term_err_t err;
 	f_mode_t f_mode;
 
 
@@ -66,20 +65,6 @@ TEST_LONG(tty, "test tty non/blocking io"){
 			printf(FG_RED "error " RESET_ATTR "read \"%s\" -", strerror(errno));
 			errno = E_OK;
 
-			ioctl(0, IOCTL_STATUS, &err, sizeof(err));
-
-			if(errno == E_OK){
-				fprintf(stderr, "%s%s%s%s\n",
-					(err & TERR_DATA_OVERRUN ? " data overrun" : ""),
-					(err & TERR_PARITY ? " parity error" : ""),
-					(err & TERR_FRAME ? " frame error" : ""),
-					(err & TERR_RX_FULL ? " rx queue full" : "")
-				);
-			}
-			else
-				fprintf(stderr, "\nioctl error \"%s\"\n", strerror(errno));
-
-			errno = E_OK;
 			continue;
 		}
 
