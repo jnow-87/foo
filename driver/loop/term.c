@@ -20,7 +20,7 @@
 static int configure(void *cfg, void *data);
 static char putc(char c, void *data);
 static size_t puts(char const *s, size_t n, void *data);
-static size_t gets(char *s, size_t n, term_err_t *err, void *data);
+static size_t gets(char *s, size_t n, void *data);
 
 
 /* local functions */
@@ -39,6 +39,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->putc = putc;
 	itf->puts = puts;
 	itf->gets = gets;
+	itf->error = 0x0;
 
 	itf->data = loop;
 	itf->rx_int = 0;
@@ -72,6 +73,6 @@ static size_t puts(char const *s, size_t n, void *data){
 	return loop_write(data, (void*)s, n);
 }
 
-static size_t gets(char *s, size_t n, term_err_t *err, void *data){
+static size_t gets(char *s, size_t n, void *data){
 	return loop_read(data, s, n);
 }

@@ -82,7 +82,7 @@ typedef struct{
 static int configure(void *cfg, void *data);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
-static size_t gets(char *s, size_t n, term_err_t *err, void *data);
+static size_t gets(char *s, size_t n, void *data);
 
 
 /* local functions */
@@ -101,6 +101,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
+	itf->error = 0x0;
 	itf->data = dtd;
 	itf->rx_int = dtd->rx_int;
 	itf->tx_int = dtd->tx_int;
@@ -184,10 +185,8 @@ static size_t putsn(char const *s, size_t n, void *data){
 
 	regs = ((dt_data_t*)data)->regs;
 
-	if(s == 0x0){
-		errno = E_INVAL;
-		return 0;
-	}
+	if(s == 0x0)
+		goto_errno(err, E_INVAL);
 
 	for(i=0; i<n; i++, s++){
 		while(!(regs->ucsra & (0x1 << UCSRA_UDRE)));
@@ -195,34 +194,33 @@ static size_t putsn(char const *s, size_t n, void *data){
 	}
 
 	return i;
+
+
+err:
+	return 0;
 }
 
-static size_t gets(char *s, size_t n, term_err_t *err, void *data){
+static size_t gets(char *s, size_t n, void *data){
 	size_t i;
-	uint8_t e;
 	uart_regs_t *regs;
 
 
 	regs = ((dt_data_t*)data)->regs;
-	e = 0;
 
 	/* read data */
 	i = 0;
 
 	while(i < n && (regs->ucsra & (0x1 << UCSRA_RXC))){
-		e |= regs->ucsra & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE));
+		if(regs->ucsra & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE)))
+			goto_errno(err, E_IO);
+
 		s[i] = regs->udr;
-
-		if(e){
-			*err |= (bits(e, UCSRA_FE, 0x1) ? TERR_FRAME : 0)
-				 |  (bits(e, UCSRA_DOR, 0x1) ? TERR_DATA_OVERRUN : 0)
-				 |  (bits(e, UCSRA_UPE, 0x1) ? TERR_PARITY : 0)
-				 |  (bits(e, UCSRA_RXC, 0x1) ? TERR_RX_FULL : 0)
-				 ;
-		}
-
 		i++;
 	}
 
 	return i;
+
+
+err:
+	return 0;
 }

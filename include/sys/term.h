@@ -13,15 +13,6 @@
 
 /* types */
 typedef enum{
-	TERR_NONE = 0x0,
-	TERR_DATA_OVERRUN = 0x1,
-	TERR_PARITY = 0x2,
-	TERR_FRAME = 0x4,
-	TERR_RX_FULL = 0x8,
-	TERR_WRITE_COLL = 0x10,
-} term_err_t;
-
-typedef enum{
 	TIFL_CRNL = 0x1,
 	TIFL_NLCR = 0x2,
 } term_iflags_t;

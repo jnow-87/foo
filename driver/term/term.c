@@ -68,7 +68,7 @@ term_t *term_create(term_itf_t *hw, void *cfg, fs_node_t *node){
 	term->cfg = cfg;
 	term->hw = hw;
 	term->node = node;
-	term->rx_err = TERR_NONE;
+	term->errno = E_OK;
 
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 	itask_queue_init(&term->tx_queue);
@@ -92,26 +92,39 @@ void term_destroy(term_t *term){
 }
 
 size_t term_gets(term_t *term, char *s, size_t n){
-	if(term->hw->rx_int)	return ringbuf_read(&term->rx_buf, s, n);
-	else					return term->hw->gets(s, n, &term->rx_err, term->hw->data);
+	size_t r;
+
+
+	r = term->hw->rx_int ? ringbuf_read(&term->rx_buf, s, n) : term->hw->gets(s, n, term->hw->data);
+
+	if(r == 0)
+		term->errno = errno;
+
+	return r;
 }
 
 size_t term_puts(term_t *term, char const *s, size_t n){
+	size_t r;
 	tx_data_t data;
 
 
 	if(n == 0)
 		return 0;
 
-	if(n == 1 || int_enabled() == INT_NONE || term->hw->tx_int == 0)
-		return term->hw->puts(s, n, term->hw->data);
+	if(int_enabled() != INT_NONE && term->hw->tx_int){
+		data.s = s;
+		data.len = n;
 
-	data.s = s;
-	data.len = n;
+		term->errno = itask_issue(&term->tx_queue, &data, term->hw->tx_int);
+		r = n - data.len;
+	}
+	else
+		r = term->hw->puts(s, n, term->hw->data);
 
-	(void)itask_issue(&term->tx_queue, &data, term->hw->tx_int);
+	if(r == 0)
+		term->errno = errno;
 
-	return n - data.len;
+	return term->errno ? 0 : r;
 }
 
 term_flags_t *term_flags(term_t *term){
@@ -128,10 +141,13 @@ void term_rx_hdlr(int_num_t num, void *_term){
 
 	mutex_lock(&term->node->mtx);
 
-	n = term->hw->gets(buf, 16, &term->rx_err, term->hw->data);
+	n = term->hw->gets(buf, 16, term->hw->data);
+
+	if(n == 0)
+		term->errno = errno;
 
 	if(ringbuf_write(&term->rx_buf, buf, n) != n)
-		term->rx_err |= TERR_RX_FULL;
+		term->errno = E_LIMIT;
 
 	ksignal_send(&term->node->datain_sig);
 

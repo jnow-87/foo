@@ -64,7 +64,7 @@ typedef struct{
 static int configure(void *cfg, void *data);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
-static size_t gets(char *s, size_t n, term_err_t *err, void *data);
+static size_t gets(char *s, size_t n, void *data);
 
 
 /* local functions */
@@ -83,6 +83,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
+	itf->error = 0x0;
 	itf->data = dtd;
 	itf->rx_int = dtd->int_num;
 	itf->tx_int = 0;
@@ -152,10 +153,8 @@ static size_t putsn(char const *s, size_t n, void *data){
 
 	regs = ((dt_data_t*)data)->regs;
 
-	if(s == 0x0){
-		errno = E_INVAL;
-		return 0;
-	}
+	if(s == 0x0)
+		goto_errno(err, E_INVAL);
 
 	for(i=0; i<n; i++, s++){
 		regs->spdr = *s;
@@ -165,9 +164,13 @@ static size_t putsn(char const *s, size_t n, void *data){
 	}
 
 	return i;
+
+
+err:
+	return 0;
 }
 
-static size_t gets(char *s, size_t n, term_err_t *err, void *data){
+static size_t gets(char *s, size_t n, void *data){
 	spi_regs_t *regs;
 
 
@@ -179,13 +182,16 @@ static size_t gets(char *s, size_t n, term_err_t *err, void *data){
 	*s = regs->spdr;
 
 	if(regs->spsr & (0x1 << SPSR_WCOL)){
-		*err |= TERR_WRITE_COLL;
 		DEBUG("rx error, read %c (%#x)\n", *s, (int)*s);
 
-		return 0;
+		goto_errno(err, E_IO);
 	}
 
 	DEBUG("read %c (%#x)\n", *s, (int)*s);
 
 	return 1;
+
+
+err:
+	return 0;
 }

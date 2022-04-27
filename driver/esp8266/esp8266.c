@@ -415,15 +415,16 @@ static void rx_hdlr(int_num_t num, void *_esp){
 	size_t len;
 	char buf[16];
 	esp_t *esp;
-	term_err_t err;
 
 
 	esp = (esp_t*)_esp;
 
 	mutex_lock(&esp->mtx);
 
-	len = esp->hw->gets(buf, 16, &err, esp->hw->data);
-	ringbuf_write(&esp->rx.line, buf, len);
+	len = esp->hw->gets(buf, 16, esp->hw->data);
+
+	if(len > 0)
+		ringbuf_write(&esp->rx.line, buf, len);
 
 	mutex_unlock(&esp->mtx);
 }

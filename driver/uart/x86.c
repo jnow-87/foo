@@ -35,7 +35,7 @@ typedef struct{
 static int configure(void *cfg, void *data);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
-static size_t gets(char *s, size_t n, term_err_t *err, void *data);
+static size_t gets(char *s, size_t n, void *data);
 
 
 /* local functions */
@@ -63,6 +63,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
+	itf->error = 0x0;
 	itf->data = uart;
 	itf->rx_int = dtd->rx_int;
 	itf->tx_int = 0;
@@ -111,21 +112,30 @@ static char putc(char c, void *data){
 }
 
 static size_t putsn(char const *s, size_t n, void *data){
-	if(s == 0x0){
-		errno = E_INVAL;
-		return 0;
-	}
+	if(s == 0x0)
+		goto_errno(err, E_INVAL);
 
 	lnx_write(((dev_data_t*)data)->fd, s, n);
 
 	return n;
+
+
+err:
+	return 0;
 }
 
-static size_t gets(char *s, size_t n, term_err_t *err, void *data){
+static size_t gets(char *s, size_t n, void *data){
 	ssize_t r;
 
 
 	r = lnx_read(((dev_data_t*)data)->fd, s, n);
 
-	return (r < 0) ? 0 : r;
+	if(r < 0)
+		goto_errno(err, E_IO);
+
+	return r;
+
+
+err:
+	return 0;
 }

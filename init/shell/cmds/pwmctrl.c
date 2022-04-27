@@ -47,7 +47,6 @@ static int exec(int argc, char **argv){
 	char c;
 	unsigned int duty;
 	size_t sample_int;
-	term_err_t terr;
 	f_mode_t f_mode;
 	pwm_cfg_t cfg;
 
@@ -103,10 +102,8 @@ static int exec(int argc, char **argv){
 	/* main loop */
 	while(c != 'q'){
 		// process user input
-		if(read(0, &c, 1) < 0){
-			ioctl(0, IOCTL_STATUS, &terr, sizeof(term_err_t));
+		if(read(0, &c, 1) < 0)
 			continue;
-		}
 
 		switch(c){
 		case '+':	update_duty_cycle(&duty, 10, &cfg, dev); break;
