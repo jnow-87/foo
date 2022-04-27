@@ -23,7 +23,13 @@
 typedef struct{
 	char const *s;
 	size_t len;
+
+	term_t *term;
 } tx_data_t;
+
+
+/* local/static prototypes */
+static int tx_complete(void *data);
 
 
 /* global functions */
@@ -114,6 +120,7 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 	if(int_enabled() != INT_NONE && term->hw->tx_int){
 		data.s = s;
 		data.len = n;
+		data.term = term;
 
 		term->errno = itask_issue(&term->tx_queue, &data, term->hw->tx_int);
 		r = n - data.len;
@@ -155,24 +162,44 @@ void term_rx_hdlr(int_num_t num, void *_term){
 }
 
 void term_tx_hdlr(int_num_t num, void *_term){
+	char c;
 	term_t *term;
 	tx_data_t *data;
 
 
 	term = (term_t*)_term;
 
-	data = itask_query_data(&term->tx_queue);
+	data = itask_query_data(&term->tx_queue, tx_complete);
 
 	if(data == 0x0)
 		return;
 
 	mutex_lock(&term->node->mtx);
-	while(term->hw->putc(*data->s, term->hw->data) != *data->s);
+	c = term->hw->putc(*data->s, term->hw->data);
 	mutex_unlock(&term->node->mtx);
 
-	data->s++;
-	data->len--;
+	if(c == *data->s){
+		data->s++;
+		data->len--;
+	}
+	else
+		itask_complete(&term->tx_queue, errno ? errno : E_IO);
+}
 
-	if(data->len == 0)
-		itask_complete(&term->tx_queue, E_OK);
+
+/* local functions */
+static int tx_complete(void *_data){
+	tx_data_t *data;
+	term_itf_t *itf;
+	errno_t ecode;
+
+
+	data = (tx_data_t*)_data;
+	itf = data->term->hw;
+	ecode = itf->error ? itf->error(itf->data) : E_OK;
+
+	if(ecode != E_OK)
+		return ecode;
+
+	return (data->len == 0) ? E_OK : -1;
 }

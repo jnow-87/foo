@@ -46,7 +46,7 @@ int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
 	return_errno(task.errno);
 }
 
-void itask_complete(itask_queue_t *queue, errno_t e_code){
+void itask_complete(itask_queue_t *queue, errno_t ecode){
 	itask_t *task;
 
 
@@ -54,20 +54,31 @@ void itask_complete(itask_queue_t *queue, errno_t e_code){
 
 	task = list_first(queue->head);
 	list1_rm_head(queue->head, queue->tail);
-	task->errno = e_code;
+	task->errno = ecode;
 
 	ksignal_send(&task->sig);
 
 	mutex_unlock(&queue->mtx);
 }
 
-void *itask_query_data(itask_queue_t *queue){
+void *itask_query_data(itask_queue_t *queue, int (*complete)(void *data)){
+	int ecode;
 	itask_t *task;
 
 
-	mutex_lock(&queue->mtx);
-	task = list_first(queue->head);
-	mutex_unlock(&queue->mtx);
+	while(1){
+		mutex_lock(&queue->mtx);
+		task = list_first(queue->head);
+		mutex_unlock(&queue->mtx);
 
-	return (task ? task->data : 0x0);
+		if(task == 0x0)
+			return 0x0;
+
+		ecode = (complete == 0x0) ? -1 : complete(task->data);
+
+		if(ecode < 0)
+			return task->data;
+
+		itask_complete(queue, ecode);
+	}
 }

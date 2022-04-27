@@ -40,8 +40,8 @@ typedef struct{
 void itask_queue_init(itask_queue_t *queue);
 
 int itask_issue(itask_queue_t *queue, void *data, int_num_t num);
-void itask_complete(itask_queue_t *queue, errno_t e_code);
-void *itask_query_data(itask_queue_t *queue);
+void itask_complete(itask_queue_t *queue, errno_t ecode);
+void *itask_query_data(itask_queue_t *queue, int (*complete)(void *data));
 
 
 #endif // KERNEL_INTTASK_H
