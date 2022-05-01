@@ -55,7 +55,7 @@ void int_release(int_num_t num){
 }
 
 void int_foretell(int_num_t num){
-	foretell(num, true);
+	foretell(num, 1);
 }
 
 void int_khdlr(int_num_t num){
@@ -77,8 +77,9 @@ void int_khdlr(int_num_t num){
 				continue;
 
 			num = i * 8 + j;
-			call_hdlr(num);
+
 			foretell(num, 0);
+			call_hdlr(num);
 		}
 	}
 
