@@ -54,16 +54,8 @@ int user_input_help(void){
 		"  In interactive mode both kernel and application are halted\n"
 		"  and need to be sent a signal to start execution.\n"
 		"\n"
-		"  Program information\n"
-		"    %s pid: %u\n"
-		"    kernel pid: %u\n"
-		"    app pid: %u\n"
-		"\n"
 		"  Command help\n"
 		, PROGNAME
-		, PROGNAME, getpid()
-		, KERNEL->pid
-		, APP->pid
 	);
 
 	cmd_help("");

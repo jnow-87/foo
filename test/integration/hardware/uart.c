@@ -183,9 +183,6 @@ static int configure(int fd, uart_cfg_t *cfg){
 	int parity[] = { 0, PARENB, PARENB | PARODD };
 
 
-	if(cfsetspeed(&attr, baudrate(cfg->baudrate)) != 0)
-		return -1;
-
 	if(tcgetattr(fd, &attr) != 0)
 		return -1;
 
@@ -199,6 +196,9 @@ static int configure(int fd, uart_cfg_t *cfg){
 				 | ((cfg->stopb == UART_STOPB2) ? CSTOPB : 0)
 				 ;
 
+	if(cfsetspeed(&attr, baudrate(cfg->baudrate)) != 0)
+		return -1;
+
 	if(tcsetattr(fd, TCSANOW, &attr) != 0)
 		return -1;
 
@@ -207,22 +207,22 @@ static int configure(int fd, uart_cfg_t *cfg){
 
 static speed_t baudrate(uart_baudrate_t br){
 	switch(br){
-	case UART_BR_2400:		return B2400; break;
-	case UART_BR_4800:		return B4800; break;
-	case UART_BR_9600:		return B9600; break;
-	case UART_BR_19200:		return B19200; break;
-	case UART_BR_38400:		return B38400; break;
-	case UART_BR_57600:		return B57600; break;
-	case UART_BR_115200:	return B115200; break;
-	case UART_BR_230400:	return B230400; break;
-	case UART_BR_500000:	return B500000; break;
-	case UART_BR_1000000:	return B1000000; break;
+	case UART_BR_2400:		return B2400;
+	case UART_BR_4800:		return B4800;
+	case UART_BR_9600:		return B9600;
+	case UART_BR_19200:		return B19200;
+	case UART_BR_38400:		return B38400;
+	case UART_BR_57600:		return B57600;
+	case UART_BR_115200:	return B115200;
+	case UART_BR_230400:	return B230400;
+	case UART_BR_500000:	return B500000;
+	case UART_BR_1000000:	return B1000000;
 	case UART_BR_0:			// fall through
 	case UART_BR_14400:		// fall through
 	case UART_BR_28800:		// fall through
 	case UART_BR_76800:		// fall through
 	case UART_BR_250000:	// fall through
-	default:				return B0; break;
+	default:				return B0;
 	}
 }
 

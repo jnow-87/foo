@@ -11,8 +11,10 @@
 #define X86_HARDWARE_H
 
 
+#include <kernel/interrupt.h>
 #include <sys/uart.h>
 #include <sys/types.h>
+
 
 /* macros */
 #define X86_INT_PRIOS	2
@@ -41,7 +43,7 @@ typedef enum{
 	INT_SYSCALL,
 	INT_UART0,
 	INT_UART1,
-	NUM_INT
+	ARCH_NUM_INTS
 } x86_int_num_t;
 
 typedef enum{
@@ -108,6 +110,8 @@ void x86_hw_op_write_writeback(x86_hw_op_t *op);
 
 void x86_hw_op_read(x86_hw_op_t *op);
 void x86_hw_op_read_writeback(x86_hw_op_t *op);
+
+void x86_hw_int_trigger(int_num_t num, void *data);
 
 
 /* external variables */

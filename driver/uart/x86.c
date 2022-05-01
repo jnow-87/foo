@@ -140,8 +140,16 @@ static size_t gets(char *s, size_t n, void *data){
 
 	r = lnx_read(((dev_data_t*)data)->fd, s, n);
 
-	if(r < 0)
-		goto_errno(err, E_IO);
+	if(r < 0){
+		switch(r){
+		case -11: // EAGAIN
+			lnx_nanosleep(1000000);
+			goto_errno(err, E_AGAIN);
+
+		default:
+			goto_errno(err, E_IO);
+		}
+	}
 
 	return r;
 

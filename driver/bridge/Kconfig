@@ -1,0 +1,28 @@
+#
+# Copyright (C) 2021 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+menuconfig DRIVER_BRIDGE
+	bool "Bridge driver"
+	select KERNEL_SIGNAL
+	select KERNEL_INTTASK
+	select SYS_RINGBUFFER
+
+if DRIVER_BRIDGE
+	config BRIDGE_UART
+		bool "UART bridge"
+
+	config BRIDGE_RETRY_LIMIT
+		int "Number of tolerated errors before aborting a transmission"
+		default 3
+
+	config BRIDGE_DEBUG
+		bool "Enable debug messages"
+		depends on KERNEL_MSG_DEBUG
+		default n
+endif # DRIVER_BRIDGE

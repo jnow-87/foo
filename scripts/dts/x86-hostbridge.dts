@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Jan Nowotsch
+ * Copyright (C) 2022 Jan Nowotsch
  * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
  *
  * Released under the terms of the GNU GPL v2.0
@@ -96,6 +96,83 @@ devices = {
 			 *	the underlying device driver, i.e. loop_cfg_t
 			 */
 			int<8> = [
+				0x0,				// iflags (none)
+				0x0,				// oflags (none)
+				0x0					// lflags (none)
+			];
+		};
+	};
+
+	uart1 = {
+		compatible = "x86,uart";
+
+		/**
+		 * uart hardware description
+		 * 	has to match the device tree data type
+		 *	of the x86 uart driver
+		 */
+		string = "/dev/ttyUSB1";	// path
+		int<8> = [
+			4,						// rx interrupt
+			5						// tx interrupt
+		];
+
+		brdg0-left = {
+			compatible = "bridge,uart-itf";
+
+			/**
+			 * bridge hardware description
+			 *	has to match bridge_cfg_t
+			 */
+			/* bridge config */
+			int<8> = [
+				0,					// id
+				2,					// chunksize
+				0,					// rx interrupt
+				0					// tx interrupt
+			];
+
+			/* terminal config */
+			int<32> = [ 115200 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0x0,				// iflags (none)
+				0x0,				// oflags (none)
+				0x0					// lflags (none)
+			];
+		};
+	};
+
+	brdg0-right = {
+		compatible = "bridge,uart-dev";
+
+		/**
+		 * bridge hardware description
+		 *	has to match bridge_cfg_t
+		 */
+		/* bridge config */
+		int<8> = [
+			0,					// id
+			2,					// chunksize
+			6,					// rx interrupt
+			7					// tx interrupt
+		];
+
+		tty-bridge0 = {
+			compatible = "terminal";
+
+			/**
+			 * terminal configuration
+			 * 	has to match the configuration data type of
+			 * 	the underlying device driver uart_cfg_t
+			 */
+			int<32> = [ 115200 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
 				0x0,				// iflags (none)
 				0x0,				// oflags (none)
 				0x0					// lflags (none)

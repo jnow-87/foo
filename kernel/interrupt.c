@@ -7,6 +7,7 @@
 
 
 
+#include <config/config.h>
 #include <arch/arch.h>
 #include <arch/interrupt.h>
 #include <kernel/interrupt.h>
@@ -16,20 +17,24 @@
 #include <sys/errno.h>
 
 
+/* macros */
+#define NUM_INTS	(ARCH_NUM_INTS + CONFIG_INT_VIRTUALS)
+
+
 /* local/static prototypes */
 static void call_hdlr(int_num_t num);
 static void foretell(int_num_t num, uint8_t set);
 
 
 /* static variables */
-static int_hdlr_t int_hdlr[NUM_INT] = { 0x0 };
-static void *int_data[NUM_INT] = { 0x0 };
-static uint8_t foretold[NUM_INT / 8 + 1] = { 0 };
+static int_hdlr_t int_hdlr[NUM_INTS] = { 0x0 };
+static void *int_data[NUM_INTS] = { 0x0 };
+static uint8_t foretold[NUM_INTS / 8 + 1] = { 0 };
 
 
 /* global functions */
 int int_register(int_num_t num, int_hdlr_t hdlr, void *data){
-	if(num >= NUM_INT)
+	if(num >= NUM_INTS)
 		return_errno(E_INVAL);
 
 	if(int_hdlr[num] != 0x0)
@@ -42,7 +47,7 @@ int int_register(int_num_t num, int_hdlr_t hdlr, void *data){
 }
 
 void int_release(int_num_t num){
-	if(num >= NUM_INT)
+	if(num >= NUM_INTS)
 		return;
 
 	int_hdlr[num] = 0x0;
@@ -50,7 +55,7 @@ void int_release(int_num_t num){
 }
 
 void int_foretell(int_num_t num){
-	foretell(num, true);
+	foretell(num, 1);
 }
 
 void int_khdlr(int_num_t num){
@@ -72,8 +77,14 @@ void int_khdlr(int_num_t num){
 				continue;
 
 			num = i * 8 + j;
-			call_hdlr(num);
+
 			foretell(num, 0);
+			call_hdlr(num);
+
+			// re-iterate the foretold interrupts, handling the case of an
+			// interrupt being foretold in a foretold interrupt handler
+			i = 0;
+			j = 0;
 		}
 	}
 
@@ -83,7 +94,7 @@ void int_khdlr(int_num_t num){
 
 /* local functions */
 static void call_hdlr(int_num_t num){
-	if(num >= NUM_INT || int_hdlr[num] == 0x0)
+	if(num >= NUM_INTS || int_hdlr[num] == 0x0)
 		kpanic("unhandled or invalid interrupt %u\n", num);
 
 	int_hdlr[num](num, int_data[num]);

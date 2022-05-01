@@ -25,7 +25,7 @@
 
 
 /* macros */
-#define INT_VEC_SC		(DEVTREE_KERNEL_FLASH_BASE + INT_VEC_SIZE * NUM_HW_INT)
+#define INT_VEC_SC		(DEVTREE_KERNEL_FLASH_BASE + INT_VEC_SIZE * AVR_NUM_HW_INTS)
 
 #ifdef CONFIG_AVR_ISA_AVR4
 # define SYSCALL(addr)	\
@@ -82,7 +82,7 @@ static void sc_hdlr(int_num_t num, void *data){
 
 #ifdef BUILD_KERNEL
 static int init(void){
-	return int_register(NUM_HW_INT, sc_hdlr, 0x0);
+	return int_register(AVR_NUM_HW_INTS, sc_hdlr, 0x0);
 }
 
 platform_init(0, init);

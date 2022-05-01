@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019 Jan Nowotsch
+ * Copyright (C) 2022 Jan Nowotsch
  * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
  *
  * Released under the terms of the GNU GPL v2.0
@@ -120,15 +120,54 @@ devices = {
 			30						// uart1 tx interrupt (disabled)
 		];
 
-		eth0 = {
-			compatible = "esp8266";
+		brdg0-left = {
+			compatible = "bridge,uart-itf";
+
+			/* bridge config */
+			int<8> = [
+				0,					// id
+				2,					// chunksize
+				0,					// rx interrupt
+				0					// tx interrupt
+			];
+
+			/* terminal config */
+			int<32> = [ 115200 ];	// baudrate
+			int<8> = [
+				1,					// stop bits (1)
+				0,					// parity (TPARITY_NONE)
+				3,					// csize (TCS_8)
+				0x0,				// iflags (none)
+				0x0,				// oflags (none)
+				0x0					// lflags (none)
+			];
+		};
+	};
+
+	brdg0-right = {
+		compatible = "bridge,uart-dev";
+
+		/**
+		 * bridge hardware description
+		 *	has to match bridge_cfg_t
+		 */
+		/* bridge config */
+		int<8> = [
+			0,					// id
+			2,					// chunksize
+			37,					// rx interrupt
+			38					// tx interrupt
+		];
+
+		tty-bridge0 = {
+			compatible = "terminal";
 
 			/**
-			 * uart configuration
+			 * terminal configuration
 			 * 	has to match the configuration data type of
-			 * 	the avr uart driver
+			 * 	the underlying device driver uart_cfg_t
 			 */
-			int<32> = [ 2400 ];		// baudrate
+			int<32> = [ 115200 ];	// baudrate
 			int<8> = [
 				1,					// stop bits (1)
 				0,					// parity (TPARITY_NONE)
