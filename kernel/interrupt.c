@@ -80,6 +80,11 @@ void int_khdlr(int_num_t num){
 
 			foretell(num, 0);
 			call_hdlr(num);
+
+			// re-iterate the foretold interrupts, handling the case of an
+			// interrupt being foretold in a foretold interrupt handler
+			i = 0;
+			j = 0;
 		}
 	}
 
