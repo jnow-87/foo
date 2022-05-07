@@ -11,7 +11,7 @@
 #include <kernel/inttask.h>
 #include <kernel/ksignal.h>
 #include <kernel/memory.h>
-#include <sys/list.h>
+#include <sys/queue.h>
 #include <sys/errno.h>
 #include <sys/mutex.h>
 
@@ -34,7 +34,7 @@ int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
 
 	mutex_lock(&queue->mtx);
 
-	list1_add_tail(queue->head, queue->tail, &task);
+	queue_enqueue(queue->head, queue->tail, &task);
 	is_first = (list_first(queue->head) == &task);
 
 	if(is_first)
@@ -52,11 +52,12 @@ void itask_complete(itask_queue_t *queue, errno_t ecode){
 
 	mutex_lock(&queue->mtx);
 
-	task = list_first(queue->head);
-	list1_rm_head(queue->head, queue->tail);
-	task->errno = ecode;
+	task = queue_dequeue(queue->head, queue->tail);
 
-	ksignal_send(&task->sig);
+	if(task != 0x0){
+		task->errno = ecode;
+		ksignal_send(&task->sig);
+	}
 
 	mutex_unlock(&queue->mtx);
 }
