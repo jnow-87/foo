@@ -7,10 +7,9 @@
 
 
 
-obj-$(CONFIG_I2C_PROTO_INT) += proto_int.o
-obj-$(CONFIG_I2C_PROTO_POLL) += proto_poll.o
-obj-$(CONFIG_I2C_DEV_INT) += dev_int.o
-obj-$(CONFIG_I2C_DEV_POLL) += dev_poll.o
+obj-y := i2c.o
+
+obj-$(CONFIG_I2C_DEVFS_DEV) += dev.o
 obj-$(CONFIG_AVR) += avr.o
 
 

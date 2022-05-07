@@ -326,7 +326,7 @@ devices = {
 		int<8> = [ 26 ];			// interrupt number
 
 		i2c0 = {
-			compatible = "i2c,int";
+			compatible = "i2c";
 
 			/**
 			 * i2c configuration
