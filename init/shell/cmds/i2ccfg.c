@@ -11,7 +11,6 @@
 #include <sys/ioctl.h>
 #include <sys/errno.h>
 #include <sys/string.h>
-#include <sys/i2c.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,28 +24,17 @@ static int help(char const *prog_name, char const *msg);
 /* local functions */
 static int exec(int argc, char **argv){
 	int fd;
-	i2c_cfg_t cfg;
+	uint8_t slave;
 
-
-	memset(&cfg, 0, sizeof(i2c_cfg_t));
 
 	/* check options */
-	if(argc < 6)
+	if(argc != 3)
 		return help(argv[0], 0x0);
 
-	cfg.mode = atoi(argv[2]);
-	cfg.host_addr = atoi(argv[3]);
-	cfg.target_addr = atoi(argv[4]);
-	cfg.clock_khz = atoi(argv[5]);
+	slave = atoi(argv[2]);
 
-	if(cfg.mode != I2C_MODE_MASTER && cfg.mode != I2C_MODE_SLAVE)
-		return help(argv[0], "invalid mode");
-
-	if(!cfg.host_addr || cfg.host_addr & 0x80)
-		return help(argv[0], "invalid host address");
-
-	if(!cfg.target_addr || cfg.target_addr & 0x80)
-		return help(argv[0], "invalid target address");
+	if(slave & 0x80)
+		return help(argv[0], "invalid slave address");
 
 	/* apply configuration */
 	fd = open(argv[1], O_RDWR);
@@ -56,7 +44,7 @@ static int exec(int argc, char **argv){
 		return 1;
 	}
 
-	if(ioctl(fd, IOCTL_CFGWR, &cfg, sizeof(i2c_cfg_t)) != 0){
+	if(ioctl(fd, IOCTL_CFGWR, &slave, 1) != 0){
 		fprintf(stderr, "ioctl error \"%s\"\n", strerror(errno));
 		return 1;
 	}
@@ -73,12 +61,11 @@ static int help(char const *prog_name, char const *msg){
 	}
 
 	fprintf(stdout,
-		"usage: %s <device> <mode> <host addr> <target addr> <freq [kHz]>\n\n"
+		"usage: %s <device> <slave>\n\n"
 		"%15.15s    %s\n"
 		"%15.15s    %s\n"
 		, prog_name
-		, "<mode>", "master (1), slave(2)"
-		, "<* addr>", "7 bit address"
+		, "<slave>", "7 bit slave address"
 	);
 
 	return (msg ? 1 : 0);

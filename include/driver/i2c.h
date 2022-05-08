@@ -11,15 +11,18 @@
 #define DRIVER_I2C_H
 
 
-#include <kernel/interrupt.h>
 #include <kernel/inttask.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
-#include <sys/i2c.h>
 #include <sys/linebuf.h>
 
 
 /* types */
+typedef enum{
+	I2C_MODE_MASTER = 1,
+	I2C_MODE_SLAVE
+} i2c_mode_t;
+
 typedef enum{
 	// state sections bits
 	I2C_STATE_BIT_SPECIAL = 0x20,
@@ -81,10 +84,24 @@ typedef struct{
 } i2c_dgram_t;
 
 typedef struct{
-	int (*configure)(i2c_cfg_t *cfg, bool int_en, void *hw);
+	/**
+	 * NOTE fixed-size types are used to allow
+	 * 		using this type with the device tree
+	 */
+
+	uint8_t mode;		/**< cf. i2c_mode_t */
+	uint16_t clock_khz;
+
+	uint8_t bcast_en;
+	uint8_t addr;
+
+	uint8_t int_num;
+} i2c_cfg_t;
+
+typedef struct{
+	int (*configure)(i2c_cfg_t *cfg, void *hw);
 
 	i2c_state_t (*state)(void *hw);
-
 	void (*start)(void *hw);
 	void (*ack)(bool ack, void *hw);
 
@@ -93,14 +110,12 @@ typedef struct{
 
 	uint8_t (*byte_read)(void *hw);
 	void (*byte_write)(uint8_t c, bool last, void *hw);
-
-	void *hw;
-	int_num_t int_num;
 } i2c_ops_t;
 
-typedef struct{
+typedef struct i2c_t{
 	i2c_cfg_t *cfg;
-	i2c_ops_t *ops;
+	i2c_ops_t ops;
+	void *hw;
 
 	itask_queue_t master_cmds,
 				  slave_cmds;

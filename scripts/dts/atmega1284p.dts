@@ -318,28 +318,38 @@ devices = {
 	i2c = {
 		compatible = "avr,i2c";
 
+		/**
+		 * i2c hardware description
+		 * 	has to match the device tree data type
+		 *	of the avr i2c driver
+		 */
 		baseaddr = 0xb8;
 
 		reg = [ 0x64 ];				// PRRO
 		int<8> = [ 0x80 ];			// PRR0_PRTWI
 
-		int<8> = [ 26 ];			// interrupt number
+		/**
+		 * i2c configuration
+		 *	has to match the configuration data type of
+		 *	the underlying device driver
+		 */
+		 int<8> = [ 1 ];		// mode (master)
+		 int<16> = [ 100 ];		// clock (100kHz)
+		 int<8> = [
+			1,					// broadcast (enabled)
+			1,					// address
+			26					// interrupt number
+		 ];
 
 		i2c0 = {
 			compatible = "i2c";
 
 			/**
-			 * i2c configuration
-			 *	has to match the configuration data type of
-			 *	the underlying device driver
+			 * i2c devfs dev config
+			 *	has to match the configuration of the
+			 *	devfs dev device driver
 			 */
-			 int<8> = [ 1 ];		// mode (master)
-			 int<16> = [ 50 ];		// clock (50kHz)
-			 int<8> = [
-				1,					// broadcast (enabled)
-				1,					// host address
-				0					// target address
-			 ];
+			 int<8> = [ 0 ];	// slave address
 		};
 	};
 

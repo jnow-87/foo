@@ -45,18 +45,20 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 		goto err_0;
 
 	i2c->cfg = cfg;
-	i2c->ops = ops;
+	i2c->hw = hw;
+
+	memcpy(&i2c->ops, ops, sizeof(i2c_ops_t));
 
 	mutex_init(&i2c->mtx, MTX_NOINT);
 	itask_queue_init(&i2c->master_cmds);
 	itask_queue_init(&i2c->slave_cmds);
 
-	if(ops->configure(i2c->cfg, ops->int_num != 0, ops->hw) != 0)
+	if(ops->configure(i2c->cfg, i2c->hw) != 0)
 		goto err_1;
 
 	ops->slave_mode(false, false, hw);
 
-	if(ops->int_num && int_register(ops->int_num, int_hdlr, i2c) != 0)
+	if(cfg->int_num && int_register(cfg->int_num, int_hdlr, i2c) != 0)
 		goto err_1;
 
 	return i2c;
@@ -70,8 +72,8 @@ err_0:
 }
 
 void i2c_destroy(i2c_t *i2c){
-	if(i2c->ops->int_num)
-		int_release(i2c->ops->int_num);
+	if(i2c->cfg->int_num)
+		int_release(i2c->cfg->int_num);
 
 	itask_queue_destroy(&i2c->master_cmds);
 	itask_queue_destroy(&i2c->slave_cmds);
@@ -112,7 +114,7 @@ static size_t rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, void *buf, size_t n){
 
 	linebuf_init(&dgram.data, buf, n, (cmd == I2C_CMD_WRITE) ? n : 0);
 
-	return (i2c->ops->int_num ? int_cmd(i2c, &dgram) : poll_cmd(i2c, &dgram));
+	return (i2c->cfg->int_num ? int_cmd(i2c, &dgram) : poll_cmd(i2c, &dgram));
 }
 
 static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
@@ -128,7 +130,7 @@ static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 		mutex_lock(&i2c->mtx);
 
 		r = op(i2c, dgram, state);
-		state = i2c->ops->state(i2c->ops->hw);
+		state = i2c->ops.state(i2c->hw);
 
 		mutex_unlock(&i2c->mtx);
 
@@ -145,7 +147,7 @@ static size_t int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 
 
 	queue = (i2c->cfg->mode == I2C_MODE_MASTER) ? &i2c->master_cmds : &i2c->slave_cmds;
-	itask_issue(queue, dgram, i2c->ops->int_num);
+	itask_issue(queue, dgram, i2c->cfg->int_num);
 
 	return linebuf_contains(&dgram->data);
 }
@@ -164,7 +166,7 @@ static void int_hdlr(int_num_t num, void *_i2c){
 	mutex_lock(&i2c->mtx);
 
 	/* identify dgram */
-	state = i2c->ops->state(i2c->ops->hw);
+	state = i2c->ops.state(i2c->hw);
 
 	master_cmd = (i2c->cfg->mode == I2C_MODE_MASTER && !(state & I2C_STATE_BIT_SLAVE));
 	cmds = master_cmd ? &i2c->master_cmds : &i2c->slave_cmds;
@@ -187,7 +189,7 @@ static void int_hdlr(int_num_t num, void *_i2c){
 	itask_complete(cmds, -r);
 
 	if(itask_query_data(&i2c->master_cmds, 0x0) || itask_query_data(&i2c->slave_cmds, 0x0))
-		int_foretell(i2c->ops->int_num);
+		int_foretell(i2c->cfg->int_num);
 
 unlock:
 	mutex_unlock(&i2c->mtx);
@@ -198,7 +200,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	i2c_ops_t *ops;
 
 
-	ops = i2c->ops;
+	ops = &i2c->ops;
 
 	switch(state){
 	/* master start */
@@ -208,13 +210,13 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		// fall through
 	case I2C_STATE_NEXT_CMD:
 		DEBUG("issue start\n");
-		ops->start(ops->hw);
+		ops->start(i2c->hw);
 		break;
 
 	case I2C_STATE_MST_START:
 	case I2C_STATE_MST_RESTART:
 		DEBUG("start (%#hhx)\n", state);
-		ops->slave_addr(dgram->cmd, dgram->slave, ops->hw);
+		ops->slave_addr(dgram->cmd, dgram->slave, i2c->hw);
 		break;
 
 	case I2C_STATE_MST_SLAW_NACK:
@@ -239,14 +241,14 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		linebuf_peek(&dgram->data, &c, 1);
 		DEBUG("sla-w (%#hhx): %#hhx\n", state, c);
 
-		ops->byte_write(c, true, ops->hw);
+		ops->byte_write(c, true, i2c->hw);
 		break;
 
 
 	/* master read */
 	case I2C_STATE_MST_SLAR_DATA_ACK:
 	case I2C_STATE_MST_SLAR_DATA_NACK:
-		c = ops->byte_read(ops->hw);
+		c = ops->byte_read(i2c->hw);
 		linebuf_write(&dgram->data, &c, 1);
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
@@ -256,7 +258,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		// fall through
 	case I2C_STATE_MST_SLAR_ACK:
 		DEBUG("sla-r (%#hhx)\n", state);
-		ops->ack((linebuf_left(&dgram->data) > 1), ops->hw);
+		ops->ack((linebuf_left(&dgram->data) > 1), i2c->hw);
 		break;
 
 
@@ -279,12 +281,12 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	i2c_ops_t *ops;
 
 
-	ops = i2c->ops;
+	ops = &i2c->ops;
 
 	switch(state){
 	case I2C_STATE_NEXT_CMD:
 		DEBUG("make addressable\n");
-		i2c->ops->slave_mode(true, false, ops->hw);
+		i2c->ops.slave_mode(true, false, i2c->hw);
 		break;
 
 	/* slave read */
@@ -292,7 +294,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_SLAW_DATA_NACK:
 	case I2C_STATE_SLA_BCAST_DATA_ACK:
 	case I2C_STATE_SLA_BCAST_DATA_NACK:
-		c = ops->byte_read(ops->hw);
+		c = ops->byte_read(i2c->hw);
 		linebuf_write(&dgram->data, &c, 1);
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
@@ -307,7 +309,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_SLAW_MATCH:
 	case I2C_STATE_SLA_BCAST_MATCH:
 		DEBUG("match (%#hhx)\n", state);
-		ops->ack(!(linebuf_full(&dgram->data)), ops->hw);
+		ops->ack(!(linebuf_full(&dgram->data)), i2c->hw);
 		break;
 
 
@@ -333,7 +335,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		linebuf_read(&dgram->data, &c, 1);
 		DEBUG("write (%#hhx): %#hhx\n", state, c);
 
-		ops->byte_write(c, (linebuf_contains(&dgram->data) == 0), ops->hw);
+		ops->byte_write(c, (linebuf_contains(&dgram->data) == 0), i2c->hw);
 		break;
 
 	case I2C_STATE_SLA_SLAW_STOP:
@@ -357,7 +359,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 static int complete(i2c_t *i2c, errno_t ecode, bool stop){
 	DEBUG("complete: %s, %sstop\n", strerror(ecode), (stop ? "" : "no "));
-	i2c->ops->slave_mode(false, stop, i2c->ops->hw);
+	i2c->ops.slave_mode(false, stop, i2c->hw);
 
 	return -ecode;
 }

@@ -8,12 +8,10 @@
 
 
 #include <arch/arch.h>
-#include <kernel/memory.h>
 #include <kernel/driver.h>
 #include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>
-#include <sys/i2c.h>
 
 
 /* macros */
@@ -58,12 +56,12 @@ typedef struct{
 	uint8_t volatile *prr;
 	uint8_t const prr_en;		// PRR device enable value (bit mask)
 
-	uint8_t const int_num;
+	i2c_cfg_t cfg;
 } dt_data_t;
 
 
 /* local/static prototypes */
-static int configure(i2c_cfg_t *cfg, bool int_en, void *hw);
+static int configure(i2c_cfg_t *cfg, void *hw);
 
 static i2c_state_t state(void *hw);
 static void start(void *hw);
@@ -79,34 +77,26 @@ static void byte_write(uint8_t c, bool ack, void *hw);
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd;
-	i2c_ops_t *prim;
+	i2c_ops_t ops;
 
 
 	dtd = (dt_data_t*)dt_data;
 
-	prim = kmalloc(sizeof(i2c_ops_t));
+	ops.configure = configure;
+	ops.state = state;
+	ops.start = start;
+	ops.ack = ack;
+	ops.slave_mode = slave_mode;
+	ops.slave_addr = slave_addr;
+	ops.byte_read = byte_read;
+	ops.byte_write = byte_write;
 
-	if(prim == 0x0)
-		return 0x0;
-
-	prim->configure = configure;
-	prim->state = state;
-	prim->start = start;
-	prim->ack = ack;
-	prim->slave_mode = slave_mode;
-	prim->slave_addr = slave_addr;
-	prim->byte_read = byte_read;
-	prim->byte_write = byte_write;
-
-	prim->int_num = dtd->int_num;
-	prim->hw = dt_data;
-
-	return prim;
+	return i2c_create(&ops, &dtd->cfg, dtd);
 }
 
 driver_probe("avr,i2c", probe);
 
-static int configure(i2c_cfg_t *cfg, bool int_en, void *hw){
+static int configure(i2c_cfg_t *cfg, void *hw){
 	uint8_t brate;
 	dt_data_t *dtd;
 	i2c_regs_t *regs;
@@ -121,7 +111,7 @@ static int configure(i2c_cfg_t *cfg, bool int_en, void *hw){
 		return_errno(E_LIMIT);
 
 	// only 7-bit addresses
-	if(cfg->host_addr & 0x80 || cfg->target_addr & 0x80)
+	if(cfg->addr & 0x80)
 		return_errno(E_LIMIT);
 
 	/* compute baud rate */
@@ -140,10 +130,10 @@ static int configure(i2c_cfg_t *cfg, bool int_en, void *hw){
 	regs->twsr = 0x0;
 	regs->twbr = brate;
 	regs->twamr = 0x0;
-	regs->twar = cfg->host_addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
+	regs->twar = cfg->addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
 	regs->twcr = (0x1 << TWCR_TWEN)
 			   | (0x0 << TWCR_TWEA)
-			   | ((int_en ? 0x1 : 0x0) << TWCR_TWIE)
+			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
 			   ;
 
 	return E_OK;
