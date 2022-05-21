@@ -12,11 +12,12 @@ obj-y := errno.o string.o memblock.o mutex.o list1.o list2.o vector.o devtree.o 
 
 obj-$(CONFIG_KERNEL_PRINTF) += stream.o
 obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
+obj-$(CONFIG_SYS_LINEBUFFER) += linebuf.o
 obj-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
 obj-$(CONFIG_KERNEL_NET) += inet.o
 
 # host
-hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o list1.o list2.o vector.o devtree.o devicetree.o patmat.o inet.o
+hostobj-y := errno.o string.o stream.o memblock.o ringbuf.o linebuf.o list1.o list2.o vector.o devtree.o devicetree.o patmat.o inet.o
 
 # libsys
 obj-nobuiltin-y := libsys.o
@@ -27,6 +28,7 @@ libsys-$(CONFIG_SC_DYNMEM) += memblock.o
 libsys-$(CONFIG_LIB_MUTEX) += mutex.o
 libsys-$(CONFIG_LIB_STREAM) += stream.o
 libsys-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
+libsys-$(CONFIG_SYS_LINEBUFFER) += linebuf.o
 libsys-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
 libsys-$(CONFIG_KERNEL_NET) += inet.o
 
