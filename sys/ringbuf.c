@@ -14,10 +14,7 @@
 
 /* global functions */
 void ringbuf_init(ringbuf_t *buf, void *data, size_t n){
-	buf->rd = n - 1;
-	buf->wr = 0;
-	buf->data = data;
-	buf->size = n;
+	*buf = RINGBUF_INITIALISER(data, n);
 }
 
 size_t ringbuf_read(ringbuf_t *buf, void *data, size_t n){

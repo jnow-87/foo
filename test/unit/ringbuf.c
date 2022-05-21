@@ -19,14 +19,13 @@
 
 
 /* static variables */
-ringbuf_t ring;
-char data[10];
-char readb[10];
+static ringbuf_t ring;
+static char data[10];
+static char readb[10];
 
 
 /* local functions */
 TEST(ringbuf_read){
-	size_t i;
 	int n;
 
 
@@ -37,7 +36,7 @@ TEST(ringbuf_read){
 
 	n += TEST_INT_EQ(WRITE("deadbeef"), 8);
 
-	n += TEST_INT_EQ(i = READ(2), 2);
+	n += TEST_INT_EQ(READ(2), 2);
 	n += TEST_STRN_EQ(readb, "de", 2);
 
 	/* read more than data are available */
@@ -45,18 +44,18 @@ TEST(ringbuf_read){
 
 	n += TEST_INT_EQ(WRITE("deadbeef"), 8);
 
-	n += TEST_INT_EQ(i = READ(100), 8);
+	n += TEST_INT_EQ(READ(100), 8);
 	n += TEST_STRN_EQ(readb, "deadbeef", 8);
 
 	/* read with wrap around the buffer end */
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("deadbeef01"), 9);
-	n += TEST_INT_EQ(i = READ(4), 4);
+	n += TEST_INT_EQ(READ(4), 4);
 	n += TEST_STRN_EQ(readb, "dead", 4);
 
 	n += TEST_INT_EQ(WRITE("2345"), 4);
-	n += TEST_INT_EQ(i = READ(10), 9);
+	n += TEST_INT_EQ(READ(10), 9);
 	n += TEST_STRN_EQ(readb, "beef02345", 9);
 
 	return -n;
@@ -64,7 +63,6 @@ TEST(ringbuf_read){
 
 TEST(ringbuf_write){
 	int n;
-	size_t i;
 
 
 	n = 0;
@@ -72,22 +70,22 @@ TEST(ringbuf_write){
 	/* normal write */
 	INIT();
 
-	n += TEST_INT_EQ(i = WRITE("deadbeef"), 8);
+	n += TEST_INT_EQ(WRITE("deadbeef"), 8);
 	n += TEST_STRN_EQ(ring.data, "deadbeef", 8);
 
 	/* write entire buffer */
 	INIT();
 
-	n += TEST_INT_EQ(i = WRITE("deadbeef01"), 9);
+	n += TEST_INT_EQ(WRITE("deadbeef01"), 9);
 	n += TEST_STRN_EQ(ring.data, "deadbeef0", 9);
 
 	/* write with wrap around the buffer end */
 	INIT();
 
-	n += TEST_INT_EQ(i = WRITE("deadbeef"), 8);
+	n += TEST_INT_EQ(WRITE("deadbeef"), 8);
 	n += TEST_STRN_EQ(ring.data, "deadbeef", 8);
-	n += TEST_INT_EQ(i = READ(2), 2);
-	n += TEST_INT_EQ(i = WRITE("0123"), 3);
+	n += TEST_INT_EQ(READ(2), 2);
+	n += TEST_INT_EQ(WRITE("0123"), 3);
 	n += TEST_STRN_EQ(ring.data, "2eadbeef01", 10);
 
 	return -n;

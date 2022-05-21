@@ -15,7 +15,7 @@
 
 
 /* macros */
-#define RINGBUF_INITIALISER(_data, _size){ \
+#define RINGBUF_INITIALISER(_data, _size) (ringbuf_t){ \
 	.rd = _size - 1, \
 	.wr = 0, \
 	.size = _size, \
