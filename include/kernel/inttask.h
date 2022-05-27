@@ -38,6 +38,7 @@ typedef struct{
 
 /* prototypes i*/
 void itask_queue_init(itask_queue_t *queue);
+void itask_queue_destroy(itask_queue_t *queue);
 
 int itask_issue(itask_queue_t *queue, void *data, int_num_t num);
 void itask_complete(itask_queue_t *queue, errno_t ecode);

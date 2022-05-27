@@ -23,6 +23,12 @@ void itask_queue_init(itask_queue_t *queue){
 	mutex_init(&queue->mtx, MTX_NOINT);
 }
 
+void itask_queue_destroy(itask_queue_t *queue){
+	while(itask_query_data(queue, 0x0)){
+		itask_complete(queue, E_END);
+	}
+}
+
 int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
 	bool is_first;
 	itask_t task;
