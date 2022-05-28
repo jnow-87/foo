@@ -55,6 +55,10 @@ menu "Hidden"
 		bool "Ring buffer"
 		default n
 
+	config SYS_LINEBUFFER
+		bool "Line buffer"
+		default n
+
 	config SYS_PATTERN_MATCH
 		bool "Pattern matching api"
 		default n

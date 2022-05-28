@@ -8,12 +8,10 @@
 
 
 #include <arch/arch.h>
-#include <kernel/memory.h>
 #include <kernel/driver.h>
 #include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>
-#include <sys/i2c.h>
 
 
 /* macros */
@@ -58,62 +56,53 @@ typedef struct{
 	uint8_t volatile *prr;
 	uint8_t const prr_en;		// PRR device enable value (bit mask)
 
-	uint8_t const int_num;
+	i2c_cfg_t cfg;
 } dt_data_t;
 
 
 /* local/static prototypes */
-static int configure(i2c_cfg_t *cfg, bool int_en, void *data);
+static int configure(i2c_cfg_t *cfg, void *hw);
 
-static i2c_state_t xstate(bool wait, void *data);
+static i2c_state_t state(void *hw);
+static void start(void *hw);
+static void ack(bool ack, void *hw);
 
-static void start(void *data);
+static void slave_mode(bool addressable, bool stop, void *hw);
+static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw);
 
-static void slave_mode_set(bool stop, bool int_en, void *data);
-static void slave_read_write(uint8_t remote, bool read, bool int_en, void *data);
-
-static void byte_request(bool ack, void *data);
-static uint8_t byte_read(void *data);
-static void byte_write(uint8_t c, bool ack, void *data);
+static uint8_t byte_read(void *hw);
+static void byte_write(uint8_t c, bool ack, void *hw);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd;
-	i2c_primitives_t *prim;
+	i2c_ops_t ops;
 
 
 	dtd = (dt_data_t*)dt_data;
 
-	prim = kmalloc(sizeof(i2c_primitives_t));
+	ops.configure = configure;
+	ops.state = state;
+	ops.start = start;
+	ops.ack = ack;
+	ops.slave_mode = slave_mode;
+	ops.slave_addr = slave_addr;
+	ops.byte_read = byte_read;
+	ops.byte_write = byte_write;
 
-	if(prim == 0x0)
-		return 0x0;
-
-	prim->configure = configure;
-	prim->state = xstate;
-	prim->start = start;
-	prim->slave_mode_set = slave_mode_set;
-	prim->slave_read_write = slave_read_write;
-	prim->byte_request = byte_request;
-	prim->byte_read = byte_read;
-	prim->byte_write = byte_write;
-
-	prim->int_num = dtd->int_num;
-	prim->data = dt_data;
-
-	return prim;
+	return i2c_create(&ops, &dtd->cfg, dtd);
 }
 
 driver_probe("avr,i2c", probe);
 
-static int configure(i2c_cfg_t *cfg, bool int_en, void *data){
+static int configure(i2c_cfg_t *cfg, void *hw){
 	uint8_t brate;
 	dt_data_t *dtd;
 	i2c_regs_t *regs;
 
 
-	dtd = (dt_data_t*)data;
+	dtd = (dt_data_t*)hw;
 	regs = dtd->regs;
 
 	/* check config */
@@ -122,7 +111,7 @@ static int configure(i2c_cfg_t *cfg, bool int_en, void *data){
 		return_errno(E_LIMIT);
 
 	// only 7-bit addresses
-	if(cfg->host_addr & 0x80 || cfg->target_addr & 0x80)
+	if(cfg->addr & 0x80)
 		return_errno(E_LIMIT);
 
 	/* compute baud rate */
@@ -141,32 +130,25 @@ static int configure(i2c_cfg_t *cfg, bool int_en, void *data){
 	regs->twsr = 0x0;
 	regs->twbr = brate;
 	regs->twamr = 0x0;
-	regs->twar = cfg->host_addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
+	regs->twar = cfg->addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
 	regs->twcr = (0x1 << TWCR_TWEN)
-			   | (0x1 << TWCR_TWEA)
-			   | ((int_en ? 0x1 : 0x0) << TWCR_TWIE)
+			   | (0x0 << TWCR_TWEA)
+			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
 			   ;
 
 	return E_OK;
 }
 
-static i2c_state_t xstate(bool wait, void *data){
-	uint8_t s;
+static i2c_state_t state(void *hw){
 	i2c_regs_t *regs;
 
 
-	regs = ((dt_data_t*)data)->regs;
+	regs = ((dt_data_t*)hw)->regs;
 
-	// wait for interrupt flag to be set
-	while(!(regs->twcr & (0x1 << TWCR_TWINT))){
-		if(!wait)
-			return I2C_STATE_MST_NOINT;
-	}
+	if((regs->twcr & (0x1 << TWCR_TWINT)) == 0)
+		return I2C_STATE_NONE;
 
-	// convert state
-	s = regs->twsr & ~(0x3 << TWSR_TWPS);
-
-	switch(s){
+	switch(regs->twsr & ~(0x3 << TWSR_TWPS)){
 	case 0x08:	return I2C_STATE_MST_START;
 	case 0x10:	return I2C_STATE_MST_RESTART;
 	case 0x18:	return I2C_STATE_MST_SLAW_ACK;
@@ -197,69 +179,59 @@ static i2c_state_t xstate(bool wait, void *data){
 	}
 }
 
-static void start(void *data){
+static void start(void *hw){
 	i2c_regs_t *regs;
 
 
-	regs = ((dt_data_t*)data)->regs;
-	regs->twcr |= (0x0 << TWCR_TWSTO)
-			   |  (0x1 << TWCR_TWSTA)
+	regs = ((dt_data_t*)hw)->regs;
+
+	regs->twcr |= (0x1 << TWCR_TWSTA)
 			   |  (0x1 << TWCR_TWINT)
 			   ;
 }
 
-static void slave_mode_set(bool stop, bool int_en, void *data){
+static void ack(bool ack, void *hw){
 	i2c_regs_t *regs;
 
 
-	regs = ((dt_data_t*)data)->regs;
+	regs = ((dt_data_t*)hw)->regs;
 
-	regs->twcr = (((int_en) ? 0x1 : 0x0) << TWCR_TWIE)
-			   | (0x1 << TWCR_TWEA)
+	regs->twcr &= ~(0x1 << TWCR_TWEA);
+	regs->twcr |= ((ack ? 0x1 : 0x0) << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+}
+
+static void slave_mode(bool addressable, bool stop, void *hw){
+	i2c_regs_t *regs;
+
+
+	regs = ((dt_data_t*)hw)->regs;
+
+	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
+			   | ((addressable ? 0x1 : 0x0) << TWCR_TWEA)
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)
-			   | (((stop) ? 0x1 : 0x0)  << TWCR_TWSTO)
+			   | ((stop ? 0x1 : 0x0)  << TWCR_TWSTO)
 			   ;
 }
 
-static void slave_read_write(uint8_t remote, bool read, bool int_en, void *data){
+static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw){
 	i2c_regs_t *regs;
 
 
-	regs = ((dt_data_t*)data)->regs;
+	regs = ((dt_data_t*)hw)->regs;
 
-	regs->twdr = (remote << TWDR_ADDR)
-			   | ((read ? 0x1 : 0x0) << TWDR_RW)
-			   ;
-
-	regs->twcr = ((int_en ? 0x1 : 0x0) << TWCR_TWIE)
+	regs->twdr = (slave << TWDR_ADDR) | (((cmd & I2C_CMD_READ) ? 0x1 : 0x0) << TWDR_RW);
+	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)
 			   ;
 }
 
-static void byte_request(bool ack, void *data){
-	i2c_regs_t *regs;
-
-
-	regs = ((dt_data_t*)data)->regs;
-
-	if(ack)	regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
-	else	regs->twcr = (regs->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
+static uint8_t byte_read(void *hw){
+	return ((dt_data_t*)hw)->regs->twdr;
 }
 
-static uint8_t byte_read(void *data){
-	return ((dt_data_t*)data)->regs->twdr;
-}
-
-static void byte_write(uint8_t c, bool ack, void *data){
-	i2c_regs_t *regs;
-
-
-	regs = ((dt_data_t*)data)->regs;
-
-	regs->twdr = c;
-
-	if(ack)	regs->twcr |= (0x1 << TWCR_TWEA) | (0x1 << TWCR_TWINT);
-	else	regs->twcr = (regs->twcr & ~(0x1 << TWCR_TWEA)) | (0x1 << TWCR_TWINT);
+static void byte_write(uint8_t c, bool last, void *hw){
+	((dt_data_t*)hw)->regs->twdr = c;
+	ack(!last, hw);
 }

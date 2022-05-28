@@ -11,6 +11,8 @@ obj-y := interactive.o non-interactive.o
 hostobj-y := $(obj-y)
 
 interactive-y := itty.o gpioint.o exit.o
+interactive-$(CONFIG_DRIVER_I2C) += i2c.o
+
 non-interactive-y := close.o thread.o stat.o signal.o tty.o sleep.o time.o
 non-interactive-$(if $(CONFIG_X86),n,y) += sigthread.o kill.o
 

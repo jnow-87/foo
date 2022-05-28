@@ -14,6 +14,7 @@
 #include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <sys/mutex.h>
 #include <sys/ioctl.h>
 #include <sys/i2c.h>
 #include <sys/string.h>
@@ -21,31 +22,34 @@
 
 /* types */
 typedef struct{
-	i2c_primitives_t *prim;
-	i2c_cfg_t *cfg;
-} i2c_t;
+	uint8_t slave;
+} dt_data_t;
+
+typedef struct{
+	i2c_t *i2c;
+	dt_data_t *cfg;
+} dev_data_t;
 
 
 /* local/static prototypes */
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	dev_data_t *data;
 	devfs_ops_t ops;
-	i2c_t *i2c;
 
 
-	/* allocate eeprom */
-	i2c = kmalloc(sizeof(i2c_t));
+	data = kmalloc(sizeof(dev_data_t));
 
-	if(i2c == 0x0)
-		goto err_0;
+	if(data == 0x0)
+		goto err;
 
-	i2c->prim = dt_itf;
-	i2c->cfg = dt_data;
+	data->i2c = dt_itf;
+	data->cfg = dt_data;
 
 	/* register device */
 	ops.open = 0x0;
@@ -54,61 +58,58 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.write = write;
 	ops.ioctl = ioctl;
 
-	if(devfs_dev_register(name, &ops, i2c) == 0x0)
-		goto err_1;
+	(void)devfs_dev_register(name, &ops, data);
 
 	return 0x0;
 
 
-err_1:
-	kfree(i2c);
-
-err_0:
+err:
 	return 0x0;
 }
 
-driver_probe("i2c,poll", probe);
+driver_probe("i2c", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	i2c_cfg_t *cfg;
-	i2c_primitives_t *prim;
+	size_t r;
+	dev_data_t *data;
 
 
-	cfg = ((i2c_t*)dev->data)->cfg;
-	prim = ((i2c_t*)dev->data)->prim;
+	data = (dev_data_t*)dev->data;
 
-	if(cfg->mode == I2C_MODE_SLAVE)	return i2c_slave_read(buf, n, prim);
-	else							return i2c_master_read(cfg->target_addr, buf, n, prim);
+	mutex_unlock(&dev->node->mtx);
+	r = i2c_read(data->i2c, data->cfg->slave, buf, n);
+	mutex_lock(&dev->node->mtx);
+
+	return r;
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	i2c_cfg_t *cfg;
-	i2c_primitives_t *prim;
+	size_t r;
+	dev_data_t *data;
 
 
-	cfg = ((i2c_t*)dev->data)->cfg;
-	prim = ((i2c_t*)dev->data)->prim;
+	data = (dev_data_t*)dev->data;
 
-	if(cfg->mode == I2C_MODE_SLAVE)	return i2c_slave_write(buf, n, prim);
-	else							return i2c_master_write(cfg->target_addr, buf, n, prim);
+	mutex_unlock(&dev->node->mtx);
+	r = i2c_write(data->i2c, data->cfg->slave, buf, n);
+	mutex_lock(&dev->node->mtx);
+
+	return r;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
-	i2c_t *i2c;
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf){
+	dev_data_t *data;
 
 
-	i2c = (i2c_t*)dev->data;
+	data = (dev_data_t*)dev->data;
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, i2c->cfg, sizeof(i2c_cfg_t));
+		memcpy(buf, data->cfg, sizeof(dt_data_t));
 		break;
 
 	case IOCTL_CFGWR:
-		if(i2c->prim->configure(data, false, i2c->prim->data) != E_OK)
-			goto err;
-
-		memcpy(i2c->cfg, data, sizeof(i2c_cfg_t));
+		memcpy(data->cfg, buf, sizeof(dt_data_t));
 		break;
 
 	default:

@@ -11,16 +11,18 @@
 #define DRIVER_I2C_H
 
 
-#include <config/config.h>
-#include <kernel/interrupt.h>
 #include <kernel/inttask.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
-#include <sys/i2c.h>
-#include <sys/ringbuf.h>
+#include <sys/linebuf.h>
 
 
 /* types */
+typedef enum{
+	I2C_MODE_MASTER = 1,
+	I2C_MODE_SLAVE
+} i2c_mode_t;
+
 typedef enum{
 	// state sections bits
 	I2C_STATE_BIT_SPECIAL = 0x20,
@@ -28,14 +30,13 @@ typedef enum{
 	I2C_STATE_BIT_SLAVE = 0x80,
 
 	// special states
-	I2C_STATE_ERROR = I2C_STATE_BIT_SPECIAL | 0x01,
+	I2C_STATE_NEXT_CMD = I2C_STATE_BIT_SPECIAL | 0x01,
+	I2C_STATE_ERROR,
 	I2C_STATE_INVAL,
 	I2C_STATE_NONE,
 
 	// master mode states
-	I2C_STATE_MST_NEXT_CMD = I2C_STATE_BIT_MASTER | 0x01,
-	I2C_STATE_MST_NOINT,
-	I2C_STATE_MST_START,
+	I2C_STATE_MST_START = I2C_STATE_BIT_MASTER | 0x01,
 	I2C_STATE_MST_RESTART,
 
 	I2C_STATE_MST_SLAW_ACK,
@@ -71,53 +72,64 @@ typedef enum{
 } i2c_state_t;
 
 typedef enum{
-	I2C_CMD_SLAVE = 0x1,
-	I2C_CMD_MASTER = 0x2,
-	I2C_CMD_READ = 0x4,
-	I2C_CMD_WRITE = 0x8,
+	I2C_CMD_READ = 1,
+	I2C_CMD_WRITE,
 } i2c_cmd_t;
 
 typedef struct{
-	itask_queue_t master_cmds,
-				  slave_cmds;
-	ringbuf_t rx_buf;
+	i2c_cmd_t cmd;
+	uint8_t slave;
 
-	mutex_t mtx;
-} i2c_int_data_t;
+	linebuf_t data;
+} i2c_dgram_t;
 
 typedef struct{
-	int (*configure)(i2c_cfg_t *cfg, bool int_en, void *data);
+	/**
+	 * NOTE fixed-size types are used to allow
+	 * 		using this type with the device tree
+	 */
 
-	i2c_state_t (*state)(bool wait, void *data);
+	uint8_t mode;		/**< cf. i2c_mode_t */
+	uint16_t clock_khz;
 
-	void (*start)(void *data);
+	uint8_t bcast_en;
+	uint8_t addr;
 
-	void (*slave_mode_set)(bool stop, bool int_en, void *data);
-	void (*slave_read_write)(uint8_t remote, bool read, bool int_en, void *data);
+	uint8_t int_num;
+} i2c_cfg_t;
 
-	void (*byte_request)(bool ack, void *data);
-	uint8_t (*byte_read)(void *data);
-	void (*byte_write)(uint8_t c, bool ack, void *data);
+typedef struct{
+	int (*configure)(i2c_cfg_t *cfg, void *hw);
 
-	int_num_t int_num;
+	i2c_state_t (*state)(void *hw);
+	void (*start)(void *hw);
+	void (*ack)(bool ack, void *hw);
 
-	void *data;
-} i2c_primitives_t;
+	void (*slave_mode)(bool addressable, bool stop, void *hw);
+	void (*slave_addr)(i2c_cmd_t cmd, uint8_t slave, void *hw);
+
+	uint8_t (*byte_read)(void *hw);
+	void (*byte_write)(uint8_t c, bool last, void *hw);
+} i2c_ops_t;
+
+typedef struct i2c_t{
+	i2c_cfg_t *cfg;
+	i2c_ops_t ops;
+	void *hw;
+
+	itask_queue_t master_cmds,
+				  slave_cmds;
+
+	mutex_t mtx;
+} i2c_t;
 
 
 /* prototypes */
-#ifdef CONFIG_I2C_PROTO_POLL
-size_t i2c_master_read(uint8_t remote, uint8_t *buf, size_t n, i2c_primitives_t *prim);
-size_t i2c_master_write(uint8_t remote, uint8_t *buf, size_t n, i2c_primitives_t *prim);
-size_t i2c_slave_read(uint8_t *buf, size_t n, i2c_primitives_t *prim);
-size_t i2c_slave_write(uint8_t *buf, size_t n, i2c_primitives_t *prim);
-#endif // CONFIG_I2C_PROTO_POLL
+i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw);
+void i2c_destroy(i2c_t *i2c);
 
-#ifdef CONFIG_I2C_PROTO_INT
-int i2c_int_data_init(i2c_int_data_t *data);
-size_t i2c_int_cmd(i2c_cmd_t cmd, i2c_int_data_t *data, uint8_t remote, void *buf, size_t n, i2c_primitives_t *prim);
-void i2c_int_hdlr(i2c_int_data_t *data, i2c_primitives_t *prim);
-#endif // CONFIG_I2C_PROTO_INT
+size_t i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
+size_t i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
 
 
 #endif // DRIVER_I2C_H
