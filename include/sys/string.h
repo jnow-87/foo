@@ -19,6 +19,9 @@
 #define strncpy(d, s, n)	(char*)memcpy(d, s, n)
 #define strncmp(d, s, n)	memcmp(d, s, n)
 
+#define callbacks_set(p, type) \
+	(memnscan(p, (int (*[])()){ 0x0 }, sizeof(type) / sizeof(int (*)()), sizeof(int (*)())) == 0x0)
+
 
 /* prototypes */
 char *strcpy(char *dest, char const *src);
