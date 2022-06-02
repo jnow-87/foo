@@ -28,8 +28,8 @@ static int16_t write_int(bridge_t *brdg, void *data, uint8_t n);
 static int16_t poll(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type);
 
 static void int_hdlr(int_num_t num, void *brdg);
-static int_num_t int_rx(bridge_t *brdg, bridge_dgram_t *dgram);
-static int_num_t int_tx(bridge_t *brdg, bridge_dgram_t *dgram);
+static int int_rx(bridge_t *brdg, bridge_dgram_t *dgram);
+static int int_tx(bridge_t *brdg, bridge_dgram_t *dgram);
 
 static bridge_dgram_t *dgram_select(bridge_t *brdg, int_num_t num);
 
@@ -223,24 +223,29 @@ static void int_hdlr(int_num_t num, void *_brdg){
 
 	dgram = dgram_select(brdg, num);
 
-	if(dgram != 0x0){
-		cplt_int = (dgram->type == DT_READ) ? int_rx(brdg, dgram) : int_tx(brdg, dgram);
+	if(dgram == 0x0)
+		goto unlock;
 
-		/* transfer complete */
-		if(cplt_int){
-			// notify bridge peer
-			int_foretell(cplt_int);
+	/* handle interrupt */
+	if((dgram->type == DT_READ) ? int_rx(brdg, dgram) : int_tx(brdg, dgram) != 0)
+		goto unlock;
 
-			// trigger next tx
-			if(!list_empty(brdg->tx_dgrams))
-				int_foretell(brdg->cfg->tx_int);
-		}
-	}
+	/* transfer complete */
+	cplt_int = (dgram->type == DT_READ) ? brdg->peer->cfg->rx_int : brdg->peer->cfg->tx_int;
 
+	// notify bridge peer
+	if(cplt_int)
+		int_foretell(cplt_int);
+
+	// trigger next tx
+	if(!list_empty(brdg->tx_dgrams))
+		int_foretell(brdg->cfg->tx_int);
+
+unlock:
 	mutex_unlock(&brdg->mtx);
 }
 
-static int_num_t int_rx(bridge_t *brdg, bridge_dgram_t *dgram){
+static int int_rx(bridge_t *brdg, bridge_dgram_t *dgram){
 	/* protocol action */
 	dgram->state = dgram_read(dgram, brdg);
 
@@ -249,30 +254,27 @@ static int_num_t int_rx(bridge_t *brdg, bridge_dgram_t *dgram){
 		if(dgram->state == DS_ERROR)
 			dgram_free(dgram, brdg);
 
-		return 0;
+		return 1;
 	}
 
 	/* transfer complete */
 	dgram->offset = 0;
 
-	return brdg->peer->cfg->rx_int;
+	return 0;
 }
 
-static int_num_t int_tx(bridge_t *brdg, bridge_dgram_t *dgram){
+static int int_tx(bridge_t *brdg, bridge_dgram_t *dgram){
 	/* protocol action */
 	dgram->state = dgram_write(dgram, brdg);
 
 	/* error handling */
 	if(dgram->state != DS_ERROR && dgram->state != DS_COMPLETE)
-		return 0;
+		return 1;
 
 	if(dgram->state == DS_ERROR){
 		// trigger retry
-		if(dgram_init_retry(dgram) == 0){
-			int_foretell(brdg->cfg->tx_int);
-
+		if(dgram_init_retry(dgram) == 0)
 			return 0;
-		}
 
 		brdg->errno = dgram_errno(dgram);
 	}
@@ -280,7 +282,7 @@ static int_num_t int_tx(bridge_t *brdg, bridge_dgram_t *dgram){
 	/* transfer complete */
 	dgram_free(dgram, brdg);
 
-	return brdg->peer->cfg->tx_int;
+	return 0;
 }
 
 static bridge_dgram_t *dgram_select(bridge_t *brdg, int_num_t num){
