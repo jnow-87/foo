@@ -21,9 +21,11 @@
 
 
 /* local/static prototypes */
+static int16_t rw(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type);
+
 static int16_t read_int(bridge_t *brdg, void *data, uint8_t n);
-static int16_t write_int(bridge_t *brdg, void const *data, uint8_t n);
-static int16_t poll(bridge_t *brdg, void const *data, uint8_t n, bridge_dgram_type_t type);
+static int16_t write_int(bridge_t *brdg, void *data, uint8_t n);
+static int16_t poll(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type);
 
 static void int_hdlr(int_num_t num, void *brdg);
 static int_num_t int_rx(bridge_t *brdg, bridge_dgram_t *dgram);
@@ -115,15 +117,26 @@ void bridge_destroy(bridge_t *brdg){
 }
 
 int16_t bridge_read(bridge_t *brdg, void *data, uint8_t n){
-	return brdg->cfg->rx_int ? read_int(brdg, data, n) : poll(brdg, data, n, DT_READ);
+	return rw(brdg, data, n, DT_READ);
 }
 
-int16_t bridge_write(bridge_t *brdg, void const *data, uint8_t n){
-	return brdg->cfg->tx_int ? write_int(brdg, data, n) : poll(brdg, data, n, DT_WRITE);
+int16_t bridge_write(bridge_t *brdg, void *data, uint8_t n){
+	return rw(brdg, data, n, DT_WRITE);
 }
 
 
 /* local functions */
+static int16_t rw(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type){
+	bridge_t *peer;
+
+
+	peer = brdg->peer;
+
+	if(type == DT_READ && peer->cfg->rx_int)		return read_int(peer, data, n);
+	else if(type == DT_WRITE && peer->cfg->tx_int)	return write_int(peer, data, n);
+	else											return poll(peer, data, n, type);
+}
+
 static int16_t read_int(bridge_t *brdg, void *data, uint8_t n){
 	uint8_t i,
 			x;
@@ -152,7 +165,7 @@ static int16_t read_int(bridge_t *brdg, void *data, uint8_t n){
 	return i;
 }
 
-static int16_t write_int(bridge_t *brdg, void const *data, uint8_t n){
+static int16_t write_int(bridge_t *brdg, void *data, uint8_t n){
 	bridge_dgram_t *dgram;
 
 
@@ -168,14 +181,14 @@ static int16_t write_int(bridge_t *brdg, void const *data, uint8_t n){
 	return (dgram == 0x0) ? -1 : n;
 }
 
-static int16_t poll(bridge_t *brdg, void const *data, uint8_t n, bridge_dgram_type_t type){
+static int16_t poll(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type){
 	bridge_dgram_t dgram;
 	bridge_dgram_state_t s;
 	bridge_dgram_state_t (*op)(bridge_dgram_t *, bridge_t *);
 
 
 	op = (type == DT_WRITE) ? dgram_write : dgram_read;
-	dgram_init(&dgram, type, (void*)data, n, brdg);
+	dgram_init(&dgram, type, data, n, brdg);
 
 	while(1){
 		mutex_lock(&brdg->mtx);
