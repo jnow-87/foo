@@ -14,8 +14,34 @@ menuconfig DRIVER_BRIDGE
 	select SYS_RINGBUFFER
 
 if DRIVER_BRIDGE
-	config BRIDGE_UART
+	menuconfig BRIDGE_UART
 		bool "UART bridge"
+
+	if BRIDGE_UART
+		config BRIDGE_UART_DEV
+			bool "UART bridge device"
+
+		config BRIDGE_UART_ITF
+			bool "UART bridge interface"
+	endif # BRIDGE_UART
+
+	menuconfig BRIDGE_I2C
+		bool "i2c bridge"
+		select DRIVER_I2C
+
+	if BRIDGE_I2C
+		config BRIDGE_I2C_DEV
+			bool "i2c bridge device"
+
+		config BRIDGE_I2C_ITF
+			bool "i2c bridge interface"
+
+		config BRIDGE_I2C_INLINE_DATA
+			int "i2c bridge inline data [bytes]"
+			range 1 128
+			default 8
+			depends on BRIDGE_I2C
+	endif # BRIDGE_I2C
 
 	config BRIDGE_RETRY_LIMIT
 		int "Number of tolerated errors before aborting a transmission"
