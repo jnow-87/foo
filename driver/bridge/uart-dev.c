@@ -29,17 +29,13 @@ static errno_t error(void *brdg);
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	bridge_t *brdg;
-	bridge_ops_t ops;
 	bridge_cfg_t *dtd;
 	term_itf_t *itf;
 
 
 	dtd = (bridge_cfg_t*)dt_data;
 
-	ops.readb = 0x0;
-	ops.writeb = 0x0;
-
-	brdg = bridge_create(dtd, &ops, 0x0);
+	brdg = bridge_create(dtd, 0x0, 0x0);
 
 	if(brdg == 0x0)
 		goto err_0;

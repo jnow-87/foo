@@ -51,15 +51,18 @@ bridge_t *bridge_create(bridge_cfg_t *cfg, bridge_ops_t *ops, void *hw){
 		goto err_0;
 
 	brdg->cfg = cfg;
-	brdg->ops = *ops;
 	brdg->hw = hw;
+
 	mutex_init(&brdg->mtx, MTX_NOINT);
 
+	if(ops != 0x0)
+		brdg->ops = *ops;
+
 	/* init interrupts */
-	if(hw && cfg->rx_int && int_register(cfg->rx_int, int_hdlr, brdg) != 0)
+	if(ops && cfg->rx_int && int_register(cfg->rx_int, int_hdlr, brdg) != 0)
 		goto err_1;
 
-	if(hw && cfg->tx_int && int_register(cfg->tx_int, int_hdlr, brdg) != 0)
+	if(ops && cfg->tx_int && int_register(cfg->tx_int, int_hdlr, brdg) != 0)
 		goto err_1;
 
 	/* link bridge peers */
@@ -131,6 +134,9 @@ static int16_t rw(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t typ
 
 
 	peer = brdg->peer;
+
+	if(!callbacks_set(&peer->ops, bridge_ops_t))
+		return_errno(E_NOIMP);
 
 	if(type == DT_READ && peer->cfg->rx_int)		return read_int(peer, data, n);
 	else if(type == DT_WRITE && peer->cfg->tx_int)	return write_int(peer, data, n);
