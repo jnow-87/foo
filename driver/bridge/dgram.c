@@ -23,10 +23,10 @@
 #define CTRLBYTE(brdg)			((brdg)->cfg->chunksize)
 #define CHUNKSIZE(dgram, brdg)	(MIN((brdg)->cfg->chunksize, (dgram)->len - (dgram)->offset))
 
-#ifdef CONFIG_BRIDGE_DEBUG
-# define BRDG_DEBUG(dgram, fmt, ...)	DEBUG("%s: " fmt, dgram_state(dgram), ##__VA_ARGS__)
+#ifdef CONFIG_BRIDGE_DEBUG_PROTOCOL
+# define PROTO_DEBUG(dgram, fmt, ...)	DEBUG("%s: " fmt, dgram_state(dgram), ##__VA_ARGS__)
 #else
-# define BRDG_DEBUG(dgram, fmt, ...)	{}
+# define PROTO_DEBUG(dgram, fmt, ...)	{}
 #endif // CONFIG_BRIDGE_DEBUG
 
 
@@ -49,10 +49,10 @@ static uint8_t checksum(uint8_t const *data, size_t n);
 
 static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t ecode);
 
-#ifdef CONFIG_BRIDGE_DEBUG
+#ifdef CONFIG_BRIDGE_DEBUG_PROTOCOL
 static char const *dgram_state(bridge_dgram_t *dgram);
 static char const *dgram_error(bridge_dgram_t *dgram);
-#endif // CONFIG_BRIDGE_DEBUG
+#endif // CONFIG_BRIDGE_DEBUG_PROTOCOL
 
 
 /* global functions */
@@ -262,7 +262,7 @@ static int rx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t *byte){
 
 	set_errno(E_OK);
 
-	BRDG_DEBUG(dgram, "read %#hhx/~%#hhx\n", *byte, ~(*byte));
+	PROTO_DEBUG(dgram, "read %#hhx/~%#hhx\n", *byte, ~(*byte));
 
 	return 0;
 }
@@ -282,7 +282,7 @@ static bridge_dgram_state_t rx_payload(bridge_t *brdg, bridge_dgram_t *dgram, ui
 }
 
 static bridge_dgram_state_t tx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_state_t next){
-	BRDG_DEBUG(dgram, "write %#hhx/~%#hhx\n", byte, ~byte);
+	PROTO_DEBUG(dgram, "write %#hhx/~%#hhx\n", byte, ~byte);
 
 	if(brdg->ops.writeb(byte, brdg->hw) != 0)
 		return seterr(dgram, DE_TX);
@@ -309,7 +309,7 @@ static bridge_dgram_state_t tx_payload(bridge_t *brdg, bridge_dgram_t *dgram){
 
 static bridge_dgram_state_t hdrcmp(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, uint8_t ref, bridge_dgram_state_t next){
 	if(byte != ref){
-		BRDG_DEBUG(dgram, "header byte mismatch, expected %#hhx\n", ref);
+		PROTO_DEBUG(dgram, "header byte mismatch, expected %#hhx\n", ref);
 
 		return nack(brdg, dgram, byte, DE_HDRBYTE);
 	}
@@ -319,14 +319,14 @@ static bridge_dgram_state_t hdrcmp(bridge_t *brdg, bridge_dgram_t *dgram, uint8_
 
 static bridge_dgram_state_t ack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_state_t next){
 	if(next != DS_ERROR)
-		BRDG_DEBUG(dgram, "ack byte %#hhx\n", byte);
+		PROTO_DEBUG(dgram, "ack byte %#hhx\n", byte);
 
 	return tx(brdg, dgram, ~byte, next);
 }
 
 static bridge_dgram_state_t nack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_error_t ecode){
 	seterr(dgram, ecode);
-	BRDG_DEBUG(dgram, "nack byte %#hhx\n", byte);
+	PROTO_DEBUG(dgram, "nack byte %#hhx\n", byte);
 
 	return ack(brdg, dgram, ~byte, DS_ERROR);
 }
@@ -338,7 +338,7 @@ static int ackcmp(bridge_dgram_t *dgram, uint8_t byte, uint8_t ref){
 		return -1;
 	}
 
-	BRDG_DEBUG(dgram, "ack byte ok\n");
+	PROTO_DEBUG(dgram, "ack byte ok\n");
 
 	return 0;
 }
@@ -360,12 +360,12 @@ static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t e
 	dgram->estate = dgram->state;
 	dgram->ecode = ecode;
 
-	BRDG_DEBUG(dgram, "%s\n", dgram_error(dgram));
+	PROTO_DEBUG(dgram, "%s\n", dgram_error(dgram));
 
 	return DS_ERROR;
 }
 
-#ifdef CONFIG_BRIDGE_DEBUG
+#ifdef CONFIG_BRIDGE_DEBUG_PROTOCOL
 static char const *dgram_state(bridge_dgram_t *dgram){
 	return (char const *[]){
 		"INVALID",
@@ -387,9 +387,9 @@ static char const *dgram_state(bridge_dgram_t *dgram){
 		"VERIFY-ACK",
 	}[dgram->state >> 2];
 }
-#endif // CONFIG_BRIDGE_DEBUG
+#endif // CONFIG_BRIDGE_DEBUG_PROTOCOL
 
-#ifdef CONFIG_BRIDGE_DEBUG
+#ifdef CONFIG_BRIDGE_DEBUG_PROTOCOL
 static char const *dgram_error(bridge_dgram_t *dgram){
 	return (char const *[]){
 		"none",
@@ -401,4 +401,4 @@ static char const *dgram_error(bridge_dgram_t *dgram){
 		"out of memory",
 	}[dgram->ecode];
 }
-#endif // CONFIG_BRIDGE_DEBUG
+#endif // CONFIG_BRIDGE_DEBUG_PROTOCOL
