@@ -258,9 +258,9 @@ static int rx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t *byte){
 	while(brdg->ops.readb(byte, brdg->hw) != 0){
 		if(errno != E_AGAIN)
 			return -1;
-	}
 
-	set_errno(E_OK);
+		set_errno(E_OK);
+	}
 
 	PROTO_DEBUG(dgram, "read %#hhx/~%#hhx\n", *byte, ~(*byte));
 
