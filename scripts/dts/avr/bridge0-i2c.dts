@@ -1,0 +1,49 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+i2c0 = {
+	compatible = "avr,i2c";
+
+	/**
+	 * i2c hardware description
+	 * 	has to match dt_data_t of the avr i2c driver
+	 */
+	baseaddr = 0xb8;
+
+	reg = [ 0x64 ];				// PRRO
+	int<8> = [ 0x80 ];			// PRR0_PRTWI
+
+	/**
+	 * i2c configuration
+	 * 	has to match i2c_cfg_t
+	 */
+	int<8> = [ 1 ];			// mode (master)
+	int<16> = [ 100 ];		// clock (100kHz)
+	int<8> = [
+	   1,					// broadcast (enabled)
+	   1,					// address
+	   0					// interrupt number
+	];
+
+	brdg0-right = {
+		compatible = "bridge,i2c-itf";
+
+		/**
+		 * bridge hardware description
+		 *	has to match bridge_cfg_t
+		 */
+		// bridge config
+		int<8> = [
+			0,					// id
+			2,					// chunksize
+			37,					// rx interrupt
+			38					// tx interrupt
+		];
+	};
+};

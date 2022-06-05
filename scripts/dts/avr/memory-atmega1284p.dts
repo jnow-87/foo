@@ -1,0 +1,58 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+flash = {
+	baseaddr = 0x0;
+	size = 131072;
+
+	kernel-flash = {
+		baseaddr = 0x0;
+		size = 49152;
+	};
+
+	app-flash = {
+		baseaddr = 0x0000c000;
+		size = 81920;
+	};
+};
+
+ram = {
+	baseaddr = 0x00800000;
+	size = 16640;
+
+	registers = {
+		baseaddr = 0x00800000;
+		size = 256;
+	};
+
+	kernel-data = {
+		baseaddr = 0x00800100;
+		size = 4864;
+	};
+
+	kernel-heap = {
+		baseaddr = 0x00801400;
+		size = 2560;
+	};
+
+	kernel-stack = {
+		baseaddr = 0x00801e00;
+		size = 768;
+	};
+
+	app-heap = {
+		baseaddr = 0x00802100;
+		size = 2560;
+	};
+
+	app-data = {
+		baseaddr = 0x00802b00;
+		size = 5632;
+	};
+};

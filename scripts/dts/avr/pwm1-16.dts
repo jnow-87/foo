@@ -1,0 +1,30 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+pwm1 = {
+	compatible = "avr,pwm16";
+
+	/**
+	 * pwm hardware description
+	 * 	has to match dt_data_t of the avr 16-bit pwm driver
+	 */
+	baseaddr = 0x80;			// tcc1 config register base
+
+	reg = [
+		0x36,					// TIFR1
+		0x6f					// TIMSK1
+	];
+
+	reg = [ 0x64 ];				// PRR0
+	int<8> = [ 0x08 ];			// PRR0_PRTIM1
+
+	reg = [ 0x2a ];				// DDRD
+	int<8> = [ 0x30 ];			// DDRD bits 4..5
+
+};

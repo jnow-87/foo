@@ -1,0 +1,74 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+pa0 = {
+	compatible = "avr,gpio";
+
+	/**
+	 * gpio hardware description
+	 * 	has to match dt_data_t of the avr gpio driver
+	 */
+	baseaddr = 0x20;			// porta
+
+	reg = [
+		0x0,					// PCICR
+		0x0						// PCMASK
+	];
+
+	int<8> = [ 0 ];				// pcint number
+
+	int<8> = [
+		0x1,					// direction (in)
+		0x1						// pin mask
+	];
+};
+
+pa1 = {
+	compatible = "avr,gpio";
+
+	/**
+	 * gpio hardware description
+	 * 	has to match dt_data_t of the avr gpio driver
+	 */
+	baseaddr = 0x20;			// porta
+
+	reg = [
+		0x0,					// PCICR
+		0x0						// PCMSK
+	];
+
+	int<8> = [ 0 ] ;			// pcint number
+
+	int<8> = [
+		0x3,					// direction (in/out)
+		0x2						// pin mask
+	];
+};
+
+int0 = {
+	compatible = "avr,gpio";
+
+	/**
+	 * gpio hardware description
+	 * 	has to match dt_data_t of the avr gpio driver
+	 */
+	baseaddr = 0x20;			// porta
+
+	reg = [
+		0x68,					// PCICR
+		0x6b					// PCMSK
+	];
+
+	int<8> = [ 2 ];				// pcint number
+
+	int<8> = [
+		0x3,					// direction (in/out)
+		0x4						// pin mask
+	];
+};

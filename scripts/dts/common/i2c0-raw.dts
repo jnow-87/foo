@@ -1,0 +1,18 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+i2c-raw0 = {
+	compatible = "i2c";
+
+	/**
+	 * i2c devfs dev config
+	 *	has to match i2c_dev_cfg_t
+	 */
+	 int<8> = [ 0 ];	// slave address
+};

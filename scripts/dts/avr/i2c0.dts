@@ -1,0 +1,40 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#include <config/config.h>
+
+
+i2c0 = {
+	compatible = "avr,i2c";
+
+	/**
+	 * i2c hardware description
+	 * 	has to match dt_data_t of the avr i2c driver
+	 */
+	baseaddr = 0xb8;
+
+	reg = [ 0x64 ];				// PRRO
+	int<8> = [ 0x80 ];			// PRR0_PRTWI
+
+	/**
+	 * i2c configuration
+	 * 	has to match i2c_cfg_t
+	 */
+	int<8> = [ 1 ];			// mode (master)
+	int<16> = [ 100 ];		// clock (100kHz)
+	int<8> = [
+	   1,					// broadcast (enabled)
+	   1,					// address
+	   26					// interrupt number
+	];
+
+#ifdef CONFIG_I2C_DEVFS_DEV
+# include "../common/i2c0-raw.dts"
+#endif // CONFIG_I2C_DEVFS_DEV
+};
