@@ -18,6 +18,10 @@ devices = {
 #include "x86/uart0.dts"
 #include "common/loop0.dts"
 
+#ifdef CONFIG_DRIVER_GPIO
+# include "x86/gpio.dts"
+#endif // CONFIG_DRIVER_GPIO
+
 #ifdef CONFIG_DRIVER_BRIDGE
 # include "x86/bridge0-uart.dts"
 

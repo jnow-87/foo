@@ -10,6 +10,7 @@
 obj-y := gpio.o
 
 obj-$(CONFIG_AVR) += avr.o
+obj-$(CONFIG_X86) += x86.o
 
 
 cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
