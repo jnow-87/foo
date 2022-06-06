@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/signal.h>
 #include <sys/ioctl.h>
+#include <sys/gpio.h>
 #include <sys/fcntl.h>
 #include <sys/escape.h>
 #include <test/test.h>
@@ -41,7 +42,7 @@ static int dev_fd;
 TEST_LONG(gpioint, "test gpio device interrupts"){
 	char c;
 	f_mode_t f_mode;
-	signal_t sig;
+	gpio_int_cfg_t cfg;
 
 
 	/* prepare */
@@ -53,17 +54,18 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 		return -1;
 	}
 
-	// register signal to device interrupt
-	sig = SIGNAL;
-
-	if(ioctl(dev_fd, IOCTL_CFGWR, &sig, sizeof(signal_t)) != 0){
-		printf(FG_RED "error " RESET_ATTR "registering signal to device \"%s\"\n", strerror(errno));
-		return -1;
-	}
-
 	// register signal handler
 	if(signal(SIGNAL, hdlr) != hdlr){
 		printf(FG_RED "error " RESET_ATTR "registering signal handler \"%s\"\n", strerror(errno));
+		return -1;
+	}
+
+	// register signal to device interrupt
+	cfg.mask = 0xff;
+	cfg.sig = SIGNAL;
+
+	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg, sizeof(gpio_int_cfg_t)) != 0){
+		printf(FG_RED "error " RESET_ATTR "registering signal to device \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
