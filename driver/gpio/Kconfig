@@ -8,10 +8,15 @@
 
 
 menuconfig DRIVER_GPIO
-	bool "GPIO driver"
+	bool "gpio driver"
 	select KERNEL_DEVFS
+	select SC_SIGNAL
 
 if DRIVER_GPIO
+	config GPIO_TYPE_WIDTH
+		int "gpio register width [bits]"
+		default 8
+
 	config GPIO_DEBUG
 		bool "Enable debug messages"
 		depends on KERNEL_MSG_DEBUG

@@ -16,8 +16,16 @@
 
 
 /* macros */
+// boolean values
 #define false	0
 #define true	(!false)
+
+// type name generation
+#define TYPENAME(sign, type, width, ext) \
+	sign ##type ##width ##ext
+
+#define INT(width)		TYPENAME(, int, width, _t)
+#define UINT(width)		TYPENAME(u, int, width, _t)
 
 
 /* architecture dependent types */
