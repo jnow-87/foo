@@ -46,8 +46,6 @@ typedef struct{
 typedef struct{
 	gpio_type_t (*read)(void *hw);
 	int (*write)(gpio_type_t v, void *hw);
-
-	int (*configure)(gpio_cfg_t *cfg, void *hw);
 } gpio_ops_t;
 
 typedef struct gpio_siglst_t{

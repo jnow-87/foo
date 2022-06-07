@@ -73,9 +73,6 @@ gpio_t *gpio_create(char const *name, gpio_ops_t *ops, gpio_cfg_t *cfg, void *hw
 
 	mutex_init(&gpio->mtx, MTX_NOINT);
 
-	if(ops->configure(cfg, hw) != 0)
-		goto err_1;
-
 	/* register devfs device */
 	dev_ops.open = 0x0;
 	dev_ops.close = close;

@@ -25,7 +25,6 @@ typedef struct{
 /* local/static prototypes */
 static gpio_type_t read(void *hw);
 static int write(gpio_type_t v, void *hw);
-static int configure(gpio_cfg_t *cfg, void *hw);
 
 
 /* local functions */
@@ -44,7 +43,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 	ops.write = write;
 	ops.read = read;
-	ops.configure = configure;
 
 	if(gpio_create(name, &ops, dt_data, gpio) == 0x0)
 		goto err_1;
@@ -80,9 +78,5 @@ static int write(gpio_type_t v, void *hw){
 
 	DEBUG("%s: write %#x\n", gpio->name, gpio->value);
 
-	return E_OK;
-}
-
-static int configure(gpio_cfg_t *cfg, void *hw){
 	return E_OK;
 }
