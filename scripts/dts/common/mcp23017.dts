@@ -1,0 +1,55 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#include <config/config.h>
+
+
+gpio-mcp0 = {
+	compatible = "mcp23017";
+
+	/**
+	 * mcp23017 port configuration
+	 * has to match to dt_data_t
+	 */
+	// port-a number
+	int<8> = [ 0 ];		// port, set by the driver
+
+	// port-a gpio config, cf. gpio_cfg_t
+	int<CONFIG_GPIO_INT_WIDTH> = [
+		1,		// mode (normal)
+		0xff,	// pin mask
+		0xff,	// in mask
+		0x00,	// out mask
+		0x00,	// int mask
+		0xff,	// invert mask (inverted)
+		0		// interrupt number
+	];
+
+	// port-a i2c config
+	int<8> = [ 39 ];	// slave address
+	baseaddr = 0x0;		// i2c device, cf. i2c_t, set by the driver
+
+	// port-b number
+	int<8> = [ 0 ];		// port, set by the driver
+
+	// port-b gpio config, cf. gpio_cfg_t
+	int<CONFIG_GPIO_INT_WIDTH> = [
+		1,		// mode (normal)
+		0xff,	// pin mask
+		0x00,	// in mask
+		0xff,	// out mask
+		0x00,	// int mask
+		0xff,	// invert mask (inverted)
+		0		// interrupt number
+	];
+
+	// port-b i2c config
+	int<8> = [ 39 ];	// slave address
+	baseaddr = 0x0;		// i2c device, cf. i2c_t, set by the driver
+};

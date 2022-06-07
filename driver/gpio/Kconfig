@@ -17,6 +17,10 @@ if DRIVER_GPIO
 		int "gpio register width [bits]"
 		default 8
 
+	config DRIVER_MCP23017
+		bool "mcp23017 i2c I/O expander"
+		select DRIVER_I2C
+
 	config GPIO_DEBUG
 		bool "Enable debug messages"
 		depends on KERNEL_MSG_DEBUG

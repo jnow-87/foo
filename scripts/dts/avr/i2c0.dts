@@ -37,4 +37,8 @@ i2c0 = {
 #ifdef CONFIG_I2C_DEVFS_DEV
 # include "../common/i2c0-raw.dts"
 #endif // CONFIG_I2C_DEVFS_DEV
+
+#ifdef CONFIG_DRIVER_MCP23017
+# include "../common/mcp23017.dts"
+#endif // CONFIG_DRIVER_MCP23017
 };
