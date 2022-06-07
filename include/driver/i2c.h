@@ -17,6 +17,10 @@
 #include <sys/linebuf.h>
 
 
+/* incomplete types */
+struct i2c_t;
+
+
 /* types */
 typedef enum{
 	I2C_MODE_MASTER = 1,
@@ -99,6 +103,7 @@ typedef struct{
 } i2c_cfg_t;
 
 typedef struct{
+	/* primitives */
 	int (*configure)(i2c_cfg_t *cfg, void *hw);
 
 	i2c_state_t (*state)(void *hw);
@@ -110,6 +115,12 @@ typedef struct{
 
 	uint8_t (*byte_read)(void *hw);
 	void (*byte_write)(uint8_t c, bool last, void *hw);
+
+	/* root callbacks */
+	// if either of the following callbacks is set to zero the default i2c_read() and
+	// i2c_write() functions are used and the above primitives need to be set
+	size_t (*read)(struct i2c_t *i2c, uint8_t slave, void *buf, size_t n);
+	size_t (*write)(struct i2c_t *i2c, uint8_t slave, void *buf, size_t n);
 } i2c_ops_t;
 
 typedef struct i2c_t{

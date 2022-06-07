@@ -13,6 +13,13 @@
 #include <test/test.h>
 
 
+/* types */
+typedef struct{
+	void (*foo)(void);
+	void (*bar)(void);
+} cb_t;
+
+
 /* local functions */
 TEST(strcmp){
 	int n;
@@ -218,6 +225,30 @@ TEST(memnscan){
 	fp_array[0] = strlen;
 	n += TEST_PTR_EQ(memnscan(fp_array, &fp_zero, 10, sizeof(fp_zero)), fp_array + 1);
 	n += TEST_PTR_EQ(memnscan(fp_array, &fp_nonzero, 10, sizeof(fp_zero)), fp_array + 0);
+
+	return -n;
+}
+
+TEST(callbacks_set){
+	int n;
+	cb_t pre,
+		 cbs,
+		 post;
+
+
+	n = 0;
+
+	memset(&pre, 0x0, sizeof(cb_t));
+	memset(&cbs, 0x0, sizeof(cb_t));
+	memset(&post, 0x0, sizeof(cb_t));
+
+	n += TEST_INT_EQ(callbacks_set(&cbs, cb_t), false);
+
+	cbs.foo = (void*)0x1;
+	n += TEST_INT_EQ(callbacks_set(&cbs, cb_t), false);
+
+	cbs.bar = (void*)0x1;
+	n += TEST_INT_EQ(callbacks_set(&cbs, cb_t), true);
 
 	return -n;
 }

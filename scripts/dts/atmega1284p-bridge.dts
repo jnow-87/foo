@@ -144,7 +144,7 @@ devices = {
 		};
 	};
 
-	brdg0-right = {
+	brdg0-right-uart = {
 		compatible = "bridge,uart-dev";
 
 		/**
@@ -372,23 +372,28 @@ devices = {
 		 *	has to match the configuration data type of
 		 *	the underlying device driver
 		 */
-		 int<8> = [ 1 ];		// mode (master)
-		 int<16> = [ 100 ];		// clock (100kHz)
-		 int<8> = [
-			1,					// broadcast (enabled)
-			1,					// address
-			26					// interrupt number
-		 ];
+		int<8> = [ 1 ];			// mode (master)
+		int<16> = [ 100 ];		// clock (100kHz)
+		int<8> = [
+		   1,					// broadcast (enabled)
+		   1,					// address
+		   0					// interrupt number
+		];
 
-		i2c0 = {
-			compatible = "i2c";
+		brdg0-right-i2c = {
+			compatible = "bridge,i2c-itf";
 
 			/**
-			 * i2c devfs dev config
-			 *	has to match the configuration of the
-			 *	devfs dev device driver
+			 * bridge hardware description
+			 *	has to match bridge_cfg_t
 			 */
-			 int<8> = [ 0 ];	// slave address
+			/* bridge config */
+			int<8> = [
+				0,					// id
+				2,					// chunksize
+				37,					// rx interrupt
+				38					// tx interrupt
+			];
 		};
 	};
 

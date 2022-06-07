@@ -142,7 +142,7 @@ bridge_t *bridge_create(bridge_cfg_t *cfg, bridge_ops_t *ops, void *hw);
 void bridge_destroy(bridge_t *brdg);
 
 int16_t bridge_read(bridge_t *brdg, void *data, uint8_t n);
-int16_t bridge_write(bridge_t *brdg, void const *data, uint8_t n);
+int16_t bridge_write(bridge_t *brdg, void *data, uint8_t n);
 
 errno_t dgram_errno(bridge_dgram_t *dgram);
 

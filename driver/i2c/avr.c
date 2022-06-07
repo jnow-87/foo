@@ -90,6 +90,8 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.slave_addr = slave_addr;
 	ops.byte_read = byte_read;
 	ops.byte_write = byte_write;
+	ops.read = 0x0;
+	ops.write = 0x0;
 
 	return i2c_create(&ops, &dtd->cfg, dtd);
 }

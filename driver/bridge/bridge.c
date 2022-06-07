@@ -21,13 +21,15 @@
 
 
 /* local/static prototypes */
+static int16_t rw(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type);
+
 static int16_t read_int(bridge_t *brdg, void *data, uint8_t n);
-static int16_t write_int(bridge_t *brdg, void const *data, uint8_t n);
-static int16_t poll(bridge_t *brdg, void const *data, uint8_t n, bridge_dgram_type_t type);
+static int16_t write_int(bridge_t *brdg, void *data, uint8_t n);
+static int16_t poll(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type);
 
 static void int_hdlr(int_num_t num, void *brdg);
-static int_num_t int_rx(bridge_t *brdg, bridge_dgram_t *dgram);
-static int_num_t int_tx(bridge_t *brdg, bridge_dgram_t *dgram);
+static int int_rx(bridge_t *brdg, bridge_dgram_t *dgram);
+static int int_tx(bridge_t *brdg, bridge_dgram_t *dgram);
 
 static bridge_dgram_t *dgram_select(bridge_t *brdg, int_num_t num);
 
@@ -49,15 +51,18 @@ bridge_t *bridge_create(bridge_cfg_t *cfg, bridge_ops_t *ops, void *hw){
 		goto err_0;
 
 	brdg->cfg = cfg;
-	brdg->ops = *ops;
 	brdg->hw = hw;
+
 	mutex_init(&brdg->mtx, MTX_NOINT);
 
+	if(ops != 0x0)
+		brdg->ops = *ops;
+
 	/* init interrupts */
-	if(hw && cfg->rx_int && int_register(cfg->rx_int, int_hdlr, brdg) != 0)
+	if(ops && cfg->rx_int && int_register(cfg->rx_int, int_hdlr, brdg) != 0)
 		goto err_1;
 
-	if(hw && cfg->tx_int && int_register(cfg->tx_int, int_hdlr, brdg) != 0)
+	if(ops && cfg->tx_int && int_register(cfg->tx_int, int_hdlr, brdg) != 0)
 		goto err_1;
 
 	/* link bridge peers */
@@ -115,15 +120,29 @@ void bridge_destroy(bridge_t *brdg){
 }
 
 int16_t bridge_read(bridge_t *brdg, void *data, uint8_t n){
-	return brdg->cfg->rx_int ? read_int(brdg, data, n) : poll(brdg, data, n, DT_READ);
+	return rw(brdg, data, n, DT_READ);
 }
 
-int16_t bridge_write(bridge_t *brdg, void const *data, uint8_t n){
-	return brdg->cfg->tx_int ? write_int(brdg, data, n) : poll(brdg, data, n, DT_WRITE);
+int16_t bridge_write(bridge_t *brdg, void *data, uint8_t n){
+	return rw(brdg, data, n, DT_WRITE);
 }
 
 
 /* local functions */
+static int16_t rw(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type){
+	bridge_t *peer;
+
+
+	peer = brdg->peer;
+
+	if(!callbacks_set(&peer->ops, bridge_ops_t))
+		return_errno(E_NOIMP);
+
+	if(type == DT_READ && peer->cfg->rx_int)		return read_int(peer, data, n);
+	else if(type == DT_WRITE && peer->cfg->tx_int)	return write_int(peer, data, n);
+	else											return poll(peer, data, n, type);
+}
+
 static int16_t read_int(bridge_t *brdg, void *data, uint8_t n){
 	uint8_t i,
 			x;
@@ -152,7 +171,7 @@ static int16_t read_int(bridge_t *brdg, void *data, uint8_t n){
 	return i;
 }
 
-static int16_t write_int(bridge_t *brdg, void const *data, uint8_t n){
+static int16_t write_int(bridge_t *brdg, void *data, uint8_t n){
 	bridge_dgram_t *dgram;
 
 
@@ -168,14 +187,14 @@ static int16_t write_int(bridge_t *brdg, void const *data, uint8_t n){
 	return (dgram == 0x0) ? -1 : n;
 }
 
-static int16_t poll(bridge_t *brdg, void const *data, uint8_t n, bridge_dgram_type_t type){
+static int16_t poll(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type){
 	bridge_dgram_t dgram;
 	bridge_dgram_state_t s;
 	bridge_dgram_state_t (*op)(bridge_dgram_t *, bridge_t *);
 
 
 	op = (type == DT_WRITE) ? dgram_write : dgram_read;
-	dgram_init(&dgram, type, (void*)data, n, brdg);
+	dgram_init(&dgram, type, data, n, brdg);
 
 	while(1){
 		mutex_lock(&brdg->mtx);
@@ -204,24 +223,29 @@ static void int_hdlr(int_num_t num, void *_brdg){
 
 	dgram = dgram_select(brdg, num);
 
-	if(dgram != 0x0){
-		cplt_int = (dgram->type == DT_READ) ? int_rx(brdg, dgram) : int_tx(brdg, dgram);
+	if(dgram == 0x0)
+		goto unlock;
 
-		/* transfer complete */
-		if(cplt_int){
-			// notify bridge peer
-			int_foretell(cplt_int);
+	/* handle interrupt */
+	if((dgram->type == DT_READ) ? int_rx(brdg, dgram) : int_tx(brdg, dgram) != 0)
+		goto unlock;
 
-			// trigger next tx
-			if(!list_empty(brdg->tx_dgrams))
-				int_foretell(brdg->cfg->tx_int);
-		}
-	}
+	/* transfer complete */
+	cplt_int = (dgram->type == DT_READ) ? brdg->peer->cfg->rx_int : brdg->peer->cfg->tx_int;
 
+	// notify bridge peer
+	if(cplt_int)
+		int_foretell(cplt_int);
+
+	// trigger next tx
+	if(!list_empty(brdg->tx_dgrams))
+		int_foretell(brdg->cfg->tx_int);
+
+unlock:
 	mutex_unlock(&brdg->mtx);
 }
 
-static int_num_t int_rx(bridge_t *brdg, bridge_dgram_t *dgram){
+static int int_rx(bridge_t *brdg, bridge_dgram_t *dgram){
 	/* protocol action */
 	dgram->state = dgram_read(dgram, brdg);
 
@@ -230,30 +254,27 @@ static int_num_t int_rx(bridge_t *brdg, bridge_dgram_t *dgram){
 		if(dgram->state == DS_ERROR)
 			dgram_free(dgram, brdg);
 
-		return 0;
+		return 1;
 	}
 
 	/* transfer complete */
 	dgram->offset = 0;
 
-	return brdg->peer->cfg->rx_int;
+	return 0;
 }
 
-static int_num_t int_tx(bridge_t *brdg, bridge_dgram_t *dgram){
+static int int_tx(bridge_t *brdg, bridge_dgram_t *dgram){
 	/* protocol action */
 	dgram->state = dgram_write(dgram, brdg);
 
 	/* error handling */
 	if(dgram->state != DS_ERROR && dgram->state != DS_COMPLETE)
-		return 0;
+		return 1;
 
 	if(dgram->state == DS_ERROR){
 		// trigger retry
-		if(dgram_init_retry(dgram) == 0){
-			int_foretell(brdg->cfg->tx_int);
-
+		if(dgram_init_retry(dgram) == 0)
 			return 0;
-		}
 
 		brdg->errno = dgram_errno(dgram);
 	}
@@ -261,7 +282,7 @@ static int_num_t int_tx(bridge_t *brdg, bridge_dgram_t *dgram){
 	/* transfer complete */
 	dgram_free(dgram, brdg);
 
-	return brdg->peer->cfg->tx_int;
+	return 0;
 }
 
 static bridge_dgram_t *dgram_select(bridge_t *brdg, int_num_t num){

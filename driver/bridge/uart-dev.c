@@ -29,17 +29,13 @@ static errno_t error(void *brdg);
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	bridge_t *brdg;
-	bridge_ops_t ops;
 	bridge_cfg_t *dtd;
 	term_itf_t *itf;
 
 
 	dtd = (bridge_cfg_t*)dt_data;
 
-	ops.readb = 0x0;
-	ops.writeb = 0x0;
-
-	brdg = bridge_create(dtd, &ops, 0x0);
+	brdg = bridge_create(dtd, 0x0, 0x0);
 
 	if(brdg == 0x0)
 		goto err_0;
@@ -78,20 +74,17 @@ static int configure(void *cfg, void *brdg){
 }
 
 static char putc(char c, void *brdg){
-	return (bridge_write(((bridge_t*)brdg)->peer, &c, 1) == 1) ? c : ~c;
+	return (bridge_write(brdg, &c, 1) == 1) ? c : ~c;
 }
 
 static size_t puts(char const *s, size_t n, void *brdg){
 	size_t i;
 	int16_t x;
-	bridge_t *peer;
 
-
-	peer = ((bridge_t*)brdg)->peer;
 
 	for(i=0; i<n; i+=x){
 		x = MIN(n - i, 255);
-		x = bridge_write(peer, s + i, x);
+		x = bridge_write(brdg, (char*)s + i, x);
 
 		if(x <= 0)
 			break;
@@ -103,14 +96,11 @@ static size_t puts(char const *s, size_t n, void *brdg){
 static size_t gets(char *s, size_t n, void *brdg){
 	size_t i;
 	int16_t x;
-	bridge_t *peer;
 
-
-	peer = ((bridge_t*)brdg)->peer;
 
 	for(i=0; i<n; i+=x){
 		x = MIN(n - i, 255);
-		x = bridge_read(peer, s + i, x);
+		x = bridge_read(brdg, s + i, x);
 
 		if(x < 0)
 			goto_errno(err, E_IO);

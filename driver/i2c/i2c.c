@@ -21,6 +21,8 @@
 
 
 /* local/static prototypes */
+static size_t read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
+static size_t write(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
 static size_t rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, void *buf, size_t n);
 
 static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
@@ -39,6 +41,17 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 	i2c_t *i2c;
 
 
+	/* check/set required callbacks */
+	if(ops->read == 0x0 || ops->write == 0x0){
+		ops->read = read;
+		ops->write = write;
+
+		// ensure all i2c primitives are set to valid callbacks
+		if(!callbacks_set(ops, i2c_ops_t))
+			goto_errno(err_0, E_INVAL);
+	}
+
+	/* allocated device */
 	i2c = kcalloc(1, sizeof(i2c_t));
 
 	if(i2c == 0x0)
@@ -53,13 +66,16 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 	itask_queue_init(&i2c->master_cmds);
 	itask_queue_init(&i2c->slave_cmds);
 
-	if(ops->configure(i2c->cfg, i2c->hw) != 0)
+	// register interrupt only of they are enabled and the i2c primitives are set in ops
+	if(cfg->int_num && ops->configure && int_register(cfg->int_num, int_hdlr, i2c) != 0)
 		goto err_1;
 
-	ops->slave_mode(false, false, hw);
-
-	if(cfg->int_num && int_register(cfg->int_num, int_hdlr, i2c) != 0)
+	/* configure device */
+	if(ops->configure != 0x0 && ops->configure(i2c->cfg, i2c->hw) != 0)
 		goto err_1;
+
+	if(ops->slave_mode != 0x0)
+		ops->slave_mode(false, false, hw);
 
 	return i2c;
 
@@ -82,6 +98,16 @@ void i2c_destroy(i2c_t *i2c){
 }
 
 size_t i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
+	return i2c->ops.read(i2c, slave, buf, n);
+}
+
+size_t i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
+	return i2c->ops.write(i2c, slave, buf, n);
+}
+
+
+/* local functions */
+static size_t read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
 	n = rw(i2c, I2C_CMD_READ, slave, buf, n);
 
 	// errors are tolerated if some bytes are transfered
@@ -91,7 +117,7 @@ size_t i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
 	return n;
 }
 
-size_t i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
+static size_t write(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
 	size_t r;
 
 
@@ -104,7 +130,6 @@ size_t i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
 	return n - r;
 }
 
-/* local functions */
 static size_t rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, void *buf, size_t n){
 	i2c_dgram_t dgram;
 

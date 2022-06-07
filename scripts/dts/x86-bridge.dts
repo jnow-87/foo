@@ -113,8 +113,8 @@ devices = {
 		 */
 		string = "/dev/ttyUSB1";	// path
 		int<8> = [
-			4,						// rx interrupt
-			5						// tx interrupt
+			0,						// rx interrupt
+			0						// tx interrupt
 		];
 
 		brdg0-left = {
@@ -128,8 +128,8 @@ devices = {
 			int<8> = [
 				0,					// id
 				2,					// chunksize
-				0,					// rx interrupt
-				0					// tx interrupt
+				0,					// automatically set by the driver
+				0					// automatically set by the driver
 			];
 
 			/* terminal config */
@@ -145,7 +145,7 @@ devices = {
 		};
 	};
 
-	brdg0-right = {
+	brdg0-right-uart = {
 		compatible = "bridge,uart-dev";
 
 		/**
@@ -177,6 +177,46 @@ devices = {
 				0x0,				// oflags (none)
 				0x0					// lflags (none)
 			];
+		};
+	};
+
+	brdg0-right-i2c = {
+		compatible = "bridge,i2c-dev";
+
+		/**
+		 * bridge hardware description
+		 *	has to match bridge_cfg_t
+		 */
+		/* bridge config */
+		int<8> = [
+			0,					// id
+			2,					// chunksize
+			0,					// rx interrupt
+			0					// tx interrupt
+		];
+
+		/**
+		 * i2c configuration
+		 *	has to match the configuration data type of
+		 *	the underlying device driver
+		 */
+		int<8> = [ 1 ];			// mode (master)
+		int<16> = [ 0 ];		// clock (0kHz)
+		int<8> = [
+		   0,					// broadcast (enabled)
+		   0,					// address
+		   0					// interrupt number
+		];
+
+		i2c0 = {
+			compatible = "i2c";
+
+			/**
+			 * i2c devfs dev config
+			 *	has to match the configuration of the
+			 *	devfs dev device driver
+			 */
+			 int<8> = [ 0 ];	// slave address
 		};
 	};
 };

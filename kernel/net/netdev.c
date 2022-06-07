@@ -42,12 +42,9 @@ devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	netdev_t *netdev;
-	void (*fp_zero)(void);
 
 
-	fp_zero = 0x0;
-
-	if(memnscan(itf, &fp_zero, sizeof(netdev_itf_t) / sizeof(fp_zero), sizeof(fp_zero)) != 0x0)
+	if(!callbacks_set(itf, netdev_itf_t))
 		goto_errno(err_0, E_INVAL);
 
 	/* init netdev */

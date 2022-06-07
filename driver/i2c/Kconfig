@@ -15,7 +15,6 @@ if DRIVER_I2C
 	config I2C_DEVFS_DEV
 		bool "devfs device driver"
 		select KERNEL_DEVFS
-		select I2C_PROTO_INT
 		default n
 
 	config I2C_RXBUF_SIZE
