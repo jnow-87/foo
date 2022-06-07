@@ -53,6 +53,35 @@ define compile_file
 	)
 endef
 
+# generate a dependency file for the current target
+# 	dependency file is not generated while executing prestage stage0
+# 	fixdep is only applied if configtools are configured to be used
+# 	and built already
+#
+#	$(call gen_deps,<compiler>,<compile-flags>)
+define gen_deps
+	$(call skip_prestage,stage0,
+		$($(1)) $(filter-out %.cmd,$(2)) -MM -MF $@.d -MP -MT $@ $<
+		$(if $(configtools_unavailable), \
+			,
+			$(mv) $@.d $@.d.tmp
+			$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
+		) \
+	)
+endef
+
+# apply the compiler's pre-processor to $< during
+# all stages except stage0
+#
+#	$(call preproc_file
+define preproc_file
+	$(call skip_prestage,stage0,
+		$(echo) [PREPROC] $@ $(if $(WHATCHANGED),\($?\))
+		$(cc) $(cppflags) -xc -E -P $< -o $@
+	)
+	$(call gen_deps,cc,$(cppflags) -xc)
+endef
+
 define cmd_defconfig
 	$(echo) [CP] $< '->' $(config)
 	@(test -e $(config) && cp $(config) $(config).old) ; exit 0

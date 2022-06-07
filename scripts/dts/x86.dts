@@ -7,99 +7,26 @@
 
 
 
+#include <config/config.h>
+
+
 memory = {
-	ram = {
-		baseaddr = 0x00400000;
-		size = 44044288;
-
-		text = {
-			baseaddr = 0x00400000;
-			size = 20971520;
-		};
-
-		kernel-heap = {
-			baseaddr = 0x01800000;
-			size = 1048576;
-		};
-
-		kernel-stack = {
-			baseaddr = 0x01900000;
-			size = 4096;
-		};
-
-		app-heap = {
-			baseaddr = 0x01901000;
-			size = 1048576;
-		};
-
-		app-data = {
-			baseaddr = 0x1a01000;
-			size = 20971520;
-		};
-	};
+#include "x86/memory.dts"
 };
 
 devices = {
-	uart0 = {
-		compatible = "x86,uart";
+#include "x86/uart0.dts"
+#include "common/loop0.dts"
 
-		/**
-		 * uart hardware description
-		 * 	has to match the device tree data type
-		 *	of the x86 uart driver
-		 */
-		string = "/dev/stdin";		// path
-		int<8> = [
-			3,						// rx interrupt
-			0						// tx interrupt
-		];
+#ifdef CONFIG_DRIVER_BRIDGE
+# include "x86/bridge0-uart.dts"
 
-		tty0 = {
-			compatible = "terminal";
+# ifdef CONFIG_BRIDGE_UART_DEV
+#  include "x86/bridge0-term.dts"
+# endif // CONFIG_BRIDGE_UART_DEV
 
-			/**
-			 * terminal configuration
-			 * 	has to match the configuration data type of
-			 * 	the underlying device driver, i.e. uart_cfg_t
-			 */
-			int<32> = [ 115200 ];	// baudrate
-			int<8> = [
-				1,					// stop bits (1)
-				0,					// parity (TPARITY_NONE)
-				3,					// csize (TCS_8)
-				0x1,				// iflags (TIFL_CRNL)
-				0x2,				// oflags (TOFL_NLCR)
-				0x0					// lflags (none)
-			];
-
-			klog = {
-				compatible = "kernel,log";
-			};
-		};
-	};
-
-	loop0 = {
-		compatible = "loop,term";
-
-		/**
-		 * loop config
-		 *	has to match loop_dt_data_t
-		 */
-		int<16> = [ 256 ];			// buffer size
-
-		tty-loop0 = {
-			compatible = "terminal";
-
-			/**
-			 * terminal configuration
-			 *	has to match the configuration data type of
-			 *	the underlying device driver, i.e. loop_cfg_t
-			 */
-			int<8> = [
-				0x0,				// iflags (none)
-				0x0,				// oflags (none)
-				0x0					// lflags (none)
-			];
-		};
-	};
+# ifdef CONFIG_BRIDGE_I2C_DEV
+#  include "x86/bridge0-i2c.dts"
+# endif // CONFIG_BRIDGE_I2C_DEV
+#endif // CONFIG_DRIVER_BRIDGE
 };

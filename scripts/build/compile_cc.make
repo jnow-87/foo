@@ -11,24 +11,6 @@
 ## helper
 ####
 
-# generate a dependency file for the current target
-# 	dependency file is not generated while executing prestage stage0
-# 	fixdep is only applied if configtools are configured to be used
-# 	and built already
-#
-#	$(call gen_dep_file,<compiler>,<compile-flags>)
-define gen_dep_file
-	$(if $(call is_prestage,stage0), \
-		, \
-		$($(1)) $(filter-out %.cmd,$(2)) -MM -MF $@.d -MP -MT $@ $<
-		$(if $(configtools_unavailable), \
-			,
-			$(mv) $@.d $@.d.tmp
-			$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
-		) \
-	)
-endef
-
 # compile function wrapping some use output and the command file generation
 #
 #	$(call compile_base,<compiler>,<args>)
@@ -47,7 +29,7 @@ endef
 #	$(call compile_with_deps,<compiler>,<compile-flags>,<mode-flags>)
 define compile_with_deps
 	$(call compile_base,$(1),$(2) $(3) $< -o $@)
-	$(call gen_dep_file,$(1),$(2))
+	$(call gen_deps,$(1),$(2))
 endef
 
 

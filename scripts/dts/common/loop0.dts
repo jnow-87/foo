@@ -1,0 +1,33 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+loop0 = {
+	compatible = "loop,term";
+
+	/**
+	 * loop config
+	 *	has to match loop_dt_data_t
+	 */
+	int<16> = [ 256 ];			// buffer size
+
+	tty-loop0 = {
+		compatible = "terminal";
+
+		/**
+		 * terminal configuration
+		 * 	has to match the config data type of the underlying
+		 * 	device driver, loop_cfg_t in case of "loop,term"
+		 */
+		int<8> = [
+			0x0,				// iflags (none)
+			0x0,				// oflags (none)
+			0x0					// lflags (none)
+		];
+	};
+};

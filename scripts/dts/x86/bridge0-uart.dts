@@ -1,0 +1,50 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+uart1 = {
+	compatible = "x86,uart";
+
+	/**
+	 * uart hardware description
+	 * 	has to match dt_data_t of the x86 uart driver
+	 */
+	string = "/dev/ttyUSB1";	// path
+	int<8> = [
+		0,						// rx interrupt
+		0						// tx interrupt
+	];
+
+	brdg0-left = {
+		compatible = "bridge,uart-itf";
+
+		/**
+		 * bridge hardware description
+		 *	has to match bridge_cfg_t
+		 */
+		// bridge config
+		int<8> = [
+			0,					// id
+			2,					// chunksize
+			0,					// automatically set by the driver
+			0					// automatically set by the driver
+		];
+
+		// bridge_cfg_t::hw_cfg[]
+		//	terminal config according to uart_cfg_t
+		int<32> = [ 115200 ];	// baudrate
+		int<8> = [
+			1,					// stop bits (1)
+			0,					// parity (TPARITY_NONE)
+			3,					// csize (TCS_8)
+			0x0,				// iflags (none)
+			0x0,				// oflags (none)
+			0x0					// lflags (none)
+		];
+	};
+};

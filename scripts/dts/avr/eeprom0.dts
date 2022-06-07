@@ -1,0 +1,25 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+eeprom0 = {
+	compatible = "avr,eeprom";
+
+	/**
+	 * eeprom hardware description
+	 * 	has to match dt_data_t of the avr eeprom driver
+	 */
+	baseaddr = 0x3f;			// eeprom register base
+
+	int<16> = [
+		0x0,					// base address
+		4096					// size
+	];
+
+	int<8> = [ 25 ];			// eeprom ready interrupt
+};

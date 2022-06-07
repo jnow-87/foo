@@ -43,24 +43,29 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_t
 ####
 
 dtc := $(build_tree)/scripts/devtree/dtc
+
+devtree_preproc := $(loc_build_tree)/devicetree.i.dts
 devtree_make := $(loc_build_tree)/devicetree.make
 devtree_header := $(loc_build_tree)/devicetree.h
 devtree_src := $(loc_build_tree)/devicetree.c
 
 prepare_deps: $(devtree_header) $(devtree_make)
 
-$(devtree_src): $(CONFIG_DEVICE_TREE) $(dtc)
+$(devtree_preproc): $(CONFIG_DEVICE_TREE)
+	$(call preproc_file)
+
+$(devtree_src): $(devtree_preproc) $(dtc)
 	$(call compile_file,$(dtc) --format=c --sections=all -o $@ $<)
 
-$(devtree_header): $(CONFIG_DEVICE_TREE) $(dtc)
+$(devtree_header): $(devtree_preproc) $(dtc)
 	$(call compile_file,$(dtc) --format=header --sections=memory -o $@ $<)
 
-$(devtree_make): $(CONFIG_DEVICE_TREE) $(dtc)
+$(devtree_make): $(devtree_preproc) $(dtc)
 	$(call compile_file,$(dtc) --format=make --sections=memory -o $@ $<)
 
 
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,      $(loc_build_tree)/devicetree.c,)
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o, $(loc_build_tree)/devicetree.c, host)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,      $(devtree_src),)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o, $(devtree_src), host)
 
 
 # include devicetree.make if it already exists
