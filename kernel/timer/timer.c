@@ -49,17 +49,21 @@ void ktimer_tick(void){
 	list_for_each(timer_lst, t){
 		if(--t->ticks == 0){
 			t->hdlr(t->data);
-			list_rm(timer_lst, t);
+			t->ticks = t->base;
+
+			if(t->base == 0)
+				list_rm(timer_lst, t);
 		}
 	}
 
 	mutex_unlock(&timer_mtx);
 }
 
-void ktimer_register(ktimer_t *timer, uint32_t period_us, ktimer_hdlr_t hdlr, void *data){
+void ktimer_register(ktimer_t *timer, uint32_t period_us, ktimer_hdlr_t hdlr, void *data, bool periodic){
 	timer->hdlr = hdlr;
 	timer->data = data;
 	timer->ticks = to_ticks(period_us);
+	timer->base = periodic ? timer->ticks : 0;
 
 	mutex_lock(&timer_mtx);
 	list_add_tail(timer_lst, timer);

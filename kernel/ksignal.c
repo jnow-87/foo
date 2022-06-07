@@ -58,7 +58,7 @@ int ksignal_timedwait(ksignal_t *sig, mutex_t *mtx, uint32_t timeout_us){
 	if(!(mtx->attr & MTX_NOINT))
 		return_errno(E_INVAL);
 
-	ktimer_register(&timer, timeout_us, timeout_hdlr, &to);
+	ktimer_register(&timer, timeout_us, timeout_hdlr, &to, false);
 	ksignal_wait(sig, mtx);
 	ktimer_release(&timer);
 
