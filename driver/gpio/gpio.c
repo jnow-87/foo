@@ -134,13 +134,13 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	gpio_t *gpio;
 
 
-	if(n != sizeof(gpio_type_t))
+	if(n != sizeof(gpio_int_t))
 		goto_errno(err, E_LIMIT);
 
 	gpio = (gpio_t*)dev->data;
-	*((gpio_type_t*)buf) = ((gpio->ops.read(gpio->hw) ^ gpio->cfg->invert_mask) & gpio->cfg->in_mask);
+	*((gpio_int_t*)buf) = ((gpio->ops.read(gpio->hw) ^ gpio->cfg->invert_mask) & gpio->cfg->in_mask);
 
-	DEBUG("%s read %#x\n", gpio->dev->node->name, *((gpio_type_t*)buf));
+	DEBUG("%s read %#x\n", gpio->dev->node->name, *((gpio_int_t*)buf));
 
 	return n;
 
@@ -151,15 +151,15 @@ err:
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	gpio_t *gpio;
-	gpio_type_t c,
-				v;
+	gpio_int_t c,
+			   v;
 
 
-	if(n != sizeof(gpio_type_t))
+	if(n != sizeof(gpio_int_t))
 		goto_errno(err, E_LIMIT);
 
 	gpio = (gpio_t*)dev->data;
-	v = *((gpio_type_t*)buf);
+	v = *((gpio_int_t*)buf);
 
 	if(gpio->cfg->mode == GM_STRICT && (v & ~gpio->cfg->out_mask))
 		goto_errno(err, E_INVAL);
@@ -186,7 +186,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
 static void int_hdlr(int_num_t num, void *data){
 	gpio_t *gpio;
 	gpio_siglst_t *sig;
-	gpio_type_t v;
+	gpio_int_t v;
 
 
 	gpio = (gpio_t*)data;

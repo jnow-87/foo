@@ -13,7 +13,7 @@ menuconfig DRIVER_GPIO
 	select SC_SIGNAL
 
 if DRIVER_GPIO
-	config GPIO_TYPE_WIDTH
+	config GPIO_INT_WIDTH
 		int "gpio register width [bits]"
 		default 8
 
