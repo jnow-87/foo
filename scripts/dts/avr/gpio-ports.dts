@@ -28,7 +28,7 @@ porta = {
 	 * gpio hardware description
 	 * 	has to match gpio_cfg_t
 	 */
-	int<CONFIG_GPIO_TYPE_WIDTH> = [
+	int<CONFIG_GPIO_INT_WIDTH> = [
 		1,		// mode (normal)
 		0x0f,	// pin mask
 		0x0f,	// in mask
@@ -57,7 +57,7 @@ led = {
 	 * gpio hardware description
 	 * 	has to match gpio_cfg_t
 	 */
-	int<CONFIG_GPIO_TYPE_WIDTH> = [
+	int<CONFIG_GPIO_INT_WIDTH> = [
 		1,		// mode (normal)
 		0x03,	// pin mask
 		0x00,	// in mask
@@ -86,7 +86,7 @@ int0 = {
 	 * gpio hardware description
 	 * 	has to match gpio_cfg_t
 	 */
-	int<CONFIG_GPIO_TYPE_WIDTH> = [
+	int<CONFIG_GPIO_INT_WIDTH> = [
 		1,		// mode (normal)
 		0xc0,	// pin mask
 		0xc0,	// in mask

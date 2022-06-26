@@ -34,20 +34,18 @@ typedef struct{
 
 	uint8_t mode;				/**< cf. gpio_mode_t */
 
-	gpio_type_t pin_mask,
-				in_mask,
-				out_mask,
-				int_mask,
-				invert_mask;	/**< 0 = pass through, 1 = invert */
+	gpio_int_t pin_mask,
+			   in_mask,
+			   out_mask,
+			   int_mask,
+			   invert_mask;	/**< 0 = pass through, 1 = invert */
 
 	uint8_t int_num;			/**< cf. int_num_t */
 } gpio_cfg_t;
 
 typedef struct{
-	gpio_type_t (*read)(void *hw);
-	int (*write)(gpio_type_t v, void *hw);
-
-	int (*configure)(gpio_cfg_t *cfg, void *hw);
+	gpio_int_t (*read)(void *hw);
+	int (*write)(gpio_int_t v, void *hw);
 } gpio_ops_t;
 
 typedef struct gpio_siglst_t{
@@ -58,7 +56,7 @@ typedef struct gpio_siglst_t{
 	thread_t *thread;
 	fs_filed_t *fd;
 
-	gpio_type_t mask;
+	gpio_int_t mask;
 } gpio_siglst_t;
 
 typedef struct{

@@ -16,6 +16,7 @@ menuconfig DRIVER_BRIDGE
 if DRIVER_BRIDGE
 	menuconfig BRIDGE_UART
 		bool "UART bridge"
+		select DRIVER_UART
 
 	if BRIDGE_UART
 		config BRIDGE_UART_DEV

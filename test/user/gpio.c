@@ -29,9 +29,9 @@
 
 
 /* local/static prototypes */
-static int test_read(int fd, gpio_type_t expect);
-static int test_write(int fd, gpio_type_t v, gpio_type_t expect);
-static int test_ioctl(int fd, gpio_type_t mask, signal_t sig, errno_t expect);
+static int test_read(int fd, gpio_int_t expect);
+static int test_write(int fd, gpio_int_t v, gpio_int_t expect);
+static int test_ioctl(int fd, gpio_int_t mask, signal_t sig, errno_t expect);
 
 
 /* local functions */
@@ -42,7 +42,7 @@ TEST_LONG(gpio, "test gpio interface"){
 	int n;
 	int fd_normal,
 		fd_strict;
-	gpio_type_t v;
+	gpio_int_t v;
 
 
 	n = 0;
@@ -58,12 +58,12 @@ TEST_LONG(gpio, "test gpio interface"){
 	n += test_ioctl(fd_normal, 0xff, SIG_USR0, E_OK);
 
 	/* error cases */
-	// read more than sizeof(gpio_type_t)
+	// read more than sizeof(gpio_int_t)
 	n += TEST_INT_EQ(read(fd_normal, &v, sizeof(v) * 2), -1);
 	n += TEST_INT_EQ(errno, E_LIMIT);
 	set_errno(E_OK);
 
-	// write more than sizeof(gpio_type_t)
+	// write more than sizeof(gpio_int_t)
 	n += TEST_INT_EQ(write(fd_normal, &v, sizeof(v) * 2), -1);
 	n += TEST_INT_EQ(errno, E_LIMIT);
 	set_errno(E_OK);
@@ -90,9 +90,9 @@ TEST_LONG(gpio, "test gpio interface"){
 	return -n;
 }
 
-static int test_read(int fd, gpio_type_t expect){
+static int test_read(int fd, gpio_int_t expect){
 	int n;
-	gpio_type_t v;
+	gpio_int_t v;
 
 
 	v = ~expect;
@@ -104,7 +104,7 @@ static int test_read(int fd, gpio_type_t expect){
 	return -n;
 }
 
-static int test_write(int fd, gpio_type_t v, gpio_type_t expect){
+static int test_write(int fd, gpio_int_t v, gpio_int_t expect){
 	int n;
 
 
@@ -115,7 +115,7 @@ static int test_write(int fd, gpio_type_t v, gpio_type_t expect){
 	return n;
 }
 
-static int test_ioctl(int fd, gpio_type_t mask, signal_t sig, errno_t expect){
+static int test_ioctl(int fd, gpio_int_t mask, signal_t sig, errno_t expect){
 	int n;
 	gpio_int_cfg_t cfg;
 

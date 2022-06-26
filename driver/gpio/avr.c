@@ -35,57 +35,50 @@ typedef struct{
 
 
 /* local/static prototypes */
-static gpio_type_t read(void *hw);
-static int write(gpio_type_t v, void *hw);
-static int configure(gpio_cfg_t *cfg, void *hw);
+static gpio_int_t read(void *hw);
+static int write(gpio_int_t v, void *hw);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd;
 	gpio_ops_t ops;
+	gpio_regs_t *regs;
+	gpio_cfg_t *cfg;
 
 
 	dtd = (dt_data_t*)dt_data;
+	cfg = &dtd->cfg;
+	regs = dtd->regs;
 
+	/* create device */
 	ops.read = read;
 	ops.write = write;
-	ops.configure = configure;
 
-	gpio_create(name, &ops, &dtd->cfg, dtd);
+	(void)gpio_create(name, &ops, cfg, dtd);
+
+	/* configure */
+	// port
+	regs->port |= cfg->in_mask | cfg->out_mask | cfg->int_mask;
+	regs->ddr |= cfg->out_mask | cfg->int_mask;
+
+	// interrupts
+	*dtd->pcmsk |= cfg->int_mask;
+
+	if(cfg->int_num)
+		*dtd->pcicr |= (0x1 << (cfg->int_num - INT_PCINT0));
 
 	return 0x0;
 }
 
 driver_probe("avr,gpio", probe);
 
-static gpio_type_t read(void *hw){
+static gpio_int_t read(void *hw){
 	return ((dt_data_t*)hw)->regs->pin;
 }
 
-static int write(gpio_type_t v, void *hw){
+static int write(gpio_int_t v, void *hw){
 	((dt_data_t*)hw)->regs->port = v;
-
-	return E_OK;
-}
-
-static int configure(gpio_cfg_t *cfg, void *hw){
-	dt_data_t *dtd;
-	gpio_regs_t *regs;
-
-
-	dtd = (dt_data_t*)hw;
-	regs = dtd->regs;
-
-	/* configure port */
-	regs->port |= cfg->in_mask | cfg->out_mask | cfg->int_mask;
-	regs->ddr |= cfg->out_mask | cfg->int_mask;
-
-	/* configure interrupts */
-	*dtd->pcmsk |= cfg->int_mask;
-
-	if(cfg->int_num)
-		*dtd->pcicr |= (0x1 << (cfg->int_num - INT_PCINT0));
 
 	return E_OK;
 }

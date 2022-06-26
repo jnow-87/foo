@@ -17,7 +17,7 @@ gpio-normal = {
 	 * gpio hardware description
 	 * 	has to match gpio_cfg_t
 	 */
-	int<CONFIG_GPIO_TYPE_WIDTH> = [
+	int<CONFIG_GPIO_INT_WIDTH> = [
 		1,		// mode (normal)
 		0xff,	// pin mask
 		0x3f,	// in mask
@@ -35,7 +35,7 @@ gpio-strict = {
 	 * gpio hardware description
 	 * 	has to match gpio_cfg_t
 	 */
-	int<CONFIG_GPIO_TYPE_WIDTH> = [
+	int<CONFIG_GPIO_INT_WIDTH> = [
 		2,		// mode (strict)
 		0xff,	// pin mask
 		0x3f,	// in mask

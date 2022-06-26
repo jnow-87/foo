@@ -13,9 +13,13 @@ menuconfig DRIVER_GPIO
 	select SC_SIGNAL
 
 if DRIVER_GPIO
-	config GPIO_TYPE_WIDTH
+	config GPIO_INT_WIDTH
 		int "gpio register width [bits]"
 		default 8
+
+	config DRIVER_MCP23017
+		bool "mcp23017 i2c I/O expander"
+		select DRIVER_I2C
 
 	config GPIO_DEBUG
 		bool "Enable debug messages"
