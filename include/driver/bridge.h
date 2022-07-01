@@ -17,15 +17,15 @@
 
 
 /* macros */
-#define DS_ACK_FLAG				0x1
-#define DS_TX_FLAG				0x2
+#define BDS_ACK_FLAG			0x1
+#define BDS_TX_FLAG				0x2
 
-#define DS_BASE(num)			(((num) << 2))
-#define DS_TX(num)				(((num) << 2) | DS_TX_FLAG)
-#define DS_ACK(num)				(((num) << 2) | DS_ACK_FLAG)
+#define BDS_BASE(num)			(((num) << 2))
+#define BDS_TX(num)				(((num) << 2) | BDS_TX_FLAG)
+#define BDS_ACK(num)			(((num) << 2) | BDS_ACK_FLAG)
 
-#define DS_ISTX					((state) & DS_TX_FLAG)
-#define DS_ISACK(state)			((state) & DS_ACK_FLAG)
+#define BDS_ISTX				((state) & BDS_TX_FLAG)
+#define BDS_ISACK(state)		((state) & BDS_ACK_FLAG)
 
 
 /* incomplete types */
@@ -34,40 +34,40 @@ struct bridge_t;
 
 /* types */
 typedef enum{
-	DT_READ = 0,
-	DT_WRITE,
+	BDT_READ = 0,
+	BDT_WRITE,
 } bridge_dgram_type_t;
 
 typedef enum{
-	DS_CTRL_BYTE = DS_BASE(1),
-	DS_DATA_LEN = DS_BASE(2),
-	DS_CHECKSUM = DS_BASE(3),
-	DS_DATA = DS_BASE(4),
+	BDS_CTRL_BYTE = BDS_BASE(1),
+	BDS_DATA_LEN = BDS_BASE(2),
+	BDS_CHECKSUM = BDS_BASE(3),
+	BDS_DATA = BDS_BASE(4),
 
-	DS_COMPLETE = DS_BASE(5),
-	DS_ERROR = DS_BASE(6),
+	BDS_COMPLETE = BDS_BASE(5),
+	BDS_ERROR = BDS_BASE(6),
 
-	DS_CTRL_BYTE_TX = DS_TX(7),
-	DS_DATA_LEN_TX = DS_TX(8),
-	DS_CHECKSUM_TX = DS_TX(9),
-	DS_DATA_TX = DS_TX(10),
-	DS_VERIFY_TX = DS_TX(11),
+	BDS_CTRL_BYTE_TX = BDS_TX(7),
+	BDS_DATA_LEN_TX = BDS_TX(8),
+	BDS_CHECKSUM_TX = BDS_TX(9),
+	BDS_DATA_TX = BDS_TX(10),
+	BDS_VERIFY_TX = BDS_TX(11),
 
-	DS_CTRL_BYTE_ACK = DS_ACK(12),
-	DS_DATA_LEN_ACK = DS_ACK(13),
-	DS_CHECKSUM_ACK = DS_ACK(14),
-	DS_DATA_ACK = DS_ACK(15),
-	DS_VERIFY_ACK = DS_ACK(16),
+	BDS_CTRL_BYTE_ACK = BDS_ACK(12),
+	BDS_DATA_LEN_ACK = BDS_ACK(13),
+	BDS_CHECKSUM_ACK = BDS_ACK(14),
+	BDS_DATA_ACK = BDS_ACK(15),
+	BDS_VERIFY_ACK = BDS_ACK(16),
 } bridge_dgram_state_t;
 
 typedef enum{
-	DE_NONE = 0,
-	DE_HDRBYTE,		/**< header byte mismatch */
-	DE_CHECKSUM,	/**< checksum mismatch */
-	DE_ACK,			/**< acknowledged byte mismatch */
-	DE_RX,			/**< read failed */
-	DE_TX,			/**< write failed */
-	DE_NOMEM,		/**< memory allocation error */
+	BDE_NONE = 0,
+	BDE_HDRBYTE,	/**< header byte mismatch */
+	BDE_CHECKSUM,	/**< checksum mismatch */
+	BDE_ACK,		/**< acknowledged byte mismatch */
+	BDE_RX,			/**< read failed */
+	BDE_TX,			/**< write failed */
+	BDE_NOMEM,		/**< memory allocation error */
 } bridge_dgram_error_t;
 
 typedef struct bridge_dgram_t{
