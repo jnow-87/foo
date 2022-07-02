@@ -70,31 +70,35 @@ err:
 driver_probe("i2c", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	size_t r;
 	dev_data_t *data;
 
 
 	data = (dev_data_t*)dev->data;
 
 	mutex_unlock(&dev->node->mtx);
-	r = i2c_read(data->i2c, data->cfg->slave, buf, n);
+
+	if(i2c_read(data->i2c, data->cfg->slave, buf, n) != 0)
+		n = 0;
+
 	mutex_lock(&dev->node->mtx);
 
-	return r;
+	return n;
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	size_t r;
 	dev_data_t *data;
 
 
 	data = (dev_data_t*)dev->data;
 
 	mutex_unlock(&dev->node->mtx);
-	r = i2c_write(data->i2c, data->cfg->slave, buf, n);
+
+	if(i2c_write(data->i2c, data->cfg->slave, buf, n) != 0)
+		n = 0;
+
 	mutex_lock(&dev->node->mtx);
 
-	return r;
+	return n;
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf, size_t n){
