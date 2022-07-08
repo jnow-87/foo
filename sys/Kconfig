@@ -40,6 +40,18 @@ endif # KERNEL_PRINTF || LIB_STREAM
 # }}}
 
 #
+# fonts
+#
+# {{{
+menuconfig FONTS
+	bool "Fonts"
+
+if FONTS
+	source "sys/fonts/Kconfig"
+endif
+# }}}
+
+#
 # miscellaneous
 #
 # {{{

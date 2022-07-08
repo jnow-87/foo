@@ -27,4 +27,9 @@ typedef struct{
 } font_t;
 
 
+/* prototypes */
+font_t *font_resolve(char const *name);
+uint8_t *font_char(char c, font_t *font);
+
+
 #endif // SYS_FONT_H
