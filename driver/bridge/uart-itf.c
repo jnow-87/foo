@@ -38,7 +38,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dtd->rx_int = dti->rx_int;
 	dtd->tx_int = dti->tx_int;
 
-	(void)bridge_create(dtd, &ops, dt_itf);
+	(void)bridge_create(&ops, dtd, dt_itf);
 
 	return 0x0;
 }

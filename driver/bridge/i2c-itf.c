@@ -79,7 +79,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(dtd->rx_int == 0 || dti->cfg->int_num != 0)
 		goto_errno(err_0, E_INVAL);
 
-	brdg = bridge_create(dtd, 0x0, dti);
+	brdg = bridge_create(0x0, dtd, dti);
 
 	if(brdg == 0)
 		goto err_0;

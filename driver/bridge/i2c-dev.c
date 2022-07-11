@@ -41,7 +41,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(dtd->rx_int != 0 || dtd->tx_int != 0)
 		goto_errno(err_0, E_INVAL);
 
-	brdg = bridge_create(dtd, 0x0, 0x0);
+	brdg = bridge_create(0x0, dtd, 0x0);
 
 	if(brdg == 0x0)
 		goto err_0;

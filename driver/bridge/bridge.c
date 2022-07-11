@@ -40,7 +40,7 @@ static mutex_t bridge_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-bridge_t *bridge_create(bridge_cfg_t *cfg, bridge_ops_t *ops, void *hw){
+bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
 	bridge_t *brdg;
 
 

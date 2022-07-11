@@ -138,7 +138,7 @@ typedef struct bridge_t{
 
 
 /* prototypes */
-bridge_t *bridge_create(bridge_cfg_t *cfg, bridge_ops_t *ops, void *hw);
+bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw);
 void bridge_destroy(bridge_t *brdg);
 
 int16_t bridge_read(bridge_t *brdg, void *data, uint8_t n);

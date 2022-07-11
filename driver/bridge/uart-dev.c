@@ -35,7 +35,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 	dtd = (bridge_cfg_t*)dt_data;
 
-	brdg = bridge_create(dtd, 0x0, 0x0);
+	brdg = bridge_create(0x0, dtd, 0x0);
 
 	if(brdg == 0x0)
 		goto err_0;
