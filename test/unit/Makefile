@@ -8,7 +8,17 @@
 
 
 # target
-obj-y := memmock.o string.o list.o list1.o queue.o stack.o memblock.o vector.o devtree.o
+obj-y := \
+	memmock.o \
+	string.o \
+	ctype.o \
+	list.o \
+	list1.o \
+	queue.o \
+	stack.o \
+	memblock.o \
+	vector.o \
+	devtree.o
 
 obj-$(CONFIG_LIB_STREAM) += stream.o
 obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
@@ -17,7 +27,22 @@ obj-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
 obj-$(CONFIG_KERNEL_NET) += inet.o
 
 # host
-hostobj-y := memmock.o string.o list.o list1.o queue.o stack.o memblock.o vector.o devtree.o stream.o ringbuf.o linebuf.o patmat.o inet.o
+hostobj-y := \
+	memmock.o \
+	string.o \
+	ctype.o \
+	list.o \
+	list1.o \
+	queue.o \
+	stack.o \
+	memblock.o \
+	vector.o \
+	devtree.o \
+	stream.o \
+	ringbuf.o \
+	linebuf.o \
+	patmat.o \
+	inet.o
 
 
 # flags
