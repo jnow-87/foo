@@ -282,7 +282,7 @@ static int sc_hdlr_ioctl(void *_p){
 	copy_from_user(data, p->data, p->data_len, this_p);
 
 	mutex_lock(&node->mtx);
-	r = node->ops->ioctl(fd, p->cmd, data);
+	r = node->ops->ioctl(fd, p->cmd, data, p->data_len);
 	mutex_unlock(&node->mtx);
 
 	/* update user space */

@@ -37,7 +37,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(fs_filed_t *fd, int request, void *data);
+static int ioctl(fs_filed_t *fd, int request, void *data, size_t n);
 
 static int connect(socket_t *sock, sock_addr_t *addr, size_t addr_len);
 static int bind(socket_t *sock, sock_addr_t *addr, size_t addr_len);
@@ -298,7 +298,7 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	return sendto(fd, buf, n, 0x0, 0);
 }
 
-static int ioctl(fs_filed_t *fd, int request, void *_data){
+static int ioctl(fs_filed_t *fd, int request, void *_data, size_t n){
 	int r;
 	fs_node_t *node;
 	socket_t *sock;
@@ -308,6 +308,9 @@ static int ioctl(fs_filed_t *fd, int request, void *_data){
 	data = (socket_ioctl_t*)_data;
 	node = fd->node;
 	sock = (socket_t*)node->data;
+
+	if(n != sizeof(socket_ioctl_t) + data->addr_len)
+		return_errno(E_INVAL);
 
 	switch(request){
 	case IOCTL_CONNECT:

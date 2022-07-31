@@ -31,11 +31,11 @@ TEST_LONG(tty, "test tty non/blocking io"){
 
 
 	/* configure terminal */
-	ioctl(0, IOCTL_CFGRD, &cfg, sizeof(uart_cfg_t));
+	ioctl(0, IOCTL_CFGRD, &cfg);
 	cfg.iflags |= TIFL_CRNL;
 	cfg.oflags |= TOFL_NLCR;
 	cfg.lflags &= ~TLFL_ECHO;
-	ioctl(0, IOCTL_CFGWR, &cfg, sizeof(uart_cfg_t));
+	ioctl(0, IOCTL_CFGWR, &cfg);
 
 	/* get stdin file mode */
 	if(fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t)) != 0){

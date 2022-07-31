@@ -125,14 +125,14 @@ static int configure(int fd, term_iflags_t iflags, term_oflags_t oflags, term_lf
 	loop_cfg_t cfg;
 
 
-	if(ioctl(fd, IOCTL_CFGRD, &cfg, sizeof(loop_cfg_t)) != 0)
+	if(ioctl(fd, IOCTL_CFGRD, &cfg) != 0)
 		return -1;
 
 	cfg.iflags = iflags;
 	cfg.oflags = oflags;
 	cfg.lflags = lflags;
 
-	if(ioctl(fd, IOCTL_CFGWR, &cfg, sizeof(loop_cfg_t)) != 0)
+	if(ioctl(fd, IOCTL_CFGWR, &cfg) != 0)
 		return -1;
 
 	return 0;

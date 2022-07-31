@@ -97,11 +97,12 @@ typedef struct{
 	 * 						file system implementation.
 	 * \param	data		pointer to additional data that might be required to
 	 * 						perform the request (kernel memory)
+	 * \param	n			size of the memory pointed to by data
 	 *
-	 * \return	E_OK on succes. If an error occured a value smaller than 0 is
+	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
-	int (*ioctl)(struct fs_filed_t *fd, int request, void *data);
+	int (*ioctl)(struct fs_filed_t *fd, int request, void *data, size_t n);
 
 	/**
 	 * \brief	Perform the requested command on the given file descriptor fd.
@@ -112,7 +113,7 @@ typedef struct{
 	 * \param	data		pointer to additional data that might be required to
 	 * 						perform the request (kernel memory)
 	 *
-	 * \return	E_OK on succes. If an error occured a value smaller than 0 is
+	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
 	int (*fcntl)(struct fs_filed_t *fd, int cmd, void *data);
@@ -136,7 +137,7 @@ typedef struct{
 	 * \param	path	path to the target node
 	 *
 	 * \return	pointer to the target node on success. On error 0x0 is returned and
-	 * 			errnor is set appropriately.
+	 * 			errno is set appropriately.
 	 */
 	struct fs_node_t *(*node_find)(struct fs_node_t *start, char const *path);
 } fs_ops_t;

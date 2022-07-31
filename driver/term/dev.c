@@ -24,7 +24,7 @@
 /* local/static prototypes */
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
 
 static size_t flputs(char const *s, size_t n, void *term);
 
@@ -156,25 +156,27 @@ err:
 	return 0;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
-	int r;
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
 	term_t *term;
 
 
 	term = (term_t*)dev->data;
 
+	if(n != sizeof(term_cfg_t) && n != (sizeof(term_cfg_t) + term->hw->cfg_size))
+		return_errno(E_INVAL);
+
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, term->cfg, term->hw->cfg_size);
+		memcpy(data, term->cfg, n);
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		r = term->hw->configure(data, term->hw->data);
+		if(n > sizeof(term_cfg_t)){
+			if(term->hw->configure(data, term->hw->data) != 0)
+				return -errno;
+		}
 
-		if(r != E_OK)
-			return -errno;
-
-		memcpy(term->cfg, data, term->hw->cfg_size);
+		memcpy(term->cfg, data, n);
 		return E_OK;
 
 	default:

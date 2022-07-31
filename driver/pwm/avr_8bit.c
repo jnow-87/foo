@@ -65,7 +65,7 @@ static size_t read_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t read(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg);
 static size_t write(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg);
-static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
 static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd);
 static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs);
 
@@ -158,7 +158,10 @@ static size_t write(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg){
 	return sizeof(*buf);
 }
 
-static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
+static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
+	if(n != sizeof(pwm_cfg_t))
+		return_errno(E_INVAL);
+
 	switch(request){
 	case IOCTL_CFGRD:	return config_get(data, ((dt_data_t*)dev->data)->regs);
 	case IOCTL_CFGWR:	return config_set(data, dev->data);

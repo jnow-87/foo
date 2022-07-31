@@ -66,9 +66,9 @@ int shell(char const *prompt, FILE *_stream){
 	strncpy(shell_file, "stdin", NAME_MAX);
 
 	// configure terminal
-	ioctl(0, IOCTL_CFGRD, &cfg, sizeof(uart_cfg_t));
+	ioctl(0, IOCTL_CFGRD, &cfg);
 	cfg.lflags &= ~TLFL_ECHO;
-	ioctl(0, IOCTL_CFGWR, &cfg, sizeof(uart_cfg_t));
+	ioctl(0, IOCTL_CFGWR, &cfg);
 
 	// init commands
 	cmd_init();

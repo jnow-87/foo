@@ -34,7 +34,7 @@ typedef struct{
 /* local/static prototypes */
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf, size_t n);
 
 
 /* local functions */
@@ -97,19 +97,22 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	return r;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf){
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf, size_t n){
 	dev_data_t *data;
 
 
 	data = (dev_data_t*)dev->data;
 
+	if(n != sizeof(dt_data_t))
+		return_errno(E_INVAL);
+
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(buf, data->cfg, sizeof(dt_data_t));
+		memcpy(buf, data->cfg, n);
 		break;
 
 	case IOCTL_CFGWR:
-		memcpy(data->cfg, buf, sizeof(dt_data_t));
+		memcpy(data->cfg, buf, n);
 		break;
 
 	default:

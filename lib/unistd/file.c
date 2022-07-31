@@ -88,7 +88,7 @@ ssize_t write(int fd, void *buf, size_t n){
 	return p.data_len;
 }
 
-int ioctl(int fd, int cmd, void *data, size_t data_len){
+int ionctl(int fd, int cmd, void *data, size_t data_len){
 	sc_fs_t p;
 
 

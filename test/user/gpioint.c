@@ -64,7 +64,7 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	cfg.mask = 0xff;
 	cfg.sig = SIGNAL;
 
-	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg, sizeof(gpio_int_cfg_t)) != 0){
+	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg) != 0){
 		printf(FG_RED "error " RESET_ATTR "registering signal to device \"%s\"\n", strerror(errno));
 		return -1;
 	}

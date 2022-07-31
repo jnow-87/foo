@@ -19,7 +19,7 @@ static int open(devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode);
 static int close(devfs_dev_t *dev, fs_filed_t *fd);
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
 static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
 
 
@@ -85,7 +85,7 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	return n;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
 	DEBUG("dummy callback for loop device\n");
 
 	return E_OK;
