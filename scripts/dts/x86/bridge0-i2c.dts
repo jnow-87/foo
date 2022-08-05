@@ -13,26 +13,21 @@
 brdg0-right-i2c = {
 	compatible = "bridge,i2c-dev";
 
-	/**
-	 * bridge hardware description
-	 *	has to match bridge_cfg_t
-	 */
-	// bridge config
+	/* bridge config (bridge_cfg_t) */
 	int<8> = [
-		0,					// id
-		2,					// chunksize
-		0,					// rx interrupt
-		0					// tx interrupt
+		0,				// id
+		2,				// chunksize
+		0,				// rx interrupt
+		0,				// tx interrupt
 	];
 
-	// bridge_cfg_t::hw_cfg[]
-	//	i2c config according to i2c_cfg_t
-	int<8> = [ 1 ];			// mode (master)
-	int<16> = [ 0 ];		// clock (0kHz)
+	// hwcfg (i2c_cfg_t)
+	int<8> = [ 1 ];		// mode (master)
+	int<16> = [ 0 ];	// clock (0kHz)
 	int<8> = [
-	   0,					// broadcast (enabled)
-	   0,					// address
-	   0					// interrupt number
+	   0,				// broadcast (enabled)
+	   0,				// address
+	   0,				// interrupt number
 	];
 
 #ifdef CONFIG_I2C_DEVFS_DEV

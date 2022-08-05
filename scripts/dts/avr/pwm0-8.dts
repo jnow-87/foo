@@ -10,20 +10,17 @@
 pwm0 = {
 	compatible = "avr,pwm8";
 
-	/**
-	 * pwm hardware description
-	 * 	has to match dt_data_t of the avr 8-bit pwm driver
-	 */
-	baseaddr = 0x44;			// tcc0 config register base
+	/* pwm hardware (dt_data_t) */
+	baseaddr = 0x44;	// tcc0 config register base
 
 	reg = [
-		0x35,					// TIFR0
-		0x6e					// TIMSK0
+		0x35,			// TIFR0
+		0x6e,			// TIMSK0
 	];
 
-	reg = [ 0x64 ];				// PRR0
-	int<8> = [ 0x20 ];			// PRR0_PRTIM0
+	reg = [ 0x64 ];		// PRR0
+	int<8> = [ 0x20 ];	// PRR0_PRTIM0
 
-	reg = [ 0x24 ];				// DDRB
-	int<8> = [ 0x18 ];			// DDRB bits 3..4
+	reg = [ 0x24 ];		// DDRB
+	int<8> = [ 0x18 ];	// DDRB bits 3..4
 };

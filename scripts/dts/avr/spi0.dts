@@ -10,32 +10,25 @@
 spi0 = {
 	compatible = "avr,spi";
 
-	/**
-	 * spi hardware description
-	 * 	has to match dt_data_t of the avr spi driver
-	 */
-	baseaddr = 0x4c;			// spi config register base
+	/* spi hardware (dt_data_t) */
+	baseaddr = 0x4c;	// spi config register base
 
-	reg = [ 0x24 ];				// DDRB
+	reg = [ 0x24 ];		// DDRB
 	int<8> = [
-		0x40,					// PB6 (MISO)
-		0x20,					// PB5 (MOSI)
-		0x80					// PB7 (SCK)
+		0x40,			// PB6 (MISO)
+		0x20,			// PB5 (MOSI)
+		0x80,			// PB7 (SCK)
 	];
 
-	reg = [ 0x64 ];				// PRRO
-	int<8> = [ 0x4 ];			// PRR0_PRSPI
+	reg = [ 0x64 ];		// PRRO
+	int<8> = [ 0x4 ];	// PRR0_PRSPI
 
-	int<8> = [ 19 ];			// interrupt number
+	int<8> = [ 19 ];	// interrupt number
 
 	tty1 = {
 		compatible = "terminal";
 
-		/**
-		 * terminal configuration
-		 * 	has to match the config data type of the underlying
-		 * 	device driver, i.e. spi_cfg_t
-		 */
+		/* terminal config (spi_cfg_t) */
 		int<8> = [
 			1,					// device mode (master)
 			0,					// sample mode (CPOL = 0, CPHA = 0)
@@ -43,7 +36,7 @@ spi0 = {
 			1,					// prescaler (4)
 			0,					// iflags (none)
 			0,					// oflags (none)
-			0					// lflags (none)
+			0,					// lflags (none)
 		];
 	};
 };

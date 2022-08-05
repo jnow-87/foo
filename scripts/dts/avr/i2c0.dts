@@ -13,25 +13,20 @@
 i2c0 = {
 	compatible = "avr,i2c";
 
-	/**
-	 * i2c hardware description
-	 * 	has to match dt_data_t of the avr i2c driver
-	 */
+	/* i2c hardware (dt_data_t) */
 	baseaddr = 0xb8;
 
-	reg = [ 0x64 ];				// PRRO
-	int<8> = [ 0x80 ];			// PRR0_PRTWI
+	reg = [ 0x64 ];	  	// PRRO
+	int<8> = [ 0x80 ];	// PRR0_PRTWI
 
 	/**
-	 * i2c configuration
-	 * 	has to match i2c_cfg_t
-	 */
-	int<8> = [ 1 ];			// mode (master)
-	int<16> = [ 100 ];		// clock (100kHz)
+	 * i2c config (i2c_cfg_t) */
+	int<8> = [ 1 ];		// mode (master)
+	int<16> = [ 100 ];	// clock (100kHz)
 	int<8> = [
-	   1,					// broadcast (enabled)
-	   1,					// address
-	   26					// interrupt number
+	   1,				// broadcast (enabled)
+	   1,				// address
+	   26,				// interrupt number
 	];
 
 #ifdef CONFIG_I2C_DEVFS_DEV

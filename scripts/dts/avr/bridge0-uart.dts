@@ -10,10 +10,7 @@
 uart1 = {
 	compatible = "avr,uart";
 
-	/**
-	 * uart hardware description
-	 * 	has to match dt_data_t of the avr uart driver
-	 */
+	/* uart hardware (dt_data_t) */
 	baseaddr = 0xc8;			// uart1 config register base
 
 	reg = [ 0x64 ];				// PRR0
@@ -21,26 +18,21 @@ uart1 = {
 
 	int<8> = [
 		28,						// uart1 rx interrupt
-		30						// uart1 tx interrupt (disabled)
+		30,						// uart1 tx interrupt (disabled)
 	];
 
 	brdg0-left = {
 		compatible = "bridge,uart-itf";
 
-		/**
-		 * bridge hardware description
-		 *	has to match bridge_cfg_t
-		 */
-		// bridge config
+		/* bridge config (bridge_cfg_t) */
 		int<8> = [
 			0,					// id
 			2,					// chunksize
 			0,					// rx interrupt
-			0					// tx interrupt
+			0,					// tx interrupt
 		];
 
-		// bridge_cfg_t::hw_cfg[]
-		//	terminal config according to uart_cfg_t
+		// hwcfg (uart_cfg_t)
 		int<32> = [ 115200 ];	// baudrate
 		int<8> = [
 			1,					// stop bits (1)
@@ -48,7 +40,7 @@ uart1 = {
 			3,					// csize (TCS_8)
 			0x0,				// iflags (none)
 			0x0,				// oflags (none)
-			0x0					// lflags (none)
+			0x0,				// lflags (none)
 		];
 	};
 };

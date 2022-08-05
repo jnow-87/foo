@@ -10,26 +10,18 @@
 brdg0-right = {
 	compatible = "bridge,uart-dev";
 
-	/**
-	 * bridge hardware description
-	 *	has to match bridge_cfg_t
-	 */
-	// bridge config
+	/* bridge config (bridge_cfg_t) */
 	int<8> = [
-		0,					// id
-		2,					// chunksize
-		37,					// rx interrupt
-		38					// tx interrupt
+		0,						// id
+		2,						// chunksize
+		37,						// rx interrupt
+		38,						// tx interrupt
 	];
 
 	tty-bridge0 = {
 		compatible = "terminal";
 
-		/**
-		 * terminal configuration
-		 * 	has to match the config data type of the underlying
-		 * 	device driver, i.e. uart_cfg_t
-		 */
+		/* terminal config (uart_cfg_t) */
 		int<32> = [ 115200 ];	// baudrate
 		int<8> = [
 			1,					// stop bits (1)
@@ -37,7 +29,7 @@ brdg0-right = {
 			3,					// csize (TCS_8)
 			0x0,				// iflags (none)
 			0x0,				// oflags (none)
-			0x0					// lflags (none)
+			0x0,				// lflags (none)
 		];
 	};
 };
