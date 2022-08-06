@@ -17,6 +17,14 @@ uart1 = {
 		0,						// tx interrupt
 	];
 
+	// cfg (uart_cfg_t)
+	int<32> = [ 115200 ];		// baudrate
+	int<8> = [
+		1,						// stop bits (1)
+		0,						// parity (UART_PARITY_NONE)
+		3,						// csize (UART_CS_8)
+	];
+
 	brdg0-left = {
 		compatible = "bridge,uart-itf";
 
@@ -26,17 +34,6 @@ uart1 = {
 			2,					// chunksize
 			0,					// automatically set by the driver
 			0,					// automatically set by the driver
-		];
-
-		// hwcfg (uart_cfg_t)
-		int<32> = [ 115200 ];	// baudrate
-		int<8> = [
-			1,					// stop bits (1)
-			0,					// parity (TPARITY_NONE)
-			3,					// csize (TCS_8)
-			0x0,				// iflags (none)
-			0x0,				// oflags (none)
-			0x0,				// lflags (none)
 		];
 	};
 };

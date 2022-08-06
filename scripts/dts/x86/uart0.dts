@@ -11,24 +11,34 @@ uart0 = {
 	compatible = "x86,uart";
 
 	/* uart hardware (dt_data_t) */
-	string = "/dev/stdin";		// path
+	string = "/dev/stdin";	// path
 	int<8> = [
-		3,						// rx interrupt
-		0,						// tx interrupt
+		3,					// rx interrupt
+		0,					// tx interrupt
+	];
+
+	// cfg (uart_cfg_t)
+	int<32> = [ 115200 ];	// baudrate
+	int<8> = [
+		1,					// stop bits (1)
+		0,					// parity (UART_PARITY_NONE)
+		3,					// csize (UART_CS_8)
 	];
 
 	tty0 = {
 		compatible = "terminal";
 
-		/* terminal config (uart_cfg_t) */
-		int<32> = [ 115200 ];	// baudrate
+		/* terminal config (term_cfg_t) */
 		int<8> = [
-			1,					// stop bits (1)
-			0,					// parity (TPARITY_NONE)
-			3,					// csize (TCS_8)
-			0x1,				// iflags (TIFL_CRNL)
-			0x2,				// oflags (TOFL_NLCR)
-			0x0,				// lflags (none)
+			0x1,			// iflags (TIFL_CRNL)
+			0x2,			// oflags (TOFL_NLCR)
+			0x0,			// lflags (none)
+			0,				// tabs
+		];
+
+		int<16> = [
+			0,				// lines (set by the driver)
+			0,				// columns (set by the driver)
 		];
 
 		klog = {

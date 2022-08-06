@@ -141,6 +141,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	devfs_dev_t *dev;
 	netdev_itf_t itf;
 	term_itf_t *hw;
+	term_cfg_t term;
 
 
 	hw = (term_itf_t*)dt_itf;
@@ -199,7 +200,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(hw->rx_int)
 		dev->node->timeout_us = 0;
 
-	if(hw->configure(dt_data, hw->data) != 0)
+	if(hw->configure != 0x0 && hw->configure(&term, hw->cfg, hw->data) != 0)
 		goto err_5;
 
 	if(ktask_create(rx_task, &esp, sizeof(esp_t*), 0x0, true) != 0)

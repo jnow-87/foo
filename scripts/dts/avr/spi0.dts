@@ -25,18 +25,28 @@ spi0 = {
 
 	int<8> = [ 19 ];	// interrupt number
 
+	// cfg (spi_cfg_t)
+	int<8> = [
+		1,				// device mode (master)
+		0,				// sample mode (CPOL = 0, CPHA = 0)
+		0,				// data order (MSB first)
+		1,				// prescaler (4)
+	];
+
 	tty1 = {
 		compatible = "terminal";
 
-		/* terminal config (spi_cfg_t) */
+		/* terminal config (term_cfg_t) */
 		int<8> = [
-			1,					// device mode (master)
-			0,					// sample mode (CPOL = 0, CPHA = 0)
-			0,					// data order (MSB first)
-			1,					// prescaler (4)
-			0,					// iflags (none)
-			0,					// oflags (none)
-			0,					// lflags (none)
+			0x0,		// iflags (none)
+			0x0,		// oflags (none)
+			0x0,		// lflags (none)
+			0,			// tabs
+		];
+
+		int<16> = [
+			0,			// lines (set by the driver)
+			0,			// columns (set by the driver)
 		];
 	};
 };

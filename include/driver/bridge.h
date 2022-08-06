@@ -95,7 +95,7 @@ typedef struct{
 	uint8_t rx_int,
 			tx_int;
 
-	uint8_t hw_cfg[];
+	uint8_t hwcfg[];
 } bridge_cfg_t;
 
 typedef struct{

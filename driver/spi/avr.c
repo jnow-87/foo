@@ -57,11 +57,13 @@ typedef struct{
 
 	// interrupt
 	uint8_t const int_num;
+
+	spi_cfg_t cfg;
 } dt_data_t;
 
 
 /* local/static prototypes */
-static int configure(void *cfg, void *data);
+static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, void *data);
@@ -74,7 +76,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 
 	dtd = (dt_data_t*)dt_data;
-	itf = kmalloc(sizeof(term_itf_t));
+	itf = kcalloc(1, sizeof(term_itf_t));
 
 	if(itf == 0x0)
 		return 0x0;
@@ -83,19 +85,19 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
-	itf->error = 0x0;
+
 	itf->data = dtd;
+	itf->cfg = &dtd->cfg;
+	itf->cfg_size = sizeof(spi_cfg_t);
 	itf->rx_int = dtd->int_num;
 	itf->tx_int = 0;
-	itf->cfg_size = sizeof(spi_cfg_t);
-	itf->cfg_flags_offset = offsetof(spi_cfg_t, iflags);
 
 	return itf;
 }
 
 driver_probe("avr,spi", probe);
 
-static int configure(void *_cfg, void *data){
+static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
 	uint8_t const pres_bits[] = { 0b100, 0b000, 0b101, 0b001, 0b110, 0b010, 0b011 };
 	spi_cfg_t *cfg;
 	dt_data_t *dtd;
@@ -104,7 +106,7 @@ static int configure(void *_cfg, void *data){
 
 	dtd = (dt_data_t*)data;
 	regs = dtd->regs;
-	cfg = (spi_cfg_t*)_cfg;
+	cfg = (spi_cfg_t*)hw_cfg;
 
 	/* disable spi, triggering reset */
 	regs->spcr = 0x0;

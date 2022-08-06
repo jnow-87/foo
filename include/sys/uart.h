@@ -11,7 +11,6 @@
 #define SYS_UART_H
 
 
-#include <sys/term.h>
 #include <sys/types.h>
 
 
@@ -62,10 +61,6 @@ typedef struct{
 	uint8_t stopb;		/**< cf. uart_stopb_t */
 	uint8_t parity;		/**< cf. uart_parity_t */
 	uint8_t csize;		/**< cf. uart_csize_t */
-
-	uint8_t iflags,		/**< cf. term_flags_t */
-			oflags,
-			lflags;
 } uart_cfg_t;
 
 

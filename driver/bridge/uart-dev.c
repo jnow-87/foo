@@ -19,7 +19,6 @@
 
 
 /* local/static prototypes */
-static int configure(void *cfg, void *brdg);
 static char putc(char c, void *brdg);
 static size_t puts(char const *s, size_t n, void *brdg);
 static size_t gets(char *s, size_t n, void *brdg);
@@ -40,22 +39,21 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(brdg == 0x0)
 		goto err_0;
 
-	itf = kmalloc(sizeof(term_itf_t));
+	itf = kcalloc(1, sizeof(term_itf_t));
 
 	if(itf == 0x0)
 		goto err_1;
 
-	itf->configure = configure;
 	itf->putc = putc;
 	itf->puts = puts;
 	itf->gets = gets;
 	itf->error = error;
 
 	itf->data = brdg;
+	itf->cfg = 0x0;
+	itf->cfg_size = 0;
 	itf->rx_int = dtd->rx_int;
 	itf->tx_int = dtd->tx_int;
-	itf->cfg_size = sizeof(uart_cfg_t);
-	itf->cfg_flags_offset = offsetof(uart_cfg_t, iflags);
 
 	return itf;
 
@@ -68,10 +66,6 @@ err_0:
 }
 
 driver_probe("bridge,uart-dev", probe);
-
-static int configure(void *cfg, void *brdg){
-	return E_OK;
-}
 
 static char putc(char c, void *brdg){
 	return (bridge_write(brdg, &c, 1) == 1) ? c : ~c;

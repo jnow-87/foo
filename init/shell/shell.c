@@ -12,7 +12,6 @@
 #include <sys/errno.h>
 #include <sys/stat.h>
 #include <sys/term.h>
-#include <sys/uart.h>
 #include <sys/ioctl.h>
 #include <sys/stack.h>
 #include <sys/escape.h>
@@ -54,7 +53,7 @@ int shell(char const *prompt, FILE *_stream){
 	stat_t f_stat;
 	stream_stack *streams,
 				 *stackp;
-	uart_cfg_t cfg;
+	term_cfg_t cfg;
 
 
 	/* init */

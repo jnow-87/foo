@@ -51,7 +51,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.read = read;
 	ops.write = write;
 
-	itf = i2c_create(&ops, (i2c_cfg_t*)dtd->hw_cfg, brdg);
+	itf = i2c_create(&ops, (i2c_cfg_t*)dtd->hwcfg, brdg);
 
 	if(itf == 0x0)
 		goto err_1;

@@ -13,7 +13,6 @@
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/term.h>
-#include <sys/uart.h>
 #include <sys/escape.h>
 #include <test/test.h>
 
@@ -26,7 +25,7 @@ TEST_LONG(tty, "test tty non/blocking io"){
 	size_t i,
 		   n;
 	char buf[20];
-	uart_cfg_t cfg;
+	term_cfg_t cfg;
 	f_mode_t f_mode;
 
 

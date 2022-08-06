@@ -16,11 +16,14 @@ loop0 = {
 	tty-loop0 = {
 		compatible = "terminal";
 
-		/* terminal config (loop_cfg_t) */
+		/* terminal config (term_loop_cfg_t) */
 		int<8> = [
 			0x0,		// iflags (none)
 			0x0,		// oflags (none)
 			0x0,		// lflags (none)
 		];
+
+		string = "";	// font name
+		baseaddr = 0x0;	// font pointer (set by the driver)
 	};
 };
