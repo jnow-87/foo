@@ -10,9 +10,6 @@
 i2c-raw0 = {
 	compatible = "i2c";
 
-	/**
-	 * i2c devfs dev config
-	 *	has to match i2c_dev_cfg_t
-	 */
-	 int<8> = [ 0 ];	// slave address
+	/* i2c devfs dev config (i2c_dev_cfg_t) */
+	int<8> = [ 0 ];	// slave address
 };

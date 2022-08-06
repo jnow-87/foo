@@ -10,10 +10,7 @@
 uart0 = {
 	compatible = "avr,uart";
 
-	/**
-	 * uart hardware description
-	 * 	has to match dt_data_t of the avr uart driver
-	 */
+	/* uart hardware (dt_data_t) */
 	baseaddr = 0xc0;			// uart0 config register base
 
 	reg = [ 0x64 ];				// PRR0
@@ -21,17 +18,13 @@ uart0 = {
 
 	int<8> = [
 		20,						// uart0 rx interrupt
-		22						// uart0 tx interrupt
+		22,						// uart0 tx interrupt
 	];
 
 	tty0 = {
 		compatible = "terminal";
 
-		/**
-		 * terminal configuration
-		 * 	has to match the config data type of the underlying
-		 * 	device driver, i.e. uart_cfg_t
-		 */
+		/* terminal config (uart_cfg_t) */
 		int<32> = [ 115200 ];	// baudrate
 		int<8> = [
 			1,					// stop bits (1)
@@ -39,7 +32,7 @@ uart0 = {
 			3,					// csize (TCS_8)
 			0x0,				// iflags (none)
 			0x2,				// oflags (TOFL_NLCR)
-			0x0					// lflags (none)
+			0x0,				// lflags (none)
 		];
 
 		klog = {

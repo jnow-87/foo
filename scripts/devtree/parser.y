@@ -81,7 +81,7 @@
 	})
 
 	// vector allocate
-	#define VECTOR_ALLOC(data)({ \
+	#define INT_LIST_ALLOC()({ \
 		vector_t *v; \
 		\
 		\
@@ -91,16 +91,13 @@
 		if(vector_init(v, sizeof(unsigned int), 16) != 0) \
 			PARSER_ERROR("init vector\n"); \
 		\
-		VECTOR_ADD(v, data); \
-		\
 		v; \
 	})
 
 	// vector add
-	#define VECTOR_ADD(v, data){ \
-		if(vector_add(v, data) != 0) \
+	#define INT_LIST_ADD(v, data){ \
+		if(!data.empty && vector_add(v, &data.val) != 0) \
 			PARSER_ERROR("adding to vector\n"); \
-		\
 	}
 
 
@@ -204,6 +201,11 @@
 	unsigned int i;
 
 	struct{
+		bool empty;
+		unsigned int val;
+	} opt_int;
+
+	struct{
 		char *s;
 		unsigned int len;
 	} str;
@@ -237,6 +239,7 @@
 %type <memory> memory
 %type <memory> memory-attr
 %type <int_lst> int-list
+%type <opt_int> int-list-val
 
 
 %%
@@ -281,9 +284,17 @@ memory-attr : %empty													{ $$ = NODE_ALLOC_MEMORY(); }
 			;
 
 /* basic types */
-int-list : INT															{ $$ = VECTOR_ALLOC(&$1); }
-		 | int-list ',' INT												{ $$ = $1; VECTOR_ADD($$, &$3); }
+int-list : int-list-val													{ $$ = INT_LIST_ALLOC(); INT_LIST_ADD($$, $1); }
+		 | int-list opt-com int-list-val								{ $$ = $1; INT_LIST_ADD($$, $3); }
 		 ;
+
+int-list-val : %empty													{ $$.empty = true; }
+			 | INT														{ $$.empty = false; $$.val = $1; }
+			 ;
+
+opt-com : %empty														{ }
+		| ','															{ }
+		;
 
 
 %%

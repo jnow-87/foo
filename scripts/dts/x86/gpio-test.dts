@@ -13,10 +13,7 @@
 gpio-normal = {
 	compatible = "x86,gpio";
 
-	/**
-	 * gpio hardware description
-	 * 	has to match gpio_cfg_t
-	 */
+	/* gpio config (gpio_cfg_t) */
 	int<CONFIG_GPIO_INT_WIDTH> = [
 		1,		// mode (normal)
 		0xff,	// pin mask
@@ -24,17 +21,14 @@ gpio-normal = {
 		0xfc,	// out mask
 		0x00,	// int mask
 		0xff,	// invert mask (pass through)
-		0		// interrupt number
+		0,		// interrupt number
 	];
 };
 
 gpio-strict = {
 	compatible = "x86,gpio";
 
-	/**
-	 * gpio hardware description
-	 * 	has to match gpio_cfg_t
-	 */
+	/* gpio config (gpio_cfg_t) */
 	int<CONFIG_GPIO_INT_WIDTH> = [
 		2,		// mode (strict)
 		0xff,	// pin mask
@@ -42,6 +36,6 @@ gpio-strict = {
 		0xfc,	// out mask
 		0x00,	// int mask
 		0x00,	// invert mask (pass through)
-		0		// interrupt number
+		0,		// interrupt number
 	];
 };

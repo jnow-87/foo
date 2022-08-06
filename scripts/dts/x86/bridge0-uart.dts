@@ -10,33 +10,25 @@
 uart1 = {
 	compatible = "x86,uart";
 
-	/**
-	 * uart hardware description
-	 * 	has to match dt_data_t of the x86 uart driver
-	 */
+	/* uart hardware (dt_data_t) */
 	string = "/dev/ttyUSB1";	// path
 	int<8> = [
 		0,						// rx interrupt
-		0						// tx interrupt
+		0,						// tx interrupt
 	];
 
 	brdg0-left = {
 		compatible = "bridge,uart-itf";
 
-		/**
-		 * bridge hardware description
-		 *	has to match bridge_cfg_t
-		 */
-		// bridge config
+		/* bridge config (bridge_cfg_t) */
 		int<8> = [
 			0,					// id
 			2,					// chunksize
 			0,					// automatically set by the driver
-			0					// automatically set by the driver
+			0,					// automatically set by the driver
 		];
 
-		// bridge_cfg_t::hw_cfg[]
-		//	terminal config according to uart_cfg_t
+		// hwcfg (uart_cfg_t)
 		int<32> = [ 115200 ];	// baudrate
 		int<8> = [
 			1,					// stop bits (1)
@@ -44,7 +36,7 @@ uart1 = {
 			3,					// csize (TCS_8)
 			0x0,				// iflags (none)
 			0x0,				// oflags (none)
-			0x0					// lflags (none)
+			0x0,				// lflags (none)
 		];
 	};
 };
