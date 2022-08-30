@@ -11,6 +11,7 @@
 #define TEST_INT_BRICKOS_H
 
 
+#include <sys/types.h>
 #include <brickos/child.h>
 
 
@@ -30,6 +31,8 @@ typedef enum{
 /* prototypes */
 int brickos_init_childs(void);
 void brickos_destroy_childs(void);
+
+char const *brickos_child_name(pid_t pid);
 
 
 /* external variables */

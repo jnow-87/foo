@@ -92,6 +92,7 @@ int main(int argc, char **argv){
 	r |= sigemptyset(&sig_lst);
 	r |= sigaddset(&sig_lst, SIGINT);
 	r |= sigaddset(&sig_lst, SIGPIPE);
+	r |= sigaddset(&sig_lst, SIGCHLD);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_USR_SIG);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
 
@@ -165,6 +166,10 @@ static int signal_hdlr(int fd){
 			EEXIT("reading signal info failed with %s\n", strerror(errno));
 
 		switch(info.ssi_signo){
+		case SIGCHLD:
+			ERROR("%s process stopped with status %d\n", brickos_child_name(info.ssi_pid), info.ssi_status);
+
+			// fall through
 		case SIGINT:
 		case SIGPIPE: // fall through
 			DEBUG(1, "initiate shutdown\n");
