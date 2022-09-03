@@ -205,9 +205,9 @@ static void exec(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
 	DEBUG("issue i2c command\n");
 
 	if(hdr->cmd == I2C_CMD_WRITE){
-		r = (hdr->nbuf == 1) ?
-			i2c_write(dev->brdg->hw, hdr->slave, dev->buf, hdr->len) :
-			i2c_write_n(dev->brdg->hw, hdr->slave, dev->bufs, dev->nbuf)
+		r = (hdr->nbuf == 1)
+		  ? i2c_write(dev->brdg->hw, hdr->slave, dev->buf, hdr->len)
+		  : i2c_write_n(dev->brdg->hw, hdr->slave, dev->bufs, dev->nbuf)
 		;
 	}
 	else
