@@ -16,14 +16,12 @@
 
 /* local functions */
 static int exec(int argc, char **argv){
-	if(argc < 2){
-		printf("usage: %s <directory>\n", argv[0]);
-		return -1;
-	}
+	if(argc < 2)
+		return cmd_help(argv[0], "<directory>", "missing arguments", 0);
 
 	if(mkdir(argv[1]) != 0){
 		fprintf(stderr, "error \"%s\"\n", strerror(errno));
-		return -1;
+		return 1;
 	}
 
 	return 0;

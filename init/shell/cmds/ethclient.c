@@ -14,11 +14,17 @@
 #include <sys/inet.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <getopt.h>
 #include <socket.h>
 #include <shell/cmd.h>
 
 
 /* macros */
+#define ARGS	"<udp|tcp> <ip> <port>"
+#define OPTS \
+	"-t <timeout>", "time to wait for incoming data [ms]", \
+	"-h", "print this help message"
+
 #define ERROR(fmt, ...)({ fprintf(stderr, "error " fmt, ##__VA_ARGS__); -1; })
 
 
@@ -35,7 +41,6 @@ typedef struct{
 static int client(int sock);
 static int rx_loop(int sock);
 static int parse_opts(int argc, char **argv);
-static int help(char const *pname, char const *fmt, ...);
 
 
 /* static variables */
@@ -46,12 +51,13 @@ static opts_t opts = {
 
 /* local functions */
 static int exec(int argc, char **argv){
+	int r;
 	int sock;
 
 
 	/* parse command line options */
-	if(parse_opts(argc, argv) != 0)
-		return 1;
+	if((r = parse_opts(argc, argv)) != 0)
+		return r > 0;
 
 	/* start server */
 	printf("connect %s client to %s:%d\n",
@@ -162,57 +168,26 @@ static int rx_loop(int sock){
 }
 
 static int parse_opts(int argc, char **argv){
-	int i;
+	char opt;
 
 
-	for(i=1; i<argc && argv[i][0]=='-'; i++){
-		switch(argv[i][1]){
-		case 't':
-			if(++i >= argc)
-				return help(argv[0], "missing argument to -t");
-
-			opts.rx_timeout_ms = atoi(argv[i]);
-			break;
-
-		case 'h':
-			return help(argv[0], 0x0);
-
-		default:
-			return help(argv[0], "invalid option \"%s\"", argv[i]);
+	while((opt = getopt(argc, argv, "t:h")) != -1){
+		switch(opt){
+		case 't':	opts.rx_timeout_ms = atoi(optarg); break;
+		case 'h':	CMD_HELP(argv[0], 0x0); return -1;
+		default:	return CMD_HELP(argv[0], "");
 		};
 	}
 
-	if(i + 3 > argc)
-		return help(argv[0], "missing argument");
+	if(optind + 2 >= argc)
+		return CMD_HELP(argv[0], "missing argument");
 
-	if(strcmp(argv[i], "udp") == 0)			opts.type = SOCK_DGRAM;
-	else if(strcmp(argv[i], "tcp") == 0)	opts.type = SOCK_STREAM;
-	else									return help(argv[0], "invalid type");
+	if(strcmp(argv[optind], "udp") == 0)		opts.type = SOCK_DGRAM;
+	else if(strcmp(argv[optind], "tcp") == 0)	opts.type = SOCK_STREAM;
+	else										return CMD_HELP(argv[0], "invalid type");
 
-	opts.ip = inet_addr(argv[i + 1]);
-	opts.port = atoi(argv[i + 2]);
+	opts.ip = inet_addr(argv[optind + 1]);
+	opts.port = atoi(argv[optind + 2]);
 
 	return 0;
-}
-
-static int help(char const *pname, char const *fmt, ...){
-	va_list lst;
-
-
-	if(fmt){
-		va_start(lst, fmt);
-		vfprintf(stderr, fmt, lst);
-		va_end(lst);
-		fputs("\n\n", stderr);
-	}
-
-	fprintf(stderr,
-		"usage: %s [<options>] <udp|tcp> <ip> <port>\n"
-		"\noptions:\n"
-		"%15.15s    %s\n"
-		, pname
-		, "-t <timeout>", "time to wait for incoming data [ms]"
-	);
-
-	return (fmt ? 1 : 0);
 }

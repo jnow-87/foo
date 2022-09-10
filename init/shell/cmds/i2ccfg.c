@@ -17,8 +17,9 @@
 #include <shell/cmd.h>
 
 
-/* local/static prototypes */
-static int help(char const *prog_name, char const *msg);
+/* macros */
+#define ARGS	"<device> <7-bit slave>"
+#define OPTS	""
 
 
 /* local functions */
@@ -29,12 +30,12 @@ static int exec(int argc, char **argv){
 
 	/* check options */
 	if(argc != 3)
-		return help(argv[0], 0x0);
+		return CMD_HELP(argv[0], 0x0);
 
 	slave = atoi(argv[2]);
 
 	if(slave & 0x80)
-		return help(argv[0], "invalid slave address");
+		return CMD_HELP(argv[0], "invalid slave address");
 
 	/* apply configuration */
 	fd = open(argv[1], O_RDWR);
@@ -53,21 +54,3 @@ static int exec(int argc, char **argv){
 }
 
 command("i2ccfg", exec);
-
-static int help(char const *prog_name, char const *msg){
-	if(msg){
-		fprintf(stderr, msg);
-		fputs("\n", stderr);
-	}
-
-	fprintf(stdout,
-		"usage: %s <device> <slave>\n\n"
-		"%15.15s    %s\n"
-		"%15.15s    %s\n"
-		, prog_name
-		, "<slave>", "7 bit slave address"
-	);
-
-	return (msg ? 1 : 0);
-
-}

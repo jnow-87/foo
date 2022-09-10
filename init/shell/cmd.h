@@ -12,6 +12,7 @@
 
 
 #include <sys/compiler.h>
+#include <sys/stdarg.h>
 
 
 /* macros */
@@ -21,6 +22,11 @@
 		.name = cmd_name_##_exec, \
 		.exec = _exec, \
 	}
+
+#define OPTIONS(...) sizeof_array(((char *[]){__VA_ARGS__})) / 2, ##__VA_ARGS__
+
+#define CMD_HELP(pname, err) \
+	cmd_help(pname, ARGS, err, OPTIONS(OPTS))
 
 
 /* types */
@@ -36,6 +42,8 @@ typedef struct cmd_t{
 /* prototypes */
 void cmd_init(void);
 int cmd_exec(int argc, char **argv);
+
+int cmd_help(char const *name, char const *args, char const *error, size_t nopts, ...);
 
 
 #endif // INIT_CMD_H

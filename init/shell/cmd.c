@@ -12,9 +12,12 @@
 #include <sys/stat.h>
 #include <sys/errno.h>
 #include <sys/list.h>
+#include <sys/stdarg.h>
+#include <sys/math.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <getopt.h>
 #include <shell/cmd.h>
 #include <shell/shell.h>
 
@@ -86,6 +89,7 @@ int cmd_exec(int argc, char **argv){
 	}
 
 	/* execute command */
+	getopt_reset();
 	(void)cmd->exec((stdout_dup != -1 ? argc - 2 : argc), argv);
 
 	/* revert output redirection */
@@ -100,6 +104,54 @@ int cmd_exec(int argc, char **argv){
 
 	return 0;
 }
+
+int cmd_help(char const *name, char const *args, char const *error, size_t nopts, ...){
+	size_t i,
+		   opt_len;
+	char const *opt,
+			   *help;
+	char fmt[20];
+	va_list lst;
+
+
+	if(error && error[0] != 0)
+		fprintf(stderr, "%s\n\n", error);
+
+	printf("usage: %s %s%s\n", name, (nopts > 0) ? "[options] " : "", args);
+
+	if(nopts > 0){
+		opt_len = 0;
+		va_start(lst, nopts);
+
+		// determine length of option strings
+		for(i=0; i<nopts; i++){
+			opt = va_arg(lst, char*);
+			help = va_arg(lst, char*);
+
+			opt_len = MAX(opt_len, strlen(opt) + 1);
+		}
+
+		va_end(lst);
+		snprintf(fmt, sizeof(fmt), "%%%u.%us    %%s\n", opt_len, opt_len);
+
+		// print options
+		printf("\noptions:\n");
+
+		va_start(lst, nopts);
+
+		for(i=0; i<nopts; i++){
+			opt = va_arg(lst, char*);
+			help = va_arg(lst, char*);
+
+			printf(fmt, opt, help);
+		}
+
+		va_end(lst);
+	}
+
+	return (error != 0x0) ? 1 : 0;
+}
+
 
 /* local functions */
 static int redirect_init(FILE *fp, char const *file, char const *redir_type){

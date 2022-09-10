@@ -20,14 +20,12 @@ static int exec(int argc, char **argv){
 	stat_t f_stat;
 
 
-	if(argc < 2){
-		printf("usage: %s <file>\n", argv[0]);
-		return -1;
-	}
+	if(argc < 2)
+		return cmd_help(argv[0], "<file>", "missing arguments", 0);
 
 	if(stat(argv[1], &f_stat) != 0){
 		fprintf(stderr, "file not found\n");
-		return -1;
+		return 1;
 	}
 
 	if(f_stat.type == FT_DIR){
@@ -39,7 +37,7 @@ static int exec(int argc, char **argv){
 
 	if(unlink(argv[1]) != 0){
 		fprintf(stderr, "error \"%s\"\n", strerror(errno));
-		return -1;
+		return 1;
 	}
 
 	return 0;

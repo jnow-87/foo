@@ -24,10 +24,8 @@ static int exec(int argc, char **argv){
 	if(argc > 1)
 		path = argv[1];
 
-	if(chdir(path) != 0){
-		fprintf(stderr, "error \"%s\"\n", strerror(errno));
-		return -1;
-	}
+	if(chdir(path) != 0)
+		return cmd_help(argv[0], "[<path>]", strerror(errno), 0);
 
 	return 0;
 }

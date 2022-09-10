@@ -19,9 +19,11 @@ menu "Commands"
 
 	config INIT_ECHO
 		bool "echo"
+		select LIB_GETOPT
 
 	config INIT_CAT
 		bool "cat"
+		select LIB_GETOPT
 
 	config INIT_MKDIR
 		bool "mkdir"
@@ -47,9 +49,11 @@ menu "Commands"
 
 	config INIT_ETHERNET
 		bool "ethernet"
+		select LIB_GETOPT
 
 	config INIT_TEST
 		bool "test"
+		select LIB_GETOPT
 
 	config INIT_TEST_UNIT
 		bool "Include unit tests"
