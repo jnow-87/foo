@@ -21,6 +21,7 @@ obj-y := \
 	devtree.o
 
 obj-$(CONFIG_LIB_STREAM) += stream.o
+obj-$(CONFIG_LIB_GETOPT) += getopt.o
 obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 obj-$(CONFIG_SYS_LINEBUFFER) += linebuf.o
 obj-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
@@ -39,6 +40,7 @@ hostobj-y := \
 	vector.o \
 	devtree.o \
 	stream.o \
+	getopt.o \
 	ringbuf.o \
 	linebuf.o \
 	patmat.o \

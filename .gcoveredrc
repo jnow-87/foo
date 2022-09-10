@@ -19,7 +19,6 @@
 
 	"arch/"
 	"kernel/"
-	"lib/"
 	"init/"
 	"driver/"
 

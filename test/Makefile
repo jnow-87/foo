@@ -15,7 +15,7 @@ hostbin-y := utest
 
 
 # utest
-utest-y := main.utest.o mock/ sys/ unit/
+utest-y := main.utest.o mock/ sys/ unit/ lib/
 uttest-y := main.utest.o mock/ unit/
 
 # target flags
