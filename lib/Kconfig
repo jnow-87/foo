@@ -15,6 +15,10 @@ menu stdio
 	source lib/stdio/Kconfig
 endmenu
 
+config LIB_GETOPT
+	bool "getopt library"
+	default n
+
 menu "Hidden"
 	visible if 0
 
