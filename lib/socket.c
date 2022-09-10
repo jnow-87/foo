@@ -20,10 +20,12 @@
 /* global functions */
 int socket(net_family_t domain, sock_type_t type){
 	sc_socket_t p;
+	sock_addr_t addr;
 
 
+	addr.domain = domain;
 	p.type = type;
-	p.addr->domain = domain;
+	p.addr = &addr;
 
 	if(sc(SC_SOCKET, &p) != E_OK)
 		return -1;
