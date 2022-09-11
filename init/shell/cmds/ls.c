@@ -36,7 +36,7 @@ static int exec(int argc, char **argv){
 
 	if(dir < 0){
 		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
-		return -1;
+		return 1;
 	}
 
 	while(1){

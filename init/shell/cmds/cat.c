@@ -14,17 +14,25 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <getopt.h>
 #include <string.h>
 #include <shell/cmd.h>
 
 
-/* local/static prototyes */
-static int help(char const *prog_name, char const *msg, ...);
+/* macros */
+#define ARGS	"<ifile>"
+#define OPTS \
+	"-b", "assume binary data from <ifile>", \
+	"-n <blocks>", "number of blocks to read", \
+	"-s <block-size>", "number of bytes per block (default 1)", \
+	"-o <offset>", "offset into file (default 0)", \
+	"-h", "print this help message"
 
 
 /* local functions */
 static int exec(int argc, char **argv){
 	ssize_t i;
+	char opt;
 	size_t n,
 		   bs,
 		   decr;
@@ -45,46 +53,25 @@ static int exec(int argc, char **argv){
 	binary = false;
 
 	/* check options */
-	for(i=1; i<argc && argv[i][0]=='-'; i++){
-		switch(argv[i][1]){
-		case 'b':
-			binary = true;
-			break;
-
-		case 'n':
-			if(i + 1 >= argc)
-				return help(argv[0], "missing argument to option '-n'");
-
-			n = atoi(argv[++i]);
-			break;
-
-		case 's':
-			if(i + 1 >= argc)
-				return help(argv[0], "missing argument to option '-s'");
-
-			bs = atoi(argv[++i]);
-			break;
-
-		case 'o':
-			if(i + 1 >= argc)
-				return help(argv[0], "missing argument to option '-o'");
-
-			offset = atoi(argv[++i]);
-			break;
-
-		default:
-			return help(argv[0], "invalid option '%s'\n", argv[i]);
+	while((opt = getopt(argc, argv, "bn:s:o:h")) != -1){
+		switch(opt){
+		case 'b':	binary = true; break;
+		case 'n':	n = atoi(optarg); break;
+		case 's':	bs = atoi(optarg); break;
+		case 'o':	offset = atoi(optarg); break;
+		case 'h':	return CMD_HELP(argv[0], 0x0);
+		default:	return CMD_HELP(argv[0], "");
 		}
 	}
 
-	if(i >= argc)
-		return help(argv[0], "missing input file");
+	if(optind >= argc)
+		return CMD_HELP(argv[0], "missing input file");
 
 	/* open file */
-	fd = open(argv[i], O_RDONLY);
+	fd = open(argv[optind], O_RDONLY);
 
 	if(fd < 0){
-		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[i], strerror(errno));
+		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[optind], strerror(errno));
 		goto end_0;
 	}
 
@@ -150,31 +137,3 @@ end_0:
 }
 
 command("cat", exec);
-
-static int help(char const *prog_name, char const *msg, ...){
-	va_list lst;
-
-
-	if(msg){
-		va_start(lst, msg);
-		vfprintf(stderr, msg, lst);
-		va_end(lst);
-		fputs("\n", stderr);
-	}
-
-	fprintf(stderr,
-		"usage: %s <options> <ifile>\n"
-		"\noptions:\n"
-		"%15.15s    %s\n"
-		"%15.15s    %s\n"
-		"%15.15s    %s\n"
-		"%15.15s    %s\n"
-		, prog_name
-		, "-n", "number of blocks to read"
-		, "-s", "number of bytes per block (default 1)"
-		, "-o", "offset into file (default 0)"
-		, "-b", "assume binary data from <ifile>"
-	);
-
-	return (msg ? 1 : 0);
-}

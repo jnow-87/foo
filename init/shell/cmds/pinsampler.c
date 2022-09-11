@@ -50,17 +50,15 @@ static int exec(int argc, char **argv){
 	signal_t sig;
 
 
-	if(argc < 2){
-		printf("usage: %s <pin device>\n", argv[0]);
-		return -1;
-	}
+	if(argc < 2)
+		return cmd_help(argv[0], "<pin-device>", "missing arguments", 0);
 
 	/* init device */
 	pin_fd = open(argv[1], O_RDONLY);
 
 	if(pin_fd < 0){
 		printf("open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
-		return -1;
+		return 1;
 	}
 
 	// try registering change interrupt

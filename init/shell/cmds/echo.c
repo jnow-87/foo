@@ -11,16 +11,22 @@
 #include <sys/string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <shell/cmd.h>
 
 
-/* local/static prototypes */
-static int help(char const *prog_name, char const *msg, ...);
+/* macros */
+#define ARGS	"<args>"
+#define OPTS \
+	"-b", "convert <args> to binary representation", \
+	"-n", "skip trailing newline", \
+	"-h", "print this help message"
 
 
 /* local functions */
 static int exec(int argc, char **argv){
 	int i;
+	char opt;
 	uint8_t x;
 	bool binary,
 		 newline;
@@ -30,23 +36,17 @@ static int exec(int argc, char **argv){
 	newline = true;
 
 	/* check options */
-	for(i=1; i<argc && argv[i][0]=='-'; i++){
-		switch(argv[i][1]){
-		case 'b':
-			binary = true;
-			break;
-
-		case 'n':
-			newline = false;
-			break;
-
-		default:
-			return help(argv[0], "invalid option '%s'\n", argv[i]);
+	while((opt = getopt(argc, argv, "bnh")) != -1){
+		switch(opt){
+		case 'b':	binary = true; break;
+		case 'n':	newline = false; break;
+		case 'h':	return CMD_HELP(argv[0], 0x0);
+		default:	return CMD_HELP(argv[0], "");
 		}
 	}
 
 	/* echo non-option arguments */
-	for(; i<argc; i++){
+	for(i=optind; i<argc; i++){
 		if(binary){
 			x = strtol(argv[i], 0x0, 0);
 			fwrite(&x, sizeof(x), stdout);
@@ -74,27 +74,3 @@ static int exec(int argc, char **argv){
 }
 
 command("echo", exec);
-
-static int help(char const *prog_name, char const *msg, ...){
-	va_list lst;
-
-
-	if(msg){
-		va_start(lst, msg);
-		vfprintf(stderr, msg, lst);
-		va_end(lst);
-		fputs("\n", stderr);
-	}
-
-	fprintf(stderr,
-		"usage: %s <options> <args>\n"
-		"\noptions:\n"
-		"%15.15s    %s\n"
-		"%15.15s    %s\n"
-		, prog_name
-		, "-b", "convert <args> to binary representation"
-		, "-n", "skip trailing newline"
-	);
-
-	return (msg ? 1 : 0);
-}

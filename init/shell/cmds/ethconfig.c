@@ -15,13 +15,23 @@
 #include <sys/string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <getopt.h>
 #include <shell/cmd.h>
 
 
 /* macros */
+#define ARGS	"<ssid> <password>"
+#define OPTS \
+	"-d <device>", "target net-device", \
+	"-t ap|client", "set device to access point or client mode", \
+	"-s <ip> <gateway> <netmask>", "use static ip configuration", \
+	"-h <host>", "set host name"
+
 #define OPTS_STRCPY(opts, attr, val){ \
-	if(sizeof((opts).attr) <= strlen(val)) \
-		return help(argv[0], "%s too long, max. %d", #attr, sizeof((opts).attr)); \
+	if(sizeof((opts).attr) <= strlen(val)){ \
+		fprintf(stderr, "%s too long, max. %d", #attr, sizeof((opts).attr)); \
+		return CMD_HELP(argv[0], ""); \
+	} \
 	\
 	strcpy((opts).attr, val); \
 }
@@ -36,7 +46,6 @@ typedef struct{
 
 /* local/static prototypes */
 static int parse_opts(int argc, char **argv);
-static int help(char const *pname, char const *fmt, ...);
 
 
 /* static variables */
@@ -109,81 +118,40 @@ command("ethconfig", exec);
 
 
 static int parse_opts(int argc, char **argv){
-	int i;
+	char opt;
 
 
-	for(i=1; i<argc && argv[i][0]=='-'; i++){
-		switch(argv[i][1]){
-		case 'd':
-			if(++i >= argc)
-				help(argv[0], "missing argument to -d");
-
-			opts.dev = argv[i];
-			break;
-
-		case 'h':
-			if(++i >= argc)
-				help(argv[0], "missing argument to -h");
-
-			OPTS_STRCPY(opts.dev_cfg, hostname, argv[i]);
-			break;
-
+	while((opt = getopt(argc, argv, "d:h:t:s")) != -1){
+		switch(opt){
+		case 'd':	opts.dev = optarg; break;
+		case 'h':	OPTS_STRCPY(opts.dev_cfg, hostname, optarg); break;
 		case 't':
-			if(++i >= argc)
-				help(argv[0], "missing argument to -t");
-
-			if(strcmp(argv[i], "client") == 0)	opts.dev_cfg.mode = INET_CLIENT;
-			else if(strcmp(argv[i], "ap") == 0)	opts.dev_cfg.mode = INET_AP;
-			else								return help(argv[0], "invalid mode \"%s\"", argv[i]);
+			if(strcmp(optarg, "client") == 0)	opts.dev_cfg.mode = INET_CLIENT;
+			else if(strcmp(optarg, "ap") == 0)	opts.dev_cfg.mode = INET_AP;
+			else								return CMD_HELP(argv[0], "invalid mode");
 			break;
 
 		case 's':
-			if(i + 3 >= argc)
-				help(argv[0], "missing argument to -s");
+			if(optind + 2 >= argc)
+				return CMD_HELP(argv[0], "missing argument to -s");
 
 			opts.dev_cfg.dhcp = false;
 
-			opts.dev_cfg.ip = inet_addr(argv[++i]);
-			opts.dev_cfg.gateway = inet_addr(argv[++i]);
-			opts.dev_cfg.netmask = inet_addr(argv[++i]);
+			opts.dev_cfg.ip = inet_addr(argv[optind++]);
+			opts.dev_cfg.gateway = inet_addr(argv[optind++]);
+			opts.dev_cfg.netmask = inet_addr(argv[optind]);
 			break;
 
 		default:
-			return help(argv[0], "invalid option \"%s\"", argv[i]);
+			return CMD_HELP(argv[0], "");
 		};
 	}
 
-	if(i + 2 > argc)
-		return help(argv[0], "missing argument");
+	if(optind + 1 >= argc)
+		return CMD_HELP(argv[0], "missing argument");
 
-	OPTS_STRCPY(opts.dev_cfg, ssid, argv[i]);
-	OPTS_STRCPY(opts.dev_cfg, password, argv[i + 1]);
+	OPTS_STRCPY(opts.dev_cfg, ssid, argv[optind]);
+	OPTS_STRCPY(opts.dev_cfg, password, argv[optind + 1]);
 
 	return 0;
-}
-
-static int help(char const *pname, char const *fmt, ...){
-	va_list lst;
-
-
-	if(fmt){
-		va_start(lst, fmt);
-		vfprintf(stderr, fmt, lst);
-		va_end(lst);
-		fputs("\n\n", stderr);
-	}
-
-	fprintf(stderr,
-		"usage: %s [<options>] <ssid> <password>\n"
-		"\noptions:\n"
-		"%22.22s    %s\n"
-		"%22.22s    %s\n"
-		"%22.22s    %s\n"
-		, pname
-		, "-d <device>", "target net-device"
-		, "-t <ap|client>", "set device to access point or client mode"
-		, "-s <ip> <gw> <nm>", "use static ip configuration"
-	);
-
-	return (fmt ? 1 : 0);
 }

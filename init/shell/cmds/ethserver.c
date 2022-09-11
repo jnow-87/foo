@@ -14,11 +14,17 @@
 #include <sys/inet.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <getopt.h>
 #include <socket.h>
 #include <shell/cmd.h>
 
 
 /* macros */
+#define ARGS	"<udp|tcp> <port>"
+#define OPTS \
+	"-e", "send a reply on incoming data", \
+	"-h", "print this help message"
+
 #define ERROR(fmt, ...)({ fprintf(stderr, "error " fmt, ##__VA_ARGS__); -1; })
 
 
@@ -33,8 +39,6 @@ typedef struct{
 /* local/static prototypes */
 static int server(int sock);
 static void rx_loop(int sock);
-static int parse_opts(int argc, char **argv);
-static int help(char const *pname, char const *fmt, ...);
 
 
 /* static variables */
@@ -45,12 +49,27 @@ static opts_t opts = {
 
 /* local functions */
 static int exec(int argc, char **argv){
+	char opt;
 	int sock;
 
 
 	/* parse command line options */
-	if(parse_opts(argc, argv) != 0)
-		return 1;
+	while((opt = getopt(argc, argv, "eh")) != -1){
+		switch(opt){
+		case 'e':	opts.echo = true; break;
+		case 'h':	return CMD_HELP(argv[0], 0x0);
+		default:	return CMD_HELP(argv[0], "");
+		};
+	}
+
+	if(optind + 1 >= argc)
+		return CMD_HELP(argv[0], "missing argument");
+
+	if(strcmp(argv[optind], "udp") == 0)		opts.type = SOCK_DGRAM;
+	else if(strcmp(argv[optind], "tcp") == 0)	opts.type = SOCK_STREAM;
+	else										return CMD_HELP(argv[0], "invalid type");
+
+	opts.port = atoi(argv[optind + 1]);
 
 	/* start server */
 	printf("start %s server on port %d\n",
@@ -154,53 +173,4 @@ static void rx_loop(int sock){
 				printf("send error: %s\n", strerror(errno));
 		}
 	}
-}
-
-static int parse_opts(int argc, char **argv){
-	int i;
-
-
-	for(i=1; i<argc && argv[i][0]=='-'; i++){
-		switch(argv[i][1]){
-		case 'e':
-			opts.echo = true;
-			break;
-
-		default:
-			return help(argv[0], "invalid option \"%s\"", argv[i]);
-		};
-	}
-
-	if(i + 2 > argc)
-		return help(argv[0], "missing argument");
-
-	if(strcmp(argv[i], "udp") == 0)			opts.type = SOCK_DGRAM;
-	else if(strcmp(argv[i], "tcp") == 0)	opts.type = SOCK_STREAM;
-	else									return help(argv[0], "invalid type");
-
-	opts.port = atoi(argv[i + 1]);
-
-	return 0;
-}
-
-static int help(char const *pname, char const *fmt, ...){
-	va_list lst;
-
-
-	if(fmt){
-		va_start(lst, fmt);
-		vfprintf(stderr, fmt, lst);
-		va_end(lst);
-		fputs("\n\n", stderr);
-	}
-
-	fprintf(stderr,
-		"usage: %s [<options>] <udp|tcp> <port>\n"
-		"\noptions:\n"
-		"%15.15s    %s\n"
-		, pname
-		, "-e", "send a reply on incoming data"
-	);
-
-	return (fmt ? 1 : 0);
 }

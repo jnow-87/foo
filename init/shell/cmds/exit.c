@@ -24,7 +24,7 @@ static int exec(int argc, char **argv){
 
 	exit(status);
 
-	return -1;
+	return 1;
 }
 
 command("exit", exec);

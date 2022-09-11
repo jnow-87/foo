@@ -15,10 +15,8 @@
 
 /* local functions */
 static int exec(int argc, char **argv){
-	if(argc < 2){
-		fprintf(stderr, "usage: %s <seconds>\n", argv[0]);
-		return 1;
-	}
+	if(argc < 2)
+		return cmd_help(argv[0], "<seconds>", "missing arguments", 0);
 
 	return sleep(atoi(argv[1]) * 1000, 0);
 }

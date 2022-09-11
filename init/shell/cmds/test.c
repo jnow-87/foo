@@ -10,14 +10,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include <sys/types.h>
-#include <sys/stdarg.h>
 #include <sys/escape.h>
 #include <test/test.h>
 #include <shell/cmd.h>
 
 
 /* macros */
+#define ARGS	"<test-nr>"
+#define OPTS \
+	"-l <log-file>", "log-file name", \
+	"-h", "print this help message"
+
 #define NUM_INT_TESTS		((size_t)(__stop_tests_user_interactive - __start_tests_user_interactive))
 #define NUM_NONINT_TESTS	((size_t)(__stop_tests_user_noninteractive - __start_tests_user_noninteractive))
 #define NUM_UNIT_TESTS		((size_t)(__stop_tests_unit - __start_tests_unit))
@@ -25,7 +30,7 @@
 
 /* local/static prototypes */
 static int run(test_t *tests, size_t n, bool summary, char const *log_name);
-static int help(char const *cmd_name, char const *msg, ...);
+static int help(char const *cmd_name, char const *error);
 
 
 /* external variables */
@@ -60,7 +65,7 @@ void test_log(char const *fmt, ...){
 
 /* local functions */
 static int exec(int argc, char **argv){
-	int i;
+	char opt;
 	size_t n;
 	char const *log_name;
 
@@ -68,24 +73,18 @@ static int exec(int argc, char **argv){
 	/* parse options */
 	log_name = 0x0;
 
-	for(i=1; i<argc && argv[i][0]=='-'; i++){
-		switch(argv[i][1]){
-		case 'l':
-			if(i + 1 >= argc)
-				return help(argv[0], "missing argument to option '%s'", argv[i]);
-
-			log_name = argv[++i];
-			break;
-
-		default:
-			return help(argv[0], "invalid option '%s'\n", argv[i]);
+	while((opt = getopt(argc, argv, "l:h")) != -1){
+		switch(opt){
+		case 'l':	log_name = optarg; break;
+		case 'h':	return help(argv[0], 0x0);
+		default:	return help(argv[0], "");
 		}
 	}
 
-	if(i >= argc)
+	if(optind >= argc)
 		return help(argv[0], "missing arguments");
 
-	n = (size_t)atoi(argv[i]);
+	n = (size_t)atoi(argv[optind]);
 
 	/* run tests */
 	if(n < NUM_INT_TESTS)
@@ -101,7 +100,7 @@ static int exec(int argc, char **argv){
 
 	printf("Invalid test number\n\n");
 
-	return -1;
+	return 1;
 }
 
 command("test", exec);
@@ -149,33 +148,16 @@ static int run(test_t *tests, size_t num, bool summary, char const *log_name){
 	return -results[1];
 }
 
-static int help(char const *cmd_name, char const *msg, ...){
+static int help(char const *cmd_name, char const *error){
 	size_t i;
 	test_t *test;
-	va_list lst;
 
 
-	if(msg){
-		va_start(lst, msg);
-		vfprintf(stderr, msg, lst);
-		va_end(lst);
-		fputs("\n", stderr);
-	}
+	CMD_HELP(cmd_name, error);
 
-	fprintf(stderr,
-		"usage: %s [options] <test-nr>\n"
-		"\n"
-		"options:\n"
-		"%15.15s    %s\n"
-		"\n"
-		, cmd_name
-		, "-l", "log-file name"
-	);
-
-	printf("\t%6.6s    %15.15s    %s\n", "Number", "Name", "Description");
+	printf("\ntests:\n\t%6.6s    %15.15s    %s\n", "Number", "Name", "Description");
 
 	i = 0;
-
 	test_for_each_type(test, user_interactive)
 		printf("\t%6d    %15.15s    %s\n", i++, test->name, test->descr);
 
@@ -185,5 +167,5 @@ static int help(char const *cmd_name, char const *msg, ...){
 	printf("\t%6d    %15.15s    %s\n", i++, "unit", "unit tests");
 #endif // CONFIG_INIT_TEST_UNIT
 
-	return 0;
+	return (error != 0x0) ? 1 : 0;
 }

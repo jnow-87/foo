@@ -51,24 +51,22 @@ static int exec(int argc, char **argv){
 	pwm_cfg_t cfg;
 
 
-	if(argc < 3){
-		fprintf(stderr, "usage: %s <pwm device> <sample pin>\n", argv[0]);
-		return -1;
-	}
+	if(argc < 3)
+		return cmd_help(argv[0], "<pwm device> <sample pin>", "missing arguments", 0);
 
 	/* open pwm and sample pin files */
 	dev = open(argv[1], O_RDWR);
 
 	if(dev < 0){
 		fprintf(stderr, "open device \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
-		return -1;
+		return 1;
 	}
 
 	fd_sample = open(argv[2], O_RDONLY);
 
 	if(fd_sample < 0){
 		fprintf(stderr, "open sample pin \"%s\" failed \"%s\"\n", argv[2], strerror(errno));
-		return -1;
+		return 1;
 	}
 
 	/* make stdin non-blocking */

@@ -70,6 +70,7 @@
  * 							return 1 if result and reference
  * 							match and 0 otherwise
  *
+ * \param	n		number of bytes to compare - passed on to cmp()
  * \param	fmt		printf specifier for printing the result of
  * 					expr and ref
  *
@@ -80,20 +81,22 @@
  * 			1 otherwise
  */
 #define _TEST_EVAL(eq, cmp, n, fmt, expr, ref)({ \
-	typeof(ref) _result; \
+	typeof(ref) _result, \
+				_ref; \
 	int _eq, \
 		_passed; \
 	\
 	\
 	_result = expr; \
-	_eq = cmp(_result, ref, n); \
+	_ref = ref; \
+	_eq = cmp(_result, _ref, n); \
 	_passed = (_eq == eq); \
 	\
 	TEST_LOG("(%s = " fmt ") %s " fmt " [%s]\n", \
 		#expr, \
 		_result, \
 		(((char *[]){ "!=", "==" })[_eq]), \
-		ref, \
+		_ref, \
 		(((char *[]){ "failed", "passed" })[_passed]) \
 	); \
 	\

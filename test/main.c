@@ -107,6 +107,8 @@ void test_log(char const *fmt, ...){
 static int test_log_open(char const *name){
 	log = fopen(name, "w");
 
+	stderr = log;
+
 	if(log == 0x0)
 		fprintf(stderr, "open log-file \"%s\" failed with %s\n", name, strerror(errno));
 
