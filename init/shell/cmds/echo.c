@@ -7,39 +7,60 @@
 
 
 
-#include <sys/stdarg.h>
-#include <sys/string.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <getopt.h>
+#include <sys/string.h>
 #include <shell/cmd.h>
 
 
 /* macros */
 #define ARGS	"<args>"
 #define OPTS \
-	"-b", "convert <args> to binary representation", \
+	"-e", "evaluate escape characters", \
 	"-n", "skip trailing newline", \
 	"-h", "print this help message"
+
+#define DEFAULT_OPTS() (opts_t){ \
+	.newline = true, \
+	.escape = false, \
+}
+
+#define ERROR(msg)({ \
+	fprintf(stderr, "error: %s: %s\n", msg, strerror(errno)); \
+	1; \
+})
+
+
+/* types */
+typedef struct{
+	bool newline,
+		 escape;
+} opts_t;
+
+
+/* local/static prototypes */
+static int echo(char *s, bool last);
+static char esc(char **s);
+static char esc_num(char **s, uint8_t n, uint8_t base);
+
+
+/* static variables */
+static opts_t opts;
 
 
 /* local functions */
 static int exec(int argc, char **argv){
 	int i;
 	char opt;
-	uint8_t x;
-	bool binary,
-		 newline;
 
 
-	binary = false;
-	newline = true;
+	opts = DEFAULT_OPTS();
 
 	/* check options */
-	while((opt = getopt(argc, argv, "bnh")) != -1){
+	while((opt = getopt(argc, argv, "enh")) != -1){
 		switch(opt){
-		case 'b':	binary = true; break;
-		case 'n':	newline = false; break;
+		case 'e':	opts.escape = true; break;
+		case 'n':	opts.newline = false; break;
 		case 'h':	return CMD_HELP(argv[0], 0x0);
 		default:	return CMD_HELP(argv[0], "");
 		}
@@ -47,30 +68,69 @@ static int exec(int argc, char **argv){
 
 	/* echo non-option arguments */
 	for(i=optind; i<argc; i++){
-		if(binary){
-			x = strtol(argv[i], 0x0, 0);
-			fwrite(&x, sizeof(x), stdout);
-		}
-		else{
-			fputs(argv[i], stdout);
-
-			if(i + 1 < argc)
-				fputc(' ', stdout);
-		}
-
-		if(errno)
-			break;
+		if(echo(argv[i], i + 1 >= argc) != 0)
+			return ERROR("write");
 	}
 
-	if(!binary && newline)
+	if(opts.newline)
 		fputc('\n', stdout);
 
 	fflush(stdout);
 
-	if(errno)
-		fprintf(stderr, "error \"%s\"\n", strerror(errno));
-
-	return errno;
+	return errno ? ERROR("flush") : 0;
 }
 
 command("echo", exec);
+
+
+static int echo(char *s, bool last){
+	if(opts.escape){
+		for(; s[0]!=0; s++){
+			if(s[0] == '\\' && s[1] != 0){
+				s += 1;
+				fputc(esc(&s), stdout);
+			}
+			else
+				fputc(s[0], stdout);
+		}
+	}
+	else
+		fputs(s, stdout);
+
+	if(!last)
+		fputc(' ', stdout);
+
+	return -errno;
+}
+
+static char esc(char **s){
+	switch(**s){
+	case 'e':	return '\033';
+	case 'a':	return '\a';
+	case 't':	return '\t';
+	case 'b':	return '\b';
+	case 'r':	return '\r';
+	case 'n':	return '\n';
+	case 'v':	return '\v';
+	case 'f':	return '\f';
+	case '\\':	return '\\';
+	case 'h':	return esc_num(s, 2, 16);
+	case '0':	return esc_num(s, 3, 8);
+	default:	(*s)--; return '\\';
+	}
+}
+
+static char esc_num(char **s, uint8_t n, uint8_t base){
+	char num[n + 1];
+	char *end;
+	char x;
+
+
+	strncpy(num, *s + 1, n);
+	num[n] = 0;
+
+	x = strtol(num, &end, base);
+	*s += end - num;
+
+	return x;
+}
