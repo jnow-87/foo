@@ -90,7 +90,11 @@ int cmd_exec(int argc, char **argv){
 
 	/* execute command */
 	getopt_reset();
+
 	(void)cmd->exec((stdout_dup != -1 ? argc - 2 : argc), argv);
+
+	(void)fflush(stdout);
+	(void)fflush(stderr);
 
 	/* revert output redirection */
 	if(stdout_dup != -1){
@@ -215,8 +219,6 @@ err_0:
 }
 
 static int redirect_revert(FILE *fp, int fd_revert){
-	(void)fflush(fp);
-
 	if(dup2(fd_revert, fileno(fp)) != fileno(fp))
 		return -1;
 	return close(fd_revert);
