@@ -7,133 +7,165 @@
 
 
 
-#include <sys/errno.h>
-#include <sys/stat.h>
-#include <sys/fcntl.h>
-#include <sys/stdarg.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <getopt.h>
+#include <unistd.h>
 #include <string.h>
+#include <getopt.h>
+#include <sys/errno.h>
+#include <sys/fcntl.h>
+#include <sys/escape.h>
 #include <shell/cmd.h>
 
 
 /* macros */
 #define ARGS	"<ifile>"
 #define OPTS \
-	"-b", "assume binary data from <ifile>", \
 	"-n <blocks>", "number of blocks to read", \
 	"-s <block-size>", "number of bytes per block (default 1)", \
 	"-o <offset>", "offset into file (default 0)", \
+	"-x", "hex dump mode", \
 	"-h", "print this help message"
+
+#define DEFAULT_OPTS() (opts_t){ \
+	.hexdump = false, \
+	.length = -1, \
+	.blocksize = 8, \
+	.offset = 0, \
+}
+
+#define ERROR(file, msg)({ \
+	fprintf(stderr, "error:%s: %s: %s\n", file, msg, strerror(errno)); \
+	-1; \
+})
+
+
+/* types */
+typedef struct{
+	bool hexdump;
+	ssize_t length;
+	size_t blocksize,
+		   offset;
+} opts_t;
+
+
+/* local/static prototypes */
+static int cat(char const *file);
+static int prepare(char const *file);
+static int readwrite(int fd, char const *file, bool interactive);
+
+
+/* static variables */
+static opts_t opts;
 
 
 /* local functions */
 static int exec(int argc, char **argv){
-	ssize_t i;
 	char opt;
-	size_t n,
-		   bs,
-		   decr;
-	ssize_t r;
-	int offset;
-	char *buf;
-	bool binary;
-	int fd;
-	stat_t f_stat;
-	seek_t f_seek;
+	int i;
 
 
-	buf = 0x0;
-	n = 0;
-	bs = 1;
-	decr = 1;
-	offset = 0;
-	binary = false;
+	opts = DEFAULT_OPTS();
 
-	/* check options */
-	while((opt = getopt(argc, argv, "bn:s:o:h")) != -1){
+	/* parse options */
+	while((opt = getopt(argc, argv, "n:s:o:xh")) != -1){
 		switch(opt){
-		case 'b':	binary = true; break;
-		case 'n':	n = atoi(optarg); break;
-		case 's':	bs = atoi(optarg); break;
-		case 'o':	offset = atoi(optarg); break;
+		case 'n':	opts.length = atoi(optarg); break;
+		case 's':	opts.blocksize = atoi(optarg); break;
+		case 'o':	opts.offset = atoi(optarg); break;
+		case 'x':	opts.hexdump = true; break;
 		case 'h':	return CMD_HELP(argv[0], 0x0);
 		default:	return CMD_HELP(argv[0], "");
 		}
 	}
 
-	if(optind >= argc)
-		return CMD_HELP(argv[0], "missing input file");
+	/* cat */
+	if(optind == argc)
+		return -readwrite(0, "stdin", true);
 
-	/* open file */
-	fd = open(argv[optind], O_RDONLY);
-
-	if(fd < 0){
-		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[optind], strerror(errno));
-		goto end_0;
+	for(i=optind; i<argc; i++){
+		if(cat(argv[i]) != 0)
+			return 1;
 	}
 
-	// get file size
-	if(n == 0){
-		if(fstat(fd, &f_stat) != 0)
-			goto end_1;
-
-		n = f_stat.size;
-	}
-
-	if(n == 0){
-		// setup infinite read loop
-		decr = 0;
-		n = 1;
-	}
-
-	// seek into file
-	f_seek.offset = offset;
-	f_seek.whence = SEEK_SET;
-
-	if(offset && fcntl(fd, F_SEEK, &f_seek, sizeof(seek_t)) != E_OK){
-		fprintf(stderr, "seek failed \"%s\"\n", strerror(errno));
-		goto end_1;
-	}
-
-	/* allocate buffer */
-	buf = malloc(bs + 1);
-
-	if(buf == 0x0){
-		fprintf(stderr, "unable to allocate buffer memory \"%s\"\n", strerror(errno));
-		goto end_1;
-	}
-
-	/* read */
-	for(; n>0; n-=decr){
-		r = read(fd, buf, bs);
-
-		if(r <= 0 || errno)
-			break;
-
-		buf[r] = 0;
-
-		if(binary){
-			for(i=0; i<r; i++)
-				printf("%x", (int)(buf[i] & 0xff));
-		}
-		else
-			fprintf(stdout, buf);
-	}
-
-	if(errno)
-		fprintf(stderr, "error \"%s\"\n", strerror(errno));
-
-	/* cleanup */
-	free(buf);
-
-end_1:
-	close(fd);
-
-end_0:
-	return errno;
+	return 0;
 }
 
 command("cat", exec);
+
+
+static int cat(char const *file){
+	int fd,
+		r;
+
+
+	fd = prepare(file);
+
+	if(fd < 0)
+		return -1;
+
+	r = readwrite(fd, file, false);
+	close(fd);
+
+	return r;
+}
+
+static int prepare(char const *file){
+	int fd;
+	seek_t seek;
+
+
+	fd = open(file, O_RDONLY);
+
+	if(fd < 0)
+		goto err_0;
+
+	if(opts.offset > 0){
+		seek.offset = opts.offset;
+		seek.whence = SEEK_SET;
+
+		if(fcntl(fd, F_SEEK, &seek, sizeof(seek_t)) != E_OK)
+			goto err_1;
+	}
+
+	return fd;
+
+
+err_1:
+	close(fd);
+
+err_0:
+	return ERROR(file, "open");
+}
+
+static int readwrite(int fd, char const *file, bool interactive){
+	ssize_t i,
+			r;
+	uint8_t buf[opts.blocksize];
+
+
+	while(opts.length > 0 || opts.length == -1){
+		/* read */
+		r = read(fd, buf, opts.blocksize);
+
+		if(r == 0 || (interactive && (buf[0] == CTRL_C || buf[0] == CTRL_D)))
+			break;
+
+		if(r < 0 || errno)
+			return ERROR(file, "read");
+
+		/* write */
+		if(opts.hexdump){
+			for(i=0; i<r; i++)
+				printf("%.2hhx", buf[i]);
+
+			fflush(stdout);
+		}
+		else if(write(1, buf, r) != r)
+			return ERROR(file, "write");
+
+		if(opts.length > 0)
+			opts.length--;
+	}
+
+	return 0;
+}

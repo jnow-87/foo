@@ -12,6 +12,13 @@
 
 
 /* macros */
+// names ascii codes
+#define END_OF_TEXT	3
+#define END_OF_TX	4
+
+#define CTRL_C		END_OF_TEXT
+#define CTRL_D		END_OF_TX
+
 // foreground colors
 #define FG_BLACK	"\033[30m"
 #define FG_RED		"\033[31m"

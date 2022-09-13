@@ -92,9 +92,11 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 			continue;
 		}
 
-		// ctrl-c
-		if(c == 3)
+		if(c == CTRL_C)
 			exit(1);
+
+		if(c == CTRL_D)
+			exit(0);
 
 		// skip windows line ending
 		if(c == '\r')
