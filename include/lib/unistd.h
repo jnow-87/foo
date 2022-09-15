@@ -56,6 +56,9 @@ ssize_t write(int fd, void *buf, size_t n);
 int ionctl(int fd, int cmd, void *data, size_t data_len);
 int fcntl(int fd, int request, void *data, size_t data_len);
 
+void *mmap(int fd, size_t n);
+void munmap(void *addr);
+
 int unlink(char const *path);
 
 int mkdir(char const *path);

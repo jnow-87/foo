@@ -103,6 +103,17 @@ typedef struct{
 	 * 			returned and errno is set appropriately.
 	 */
 	int (*fcntl)(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
+
+	/**
+	 * \brief	Get a user-space address for the memory associated with the target device.
+	 *
+	 * \param	dev		target device
+	 * \param	fd		target file descriptor
+	 * \param	n		size of the mapping
+	 *
+	 * \return	User-space address on success, 0x0 on error.
+	 */
+	void * (*mmap)(struct devfs_dev_t *dev, fs_filed_t *fd, size_t n);
 } devfs_ops_t;
 
 typedef struct devfs_dev_t{

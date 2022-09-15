@@ -32,6 +32,7 @@ typedef enum{
 	SC_WRITE,
 	SC_IOCTL,
 	SC_FCNTL,
+	SC_MMAP,
 	SC_RMNODE,
 	SC_CHDIR,
 	SC_MALLOC,

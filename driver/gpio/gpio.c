@@ -80,6 +80,7 @@ gpio_t *gpio_create(char const *name, gpio_ops_t *ops, gpio_cfg_t *cfg, void *hw
 	dev_ops.write = cfg->out_mask ? write : 0x0;
 	dev_ops.ioctl = ioctl;
 	dev_ops.fcntl = 0x0;
+	dev_ops.mmap = 0x0;
 
 	dev = devfs_dev_register(name, &dev_ops, gpio);
 

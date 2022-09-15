@@ -49,6 +49,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dev_ops.write = write;
 	dev_ops.ioctl = ioctl;
 	dev_ops.fcntl = 0x0;
+	dev_ops.mmap = 0x0;
 
 	dev = devfs_dev_register(name, &dev_ops, 0x0);
 

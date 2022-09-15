@@ -143,6 +143,7 @@ static int init(void){
 	ops.write = write;
 	ops.ioctl = 0x0;
 	ops.fcntl = fcntl;
+	ops.mmap = 0x0;
 	ops.node_rm = node_rm;
 	ops.node_find = node_find;
 

@@ -42,6 +42,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.write = write;
 	ops.ioctl = ioctl;
 	ops.fcntl = fcntl;
+	ops.mmap = 0x0;
 
 	if(devfs_dev_register(name, &ops, loop) == 0x0)
 		goto err;

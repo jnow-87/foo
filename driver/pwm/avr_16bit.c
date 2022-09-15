@@ -104,6 +104,7 @@ static void *probe(char const *_name, void *dt_data, void *dt_itf){
 	ops.close = 0x0;
 	ops.ioctl = ioctl;
 	ops.fcntl = 0x0;
+	ops.mmap = 0x0;
 
 	name[name_len] = 'a';
 	ops.read = read_a;

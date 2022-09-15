@@ -57,6 +57,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.read = read;
 	ops.write = write;
 	ops.ioctl = ioctl;
+	ops.mmap = 0x0;
 
 	(void)devfs_dev_register(name, &ops, data);
 

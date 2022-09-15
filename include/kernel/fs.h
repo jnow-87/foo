@@ -119,6 +119,17 @@ typedef struct{
 	int (*fcntl)(struct fs_filed_t *fd, int cmd, void *data);
 
 	/**
+	 * \brief	Get a user-space address for the memory associated with the given
+	 * 			file descriptor.
+	 *
+	 * \param	fd		target file descriptor
+	 * \param	n		size of the mapping
+	 *
+	 * \return	User-space address on success, 0x0 on error.
+	 */
+	void * (*mmap)(struct fs_filed_t *fd, size_t n);
+
+	/**
 	 * \brief	Remove the node specified through start and path from the file
 	 * 			system.
 	 *

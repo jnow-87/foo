@@ -78,6 +78,7 @@ static int init(void){
 	ops.write = write;
 	ops.ioctl = ioctl;
 	ops.fcntl = 0x0;
+	ops.mmap = 0x0;
 	ops.node_rm = 0x0;
 	ops.node_find = 0x0;
 

@@ -105,6 +105,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.write = write;
 	ops.ioctl = 0x0;
 	ops.fcntl = fcntl;
+	ops.mmap = 0x0;
 
 	dev = devfs_dev_register(name, &ops, eeprom);
 

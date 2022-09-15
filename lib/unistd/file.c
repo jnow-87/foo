@@ -116,6 +116,28 @@ int fcntl(int fd, int request, void *data, size_t data_len){
 	return 0;
 }
 
+void *mmap(int fd, size_t n){
+	sc_fs_t p;
+
+
+	p.fd = fd;
+	p.data = 0x0;
+	p.data_len = n;
+
+	if(sc(SC_MMAP, &p) != E_OK)
+		return 0x0;
+	return p.data;
+}
+
+void munmap(void *addr){
+	sc_fs_t p;
+
+
+	p.data = addr;
+
+	(void)sc(SC_MMAP, &p);
+}
+
 int unlink(char const *path){
 	sc_fs_t p;
 
