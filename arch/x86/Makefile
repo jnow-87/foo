@@ -8,13 +8,13 @@
 
 
 # kernel
-obj-y := hardware.o atomic.o opts.o kernel/ linux/
+obj-y := hardware.o atomic.o opts.o syscall.o kernel/ linux/
 obj-$(CONFIG_CODE_COVERAGE) += gcov/ gcov/libgcov.a
 
 # libsys
 obj-nobuiltin-y := libsys.o
 
-libsys-y := hardware.libsys.o atomic.libsys.o opts.libsys.o lib/ $(loc_build_tree)/linux/libsys.o
+libsys-y := hardware.libsys.o atomic.libsys.o opts.libsys.o syscall.libsys.o lib/ $(loc_build_tree)/linux/libsys.o
 libsys-$(CONFIG_CODE_COVERAGE) += $(loc_build_tree)/gcov/libsys.o $(loc_build_tree)/gcov/libgcov.a
 
 

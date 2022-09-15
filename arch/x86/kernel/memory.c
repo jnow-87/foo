@@ -72,6 +72,7 @@ void x86_memory_cleanup(void){
 /* local functions */
 static int init(void){
 	devtree_memory_t *kheap;
+	x86_hw_op_t op;
 
 
 	/* update kernel heap base address with a shared memory section */
@@ -89,6 +90,13 @@ static int init(void){
 
 	if(kheap->base == (void*)-1)
 		LNX_EEXIT("kernel heap allocation failed in shmat()\n");
+
+	/* send shared memory id to the application */
+	op.num = HWO_SETUP;
+	op.setup.shm_id = kheap_shmid;
+
+	x86_hw_op_write(&op);
+	x86_hw_op_write_writeback(&op);
 
 	return E_OK;
 }

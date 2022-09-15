@@ -50,6 +50,8 @@ static int event_copy_to_user(x86_hw_op_t *op);
 
 static int event_uart_config(x86_hw_op_t *op);
 
+static int event_setup(x86_hw_op_t *op);
+
 static int event_inval(x86_hw_op_t *op);
 
 static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op);
@@ -70,6 +72,7 @@ static ops_cfg_t hw_ops[] = {
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
 	{ .name = "uart_config",	.hdlr = event_uart_config },
+	{ .name = "setup",			.hdlr = event_setup },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
@@ -313,6 +316,25 @@ static int event_copy_to_user(x86_hw_op_t *op){
 
 static int event_uart_config(x86_hw_op_t *op){
 	return uart_configure(op->uart.path, op->uart.int_num, &op->uart.cfg);
+}
+
+static int event_setup(x86_hw_op_t *op){
+	x86_hw_op_t app_op;
+
+
+	app_op = *op;
+
+	child_lock(APP);
+
+	hw_op_write(&app_op, APP);
+	hw_op_write_writeback(&app_op, APP);
+
+	child_unlock(APP);
+
+	if(app_op.retval != 0)
+		EEXIT("setup failed with %d\n", app_op.retval);
+
+	return 0;
 }
 
 static int event_inval(x86_hw_op_t *op){

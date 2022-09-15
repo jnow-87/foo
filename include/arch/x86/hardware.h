@@ -62,6 +62,7 @@ typedef enum{
 	HWO_COPY_FROM_USER,
 	HWO_COPY_TO_USER,
 	HWO_UART_CFG,
+	HWO_SETUP,
 	HWO_NOPS
 } x86_hw_op_num_t;
 
@@ -100,6 +101,10 @@ typedef struct{
 			int int_num;
 			uart_cfg_t cfg;
 		} uart;
+
+		struct{
+			int shm_id;
+		} setup;
 	};
 } x86_hw_op_t;
 

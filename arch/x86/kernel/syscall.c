@@ -10,6 +10,7 @@
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
 #include <arch/x86/init.h>
+#include <arch/x86/syscall.h>
 #include <arch/x86/interrupt.h>
 #include <arch/x86/rootfs.h>
 #include <arch/interrupt.h>
@@ -19,6 +20,7 @@
 #include <kernel/interrupt.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
+#include <sys/devtree.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 
@@ -27,7 +29,41 @@
 static void yield_user(thread_t const *this_t);
 static void yield_kernel(void);
 
-static void overlay_exit(void *param);
+static int overlay_exit(void *p);
+static int overlay_mmap(void *p);
+
+
+/* static variables */
+// syscall overlays
+static overlay_t overlays[] = {
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = overlay_mmap,	.loc = OLOC_POST },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = overlay_exit,	.loc = OLOC_PRE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
+};
 
 
 /* global functions */
@@ -75,11 +111,12 @@ static void sc_hdlr(int_num_t num, void *data){
 
 	LNX_DEBUG("syscall(num = %u, param = %p, psize = %u)\n", sc.num, sc.param, sc.size);
 
-	if(sc.num == SC_EXIT)
-		overlay_exit(sc.param);
-
 	/* call kernel syscall handler */
-	sc_khdlr(sc.num, sc.param, sc.size);
+	if(x86_sc_overlay_call(sc.num, sc.param, OLOC_PRE, overlays) == 0)
+		sc_khdlr(sc.num, sc.param, sc.size);
+
+	if(errno == E_OK)
+		errno = x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays);
 
 	/* set errno */
 	LNX_DEBUG("errno: %d\n", errno);
@@ -94,6 +131,8 @@ static void sc_hdlr(int_num_t num, void *data){
 }
 
 static int init(void){
+	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
+
 	return int_register(INT_SYSCALL, sc_hdlr, 0x0);
 }
 
@@ -135,14 +174,14 @@ static void yield_kernel(void){
 	}
 }
 
-static void overlay_exit(void *param){
+static int overlay_exit(void *p){
 	sc_exit_t kparam;
 
 
-	copy_from_user(&kparam, param, sizeof(kparam), sched_running()->parent);
+	copy_from_user(&kparam, p, sizeof(kparam), sched_running()->parent);
 
 	if(!kparam.kill_siblings)
-		return;
+		return E_OK;
 
 	LNX_DEBUG("application exit with %d\n", kparam.status);
 
@@ -155,4 +194,34 @@ static void overlay_exit(void *param){
 	x86_std_fini();
 
 	lnx_exit(kparam.status);
+
+	return E_OK;
+}
+
+static int overlay_mmap(void *p){
+	sc_fs_t kparam;
+	devtree_memory_t *kheap;
+	process_t *this_p;
+
+
+	this_p = sched_running()->parent;
+	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
+
+	copy_from_user(&kparam, p, sizeof(kparam), this_p);
+
+	// In order for mmap to work in the x86 setup the kernel heap is created
+	// as a shared memory region. Hence, instead of returning the mmaped address
+	// to the application, the offset relative to the kernel heap base is
+	// returned, which is used on the application relative to its address of the
+	// shared memory.
+	if(kparam.data < kheap->base || kparam.data >= kheap->base + kheap->size){
+		LNX_ERROR("trying to mmap non-heap address %p\n", kparam.data);
+		return_errno(E_INVAL);
+	}
+
+	kparam.data -= (ptrdiff_t)kheap->base;
+
+	copy_to_user(p, &kparam, sizeof(kparam), this_p);
+
+	return E_OK;
 }

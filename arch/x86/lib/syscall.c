@@ -32,17 +32,6 @@ typedef struct{
 	unsigned int cnt;
 } ops_t;
 
-typedef enum{
-	OLOC_NONE = 0x0,
-	OLOC_PRE = 0x1,
-	OLOC_POST = 0x2,
-} overlay_location_t;
-
-typedef struct{
-	int (*call)(void *);
-	overlay_location_t loc;
-} overlay_t;
-
 
 /* local/static prototypes */
 // hardware event handling
@@ -51,11 +40,10 @@ static void hw_event_hdlr(int sig);
 static int event_syscall_return(x86_hw_op_t *op);
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
+static int event_setup(x86_hw_op_t *op);
 static int event_inval(x86_hw_op_t *op);
 
 // syscall overlays
-static int overlay_call(sc_num_t num, void *param, overlay_location_t loc);
-
 static int overlay_malloc(void *p);
 static int overlay_free(void *p);
 
@@ -63,6 +51,8 @@ static int overlay_thread_create(void *p);
 
 static int overlay_sigregister(void *p);
 static int overlay_sigsend(void *p);
+
+static int overlay_mmap(void *p);
 
 
 /* static variables */
@@ -79,6 +69,7 @@ static ops_t ops[] = {
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
 	{ .name = "uart_config",	.hdlr = event_inval },
+	{ .name = "setup",			.hdlr = event_setup },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
@@ -91,6 +82,7 @@ static overlay_t overlays[] = {
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
+	{ .call = overlay_mmap,				.loc = OLOC_POST },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = overlay_malloc,			.loc = OLOC_POST },
@@ -116,6 +108,9 @@ static overlay_t overlays[] = {
 static uint8_t mem_blob[DEVTREE_APP_HEAP_SIZE];
 static memblock_t *app_heap = 0x0;
 
+static int kheap_shmid = -1;
+static void *kheap_base = 0x0;
+
 // signal overlay data
 static thread_entry_t sig_hdlr = 0x0;
 static bool ignore_exit = false;
@@ -129,7 +124,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 	if(ignore_exit && num == SC_EXIT)
 		return E_OK;
 
-	if(overlay_call(num, param, OLOC_PRE) != 0)
+	if(x86_sc_overlay_call(num, param, OLOC_PRE, overlays) != 0)
 		return -errno;
 
 	/* trigger syscall */
@@ -165,12 +160,15 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 	if(sc.errno)
 		return_errno(sc.errno);
 
-	return overlay_call(num, param, OLOC_POST);
+	return x86_sc_overlay_call(num, param, OLOC_POST, overlays);
 }
 
 
 /* local functions */
 static int init(void){
+	BUILD_ASSERT(sizeof_array(ops) == HWO_NOPS + 1);
+	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
+
 	lnx_sigaction(CONFIG_TEST_INT_HW_SIG, hw_event_hdlr, 0x0);
 
 	app_heap = (void*)mem_blob;
@@ -219,19 +217,20 @@ static int event_copy_to_user(x86_hw_op_t *op){
 	return 0;
 }
 
+static int event_setup(x86_hw_op_t *op){
+	kheap_shmid = op->setup.shm_id;
+	kheap_base = lnx_shmat(kheap_shmid);
+
+	if(kheap_base == (void*)-1)
+		LNX_EEXIT("unable to allocated kernel heap shared memory on id %d\n", kheap_shmid);
+
+	return 0;
+}
+
 static int event_inval(x86_hw_op_t *op){
 	LNX_DEBUG("  [%u] invalid hardware-op\n", op->seq);
 
 	return -1;
-}
-
-static int overlay_call(sc_num_t num, void *param, overlay_location_t loc){
-	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
-
-	if(overlays[num].call == 0x0 || (overlays[num].loc & loc) == 0)
-		return 0;
-
-	return overlays[num].call(param);
 }
 
 static int overlay_malloc(void *_p){
@@ -312,6 +311,19 @@ static int overlay_sigsend(void *_p){
 
 	x86_hw_op_active_tid = 0;
 	ignore_exit = false;
+
+	return E_OK;
+}
+
+static int overlay_mmap(void *_p){
+	sc_fs_t *p;
+
+
+	p = (sc_fs_t*)_p;
+
+	// for a description of the x86 mmap overlay mechanism refer
+	// to the documentation of the mmap overlay within the kernel
+	p->data += (ptrdiff_t)kheap_base;
 
 	return E_OK;
 }
