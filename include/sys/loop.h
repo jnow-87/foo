@@ -7,9 +7,14 @@
 
 
 
-loop0 = {
-	compatible = "loop,block";
+#ifndef SYS_LOOP_H
+#define SYS_LOOP_H
 
-	/* loop config (loop_cfg_t) */
-	int<16> = [ 32 ];	// buffer size
-};
+
+/* types */
+typedef struct{
+	uint16_t size;
+} loop_cfg_t;
+
+
+#endif // SYS_LOOP_H

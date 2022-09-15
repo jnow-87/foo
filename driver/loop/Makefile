@@ -7,9 +7,7 @@
 
 
 
-obj-y := loop.o
-
-obj-$(CONFIG_LOOP_DEV) += dev.o
+obj-$(CONFIG_LOOP_BLOCK) += block.o
 obj-$(CONFIG_LOOP_TERM) += term.o
 
 

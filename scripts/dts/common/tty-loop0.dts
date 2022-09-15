@@ -1,0 +1,32 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+loop1 = {
+	compatible = "loop,term";
+
+	/* loop config (loop_cfg_t) */
+	int<16> = [ 32 ];	// buffer size
+
+	tty-loop0 = {
+		compatible = "terminal";
+
+		/* terminal config (term_cfg_t) */
+		int<8> = [
+			0x0,		// iflags (none)
+			0x0,		// oflags (none)
+			0x0,		// lflags (none)
+			0,			// tabs
+		];
+
+		int<16> = [
+			0,			// lines (set by the driver)
+			0,			// columns (set by the driver)
+		];
+	};
+};

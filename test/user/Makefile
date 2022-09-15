@@ -14,7 +14,17 @@ interactive-y := itty.o exit.o
 interactive-$(CONFIG_DRIVER_GPIO) += gpioint.o
 interactive-$(CONFIG_DRIVER_I2C) += i2c.o
 
-non-interactive-y := close.o thread.o stat.o signal.o tty.o sleep.o time.o
+non-interactive-y := \
+	$(build_tree)/sys/devicetree.o \
+	close.o \
+	thread.o \
+	stat.o \
+	signal.o \
+	tty.o \
+	sleep.o \
+	time.o \
+	mmap.o
+
 non-interactive-$(CONFIG_DRIVER_GPIO) += gpio.o
 non-interactive-$(if $(CONFIG_X86),n,y) += sigthread.o kill.o
 
