@@ -43,7 +43,7 @@ void lnx_nanosleep(long int ns){
 		case 0:
 			return;
 
-		case -4: // EINTR
+		case -LNX_EINTR:
 			break;
 
 		default:

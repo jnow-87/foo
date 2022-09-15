@@ -19,5 +19,7 @@ struct process_t;
 void x86_copy_from_user(void *target, void const *src, unsigned int n, struct process_t const *this_p);
 void x86_copy_to_user(void *target, void const *src, unsigned int n, struct process_t const *this_p);
 
+void x86_memory_cleanup(void);
+
 
 #endif // X86_MEMORY_H

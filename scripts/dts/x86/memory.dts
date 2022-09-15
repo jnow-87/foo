@@ -16,11 +16,6 @@ ram = {
 		size = 20971520;
 	};
 
-	kernel-heap = {
-		baseaddr = 0x01800000;
-		size = 1048576;
-	};
-
 	kernel-stack = {
 		baseaddr = 0x01900000;
 		size = 4096;
@@ -35,4 +30,12 @@ ram = {
 		baseaddr = 0x1a01000;
 		size = 20971520;
 	};
+};
+
+// Kernel heap needs to be allocated dynamically to allow
+// using it as shared memory. However, a kernel-heap node
+// is needed since the kernel assumes its presence.
+kernel-heap = {
+	baseaddr = 0x0;
+	size = 1048576;
 };

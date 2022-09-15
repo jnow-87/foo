@@ -151,6 +151,7 @@ static void overlay_exit(void *param){
 		kparam.status = -1;
 	}
 
+	x86_memory_cleanup();
 	x86_std_fini();
 
 	lnx_exit(kparam.status);

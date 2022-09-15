@@ -8,7 +8,7 @@
 
 
 # kernel
-obj-y := syscall.o file.o signal.o process.o time.o mmap.o
+obj-y := syscall.o file.o signal.o process.o time.o shm.o mmap.o
 
 # libsys
 obj-nobuiltin-y := libsys.o

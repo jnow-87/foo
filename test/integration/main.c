@@ -257,6 +257,11 @@ static void cleanup(void){
 	}
 
 	term_default();
+
+	// remove shared memory segments that are left from uncleanly terminated
+	// executions, e.g. killed or segfaulted
+	DEBUG(1, "remove left-over shared memory segments\n");
+	system("ipcrm --all=shm");
 }
 
 static void process_info(void){

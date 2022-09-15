@@ -156,7 +156,7 @@ void lnx_mkdir(char const *path, int mode){
 
 	switch(r){
 	case 0:		// fall through
-	case -17:	// EEXIST
+	case -LNX_EEXIST:
 		return;
 
 	default:

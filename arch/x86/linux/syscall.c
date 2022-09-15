@@ -36,7 +36,7 @@ long int lnx_syscall(unsigned long int num, unsigned long int args[6], int toler
 			return r;
 
 		switch(r){
-		case -4: // EINTR
+		case -LNX_EINTR:
 			LNX_DEBUG("syscall %lu with tolerated error %ld\n", num, r);
 			break;
 
