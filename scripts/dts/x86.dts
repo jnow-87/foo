@@ -25,6 +25,10 @@ devices = {
 # include "common/tty-loop0.dts"
 #endif // CONFIG_LOOP_TERM
 
+#ifdef CONFIG_LOOP_VRAM
+# include "common/vram-loop0.dts"
+#endif // CONFIG_LOOP_VRAM
+
 #ifdef CONFIG_DRIVER_GPIO
 # include "x86/gpio.dts"
 

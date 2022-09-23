@@ -14,4 +14,8 @@ menuconfig DRIVER_VRAM
 if DRIVER_VRAM
 	config VRAM_RAW
 		bool "devfs device driver"
+
+	config VRAM_TERM
+		bool "Terminal driver"
+		select FONTS
 endif # DRIVER_VRAM

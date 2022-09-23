@@ -27,6 +27,7 @@ non-interactive-y := \
 
 non-interactive-$(CONFIG_DRIVER_GPIO) += gpio.o
 non-interactive-$(if $(CONFIG_X86),n,y) += sigthread.o kill.o
+non-interactive-$(CONFIG_VRAM_TERM) += vramtty.o
 
 
 # flags

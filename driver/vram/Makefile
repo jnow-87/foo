@@ -10,3 +10,4 @@
 obj-y := vram.o
 
 obj-$(CONFIG_VRAM_RAW) += raw.o
+obj-$(CONFIG_VRAM_TERM) += term.o

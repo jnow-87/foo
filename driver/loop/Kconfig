@@ -19,6 +19,9 @@ if DRIVER_LOOPBACK
 		bool "Loopback terminal"
 		select SYS_RINGBUFFER
 
+	config LOOP_VRAM
+		bool "Loopback video ram"
+
 	config LOOP_DEBUG
 		bool "Enable debug messages"
 		depends on KERNEL_MSG_DEBUG
