@@ -1,0 +1,12 @@
+#
+# Copyright (C) 2022 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+config DRIVER_SSD1306
+	bool "SSD1306 i2c display"
+	select DRIVER_I2C

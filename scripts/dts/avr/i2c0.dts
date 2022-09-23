@@ -26,7 +26,11 @@ i2c0 = {
 	int<8> = [
 	   1,				// broadcast (enabled)
 	   1,				// address
-	   26,				// interrupt number
+#ifdef CONFIG_DRIVER_SSD1306
+	   0,				// interrupt number
+#else
+	   26,
+#endif // CONFIG_DRIVER_SSD1306
 	];
 
 #ifdef CONFIG_I2C_DEVFS_DEV
@@ -36,4 +40,8 @@ i2c0 = {
 #ifdef CONFIG_DRIVER_MCP23017
 # include "../common/mcp23017.dts"
 #endif // CONFIG_DRIVER_MCP23017
+
+#ifdef CONFIG_DRIVER_SSD1306
+# include "../common/ssd1306.dts"
+#endif // CONFIG_DRIVER_SSD1306
 };

@@ -37,4 +37,8 @@ brdg0-right-i2c = {
 #ifdef CONFIG_DRIVER_MCP23017
 # include "../common/mcp23017.dts"
 #endif // CONFIG_DRIVER_MCP23017
+
+#ifdef CONFIG_DRIVER_SSD1306
+# include "../common/ssd1306.dts"
+#endif // CONFIG_DRIVER_SSD1306
 };
