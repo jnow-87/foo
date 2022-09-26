@@ -19,3 +19,4 @@ source driver/esp8266/Kconfig
 source driver/bridge/Kconfig
 source driver/vram/Kconfig
 source driver/ssd1306/Kconfig
+source driver/x11/Kconfig

@@ -29,6 +29,10 @@ devices = {
 # include "common/vram-loop0.dts"
 #endif // CONFIG_LOOP_VRAM
 
+#ifdef CONFIG_DRIVER_X11
+# include "x86/vram0.dts"
+#endif // CONFIG_DRIVER_X11
+
 #ifdef CONFIG_DRIVER_GPIO
 # include "x86/gpio.dts"
 

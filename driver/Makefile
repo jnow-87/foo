@@ -19,3 +19,4 @@ obj-$(CONFIG_DRIVER_ESP8266) += esp8266/
 obj-$(CONFIG_DRIVER_BRIDGE) += bridge/
 obj-$(CONFIG_DRIVER_VRAM) += vram/
 obj-$(CONFIG_DRIVER_SSD1306) += ssd1306/
+obj-$(CONFIG_DRIVER_X11) += x11/

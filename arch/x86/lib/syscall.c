@@ -69,6 +69,7 @@ static ops_t ops[] = {
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
 	{ .name = "uart_config",	.hdlr = event_inval },
+	{ .name = "display_config",	.hdlr = event_inval },
 	{ .name = "setup",			.hdlr = event_setup },
 	{ .name = "invalid",		.hdlr = event_inval },
 };

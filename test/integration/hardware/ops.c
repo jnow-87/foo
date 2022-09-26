@@ -36,22 +36,16 @@ typedef struct{
 
 /* local/static prototypes */
 static int event_exit(x86_hw_op_t *op);
-
 static int event_int_trigger(x86_hw_op_t *op);
 static int event_int_return(x86_hw_op_t *op);
-
 static int event_int_set(x86_hw_op_t *op);
 static int event_int_state(x86_hw_op_t *op);
-
 static int event_syscall_return(x86_hw_op_t *op);
-
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
-
 static int event_uart_config(x86_hw_op_t *op);
-
+static int event_display_config(x86_hw_op_t *op);
 static int event_setup(x86_hw_op_t *op);
-
 static int event_inval(x86_hw_op_t *op);
 
 static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op);
@@ -72,6 +66,7 @@ static ops_cfg_t hw_ops[] = {
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
 	{ .name = "uart_config",	.hdlr = event_uart_config },
+	{ .name = "display_config",	.hdlr = event_display_config },
 	{ .name = "setup",			.hdlr = event_setup },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
@@ -143,6 +138,8 @@ void hw_event_process(void){
 	child_t *src,
 			*op_src;
 
+
+	BUILD_ASSERT(sizeof_array(hw_ops) == HWO_NOPS + 1);
 
 	src = hw_event_dequeue();
 
@@ -316,6 +313,10 @@ static int event_copy_to_user(x86_hw_op_t *op){
 
 static int event_uart_config(x86_hw_op_t *op){
 	return uart_configure(op->uart.path, op->uart.int_num, &op->uart.cfg);
+}
+
+static int event_display_config(x86_hw_op_t *op){
+	return display_configure(op->display.shm_id, op->display.scale, &op->display.cfg);
 }
 
 static int event_setup(x86_hw_op_t *op){

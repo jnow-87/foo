@@ -12,8 +12,9 @@
 
 
 #include <kernel/interrupt.h>
-#include <sys/uart.h>
 #include <sys/types.h>
+#include <sys/uart.h>
+#include <sys/vram.h>
 
 
 /* macros */
@@ -62,6 +63,7 @@ typedef enum{
 	HWO_COPY_FROM_USER,
 	HWO_COPY_TO_USER,
 	HWO_UART_CFG,
+	HWO_DISPLAY_CFG,
 	HWO_SETUP,
 	HWO_NOPS
 } x86_hw_op_num_t;
@@ -101,6 +103,12 @@ typedef struct{
 			int int_num;
 			uart_cfg_t cfg;
 		} uart;
+
+		struct{
+			int shm_id;
+			uint8_t scale;
+			vram_cfg_t cfg;
+		} display;
 
 		struct{
 			int shm_id;
