@@ -72,6 +72,34 @@ static thread_t *running[CONFIG_NCORES] = { kernel_threads + 0 };
 
 
 /* global functions */
+int sched_init(void){
+	process_t *this_p;
+
+
+	/* create init process */
+	// create init processs
+	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, fs_root);
+
+	if(this_p == 0x0)
+		goto err;
+
+	// add first thread to ready queue
+	thread_transition(this_p->threads, READY);
+
+	/* create cleanup task */
+	if(ktask_create(cleanup, 0x0, 0, 0x0, true) != 0)
+		goto err;
+
+	return E_OK;
+
+
+err:
+	/* NOTE cleanup in case of an error is not required, since the
+	 * 		kernel will stop anyways if any of the init calls fails
+	 */
+	return -errno;
+}
+
 void sched_yield(void){
 	char dummy;
 
@@ -97,10 +125,10 @@ void sched_trigger(void){
 	if(running[PIR]->state == RUNNING)
 		thread_transition_unsafe(running[PIR], READY);
 
-	this_t = list_first(sched_queues[READY])->thread;
-
-	if(this_t == 0x0)
+	if(list_first(sched_queues[READY]) == 0x0)
 		kpanic("no ready thread\n");
+
+	this_t = list_first(sched_queues[READY])->thread;
 
 	thread_transition_unsafe(this_t, RUNNING);
 
@@ -237,20 +265,6 @@ static int init_deep(void){
 		running[PIR] = this_t;
 	}
 
-	/* create init process */
-	// create init processs
-	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, fs_root);
-
-	if(this_p == 0x0)
-		goto err;
-
-	// add first thread to ready queue
-	thread_transition(this_p->threads, READY);
-
-	/* create cleanup task */
-	if(ktask_create(cleanup, 0x0, 0, 0x0, true) != 0)
-		goto err;
-
 	return E_OK;
 
 
@@ -319,6 +333,7 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 
 	/* perform transition */
 	if(this_t->state == CREATED){
+		// TODO move into separate function and call it through thread_create()
 		e = kpalloc(sizeof(sched_queue_t));
 		e->thread = this_t;
 	}

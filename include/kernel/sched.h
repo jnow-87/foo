@@ -28,6 +28,8 @@ typedef void (*thread_modifier_t)(thread_t *this_t, void *data);
 
 
 /* prototypes */
+int sched_init(void);
+
 void sched_yield(void);
 void sched_trigger(void);
 

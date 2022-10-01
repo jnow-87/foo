@@ -29,21 +29,20 @@ kopt_t kopt = KOPT_INITIALISER();
 
 /* global functions */
 void kernel(void){
-	/* init */
+	/* init kernel */
 	if(kinit() != E_OK)
 		kpanic("kernel init error \"%s\"\n", strerror(errno));
+
+	kstat();
+	ktest();
+
+	int_enable(INT_ALL);
 
 	if(driver_load() != E_OK)
 		kpanic("driver init error \"%s\"\n", strerror(errno));
 
-	/* kernel statistics */
-	kstat();
-
-	/* kernel test */
-	ktest();
-
-	/* enable interrupts */
-	int_enable(INT_ALL);
+	if(sched_init() != E_OK)
+		kpanic("scheduler init error \"%s\"\n", strerror(errno));
 
 	/* kernel thread */
 	while(1){
