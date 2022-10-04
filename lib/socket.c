@@ -29,6 +29,7 @@ int socket(net_family_t domain, sock_type_t type){
 
 	if(sc(SC_SOCKET, &p) != E_OK)
 		return -1;
+
 	return p.fd;
 }
 
@@ -122,5 +123,6 @@ ssize_t sendto(int fd, void *data, size_t data_len, sock_addr_t *addr, size_t ad
 
 	if(sc(SC_SEND, &p) != E_OK)
 		return -1;
+
 	return p.data_len;
 }

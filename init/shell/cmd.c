@@ -221,6 +221,7 @@ err_0:
 static int redirect_revert(FILE *fp, int fd_revert){
 	if(dup2(fd_revert, fileno(fp)) != fileno(fp))
 		return -1;
+
 	return close(fd_revert);
 }
 

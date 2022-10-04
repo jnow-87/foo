@@ -53,6 +53,7 @@ int signal_send(signal_t sig, pid_t pid, tid_t tid){
 
 	if(sc(SC_SIGSEND, &p) != E_OK)
 		return -1;
+
 	return 0;
 }
 

@@ -168,6 +168,7 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 	if(n <= 1 || dtd->int_num == 0)
 		return write_noint(dev->data, fd, buf, n);
+
 	return write_int(dev->data, fd, buf, n);
 }
 

@@ -607,6 +607,7 @@ int item_activate_selected(void)
 	item_foreach()
 		if (item_is_selected())
 			return 1;
+
 	return 0;
 }
 

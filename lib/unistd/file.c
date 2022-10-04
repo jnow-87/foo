@@ -32,6 +32,7 @@ int open(char const *path, f_mode_t mode){
 
 	if(sc(SC_OPEN, &p) != E_OK)
 		return -1;
+
 	return p.fd;
 }
 
@@ -48,6 +49,7 @@ int dup2(int old_fd, int new_fd){
 
 	if(sc(SC_DUP, &p) != E_OK)
 		return -1;
+
 	return p.fd;
 }
 
@@ -59,6 +61,7 @@ int close(int fd){
 
 	if(sc(SC_CLOSE, &p) != E_OK)
 		return -1;
+
 	return 0;
 }
 
@@ -72,6 +75,7 @@ ssize_t read(int fd, void *buf, size_t n){
 
 	if(sc(SC_READ, &p) != E_OK)
 		return -1;
+
 	return p.data_len;
 }
 
@@ -85,6 +89,7 @@ ssize_t write(int fd, void *buf, size_t n){
 
 	if(sc(SC_WRITE, &p) != E_OK)
 		return -1;
+
 	return p.data_len;
 }
 
@@ -99,6 +104,7 @@ int ionctl(int fd, int cmd, void *data, size_t data_len){
 
 	if(sc(SC_IOCTL, &p) != E_OK)
 		return -1;
+
 	return 0;
 }
 
@@ -113,6 +119,7 @@ int fcntl(int fd, int request, void *data, size_t data_len){
 
 	if(sc(SC_FCNTL, &p) != E_OK)
 		return -1;
+
 	return 0;
 }
 
@@ -126,6 +133,7 @@ void *mmap(int fd, size_t n){
 
 	if(sc(SC_MMAP, &p) != E_OK)
 		return 0x0;
+
 	return p.data;
 }
 
@@ -147,6 +155,7 @@ int unlink(char const *path){
 
 	if(sc(SC_RMNODE, &p) != E_OK)
 		return -1;
+
 	return 0;
 }
 
@@ -167,6 +176,7 @@ int mkdir(char const *_path){
 
 	if(fd < 0)
 		return -1;
+
 	return close(fd);
 }
 
@@ -179,6 +189,7 @@ int chdir(char const *path){
 
 	if(sc(SC_CHDIR, &p) != E_OK)
 		return -1;
+
 	return 0;
 }
 

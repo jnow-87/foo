@@ -28,6 +28,7 @@ pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char c
 
 	if(sc(SC_PROCCREATE, &p) != E_OK)
 		return 0;
+
 	return p.pid;
 }
 

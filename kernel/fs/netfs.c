@@ -440,6 +440,7 @@ static size_t recvfrom(fs_filed_t *fd, void *data, size_t data_len, sock_addr_t 
 
 	if(sock->type == SOCK_DGRAM)
 		return socket_dataout_dgram(sock, data, data_len, addr, addr_len);
+
 	return socket_dataout_stream(sock, data, data_len);
 }
 

@@ -61,6 +61,7 @@ driver_probe("loop,term", probe);
 static char putc(char c, void *data){
 	if(ringbuf_write(data, &c, 1) != 1)
 		return ~c;
+
 	return c;
 }
 
