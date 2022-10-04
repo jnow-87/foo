@@ -145,15 +145,15 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size
 	switch(request){
 	case IOCTL_CFGRD:
 		memcpy(data, netdev->hw.cfg, cfg_size);
-		return E_OK;
+		return 0;
 
 	case IOCTL_CFGWR:
 		memcpy(netdev->hw.cfg, data, cfg_size);
 
-		if(netdev->hw.configure(netdev) != E_OK)
+		if(netdev->hw.configure(netdev) != 0)
 			return -errno;
 
-		return E_OK;
+		return 0;
 
 	default:
 		return_errno(E_NOSUP);

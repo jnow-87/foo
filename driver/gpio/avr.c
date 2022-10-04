@@ -80,5 +80,5 @@ static gpio_int_t read(void *hw){
 static int write(gpio_int_t v, void *hw){
 	((dt_data_t*)hw)->regs->port = v;
 
-	return E_OK;
+	return 0;
 }

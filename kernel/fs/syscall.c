@@ -43,7 +43,7 @@ static int init(void){
 	int r;
 
 
-	r = E_OK;
+	r = 0;
 
 	r |= sc_register(SC_OPEN, sc_hdlr_open);
 	r |= sc_register(SC_DUP, sc_hdlr_dup);
@@ -118,7 +118,7 @@ static int sc_hdlr_dup(void *_p){
 	if(errno && errno != E_INVAL)
 		return -errno;
 
-	errno = E_OK;
+	errno = 0;
 
 	/* duplicate old fd */
 	p->fd = fs_fd_dup(old_fd, p->fd, this_p);
@@ -127,7 +127,7 @@ static int sc_hdlr_dup(void *_p){
 
 	DEBUG("created fd with id %d\n", p->fd);
 
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_close(void *_p){
@@ -198,10 +198,10 @@ static int sc_hdlr_read(void *_p){
 
 	// avoid communicating end of resource to user space
 	if(errno == E_END)
-		errno = E_OK;
+		errno = 0;
 
 	/* update user space */
-	if(errno == E_OK)
+	if(errno == 0)
 		copy_to_user(p->data, buf, p->data_len, this_p);
 
 end:
@@ -288,7 +288,7 @@ static int sc_hdlr_ioctl(void *_p){
 	mutex_unlock(&node->mtx);
 
 	/* update user space */
-	if(errno == E_OK)
+	if(errno == 0)
 		copy_to_user(p->data, data, p->data_len, this_p);
 
 end:
@@ -330,7 +330,7 @@ static int sc_hdlr_fcntl(void *_p){
 
 	if(r == -E_NOIMP){
 		if(node->ops->fcntl != 0x0){
-			errno = E_OK;
+			errno = 0;
 			r = node->ops->fcntl(fd, p->cmd, data);
 		}
 	}
@@ -338,7 +338,7 @@ static int sc_hdlr_fcntl(void *_p){
 	mutex_unlock(&node->mtx);
 
 	/* update user space */
-	if(r == E_OK)
+	if(r == 0)
 		copy_to_user(p->data, data, p->data_len, this_p);
 
 	fs_fd_release(fd);
@@ -476,5 +476,5 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data, process_t *this_p){
 		return_errno(E_NOIMP);
 	}
 
-	return E_OK;
+	return 0;
 }

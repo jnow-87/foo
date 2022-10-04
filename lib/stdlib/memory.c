@@ -72,7 +72,7 @@ void *__malloc(size_t size){
 	// syscall
 	addr = 0x0;
 
-	if(sc(SC_MALLOC, &p) != E_OK)
+	if(sc(SC_MALLOC, &p) != 0)
 		goto clean;
 
 	// update block_lst

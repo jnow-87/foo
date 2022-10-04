@@ -148,7 +148,7 @@ static int cursor(uint16_t line, uint16_t column, bool toggle, void *hw){
 	term->column = column * term->font->width;
 
 	if(!toggle)
-		return E_OK;
+		return 0;
 
 	return vram_invert_page(term->vram, term->line, term->column, term->font->width);
 }

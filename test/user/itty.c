@@ -49,20 +49,20 @@ TEST_LONG(tty, "test tty non/blocking io"){
 	);
 
 	buf[0] = 'i';
-	errno = E_OK;
+	errno = 0;
 	i = 0;
 	n = 0;
 
 	while(1){
 		// read
-		errno = E_OK;
+		errno = 0;
 		n = fread(buf, 1, stdin);
 		i++;
 
 		// error handling
 		if(errno){
 			printf(FG_RED "error " RESET_ATTR "read \"%s\" -", strerror(errno));
-			errno = E_OK;
+			errno = 0;
 
 			continue;
 		}

@@ -258,7 +258,7 @@ TEST(strerror){
 
 
 	n = 0;
-	n += TEST_STR_EQ(strerror(E_OK), "Success");
+	n += TEST_STR_EQ(strerror(0), "Success");
 	n += TEST_STR_EQ(strerror(E_UNKNOWN), "Unknown");
 	n += TEST_STR_EQ(strerror(0xfe), "Invalid errno");
 

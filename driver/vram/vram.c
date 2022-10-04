@@ -74,7 +74,7 @@ int vram_configure(vram_t *vram, vram_cfg_t *cfg){
 
 	vram->cfg = *cfg;
 
-	return E_OK;
+	return 0;
 }
 
 int vram_write_page(vram_t *vram, size_t page, size_t column, size_t n, uint8_t pattern){
@@ -86,7 +86,7 @@ int vram_write_page(vram_t *vram, size_t page, size_t column, size_t n, uint8_t 
 	memset(vram->ram + (page * vram->cfg.width) + column, pattern, n);
 	vram_makedirty(page, vram->dirty, true);
 
-	return E_OK;
+	return 0;
 }
 
 int vram_write_pages(vram_t *vram, size_t start, size_t npages, uint8_t pattern){
@@ -110,7 +110,7 @@ int vram_write_pages(vram_t *vram, size_t start, size_t npages, uint8_t pattern)
 		vram_makedirty(i, vram->dirty, true);
 	}
 
-	return E_OK;
+	return 0;
 }
 
 int vram_write_pattern(vram_t *vram, uint8_t pattern){
@@ -131,7 +131,7 @@ int vram_write_block(vram_t *vram, size_t page, size_t column, uint8_t *block, s
 
 	vram_makedirty(page, vram->dirty, true);
 
-	return E_OK;
+	return 0;
 }
 
 int vram_invert_page(vram_t *vram, size_t page, size_t column, size_t n){
@@ -148,7 +148,7 @@ int vram_invert_page(vram_t *vram, size_t page, size_t column, size_t n){
 
 	vram_makedirty(page, vram->dirty, true);
 
-	return E_OK;
+	return 0;
 }
 
 int vram_invert_pages(vram_t *vram, size_t start, size_t npages){
@@ -160,7 +160,7 @@ int vram_invert_pages(vram_t *vram, size_t start, size_t npages){
 			return -errno;
 	}
 
-	return E_OK;
+	return 0;
 }
 
 int vram_scroll(vram_t *vram, ssize_t npages){

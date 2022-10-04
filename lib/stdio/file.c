@@ -124,7 +124,7 @@ int fclose(FILE *stream){
 	if(fflush(stream) != 0)
 		goto err;
 
-	if(close(stream->fileno) != E_OK)
+	if(close(stream->fileno) != 0)
 		goto err;
 
 	free(stream->rbuf);
@@ -300,7 +300,7 @@ int fseek(FILE *stream, int offset, whence_t whence){
 	p.whence = whence;
 	p.offset = offset;
 
-	if(fcntl(stream->fileno, F_SEEK, &p, sizeof(seek_t)) != E_OK)
+	if(fcntl(stream->fileno, F_SEEK, &p, sizeof(seek_t)) != 0)
 		return -1;
 
 	return 0;

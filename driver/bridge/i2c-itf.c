@@ -213,7 +213,7 @@ static void exec(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
 	else
 		r = i2c_read(dev->brdg->hw, hdr->slave, dev->buf, hdr->len);
 
-	if(ack(dev, ((r == 0) ? E_OK : (errno ? errno : E_AGAIN))) != 0)
+	if(ack(dev, ((r == 0) ? 0 : (errno ? errno : E_AGAIN))) != 0)
 		return;
 
 	if(hdr->cmd == I2C_CMD_READ)

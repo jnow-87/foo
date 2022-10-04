@@ -163,7 +163,7 @@ static int init(void){
 
 	fs_root->parent = fs_root;
 
-	return E_OK;
+	return 0;
 
 
 err_1:
@@ -259,7 +259,7 @@ err:
 static int close(fs_filed_t *fd, process_t *this_p){
 	fs_fd_free(fd, this_p);
 
-	return E_OK;
+	return 0;
 }
 
 static size_t read(fs_filed_t *fd, void *buf, size_t n){
@@ -394,7 +394,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 
 		stat->type = fd->node->type;
 
-		return E_OK;
+		return 0;
 
 	default:
 		return_errno(E_INVAL);
@@ -525,5 +525,5 @@ static int file_seek(fs_filed_t *fd, seek_t *p){
 
 
 k_ok:
-	return E_OK;
+	return 0;
 }

@@ -319,7 +319,7 @@ static int listen(socket_t *sock){
 end:
 	mutex_unlock(&esp->mtx);
 
-	return E_OK;
+	return 0;
 }
 
 static void close(socket_t *sock){
@@ -411,7 +411,7 @@ static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uin
 	esp->links[link_id] = sock;
 	mutex_unlock(&esp->mtx);
 
-	return E_OK;
+	return 0;
 }
 
 // rx interrupt handling
@@ -681,12 +681,12 @@ static int tx_complete(void *_data){
 
 	data = (tx_data_t*)_data;
 	itf = data->hw;
-	ecode = itf->error ? itf->error(itf->data) : E_OK;
+	ecode = itf->error ? itf->error(itf->data) : 0;
 
-	if(ecode != E_OK)
+	if(ecode != 0)
 		return ecode;
 
-	return (data->len == 0) ? E_OK : -1;
+	return (data->len == 0) ? 0 : -1;
 }
 
 // command handling

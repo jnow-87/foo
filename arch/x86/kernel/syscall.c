@@ -115,7 +115,7 @@ static void sc_hdlr(int_num_t num, void *data){
 	if(x86_sc_overlay_call(sc.num, sc.param, OLOC_PRE, overlays) == 0)
 		sc_khdlr(sc.num, sc.param, sc.size);
 
-	if(errno == E_OK)
+	if(errno == 0)
 		errno = x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays);
 
 	/* set errno */
@@ -181,7 +181,7 @@ static int overlay_exit(void *p){
 	copy_from_user(&kparam, p, sizeof(kparam), sched_running()->parent);
 
 	if(!kparam.kill_siblings)
-		return E_OK;
+		return 0;
 
 	LNX_DEBUG("application exit with %d\n", kparam.status);
 
@@ -195,7 +195,7 @@ static int overlay_exit(void *p){
 
 	lnx_exit(kparam.status);
 
-	return E_OK;
+	return 0;
 }
 
 static int overlay_mmap(void *p){
@@ -223,5 +223,5 @@ static int overlay_mmap(void *p){
 
 	copy_to_user(p, &kparam, sizeof(kparam), this_p);
 
-	return E_OK;
+	return 0;
 }

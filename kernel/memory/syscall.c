@@ -28,7 +28,7 @@ static int init(void){
 	int r;
 
 
-	r = E_OK;
+	r = 0;
 
 	r |= sc_register(SC_MALLOC, sc_hdlr_malloc);
 	r |= sc_register(SC_FREE, sc_hdlr_free);
@@ -80,7 +80,7 @@ static int sc_hdlr_malloc(void *_p){
 
 	DEBUG("result %p\n", p->p);
 
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_free(void *_p){
@@ -113,5 +113,5 @@ static int sc_hdlr_free(void *_p){
 
 	mutex_unlock(&this_p->mtx);
 
-	return E_OK;
+	return 0;
 }

@@ -106,7 +106,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size
 
 	memcpy(data, loop->cfg, n);
 
-	return E_OK;
+	return 0;
 }
 
 static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n){

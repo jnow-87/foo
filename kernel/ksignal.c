@@ -62,7 +62,7 @@ int ksignal_timedwait(ksignal_t *sig, mutex_t *mtx, uint32_t timeout_us){
 	ksignal_wait(sig, mtx);
 	ktimer_release(&timer);
 
-	return E_OK;
+	return 0;
 }
 
 void ksignal_send(ksignal_t *sig){

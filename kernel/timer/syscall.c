@@ -28,7 +28,7 @@ static int init(void){
 	int r;
 
 
-	r = E_OK;
+	r = 0;
 
 	r |= sc_register(SC_SLEEP, sc_hdlr_sleep);
 	r |= sc_register(SC_TIME, sc_hdlr_time);
@@ -59,5 +59,5 @@ static int sc_hdlr_sleep(void *_p){
 static int sc_hdlr_time(void *p){
 	ktimer_time(p);
 
-	return E_OK;
+	return 0;
 }

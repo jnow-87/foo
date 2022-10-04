@@ -103,7 +103,7 @@ int socket_listen(socket_t *sock, int backlog){
 	ringbuf_init(&sock->clients, data, size);
 	mutex_unlock(&sock->mtx);
 
-	return E_OK;
+	return 0;
 }
 
 void socket_link(socket_t *sock, fs_node_t *node){
@@ -271,7 +271,7 @@ int socket_datain_stream(socket_t *sock, uint8_t *data, size_t len, bool signal)
 	if(node == 0x0)
 		return_errno(E_LIMIT);
 
-	return E_OK;
+	return 0;
 }
 
 int socket_dataout_stream(socket_t *sock, void *data, size_t data_len){
@@ -310,7 +310,7 @@ int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint
 
 	mutex_unlock(&sock->mtx);
 
-	return E_OK;
+	return 0;
 }
 
 int socket_dataout_dgram(socket_t *sock, void *data, size_t data_len, sock_addr_t *addr, size_t *addr_len){

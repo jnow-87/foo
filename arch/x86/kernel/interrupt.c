@@ -87,7 +87,7 @@ static int init(void){
 		lnx_sigaddset(&blocked, CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - i);
 	}
 
-	return E_OK;
+	return 0;
 }
 
 platform_init(0, init);

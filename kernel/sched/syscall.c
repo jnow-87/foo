@@ -38,7 +38,7 @@ static int init(void){
 
 
 	/* register syscalls */
-	r = E_OK;
+	r = 0;
 
 	r |= sc_register(SC_SCHEDYIELD, sc_hdlr_sched_yield);
 
@@ -57,7 +57,7 @@ kernel_init(2, init);
 
 static int sc_hdlr_sched_yield(void *p){
 	sched_trigger();
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_process_create(void *_p){
@@ -88,7 +88,7 @@ static int sc_hdlr_process_create(void *_p){
 
 	p->pid = new->pid;
 
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_process_info(void *_p){
@@ -101,7 +101,7 @@ static int sc_hdlr_process_info(void *_p){
 
 	p->pid = this_p->pid;
 
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_thread_create(void *_p){
@@ -128,7 +128,7 @@ static int sc_hdlr_thread_create(void *_p){
 
 	p->tid = new->tid;
 
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_thread_info(void *_p){
@@ -143,7 +143,7 @@ static int sc_hdlr_thread_info(void *_p){
 	p->priority = this_t->priority;
 	p->affinity = this_t->affinity;
 
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_nice(void *_p){
@@ -158,7 +158,7 @@ static int sc_hdlr_nice(void *_p){
 
 	p->priority = this_t->priority;
 
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_exit(void *_p){
@@ -189,5 +189,5 @@ static int sc_hdlr_exit(void *_p){
 	sched_thread_bury(this_t);
 	sched_trigger();
 
-	return E_OK;
+	return 0;
 }

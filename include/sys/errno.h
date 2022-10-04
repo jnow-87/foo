@@ -13,26 +13,26 @@
 
 /* macros */
 #define set_errno(e_code)			{ errno = e_code; }
+#define reset_errno()				set_errno(0)
 #define return_errno(e_code)		{ set_errno(e_code); return (-e_code); }
 #define goto_errno(label, e_code)	{ set_errno(e_code); goto label; }
 
 
 /* types */
 typedef enum{
-	E_OK = 0,	/**< all ok */
-	E_INVAL,	/**< invalid argument, e.g. out of range or entry not found */
-	E_NOMEM,	/**< out of memory */
-	E_LIMIT,	/**< implementation limit reached */
-	E_IO,		/**< I/O error */
-	E_NOIMP,	/**< function not implemented */
-	E_INUSE,	/**< resource in use */
-	E_UNAVAIL,	/**< resource is not available */
-	E_AGAIN,	/**< no data available, try again */
-	E_END,		/**< end of resource reached */
-	E_NOSUP,	/**< operation not supported */
-	E_CONN,		/**< connection already established */
-	E_NOCONN,	/**< no connection */
-	E_UNKNOWN,	/**< unknown error */
+	E_INVAL = 1,	/**< invalid argument, e.g. out of range or entry not found */
+	E_NOMEM,		/**< out of memory */
+	E_LIMIT,		/**< implementation limit reached */
+	E_IO,			/**< I/O error */
+	E_NOIMP,		/**< function not implemented */
+	E_INUSE,		/**< resource in use */
+	E_UNAVAIL,		/**< resource is not available */
+	E_AGAIN,		/**< no data available, try again */
+	E_END,			/**< end of resource reached */
+	E_NOSUP,		/**< operation not supported */
+	E_CONN,			/**< connection already established */
+	E_NOCONN,		/**< no connection */
+	E_UNKNOWN,		/**< unknown error */
 } errno_t;
 
 

@@ -123,7 +123,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 
 	if(ignore_exit && num == SC_EXIT)
-		return E_OK;
+		return 0;
 
 	if(x86_sc_overlay_call(num, param, OLOC_PRE, overlays) != 0)
 		return -errno;
@@ -242,7 +242,7 @@ static int overlay_malloc(void *_p){
 	p = (sc_malloc_t*)_p;
 
 	if(p->size == 0)
-		return E_OK;
+		return 0;
 
 	brickos_addr = p->p;
 
@@ -254,7 +254,7 @@ static int overlay_malloc(void *_p){
 	if(p->p == 0x0)
 		return_errno(E_NOMEM);
 
-	return E_OK;
+	return 0;
 }
 
 static int overlay_free(void *_p){
@@ -272,7 +272,7 @@ static int overlay_free(void *_p){
 
 	p->p = brickos_addr;
 
-	return E_OK;
+	return 0;
 }
 
 static int overlay_thread_create(void *_p){
@@ -287,13 +287,13 @@ static int overlay_thread_create(void *_p){
 	_exit(p->entry(p->arg), false);
 	x86_hw_op_active_tid = 0;
 
-	return E_OK;
+	return 0;
 }
 
 static int overlay_sigregister(void *p){
 	sig_hdlr = ((sc_signal_t*)p)->hdlr;
 
-	return E_OK;
+	return 0;
 }
 
 static int overlay_sigsend(void *_p){
@@ -313,7 +313,7 @@ static int overlay_sigsend(void *_p){
 	x86_hw_op_active_tid = 0;
 	ignore_exit = false;
 
-	return E_OK;
+	return 0;
 }
 
 static int overlay_mmap(void *_p){
@@ -326,5 +326,5 @@ static int overlay_mmap(void *_p){
 	// to the documentation of the mmap overlay within the kernel
 	p->data += (ptrdiff_t)kheap_base;
 
-	return E_OK;
+	return 0;
 }

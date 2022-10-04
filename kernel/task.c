@@ -80,7 +80,7 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *dep_
 
 	mutex_unlock(&task_mtx);
 
-	return E_OK;
+	return 0;
 }
 
 /**

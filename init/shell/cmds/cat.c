@@ -123,7 +123,7 @@ static int prepare(char const *file){
 		seek.offset = opts.offset;
 		seek.whence = SEEK_SET;
 
-		if(fcntl(fd, F_SEEK, &seek, sizeof(seek_t)) != E_OK)
+		if(fcntl(fd, F_SEEK, &seek, sizeof(seek_t)) != 0)
 			goto err_1;
 	}
 

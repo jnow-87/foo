@@ -124,7 +124,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf, size_
 		goto_errno(err, E_NOSUP);
 	}
 
-	return E_OK;
+	return 0;
 
 
 err:

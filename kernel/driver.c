@@ -47,17 +47,17 @@ static int probe_childs(devtree_device_t const * const *childs, void *itf){
 		if(itf && iskheap(itf))
 			kfree(itf);
 
-		return E_OK;
+		return 0;
 	}
 
 	for(i=0; childs[i]!=0x0; i++){
-		if(probe(childs[i], itf) != E_OK){
+		if(probe(childs[i], itf) != 0){
 			FATAL("driver probe error for \"%s\": %s\n", childs[i]->name, strerror(errno));
 			return -errno;
 		}
 	}
 
-	return E_OK;
+	return 0;
 }
 
 static int probe(devtree_device_t const *node, void *itf){
@@ -79,7 +79,7 @@ static int probe(devtree_device_t const *node, void *itf){
 			return probe_childs(node->childs, itf);
 
 		if(node->childs == 0x0)
-			return E_OK;
+			return 0;
 
 		FATAL("no driver interface for \"%s\" childs\n", node->name);
 
@@ -88,5 +88,5 @@ static int probe(devtree_device_t const *node, void *itf){
 
 	INFO("no compatible driver found for \"%s\"\n", node->name);
 
-	return E_OK;
+	return 0;
 }

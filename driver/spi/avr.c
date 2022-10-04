@@ -131,7 +131,7 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
 			   | ((pres_bits[cfg->prescaler] & 0x3) << SPCR_SPR)
 			   ;
 
-	return E_OK;
+	return 0;
 }
 
 static char putc(char c, void *data){

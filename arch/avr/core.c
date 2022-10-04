@@ -124,7 +124,7 @@ static int init(void){
 	mreg_w(PRR1, 0xff);
 #endif // PRR1
 
-	return E_OK;
+	return 0;
 }
 
 core_init(init);

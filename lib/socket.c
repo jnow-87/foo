@@ -27,7 +27,7 @@ int socket(net_family_t domain, sock_type_t type){
 	p.type = type;
 	p.addr = &addr;
 
-	if(sc(SC_SOCKET, &p) != E_OK)
+	if(sc(SC_SOCKET, &p) != 0)
 		return -1;
 
 	return p.fd;
@@ -75,7 +75,7 @@ int accept(int fd, sock_addr_t *addr, size_t *addr_len){
 
 	p->addr_len = *addr_len;
 
-	if(ionctl(fd, IOCTL_ACCEPT, p, size) != E_OK)
+	if(ionctl(fd, IOCTL_ACCEPT, p, size) != 0)
 		return -1;
 
 	*addr_len = p->addr_len;
@@ -98,7 +98,7 @@ ssize_t recvfrom(int fd, void *data, size_t data_len, sock_addr_t *addr, size_t 
 	p.addr = addr;
 	p.addr_len = addr_len ? *addr_len : 0;
 
-	if(sc(SC_RECV, &p) != E_OK)
+	if(sc(SC_RECV, &p) != 0)
 		return -1;
 
 	if(addr_len)
@@ -121,7 +121,7 @@ ssize_t sendto(int fd, void *data, size_t data_len, sock_addr_t *addr, size_t ad
 	p.addr = addr;
 	p.addr_len = addr_len;
 
-	if(sc(SC_SEND, &p) != E_OK)
+	if(sc(SC_SEND, &p) != 0)
 		return -1;
 
 	return p.data_len;

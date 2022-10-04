@@ -30,7 +30,7 @@ typedef struct{
 	 * 					further data
 	 * \param	mode	mode to consider when opening the device
 	 *
-	 * \return	E_OK on success. On error a value smaller than 0 is returned and
+	 * \return	0 on success. On error a value smaller than 0 is returned and
 	 * 			errno is set appropriately.
 	 */
 	int (*open)(struct devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode);
@@ -42,7 +42,7 @@ typedef struct{
 	 * \param	fd		Target file descriptor. The descriptor must not be released by
 	 * 					this callback.
 	 *
-	 * \return	E_OK on success. On error a value smaller than 0 is returned and
+	 * \return	0 on success. On error a value smaller than 0 is returned and
 	 * 			errno is set appropriately.
 	 */
 	int (*close)(struct devfs_dev_t *dev, fs_filed_t *fd);
@@ -84,7 +84,7 @@ typedef struct{
 	 * 						request (kernel memory)
 	 * \param	n			size of the memory pointed to by data
 	 *
-	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
+	 * \return	0 on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
 	int (*ioctl)(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
@@ -99,7 +99,7 @@ typedef struct{
 	 * \param	data		additional data that might be required to perform the
 	 * 						request (kernel memory)
 	 *
-	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
+	 * \return	0 on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
 	int (*fcntl)(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);

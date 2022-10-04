@@ -56,7 +56,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size
 		return_errno(E_INVAL);
 
 	switch(request){
-	case IOCTL_CFGRD:	memcpy(data, &vram->cfg, n); return E_OK;
+	case IOCTL_CFGRD:	memcpy(data, &vram->cfg, n); return 0;
 	case IOCTL_CFGWR:	return vram_configure(vram, data);
 	default:			return_errno(E_NOSUP);
 	};

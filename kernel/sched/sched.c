@@ -190,7 +190,7 @@ static int init_shallow(void){
 		running[i] = kernel_threads + i;
 	}
 
-	return E_OK;
+	return 0;
 }
 
 kernel_init(0, init_shallow);
@@ -251,7 +251,7 @@ static int init_deep(void){
 	if(ktask_create(cleanup, 0x0, 0, 0x0, true) != 0)
 		goto err;
 
-	return E_OK;
+	return 0;
 
 
 err:

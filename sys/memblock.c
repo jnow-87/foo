@@ -25,7 +25,7 @@ int memblock_init(memblock_t *pool, size_t len){
 	list_init(pool);
 	pool->len = len;
 
-	return E_OK;
+	return 0;
 }
 
 void *memblock_alloc(memblock_t **pool, size_t n, size_t align){
@@ -73,7 +73,7 @@ int memblock_free(memblock_t **pool, void *addr){
 
 
 	if(addr == 0x0)
-		return E_OK;
+		return 0;
 
 	/* get block address */
 	blk = addr - sizeof(memblock_t);
@@ -136,5 +136,5 @@ int memblock_free(memblock_t **pool, void *addr){
 		}
 	}
 
-	return E_OK;
+	return 0;
 }

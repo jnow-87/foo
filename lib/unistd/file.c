@@ -30,7 +30,7 @@ int open(char const *path, f_mode_t mode){
 	p.data_len = strlen(path) + 1;
 	p.mode = mode;
 
-	if(sc(SC_OPEN, &p) != E_OK)
+	if(sc(SC_OPEN, &p) != 0)
 		return -1;
 
 	return p.fd;
@@ -47,7 +47,7 @@ int dup2(int old_fd, int new_fd){
 	p.fd = new_fd;
 	p.data = &old_fd;
 
-	if(sc(SC_DUP, &p) != E_OK)
+	if(sc(SC_DUP, &p) != 0)
 		return -1;
 
 	return p.fd;
@@ -59,7 +59,7 @@ int close(int fd){
 
 	p.fd = fd;
 
-	if(sc(SC_CLOSE, &p) != E_OK)
+	if(sc(SC_CLOSE, &p) != 0)
 		return -1;
 
 	return 0;
@@ -73,7 +73,7 @@ ssize_t read(int fd, void *buf, size_t n){
 	p.data = buf;
 	p.data_len = n;
 
-	if(sc(SC_READ, &p) != E_OK)
+	if(sc(SC_READ, &p) != 0)
 		return -1;
 
 	return p.data_len;
@@ -87,7 +87,7 @@ ssize_t write(int fd, void *buf, size_t n){
 	p.data = buf;
 	p.data_len = n;
 
-	if(sc(SC_WRITE, &p) != E_OK)
+	if(sc(SC_WRITE, &p) != 0)
 		return -1;
 
 	return p.data_len;
@@ -102,7 +102,7 @@ int ionctl(int fd, int cmd, void *data, size_t data_len){
 	p.data = data;
 	p.data_len = data_len;
 
-	if(sc(SC_IOCTL, &p) != E_OK)
+	if(sc(SC_IOCTL, &p) != 0)
 		return -1;
 
 	return 0;
@@ -117,7 +117,7 @@ int fcntl(int fd, int request, void *data, size_t data_len){
 	p.data = data;
 	p.data_len = data_len;
 
-	if(sc(SC_FCNTL, &p) != E_OK)
+	if(sc(SC_FCNTL, &p) != 0)
 		return -1;
 
 	return 0;
@@ -131,7 +131,7 @@ void *mmap(int fd, size_t n){
 	p.data = 0x0;
 	p.data_len = n;
 
-	if(sc(SC_MMAP, &p) != E_OK)
+	if(sc(SC_MMAP, &p) != 0)
 		return 0x0;
 
 	return p.data;
@@ -153,7 +153,7 @@ int unlink(char const *path){
 	p.data = (void*)path;
 	p.data_len = strlen(path) + 1;
 
-	if(sc(SC_RMNODE, &p) != E_OK)
+	if(sc(SC_RMNODE, &p) != 0)
 		return -1;
 
 	return 0;
@@ -187,7 +187,7 @@ int chdir(char const *path){
 	p.data = (void*)path;
 	p.data_len = strlen(path) + 1;
 
-	if(sc(SC_CHDIR, &p) != E_OK)
+	if(sc(SC_CHDIR, &p) != 0)
 		return -1;
 
 	return 0;

@@ -20,7 +20,7 @@ tid_t thread_create(int (*entry)(void *), void *arg){
 	p.entry = entry;
 	p.arg = arg;
 
-	if(sc(SC_THREADCREATE, &p) != E_OK)
+	if(sc(SC_THREADCREATE, &p) != 0)
 		return 0;
 
 	return p.tid;
@@ -46,7 +46,7 @@ int nice(int inc){
 
 	p.priority = inc;
 
-	if(sc(SC_NICE, &p) != E_OK)
+	if(sc(SC_NICE, &p) != 0)
 		return -1;
 
 	return p.priority;

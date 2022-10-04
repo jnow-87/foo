@@ -35,7 +35,7 @@ int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
 
 
 	task.data = data;
-	task.errno = E_OK;
+	task.errno = 0;
 	ksignal_init(&task.sig);
 
 	mutex_lock(&queue->mtx);

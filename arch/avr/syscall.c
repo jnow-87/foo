@@ -63,7 +63,7 @@ int avr_sc(sc_num_t num, void *param, size_t psize){
 	if(sc.errno)
 		return_errno(sc.errno);
 
-	return E_OK;
+	return 0;
 }
 
 

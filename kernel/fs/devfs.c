@@ -77,14 +77,14 @@ int devfs_dev_release(devfs_dev_t *dev){
 	if(node == 0x0)
 		goto_errno(err, E_INVAL);
 
-	if(fs_node_destroy(node) != E_OK)
+	if(fs_node_destroy(node) != 0)
 		goto err;
 
 	fs_unlock();
 
 	kfree(dev);
 
-	return E_OK;
+	return 0;
 
 
 err:
@@ -121,7 +121,7 @@ static int init(void){
 	if(devfs_root == 0x0)
 		goto err_1;
 
-	return E_OK;
+	return 0;
 
 
 err_1:
@@ -147,7 +147,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 	if(dev->ops.open == 0x0)
 		return fd->id;
 
-	if(dev->ops.open(dev, fd, mode) != E_OK)
+	if(dev->ops.open(dev, fd, mode) != 0)
 		goto err;
 
 	return fd->id;
@@ -166,13 +166,13 @@ static int close(fs_filed_t *fd, process_t *this_p){
 
 	fs_lock();
 
-	r = E_OK;
+	r = 0;
 	dev = (devfs_dev_t*)fd->node->data;
 
 	if(dev->ops.close != 0x0)
 		r = dev->ops.close(dev, fd);
 
-	if(r == E_OK)
+	if(r == 0)
 		fs_fd_free(fd, this_p);
 
 	fs_unlock();
@@ -234,7 +234,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 		stat->type = fd->node->type;
 		stat->size = 0;
 
-		return E_OK;
+		return 0;
 
 	default:
 		if(dev->ops.fcntl == 0x0)

@@ -128,7 +128,7 @@ static int close(devfs_dev_t *dev, fs_filed_t *fd){
 	gpio = (gpio_t*)dev->data;
 	sig = list_find_safe(gpio->sigs, fd, fd, &gpio->mtx);
 
-	return (sig != 0x0) ? int_clear(gpio, sig) : E_OK;
+	return (sig != 0x0) ? int_clear(gpio, sig) : 0;
 }
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
@@ -249,7 +249,7 @@ static int int_set(gpio_t *gpio, gpio_int_cfg_t *cfg, fs_filed_t *fd){
 	if(queued == 0x0)
 		list_add_tail_safe(gpio->sigs, sig, &gpio->mtx);
 
-	return E_OK;
+	return 0;
 }
 
 static int int_clear(gpio_t *gpio, gpio_siglst_t *sig){
@@ -262,5 +262,5 @@ static int int_clear(gpio_t *gpio, gpio_siglst_t *sig){
 	list_rm_safe(gpio->sigs, sig, &gpio->mtx);
 	kfree(sig);
 
-	return E_OK;
+	return 0;
 }

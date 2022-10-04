@@ -16,7 +16,7 @@
 /* global functions */
 int term_cursor_set(term_t *term, uint16_t line, uint16_t column){
 	if(term->hw->cursor == 0x0)
-		return E_OK;
+		return 0;
 
 	term->cursor.line = MIN(line, term->cfg->lines - 1);
 	term->cursor.column = MIN(column, term->cfg->columns - 1);
@@ -72,12 +72,12 @@ int term_cursor_restore(term_t *term){
 
 int term_cursor_show(term_t *term, bool show){
 	if(show == term->cursor.visible)
-		return E_OK;
+		return 0;
 
 	if(term->hw->cursor(term->cursor.line, term->cursor.column, true, term->hw->data) != 0)
 		return -errno;
 
 	term->cursor.visible = show;
 
-	return E_OK;
+	return 0;
 }

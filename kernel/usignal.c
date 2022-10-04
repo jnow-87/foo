@@ -54,7 +54,7 @@ int usignal_send(thread_t *this_t, signal_t num){
 
 	list_add_tail_safe(this_t->signals, sig, &this_t->mtx);
 
-	return E_OK;
+	return 0;
 }
 
 void usignal_destroy(struct thread_t *this_t){
@@ -123,7 +123,7 @@ static int init(void){
 	int r;
 
 
-	r = E_OK;
+	r = 0;
 
 	r |= sc_register(SC_SIGREGISTER, sc_hdlr_signal_register);
 	r |= sc_register(SC_SIGSEND, sc_hdlr_signal_send);
@@ -149,7 +149,7 @@ static int sc_hdlr_signal_register(void *_p){
 	DEBUG("%s: %p\n", this_p->name, p->hdlr);
 	this_p->sig_hdlr = p->hdlr;
 
-	return E_OK;
+	return 0;
 }
 
 static int sc_hdlr_signal_send(void *_p){
@@ -187,5 +187,5 @@ static int sc_hdlr_signal_return(void *_p){
 	stack_pop(this_t->ctx_stack);
 	mutex_unlock(&this_t->mtx);
 
-	return E_OK;
+	return 0;
 }

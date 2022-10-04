@@ -326,7 +326,7 @@ int fs_node_destroy(fs_node_t *node){
 		goto_errno(err, E_INUSE);
 
 	list_for_each(node->childs, child){
-		if(fs_node_destroy(child) != E_OK)
+		if(fs_node_destroy(child) != 0)
 			goto err;
 	}
 
@@ -338,7 +338,7 @@ int fs_node_destroy(fs_node_t *node){
 
 	fs_unlock();
 
-	return E_OK;
+	return 0;
 
 
 err:

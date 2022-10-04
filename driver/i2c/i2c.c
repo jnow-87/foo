@@ -248,7 +248,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		DEBUG("(n)ack (%#hhx)\n", state);
 
 		if((linebuf_empty(&dgram->data) && buffer_load(dgram) == -1) || state == I2C_STATE_MST_SLAW_DATA_NACK)
-			return complete(i2c, E_OK, true);
+			return complete(i2c, 0, true);
 
 		// fall through
 	case I2C_STATE_MST_SLAW_ACK:
@@ -267,7 +267,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
 		if(linebuf_empty(&dgram->data) || state == I2C_STATE_MST_SLAR_DATA_NACK)
-			return complete(i2c, E_OK, true);
+			return complete(i2c, 0, true);
 
 		// fall through
 	case I2C_STATE_MST_SLAR_ACK:
@@ -313,7 +313,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
 		if(state == I2C_STATE_SLA_SLAW_DATA_NACK || state == I2C_STATE_SLA_BCAST_DATA_NACK)
-			return complete(i2c, E_OK, false);
+			return complete(i2c, 0, false);
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
@@ -334,12 +334,12 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		DEBUG("(n)ack (%#hhx)\n", state);
 
 		if(linebuf_empty(&dgram->data)){
-			itask_complete(&i2c->slave_cmds, E_OK);
+			itask_complete(&i2c->slave_cmds, 0);
 			dgram = itask_query_data(&i2c->slave_cmds, 0x0);
 		}
 
 		if(state == I2C_STATE_SLA_SLAR_DATA_LAST_ACK || state == I2C_STATE_SLA_SLAR_DATA_NACK || dgram == 0x0)
-			return complete(i2c, E_OK, false);
+			return complete(i2c, 0, false);
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
@@ -354,7 +354,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 	case I2C_STATE_SLA_SLAW_STOP:
 		DEBUG("stop (%#hhx)\n", state);
-		return complete(i2c, E_OK, false);
+		return complete(i2c, 0, false);
 
 
 	/* no state change */

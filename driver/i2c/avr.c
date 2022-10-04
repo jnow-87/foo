@@ -138,7 +138,7 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
 			   ;
 
-	return E_OK;
+	return 0;
 }
 
 static i2c_state_t state(void *hw){

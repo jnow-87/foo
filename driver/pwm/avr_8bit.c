@@ -218,7 +218,7 @@ static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd){
 	// 		later updates to the registers would overwrite the user applied
 	// 		settings
 
-	return E_OK;
+	return 0;
 }
 
 static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs){
@@ -240,5 +240,5 @@ static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs){
 	default: cfg->prescaler = PWM_PRES_MAX;
 	}
 
-	return E_OK;
+	return 0;
 }

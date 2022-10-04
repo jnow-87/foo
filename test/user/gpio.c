@@ -46,7 +46,7 @@ TEST_LONG(gpio, "test gpio interface"){
 
 
 	n = 0;
-	set_errno(E_OK);
+	reset_errno();
 
 	/* prepare */
 	ASSERT_INT_NEQ(fd_normal = open(DEV_NORMAL, O_RDWR), -1);
@@ -55,18 +55,18 @@ TEST_LONG(gpio, "test gpio interface"){
 	/* normal cases */
 	n += test_write(fd_normal, 0xae, EXPECT(0xae));
 	n += test_write(fd_normal, 0x0, EXPECT(0x0));
-	n += test_ioctl(fd_normal, 0xff, SIG_USR0, E_OK);
+	n += test_ioctl(fd_normal, 0xff, SIG_USR0, 0);
 
 	/* error cases */
 	// read more than sizeof(gpio_int_t)
 	n += TEST_INT_EQ(read(fd_normal, &v, sizeof(v) * 2), -1);
 	n += TEST_INT_EQ(errno, E_LIMIT);
-	set_errno(E_OK);
+	reset_errno();
 
 	// write more than sizeof(gpio_int_t)
 	n += TEST_INT_EQ(write(fd_normal, &v, sizeof(v) * 2), -1);
 	n += TEST_INT_EQ(errno, E_LIMIT);
-	set_errno(E_OK);
+	reset_errno();
 
 	// write bits other than in the devices out_mask
 	// shall be ok in normal mode but give an error in strict mode
@@ -75,7 +75,7 @@ TEST_LONG(gpio, "test gpio interface"){
 	v = 0xff;
 	n += TEST_INT_EQ(write(fd_strict, &v, sizeof(v)), -1);
 	n += TEST_INT_EQ(errno, E_INVAL);
-	set_errno(E_OK);
+	reset_errno();
 
 	// ioctl invalid signal
 	n += test_ioctl(fd_normal, 0xff, SIG_USR0 - 1, E_INVAL);
@@ -126,7 +126,7 @@ static int test_ioctl(int fd, gpio_int_t mask, signal_t sig, errno_t expect){
 
 	n += TEST_INT_EQ(ioctl(fd, IOCTL_CFGWR, &cfg), expect ? -1 : 0);
 	n += TEST_INT_EQ(errno, expect);
-	set_errno(E_OK);
+	reset_errno();
 
 	return -n;
 }

@@ -43,7 +43,7 @@ int int_register(int_num_t num, int_hdlr_t hdlr, void *data){
 	int_hdlr[num] = hdlr;
 	int_data[num] = data;
 
-	return E_OK;
+	return 0;
 }
 
 void int_release(int_num_t num){
@@ -65,7 +65,7 @@ void int_khdlr(int_num_t num){
 
 
 	e = errno;
-	errno = E_OK;
+	errno = 0;
 
 	/* handle the given interrupt */
 	call_hdlr(num);

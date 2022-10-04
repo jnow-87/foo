@@ -87,7 +87,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size
 	default:			return_errno(E_NOSUP);
 	};
 
-	return E_OK;
+	return 0;
 }
 
 static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n){

@@ -83,7 +83,7 @@ term_t *term_create(term_itf_t *hw, term_cfg_t *cfg, fs_node_t *node){
 	term->cfg = cfg;
 	term->node = node;
 	term->hw = hw;
-	term->errno = E_OK;
+	term->errno = 0;
 
 	term_esc_reset(term);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
@@ -219,7 +219,7 @@ static size_t puts_poll(term_t *term, char const *s, size_t n){
 		}
 	}
 
-	if(errno == E_OK && error(term) == E_OK)
+	if(errno == 0 && error(term) == 0)
 		j += puts(term, s + j, i - j);
 
 	(void)term_cursor_show(term, CURSOR(term));
@@ -245,7 +245,7 @@ static size_t puts(term_t *term, char const *s, size_t n){
 }
 
 static errno_t error(term_t *term){
-	return (term->hw->error != 0x0) ? term->hw->error(term->hw->data) : E_OK;
+	return (term->hw->error != 0x0) ? term->hw->error(term->hw->data) : 0;
 }
 
 static int tx_complete(void *_data){
@@ -256,8 +256,8 @@ static int tx_complete(void *_data){
 	data = (tx_data_t*)_data;
 	ecode = error(data->term);
 
-	if(ecode != E_OK)
+	if(ecode != 0)
 		return ecode;
 
-	return (data->len == 0) ? E_OK : -1;
+	return (data->len == 0) ? 0 : -1;
 }

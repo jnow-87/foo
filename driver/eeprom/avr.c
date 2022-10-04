@@ -192,11 +192,11 @@ static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *_data){
 			return_errno(E_LIMIT);
 
 		fd->fp = whence + data->offset;
-		return E_OK;
+		return 0;
 
 	case F_TELL:
 		data->pos = fd->fp;
-		return E_OK;
+		return 0;
 
 	default:
 		return E_NOSUP;
@@ -308,5 +308,5 @@ static void write_hdlr(int_num_t num, void *_eeprom){
 }
 
 static int write_complete(void *data){
-	return (((write_data_t*)data)->len == 0) ? E_OK : -1;
+	return (((write_data_t*)data)->len == 0) ? 0 : -1;
 }

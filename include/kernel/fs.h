@@ -56,7 +56,7 @@ typedef struct{
 	 * \param	fd		pointer to target file descriptor
 	 * \param	this_p	process that the file descriptor is allocated to
 	 *
-	 * \return	E_OK on success and a value smaller than 0 if an error occurred. In
+	 * \return	0 on success and a value smaller than 0 if an error occurred. In
 	 * 			the latter case errno is set appropriately.
 	 *
 	 * \post	If no error occurred the target file descriptor is released using
@@ -99,7 +99,7 @@ typedef struct{
 	 * 						perform the request (kernel memory)
 	 * \param	n			size of the memory pointed to by data
 	 *
-	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
+	 * \return	0 on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
 	int (*ioctl)(struct fs_filed_t *fd, int request, void *data, size_t n);
@@ -113,7 +113,7 @@ typedef struct{
 	 * \param	data		pointer to additional data that might be required to
 	 * 						perform the request (kernel memory)
 	 *
-	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
+	 * \return	0 on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
 	int (*fcntl)(struct fs_filed_t *fd, int cmd, void *data);
@@ -136,7 +136,7 @@ typedef struct{
 	 * \param	start	root node to start the search for the target node
 	 * \param	path	path to the target node
 	 *
-	 * \return	E_OK if the target node has been removed. On error a value smaller
+	 * \return	0 if the target node has been removed. On error a value smaller
 	 * 			than 0 is returned and errno is set appropriately.
 	 */
 	int (*node_rm)(struct fs_node_t *start, char const *path);

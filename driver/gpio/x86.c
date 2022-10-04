@@ -78,5 +78,5 @@ static int write(gpio_int_t v, void *hw){
 
 	DEBUG("%s: write %#x\n", gpio->name, gpio->value);
 
-	return E_OK;
+	return 0;
 }

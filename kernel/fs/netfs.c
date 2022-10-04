@@ -62,13 +62,13 @@ static int init(void){
 
 
 	/* register syscalls */
-	r = E_OK;
+	r = 0;
 
 	r |= sc_register(SC_SOCKET, sc_hdlr_socket);
 	r |= sc_register(SC_RECV, sc_hdlr_recv);
 	r |= sc_register(SC_SEND, sc_hdlr_send);
 
-	if(r != E_OK)
+	if(r != 0)
 		goto err_0;
 
 	/* register netfs */
@@ -93,7 +93,7 @@ static int init(void){
 	if(netfs_root == 0x0)
 		goto err_2;
 
-	return E_OK;
+	return 0;
 
 
 err_2:
@@ -140,7 +140,7 @@ static int sc_hdlr_socket(void *_p){
 
 	p->fd = fd->id;
 
-	return E_OK;
+	return 0;
 
 
 err_1:
@@ -198,10 +198,10 @@ static int sc_hdlr_recv(void *_p){
 
 	// avoid communicating end of resource to user space
 	if(errno == E_END)
-		errno = E_OK;
+		errno = 0;
 
 	/* update user space */
-	if(errno == E_OK){
+	if(errno == 0){
 		copy_to_user(p->data, buf, p->data_len, this_p);
 
 		if(addr)
@@ -336,7 +336,7 @@ static int ioctl(fs_filed_t *fd, int request, void *_data, size_t n){
 			ksignal_wait(&node->datain_sig, &node->mtx);
 		}
 
-		r = (data->fd >= 0) ? E_OK : -errno;
+		r = (data->fd >= 0) ? 0 : -errno;
 		break;
 
 	default:

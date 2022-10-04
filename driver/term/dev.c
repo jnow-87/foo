@@ -133,7 +133,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 
 err:
-	term->errno = E_OK;
+	term->errno = 0;
 
 	return 0;
 }
@@ -151,7 +151,7 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 
 err:
-	term->errno = E_OK;
+	term->errno = 0;
 
 	return 0;
 }
@@ -172,7 +172,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size
 		if(n > sizeof(term_cfg_t))
 			memcpy(data + sizeof(term_cfg_t), term->hw->cfg, term->hw->cfg_size);
 
-		return E_OK;
+		return 0;
 
 	case IOCTL_CFGWR:
 		if(n > sizeof(term_cfg_t)){
@@ -187,7 +187,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size
 
 		memcpy(term->cfg, data, sizeof(term_cfg_t));
 
-		return E_OK;
+		return 0;
 
 	default:
 		return_errno(E_NOSUP);

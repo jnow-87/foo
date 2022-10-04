@@ -38,7 +38,7 @@ int sc_register(sc_num_t num, sc_hdlr_t hdlr){
 
 	mutex_unlock(&sc_mtx);
 
-	return E_OK;
+	return 0;
 
 
 err:
@@ -55,7 +55,7 @@ int sc_release(sc_num_t num){
 	sc_map[num] = 0x0;
 	mutex_unlock(&sc_mtx);
 
-	return E_OK;
+	return 0;
 }
 
 /**
@@ -67,7 +67,7 @@ int sc_release(sc_num_t num){
  * \param	param	user space pointer to system call arguments
  * \param	psize	size of param
  *
- * \pre		errno is reset to E_OK
+ * \pre		errno is reset to 0
  */
 void sc_khdlr(sc_num_t num, void *param, size_t psize){
 	int r;
@@ -97,12 +97,12 @@ void sc_khdlr(sc_num_t num, void *param, size_t psize){
 	int_enable(INT_NONE);
 
 	if(r != 0){
-		if(errno == E_OK)
+		if(errno == 0)
 			errno = E_UNKNOWN;
 
 		DEBUG("syscall %d on %s:%u failed \"%s\" (%#x)\n", num, this_t->parent->name, this_t->tid, strerror(errno), r);
 	}
-	else if(errno != E_OK)
+	else if(errno != 0)
 		WARN("uncaught error for syscall %d: %s\n", (int)num, strerror(errno));
 
 	/* copy result to user space */

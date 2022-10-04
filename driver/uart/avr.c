@@ -165,7 +165,7 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
 				| (cfg->stopb << UCSRC_USBS)
 				;
 
-	return E_OK;
+	return 0;
 }
 
 static char putc(char c, void *data){

@@ -40,7 +40,7 @@ TEST(mmap){
 	/* try mapping a too large block */
 	r += TEST_PTR_EQ(mmap(fd_wr, cfg.size + 1), 0x0);
 	r += TEST_INT_EQ(errno, E_LIMIT);
-	set_errno(E_OK);
+	reset_errno();
 
 	/* write + read through mmaped block */
 	ASSERT_PTR_NEQ(mem = mmap(fd_wr, cfg.size), 0x0);

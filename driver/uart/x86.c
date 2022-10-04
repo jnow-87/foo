@@ -106,7 +106,7 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);
 
-	return E_OK;
+	return 0;
 }
 
 static char putc(char c, void *data){

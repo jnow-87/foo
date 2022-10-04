@@ -117,7 +117,7 @@ static errno_t error(void *brdg){
 
 	peer = ((bridge_t*)brdg)->peer;
 	ecode = peer->errno;
-	peer->errno = E_OK;
+	peer->errno = 0;
 
 	return ecode;
 }

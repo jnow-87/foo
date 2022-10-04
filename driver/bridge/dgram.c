@@ -259,7 +259,7 @@ static int rx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t *byte){
 		if(errno != E_AGAIN)
 			return -1;
 
-		set_errno(E_OK);
+		reset_errno();
 	}
 
 	PROTO_DEBUG(dgram, "read %#hhx/~%#hhx\n", *byte, ~(*byte));

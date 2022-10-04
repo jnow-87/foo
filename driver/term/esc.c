@@ -36,7 +36,7 @@ int term_esc_handle(term_t *term, char c){
 	term->esc.hdlr = term->esc.hdlr(term, c);
 
 	if(term->esc.hdlr != 0x0)
-		return E_OK;
+		return 0;
 
 	(void)reset(term);
 
@@ -219,5 +219,5 @@ static int erase(term_t *term, term_erase_t type, uint16_t n){
 	default:	type |= TE_TO_START | TE_TO_END; break;
 	}
 
-	return (term->hw->erase != 0x0) ? term->hw->erase(type, n, term->hw->data) : E_OK;
+	return (term->hw->erase != 0x0) ? term->hw->erase(type, n, term->hw->data) : 0;
 }
