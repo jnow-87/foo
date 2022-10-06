@@ -43,7 +43,7 @@ int connect(int fd, sock_addr_t *addr, size_t addr_len){
 	p->addr_len = addr_len;
 	memcpy(&p->addr, addr, addr_len);
 
-	return ioctl(fd, IOCTL_CONNECT, p, size);
+	return ionctl(fd, IOCTL_CONNECT, p, size);
 }
 
 int bind(int fd, sock_addr_t *addr, size_t addr_len){
@@ -57,11 +57,11 @@ int bind(int fd, sock_addr_t *addr, size_t addr_len){
 	p->addr_len = addr_len;
 	memcpy(&p->addr, addr, addr_len);
 
-	return ioctl(fd, IOCTL_BIND, p, size);
+	return ionctl(fd, IOCTL_BIND, p, size);
 }
 
 int listen(int fd, int backlog){
-	return ioctl(fd, IOCTL_LISTEN, &backlog, sizeof(int*));
+	return ioctl(fd, IOCTL_LISTEN, &backlog);
 }
 
 int accept(int fd, sock_addr_t *addr, size_t *addr_len){
@@ -74,7 +74,7 @@ int accept(int fd, sock_addr_t *addr, size_t *addr_len){
 
 	p->addr_len = *addr_len;
 
-	if(ioctl(fd, IOCTL_ACCEPT, p, size) != E_OK)
+	if(ionctl(fd, IOCTL_ACCEPT, p, size) != E_OK)
 		return -1;
 
 	*addr_len = p->addr_len;

@@ -103,6 +103,9 @@ bool iskheap(void *addr);
 void *umalloc(size_t n);
 void ufree(void *addr);
 
+void *ummap(void *addr);
+void umunmap(void *addr);
+
 page_t *page_alloc(struct process_t *this_p, page_size_t psize);
 void page_free(struct process_t *this_p, page_t *page);
 

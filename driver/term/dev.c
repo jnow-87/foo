@@ -24,7 +24,7 @@
 /* local/static prototypes */
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
 
 static size_t flputs(char const *s, size_t n, void *term);
 
@@ -34,11 +34,13 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	term_t *term;
-	term_itf_t *hw;
-	klog_itf_t *itf;
+	term_cfg_t *dtd;
+	term_itf_t *dti;
+	klog_itf_t *klog;
 
 
-	hw = (term_itf_t*)dt_itf;
+	dtd = (term_cfg_t*)dt_data;
+	dti = (term_itf_t*)dt_itf;
 
 	/* register device */
 	dev_ops.open = 0x0;
@@ -47,6 +49,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dev_ops.write = write;
 	dev_ops.ioctl = ioctl;
 	dev_ops.fcntl = 0x0;
+	dev_ops.mmap = 0x0;
 
 	dev = devfs_dev_register(name, &dev_ops, 0x0);
 
@@ -54,7 +57,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_0;
 
 	/* create terminal */
-	term = term_create(hw, dt_data, dev->node);
+	term = term_create(dti, dtd, dev->node);
 
 	if(term == 0x0)
 		goto err_1;
@@ -62,38 +65,38 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dev->data = term;
 
 	/* register interrupt */
-	if(hw->rx_int && int_register(hw->rx_int, term_rx_hdlr, term) != 0)
+	if(dti->rx_int && int_register(dti->rx_int, term_rx_hdlr, term) != 0)
 		goto err_2;
 
-	if(hw->tx_int && int_register(hw->tx_int, term_tx_hdlr, term) != 0)
+	if(dti->tx_int && int_register(dti->tx_int, term_tx_hdlr, term) != 0)
 		goto err_3;
 
-	if(hw->rx_int)
+	if(dti->rx_int)
 		term->node->timeout_us = 0;
 
 	/* init term */
-	if(term->hw->configure(term->cfg, term->hw->data) != 0)
+	if(dti->configure != 0x0 && dti->configure(term->cfg, dti->cfg, dti->data) != 0)
 		goto err_4;
 
 	/* create terminal interface */
-	itf = kmalloc(sizeof(klog_itf_t));
+	klog = kmalloc(sizeof(klog_itf_t));
 
-	if(itf == 0x0)
+	if(klog == 0x0)
 		goto err_4;
 
-	itf->puts = flputs;
-	itf->data = term;
+	klog->puts = flputs;
+	klog->data = term;
 
-	return itf;
+	return klog;
 
 
 err_4:
-	if(hw->tx_int)
-		int_release(hw->tx_int);
+	if(dti->tx_int)
+		int_release(dti->tx_int);
 
 err_3:
-	if(hw->rx_int)
-		int_release(hw->rx_int);
+	if(dti->rx_int)
+		int_release(dti->rx_int);
 
 err_2:
 	term_destroy(term);
@@ -109,7 +112,6 @@ driver_probe("terminal", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	term_t *term;
-	term_flags_t *flags;
 
 
 	term = (term_t*)dev->data;
@@ -121,12 +123,10 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 		goto_errno(err, term->errno);
 
 	/* handle terminal flags */
-	flags = term_flags(term);
-
-	if(term_flags_apply(term, buf, n, 1, TFT_I, flags->iflags) == 0x0)
+	if(term_flags_apply(term, buf, n, 1, TFT_I,  term->cfg->iflags) == 0x0)
 		goto_errno(err, E_IO);
 
-	if(term_flags_apply(term, buf, n, n, TFT_L, flags->lflags) == 0x0)
+	if(term_flags_apply(term, buf, n, n, TFT_L, term->cfg->lflags) == 0x0)
 		goto_errno(err, E_IO);
 
 	return n;
@@ -156,25 +156,37 @@ err:
 	return 0;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
-	int r;
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
 	term_t *term;
 
 
 	term = (term_t*)dev->data;
 
+	if(n != sizeof(term_cfg_t) && n != (sizeof(term_cfg_t) + term->hw->cfg_size))
+		return_errno(E_INVAL);
+
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, term->cfg, term->hw->cfg_size);
+		memcpy(data, term->cfg, sizeof(term_cfg_t));
+
+		if(n > sizeof(term_cfg_t))
+			memcpy(data + sizeof(term_cfg_t), term->hw->cfg, term->hw->cfg_size);
+
 		return E_OK;
 
 	case IOCTL_CFGWR:
-		r = term->hw->configure(data, term->hw->data);
+		if(n > sizeof(term_cfg_t)){
+			if(term->hw->configure == 0x0)
+				return_errno(E_NOSUP);
 
-		if(r != E_OK)
-			return -errno;
+			if(term->hw->configure(data, data + sizeof(term_cfg_t), term->hw->data) != 0)
+				return -errno;
 
-		memcpy(term->cfg, data, term->hw->cfg_size);
+			memcpy(term->hw->cfg, data + sizeof(term_cfg_t), term->hw->cfg_size);
+		}
+
+		memcpy(term->cfg, data, sizeof(term_cfg_t));
+
 		return E_OK;
 
 	default:
@@ -186,7 +198,6 @@ static size_t flputs(char const *_s, size_t n, void *_term){
 	size_t n_put;
 	char s[n];
 	term_t *term;
-	term_flags_t *flags;
 
 
 	term = (term_t*)_term;
@@ -194,9 +205,7 @@ static size_t flputs(char const *_s, size_t n, void *_term){
 	memcpy(s, _s, n);
 
 	/* handle terminal iflags */
-	flags = term_flags(term);
-
-	_s = term_flags_apply(term, s, n, 1, TFT_O, flags->oflags);
+	_s = term_flags_apply(term, s, n, 1, TFT_O, term->cfg->oflags);
 	n_put = _s - s;
 
 	if(_s == 0x0)

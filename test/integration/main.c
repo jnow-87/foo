@@ -70,6 +70,7 @@ static thread_cfg_t threads[] = {
 	THREAD("sched_timer",		AM_NONINTERACTIVE,	0x0,				hw_sched_timer,		0x0),
 	THREAD("user-input",		AM_INTERACTIVE,		user_input_help,	user_input_process,	user_input_cleanup),
 	THREAD("uart",				AM_ALWAYS,			uart_init,			uart_poll,			uart_cleanup),
+	THREAD("display",			AM_ALWAYS,			display_init,		display_poll,		display_cleanup),
 };
 
 
@@ -92,6 +93,7 @@ int main(int argc, char **argv){
 	r |= sigemptyset(&sig_lst);
 	r |= sigaddset(&sig_lst, SIGINT);
 	r |= sigaddset(&sig_lst, SIGPIPE);
+	r |= sigaddset(&sig_lst, SIGCHLD);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_USR_SIG);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
 
@@ -165,6 +167,10 @@ static int signal_hdlr(int fd){
 			EEXIT("reading signal info failed with %s\n", strerror(errno));
 
 		switch(info.ssi_signo){
+		case SIGCHLD:
+			ERROR("%s process stopped with status %d\n", brickos_child_name(info.ssi_pid), info.ssi_status);
+
+			// fall through
 		case SIGINT:
 		case SIGPIPE: // fall through
 			DEBUG(1, "initiate shutdown\n");
@@ -252,6 +258,11 @@ static void cleanup(void){
 	}
 
 	term_default();
+
+	// remove shared memory segments that are left from uncleanly terminated
+	// executions, e.g. killed or segfaulted
+	DEBUG(1, "remove left-over shared memory segments\n");
+	system("ipcrm --all=shm");
 }
 
 static void process_info(void){

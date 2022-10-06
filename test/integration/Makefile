@@ -22,4 +22,5 @@ itestfw-hostcflags += \
 itestfw-hostldlibs += \
 	-lpthread \
 	-lreadline \
-	-lrt
+	-lrt \
+	-lX11

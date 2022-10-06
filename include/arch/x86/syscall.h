@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2017 Jan Nowotsch
+ * Copyright (C) 2020 Jan Nowotsch
  * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
  *
  * Released under the terms of the GNU GPL v2.0
@@ -15,8 +15,22 @@
 #include <sys/syscall.h>
 
 
+/* types */
+typedef enum{
+	OLOC_NONE = 0x0,
+	OLOC_PRE = 0x1,
+	OLOC_POST = 0x2,
+} overlay_location_t;
+
+typedef struct{
+	int (*call)(void *);
+	overlay_location_t loc;
+} overlay_t;
+
+
 /* prototypes */
 int x86_sc(sc_num_t num, void *param, size_t psize);
+int x86_sc_overlay_call(sc_num_t num, void *param, overlay_location_t loc, overlay_t *overlays);
 
 
 #endif // X86_SYSCALL_H

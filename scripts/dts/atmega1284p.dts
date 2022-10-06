@@ -56,7 +56,11 @@ devices = {
 # endif // CONFIG_BRIDGE_I2C_ITF
 #endif // CONFIG_DRIVER_BRIDGE
 
-#ifdef CONFIG_DRIVER_LOOPBACK
+#ifdef CONFIG_LOOP_BLOCK
 # include "common/loop0.dts"
-#endif // CONFIG_DRIVER_LOOPBACK
+#endif // CONFIG_LOOP_BLOCK
+
+#ifdef CONFIG_LOOP_TERM
+# include "common/tty-loop0.dts"
+#endif // CONFIG_LOOP_TERM
 };

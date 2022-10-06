@@ -16,7 +16,22 @@ memory = {
 
 devices = {
 #include "x86/uart0.dts"
-#include "common/loop0.dts"
+
+#ifdef CONFIG_LOOP_BLOCK
+# include "common/loop0.dts"
+#endif // CONFIG_LOOP_BLOCK
+
+#ifdef CONFIG_LOOP_TERM
+# include "common/tty-loop0.dts"
+#endif // CONFIG_LOOP_TERM
+
+#ifdef CONFIG_LOOP_VRAM
+# include "common/vram-loop0.dts"
+#endif // CONFIG_LOOP_VRAM
+
+#ifdef CONFIG_DRIVER_X11
+# include "x86/vram0.dts"
+#endif // CONFIG_DRIVER_X11
 
 #ifdef CONFIG_DRIVER_GPIO
 # include "x86/gpio.dts"

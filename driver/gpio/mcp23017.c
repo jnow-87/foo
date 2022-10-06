@@ -42,10 +42,10 @@
 
 // I/O wrapper
 #define MCP_READ(mcp, data, n) \
-	((i2c_read(((dev_data_t*)mcp)->hw, ((dev_data_t*)mcp)->slave, data, n) != n) ? -1 : 0)
+	i2c_read((mcp)->hw, (mcp)->slave, data, n)
 
 #define MCP_WRITE(mcp, data) \
-	((i2c_write(((dev_data_t*)mcp)->hw, ((dev_data_t*)mcp)->slave, data, sizeof(data)) != sizeof(data)) ? -1 : 0)
+	i2c_write((mcp)->hw, (mcp)->slave, data, sizeof_array(data))
 
 #define MCP_DATA(...)	((uint8_t []){ __VA_ARGS__ })
 

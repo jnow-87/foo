@@ -49,7 +49,7 @@ endef
 define compile_file
 	$(call cmd_run_script,
 		$(mkdir) $(dir $@)
-		$(QUTIL)$(1)
+		$(QBUILD)$(1)
 	)
 endef
 

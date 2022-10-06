@@ -30,7 +30,7 @@ typedef struct{
 	 * 					further data
 	 * \param	mode	mode to consider when opening the device
 	 *
-	 * \return	E_OK on succes. On error a value smaller than 0 is returned and
+	 * \return	E_OK on success. On error a value smaller than 0 is returned and
 	 * 			errno is set appropriately.
 	 */
 	int (*open)(struct devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode);
@@ -42,7 +42,7 @@ typedef struct{
 	 * \param	fd		Target file descriptor. The descriptor must not be released by
 	 * 					this callback.
 	 *
-	 * \return	E_OK on succes. On error a value smaller than 0 is returned and
+	 * \return	E_OK on success. On error a value smaller than 0 is returned and
 	 * 			errno is set appropriately.
 	 */
 	int (*close)(struct devfs_dev_t *dev, fs_filed_t *fd);
@@ -82,11 +82,12 @@ typedef struct{
 	 * 						file system implementation.
 	 * \param	data		additional data that might be required to perform the
 	 * 						request (kernel memory)
+	 * \param	n			size of the memory pointed to by data
 	 *
-	 * \return	E_OK on succes. If an error occured a value smaller than 0 is
+	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
-	int (*ioctl)(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+	int (*ioctl)(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
 
 	/**
 	 * \brief	Perform the requested command on the given file descriptor fd.
@@ -98,10 +99,21 @@ typedef struct{
 	 * \param	data		additional data that might be required to perform the
 	 * 						request (kernel memory)
 	 *
-	 * \return	E_OK on succes. If an error occured a value smaller than 0 is
+	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
 	int (*fcntl)(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
+
+	/**
+	 * \brief	Get a user-space address for the memory associated with the target device.
+	 *
+	 * \param	dev		target device
+	 * \param	fd		target file descriptor
+	 * \param	n		size of the mapping
+	 *
+	 * \return	User-space address on success, 0x0 on error.
+	 */
+	void * (*mmap)(struct devfs_dev_t *dev, fs_filed_t *fd, size_t n);
 } devfs_ops_t;
 
 typedef struct devfs_dev_t{

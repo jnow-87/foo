@@ -1,0 +1,60 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+x11 = {
+	compatible = "x11";
+
+	/* x11 hardware (dt_data_t) */
+	int<8> = [ 3 ];			// scale
+
+	vram0 = {
+		compatible = "vram,raw";
+
+		/* display config (vram_cfg_t) */
+		int<16> = [
+			64,				// height
+			128,			// width
+		];
+
+		int<8> = [ 0x10 ];	// contrast
+		int<8> = [ 0x0 ];	// flags (none)
+		int<16> = [ 100 ];	// refresh_ms
+	};
+
+	vram0-tty = {
+		compatible = "vram,term";
+
+		/* display config (vram_cfg_t) */
+		int<16> = [
+			64,				// height
+			128,			// width
+		];
+
+		int<8> = [ 0x10 ];	// contrast
+		int<8> = [ 0x0 ];	// flags (none)
+		int<16> = [ 100 ];	// refresh_ms
+
+		tty1 = {
+			compatible = "terminal";
+
+			/* terminal config (term_cfg_t) */
+			int<8> = [
+				0x0,		// iflags (none)
+				0x2,		// oflags (TOFL_NLCR)
+				0x1e,		// lflags (TLFL_CURSOR | TLFL_SCROLL | TLFL_WRAP | TLFL_CANON)
+				4,			// tabs
+			];
+
+			int<16> = [
+				0,			// lines (set by the driver)
+				0,			// columns (set by the driver)
+			];
+		};
+	};
+};

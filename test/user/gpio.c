@@ -84,8 +84,8 @@ TEST_LONG(gpio, "test gpio interface"){
 
 	/* cleanup */
 	// close device
-	close(fd_normal);
-	close(fd_strict);
+	n += TEST_INT_EQ(close(fd_normal), 0);
+	n += TEST_INT_EQ(close(fd_strict), 0);
 
 	return -n;
 }
@@ -124,7 +124,7 @@ static int test_ioctl(int fd, gpio_int_t mask, signal_t sig, errno_t expect){
 	cfg.mask = mask;
 	cfg.sig = sig;
 
-	n += TEST_INT_EQ(ioctl(fd, IOCTL_CFGWR, &cfg, sizeof(cfg)), expect ? -1 : 0);
+	n += TEST_INT_EQ(ioctl(fd, IOCTL_CFGWR, &cfg), expect ? -1 : 0);
 	n += TEST_INT_EQ(errno, expect);
 	set_errno(E_OK);
 

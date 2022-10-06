@@ -13,6 +13,7 @@
 
 #include <kernel/inttask.h>
 #include <sys/types.h>
+#include <sys/blob.h>
 #include <sys/mutex.h>
 #include <sys/linebuf.h>
 
@@ -84,6 +85,9 @@ typedef struct{
 	i2c_cmd_t cmd;
 	uint8_t slave;
 
+	blob_t *blobs;
+	size_t nblobs;
+
 	linebuf_t data;
 } i2c_dgram_t;
 
@@ -119,8 +123,8 @@ typedef struct{
 	/* root callbacks */
 	// if either of the following callbacks is set to zero the default i2c_read() and
 	// i2c_write() functions are used and the above primitives need to be set
-	size_t (*read)(struct i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-	size_t (*write)(struct i2c_t *i2c, uint8_t slave, void *buf, size_t n);
+	int (*read)(struct i2c_t *i2c, uint8_t slave, void *buf, size_t n);
+	int (*write)(struct i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
 } i2c_ops_t;
 
 typedef struct i2c_t{
@@ -139,8 +143,9 @@ typedef struct i2c_t{
 i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw);
 void i2c_destroy(i2c_t *i2c);
 
-size_t i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-size_t i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
+int i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
+int i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
+int i2c_write_n(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
 
 
 #endif // DRIVER_I2C_H

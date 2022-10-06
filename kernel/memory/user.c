@@ -43,6 +43,24 @@ void ufree(void *addr){
 	mutex_unlock(&umem_mtx);
 }
 
+void *ummap(void *addr){
+#ifdef CONFIG_KERNEL_VIRT_MEM
+	// TODO
+	set_errno(E_NOIMP);
+
+	return 0x0;
+#else
+	return addr;
+#endif // CONFIG_KERNEL_VIRT_MEM
+}
+
+void umunmap(void *addr){
+#ifdef CONFIG_KERNEL_VIRT_MEM
+	// TODO
+	set_errno(E_NOIMP);
+#endif // CONFIG_KERNEL_VIRT_MEM
+}
+
 
 /* local functions */
 static int init(void){

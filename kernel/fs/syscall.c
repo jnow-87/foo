@@ -30,6 +30,7 @@ static int sc_hdlr_read(void *param);
 static int sc_hdlr_write(void *param);
 static int sc_hdlr_ioctl(void *param);
 static int sc_hdlr_fcntl(void *param);
+static int sc_hdlr_mmap(void *param);
 static int sc_hdlr_rmnode(void *param);
 static int sc_hdlr_chdir(void *param);
 
@@ -51,6 +52,7 @@ static int init(void){
 	r |= sc_register(SC_WRITE, sc_hdlr_write);
 	r |= sc_register(SC_IOCTL, sc_hdlr_ioctl);
 	r |= sc_register(SC_FCNTL, sc_hdlr_fcntl);
+	r |= sc_register(SC_MMAP, sc_hdlr_mmap);
 	r |= sc_register(SC_RMNODE, sc_hdlr_rmnode);
 	r |= sc_register(SC_CHDIR, sc_hdlr_chdir);
 
@@ -282,7 +284,7 @@ static int sc_hdlr_ioctl(void *_p){
 	copy_from_user(data, p->data, p->data_len, this_p);
 
 	mutex_lock(&node->mtx);
-	r = node->ops->ioctl(fd, p->cmd, data);
+	r = node->ops->ioctl(fd, p->cmd, data, p->data_len);
 	mutex_unlock(&node->mtx);
 
 	/* update user space */
@@ -342,6 +344,45 @@ static int sc_hdlr_fcntl(void *_p){
 	fs_fd_release(fd);
 
 	return r;
+}
+
+static int sc_hdlr_mmap(void *_p){
+	fs_filed_t *fd;
+	fs_node_t *node;
+	sc_fs_t *p;
+	process_t *this_p;
+
+
+	this_p = sched_running()->parent;
+
+	/* initials */
+	p = (sc_fs_t*)_p;
+	fd = fs_fd_acquire(p->fd, this_p);
+
+	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
+
+	if(fd == 0x0)
+		return_errno(E_INVAL);
+
+	node = fd->node;
+
+	/* call ioctl callback if implemented */
+	if(node->ops->mmap == 0x0)
+		goto_errno(end, E_NOIMP);
+
+	DEBUG("len %zu\n", p->data_len);
+
+	mutex_lock(&node->mtx);
+
+	if(p->data == 0x0)	p->data = node->ops->mmap(fd, p->data_len);
+	else				umunmap(p->data);
+
+	mutex_unlock(&node->mtx);
+
+end:
+	fs_fd_release(fd);
+
+	return -errno;
 }
 
 static int sc_hdlr_rmnode(void *_p){

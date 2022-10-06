@@ -29,8 +29,9 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(fs_filed_t *fd, int request, void *data);
+static int ioctl(fs_filed_t *fd, int request, void *data, size_t n);
 static int fcntl(fs_filed_t *fd, int cmd, void *data);
+static void *mmap(fs_filed_t *fd, size_t n);
 
 
 /* global functions */
@@ -105,6 +106,7 @@ static int init(void){
 	ops.write = write;
 	ops.ioctl = ioctl;
 	ops.fcntl = fcntl;
+	ops.mmap = mmap;
 	ops.node_find = 0x0;
 	ops.node_rm = 0x0;
 
@@ -184,12 +186,12 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 
 	dev = (devfs_dev_t*)fd->node->data;
 
-	if(dev->ops.read == 0x0){
-		errno = E_NOIMP;
-		return 0;
-	}
+	if(dev->ops.read != 0x0)
+		return dev->ops.read(dev, fd, buf, n);
 
-	return dev->ops.read(dev, fd, buf, n);
+	set_errno(E_NOIMP);
+
+	return 0;
 }
 
 static size_t write(fs_filed_t *fd, void *buf, size_t n){
@@ -198,15 +200,15 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 
 	dev = (devfs_dev_t*)fd->node->data;
 
-	if(dev->ops.write == 0x0){
-		errno = E_NOIMP;
-		return 0;
-	}
+	if(dev->ops.write != 0x0)
+		return dev->ops.write(dev, fd, buf, n);
 
-	return dev->ops.write(dev, fd, buf, n);
+	set_errno(E_NOIMP);
+
+	return 0;
 }
 
-static int ioctl(fs_filed_t *fd, int request, void *data){
+static int ioctl(fs_filed_t *fd, int request, void *data, size_t n){
 	devfs_dev_t *dev;
 
 
@@ -215,7 +217,7 @@ static int ioctl(fs_filed_t *fd, int request, void *data){
 	if(dev->ops.ioctl == 0x0)
 		return_errno(E_NOIMP);
 
-	return dev->ops.ioctl(dev, fd, request, data);
+	return dev->ops.ioctl(dev, fd, request, data, n);
 }
 
 static int fcntl(fs_filed_t *fd, int cmd, void *data){
@@ -240,4 +242,18 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 
 		return dev->ops.fcntl(dev, fd, cmd, data);
 	};
+}
+
+static void *mmap(fs_filed_t *fd, size_t n){
+	devfs_dev_t *dev;
+
+
+	dev = (devfs_dev_t *)fd->node->data;
+
+	if(dev->ops.mmap != 0x0)
+		return dev->ops.mmap(dev, fd, n);
+
+	set_errno(E_NOIMP);
+
+	return 0x0;
 }

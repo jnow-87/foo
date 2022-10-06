@@ -23,7 +23,7 @@
 
 
 /* local/static prototypes */
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
 
 
 /* global variables */
@@ -64,6 +64,7 @@ devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t
 	dev_ops.write = 0x0;
 	dev_ops.ioctl = ioctl;
 	dev_ops.fcntl = 0x0;
+	dev_ops.mmap = 0x0;
 
 	dev = devfs_dev_register(name, &dev_ops, netdev);
 
@@ -130,13 +131,16 @@ err:
 
 
 /* local functions */
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
 	size_t cfg_size;
 	netdev_t *netdev;
 
 
 	netdev = dev->data;
 	cfg_size = net_domain_cfg[netdev->domain].cfg_size;
+
+	if(n != cfg_size)
+		return_errno(E_INVAL);
 
 	switch(request){
 	case IOCTL_CFGRD:

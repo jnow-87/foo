@@ -57,10 +57,6 @@ SECTIONS {
 		*(COMMON)
 	} > text
 
-	.kernel_heap : {
-		*(.memory_kernel_heap)
-	} > kernel_heap
-
 	.kernel_stack : {
 		*(.memory_kernel_stack)
 	} > kernel_stack

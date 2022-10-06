@@ -65,7 +65,7 @@ bridge_dgram_t *dgram_alloc_rx(bridge_t *brdg){
 	if(dgram == 0x0)
 		return 0x0;
 
-	dgram_init(dgram, DT_READ, 0x0, 0, brdg);
+	dgram_init(dgram, BDT_READ, 0x0, 0, brdg);
 	list_add_tail(brdg->rx_dgrams, dgram);
 
 	return dgram;
@@ -83,14 +83,14 @@ bridge_dgram_t *dgram_alloc_tx(bridge_t *brdg, void const *data, uint8_t len){
 	dgram->data = (void*)dgram + sizeof(bridge_dgram_t);
 	memcpy(dgram->data, data, len);
 
-	dgram_init(dgram, DT_WRITE, dgram->data, len, brdg);
+	dgram_init(dgram, BDT_WRITE, dgram->data, len, brdg);
 	list_add_tail(brdg->tx_dgrams, dgram);
 
 	return dgram;
 }
 
 void dgram_free(bridge_dgram_t *dgram, bridge_t *brdg){
-	if(dgram->type == DT_READ){
+	if(dgram->type == BDT_READ){
 		list_rm(brdg->rx_dgrams, dgram);
 		kfree(dgram->data);
 	}
@@ -104,19 +104,19 @@ void dgram_init(bridge_dgram_t *dgram, bridge_dgram_type_t type, void *data, uin
 	memset(dgram, 0, sizeof(bridge_dgram_t));
 
 	dgram->type = type;
-	dgram->state = DS_CTRL_BYTE;
-	dgram->estate = DS_ERROR;
+	dgram->state = BDS_CTRL_BYTE;
+	dgram->estate = BDS_ERROR;
 
 	dgram_init_data(dgram, data, len, brdg);
 
-	if(type == DT_WRITE)
+	if(type == BDT_WRITE)
 		dgram->checksum = checksum(data, len);
 }
 
 int dgram_init_retry(bridge_dgram_t *dgram){
-	dgram->state = DS_CTRL_BYTE;
-	dgram->estate = DS_ERROR;
-	dgram->ecode = DE_NONE;
+	dgram->state = BDS_CTRL_BYTE;
+	dgram->estate = BDS_ERROR;
+	dgram->ecode = BDE_NONE;
 	dgram->attempts++;
 
 	return (dgram->attempts >= CONFIG_BRIDGE_RETRY_LIMIT) ? -1 : 0;
@@ -128,53 +128,53 @@ bridge_dgram_state_t dgram_read(bridge_dgram_t *dgram, bridge_t *brdg){
 
 
 	/* read incoming byte if not in an acknowledge state */
-	if(!DS_ISACK(dgram->state)){
+	if(!BDS_ISACK(dgram->state)){
 		if(rx(brdg, dgram, &byte) != 0)
-			return seterr(dgram, DE_RX);
+			return seterr(dgram, BDE_RX);
 	}
 
 	/* perform state action and state change */
 	switch(dgram->state){
-	case DS_CTRL_BYTE:
-		return hdrcmp(brdg, dgram, byte, CTRLBYTE(brdg), DS_CTRL_BYTE_ACK);
+	case BDS_CTRL_BYTE:
+		return hdrcmp(brdg, dgram, byte, CTRLBYTE(brdg), BDS_CTRL_BYTE_ACK);
 
-	case DS_DATA_LEN:
+	case BDS_DATA_LEN:
 		if(dgram->data == 0x0)
 			dgram_init_data(dgram, kmalloc(byte), byte, brdg);
 
 		if(dgram->data == 0x0)
-			return nack(brdg, dgram, byte, DE_NOMEM);
+			return nack(brdg, dgram, byte, BDE_NOMEM);
 
-		return hdrcmp(brdg, dgram, byte, dgram->len, DS_DATA_LEN_ACK);
+		return hdrcmp(brdg, dgram, byte, dgram->len, BDS_DATA_LEN_ACK);
 
-	case DS_CHECKSUM:
+	case BDS_CHECKSUM:
 		dgram->checksum = byte;
 
-		return ack(brdg, dgram, byte, DS_CHECKSUM_ACK);
+		return ack(brdg, dgram, byte, BDS_CHECKSUM_ACK);
 
-	case DS_DATA:
+	case BDS_DATA:
 		return rx_payload(brdg, dgram, byte);
 
-	case DS_DATA_ACK:
+	case BDS_DATA_ACK:
 		if(dgram->chunksize)
-			return DS_DATA;
+			return BDS_DATA;
 
 		csum = checksum(dgram->data, dgram->len);
 
 		if(csum != dgram->checksum)
-			seterr(dgram, DE_CHECKSUM);
+			seterr(dgram, BDE_CHECKSUM);
 
-		return tx(brdg, dgram, csum, (csum != dgram->checksum) ? DS_ERROR : DS_VERIFY_ACK);
+		return tx(brdg, dgram, csum, (csum != dgram->checksum) ? BDS_ERROR : BDS_VERIFY_ACK);
 
-	case DS_VERIFY_TX:
-		return (ackcmp(dgram, byte, dgram->checksum) != 0) ? DS_ERROR : DS_COMPLETE;
+	case BDS_VERIFY_TX:
+		return (ackcmp(dgram, byte, dgram->checksum) != 0) ? BDS_ERROR : BDS_COMPLETE;
 
-	case DS_CTRL_BYTE_ACK:	return DS_DATA_LEN;
-	case DS_DATA_LEN_ACK:	return DS_CHECKSUM;
-	case DS_CHECKSUM_ACK:	return DS_DATA;
-	case DS_VERIFY_ACK:		return DS_VERIFY_TX;
+	case BDS_CTRL_BYTE_ACK:	return BDS_DATA_LEN;
+	case BDS_DATA_LEN_ACK:	return BDS_CHECKSUM;
+	case BDS_CHECKSUM_ACK:	return BDS_DATA;
+	case BDS_VERIFY_ACK:	return BDS_VERIFY_TX;
 
-	default:				return DS_ERROR;
+	default:				return BDS_ERROR;
 	}
 }
 
@@ -183,67 +183,67 @@ bridge_dgram_state_t dgram_write(bridge_dgram_t *dgram, bridge_t *brdg){
 
 
 	/* read ack byte in acknowledge states */
-	if(DS_ISACK(dgram->state)){
+	if(BDS_ISACK(dgram->state)){
 		if(rx(brdg, dgram, &byte) != 0)
-			return seterr(dgram, DE_RX);
+			return seterr(dgram, BDE_RX);
 	}
 
 	/* perform state action and state change */
 	switch(dgram->state){
-	case DS_CTRL_BYTE:
-		return tx(brdg, dgram, CTRLBYTE(brdg), DS_CTRL_BYTE_TX);
+	case BDS_CTRL_BYTE:
+		return tx(brdg, dgram, CTRLBYTE(brdg), BDS_CTRL_BYTE_TX);
 
-	case DS_CTRL_BYTE_ACK:
+	case BDS_CTRL_BYTE_ACK:
 		if(ackcmp(dgram, byte, CTRLBYTE(brdg)) != 0)
-			return DS_ERROR;
+			return BDS_ERROR;
 
 		// fall through
-	case DS_DATA_LEN:
-		return tx(brdg, dgram, dgram->len, DS_DATA_LEN_TX);
+	case BDS_DATA_LEN:
+		return tx(brdg, dgram, dgram->len, BDS_DATA_LEN_TX);
 
-	case DS_DATA_LEN_ACK:
+	case BDS_DATA_LEN_ACK:
 		if(ackcmp(dgram, byte, dgram->len) != 0)
-			return DS_ERROR;
+			return BDS_ERROR;
 
 		// fall through
-	case DS_CHECKSUM:
-		return tx(brdg, dgram, dgram->checksum, DS_CHECKSUM_TX);
+	case BDS_CHECKSUM:
+		return tx(brdg, dgram, dgram->checksum, BDS_CHECKSUM_TX);
 
-	case DS_CHECKSUM_ACK:
+	case BDS_CHECKSUM_ACK:
 		if(ackcmp(dgram, byte, dgram->checksum) != 0)
-			return DS_ERROR;
+			return BDS_ERROR;
 
 		// fall through
-	case DS_DATA:
+	case BDS_DATA:
 		return tx_payload(brdg, dgram);
 
-	case DS_DATA_ACK:
+	case BDS_DATA_ACK:
 		if(ackcmp(dgram, byte, ((uint8_t*)dgram->data)[dgram->offset - 1]) != 0)
-			return DS_ERROR;
+			return BDS_ERROR;
 
 		if(dgram->chunksize)
 			return tx_payload(brdg, dgram);
 
-		return DS_VERIFY_ACK;
+		return BDS_VERIFY_ACK;
 
-	case DS_VERIFY_ACK:
+	case BDS_VERIFY_ACK:
 		if(byte != dgram->checksum)
-			return nack(brdg, dgram, byte, DE_CHECKSUM);
+			return nack(brdg, dgram, byte, BDE_CHECKSUM);
 
-		return ack(brdg, dgram, byte, DS_VERIFY_TX);
+		return ack(brdg, dgram, byte, BDS_VERIFY_TX);
 
-	case DS_CTRL_BYTE_TX:	return DS_CTRL_BYTE_ACK;
-	case DS_DATA_LEN_TX:	return DS_DATA_LEN_ACK;
-	case DS_CHECKSUM_TX:	return DS_CHECKSUM_ACK;
-	case DS_DATA_TX:		return DS_DATA_ACK;
-	case DS_VERIFY_TX:		return DS_COMPLETE;
+	case BDS_CTRL_BYTE_TX:	return BDS_CTRL_BYTE_ACK;
+	case BDS_DATA_LEN_TX:	return BDS_DATA_LEN_ACK;
+	case BDS_CHECKSUM_TX:	return BDS_CHECKSUM_ACK;
+	case BDS_DATA_TX:		return BDS_DATA_ACK;
+	case BDS_VERIFY_TX:		return BDS_COMPLETE;
 
-	default:				return DS_ERROR;
+	default:				return BDS_ERROR;
 	}
 }
 
 errno_t dgram_errno(bridge_dgram_t *dgram){
-	return (dgram->ecode == DE_NOMEM) ? E_NOMEM : E_IO;
+	return (dgram->ecode == BDE_NOMEM) ? E_NOMEM : E_IO;
 }
 
 
@@ -274,18 +274,18 @@ static bridge_dgram_state_t rx_payload(bridge_t *brdg, bridge_dgram_t *dgram, ui
 	dgram->chunksize--;
 
 	if(dgram->chunksize)
-		return DS_DATA;
+		return BDS_DATA;
 
 	dgram->chunksize = CHUNKSIZE(dgram, brdg);
 
-	return ack(brdg, dgram, byte, DS_DATA_ACK);
+	return ack(brdg, dgram, byte, BDS_DATA_ACK);
 }
 
 static bridge_dgram_state_t tx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_state_t next){
 	PROTO_DEBUG(dgram, "write %#hhx/~%#hhx\n", byte, ~byte);
 
 	if(brdg->ops.writeb(byte, brdg->hw) != 0)
-		return seterr(dgram, DE_TX);
+		return seterr(dgram, BDE_TX);
 
 	return next;
 }
@@ -300,25 +300,25 @@ static bridge_dgram_state_t tx_payload(bridge_t *brdg, bridge_dgram_t *dgram){
 	dgram->chunksize--;
 
 	if(dgram->chunksize)
-		return tx(brdg, dgram, byte, DS_DATA);
+		return tx(brdg, dgram, byte, BDS_DATA);
 
 	dgram->chunksize = CHUNKSIZE(dgram, brdg);
 
-	return tx(brdg, dgram, byte, DS_DATA_TX);
+	return tx(brdg, dgram, byte, BDS_DATA_TX);
 }
 
 static bridge_dgram_state_t hdrcmp(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, uint8_t ref, bridge_dgram_state_t next){
 	if(byte != ref){
 		PROTO_DEBUG(dgram, "header byte mismatch, expected %#hhx\n", ref);
 
-		return nack(brdg, dgram, byte, DE_HDRBYTE);
+		return nack(brdg, dgram, byte, BDE_HDRBYTE);
 	}
 
 	return ack(brdg, dgram, byte, next);
 }
 
 static bridge_dgram_state_t ack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_state_t next){
-	if(next != DS_ERROR)
+	if(next != BDS_ERROR)
 		PROTO_DEBUG(dgram, "ack byte %#hhx\n", byte);
 
 	return tx(brdg, dgram, ~byte, next);
@@ -328,12 +328,12 @@ static bridge_dgram_state_t nack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t 
 	seterr(dgram, ecode);
 	PROTO_DEBUG(dgram, "nack byte %#hhx\n", byte);
 
-	return ack(brdg, dgram, ~byte, DS_ERROR);
+	return ack(brdg, dgram, ~byte, BDS_ERROR);
 }
 
 static int ackcmp(bridge_dgram_t *dgram, uint8_t byte, uint8_t ref){
 	if(((~byte) & 0xff) != ref){
-		seterr(dgram, DE_ACK);
+		seterr(dgram, BDE_ACK);
 
 		return -1;
 	}
@@ -362,7 +362,7 @@ static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t e
 
 	PROTO_DEBUG(dgram, "%s\n", dgram_error(dgram));
 
-	return DS_ERROR;
+	return BDS_ERROR;
 }
 
 #ifdef CONFIG_BRIDGE_DEBUG_PROTOCOL

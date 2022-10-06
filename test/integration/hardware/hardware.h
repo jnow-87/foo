@@ -14,6 +14,7 @@
 #include <arch/x86/hardware.h>
 #include <sys/types.h>
 #include <sys/uart.h>
+#include <sys/vram.h>
 #include <brickos/child.h>
 
 
@@ -75,6 +76,13 @@ void uart_cleanup(void);
 
 void uart_poll(void);
 int uart_configure(char const *path, int int_num, uart_cfg_t *cfg);
+
+// display
+int display_init(void);
+void display_cleanup(void);
+
+void display_poll(void);
+int display_configure(int shm_id, uint8_t scale, vram_cfg_t *cfg);
 
 
 /* external variables */

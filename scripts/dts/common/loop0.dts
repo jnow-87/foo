@@ -8,19 +8,8 @@
 
 
 loop0 = {
-	compatible = "loop,term";
+	compatible = "loop,block";
 
-	/* loop config (loop_dt_data_t) */
-	int<16> = [ 256 ];	// buffer size
-
-	tty-loop0 = {
-		compatible = "terminal";
-
-		/* terminal config (loop_cfg_t) */
-		int<8> = [
-			0x0,		// iflags (none)
-			0x0,		// oflags (none)
-			0x0,		// lflags (none)
-		];
-	};
+	/* loop config (loop_cfg_t) */
+	int<16> = [ 32 ];	// buffer size
 };

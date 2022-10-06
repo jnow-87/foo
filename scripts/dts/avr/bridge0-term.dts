@@ -12,24 +12,26 @@ brdg0-right = {
 
 	/* bridge config (bridge_cfg_t) */
 	int<8> = [
-		0,						// id
-		2,						// chunksize
-		37,						// rx interrupt
-		38,						// tx interrupt
+		0,				// id
+		2,				// chunksize
+		37,				// rx interrupt
+		38,				// tx interrupt
 	];
 
 	tty-bridge0 = {
 		compatible = "terminal";
 
-		/* terminal config (uart_cfg_t) */
-		int<32> = [ 115200 ];	// baudrate
+		/* terminal config (term_cfg_t) */
 		int<8> = [
-			1,					// stop bits (1)
-			0,					// parity (TPARITY_NONE)
-			3,					// csize (TCS_8)
-			0x0,				// iflags (none)
-			0x0,				// oflags (none)
-			0x0,				// lflags (none)
+			0x0,		// iflags (none)
+			0x0,		// oflags (none)
+			0x0,		// lflags (none)
+			0,			// tabs
+		];
+
+		int<16> = [
+			0,			// lines (set by the driver)
+			0,			// columns (set by the driver)
 		];
 	};
 };

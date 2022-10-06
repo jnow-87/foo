@@ -24,12 +24,13 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	bridge_ops_t ops;
 	bridge_cfg_t *dtd;
 	term_itf_t *dti;
+	term_cfg_t term;
 
 
 	dtd = (bridge_cfg_t*)dt_data;
 	dti = (term_itf_t*)dt_itf;
 
-	if(dti->configure(&dtd->hw_cfg, dti->data) != 0)
+	if(dti->configure != 0x0 && dti->configure(&term, dti->cfg, dti->data) != 0)
 		return 0x0;
 
 	ops.readb = readb;
@@ -38,7 +39,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dtd->rx_int = dti->rx_int;
 	dtd->tx_int = dti->tx_int;
 
-	(void)bridge_create(dtd, &ops, dt_itf);
+	(void)bridge_create(&ops, dtd, dti);
 
 	return 0x0;
 }

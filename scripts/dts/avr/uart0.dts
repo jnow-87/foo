@@ -11,28 +11,38 @@ uart0 = {
 	compatible = "avr,uart";
 
 	/* uart hardware (dt_data_t) */
-	baseaddr = 0xc0;			// uart0 config register base
+	baseaddr = 0xc0;		// uart0 config register base
 
-	reg = [ 0x64 ];				// PRR0
-	int<8> = [ 0x2 ];			// PRR0_PRUSART0
+	reg = [ 0x64 ];			// PRR0
+	int<8> = [ 0x2 ];		// PRR0_PRUSART0
 
 	int<8> = [
-		20,						// uart0 rx interrupt
-		22,						// uart0 tx interrupt
+		20,					// uart0 rx interrupt
+		22,					// uart0 tx interrupt
+	];
+
+	// cfg (uart_cfg_t)
+	int<32> = [ 115200 ];	// baudrate
+	int<8> = [
+		1,					// stop bits (1)
+		0,					// parity (UART_PARITY_NONE)
+		3,					// csize (UART_CS_8)
 	];
 
 	tty0 = {
 		compatible = "terminal";
 
-		/* terminal config (uart_cfg_t) */
-		int<32> = [ 115200 ];	// baudrate
+		/* terminal config (term_cfg_t) */
 		int<8> = [
-			1,					// stop bits (1)
-			0,					// parity (TPARITY_NONE)
-			3,					// csize (TCS_8)
-			0x0,				// iflags (none)
-			0x2,				// oflags (TOFL_NLCR)
-			0x0,				// lflags (none)
+			0x0,			// iflags (none)
+			0x2,			// oflags (TOFL_NLCR)
+			0x0,			// lflags (none)
+			0,				// tabs
+		];
+
+		int<16> = [
+			0,				// lines (set by the driver)
+			0,				// columns (set by the driver)
 		];
 
 		klog = {

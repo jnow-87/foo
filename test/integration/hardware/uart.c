@@ -97,7 +97,7 @@ void uart_poll(void){
 	pthread_mutex_lock(&uart_mtx);
 
 	for(i=0; i<nfd; i++){
-		fds[i].fd = (uarts[i].int_num != 0 )? uarts[i].fd : -1;
+		fds[i].fd = (uarts[i].int_num != 0 ) ? uarts[i].fd : -1;
 		fds[i].events = POLLIN;
 	}
 

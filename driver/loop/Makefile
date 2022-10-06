@@ -7,10 +7,9 @@
 
 
 
-obj-y := loop.o
-
-obj-$(CONFIG_LOOP_DEV) += dev.o
+obj-$(CONFIG_LOOP_BLOCK) += block.o
 obj-$(CONFIG_LOOP_TERM) += term.o
+obj-$(CONFIG_LOOP_VRAM) += vram.o
 
 
 cppflags-$(CONFIG_LOOP_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG

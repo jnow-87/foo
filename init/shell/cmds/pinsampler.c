@@ -65,7 +65,7 @@ static int exec(int argc, char **argv){
 	use_int = 0;
 	sig = SIG_USR1;
 
-	if(ioctl(pin_fd, IOCTL_CFGWR, &sig, sizeof(signal_t)) == 0){
+	if(ioctl(pin_fd, IOCTL_CFGWR, &sig) == 0){
 		if(signal(sig, pin_change_hdlr) == pin_change_hdlr){
 			use_int = 1;
 			printf("use pin interrupt for sampling\n");

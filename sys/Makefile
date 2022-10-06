@@ -25,6 +25,8 @@ obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 obj-$(CONFIG_SYS_LINEBUFFER) += linebuf.o
 obj-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
 obj-$(CONFIG_KERNEL_NET) += inet.o
+obj-$(CONFIG_FONTS) += font.o fonts/
+obj-$(CONFIG_DRIVER_VRAM) += vram.o
 
 # host
 hostobj-y := \
@@ -62,6 +64,8 @@ libsys-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 libsys-$(CONFIG_SYS_LINEBUFFER) += linebuf.o
 libsys-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
 libsys-$(CONFIG_KERNEL_NET) += inet.o
+libsys-$(CONFIG_FONTS) += font.o fonts/
+libsys-$(CONFIG_DRIVER_VRAM) += vram.o
 
 libsys-y := $(patsubst %.o,%.libsys.o,$(libsys-y))
 

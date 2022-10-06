@@ -9,7 +9,7 @@
 
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <sys/loop.h>
+#include <sys/term.h>
 #include <test/test.h>
 
 
@@ -122,17 +122,17 @@ static int test(int fd, char const *in, char const *out){
 }
 
 static int configure(int fd, term_iflags_t iflags, term_oflags_t oflags, term_lflags_t lflags){
-	loop_cfg_t cfg;
+	term_cfg_t cfg;
 
 
-	if(ioctl(fd, IOCTL_CFGRD, &cfg, sizeof(loop_cfg_t)) != 0)
+	if(ioctl(fd, IOCTL_CFGRD, &cfg) != 0)
 		return -1;
 
 	cfg.iflags = iflags;
 	cfg.oflags = oflags;
 	cfg.lflags = lflags;
 
-	if(ioctl(fd, IOCTL_CFGWR, &cfg, sizeof(loop_cfg_t)) != 0)
+	if(ioctl(fd, IOCTL_CFGWR, &cfg) != 0)
 		return -1;
 
 	return 0;

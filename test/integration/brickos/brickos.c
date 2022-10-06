@@ -71,6 +71,18 @@ void brickos_destroy_childs(void){
 	}
 }
 
+char const *brickos_child_name(pid_t pid){
+	size_t i;
+
+
+	for(i=0; i<BOS_NCHILDS; i++){
+		if(brickos_childs[i]->pid == pid)
+			return brickos_childs[i]->name;
+	}
+
+	return "<unknown pid>";
+}
+
 
 /* local functions */
 static void argv_sort(char **argv){

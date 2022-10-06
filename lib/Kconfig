@@ -15,6 +15,16 @@ menu stdio
 	source lib/stdio/Kconfig
 endmenu
 
+menuconfig LIB_GFX
+	bool "Graphics library"
+	select FONTS
+
+if LIB_GFX
+	config GFX_INT_WIDTH
+		int "Integer type width"
+		default 16
+endif
+
 config LIB_GETOPT
 	bool "getopt library"
 	default n

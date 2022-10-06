@@ -45,7 +45,7 @@ static int exec(int argc, char **argv){
 		return 1;
 	}
 
-	if(ioctl(fd, IOCTL_CFGWR, &slave, 1) != 0){
+	if(ioctl(fd, IOCTL_CFGWR, &slave) != 0){
 		fprintf(stderr, "ioctl error \"%s\"\n", strerror(errno));
 		return 1;
 	}

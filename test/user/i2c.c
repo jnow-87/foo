@@ -82,7 +82,7 @@ static int tests(test_type_t type){
 	r += test_err(type | MASTER_RD, fd);
 	r += test_err(type | MASTER_WR, fd);
 
-	close(fd);
+	r += TEST_INT_EQ(close(fd), 0);
 
 	return -r;
 }

@@ -96,8 +96,8 @@ static int exec(int argc, char **argv){
 	}
 
 	r = 0;
-	r |= ioctl(fd, IOCTL_CFGWR, &opts.dev_cfg, sizeof(opts.dev_cfg));
-	r |= ioctl(fd, IOCTL_CFGRD, &opts.dev_cfg, sizeof(opts.dev_cfg));
+	r |= ioctl(fd, IOCTL_CFGWR, &opts.dev_cfg);
+	r |= ioctl(fd, IOCTL_CFGRD, &opts.dev_cfg);
 
 	if(r != 0)
 		fprintf(stderr, "error configuring device \"%s\"\n", strerror(errno));

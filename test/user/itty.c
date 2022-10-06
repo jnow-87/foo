@@ -13,7 +13,6 @@
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/term.h>
-#include <sys/uart.h>
 #include <sys/escape.h>
 #include <test/test.h>
 
@@ -26,16 +25,16 @@ TEST_LONG(tty, "test tty non/blocking io"){
 	size_t i,
 		   n;
 	char buf[20];
-	uart_cfg_t cfg;
+	term_cfg_t cfg;
 	f_mode_t f_mode;
 
 
 	/* configure terminal */
-	ioctl(0, IOCTL_CFGRD, &cfg, sizeof(uart_cfg_t));
+	ioctl(0, IOCTL_CFGRD, &cfg);
 	cfg.iflags |= TIFL_CRNL;
 	cfg.oflags |= TOFL_NLCR;
 	cfg.lflags &= ~TLFL_ECHO;
-	ioctl(0, IOCTL_CFGWR, &cfg, sizeof(uart_cfg_t));
+	ioctl(0, IOCTL_CFGWR, &cfg);
 
 	/* get stdin file mode */
 	if(fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t)) != 0){

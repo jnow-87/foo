@@ -94,7 +94,7 @@ static int exec(int argc, char **argv){
 	c = 0;
 
 	// disable pwm
-	ioctl(dev, IOCTL_CFGRD, &cfg, sizeof(cfg));
+	ioctl(dev, IOCTL_CFGRD, &cfg);
 	update_duty_cycle(&duty, 0, &cfg, dev);
 
 	/* main loop */
@@ -185,7 +185,7 @@ static void update_prescaler(pwm_cfg_t *pwm_cfg, pres_act_t action, int dev){
 				break;
 			}
 
-			if(ioctl(dev, IOCTL_CFGWR, pwm_cfg, sizeof(pwm_cfg_t)) == 0)
+			if(ioctl(dev, IOCTL_CFGWR, pwm_cfg) == 0)
 				break;
 		}
 		break;
@@ -197,13 +197,13 @@ static void update_prescaler(pwm_cfg_t *pwm_cfg, pres_act_t action, int dev){
 
 			pwm_cfg->prescaler--;
 
-			if(ioctl(dev, IOCTL_CFGWR, pwm_cfg, sizeof(pwm_cfg_t)) == 0)
+			if(ioctl(dev, IOCTL_CFGWR, pwm_cfg) == 0)
 				break;
 		}
 		break;
 
 	case PRES_SET:
-		ioctl(dev, IOCTL_CFGWR, pwm_cfg, sizeof(pwm_cfg_t));
+		ioctl(dev, IOCTL_CFGWR, pwm_cfg);
 		break;
 	}
 }
@@ -213,7 +213,7 @@ static void update_prescaler(pwm_cfg_t *pwm_cfg, pres_act_t action, int dev){
  */
 static void update_mode(pwm_cfg_t *pwm_cfg, int dev){
 	pwm_cfg->mode = (pwm_cfg->mode == PWM_FAST ? PWM_PHASECORRECT : PWM_FAST);
-	ioctl(dev, IOCTL_CFGWR, pwm_cfg, sizeof(pwm_cfg_t));
+	ioctl(dev, IOCTL_CFGWR, pwm_cfg);
 }
 
 /**

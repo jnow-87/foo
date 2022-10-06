@@ -29,7 +29,7 @@
 static int close(devfs_dev_t *dev, fs_filed_t *fd);
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
 
 static void int_hdlr(int_num_t num, void *gpio);
 
@@ -80,6 +80,7 @@ gpio_t *gpio_create(char const *name, gpio_ops_t *ops, gpio_cfg_t *cfg, void *hw
 	dev_ops.write = cfg->out_mask ? write : 0x0;
 	dev_ops.ioctl = ioctl;
 	dev_ops.fcntl = 0x0;
+	dev_ops.mmap = 0x0;
 
 	dev = devfs_dev_register(name, &dev_ops, gpio);
 
@@ -176,7 +177,10 @@ err:
 	return 0;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data){
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
+	if(n != sizeof(gpio_int_cfg_t))
+		return_errno(E_INVAL);
+
 	switch(request){
 	case IOCTL_CFGWR:	return int_set(dev->data, data, fd);
 	default:			return_errno(E_NOSUP);

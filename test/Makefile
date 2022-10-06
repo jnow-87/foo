@@ -9,8 +9,10 @@
 
 subdir-$(CONFIG_X86) += integration/
 
-bin-y := itest.elf
-bin-$(if $(filter-out avr,$(CONFIG_ARCH)),y,) += uttest.elf
+bin-$(if $(filter-out avr,$(CONFIG_ARCH)),y,) += \
+	itest.elf \
+	uttest.elf
+
 hostbin-y := utest
 
 

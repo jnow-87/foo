@@ -25,7 +25,9 @@ typedef struct{
 	char const *path;
 	uint8_t const rx_int,
 				  tx_int;
-} dt_data_t;
+
+	uart_cfg_t cfg;
+} __packed dt_data_t;
 
 typedef struct{
 	dt_data_t *dtd;
@@ -34,7 +36,7 @@ typedef struct{
 
 
 /* local/static prototypes */
-static int configure(void *cfg, void *data);
+static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data);
 static char putc(char c, void *data);
 static size_t putsn(char const *s, size_t n, void *data);
 static size_t gets(char *s, size_t n, void *data);
@@ -48,7 +50,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 
 	dtd = (dt_data_t*)dt_data;
-	itf = kmalloc(sizeof(term_itf_t));
+	itf = kcalloc(1, sizeof(term_itf_t));
 	uart = kmalloc(sizeof(dev_data_t));
 
 	if(itf == 0x0 || uart == 0x0)
@@ -65,12 +67,12 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->putc = putc;
 	itf->puts = putsn;
 	itf->gets = gets;
-	itf->error = 0x0;
+
 	itf->data = uart;
+	itf->cfg = &dtd->cfg;
+	itf->cfg_size = sizeof(uart_cfg_t);
 	itf->rx_int = dtd->rx_int;
 	itf->tx_int = dtd->tx_int;
-	itf->cfg_size = sizeof(uart_cfg_t);
-	itf->cfg_flags_offset = offsetof(uart_cfg_t, iflags);
 
 	return itf;
 
@@ -87,7 +89,7 @@ err_0:
 
 driver_probe("x86,uart", probe);
 
-static int configure(void *cfg, void *data){
+static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
 	dev_data_t *uart;
 	x86_hw_op_t op;
 
@@ -97,7 +99,7 @@ static int configure(void *cfg, void *data){
 	op.num = HWO_UART_CFG;
 
 	op.uart.int_num = uart->dtd->rx_int;
-	memcpy(&op.uart.cfg, cfg, sizeof(uart_cfg_t));
+	memcpy(&op.uart.cfg, hw_cfg, sizeof(uart_cfg_t));
 	strncpy(op.uart.path, uart->dtd->path, 64);
 	op.uart.path[63] = 0;
 

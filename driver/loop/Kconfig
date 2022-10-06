@@ -9,15 +9,18 @@
 
 menuconfig DRIVER_LOOPBACK
 	bool "Loopback"
-	select SYS_RINGBUFFER
 
 if DRIVER_LOOPBACK
-	config LOOP_DEV
-		bool "Loopback device"
+	config LOOP_BLOCK
+		bool "Loopback block device"
 		select KERNEL_DEVFS
 
 	config LOOP_TERM
 		bool "Loopback terminal"
+		select SYS_RINGBUFFER
+
+	config LOOP_VRAM
+		bool "Loopback video ram"
 
 	config LOOP_DEBUG
 		bool "Enable debug messages"

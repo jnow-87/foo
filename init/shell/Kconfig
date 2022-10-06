@@ -51,6 +51,10 @@ menu "Commands"
 		bool "ethernet"
 		select LIB_GETOPT
 
+	config INIT_GFXDEMO
+		bool "gfx demo"
+		select LIB_GFX
+
 	config INIT_TEST
 		bool "test"
 		select LIB_GETOPT

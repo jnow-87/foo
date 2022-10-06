@@ -88,7 +88,7 @@ ssize_t write(int fd, void *buf, size_t n){
 	return p.data_len;
 }
 
-int ioctl(int fd, int cmd, void *data, size_t data_len){
+int ionctl(int fd, int cmd, void *data, size_t data_len){
 	sc_fs_t p;
 
 
@@ -114,6 +114,28 @@ int fcntl(int fd, int request, void *data, size_t data_len){
 	if(sc(SC_FCNTL, &p) != E_OK)
 		return -1;
 	return 0;
+}
+
+void *mmap(int fd, size_t n){
+	sc_fs_t p;
+
+
+	p.fd = fd;
+	p.data = 0x0;
+	p.data_len = n;
+
+	if(sc(SC_MMAP, &p) != E_OK)
+		return 0x0;
+	return p.data;
+}
+
+void munmap(void *addr){
+	sc_fs_t p;
+
+
+	p.data = addr;
+
+	(void)sc(SC_MMAP, &p);
 }
 
 int unlink(char const *path){

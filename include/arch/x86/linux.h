@@ -71,16 +71,29 @@ typedef enum{
 	LNX_SYS_MMAP = 9,
 	LNX_SYS_SIGACTION = 13,
 	LNX_SYS_SIGRETURN_RT = 15,
+	LNX_SYS_SHMGET = 29,
+	LNX_SYS_SHMAT = 30,
+	LNX_SYS_SHMCTL = 31,
 	LNX_SYS_PAUSE = 34,
 	LNX_SYS_NANOSLEEP = 35,
 	LNX_SYS_GETPID = 39,
 	LNX_SYS_EXIT = 60,
 	LNX_SYS_KILL = 62,
+	LNX_SYS_SHMDT = 67,
 	LNX_SYS_FCNTL = 72,
 	LNX_SYS_CHDIR = 80,
 	LNX_SYS_MKDIR = 83,
 	LNX_SYS_GETPPID = 110,
 } lnx_syscall_t;
+
+typedef enum{
+	LNX_EINTR = 4,
+	LNX_ENOMEM = 12,
+	LNX_EACCESS = 13,
+	LNX_EEXIST = 17,
+	LNX_EINVAL = 22,
+	LNX_EIDRM = 43,
+} lnx_errno_t;
 
 typedef enum{
 	LNX_O_RDONLY = 0x0,
@@ -128,6 +141,10 @@ long int lnx_getpid(void);
 long int lnx_getppid(void);
 
 void lnx_exit(int code);
+
+long int lnx_shmget(size_t n);
+void *lnx_shmat(int id);
+void lnx_shmrm(int id, void *addr);
 
 
 #endif // X86_LINUX_H
