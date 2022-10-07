@@ -101,12 +101,12 @@ static int plugin_ioverflow_det(FILE *ofile, char *bin_type){
 	fprintf(ofile, ".fill : {\n");
 	fprintf(ofile, "\t. = ALIGN(2);\n");
 	fprintf(ofile, "\tFILL(0x%.2hhx%.2hhx%.2hhx%.2hhx);\n", filler.c[0], filler.c[1], filler.c[2], filler.c[3]);
-	fprintf(ofile, "\t. = ORIGIN(flash_%s) + LENGTH(flash_%s) - 4;\n", bin_type, bin_type);
+	fprintf(ofile, "\t. = ORIGIN(%s_flash) + LENGTH(%s_flash) - 4;\n", bin_type, bin_type);
 	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[0]);
 	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[1]);
 	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[2]);
 	fprintf(ofile, "\tBYTE(0x%.2hhx);\n", filler.c[3]);
-	fprintf(ofile, "} > flash_%s\n", bin_type);
+	fprintf(ofile, "} > %s_flash\n", bin_type);
 
 	return 0;
 }
