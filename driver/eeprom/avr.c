@@ -277,7 +277,7 @@ static char read_byte(size_t offset, dt_data_t *dtd){
 
 	int_enable(imask);
 
-	DEBUG("read %#4.4x: %c (%#hhx)\n", dtd->base + fd->fp, buf[i], buf[i]);
+	DEBUG("read %#4.4x: %c (%#hhx)\n", dtd->base + offset, c, c);
 
 	return c;
 }
