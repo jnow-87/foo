@@ -323,7 +323,7 @@ static int ioctl(fs_filed_t *fd, int request, void *_data, size_t n){
 		break;
 
 	case IOCTL_LISTEN:
-		r = listen(sock, *((int*)_data));
+		r = listen(sock, data->backlog);
 		break;
 
 	case IOCTL_ACCEPT:

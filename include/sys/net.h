@@ -31,6 +31,7 @@ typedef struct{
 
 typedef struct{
 	int fd;
+	int backlog;
 
 	size_t addr_len;
 	sock_addr_t addr;		// NOTE addr has to be the last member of this

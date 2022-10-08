@@ -62,7 +62,13 @@ int bind(int fd, sock_addr_t *addr, size_t addr_len){
 }
 
 int listen(int fd, int backlog){
-	return ioctl(fd, IOCTL_LISTEN, &backlog);
+	socket_ioctl_t p;
+
+
+	p.backlog = backlog;
+	p.addr_len = 0;
+
+	return ioctl(fd, IOCTL_LISTEN, &p);
 }
 
 int accept(int fd, sock_addr_t *addr, size_t *addr_len){
