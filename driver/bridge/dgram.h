@@ -17,10 +17,10 @@
 
 /* global functions */
 bridge_dgram_t *dgram_alloc_rx(bridge_t *brdg);
-bridge_dgram_t *dgram_alloc_tx(bridge_t *brdg, void const *data, uint8_t len);
+bridge_dgram_t *dgram_alloc_tx(bridge_t *brdg, void const *buf, uint8_t n);
 void dgram_free(bridge_dgram_t *dgram, bridge_t *brdg);
 
-void dgram_init(bridge_dgram_t *dgram, bridge_dgram_type_t type, void *data, uint8_t len, bridge_t *brdg);
+void dgram_init(bridge_dgram_t *dgram, bridge_dgram_type_t type, void *buf, uint8_t n, bridge_t *brdg);
 int dgram_init_retry(bridge_dgram_t *dgram);
 
 bridge_dgram_state_t dgram_read(bridge_dgram_t *dgram, bridge_t *brdg);

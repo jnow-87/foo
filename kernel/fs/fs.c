@@ -246,7 +246,7 @@ int fs_fd_wait(fs_filed_t *fd, ksignal_t *sig, mutex_t *mtx){
 	return 0;
 }
 
-fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *data, int fs_id){
+fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *payload, int fs_id){
 	fs_t *fs;
 	fs_node_t *node;
 
@@ -282,7 +282,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 
 	node->parent = parent;
 	node->childs = 0x0;
-	node->data = data;
+	node->payload = payload;
 
 	mutex_init(&node->mtx, MTX_NOINT);
 	ksignal_init(&node->datain_sig);
@@ -423,7 +423,7 @@ static int fs_node_find_unsafe(fs_node_t **start, char const **path){
 		*start = child;
 
 		if(child->type == FT_LNK)
-			*start = child->data;
+			*start = child->payload;
 
 		// skip '/'
 		while(**path == '/' && **path != 0)

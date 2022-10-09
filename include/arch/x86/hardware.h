@@ -84,7 +84,7 @@ typedef struct{
 		struct{
 			int num;
 			int en;
-			void *data;
+			void *payload;
 		} int_ctrl;
 
 		struct{
@@ -124,7 +124,7 @@ void x86_hw_op_write_writeback(x86_hw_op_t *op);
 void x86_hw_op_read(x86_hw_op_t *op);
 void x86_hw_op_read_writeback(x86_hw_op_t *op);
 
-void x86_hw_int_trigger(int_num_t num, void *data);
+void x86_hw_int_trigger(int_num_t num, void *payload);
 
 
 /* external variables */

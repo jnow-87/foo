@@ -24,17 +24,17 @@ void itask_queue_init(itask_queue_t *queue){
 }
 
 void itask_queue_destroy(itask_queue_t *queue){
-	while(itask_query_data(queue, 0x0)){
+	while(itask_query_payload(queue, 0x0)){
 		itask_complete(queue, E_END);
 	}
 }
 
-int itask_issue(itask_queue_t *queue, void *data, int_num_t num){
+int itask_issue(itask_queue_t *queue, void *payload, int_num_t num){
 	bool is_first;
 	itask_t task;
 
 
-	task.data = data;
+	task.payload = payload;
 	task.errno = 0;
 	ksignal_init(&task.sig);
 
@@ -68,7 +68,7 @@ void itask_complete(itask_queue_t *queue, errno_t ecode){
 	mutex_unlock(&queue->mtx);
 }
 
-void *itask_query_data(itask_queue_t *queue, int (*complete)(void *data)){
+void *itask_query_payload(itask_queue_t *queue, int (*complete)(void *payload)){
 	int ecode;
 	itask_t *task;
 
@@ -81,10 +81,10 @@ void *itask_query_data(itask_queue_t *queue, int (*complete)(void *data)){
 		if(task == 0x0)
 			return 0x0;
 
-		ecode = (complete == 0x0) ? -1 : complete(task->data);
+		ecode = (complete == 0x0) ? -1 : complete(task->payload);
 
 		if(ecode < 0)
-			return task->data;
+			return task->payload;
 
 		itask_complete(queue, ecode);
 	}

@@ -76,31 +76,31 @@ void socket_free(socket_t *sock){
 				break;
 
 			list_rm(sock->dgrams, dgram);
-			kfree(dgram->data);
+			kfree(dgram->buf);
 			kfree(dgram);
 		}
 	}
 	else{
-		kfree(sock->clients.data);
-		kfree(sock->stream.data);
+		kfree(sock->clients.buf);
+		kfree(sock->stream.buf);
 	}
 
 	kfree(sock);
 }
 
 int socket_listen(socket_t *sock, int backlog){
-	void *data;
+	void *buf;
 	size_t size;
 
 
 	size = sizeof(socket_t*) * backlog + 1;
-	data = kmalloc(size);
+	buf = kmalloc(size);
 
-	if(data == 0x0)
+	if(buf == 0x0)
 		return -errno;
 
 	mutex_lock(&sock->mtx);
-	ringbuf_init(&sock->clients, data, size);
+	ringbuf_init(&sock->clients, buf, size);
 	mutex_unlock(&sock->mtx);
 
 	return 0;
@@ -237,20 +237,20 @@ socket_t *socket_get_client_addr(socket_t *sock, sock_addr_t *addr, size_t *addr
 	return client;
 }
 
-int socket_datain_stream(socket_t *sock, uint8_t *data, size_t len, bool signal){
-	size_t n;
+int socket_datain_stream(socket_t *sock, void *buf, size_t n, bool signal){
+	size_t x;
 	fs_node_t *node;
 
 
-	n = 0;
+	x = 0;
 
 	mutex_lock(&sock->mtx);
 
 	while(1){
-		n += ringbuf_write(&sock->stream, data + n, len - n);
+		x += ringbuf_write(&sock->stream, buf + x, n - x);
 		node = sock->node;
 
-		if(n == len)
+		if(x == n)
 			break;
 
 		if(node == 0x0)
@@ -274,18 +274,15 @@ int socket_datain_stream(socket_t *sock, uint8_t *data, size_t len, bool signal)
 	return 0;
 }
 
-int socket_dataout_stream(socket_t *sock, void *data, size_t data_len){
-	size_t n;
-
-
+int socket_dataout_stream(socket_t *sock, void *buf, size_t n){
 	mutex_lock(&sock->mtx);
-	n = ringbuf_read(&sock->stream, data, data_len);
+	n = ringbuf_read(&sock->stream, buf, n);
 	mutex_unlock(&sock->mtx);
 
 	return n;
 }
 
-int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint8_t *data, size_t len){
+int socket_datain_dgram(socket_t *sock, void *buf, size_t n, sock_addr_t *addr, size_t addr_len){
 	datagram_t *dgram;
 	fs_node_t *node;
 
@@ -296,8 +293,8 @@ int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint
 		return -errno;
 
 	dgram->idx = 0;
-	dgram->len = len;
-	dgram->data = data;
+	dgram->len = n;
+	dgram->buf = buf;
 
 	memcpy(&dgram->addr, addr, addr_len);
 
@@ -313,14 +310,12 @@ int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint
 	return 0;
 }
 
-int socket_dataout_dgram(socket_t *sock, void *data, size_t data_len, sock_addr_t *addr, size_t *addr_len){
-	size_t n;
+int socket_dataout_dgram(socket_t *sock, void *buf, size_t n, sock_addr_t *addr, size_t *addr_len){
 	datagram_t *dgram;
 
 
 	mutex_lock(&sock->mtx);
 
-	n = 0;
 	dgram = list_first(sock->dgrams);
 
 	if(dgram == 0x0)
@@ -331,13 +326,13 @@ int socket_dataout_dgram(socket_t *sock, void *data, size_t data_len, sock_addr_
 		*addr_len = net_domain_cfg[sock->addr.domain].addr_len;
 	}
 
-	n = MIN(data_len, dgram->len - dgram->idx);
-	memcpy(data, dgram->data + dgram->idx, n);
+	n = MIN(n, dgram->len - dgram->idx);
+	memcpy(buf, dgram->buf + dgram->idx, n);
 	dgram->idx += n;
 
 	if(dgram->idx == dgram->len){
 		list_rm(sock->dgrams, dgram);
-		kfree(dgram->data);
+		kfree(dgram->buf);
 		kfree(dgram);
 	}
 

@@ -80,7 +80,7 @@ static void ktask(void){
 			rec_task = task;
 
 		/* execute task */
-		task->hdlr(task->data);
+		task->hdlr(task->payload);
 		ktask_complete(task);
 	}
 }

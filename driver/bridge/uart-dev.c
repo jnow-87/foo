@@ -49,7 +49,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->gets = gets;
 	itf->error = error;
 
-	itf->data = brdg;
+	itf->hw = brdg;
 	itf->cfg = 0x0;
 	itf->cfg_size = 0;
 	itf->rx_int = dtd->rx_int;

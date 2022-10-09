@@ -71,7 +71,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	term->itf.erase = erase;
 	term->itf.error = 0x0;
 
-	term->itf.data = term;
+	term->itf.hw = term;
 	term->itf.cfg = &term->vram->cfg;
 	term->itf.cfg_size = sizeof(vram_cfg_t);
 	term->itf.rx_int = 0;

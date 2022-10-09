@@ -13,14 +13,18 @@
 #include <kernel/timer.h>
 
 
-/* local functions */
-static void timer_hdlr(int_num_t num, void *data){
-	LNX_DEBUG("timer tick\n");
-	ktimer_tick();
-}
+/* local/static prototypes */
+static void timer_hdlr(int_num_t num, void *payload);
 
+
+/* local functions */
 static int init(void){
 	return int_register(INT_TIMER, timer_hdlr, 0x0);
 }
 
 platform_init(0, init);
+
+static void timer_hdlr(int_num_t num, void *payload){
+	LNX_DEBUG("timer tick\n");
+	ktimer_tick();
+}

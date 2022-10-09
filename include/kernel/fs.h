@@ -95,14 +95,14 @@ typedef struct{
 	 * \param	fd			target file descriptor
 	 * \param	request		Operation to perform. Behaviour depends on the individual
 	 * 						file system implementation.
-	 * \param	data		pointer to additional data that might be required to
+	 * \param	arg			pointer to additional data that might be required to
 	 * 						perform the request (kernel memory)
 	 * \param	n			size of the memory pointed to by data
 	 *
 	 * \return	0 on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
-	int (*ioctl)(struct fs_filed_t *fd, int request, void *data, size_t n);
+	int (*ioctl)(struct fs_filed_t *fd, int request, void *arg, size_t n);
 
 	/**
 	 * \brief	Perform the requested command on the given file descriptor fd.
@@ -110,13 +110,13 @@ typedef struct{
 	 * \param	fd			target file descriptor
 	 * \param	request		Command to perform. Behaviour depends on the individual
 	 * 						file system implementation.
-	 * \param	data		pointer to additional data that might be required to
+	 * \param	arg			pointer to additional data that might be required to
 	 * 						perform the request (kernel memory)
 	 *
 	 * \return	0 on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
-	int (*fcntl)(struct fs_filed_t *fd, int cmd, void *data);
+	int (*fcntl)(struct fs_filed_t *fd, int cmd, void *arg);
 
 	/**
 	 * \brief	Get a user-space address for the memory associated with the given
@@ -169,7 +169,7 @@ typedef struct fs_node_t{
 	int fs_id;
 	fs_ops_t *ops;
 
-	void *data;
+	void *payload;
 	unsigned int ref_cnt;
 	file_type_t type;
 
@@ -217,7 +217,7 @@ void fs_fd_release(fs_filed_t *fd);
 int fs_fd_wait(fs_filed_t *fd, ksignal_t *sig, mutex_t *mtx);
 
 // file node operations
-fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *data, int fs_id);
+fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *payload, int fs_id);
 int fs_node_destroy(fs_node_t *node);
 int fs_node_find(fs_node_t **start, char const **path);
 

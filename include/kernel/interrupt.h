@@ -20,7 +20,7 @@
 
 /* types */
 typedef uint8_t int_num_t;
-typedef void (*int_hdlr_t)(int_num_t num, void *data);
+typedef void (*int_hdlr_t)(int_num_t num, void *payload);
 
 typedef enum int_type_t{
 	INT_NONE = 0x0,
@@ -29,7 +29,7 @@ typedef enum int_type_t{
 
 
 /* prototypes */
-int int_register(int_num_t num, int_hdlr_t hdlr, void *data);
+int int_register(int_num_t num, int_hdlr_t hdlr, void *payload);
 void int_release(int_num_t num);
 
 void int_foretell(int_num_t num);

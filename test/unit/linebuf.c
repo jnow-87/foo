@@ -13,15 +13,15 @@
 
 
 /* macros */
-#define INIT()		linebuf_init(&buf, data, 10, 0)
-#define READ(n)		linebuf_read(&buf, readb, n)
-#define PEEK(n)		linebuf_peek(&buf, readb, n)
-#define WRITE(s)	linebuf_write(&buf, s, strlen(s))
+#define INIT()		linebuf_init(&line, buf, 10, 0)
+#define READ(n)		linebuf_read(&line, readb, n)
+#define PEEK(n)		linebuf_peek(&line, readb, n)
+#define WRITE(s)	linebuf_write(&line, s, strlen(s))
 
 
 /* static variables */
-static linebuf_t buf;
-static char data[10];
+static linebuf_t line;
+static char buf[10];
 static char readb[10];
 
 
@@ -35,35 +35,35 @@ TEST(linebuf_reset){
 	/* no change to empty buffer */
 	INIT();
 
-	n += TEST_INT_EQ(linebuf_contains(&buf), 0);
-	n += TEST_INT_EQ(linebuf_left(&buf), 10);
+	n += TEST_INT_EQ(linebuf_contains(&line), 0);
+	n += TEST_INT_EQ(linebuf_left(&line), 10);
 
-	linebuf_reset(&buf);
-	n += TEST_INT_EQ(linebuf_contains(&buf), 0);
-	n += TEST_INT_EQ(linebuf_left(&buf), 10);
+	linebuf_reset(&line);
+	n += TEST_INT_EQ(linebuf_contains(&line), 0);
+	n += TEST_INT_EQ(linebuf_left(&line), 10);
 
 	/* reset after write */
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("dead"), 4);
-	n += TEST_INT_EQ(linebuf_contains(&buf), 4);
-	n += TEST_INT_EQ(linebuf_left(&buf), 6);
+	n += TEST_INT_EQ(linebuf_contains(&line), 4);
+	n += TEST_INT_EQ(linebuf_left(&line), 6);
 
-	linebuf_reset(&buf);
-	n += TEST_INT_EQ(linebuf_contains(&buf), 0);
-	n += TEST_INT_EQ(linebuf_left(&buf), 10);
+	linebuf_reset(&line);
+	n += TEST_INT_EQ(linebuf_contains(&line), 0);
+	n += TEST_INT_EQ(linebuf_left(&line), 10);
 
 	/* reset after write + read */
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("dead"), 4);
 	n += TEST_INT_EQ(READ(2), 2);
-	n += TEST_INT_EQ(linebuf_contains(&buf), 2);
-	n += TEST_INT_EQ(linebuf_left(&buf), 6);
+	n += TEST_INT_EQ(linebuf_contains(&line), 2);
+	n += TEST_INT_EQ(linebuf_left(&line), 6);
 
-	linebuf_reset(&buf);
-	n += TEST_INT_EQ(linebuf_contains(&buf), 0);
-	n += TEST_INT_EQ(linebuf_left(&buf), 10);
+	linebuf_reset(&line);
+	n += TEST_INT_EQ(linebuf_contains(&line), 0);
+	n += TEST_INT_EQ(linebuf_left(&line), 10);
 
 	return -n;
 }
@@ -147,13 +147,13 @@ TEST(linebuf_write){
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("deadbeef"), 8);
-	n += TEST_STRN_EQ(buf.data, "deadbeef", 8);
+	n += TEST_STRN_EQ(line.buf, "deadbeef", 8);
 
 	/* write entire buffer */
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("deadbeef0124"), 10);
-	n += TEST_STRN_EQ(buf.data, "deadbeef01", 10);
+	n += TEST_STRN_EQ(line.buf, "deadbeef01", 10);
 
 	return -n;
 }
@@ -165,11 +165,11 @@ TEST(linebuf_prefilled){
 	n = 0;
 
 	/* init */
-	strcpy(data, "dead");
-	linebuf_init(&buf, data, 10, 4);
+	strcpy(buf, "dead");
+	linebuf_init(&line, buf, 10, 4);
 
-	n += TEST_INT_EQ(linebuf_contains(&buf), 4);
-	n += TEST_INT_EQ(linebuf_left(&buf), 6);
+	n += TEST_INT_EQ(linebuf_contains(&line), 4);
+	n += TEST_INT_EQ(linebuf_left(&line), 6);
 
 	/* read */
 	n += TEST_INT_EQ(READ(2), 2);
@@ -189,26 +189,26 @@ TEST(linebuf_contains_left){
 	/* empty */
 	INIT();
 
-	n += TEST_INT_EQ(linebuf_contains(&buf), 0);
-	n += TEST_INT_EQ(linebuf_left(&buf), 10);
+	n += TEST_INT_EQ(linebuf_contains(&line), 0);
+	n += TEST_INT_EQ(linebuf_left(&line), 10);
 
 	/* partial filled */
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("dead"), 4);
-	n += TEST_INT_EQ(linebuf_contains(&buf), 4);
-	n += TEST_INT_EQ(linebuf_left(&buf), 6);
+	n += TEST_INT_EQ(linebuf_contains(&line), 4);
+	n += TEST_INT_EQ(linebuf_left(&line), 6);
 
 	n += TEST_INT_EQ(READ(2), 2);
-	n += TEST_INT_EQ(linebuf_contains(&buf), 2);
-	n += TEST_INT_EQ(linebuf_left(&buf), 6);
+	n += TEST_INT_EQ(linebuf_contains(&line), 2);
+	n += TEST_INT_EQ(linebuf_left(&line), 6);
 
 	/* entirely filled */
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("deadbeef0134"), 10);
-	n += TEST_INT_EQ(linebuf_contains(&buf), 10);
-	n += TEST_INT_EQ(linebuf_left(&buf), 0);
+	n += TEST_INT_EQ(linebuf_contains(&line), 10);
+	n += TEST_INT_EQ(linebuf_left(&line), 0);
 
 	return -n;
 }
@@ -222,19 +222,19 @@ TEST(linebuf_empty){
 	INIT();
 
 	/* initially empty */
-	n += TEST_INT_EQ(linebuf_empty(&buf), true);
+	n += TEST_INT_EQ(linebuf_empty(&line), true);
 
 	/* non-empty */
 	n += TEST_INT_EQ(WRITE("dead"), 4);
-	n += TEST_INT_EQ(linebuf_empty(&buf), false);
+	n += TEST_INT_EQ(linebuf_empty(&line), false);
 
 	/* still not empty */
 	n += TEST_INT_EQ(READ(3), 3);
-	n += TEST_INT_EQ(linebuf_empty(&buf), false);
+	n += TEST_INT_EQ(linebuf_empty(&line), false);
 
 	/* empty again */
 	n += TEST_INT_EQ(READ(1), 1);
-	n += TEST_INT_EQ(linebuf_empty(&buf), true);
+	n += TEST_INT_EQ(linebuf_empty(&line), true);
 
 	return -n;
 }
@@ -247,13 +247,13 @@ TEST(linebuf_full){
 
 	INIT();
 
-	n += TEST_INT_EQ(linebuf_full(&buf), false);
+	n += TEST_INT_EQ(linebuf_full(&line), false);
 
 	n += TEST_INT_EQ(WRITE("deadbeef"), 8);
-	n += TEST_INT_EQ(linebuf_full(&buf), false);
+	n += TEST_INT_EQ(linebuf_full(&line), false);
 
 	n += TEST_INT_EQ(WRITE("01"), 2);
-	n += TEST_INT_EQ(linebuf_full(&buf), true);
+	n += TEST_INT_EQ(linebuf_full(&line), true);
 
 	return -n;
 }

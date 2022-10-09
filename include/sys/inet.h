@@ -56,14 +56,14 @@ typedef struct{
 
 typedef struct{
 	net_family_t domain;
-	inet_data_t data;
+	inet_data_t inet_data;
 } sock_addr_inet_t;
 
 
 /* prototypes */
 inet_addr_t inet_addr(char *addr);
 char *inet_ntoa(inet_addr_t addr);
-char *inet_ntoa_r(inet_addr_t addr, char *s, size_t len);
+char *inet_ntoa_r(inet_addr_t addr, char *s, size_t n);
 
 
 #endif // SYS_INET_H

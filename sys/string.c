@@ -188,9 +188,9 @@ char const *strerror(errno_t errnum){
 	return err_str[errnum];
 }
 
-char *itoa(int v, unsigned int base, char *s, size_t len){
+char *itoa(int v, unsigned int base, char *s, size_t n){
 	char d;
-	char inv_s[len];
+	char inv_s[n];
 	size_t i;
 
 
@@ -205,17 +205,17 @@ char *itoa(int v, unsigned int base, char *s, size_t len){
 		else		inv_s[i] = 'a' + d - 10;
 
 		i++;
-	}while(v != 0 && i < len);
+	}while(v != 0 && i < n);
 
 	/* check if the entire number could be converted */
 	if(v != 0)
 		return 0x0;
 
 	/* reverse string */
-	len = i;
+	n = i;
 
-	for(i=0; i<len; i++)
-		s[i] = inv_s[len - 1 - i];
+	for(i=0; i<n; i++)
+		s[i] = inv_s[n - 1 - i];
 	s[i] = 0;
 
 	return s;
@@ -286,11 +286,11 @@ char *strupr(char const *s){
 	return strupr_r(s, _s, NAME_MAX + 1);
 }
 
-char *strupr_r(char const *s, char *buf, size_t len){
+char *strupr_r(char const *s, char *buf, size_t n){
 	size_t i;
 
 
-	for(i=0; s[i]!=0 && i<len; i++){
+	for(i=0; s[i]!=0 && i<n; i++){
 		if(s[i] >= 'a' && s[i] <= 'z')	buf[i] = s[i] - 32;
 		else							buf[i] = s[i];
 	}
@@ -307,11 +307,11 @@ char *strcident(char const *s){
 	return strcident_r(s, _s, NAME_MAX + 1);
 }
 
-char *strcident_r(char const *s, char *buf, size_t len){
+char *strcident_r(char const *s, char *buf, size_t n){
 	size_t i;
 
 
-	for(i=0; s[i]!=0 && i<len; i++){
+	for(i=0; s[i]!=0 && i<n; i++){
 		switch(s[i]){
 		case '-':	buf[i] = '_'; break;
 		default:	buf[i] = s[i]; break;

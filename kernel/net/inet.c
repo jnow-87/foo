@@ -24,10 +24,10 @@ bool inet_match_addr(netdev_t *dev, sock_addr_t *addr, size_t addr_len){
 	if(addr_len != sizeof(sock_addr_inet_t))
 		return false;
 
-	if(inet_addr->data.addr == INET_ADDR_ANY)
+	if(inet_addr->inet_data.addr == INET_ADDR_ANY)
 		return true;
 
-	if((cfg->ip & cfg->netmask) == (inet_addr->data.addr & cfg->netmask))
+	if((cfg->ip & cfg->netmask) == (inet_addr->inet_data.addr & cfg->netmask))
 		return true;
 
 	return false;

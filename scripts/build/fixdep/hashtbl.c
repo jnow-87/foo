@@ -33,12 +33,12 @@ static struct item *hashtab[HASHSZ];
 /*
  * Lookup a value in the configuration string.
  */
-int hashtbl_lookup(char const *name, int len, unsigned int hash){
+int hashtbl_lookup(char const *name, int n, unsigned int hash){
 	struct item *aux;
 
 	for(aux = hashtab[hash % HASHSZ]; aux; aux = aux->next){
-		if(aux->hash == hash && aux->len == len &&
-		    memcmp(aux->name, name, len) == 0)
+		if(aux->hash == hash && aux->len == n &&
+		    memcmp(aux->name, name, n) == 0)
 			return 1;
 	}
 
@@ -48,23 +48,23 @@ int hashtbl_lookup(char const *name, int len, unsigned int hash){
 /*
  * Add a new value to the configuration string.
  */
-int hashtbl_add(char const *name, int len){
+int hashtbl_add(char const *name, int n){
 	struct item *aux;
-	unsigned int hash = strhash(name, len);
+	unsigned int hash = strhash(name, n);
 
 
-	if(hashtbl_lookup(name, len, hash))
+	if(hashtbl_lookup(name, n, hash))
 	    return 1;
 
-	aux = malloc(sizeof(*aux) + len);
+	aux = malloc(sizeof(*aux) + n);
 
 	if(!aux){
 		perror("fixdep:malloc");
 		exit(1);
 	}
 
-	memcpy(aux->name, name, len);
-	aux->len = len;
+	memcpy(aux->name, name, n);
+	aux->len = n;
 	aux->hash = hash;
 	aux->next = hashtab[hash % HASHSZ];
 	hashtab[hash % HASHSZ] = aux;

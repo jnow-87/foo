@@ -27,7 +27,7 @@ typedef struct{
 	size_t len;
 
 	term_t *term;
-} tx_data_t;
+} tx_dgram_t;
 
 
 /* local/static prototypes */
@@ -38,7 +38,7 @@ static char putc(term_t *term, char c);
 static size_t puts(term_t *term, char const *s, size_t n);
 static errno_t error(term_t *term);
 
-static int tx_complete(void *data);
+static int tx_complete(void *payload);
 
 
 /* global functions */
@@ -48,19 +48,19 @@ static int tx_complete(void *data);
  * 			If the given terminal interface indicates enabled interrupts
  * 			the receive buffer is initiased accordingly.
  *
- * \param	hw		terminal hardware interface
+ * \param	itf		terminal hardware interface
  * \param	cfg		terminal configuration
  * \param	node	pointer to the associated devfs node
  *
  * \return	pointer to the terminal
  * 			0x0 on error
  */
-term_t *term_create(term_itf_t *hw, term_cfg_t *cfg, fs_node_t *node){
+term_t *term_create(term_itf_t *itf, term_cfg_t *cfg, fs_node_t *node){
 	void *buf;
 	term_t *term;
 
 
-	if(hw->gets == 0x0 || hw->puts == 0x0)
+	if(itf->gets == 0x0 || itf->puts == 0x0)
 		goto_errno(err_0, E_INVAL);
 
 	/* allocate terminal */
@@ -72,7 +72,7 @@ term_t *term_create(term_itf_t *hw, term_cfg_t *cfg, fs_node_t *node){
 	/* allocate recv buffer */
 	buf = 0x0;
 
-	if(hw->rx_int){
+	if(itf->rx_int){
 		buf = kmalloc(CONFIG_TERM_RXBUF_SIZE);
 
 		if(buf == 0x0)
@@ -82,7 +82,7 @@ term_t *term_create(term_itf_t *hw, term_cfg_t *cfg, fs_node_t *node){
 	/* init term */
 	term->cfg = cfg;
 	term->node = node;
-	term->hw = hw;
+	term->itf = itf;
 	term->errno = 0;
 
 	term_esc_reset(term);
@@ -100,7 +100,7 @@ err_0:
 }
 
 void term_destroy(term_t *term){
-	kfree(term->rx_buf.data);
+	kfree(term->rx_buf.buf);
 	kfree(term);
 }
 
@@ -108,7 +108,7 @@ size_t term_gets(term_t *term, char *s, size_t n){
 	size_t r;
 
 
-	r = term->hw->rx_int ? ringbuf_read(&term->rx_buf, s, n) : term->hw->gets(s, n, term->hw->data);
+	r = term->itf->rx_int ? ringbuf_read(&term->rx_buf, s, n) : term->itf->gets(s, n, term->itf->hw);
 
 	if(r == 0)
 		term->errno = errno;
@@ -123,7 +123,7 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 	if(n == 0)
 		return 0;
 
-	r = (int_enabled() != INT_NONE && term->hw->tx_int)
+	r = (int_enabled() != INT_NONE && term->itf->tx_int)
 	  ? puts_int(term, s, n)
 	  : puts_poll(term, s, n)
 	;
@@ -134,17 +134,17 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 	return term->errno ? 0 : r;
 }
 
-void term_rx_hdlr(int_num_t num, void *_term){
+void term_rx_hdlr(int_num_t num, void *payload){
 	char buf[16];
 	size_t n;
 	term_t *term;
 
 
-	term = (term_t*)_term;
+	term = (term_t*)payload;
 
 	mutex_lock(&term->node->mtx);
 
-	n = term->hw->gets(buf, 16, term->hw->data);
+	n = term->itf->gets(buf, 16, term->itf->hw);
 
 	if(n == 0)
 		term->errno = errno;
@@ -157,26 +157,26 @@ void term_rx_hdlr(int_num_t num, void *_term){
 	mutex_unlock(&term->node->mtx);
 }
 
-void term_tx_hdlr(int_num_t num, void *_term){
+void term_tx_hdlr(int_num_t num, void *payload){
 	size_t n;
 	term_t *term;
-	tx_data_t *data;
+	tx_dgram_t *dgram;
 
 
-	term = (term_t*)_term;
+	term = (term_t*)payload;
 
-	data = itask_query_data(&term->tx_queue, tx_complete);
+	dgram = itask_query_payload(&term->tx_queue, tx_complete);
 
-	if(data == 0x0)
+	if(dgram == 0x0)
 		return;
 
 	mutex_lock(&term->node->mtx);
-	n = puts_poll(term, data->s, 1);
+	n = puts_poll(term, dgram->s, 1);
 	mutex_unlock(&term->node->mtx);
 
 	if(n == 1){
-		data->s++;
-		data->len--;
+		dgram->s++;
+		dgram->len--;
 	}
 	else
 		itask_complete(&term->tx_queue, errno ? errno : E_IO);
@@ -185,16 +185,16 @@ void term_tx_hdlr(int_num_t num, void *_term){
 
 /* local functions */
 static size_t puts_int(term_t *term, char const *s, size_t n){
-	tx_data_t data;
+	tx_dgram_t dgram;
 
 
-	data.s = s;
-	data.len = n;
-	data.term = term;
+	dgram.s = s;
+	dgram.len = n;
+	dgram.term = term;
 
-	term->errno = itask_issue(&term->tx_queue, &data, term->hw->tx_int);
+	term->errno = itask_issue(&term->tx_queue, &dgram, term->itf->tx_int);
 
-	return n - data.len;
+	return n - dgram.len;
 }
 
 static size_t puts_poll(term_t *term, char const *s, size_t n){
@@ -203,7 +203,7 @@ static size_t puts_poll(term_t *term, char const *s, size_t n){
 
 
 	if(!CANON(term))
-		return term->hw->puts(s, n, term->hw->data);
+		return term->itf->puts(s, n, term->itf->hw);
 
 	if(term_cursor_show(term, false) != 0)
 		return 0;
@@ -229,7 +229,7 @@ static size_t puts_poll(term_t *term, char const *s, size_t n){
 
 static char putc(term_t *term, char c){
 	if(!CANON(term) || (!term_esc_active(term) && isprint(c))){
-		if(term->hw->putc(c, term->hw->data) != c || term_cursor_move(term, 0, 1, false) != 0)
+		if(term->itf->putc(c, term->itf->hw) != c || term_cursor_move(term, 0, 1, false) != 0)
 			return ~c;
 
 		return c;
@@ -239,25 +239,25 @@ static char putc(term_t *term, char c){
 }
 
 static size_t puts(term_t *term, char const *s, size_t n){
-	n = term->hw->puts(s, n, term->hw->data);
+	n = term->itf->puts(s, n, term->itf->hw);
 
 	return (term_cursor_move(term, 0, n, false) == 0) ? n : 0;
 }
 
 static errno_t error(term_t *term){
-	return (term->hw->error != 0x0) ? term->hw->error(term->hw->data) : 0;
+	return (term->itf->error != 0x0) ? term->itf->error(term->itf->hw) : 0;
 }
 
-static int tx_complete(void *_data){
-	tx_data_t *data;
+static int tx_complete(void *payload){
+	tx_dgram_t *dgram;
 	errno_t ecode;
 
 
-	data = (tx_data_t*)_data;
-	ecode = error(data->term);
+	dgram = (tx_dgram_t*)payload;
+	ecode = error(dgram->term);
 
 	if(ecode != 0)
 		return ecode;
 
-	return (data->len == 0) ? 0 : -1;
+	return (dgram->len == 0) ? 0 : -1;
 }

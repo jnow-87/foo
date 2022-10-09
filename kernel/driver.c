@@ -70,7 +70,7 @@ static int probe(devtree_device_t const *node, void *itf){
 
 		INFO("probe driver \"%s\" for \"%s\"\n", e->compatible, node->name);
 
-		itf = e->probe(node->name, (void*)node->data, itf);
+		itf = e->probe(node->name, (void*)node->payload, itf);
 
 		if(errno)
 			return -errno;

@@ -106,10 +106,10 @@ static char putc(char c, FILE *stream){
 static void flush(void){
 	mutex_lock(&log.mtx);
 
-	log.dev->puts(log.buf, log.idx, log.dev->data);
+	log.dev->puts(log.buf, log.idx, log.dev->hw);
 
 	if(log.overflow)
-		log.dev->puts(OVERFLOW_MSG, strlen(OVERFLOW_MSG), log.dev->data);
+		log.dev->puts(OVERFLOW_MSG, strlen(OVERFLOW_MSG), log.dev->hw);
 
 	log.overflow = false;
 	log.idx = 0;

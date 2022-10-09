@@ -29,9 +29,9 @@
 static int close(devfs_dev_t *dev, fs_filed_t *fd);
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 
-static void int_hdlr(int_num_t num, void *gpio);
+static void int_hdlr(int_num_t num, void *payload);
 
 static int int_set(gpio_t *gpio, gpio_int_cfg_t *cfg, fs_filed_t *fd);
 static int int_clear(gpio_t *gpio, gpio_siglst_t *sig);
@@ -125,7 +125,7 @@ static int close(devfs_dev_t *dev, fs_filed_t *fd){
 	gpio_siglst_t *sig;
 
 
-	gpio = (gpio_t*)dev->data;
+	gpio = (gpio_t*)dev->payload;
 	sig = list_find_safe(gpio->sigs, fd, fd, &gpio->mtx);
 
 	return (sig != 0x0) ? int_clear(gpio, sig) : 0;
@@ -138,7 +138,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	if(n != sizeof(gpio_int_t))
 		goto_errno(err, E_LIMIT);
 
-	gpio = (gpio_t*)dev->data;
+	gpio = (gpio_t*)dev->payload;
 	*((gpio_int_t*)buf) = ((gpio->ops.read(gpio->hw) ^ gpio->cfg->invert_mask) & gpio->cfg->in_mask);
 
 	DEBUG("%s read %#x\n", gpio->dev->node->name, *((gpio_int_t*)buf));
@@ -159,7 +159,7 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	if(n != sizeof(gpio_int_t))
 		goto_errno(err, E_LIMIT);
 
-	gpio = (gpio_t*)dev->data;
+	gpio = (gpio_t*)dev->payload;
 	v = *((gpio_int_t*)buf);
 
 	if(gpio->cfg->mode == GM_STRICT && (v & ~gpio->cfg->out_mask))
@@ -177,23 +177,23 @@ err:
 	return 0;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
 	if(n != sizeof(gpio_int_cfg_t))
 		return_errno(E_INVAL);
 
 	switch(request){
-	case IOCTL_CFGWR:	return int_set(dev->data, data, fd);
+	case IOCTL_CFGWR:	return int_set(dev->payload, arg, fd);
 	default:			return_errno(E_NOSUP);
 	}
 }
 
-static void int_hdlr(int_num_t num, void *data){
+static void int_hdlr(int_num_t num, void *payload){
 	gpio_t *gpio;
 	gpio_siglst_t *sig;
 	gpio_int_t v;
 
 
-	gpio = (gpio_t*)data;
+	gpio = (gpio_t*)payload;
 	v = gpio->ops.read(gpio->hw);
 
 	DEBUG("%s interrupt with %#x\n", gpio->dev->node->name, v);

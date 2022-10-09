@@ -87,9 +87,9 @@ TEST(vector_add){
 	n += TEST_INT_EQ(v.capacity, 4);
 	n += TEST_INT_EQ(v.size, 3);
 
-	n += TEST_INT_EQ(((int*)v.data)[0], 10);
-	n += TEST_INT_EQ(((int*)v.data)[1], 20);
-	n += TEST_INT_EQ(((int*)v.data)[2], 30);
+	n += TEST_INT_EQ(((int*)v.buf)[0], 10);
+	n += TEST_INT_EQ(((int*)v.buf)[1], 20);
+	n += TEST_INT_EQ(((int*)v.buf)[2], 30);
 
 	n += TEST_INT_EQ(vector_add(&v, &r), 0);
 
@@ -121,23 +121,23 @@ TEST(vector_rm){
 	vector_rm(&v, 0);
 	n += TEST_INT_EQ(v.capacity, 20);
 	n += TEST_INT_EQ(v.size, 4);
-	n += TEST_INT_EQ(((int*)v.data)[0], 20);
-	n += TEST_INT_EQ(((int*)v.data)[1], 30);
-	n += TEST_INT_EQ(((int*)v.data)[2], 40);
-	n += TEST_INT_EQ(((int*)v.data)[3], 50);
+	n += TEST_INT_EQ(((int*)v.buf)[0], 20);
+	n += TEST_INT_EQ(((int*)v.buf)[1], 30);
+	n += TEST_INT_EQ(((int*)v.buf)[2], 40);
+	n += TEST_INT_EQ(((int*)v.buf)[3], 50);
 
 	vector_rm(&v, 3);
 	n += TEST_INT_EQ(v.capacity, 20);
 	n += TEST_INT_EQ(v.size, 3);
-	n += TEST_INT_EQ(((int*)v.data)[0], 20);
-	n += TEST_INT_EQ(((int*)v.data)[1], 30);
-	n += TEST_INT_EQ(((int*)v.data)[2], 40);
+	n += TEST_INT_EQ(((int*)v.buf)[0], 20);
+	n += TEST_INT_EQ(((int*)v.buf)[1], 30);
+	n += TEST_INT_EQ(((int*)v.buf)[2], 40);
 
 	vector_rm(&v, 1);
 	n += TEST_INT_EQ(v.capacity, 20);
 	n += TEST_INT_EQ(v.size, 2);
-	n += TEST_INT_EQ(((int*)v.data)[0], 20);
-	n += TEST_INT_EQ(((int*)v.data)[1], 40);
+	n += TEST_INT_EQ(((int*)v.buf)[0], 20);
+	n += TEST_INT_EQ(((int*)v.buf)[1], 40);
 
 	vector_rm(&v, 3);
 

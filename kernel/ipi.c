@@ -12,6 +12,7 @@
 #include <arch/interrupt.h>
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <sys/string.h>
 #include <sys/stack.h>
 #include <sys/mutex.h>
 #include <kernel/ipi.h>
@@ -30,7 +31,7 @@ typedef struct ipi_msg_t{
 	struct ipi_msg_t *next;
 
 	ipi_hdlr_t hdlr;
-	char data[];
+	uint8_t buf[];
 } ipi_msg_t;
 
 
@@ -40,20 +41,20 @@ static mutex_t msg_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *data, size_t size){
+int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *buf, size_t n){
 	ipi_msg_t *msg;
 
 
 	if(core >= CONFIG_NCORES)
 		return_errno(E_INVAL);
 
-	msg = kmalloc(sizeof(ipi_msg_t) + size);
+	msg = kmalloc(sizeof(ipi_msg_t) + n);
 
 	if(msg == 0x0)
 		return -errno;
 
 	msg->hdlr = hdlr;
-	memcpy(msg->data, data, size);
+	memcpy(msg->buf, buf, n);
 
 	mutex_lock(&msg_mtx);
 	stack_push(messages[core], msg);
@@ -69,6 +70,6 @@ void ipi_khdlr(void){
 
 
 	msg = stack_pop(messages[PIR]);
-	msg->hdlr(msg->data);
+	msg->hdlr(msg->buf);
 	kfree(msg);
 }

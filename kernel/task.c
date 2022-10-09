@@ -28,11 +28,11 @@ static mutex_t task_mtx = MUTEX_INITIALISER();
  * \brief	create a kernel task
  *
  * \param	hdlr		actual task implementation
- * \param	data		data required by the task
- * 						NOTE the data are copied and the actual pointer passed
+ * \param	payload		data required by the task
+ * 						NOTE the payload is copied and the actual pointer passed
  * 							 to the task implementation must not be freed
  *
- * \param	size		size of the data
+ * \param	size		size of the payload
  * \param	dep_queue	Optional dependency queue of tasks that defines dependencies
  * 						between	tasks, i.e. the task is not executed as long as not
  * 						all preceding tasks in that queue have been processed.
@@ -46,7 +46,7 @@ static mutex_t task_mtx = MUTEX_INITIALISER();
  * 			<0 on error, with errno being set appropriately
  * 				E_NOMEM		not enough memory to allocate the task
  */
-int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *dep_queue, bool recurring){
+int ktask_create(ktask_hdlr_t hdlr, void *payload, size_t size, ktask_queue_t *dep_queue, bool recurring){
 	ktask_t *task;
 
 
@@ -61,8 +61,8 @@ int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *dep_
 	task->queue_next = 0x0;
 	task->flags = TASK_READY | (recurring ? TASK_RECURRING : 0);
 
-	if(data && size)
-		memcpy(task->data, data, size);
+	if(payload && size)
+		memcpy(task->payload, payload, size);
 
 	/* enqueue task */
 	mutex_lock(&task_mtx);

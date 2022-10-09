@@ -50,11 +50,11 @@ typedef struct{
 	char const *s;
 	size_t len;
 
-	term_itf_t *hw;
-} tx_data_t;
+	term_itf_t *term;
+} tx_dgram_t;
 
 typedef struct esp_t{
-	term_itf_t *hw;
+	term_itf_t *term;
 
 	inetdev_cfg_t cfg;
 
@@ -88,12 +88,12 @@ static int connect(socket_t *sock);
 static int bind(socket_t *sock);
 static int listen(socket_t *sock);
 static void close(socket_t *sock);
-static ssize_t send(socket_t *sock, void *data, size_t data_len);
+static ssize_t send(socket_t *sock, void *buf, size_t n);
 static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uint16_t local_port);
 
 // rx interrupt handling
-static void rx_hdlr(int_num_t num, void *esp);
-static void rx_task(void *esp);
+static void rx_hdlr(int_num_t num, void *payload);
+static void rx_task(void *payload);
 
 static void *rx_parse(esp_t *esp, char c);
 static void *rx_skipline(esp_t *esp, char c);
@@ -106,14 +106,14 @@ static void rx_act_close(esp_t *esp);
 static void rx_act_ip_info(esp_t *esp);
 
 // tx interrupt handling
-static void tx_hdlr(int_num_t num, void *esp);
-static int tx_complete(void *data);
+static void tx_hdlr(int_num_t num, void *payload);
+static int tx_complete(void *payload);
 
 // command handling
 static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...);
 static void cmd_resp(esp_t *esp, ssize_t resp);
 static int puts(char const *s, esp_t *esp);
-static int putsn(char const *s, size_t len, esp_t *esp);
+static int putsn(char const *s, size_t n, esp_t *esp);
 
 // utilities
 static int get_link_id(esp_t *esp, socket_t *sock);
@@ -140,13 +140,13 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	esp_t *esp;
 	devfs_dev_t *dev;
 	netdev_itf_t itf;
-	term_itf_t *hw;
-	term_cfg_t term;
+	term_itf_t *term;
+	term_cfg_t term_cfg;
 
 
-	hw = (term_itf_t*)dt_itf;
+	term = (term_itf_t*)dt_itf;
 
-	if(hw->rx_int == 0 || hw->tx_int == 0){
+	if(term->rx_int == 0 || term->tx_int == 0){
 		WARN("uart does not support interrupts\n");
 		goto_errno(err_0, E_NOSUP);
 	}
@@ -169,7 +169,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 	ringbuf_init(&esp->rx.line, rxbuf, 16);
 
-	esp->hw = hw;
+	esp->term = term;
 	esp->rx.hdlr = rx_parse;
 	esp->resp = RESP_INVAL;
 
@@ -191,16 +191,16 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_3;
 
 	/* configure hardware */
-	if(int_register(hw->rx_int, rx_hdlr, esp) != 0)
+	if(int_register(term->rx_int, rx_hdlr, esp) != 0)
 		goto err_4;
 
-	if(int_register(hw->tx_int, tx_hdlr, esp) != 0)
+	if(int_register(term->tx_int, tx_hdlr, esp) != 0)
 		goto err_4;
 
-	if(hw->rx_int)
+	if(term->rx_int)
 		dev->node->timeout_us = 0;
 
-	if(hw->configure != 0x0 && hw->configure(&term, hw->cfg, hw->data) != 0)
+	if(term->configure != 0x0 && term->configure(&term_cfg, term->cfg, term->hw) != 0)
 		goto err_5;
 
 	if(ktask_create(rx_task, &esp, sizeof(esp_t*), 0x0, true) != 0)
@@ -210,8 +210,8 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 
 err_5:
-	int_release(hw->tx_int);
-	int_release(hw->rx_int);
+	int_release(term->tx_int);
+	int_release(term->rx_int);
 
 err_4:
 	netdev_release(dev);
@@ -239,7 +239,7 @@ static int configure(netdev_t *dev){
 	esp_t *esp;
 
 
-	esp = (esp_t*)dev->data;
+	esp = (esp_t*)dev->payload;
 	cfg = &esp->cfg;
 
 	r = 0;
@@ -281,7 +281,7 @@ static int connect(socket_t *sock){
 	inet_data_t *remote;
 
 
-	remote = &((sock_addr_inet_t*)(&sock->addr))->data;
+	remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
 	return _connect(sock, &remote->addr, remote->port, 0);
 }
@@ -293,7 +293,7 @@ static int bind(socket_t *sock){
 	if(sock->type == SOCK_STREAM)
 		return 0;
 
-	remote = &((sock_addr_inet_t*)(&sock->addr))->data;
+	remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
 	return _connect(sock, &remote->addr, 0, remote->port);
 }
@@ -303,8 +303,8 @@ static int listen(socket_t *sock){
 	inet_data_t *remote;
 
 
-	esp = (esp_t*)sock->dev->data;
-	remote = &((sock_addr_inet_t*)(&sock->addr))->data;
+	esp = (esp_t*)sock->dev->payload;
+	remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
 	mutex_lock(&esp->mtx);
 
@@ -327,7 +327,7 @@ static void close(socket_t *sock){
 	esp_t *esp;
 
 
-	esp = (esp_t*)sock->dev->data;
+	esp = (esp_t*)sock->dev->payload;
 
 	mutex_lock(&esp->mtx);
 
@@ -345,19 +345,19 @@ static void close(socket_t *sock){
 	mutex_unlock(&esp->mtx);
 }
 
-static ssize_t send(socket_t *sock, void *data, size_t data_len){
+static ssize_t send(socket_t *sock, void *buf, size_t n){
 	int r;
 	int link_id;
 	esp_t *esp;
 	inet_data_t *remote;
 
 
-	if(data_len == 0)
+	if(n == 0)
 		return 0;
 
 	r = 0;
-	esp = (esp_t*)sock->dev->data;
-	remote = &((sock_addr_inet_t*)(&sock->addr))->data;
+	esp = (esp_t*)sock->dev->payload;
+	remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
 	mutex_lock(&esp->mtx);
 	link_id = get_link_id(esp, sock);
@@ -366,13 +366,13 @@ static ssize_t send(socket_t *sock, void *data, size_t data_len){
 	if(link_id < 0)
 		return_errno(E_NOCONN);
 
-	if(sock->type == SOCK_DGRAM)	r |= cmd(esp, RESP_OK, r, "AT+CIPSEND=%u,%u,\"%a\",%u", link_id, data_len, &remote->addr, remote->port);
-	else							r |= cmd(esp, RESP_OK, r, "AT+CIPSEND=%u,%u", link_id, data_len);
+	if(sock->type == SOCK_DGRAM)	r |= cmd(esp, RESP_OK, r, "AT+CIPSEND=%u,%u,\"%a\",%u", link_id, n, &remote->addr, remote->port);
+	else							r |= cmd(esp, RESP_OK, r, "AT+CIPSEND=%u,%u", link_id, n);
 
 	if(r == 0)
-		r |= cmd(esp, RESP_SENDOK, r, "%x", data_len, data);
+		r |= cmd(esp, RESP_SENDOK, r, "%x", n, buf);
 
-	return (r == 0 ? (ssize_t)data_len : -1);
+	return (r == 0 ? (ssize_t)n : -1);
 }
 
 static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uint16_t local_port){
@@ -381,7 +381,7 @@ static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uin
 	esp_t *esp;
 
 
-	esp = (esp_t*)sock->dev->data;
+	esp = (esp_t*)sock->dev->payload;
 
 	mutex_lock(&esp->mtx);
 	link_id = get_link_id(esp, 0x0);
@@ -415,17 +415,17 @@ static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uin
 }
 
 // rx interrupt handling
-static void rx_hdlr(int_num_t num, void *_esp){
+static void rx_hdlr(int_num_t num, void *payload){
 	size_t len;
 	char buf[16];
 	esp_t *esp;
 
 
-	esp = (esp_t*)_esp;
+	esp = (esp_t*)payload;
 
 	mutex_lock(&esp->mtx);
 
-	len = esp->hw->gets(buf, 16, esp->hw->data);
+	len = esp->term->gets(buf, 16, esp->term->hw);
 
 	if(len > 0)
 		ringbuf_write(&esp->rx.line, buf, len);
@@ -433,13 +433,13 @@ static void rx_hdlr(int_num_t num, void *_esp){
 	mutex_unlock(&esp->mtx);
 }
 
-static void rx_task(void *_esp){
+static void rx_task(void *payload){
 	char c;
 	size_t n;
 	esp_t *esp;
 
 
-	esp = *((esp_t**)_esp);
+	esp = *((esp_t**)payload);
 
 	while(1){
 		mutex_lock(&esp->mtx);
@@ -548,10 +548,10 @@ static void *rx_datain_dgram(esp_t *esp, char c){
 		(void)patmat_get_results(esp->rx.parser, res);
 
 		remote.domain = AF_INET;
-		remote.data.port = (uint16_t)PATMAT_RESULT_INT(res, 3);
-		remote.data.addr = inet_addr(PATMAT_RESULT_STR(res, 2));
+		remote.inet_data.port = (uint16_t)PATMAT_RESULT_INT(res, 3);
+		remote.inet_data.addr = inet_addr(PATMAT_RESULT_STR(res, 2));
 
-		if(socket_datain_dgram(sock, (sock_addr_t*)&remote, sizeof(sock_addr_inet_t), esp->rx.dgram, esp->rx.len) != 0)
+		if(socket_datain_dgram(sock, esp->rx.dgram, esp->rx.len, (sock_addr_t*)&remote, sizeof(sock_addr_inet_t)) != 0)
 			WARN("data loss: %s\n", strerror(errno));
 
 		patmat_reset(esp->rx.parser);
@@ -599,8 +599,8 @@ static void rx_act_accept(esp_t *esp){
 	(void)patmat_get_results(esp->rx.parser, res);
 
 	remote.domain = AF_INET;
-	remote.data.port = (uint16_t)PATMAT_RESULT_INT(res, 5);
-	remote.data.addr = inet_addr(PATMAT_RESULT_STR(res, 4));
+	remote.inet_data.port = (uint16_t)PATMAT_RESULT_INT(res, 5);
+	remote.inet_data.addr = inet_addr(PATMAT_RESULT_STR(res, 4));
 
 	mutex_lock(&esp->mtx);
 
@@ -652,41 +652,41 @@ static void rx_act_ip_info(esp_t *esp){
 }
 
 // tx interrupt handling
-static void tx_hdlr(int_num_t num, void *_esp){
+static void tx_hdlr(int_num_t num, void *payload){
 	esp_t *esp;
-	tx_data_t *data;
+	tx_dgram_t *dgram;
 
 
-	esp = (esp_t*)_esp;
+	esp = (esp_t*)payload;
 
-	data = itask_query_data(&esp->tx_queue, tx_complete);
+	dgram = itask_query_payload(&esp->tx_queue, tx_complete);
 
-	if(data == 0x0)
+	if(dgram == 0x0)
 		return;
 
 	/* output character */
 	mutex_lock(&esp->mtx);
-	while(esp->hw->putc(*data->s, esp->hw->data) != *data->s);
+	while(esp->term->putc(*dgram->s, esp->term->hw) != *dgram->s);
 	mutex_unlock(&esp->mtx);
 
-	data->s++;
-	data->len--;
+	dgram->s++;
+	dgram->len--;
 }
 
-static int tx_complete(void *_data){
-	tx_data_t *data;
-	term_itf_t *itf;
+static int tx_complete(void *payload){
+	tx_dgram_t *dgram;
+	term_itf_t *term;
 	errno_t ecode;
 
 
-	data = (tx_data_t*)_data;
-	itf = data->hw;
-	ecode = itf->error ? itf->error(itf->data) : 0;
+	dgram = (tx_dgram_t*)payload;
+	term = dgram->term;
+	ecode = term->error ? term->error(term->hw) : 0;
 
 	if(ecode != 0)
 		return ecode;
 
-	return (data->len == 0) ? 0 : -1;
+	return (dgram->len == 0) ? 0 : -1;
 }
 
 // command handling
@@ -778,17 +778,17 @@ static int puts(char const *s, esp_t *esp){
 	return putsn(s, strlen(s), esp);
 }
 
-static int putsn(char const *s, size_t len, esp_t *esp){
-	tx_data_t data;
+static int putsn(char const *s, size_t n, esp_t *esp){
+	tx_dgram_t dgram;
 
 
-	data.s = s;
-	data.len = len;
-	data.hw = esp->hw;
+	dgram.s = s;
+	dgram.len = n;
+	dgram.term = esp->term;
 
-	(void)itask_issue(&esp->tx_queue, &data, esp->hw->tx_int);
+	(void)itask_issue(&esp->tx_queue, &dgram, esp->term->tx_int);
 
-	return data.len;
+	return dgram.len;
 }
 
 // utilities

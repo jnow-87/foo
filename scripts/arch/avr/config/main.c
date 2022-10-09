@@ -115,15 +115,15 @@ static int diff(char const *file0, char const *file1){
 		r;
 	char const *file[2];
 	struct stat st[2];
-	char *data[2];
+	char *buf[2];
 
 
 	file[0] = file0;
 	file[1] = file1;
 	fd[0] = -1;
 	fd[1] = -1;
-	data[0] = 0;
-	data[1] = 0;
+	buf[0] = 0;
+	buf[1] = 0;
 
 	r = -1;
 
@@ -133,19 +133,19 @@ static int diff(char const *file0, char const *file1){
 		if(fd[i] == -1 || stat(file[i], st + i))
 			goto end_0;
 
-		data[i] = mmap(0x0, st[i].st_size, PROT_READ, MAP_PRIVATE, fd[i], 0);
+		buf[i] = mmap(0x0, st[i].st_size, PROT_READ, MAP_PRIVATE, fd[i], 0);
 
-		if(data[i] == MAP_FAILED)
+		if(buf[i] == MAP_FAILED)
 			goto end_0;
 	}
 
-	r = strcmp(data[0], data[1]);
+	r = strcmp(buf[0], buf[1]);
 
 
 end_0:
 	for(i=0; i<2; i++){
-		if(data[i])
-			munmap(data[i], st[i].st_size);
+		if(buf[i])
+			munmap(buf[i], st[i].st_size);
 
 		if(fd[i] != -1)
 			close(fd[i]);

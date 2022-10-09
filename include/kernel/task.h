@@ -24,7 +24,7 @@ typedef enum{
 	TASK_READY = 0x2,
 } ktask_flag_t;
 
-typedef void (*ktask_hdlr_t)(void *p);
+typedef void (*ktask_hdlr_t)(void *payload);
 
 typedef struct ktask_t{
 	struct ktask_t *prev,
@@ -36,7 +36,7 @@ typedef struct ktask_t{
 	ktask_flag_t flags;
 
 	ktask_hdlr_t hdlr;
-	char data[];
+	uint8_t payload[];
 } ktask_t;
 
 typedef struct ktask_queue_t{
@@ -46,7 +46,7 @@ typedef struct ktask_queue_t{
 
 
 /* prototypes */
-int ktask_create(ktask_hdlr_t hdlr, void *data, size_t size, ktask_queue_t *dep_queue, bool recurring);
+int ktask_create(ktask_hdlr_t hdlr, void *payload, size_t size, ktask_queue_t *dep_queue, bool recurring);
 void ktask_complete(ktask_t *task);
 ktask_t *ktask_next(void);
 

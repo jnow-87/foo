@@ -21,13 +21,13 @@
 
 
 /* local/static prototypes */
-static int16_t rw(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type);
+static int16_t rw(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t type);
 
-static int16_t read_int(bridge_t *brdg, void *data, uint8_t n);
-static int16_t write_int(bridge_t *brdg, void *data, uint8_t n);
-static int16_t poll(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type);
+static int16_t read_int(bridge_t *brdg, void *buf, uint8_t n);
+static int16_t write_int(bridge_t *brdg, void *buf, uint8_t n);
+static int16_t poll(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t type);
 
-static void int_hdlr(int_num_t num, void *brdg);
+static void int_hdlr(int_num_t num, void *payload);
 static int int_rx(bridge_t *brdg, bridge_dgram_t *dgram);
 static int int_tx(bridge_t *brdg, bridge_dgram_t *dgram);
 
@@ -119,17 +119,17 @@ void bridge_destroy(bridge_t *brdg){
 	kfree(brdg);
 }
 
-int16_t bridge_read(bridge_t *brdg, void *data, uint8_t n){
-	return rw(brdg, data, n, BDT_READ);
+int16_t bridge_read(bridge_t *brdg, void *buf, uint8_t n){
+	return rw(brdg, buf, n, BDT_READ);
 }
 
-int16_t bridge_write(bridge_t *brdg, void *data, uint8_t n){
-	return rw(brdg, data, n, BDT_WRITE);
+int16_t bridge_write(bridge_t *brdg, void *buf, uint8_t n){
+	return rw(brdg, buf, n, BDT_WRITE);
 }
 
 
 /* local functions */
-static int16_t rw(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type){
+static int16_t rw(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t type){
 	bridge_t *peer;
 
 
@@ -138,12 +138,12 @@ static int16_t rw(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t typ
 	if(!callbacks_set(&peer->ops, bridge_ops_t))
 		return_errno(E_NOIMP);
 
-	if(type == BDT_READ && peer->cfg->rx_int)		return read_int(peer, data, n);
-	else if(type == BDT_WRITE && peer->cfg->tx_int)	return write_int(peer, data, n);
-	else											return poll(peer, data, n, type);
+	if(type == BDT_READ && peer->cfg->rx_int)		return read_int(peer, buf, n);
+	else if(type == BDT_WRITE && peer->cfg->tx_int)	return write_int(peer, buf, n);
+	else											return poll(peer, buf, n, type);
 }
 
-static int16_t read_int(bridge_t *brdg, void *data, uint8_t n){
+static int16_t read_int(bridge_t *brdg, void *buf, uint8_t n){
 	uint8_t i,
 			x;
 	bridge_dgram_t *dgram;
@@ -158,7 +158,7 @@ static int16_t read_int(bridge_t *brdg, void *data, uint8_t n){
 			break;
 
 		x = MIN(n - i, dgram->len - dgram->offset);
-		memcpy(data + i, dgram->data + dgram->offset, x);
+		memcpy(buf + i, dgram->buf + dgram->offset, x);
 
 		dgram->offset += x;
 
@@ -171,13 +171,13 @@ static int16_t read_int(bridge_t *brdg, void *data, uint8_t n){
 	return i;
 }
 
-static int16_t write_int(bridge_t *brdg, void *data, uint8_t n){
+static int16_t write_int(bridge_t *brdg, void *buf, uint8_t n){
 	bridge_dgram_t *dgram;
 
 
 	mutex_lock(&brdg->mtx);
 
-	dgram = dgram_alloc_tx(brdg, data, n);
+	dgram = dgram_alloc_tx(brdg, buf, n);
 
 	if(dgram != 0x0 && brdg->rx_dgrams == 0x0 && brdg->tx_dgrams == dgram)
 		int_foretell(brdg->cfg->tx_int);
@@ -187,14 +187,14 @@ static int16_t write_int(bridge_t *brdg, void *data, uint8_t n){
 	return (dgram == 0x0) ? -1 : n;
 }
 
-static int16_t poll(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t type){
+static int16_t poll(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t type){
 	bridge_dgram_t dgram;
 	bridge_dgram_state_t s;
 	bridge_dgram_state_t (*op)(bridge_dgram_t *, bridge_t *);
 
 
 	op = (type == BDT_WRITE) ? dgram_write : dgram_read;
-	dgram_init(&dgram, type, data, n, brdg);
+	dgram_init(&dgram, type, buf, n, brdg);
 
 	while(1){
 		mutex_lock(&brdg->mtx);
@@ -211,13 +211,13 @@ static int16_t poll(bridge_t *brdg, void *data, uint8_t n, bridge_dgram_type_t t
 	}
 }
 
-static void int_hdlr(int_num_t num, void *_brdg){
+static void int_hdlr(int_num_t num, void *payload){
 	bridge_t *brdg;
 	bridge_dgram_t *dgram;
 	int_num_t cplt_int;
 
 
-	brdg = (bridge_t*)_brdg;
+	brdg = (bridge_t*)payload;
 
 	mutex_lock(&brdg->mtx);
 

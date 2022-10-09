@@ -26,7 +26,7 @@ typedef enum{
 
 typedef struct{
 	net_family_t domain;
-	uint8_t data[];
+	uint8_t protocol_data[];
 } sock_addr_t;
 
 typedef struct{

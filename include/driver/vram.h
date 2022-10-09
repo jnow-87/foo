@@ -19,7 +19,7 @@
 /* types */
 typedef struct{
 	int (*configure)(vram_cfg_t *cfg, void *hw);
-	int (*write_page)(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw);
+	int (*write_page)(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw);
 
 	void *hw;
 } vram_itf_t;

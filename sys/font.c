@@ -35,7 +35,7 @@ font_t *font_resolve(char const *name){
 
 uint8_t *font_char(char c, font_t *font){
 	if(c < font->first_char || c > font->last_char)
-		return font->data[0];
+		return font->chars[0];
 
-	return font->data[c - font->first_char];
+	return font->chars[c - font->first_char];
 }

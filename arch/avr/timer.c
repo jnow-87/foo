@@ -24,32 +24,11 @@
 #define STRVAL(s) STR(s)
 
 
+/* local/static prototypes */
+static void timer_hdlr(int_num_t num, void *payload);
+
+
 /* local functions */
-static void timer_hdlr(int_num_t num, void *data){
-	static size_t timer = 0,
-				  sched = 0;
-
-
-	timer++;
-	sched++;
-
-	/* trigger kernel timer */
-#ifdef CONFIG_KERNEL_TIMER
-	if(timer == AVRCONFIG_KTIMER_FACTOR){
-		timer = 0;
-		ktimer_tick();
-	}
-#endif // CONFIG_KERNEL_TIMER
-
-	/* trigger scheduler */
-#ifdef CONFIG_SCHED_PREEMPTIVE
-	if(sched == AVRCONFIG_SCHED_FACTOR){
-		sched = 0;
-		sched_tick();
-	}
-#endif // CONFIG_SCHED_PREEMPTIVE
-}
-
 static int init(void){
 	/* clear reset flags */
 	mreg_w(MCUSR, 0x0);
@@ -107,3 +86,28 @@ static void stats(void){
 }
 
 kernel_stat(stats);
+
+static void timer_hdlr(int_num_t num, void *payload){
+	static size_t timer = 0,
+				  sched = 0;
+
+
+	timer++;
+	sched++;
+
+	/* trigger kernel timer */
+#ifdef CONFIG_KERNEL_TIMER
+	if(timer == AVRCONFIG_KTIMER_FACTOR){
+		timer = 0;
+		ktimer_tick();
+	}
+#endif // CONFIG_KERNEL_TIMER
+
+	/* trigger scheduler */
+#ifdef CONFIG_SCHED_PREEMPTIVE
+	if(sched == AVRCONFIG_SCHED_FACTOR){
+		sched = 0;
+		sched_tick();
+	}
+#endif // CONFIG_SCHED_PREEMPTIVE
+}

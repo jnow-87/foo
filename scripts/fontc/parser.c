@@ -21,7 +21,7 @@
 
 /* local/static prototypes */
 static int sanitise_header(font_header_t *hdr);
-static int gettoken(FILE *fp, char *tk, size_t len);
+static int gettoken(FILE *fp, char *tk, size_t n);
 
 
 /* global functions */
@@ -114,14 +114,14 @@ static int sanitise_header(font_header_t *hdr){
 	return 0;
 }
 
-static int gettoken(FILE *fp, char *tk, size_t len){
+static int gettoken(FILE *fp, char *tk, size_t n){
 	char c;
 	size_t i;
 
 
 	i = 0;
 
-	while(i < len){
+	while(i < n){
 		if(fread(&c, 1, 1, fp) != 1)
 			return ERROR("reading token\n");
 

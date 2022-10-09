@@ -219,5 +219,5 @@ static int erase(term_t *term, term_erase_t type, uint16_t n){
 	default:	type |= TE_TO_START | TE_TO_END; break;
 	}
 
-	return (term->hw->erase != 0x0) ? term->hw->erase(type, n, term->hw->data) : 0;
+	return (term->itf->erase != 0x0) ? term->itf->erase(type, n, term->itf->hw) : 0;
 }

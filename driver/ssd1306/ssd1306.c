@@ -20,8 +20,8 @@
 
 /* macros */
 // i2c wrapper
-#define I2C_WRITE(i2c, slave, data)		i2c_write(i2c, slave, data, sizeof_array(data))
-#define I2C_WRITE_N(i2c, slave, data)	i2c_write_n(i2c, slave, data, sizeof_array(data))
+#define I2C_WRITE(i2c, slave, buf)		i2c_write(i2c, slave, buf, sizeof_array(buf))
+#define I2C_WRITE_N(i2c, slave, buf)	i2c_write_n(i2c, slave, buf, sizeof_array(buf))
 #define I2C_DATA(...)					((uint8_t []){ __VA_ARGS__ })
 
 
@@ -80,7 +80,7 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(vram_cfg_t *cfg, void *hw);
-static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw);
+static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw);
 
 
 /* local functions */
@@ -142,7 +142,7 @@ static int configure(vram_cfg_t *cfg, void *hw){
 	return 0;
 }
 
-static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw){
+static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
 	int r;
 	uint8_t cmd;
 	dt_data_t *dtd;
@@ -155,7 +155,7 @@ static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw){
 
 	// write data
 	cmd = CTRL_DATA_N;
-	r |= I2C_WRITE_N(dtd->i2c, dtd->slave, BLOBS(BLOB(&cmd, 1), BLOB(data, cfg->width)));
+	r |= I2C_WRITE_N(dtd->i2c, dtd->slave, BLOBS(BLOB(&cmd, 1), BLOB(buf, cfg->width)));
 
 	return r;
 }

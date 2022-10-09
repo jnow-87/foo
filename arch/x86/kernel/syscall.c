@@ -26,11 +26,13 @@
 
 
 /* local/static prototypes */
+static void sc_hdlr(int_num_t num, void *payload);
+
 static void yield_user(thread_t const *this_t);
 static void yield_kernel(void);
 
-static int overlay_exit(void *p);
-static int overlay_mmap(void *p);
+static int overlay_exit(void *param);
+static int overlay_mmap(void *param);
 
 
 /* static variables */
@@ -90,7 +92,15 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 
 /* local functions */
-static void sc_hdlr(int_num_t num, void *data){
+static int init(void){
+	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
+
+	return int_register(INT_SYSCALL, sc_hdlr, 0x0);
+}
+
+platform_init(0, init);
+
+static void sc_hdlr(int_num_t num, void *payload){
 	x86_hw_op_t op;
 	sc_t sc;
 	thread_t const *this_t;
@@ -104,10 +114,10 @@ static void sc_hdlr(int_num_t num, void *data){
 
 	LNX_DEBUG("syscall(thread = %s.%u, data = %p)\n",
 		this_t->parent->name, this_t->tid,
-		op.int_ctrl.data
+		op.int_ctrl.payload
 	);
 
-	copy_from_user(&sc, op.int_ctrl.data, sizeof(sc), this_t->parent);
+	copy_from_user(&sc, op.int_ctrl.payload, sizeof(sc), this_t->parent);
 
 	LNX_DEBUG("syscall(num = %u, param = %p, psize = %u)\n", sc.num, sc.param, sc.size);
 
@@ -122,7 +132,7 @@ static void sc_hdlr(int_num_t num, void *data){
 	LNX_DEBUG("errno: %d\n", errno);
 	sc.errno = errno;
 
-	copy_to_user(op.int_ctrl.data, &sc, sizeof(sc), this_t->parent);
+	copy_to_user(op.int_ctrl.payload, &sc, sizeof(sc), this_t->parent);
 
 	op.num = HWO_SYSCALL_RETURN;
 
@@ -130,13 +140,6 @@ static void sc_hdlr(int_num_t num, void *data){
 	x86_hw_op_write_writeback(&op);
 }
 
-static int init(void){
-	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
-
-	return int_register(INT_SYSCALL, sc_hdlr, 0x0);
-}
-
-platform_init(0, init);
 
 static void yield_user(thread_t const *this_t){
 	int_type_t imask;
@@ -174,11 +177,11 @@ static void yield_kernel(void){
 	}
 }
 
-static int overlay_exit(void *p){
+static int overlay_exit(void *param){
 	sc_exit_t kparam;
 
 
-	copy_from_user(&kparam, p, sizeof(kparam), sched_running()->parent);
+	copy_from_user(&kparam, param, sizeof(kparam), sched_running()->parent);
 
 	if(!kparam.kill_siblings)
 		return 0;
@@ -198,7 +201,7 @@ static int overlay_exit(void *p){
 	return 0;
 }
 
-static int overlay_mmap(void *p){
+static int overlay_mmap(void *param){
 	sc_fs_t kparam;
 	devtree_memory_t *kheap;
 	process_t *this_p;
@@ -207,21 +210,21 @@ static int overlay_mmap(void *p){
 	this_p = sched_running()->parent;
 	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
 
-	copy_from_user(&kparam, p, sizeof(kparam), this_p);
+	copy_from_user(&kparam, param, sizeof(kparam), this_p);
 
 	// In order for mmap to work in the x86 setup the kernel heap is created
 	// as a shared memory region. Hence, instead of returning the mmaped address
 	// to the application, the offset relative to the kernel heap base is
 	// returned, which is used on the application relative to its address of the
 	// shared memory.
-	if(kparam.data < kheap->base || kparam.data >= kheap->base + kheap->size){
-		LNX_ERROR("trying to mmap non-heap address %p\n", kparam.data);
+	if(kparam.payload < kheap->base || kparam.payload >= kheap->base + kheap->size){
+		LNX_ERROR("trying to mmap non-heap address %p\n", kparam.payload);
 		return_errno(E_INVAL);
 	}
 
-	kparam.data -= (ptrdiff_t)kheap->base;
+	kparam.payload -= (ptrdiff_t)kheap->base;
 
-	copy_to_user(p, &kparam, sizeof(kparam), this_p);
+	copy_to_user(param, &kparam, sizeof(kparam), this_p);
 
 	return 0;
 }

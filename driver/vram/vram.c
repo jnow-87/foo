@@ -22,7 +22,7 @@
 
 
 /* local/static prototypes */
-static void refresh_hdlr(void *data);
+static void refresh_hdlr(void *payload);
 
 
 /* global functions */
@@ -177,13 +177,13 @@ int vram_scroll(vram_t *vram, ssize_t npages){
 
 
 /* local functions */
-static void refresh_hdlr(void *data){
+static void refresh_hdlr(void *payload){
 	size_t i,
 		   page;
 	vram_t *vram;
 
 
-	vram = (vram_t*)data;
+	vram = (vram_t*)payload;
 	page = vram->page_offset;
 
 	for(i=0; i<vram->npages; i++, page++){

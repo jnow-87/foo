@@ -32,7 +32,7 @@ typedef enum{
 
 
 /* local/static prototypes */
-static esc_t parse_esc(char const *s, size_t len);
+static esc_t parse_esc(char const *s, size_t n);
 
 
 /* global functions */
@@ -242,14 +242,14 @@ err:
 
 
 /* local functions */
-static esc_t parse_esc(char const *s, size_t len){
+static esc_t parse_esc(char const *s, size_t n){
 	static esc_t const codes[] = {
 		ESC_UP, ESC_DOWN, ESC_RIGHT, ESC_LEFT
 	};
 	unsigned char i;
 
 
-	if(len < 3 || *s != '\e' || *(s + 1) != '[')
+	if(n < 3 || *s != '\e' || *(s + 1) != '[')
 		return ESC_NONE;
 
 	i = *(s + 2) - 'A';

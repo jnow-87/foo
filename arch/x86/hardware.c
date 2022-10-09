@@ -94,13 +94,13 @@ void x86_hw_op_read_writeback(x86_hw_op_t *op){
 	CHECK_SEQ_NUM(seq_num, op->seq);
 }
 
-void x86_hw_int_trigger(int_num_t num, void *data){
+void x86_hw_int_trigger(int_num_t num, void *payload){
 	x86_hw_op_t op;
 
 
 	op.num = HWO_INT_TRIGGER;
 	op.int_ctrl.num = num;
-	op.int_ctrl.data = data;
+	op.int_ctrl.payload = payload;
 
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);

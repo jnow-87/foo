@@ -36,7 +36,7 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(vram_cfg_t *cfg, void *hw);
-static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw);
+static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw);
 
 
 /* local functions */
@@ -117,13 +117,13 @@ err_0:
 	return -errno;
 }
 
-static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw){
+static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
 	dev_data_t *dsp;
 
 
 	dsp = (dev_data_t*)hw;
 
-	memcpy(dsp->ram + page * cfg->width, data, cfg->width);
+	memcpy(dsp->ram + page * cfg->width, buf, cfg->width);
 	vram_makedirty(page, dsp->dirty, true);
 
 	return 0;

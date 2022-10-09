@@ -57,7 +57,7 @@ static int font_header(FILE *fp, font_header_t *hdr){
 			"\t.height = %zu,\n"
 			"\t.width = %zu,\n"
 			"\n"
-			"\t.data = {\n"
+			"\t.chars = {\n"
 			,
 			hdr->name, opts.vertical ? "_vert" : "",
 			hdr->name,
@@ -114,7 +114,7 @@ static int font_letters(FILE *ifp, FILE *ofp, font_header_t *hdr){
 
 	if(nsyms != hdr->last_char - hdr->first_char + 1){
 		return ERROR(
-			"missmatch in number of symbols: header %zu - %zu + 1 = %zu, data %zu\n",
+			"missmatch in number of symbols: header %zu - %zu + 1 = %zu, chars %zu\n",
 			hdr->last_char,
 			hdr->first_char,
 			hdr->last_char - hdr->first_char + 1,

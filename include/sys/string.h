@@ -43,15 +43,15 @@ void *memnscan(void *s0, void *s1, ssize_t nmemb, size_t size);
 
 char const *strerror(errno_t errno);
 
-char *itoa(int v, unsigned int base, char *s, size_t len);
+char *itoa(int v, unsigned int base, char *s, size_t n);
 int atoi(char const *s);
 long int strtol(char const *p, char **endp, int base);
 
 char *strupr(char const *s);
-char *strupr_r(char const *s, char *buf, size_t len);
+char *strupr_r(char const *s, char *buf, size_t n);
 
 char *strcident(char const *s);
-char *strcident_r(char const *s, char *buf, size_t len);
+char *strcident_r(char const *s, char *buf, size_t n);
 
 
 #endif // SYS_STRING_H

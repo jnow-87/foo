@@ -97,7 +97,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	hdr.len = bufs[0].len;
 
 	if(cmd == I2C_CMD_WRITE && bufs[0].len <= CONFIG_BRIDGE_I2C_INLINE_DATA)
-		memcpy(hdr.data, bufs[0].data, bufs[0].len);
+		memcpy(hdr.buf, bufs[0].buf, bufs[0].len);
 
 	DEBUG("%s: slave = %u, len = %zu\n", (cmd == I2C_CMD_READ) ? "read" : "write", slave, n);
 
@@ -118,7 +118,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 				goto end;
 
 			// write payload
-			if(i2cbrdg_write(i2c->hw, bufs[i].data, bufs[i].len) != 0)
+			if(i2cbrdg_write(i2c->hw, bufs[i].buf, bufs[i].len) != 0)
 				goto end;
 		}
 	}
@@ -129,7 +129,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 
 	/* read data */
 	if(cmd == I2C_CMD_READ)
-		i2cbrdg_read(i2c->hw, bufs[0].data, bufs[0].len);
+		i2cbrdg_read(i2c->hw, bufs[0].buf, bufs[0].len);
 
 end:
 	DEBUG("complete: %s\n", strerror(errno));

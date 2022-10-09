@@ -28,12 +28,12 @@ static void foretell(int_num_t num, uint8_t set);
 
 /* static variables */
 static int_hdlr_t int_hdlr[NUM_INTS] = { 0x0 };
-static void *int_data[NUM_INTS] = { 0x0 };
+static void *int_payload[NUM_INTS] = { 0x0 };
 static uint8_t foretold[NUM_INTS / 8 + 1] = { 0 };
 
 
 /* global functions */
-int int_register(int_num_t num, int_hdlr_t hdlr, void *data){
+int int_register(int_num_t num, int_hdlr_t hdlr, void *payload){
 	if(num >= NUM_INTS)
 		return_errno(E_INVAL);
 
@@ -41,7 +41,7 @@ int int_register(int_num_t num, int_hdlr_t hdlr, void *data){
 		return_errno(E_INUSE);
 
 	int_hdlr[num] = hdlr;
-	int_data[num] = data;
+	int_payload[num] = payload;
 
 	return 0;
 }
@@ -51,7 +51,7 @@ void int_release(int_num_t num){
 		return;
 
 	int_hdlr[num] = 0x0;
-	int_data[num] = 0x0;
+	int_payload[num] = 0x0;
 }
 
 void int_foretell(int_num_t num){
@@ -97,7 +97,7 @@ static void call_hdlr(int_num_t num){
 	if(num >= NUM_INTS || int_hdlr[num] == 0x0)
 		kpanic("unhandled or invalid interrupt %u\n", num);
 
-	int_hdlr[num](num, int_data[num]);
+	int_hdlr[num](num, int_payload[num]);
 }
 
 static void foretell(int_num_t num, uint8_t set){

@@ -237,8 +237,8 @@ void _list2_replace(list2_t **head, list2_t *old, list2_t *new);
 void _list2_rm(list2_t **head, list2_t *el);
 list2_t *_list2_last(list2_t *head);
 bool _list2_contains(list2_t *head, list2_t *el);
-list2_t *_list2_find(list2_t *head, size_t mem_offset, void const *ref, size_t size);
-list2_t *_list2_find_str(list2_t *head, size_t mem_offset, char const *ref, size_t size, bool is_array);
+list2_t *_list2_find(list2_t *head, size_t mem_offset, void const *ref, size_t n);
+list2_t *_list2_find_str(list2_t *head, size_t mem_offset, char const *ref, size_t n, bool is_array);
 
 
 #endif // SYS_LIST_H

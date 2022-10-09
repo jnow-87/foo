@@ -242,7 +242,7 @@ static int event_exit(x86_hw_op_t *op){
 }
 
 static int event_int_trigger(x86_hw_op_t *op){
-	hw_int_request(op->int_ctrl.num, op->int_ctrl.data, op->src, op->tid);
+	hw_int_request(op->int_ctrl.num, op->int_ctrl.payload, op->src, op->tid);
 
 	return 0;
 }

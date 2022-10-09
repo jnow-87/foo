@@ -47,8 +47,8 @@ char *inet_ntoa(inet_addr_t addr){
 	return inet_ntoa_r(addr, ip, 16);
 }
 
-char *inet_ntoa_r(inet_addr_t addr, char *s, size_t len){
-	snprintf(s, len, "%hhu.%hhu.%hhu.%hhu",
+char *inet_ntoa_r(inet_addr_t addr, char *s, size_t n){
+	snprintf(s, n, "%hhu.%hhu.%hhu.%hhu",
 		(uint8_t)bits(addr, 24, 0xff),
 		(uint8_t)bits(addr, 16, 0xff),
 		(uint8_t)bits(addr, 8, 0xff),

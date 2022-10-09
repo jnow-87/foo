@@ -19,8 +19,8 @@
 
 
 /* local/static prototypes */
-static int sc_hdlr_sleep(void *p);
-static int sc_hdlr_time(void *p);
+static int sc_hdlr_sleep(void *param);
+static int sc_hdlr_time(void *param);
 
 
 /* local functions */
@@ -38,14 +38,14 @@ static int init(void){
 
 kernel_init(0, init);
 
-static int sc_hdlr_sleep(void *_p){
+static int sc_hdlr_sleep(void *param){
 	int r;
 	ksignal_t sig;
 	mutex_t mtx;
 	time_t *p;
 
 
-	p = (time_t*)_p;
+	p = (time_t*)param;
 	ksignal_init(&sig);
 	mutex_init(&mtx, MTX_NOINT);
 
@@ -56,8 +56,8 @@ static int sc_hdlr_sleep(void *_p){
 	return r;
 }
 
-static int sc_hdlr_time(void *p){
-	ktimer_time(p);
+static int sc_hdlr_time(void *param){
+	ktimer_time(param);
 
 	return 0;
 }

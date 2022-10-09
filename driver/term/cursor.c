@@ -15,13 +15,13 @@
 
 /* global functions */
 int term_cursor_set(term_t *term, uint16_t line, uint16_t column){
-	if(term->hw->cursor == 0x0)
+	if(term->itf->cursor == 0x0)
 		return 0;
 
 	term->cursor.line = MIN(line, term->cfg->lines - 1);
 	term->cursor.column = MIN(column, term->cfg->columns - 1);
 
-	return term->hw->cursor(term->cursor.line, term->cursor.column, 0, term->hw->data);
+	return term->itf->cursor(term->cursor.line, term->cursor.column, 0, term->itf->hw);
 }
 
 int term_cursor_move(term_t *term, int16_t lines, int16_t columns, bool force_scroll){
@@ -38,20 +38,20 @@ int term_cursor_move(term_t *term, int16_t lines, int16_t columns, bool force_sc
 	}
 
 	if(lines < 0 && (uint16_t)-lines > term->cursor.line){
-		if(term->hw->scroll != 0x0 && (SCROLL(term) || force_scroll)){
+		if(term->itf->scroll != 0x0 && (SCROLL(term) || force_scroll)){
 			lines += term->cursor.line;
 
-			if(term->hw->scroll(lines, term->hw->data) != 0)
+			if(term->itf->scroll(lines, term->itf->hw) != 0)
 				return -errno;
 		}
 
 		lines = -term->cursor.line;
 	}
 	else if(term->cursor.line + lines >= term->cfg->lines){
-		if(term->hw->scroll != 0x0 && (SCROLL(term) || force_scroll)){
+		if(term->itf->scroll != 0x0 && (SCROLL(term) || force_scroll)){
 			lines = term->cursor.line + lines - term->cfg->lines + 1;
 
-			if(term->hw->scroll(lines, term->hw->data) != 0)
+			if(term->itf->scroll(lines, term->itf->hw) != 0)
 				return -errno;
 		}
 
@@ -74,7 +74,7 @@ int term_cursor_show(term_t *term, bool show){
 	if(show == term->cursor.visible)
 		return 0;
 
-	if(term->hw->cursor(term->cursor.line, term->cursor.column, true, term->hw->data) != 0)
+	if(term->itf->cursor(term->cursor.line, term->cursor.column, true, term->itf->hw) != 0)
 		return -errno;
 
 	term->cursor.visible = show;

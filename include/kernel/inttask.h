@@ -22,7 +22,7 @@
 typedef struct itask_t{
 	struct itask_t *next;
 
-	void *data;
+	void *payload;
 	errno_t errno;
 
 	ksignal_t sig;
@@ -40,9 +40,9 @@ typedef struct{
 void itask_queue_init(itask_queue_t *queue);
 void itask_queue_destroy(itask_queue_t *queue);
 
-int itask_issue(itask_queue_t *queue, void *data, int_num_t num);
+int itask_issue(itask_queue_t *queue, void *payload, int_num_t num);
 void itask_complete(itask_queue_t *queue, errno_t ecode);
-void *itask_query_data(itask_queue_t *queue, int (*complete)(void *data));
+void *itask_query_payload(itask_queue_t *queue, int (*complete)(void *payload));
 
 
 #endif // KERNEL_INTTASK_H

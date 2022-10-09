@@ -156,7 +156,11 @@ iter_clean:
 
 /* local functions */
 static int strsplit(char *line, int *_argc, char ***_argv){
-	unsigned int i, j, len, start, arg_len;
+	unsigned int i,
+				 j,
+				 len,
+				 start,
+				 arg_len;
 	int argc;
 	char **argv;
 

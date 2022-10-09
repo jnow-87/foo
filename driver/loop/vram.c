@@ -27,9 +27,9 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(vram_cfg_t *cfg, void *hw);
-static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw);
+static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw);
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n);
 
 
@@ -72,18 +72,18 @@ err:
 
 driver_probe("loop,vram", probe);
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
 	dev_data_t *vram;
 
 
-	vram = (dev_data_t*)dev->data;
+	vram = (dev_data_t*)dev->payload;
 
 	if(n != sizeof(vram_cfg_t))
 		return_errno(E_INVAL);
 
 	switch(request){
-	case IOCTL_CFGRD:	memcpy(data, vram->cfg, n); break;
-	case IOCTL_CFGWR:	memcpy(vram->cfg, data, n); break;
+	case IOCTL_CFGRD:	memcpy(arg, vram->cfg, n); break;
+	case IOCTL_CFGWR:	memcpy(vram->cfg, arg, n); break;
 	default:			return_errno(E_NOSUP);
 	};
 
@@ -94,7 +94,7 @@ static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n){
 	dev_data_t *vram;
 
 
-	vram = (dev_data_t*)dev->data;
+	vram = (dev_data_t*)dev->payload;
 
 	if(n > vram_npages(vram->cfg) * vram->cfg->width)
 		goto_errno(err, E_LIMIT);
@@ -122,7 +122,7 @@ static int configure(vram_cfg_t *cfg, void *hw){
 	return -errno;
 }
 
-static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw){
+static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
 	size_t i;
 	dev_data_t *vram;
 
@@ -131,10 +131,10 @@ static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw){
 
 	if(vram->cfg->flags & VRFL_INVERSE){
 		for(i=0; i<cfg->width; i++)
-			vram->ram[page * vram->cfg->width + i] = data[i] ^ 0xff;
+			vram->ram[page * vram->cfg->width + i] = buf[i] ^ 0xff;
 	}
 	else
-		memcpy(vram->ram + (page * vram->cfg->width), data, cfg->width);
+		memcpy(vram->ram + (page * vram->cfg->width), buf, cfg->width);
 
 	return 0;
 }

@@ -17,10 +17,10 @@
 
 /* types */
 typedef struct{
-	char *data;
+	uint8_t *content;
 
-	size_t data_max,
-		   data_used;
+	size_t capacity,
+		   size;
 } rootfs_file_t;
 
 

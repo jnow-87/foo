@@ -11,11 +11,11 @@
 
 
 /* global functions */
-void *lnx_mmap(void *addr, size_t len, int prot, int flags, int fd, unsigned long int offset){
+void *lnx_mmap(void *addr, size_t n, int prot, int flags, int fd, unsigned long int offset){
 	return (void*)lnx_syscall(LNX_SYS_MMAP,
 		(unsigned long int[6]){
 			(unsigned long int)addr,
-			len,
+			n,
 			prot,
 			flags,
 			fd,

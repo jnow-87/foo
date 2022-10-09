@@ -49,9 +49,9 @@ typedef struct{
 
 typedef struct{
 	uint8_t *buf;
-	size_t len;
-	size_t offset;
-} write_data_t;
+	size_t len,
+		   offset;
+} write_dgram_t;
 
 typedef struct{
 	dt_data_t *dtd;
@@ -63,7 +63,7 @@ typedef struct{
 /* local/static prototypes */
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
+static int fcntl(devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *arg);
 
 static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
 static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n);
@@ -71,8 +71,8 @@ static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t
 static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd);
 static char read_byte(size_t offset, dt_data_t *dtd);
 
-static void write_hdlr(int_num_t num, void *eeprom);
-static int write_complete(void *data);
+static void write_hdlr(int_num_t num, void *payload);
+static int write_complete(void *payload);
 
 
 /* local functions */
@@ -140,7 +140,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
 
 
 	buf = (char*)_buf;
-	dtd = ((dev_data_t*)dev->data)->dtd;
+	dtd = ((dev_data_t*)dev->payload)->dtd;
 
 	if(fd->fp + n >= dtd->size){
 		errno = E_LIMIT;
@@ -159,7 +159,7 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	dt_data_t *dtd;
 
 
-	dtd = ((dev_data_t*)dev->data)->dtd;
+	dtd = ((dev_data_t*)dev->payload)->dtd;
 
 	if(fd->fp + n >= dtd->size){
 		errno = E_LIMIT;
@@ -167,35 +167,35 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	}
 
 	if(n <= 1 || dtd->int_num == 0)
-		return write_noint(dev->data, fd, buf, n);
+		return write_noint(dev->payload, fd, buf, n);
 
-	return write_int(dev->data, fd, buf, n);
+	return write_int(dev->payload, fd, buf, n);
 }
 
-static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *_data){
+static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *arg){
 	size_t whence;
-	seek_t *data;
+	seek_t *p;
 	dt_data_t *dtd;
 
 
-	data = (seek_t*)_data;
-	dtd = ((dev_data_t*)dev->data)->dtd;
+	p = (seek_t*)arg;
+	dtd = ((dev_data_t*)dev->payload)->dtd;
 
 	switch(cmd){
 	case F_SEEK:
-		if(data->whence == SEEK_SET)		whence = 0;
-		else if(data->whence == SEEK_CUR)	whence = fd->fp;
-		else if(data->whence == SEEK_END)	whence = dtd->size - 1;
-		else								return_errno(E_NOIMP);
+		if(p->whence == SEEK_SET)		whence = 0;
+		else if(p->whence == SEEK_CUR)	whence = fd->fp;
+		else if(p->whence == SEEK_END)	whence = dtd->size - 1;
+		else							return_errno(E_NOIMP);
 
-		if(whence + data->offset >= dtd->size)
+		if(whence + p->offset >= dtd->size)
 			return_errno(E_LIMIT);
 
-		fd->fp = whence + data->offset;
+		fd->fp = whence + p->offset;
 		return 0;
 
 	case F_TELL:
-		data->pos = fd->fp;
+		p->pos = fd->fp;
 		return 0;
 
 	default:
@@ -216,16 +216,16 @@ static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size
 }
 
 static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
-	write_data_t data;
+	write_dgram_t dgram;
 
 
-	data.buf = buf;
-	data.len = n;
-	data.offset = fd->fp;
+	dgram.buf = buf;
+	dgram.len = n;
+	dgram.offset = fd->fp;
 
-	(void)itask_issue(&eeprom->write_queue, &data, eeprom->dtd->int_num);
+	(void)itask_issue(&eeprom->write_queue, &dgram, eeprom->dtd->int_num);
 
-	return n - data.len;
+	return n - dgram.len;
 }
 
 static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
@@ -282,31 +282,31 @@ static char read_byte(size_t offset, dt_data_t *dtd){
 	return c;
 }
 
-static void write_hdlr(int_num_t num, void *_eeprom){
+static void write_hdlr(int_num_t num, void *payload){
 	dev_data_t *eeprom;
-	write_data_t *data;
+	write_dgram_t *dgram;
 
 
-	eeprom = (dev_data_t*)_eeprom;
+	eeprom = (dev_data_t*)payload;
 
 	/* disable eeprom interrupt */
 	// NOTE this is required since an interrupt is triggered
 	// 		as long as EECR_EEPE is zero, i.e. always except
 	// 		during ongoing write operations
 	eeprom->dtd->regs->eecr &= ~(0x1 << EECR_EERIE);
-	data = itask_query_data(&eeprom->write_queue, write_complete);
+	dgram = itask_query_payload(&eeprom->write_queue, write_complete);
 
-	if(data == 0x0)
+	if(dgram == 0x0)
 		return;
 
 	/* write data */
-	write_byte(*data->buf, data->offset, eeprom->dtd);
+	write_byte(*dgram->buf, dgram->offset, eeprom->dtd);
 
-	data->buf++;
-	data->offset++;
-	data->len--;
+	dgram->buf++;
+	dgram->offset++;
+	dgram->len--;
 }
 
-static int write_complete(void *data){
-	return (((write_data_t*)data)->len == 0) ? 0 : -1;
+static int write_complete(void *payload){
+	return (((write_dgram_t*)payload)->len == 0) ? 0 : -1;
 }

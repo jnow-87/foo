@@ -104,7 +104,7 @@ ssize_t patmat_get_results(patmat_t *pm, void **results){
 	pat = pm->patterns + pm->last_match;
 
 	for(i=0; i<pat->nspec; i++)
-		results[i] = pat->specs[i]->data;
+		results[i] = pat->specs[i]->payload;
 
 	return pm->last_match;
 }
@@ -254,7 +254,7 @@ static void pattern_reset(patmat_pattern_t *pat){
 		spec->chars_matched = 0;
 
 		if(specs[spec->specifier].size != 0)
-			memset(spec->data, 0, specs[spec->specifier].size);
+			memset(spec->payload, 0, specs[spec->specifier].size);
 	}
 }
 
@@ -305,9 +305,9 @@ static bool match_int(char c, patmat_spec_t *spec){
 	if(c < '0' || c > '9')
 		return false;
 
-	memcpy(&num, spec->data, sizeof(int));
+	memcpy(&num, spec->payload, sizeof(int));
 	num = num * 10 + c - '0';
-	memcpy(spec->data, &num, sizeof(int));
+	memcpy(spec->payload, &num, sizeof(int));
 
 	spec->chars_matched++;
 
@@ -318,14 +318,14 @@ static bool match_char(char c, patmat_spec_t *spec){
 	if(spec->chars_matched != 0)
 		return false;
 
-	spec->data[0] = c;
+	spec->payload[0] = c;
 	spec->chars_matched++;
 
 	return true;
 }
 
 static bool match_string(char c, patmat_spec_t *spec){
-	spec->data[spec->chars_matched] = c;
+	spec->payload[spec->chars_matched] = c;
 	spec->chars_matched++;
 
 	return true;
@@ -382,7 +382,7 @@ static bool spec_completed(patmat_spec_t *spec, char const *pattern){
 
 	/* terminate strings */
 	if(spec->specifier == PMS_STR)
-		spec->data[spec->chars_matched] = 0;
+		spec->payload[spec->chars_matched] = 0;
 
 	return true;
 }

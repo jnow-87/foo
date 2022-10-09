@@ -88,7 +88,7 @@ static int tests(test_type_t type){
 }
 
 static int test_err(test_type_t type, int fd){
-	char data[4] = { 0 };
+	char buf[4] = { 0 };
 	int r;
 
 
@@ -97,8 +97,8 @@ static int test_err(test_type_t type, int fd){
 
 	r = 0;
 
-	if(type & MASTER_RD)	r += TEST_INT_EQ(read(fd, data, 4), -1);
-	else					r += TEST_INT_EQ(write(fd, data, 4), -1);
+	if(type & MASTER_RD)	r += TEST_INT_EQ(read(fd, buf, 4), -1);
+	else					r += TEST_INT_EQ(write(fd, buf, 4), -1);
 
 	r += TEST_INT_EQ(errno, E_NOCONN);
 
@@ -107,8 +107,8 @@ static int test_err(test_type_t type, int fd){
 
 static int test_rw(test_type_t type, int fd, size_t tx, size_t tx_exp, size_t rx, size_t rx_exp){
 	int r;
-	char tx_data[] = "deadbeef",
-		 rx_data[8] = { 0 };
+	char tx_buf[] = "deadbeef",
+		 rx_buf[8] = { 0 };
 
 
 	r = 0;
@@ -122,13 +122,13 @@ static int test_rw(test_type_t type, int fd, size_t tx, size_t tx_exp, size_t rx
 	if((type == (MASTER | MASTER_RD)) || (type == (SLAVE | MASTER_WR))){
 		// expect to recv 0xff on master if more data are requested then sent
 		if(tx_exp < rx_exp && type & MASTER)
-			memset(tx_data + tx_exp, 0xff, rx_exp - tx_exp);
+			memset(tx_buf + tx_exp, 0xff, rx_exp - tx_exp);
 
-		r += TEST_INT_EQ(read(fd, rx_data, rx), rx_exp);
-		r += TEST_STRN_EQ(rx_data, tx_data, rx_exp);
+		r += TEST_INT_EQ(read(fd, rx_buf, rx), rx_exp);
+		r += TEST_STRN_EQ(rx_buf, tx_buf, rx_exp);
 	}
 	else{
-		r += TEST_INT_EQ(write(fd, tx_data, tx), tx_exp);
+		r += TEST_INT_EQ(write(fd, tx_buf, tx), tx_exp);
 	}
 
 	return r;

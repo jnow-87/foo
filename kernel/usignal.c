@@ -23,9 +23,9 @@
 
 
 /* local/static prototypes */
-static int sc_hdlr_signal_register(void *p);
-static int sc_hdlr_signal_send(void *p);
-static int sc_hdlr_signal_return(void *p);
+static int sc_hdlr_signal_register(void *param);
+static int sc_hdlr_signal_send(void *param);
+static int sc_hdlr_signal_return(void *param);
 
 
 /* global functions */
@@ -134,12 +134,12 @@ static int init(void){
 
 kernel_init(0, init);
 
-static int sc_hdlr_signal_register(void *_p){
+static int sc_hdlr_signal_register(void *param){
 	sc_signal_t *p;
 	process_t *this_p;
 
 
-	p = (sc_signal_t*)_p;
+	p = (sc_signal_t*)param;
 
 	this_p = process_find(p->pid);
 
@@ -152,13 +152,13 @@ static int sc_hdlr_signal_register(void *_p){
 	return 0;
 }
 
-static int sc_hdlr_signal_send(void *_p){
+static int sc_hdlr_signal_send(void *param){
 	sc_signal_t *p;
 	process_t *this_p;
 	thread_t *this_t;
 
 
-	p = (sc_signal_t*)_p;
+	p = (sc_signal_t*)param;
 
 	/* get target thread */
 	this_p = process_find(p->pid);
@@ -175,7 +175,7 @@ static int sc_hdlr_signal_send(void *_p){
 	return usignal_send(this_t, p->sig);
 }
 
-static int sc_hdlr_signal_return(void *_p){
+static int sc_hdlr_signal_return(void *param){
 	thread_t *this_t;
 
 

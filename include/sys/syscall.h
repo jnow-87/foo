@@ -73,8 +73,8 @@ typedef struct{
 typedef struct{
 	int fd;
 
-	void *data;
-	size_t data_len;
+	void *payload;
+	size_t payload_len;
 
 	int cmd;
 	f_mode_t mode;
@@ -126,8 +126,8 @@ typedef struct{
 	sock_addr_t *addr;
 	size_t addr_len;
 
-	void *data;
-	size_t data_len;
+	void *buf;
+	size_t buf_len;
 } sc_socket_t;
 
 

@@ -14,9 +14,9 @@
 
 /* global functions */
 int vector_init(vector_t *v, size_t dt_size, size_t capa){
-	v->data = sys_malloc(dt_size * capa);
+	v->buf = sys_malloc(dt_size * capa);
 
-	if(v->data == 0x0)
+	if(v->buf == 0x0)
 		return -1;
 
 	v->capacity = capa;
@@ -27,13 +27,13 @@ int vector_init(vector_t *v, size_t dt_size, size_t capa){
 }
 
 void vector_destroy(vector_t *v){
-	sys_free(v->data);
+	sys_free(v->buf);
 
 	v->capacity = 0;
 	v->size = 0;
 }
 
-int vector_add(vector_t *v, void *data){
+int vector_add(vector_t *v, void *buf){
 	void *t;
 
 
@@ -44,12 +44,12 @@ int vector_add(vector_t *v, void *data){
 		if(t == 0x0)
 			return -1;
 
-		memcpy(t, v->data, v->size * v->dt_size);
-		sys_free(v->data);
-		v->data = t;
+		memcpy(t, v->buf, v->size * v->dt_size);
+		sys_free(v->buf);
+		v->buf = t;
 	}
 
-	memcpy(v->data + v->size * v->dt_size, data, v->dt_size);
+	memcpy(v->buf + v->size * v->dt_size, buf, v->dt_size);
 	v->size++;
 
 	return 0;
@@ -59,7 +59,7 @@ void vector_rm(vector_t *v, size_t idx){
 	if(idx >= v->size)
 		return;
 
-	memcpy(v->data + idx * v->dt_size, v->data + (idx + 1) * v->dt_size, (v->size - idx - 1) * v->dt_size);
+	memcpy(v->buf + idx * v->dt_size, v->buf + (idx + 1) * v->dt_size, (v->size - idx - 1) * v->dt_size);
 	v->size--;
 }
 
@@ -67,5 +67,5 @@ void *vector_get(vector_t *v, size_t idx){
 	if(idx >= v->size)
 		return 0x0;
 
-	return v->data + idx * v->dt_size;
+	return v->buf + idx * v->dt_size;
 }

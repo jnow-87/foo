@@ -65,7 +65,7 @@ void lnx_sigaddset(lnx_sigset_t *set, int sig){
 
 
 	i = --sig / 64;
-	set->data[i] |= ((uint64_t)0x1) << (sig % 64);
+	set->sigs[i] |= ((uint64_t)0x1) << (sig % 64);
 }
 
 void lnx_kill(int pid, int sig){

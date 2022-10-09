@@ -18,12 +18,12 @@
 
 
 /* global functions */
-int memblock_init(memblock_t *pool, size_t len){
+int memblock_init(memblock_t *pool, size_t n){
 	if(pool == 0x0)
 		return_errno(E_INVAL);
 
 	list_init(pool);
-	pool->len = len;
+	pool->len = n;
 
 	return 0;
 }

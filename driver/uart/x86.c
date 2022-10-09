@@ -36,10 +36,10 @@ typedef struct{
 
 
 /* local/static prototypes */
-static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data);
-static char putc(char c, void *data);
-static size_t putsn(char const *s, size_t n, void *data);
-static size_t gets(char *s, size_t n, void *data);
+static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw);
+static char putc(char c, void *hw);
+static size_t putsn(char const *s, size_t n, void *hw);
+static size_t gets(char *s, size_t n, void *hw);
 
 
 /* local functions */
@@ -68,7 +68,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->puts = putsn;
 	itf->gets = gets;
 
-	itf->data = uart;
+	itf->hw = uart;
 	itf->cfg = &dtd->cfg;
 	itf->cfg_size = sizeof(uart_cfg_t);
 	itf->rx_int = dtd->rx_int;
@@ -89,12 +89,12 @@ err_0:
 
 driver_probe("x86,uart", probe);
 
-static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
+static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 	dev_data_t *uart;
 	x86_hw_op_t op;
 
 
-	uart = (dev_data_t*)data;
+	uart = (dev_data_t*)hw;
 
 	op.num = HWO_UART_CFG;
 
@@ -109,25 +109,25 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
 	return 0;
 }
 
-static char putc(char c, void *data){
-	return (putsn(&c, 1, data) != 1) ? ~c : c;
+static char putc(char c, void *hw){
+	return (putsn(&c, 1, hw) != 1) ? ~c : c;
 }
 
-static size_t putsn(char const *s, size_t n, void *_data){
-	dev_data_t *data;
+static size_t putsn(char const *s, size_t n, void *hw){
+	dev_data_t *uart;
 
 
-	data = (dev_data_t*)_data;
+	uart = (dev_data_t*)hw;
 
 	if(s == 0x0)
 		goto_errno(err, E_INVAL);
 
-	lnx_write(data->fd, s, n);
+	lnx_write(uart->fd, s, n);
 
 	// the x86 hardware simulated by the test framework doesn't support
 	// tx interrupts, hence a fake interrupt is produced here
-	if(data->dtd->tx_int)
-		int_foretell(data->dtd->tx_int);
+	if(uart->dtd->tx_int)
+		int_foretell(uart->dtd->tx_int);
 
 	return n;
 
@@ -136,11 +136,11 @@ err:
 	return 0;
 }
 
-static size_t gets(char *s, size_t n, void *data){
+static size_t gets(char *s, size_t n, void *hw){
 	ssize_t r;
 
 
-	r = lnx_read(((dev_data_t*)data)->fd, s, n);
+	r = lnx_read(((dev_data_t*)hw)->fd, s, n);
 
 	if(r < 0){
 		switch(r){

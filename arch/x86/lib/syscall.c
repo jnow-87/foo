@@ -44,15 +44,15 @@ static int event_setup(x86_hw_op_t *op);
 static int event_inval(x86_hw_op_t *op);
 
 // syscall overlays
-static int overlay_malloc(void *p);
-static int overlay_free(void *p);
+static int overlay_malloc(void *param);
+static int overlay_free(void *param);
 
-static int overlay_thread_create(void *p);
+static int overlay_thread_create(void *param);
 
-static int overlay_sigregister(void *p);
-static int overlay_sigsend(void *p);
+static int overlay_sigregister(void *param);
+static int overlay_sigsend(void *param);
 
-static int overlay_mmap(void *p);
+static int overlay_mmap(void *param);
 
 
 /* static variables */
@@ -234,12 +234,12 @@ static int event_inval(x86_hw_op_t *op){
 	return -1;
 }
 
-static int overlay_malloc(void *_p){
+static int overlay_malloc(void *param){
 	void *brickos_addr;
 	sc_malloc_t *p;
 
 
-	p = (sc_malloc_t*)_p;
+	p = (sc_malloc_t*)param;
 
 	if(p->size == 0)
 		return 0;
@@ -257,12 +257,12 @@ static int overlay_malloc(void *_p){
 	return 0;
 }
 
-static int overlay_free(void *_p){
+static int overlay_free(void *param){
 	void *brickos_addr;
 	sc_malloc_t *p;
 
 
-	p = (sc_malloc_t*)_p;
+	p = (sc_malloc_t*)param;
 
 	p->p -= sizeof(brickos_addr);
 	memcpy(&brickos_addr, p->p, sizeof(brickos_addr));
@@ -275,11 +275,11 @@ static int overlay_free(void *_p){
 	return 0;
 }
 
-static int overlay_thread_create(void *_p){
+static int overlay_thread_create(void *param){
 	sc_thread_t *p;
 
 
-	p = (sc_thread_t*)_p;
+	p = (sc_thread_t*)param;
 
 	sched_yield();
 
@@ -290,17 +290,17 @@ static int overlay_thread_create(void *_p){
 	return 0;
 }
 
-static int overlay_sigregister(void *p){
-	sig_hdlr = ((sc_signal_t*)p)->hdlr;
+static int overlay_sigregister(void *param){
+	sig_hdlr = ((sc_signal_t*)param)->hdlr;
 
 	return 0;
 }
 
-static int overlay_sigsend(void *_p){
+static int overlay_sigsend(void *param){
 	sc_signal_t *p;
 
 
-	p = (sc_signal_t*)_p;
+	p = (sc_signal_t*)param;
 
 	if(sig_hdlr == 0x0)
 		LNX_EEXIT("signal handler not set\n");
@@ -316,15 +316,15 @@ static int overlay_sigsend(void *_p){
 	return 0;
 }
 
-static int overlay_mmap(void *_p){
+static int overlay_mmap(void *param){
 	sc_fs_t *p;
 
 
-	p = (sc_fs_t*)_p;
+	p = (sc_fs_t*)param;
 
 	// for a description of the x86 mmap overlay mechanism refer
 	// to the documentation of the mmap overlay within the kernel
-	p->data += (ptrdiff_t)kheap_base;
+	p->payload += (ptrdiff_t)kheap_base;
 
 	return 0;
 }

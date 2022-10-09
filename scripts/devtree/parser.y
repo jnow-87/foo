@@ -33,7 +33,7 @@
 		if((n = calloc(1, sizeof(device_node_t))) == 0x0) \
 			PARSER_ERROR("allocating node\n"); \
 		\
-		if(vector_init(&n->data, sizeof(member_t), 16) != 0) \
+		if(vector_init(&n->payload, sizeof(member_t), 16) != 0) \
 			PARSER_ERROR("init member vector\n"); \
 		\
 		n; \
@@ -95,8 +95,8 @@
 	})
 
 	// vector add
-	#define INT_LIST_ADD(v, data){ \
-		if(!data.empty && vector_add(v, &data.val) != 0) \
+	#define INT_LIST_ADD(v, payload){ \
+		if(!payload.empty && vector_add(v, &payload.val) != 0) \
 			PARSER_ERROR("adding to vector\n"); \
 	}
 
@@ -108,7 +108,7 @@
 	})
 
 	// allocate integer member
-	#define MEMBER_ALLOC_INTLIST(int_size, data)({ \
+	#define MEMBER_ALLOC_INTLIST(int_size, payload)({ \
 		member_int_t *l; \
 		\
 		\
@@ -116,7 +116,7 @@
 			PARSER_ERROR("allocating integer list\n"); \
 		\
 		l->size = (int_size); \
-		l->lst = (data); \
+		l->lst = (payload); \
 		l; \
 	})
 
@@ -126,9 +126,9 @@
 		\
 		\
 		m.type = (mem_type); \
-		m.data = (val); \
+		m.payload = (val); \
 		\
-		if(vector_add(&(node)->data, &m) != 0) \
+		if(vector_add(&(node)->payload, &m) != 0) \
 			PARSER_ERROR("adding member \"" STR(mem_type) "\"\n"); \
 	}
 

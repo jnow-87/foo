@@ -12,13 +12,13 @@
 
 
 /* macros */
-#define BLOB(_data, _len)	((blob_t){ .data = _data, .len = _len })
+#define BLOB(_buf, n)		((blob_t){ .buf = _buf, .len = n })
 #define BLOBS(...)			((blob_t []){ __VA_ARGS__ })
 
 
 /* types */
 typedef struct{
-	void *data;
+	void *buf;
 	size_t len;
 } blob_t;
 

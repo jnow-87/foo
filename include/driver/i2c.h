@@ -88,7 +88,7 @@ typedef struct{
 	blob_t *blobs;
 	size_t nblobs;
 
-	linebuf_t data;
+	linebuf_t buf;
 } i2c_dgram_t;
 
 typedef struct{

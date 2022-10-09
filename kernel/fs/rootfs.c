@@ -39,7 +39,7 @@ static int open_unsafe(fs_node_t *start, char const *path, f_mode_t mode, proces
 static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
-static int fcntl(fs_filed_t *fd, int cmd, void *data);
+static int fcntl(fs_filed_t *fd, int cmd, void *arg);
 static int node_rm(fs_node_t *start, char const *path);
 static int node_rm_unsafe(fs_node_t *start, char const *path);
 static fs_node_t *node_find(fs_node_t *start, char const *path);
@@ -112,7 +112,7 @@ int rootfs_rmdir(fs_node_t *node){
 
 	fs_lock();
 
-	if(!list_empty(node->childs) || node->data != 0x0)
+	if(!list_empty(node->childs) || node->payload != 0x0)
 		goto_errno(err, E_INUSE);
 
 	INFO("release file system from \"%s\"\n", node->name);
@@ -205,7 +205,7 @@ static int open_unsafe(fs_node_t *start, char const *path, f_mode_t mode, proces
 				return -errno;
 
 			if(start->type == FT_REG && (mode & O_APPEND))
-				fd->fp = ((rootfs_file_t*)(start->data))->data_used;
+				fd->fp = ((rootfs_file_t*)(start->payload))->size;
 
 			return fd->id;
 
@@ -302,15 +302,15 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 		m = sizeof(dir_ent_t);
 	}
 	else{
-		file = fd->node->data;
+		file = fd->node->payload;
 
 		/* check if data is left to read */
-		if(fd->fp == file->data_used)
+		if(fd->fp == file->size)
 			goto_errno(err, E_END);
 
 		/* identify number of bytes to read and copy them to buf */
-		m = MIN(n, file->data_used - fd->fp);
-		memcpy(buf, file->data + fd->fp, m);
+		m = MIN(n, file->size - fd->fp);
+		memcpy(buf, file->content + fd->fp, m);
 
 		/* update file pointer */
 		fd->fp += m;
@@ -325,7 +325,7 @@ err:
 
 static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	size_t f_size;
-	void *data;
+	void *content;
 	rootfs_file_t *file;
 
 
@@ -333,30 +333,30 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	if(fd->node->type == FT_DIR)
 		goto_errno(err, E_INVAL);
 
-	file = fd->node->data;
+	file = fd->node->payload;
 
 	/* adjust file size if required */
-	f_size = MAX(fd->fp + n, file->data_max);
+	f_size = MAX(fd->fp + n, file->capacity);
 
-	if(f_size > file->data_max){
-		f_size = MAX(f_size, 2 * file->data_max);
+	if(f_size > file->capacity){
+		f_size = MAX(f_size, 2 * file->capacity);
 
-		data = kmalloc(f_size);
+		content = kmalloc(f_size);
 
-		if(data == 0x0)
+		if(content == 0x0)
 			goto err;
 
-		memcpy(data, file->data, file->data_used);
+		memcpy(content, file->content, file->size);
 
-		kfree(file->data);
-		file->data = data;
+		kfree(file->content);
+		file->content = content;
 	}
 
 	/* update file content */
-	memcpy(file->data + fd->fp, buf, n);
+	memcpy(file->content + fd->fp, buf, n);
 
 	fd->fp += n;
-	file->data_used = MAX(fd->fp, file->data_used);
+	file->size = MAX(fd->fp, file->size);
 
 	ksignal_send(&fd->node->datain_sig);
 
@@ -367,21 +367,21 @@ err:
 	return 0;
 }
 
-static int fcntl(fs_filed_t *fd, int cmd, void *data){
+static int fcntl(fs_filed_t *fd, int cmd, void *arg){
 	fs_node_t *node;
 	stat_t *stat;
 
 
 	switch(cmd){
 	case F_SEEK:
-		return file_seek(fd, data);
+		return file_seek(fd, arg);
 
 	case F_TELL:
-		((seek_t*)data)->pos = fd->fp;
+		((seek_t*)arg)->pos = fd->fp;
 		return -errno;
 
 	case F_STAT:
-		stat = (stat_t*)data;
+		stat = (stat_t*)arg;
 
 		if(fd->node->type == FT_DIR){
 			stat->size = 0;
@@ -390,7 +390,7 @@ static int fcntl(fs_filed_t *fd, int cmd, void *data){
 				stat->size++;
 		}
 		else
-			stat->size = ((rootfs_file_t*)fd->node->data)->data_used;
+			stat->size = ((rootfs_file_t*)fd->node->payload)->size;
 
 		stat->type = fd->node->type;
 
@@ -419,8 +419,8 @@ static int node_rm_unsafe(fs_node_t *start, char const *path){
 	switch(fs_node_find(&start, &path)){
 	case 0:
 		/* target node found, so remove it */
-		if(start->data)
-			file_free(start->data);
+		if(start->payload)
+			file_free(start->payload);
 
 		return fs_node_destroy(start);
 
@@ -470,29 +470,29 @@ err:
 }
 
 static rootfs_file_t *file_alloc(void){
-	rootfs_file_t *f;
+	rootfs_file_t *file;
 
 
 	/* allocate file */
-	f = kmalloc(sizeof(rootfs_file_t));
+	file = kmalloc(sizeof(rootfs_file_t));
 
-	if(f == 0x0)
+	if(file == 0x0)
 		goto err_0;
 
-	f->data = kmalloc(CONFIG_ROOTFS_INIT_FILE_SIZE);
+	file->content = kmalloc(CONFIG_ROOTFS_INIT_FILE_SIZE);
 
-	if(f->data == 0x0)
+	if(file->content == 0x0)
 		goto err_1;
 
 	/* init file attributes */
-	f->data_max = CONFIG_ROOTFS_INIT_FILE_SIZE;
-	f->data_used = 0;
+	file->capacity = CONFIG_ROOTFS_INIT_FILE_SIZE;
+	file->size = 0;
 
-	return f;
+	return file;
 
 
 err_1:
-	kfree(f);
+	kfree(file);
 
 err_0:
 	return 0;
@@ -502,7 +502,7 @@ static void file_free(rootfs_file_t *file){
 	if(file == 0x0)
 		return;
 
-	kfree(file->data);
+	kfree(file->content);
 	kfree(file);
 }
 
@@ -511,14 +511,14 @@ static int file_seek(fs_filed_t *fd, seek_t *p){
 	rootfs_file_t *file;
 
 
-	file = (rootfs_file_t*)fd->node->data;
+	file = (rootfs_file_t*)fd->node->payload;
 
 	if(p->whence == SEEK_SET)		whence = 0;
 	else if(p->whence == SEEK_CUR)	whence = fd->fp;
-	else if(p->whence == SEEK_END)	whence = file->data_used;
+	else if(p->whence == SEEK_END)	whence = file->size;
 	else							return_errno(E_NOIMP);
 
-	if(whence + p->offset > file->data_used)
+	if(whence + p->offset > file->size)
 		goto_errno(k_ok, E_LIMIT);
 
 	fd->fp = whence + p->offset;

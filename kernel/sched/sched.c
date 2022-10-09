@@ -40,7 +40,7 @@ typedef struct{
 	thread_modifier_t op;
 
 	size_t size;
-	char data[];
+	uint8_t payload[];
 } sched_ipi_t;
 
 
@@ -51,10 +51,10 @@ static void _thread_transition(thread_t *this_t, void *queue);
 static int thread_core(thread_t *this_t);
 
 #ifdef CONFIG_KERNEL_SMP
-static void thread_modify(void *p);
+static void thread_modify(void *payload);
 #endif // CONFIG_KERNEL_SMP
 
-static void cleanup(void *p);
+static void cleanup(void *payload);
 
 
 /* static variables */
@@ -133,7 +133,7 @@ thread_t const *sched_running_nopanic(void){
 	return running[PIR];
 }
 
-void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, size_t size){
+void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *payload, size_t size){
 #ifdef CONFIG_KERNEL_SMP
 	int core;
 	sched_ipi_t *ipi;
@@ -154,14 +154,14 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, siz
 		ipi->this_t = this_t;
 		ipi->op = op;
 		ipi->size = size;
-		memcpy(ipi->data, data, size);
+		memcpy(ipi->payload, payload, size);
 
 		if(ipi_send(core, thread_modify, ipi, sizeof(sched_ipi_t) + size) != 0)
 			kpanic("trigger ipi failed \"%s\"\n", strerror(errno));
 	}
 	else
 #endif // CONFIG_KERNEL_SMP
-		op(this_t, data);
+		op(this_t, payload);
 
 	mutex_unlock(&sched_mtx);
 }
@@ -349,12 +349,12 @@ static int thread_core(thread_t *this_t){
 
 
 #ifdef CONFIG_KERNEL_SMP
-static void thread_modify(void *_p){
+static void thread_modify(void *payload){
 	sched_ipi_t *p;
 
 
-	p = (sched_ipi_t*)_p;
-	sched_thread_modify(p->this_t, p->op, p->data, p->size);
+	p = (sched_ipi_t*)payload;
+	sched_thread_modify(p->this_t, p->op, p->payload, p->size);
 }
 #endif // CONFIG_KERNEL_SMP
 
@@ -362,7 +362,7 @@ static void thread_modify(void *_p){
  * \brief	recurring task used to cleanup terminated threads
  * 			and processes
  */
-static void cleanup(void *p){
+static void cleanup(void *payload){
 	sched_queue_t *e;
 	process_t *this_p;
 	thread_t *this_t;

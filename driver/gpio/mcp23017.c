@@ -41,11 +41,11 @@
 #define IOCON_INTPOL	1
 
 // I/O wrapper
-#define MCP_READ(mcp, data, n) \
-	i2c_read((mcp)->hw, (mcp)->slave, data, n)
+#define MCP_READ(mcp, buf, n) \
+	i2c_read((mcp)->hw, (mcp)->slave, buf, n)
 
-#define MCP_WRITE(mcp, data) \
-	i2c_write((mcp)->hw, (mcp)->slave, data, sizeof_array(data))
+#define MCP_WRITE(mcp, buf) \
+	i2c_write((mcp)->hw, (mcp)->slave, buf, sizeof_array(buf))
 
 #define MCP_DATA(...)	((uint8_t []){ __VA_ARGS__ })
 

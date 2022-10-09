@@ -13,14 +13,14 @@
 
 
 /* macros */
-#define INIT()		ringbuf_init(&ring, data, 10)
+#define INIT()		ringbuf_init(&ring, buf, 10)
 #define READ(n)		ringbuf_read(&ring, readb, n)
 #define WRITE(s)	ringbuf_write(&ring, s, strlen(s))
 
 
 /* static variables */
 static ringbuf_t ring;
-static char data[10];
+static char buf[10];
 static char readb[10];
 
 
@@ -71,22 +71,22 @@ TEST(ringbuf_write){
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("deadbeef"), 8);
-	n += TEST_STRN_EQ(ring.data, "deadbeef", 8);
+	n += TEST_STRN_EQ(ring.buf, "deadbeef", 8);
 
 	/* write entire buffer */
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("deadbeef01"), 9);
-	n += TEST_STRN_EQ(ring.data, "deadbeef0", 9);
+	n += TEST_STRN_EQ(ring.buf, "deadbeef0", 9);
 
 	/* write with wrap around the buffer end */
 	INIT();
 
 	n += TEST_INT_EQ(WRITE("deadbeef"), 8);
-	n += TEST_STRN_EQ(ring.data, "deadbeef", 8);
+	n += TEST_STRN_EQ(ring.buf, "deadbeef", 8);
 	n += TEST_INT_EQ(READ(2), 2);
 	n += TEST_INT_EQ(WRITE("0123"), 3);
-	n += TEST_STRN_EQ(ring.data, "2eadbeef01", 10);
+	n += TEST_STRN_EQ(ring.buf, "2eadbeef01", 10);
 
 	return -n;
 }
