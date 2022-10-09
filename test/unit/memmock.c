@@ -14,11 +14,9 @@
 
 /* local functions */
 TEST(memmock){
-	int n;
+	int n = 0;
 	void *p;
 
-
-	n = 0;
 
 	/* disabled memory mock */
 	memmock_alloc_fail = -1;

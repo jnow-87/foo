@@ -60,22 +60,19 @@ err_0:
 driver_probe("x86,gpio", probe);
 
 static gpio_int_t read(void *hw){
-	dev_data_t *gpio;
+	dev_data_t *gpio = (dev_data_t*)hw;
 
 
-	gpio = (dev_data_t*)hw;
 	DEBUG("%s: read %#x\n", gpio->name, gpio->value);
 
 	return gpio->value;
 }
 
 static int write(gpio_int_t v, void *hw){
-	dev_data_t *gpio;
+	dev_data_t *gpio = (dev_data_t*)hw;
 
 
-	gpio = (dev_data_t*)hw;
 	gpio->value = v;
-
 	DEBUG("%s: write %#x\n", gpio->name, gpio->value);
 
 	return 0;

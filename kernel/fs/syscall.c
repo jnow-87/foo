@@ -40,10 +40,8 @@ static int fcntl(fs_filed_t *fd, int cmd, void *arg, process_t *this_p);
 
 /* local functions */
 static int init(void){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	r |= sc_register(SC_OPEN, sc_hdlr_open);
 	r |= sc_register(SC_DUP, sc_hdlr_dup);
@@ -62,16 +60,14 @@ static int init(void){
 kernel_init(0, init);
 
 static int sc_hdlr_open(void *param){
-	char path[((sc_fs_t*)(param))->payload_len];
-	sc_fs_t *p;
+	sc_fs_t *p = (sc_fs_t*)param;
+	char path[p->payload_len];
 	fs_node_t *root;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	copy_from_user(path, p->payload, p->payload_len, this_p);
 
 	/* identify file system and call its open callback */
@@ -90,16 +86,14 @@ static int sc_hdlr_open(void *param){
 }
 
 static int sc_hdlr_dup(void *param){
+	sc_fs_t *p = (sc_fs_t*)param;
 	int old_id;
-	sc_fs_t *p;
 	fs_filed_t *old_fd;
 	process_t *this_p;
 
 
+	/* initials */
 	this_p = sched_running()->parent;
-
-	/* initiali */
-	p = (sc_fs_t*)param;
 	copy_from_user(&old_id, p->payload, sizeof(int), this_p);
 	old_fd = fs_fd_acquire(old_id, this_p);
 
@@ -118,7 +112,7 @@ static int sc_hdlr_dup(void *param){
 	if(errno && errno != E_INVAL)
 		return -errno;
 
-	errno = 0;
+	reset_errno();
 
 	/* duplicate old fd */
 	p->fd = fs_fd_dup(old_fd, p->fd, this_p);
@@ -131,15 +125,13 @@ static int sc_hdlr_dup(void *param){
 }
 
 static int sc_hdlr_close(void *param){
-	sc_fs_t *p;
+	sc_fs_t *p = (sc_fs_t*)param;
 	fs_filed_t *fd;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -154,18 +146,16 @@ static int sc_hdlr_close(void *param){
 }
 
 static int sc_hdlr_read(void *param){
+	sc_fs_t *p = (sc_fs_t*)param;
 	ssize_t r;
-	char buf[((sc_fs_t*)(param))->payload_len];
-	sc_fs_t *p;
+	char buf[p->payload_len];
 	fs_filed_t *fd;
 	fs_node_t *node;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -198,7 +188,7 @@ static int sc_hdlr_read(void *param){
 
 	// avoid communicating end of resource to user space
 	if(errno == E_END)
-		errno = 0;
+		reset_errno();
 
 	/* update user space */
 	if(errno == 0)
@@ -211,17 +201,15 @@ end:
 }
 
 static int sc_hdlr_write(void *param){
-	sc_fs_t *p;
+	sc_fs_t *p = (sc_fs_t*)param;
 	fs_filed_t *fd;
 	fs_node_t *node;
 	process_t *this_p;
-	char buf[((sc_fs_t*)param)->payload_len];
+	char buf[p->payload_len];
 
-
-	this_p = sched_running()->parent;
 
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -252,18 +240,15 @@ end:
 }
 
 static int sc_hdlr_ioctl(void *param){
-	char payload[((sc_fs_t*)(param))->payload_len];
-	int r;
-	sc_fs_t *p;
+	sc_fs_t *p = (sc_fs_t*)param;
+	char payload[p->payload_len];
 	fs_filed_t *fd;
 	fs_node_t *node;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -274,8 +259,6 @@ static int sc_hdlr_ioctl(void *param){
 	node = fd->node;
 
 	/* call ioctl callback if implemented */
-	r = -E_NOIMP;
-
 	if(node->ops->ioctl == 0x0)
 		goto_errno(end, E_NOIMP);
 
@@ -284,7 +267,7 @@ static int sc_hdlr_ioctl(void *param){
 	copy_from_user(payload, p->payload, p->payload_len, this_p);
 
 	mutex_lock(&node->mtx);
-	r = node->ops->ioctl(fd, p->cmd, payload, p->payload_len);
+	(void)node->ops->ioctl(fd, p->cmd, payload, p->payload_len);
 	mutex_unlock(&node->mtx);
 
 	/* update user space */
@@ -294,22 +277,20 @@ static int sc_hdlr_ioctl(void *param){
 end:
 	fs_fd_release(fd);
 
-	return r;
+	return -errno;
 }
 
 static int sc_hdlr_fcntl(void *param){
-	char payload[((sc_fs_t*)(param))->payload_len];
+	sc_fs_t *p = (sc_fs_t*)param;
+	char payload[p->payload_len];
 	int r;
-	sc_fs_t *p;
 	fs_filed_t *fd;
 	fs_node_t *node;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -330,7 +311,7 @@ static int sc_hdlr_fcntl(void *param){
 
 	if(r == -E_NOIMP){
 		if(node->ops->fcntl != 0x0){
-			errno = 0;
+			reset_errno();
 			r = node->ops->fcntl(fd, p->cmd, payload);
 		}
 	}
@@ -347,16 +328,14 @@ static int sc_hdlr_fcntl(void *param){
 }
 
 static int sc_hdlr_mmap(void *param){
+	sc_fs_t *p = (sc_fs_t*)param;
 	fs_filed_t *fd;
 	fs_node_t *node;
-	sc_fs_t *p;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -386,16 +365,14 @@ end:
 }
 
 static int sc_hdlr_rmnode(void *param){
-	char path[((sc_fs_t*)(param))->payload_len];
-	sc_fs_t *p;
+	sc_fs_t *p = (sc_fs_t*)param;
+	char path[p->payload_len];
 	fs_node_t *root;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	copy_from_user(path, p->payload, p->payload_len, this_p);
 
 	DEBUG("%s\n", path);
@@ -411,16 +388,14 @@ static int sc_hdlr_rmnode(void *param){
 }
 
 static int sc_hdlr_chdir(void *param){
-	char path[((sc_fs_t*)(param))->payload_len];
-	sc_fs_t *p;
+	sc_fs_t *p = (sc_fs_t*)param;
+	char path[p->payload_len];
 	fs_node_t *root;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_fs_t*)param;
+	this_p = sched_running()->parent;
 	copy_from_user(path, p->payload, p->payload_len, this_p);
 
 	DEBUG("sc chdir: %s\n", path);
@@ -457,10 +432,8 @@ end:
 }
 
 static int fcntl(fs_filed_t *fd, int cmd, void *arg, process_t *this_p){
-	f_mode_t *mode;
+	f_mode_t *mode = (f_mode_t*)arg;
 
-
-	mode = (f_mode_t*)arg;
 
 	/* handle file descriptor mode commands */
 	switch(cmd){

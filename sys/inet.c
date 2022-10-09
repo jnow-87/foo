@@ -16,19 +16,15 @@
 
 /* global functions */
 inet_addr_t inet_addr(char *s){
-	int8_t i,
-		   j,
-		   len = strlen(s);
+	uint8_t j = 0,
+			len = strlen(s);
+	inet_addr_t iaddr = 0;
 	char addr[len + 1];
-	inet_addr_t iaddr;
 
 
 	strcpy(addr, s);
 
-	iaddr = 0;
-	j = 0;
-
-	for(i=0; i<=len; i++){
+	for(int8_t i=0; i<=len; i++){
 		if(addr[i] == '.' || addr[i] == 0){
 			addr[i] = 0;
 			iaddr = (iaddr << 8) | atoi(addr + j);

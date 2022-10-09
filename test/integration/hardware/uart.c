@@ -50,15 +50,13 @@ static size_t nuart = 0;
 
 /* global functions */
 int uart_init(void){
-	int r;
+	int r = 0;
 	sigset_t sig_lst;
 
 
 	uart_tid = pthread_self();
 
 	(void)signal(CONFIG_TEST_INT_UART_SIG, sig_hdlr);
-
-	r = 0;
 
 	r |= sigemptyset(&sig_lst);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
@@ -69,12 +67,9 @@ int uart_init(void){
 }
 
 void uart_cleanup(void){
-	size_t i;
-
-
 	pthread_mutex_lock(&uart_mtx);
 
-	for(i=0; i<nuart; i++)
+	for(size_t i=0; i<nuart; i++)
 		close(uarts[i].fd);
 
 	free(uarts);
@@ -84,36 +79,34 @@ void uart_cleanup(void){
 }
 
 void uart_poll(void){
-	size_t i,
-		   nfd = nuart;
-	struct pollfd fds[nfd];
+	struct pollfd fds[nuart];
 
 
-	if(nfd == 0){
+	if(nuart == 0){
 		sleep(100);
 		return;
 	}
 
 	pthread_mutex_lock(&uart_mtx);
 
-	for(i=0; i<nfd; i++){
+	for(size_t i=0; i<nuart; i++){
 		fds[i].fd = (uarts[i].int_num != 0 ) ? uarts[i].fd : -1;
 		fds[i].events = POLLIN;
 	}
 
 	pthread_mutex_unlock(&uart_mtx);
 
-	if(poll(fds, nfd, -1) <= 0)
+	if(poll(fds, nuart, -1) <= 0)
 		return;
 
-	for(i=0; i<nfd; i++){
+	for(size_t i=0; i<nuart; i++){
 		if(fds[i].revents & POLLIN)
 			hw_int_request(uarts[i].int_num, 0x0, PRIV_HARDWARE, 0);
 	}
 }
 
 int uart_configure(char const *path, int int_num, uart_cfg_t *cfg){
-	int r;
+	int r = 0;
 	int fd;
 
 
@@ -124,8 +117,6 @@ int uart_configure(char const *path, int int_num, uart_cfg_t *cfg){
 	if(fd < 0)
 		return -1;
 
-	r = 0;
-
 	r |= configure(fd, cfg);
 	r |= pthread_kill(uart_tid, CONFIG_TEST_INT_UART_SIG);
 
@@ -135,11 +126,10 @@ int uart_configure(char const *path, int int_num, uart_cfg_t *cfg){
 
 /* local functions */
 static int add(char const *path, int int_num){
-	size_t i;
 	int fd;
 
 
-	for(i=0; i<nuart; i++){
+	for(size_t i=0; i<nuart; i++){
 		if(strcmp(uarts[i].path, path) == 0)
 			return uarts[i].fd;
 	}

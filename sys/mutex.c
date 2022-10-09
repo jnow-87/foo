@@ -25,13 +25,12 @@
 #ifdef BUILD_KERNEL
 # define LOCK_ID_EQ(id0, id1)	((id0).pid == (id1).pid && (id0).tid == (id1).tid)
 # define LOCK_ID ({ \
-	thread_t const *_this_t; \
-	lock_id_t _id; \
+	thread_t const *_this_t = sched_running(); \
+	lock_id_t _id = (lock_id_t){ \
+		.pid = _this_t->parent->pid, \
+		.tid = _this_t->tid, \
+	}; \
 	\
-	\
-	_this_t = sched_running(); \
-	_id.pid = _this_t->parent->pid; \
-	_id.tid = _this_t->tid; \
 	\
 	_id; \
 })

@@ -57,9 +57,7 @@ void cmd_init(void){
 }
 
 int cmd_exec(int argc, char **argv){
-	int i,
-		r;
-	int stdout_dup;
+	int stdout_dup = -1;
 	cmd_t *cmd;
 
 
@@ -71,12 +69,10 @@ int cmd_exec(int argc, char **argv){
 		return -E_INVAL;
 	}
 
-	errno = 0;
+	reset_errno();
 
 	/* check for output redirection */
-	stdout_dup = -1;
-
-	for(i=0; i<argc; i++){
+	for(int i=0; i<argc; i++){
 		if(argv[i][0] == '>' && i + 1 < argc){
 			stdout_dup = redirect_init(stdout, argv[i + 1], argv[i]);
 			i++;
@@ -98,11 +94,9 @@ int cmd_exec(int argc, char **argv){
 
 	/* revert output redirection */
 	if(stdout_dup != -1){
-		r = redirect_revert(stdout, stdout_dup);
-
-		if(r){
+		if(redirect_revert(stdout, stdout_dup) != 0){
 			printf("reverting output redirection failed \"%s\"\n", strerror(errno));
-			return r;
+			return -1;
 		}
 	}
 
@@ -110,8 +104,7 @@ int cmd_exec(int argc, char **argv){
 }
 
 int cmd_help(char const *name, char const *args, char const *error, size_t nopts, ...){
-	size_t i,
-		   opt_len;
+	size_t opt_len = 0;
 	char const *opt,
 			   *help;
 	char fmt[20];
@@ -124,11 +117,10 @@ int cmd_help(char const *name, char const *args, char const *error, size_t nopts
 	printf("usage: %s %s%s\n", name, (nopts > 0) ? "[options] " : "", args);
 
 	if(nopts > 0){
-		opt_len = 0;
 		va_start(lst, nopts);
 
 		// determine length of option strings
-		for(i=0; i<nopts; i++){
+		for(size_t i=0; i<nopts; i++){
 			opt = va_arg(lst, char*);
 			help = va_arg(lst, char*);
 
@@ -143,7 +135,7 @@ int cmd_help(char const *name, char const *args, char const *error, size_t nopts
 
 		va_start(lst, nopts);
 
-		for(i=0; i<nopts; i++){
+		for(size_t i=0; i<nopts; i++){
 			opt = va_arg(lst, char*);
 			help = va_arg(lst, char*);
 
@@ -171,7 +163,7 @@ static int redirect_init(FILE *fp, char const *file, char const *redir_type){
 
 	// check if file is a regular file or character device
 	if(errno == E_UNAVAIL)
-		errno = 0;
+		reset_errno();
 
 	if((r != 0 && errno) || (r == 0 && f_stat.type != FT_REG && f_stat.type != FT_CHR))
 		goto_errno(err_0, E_INVAL);
@@ -227,13 +219,11 @@ static int redirect_revert(FILE *fp, int fd_revert){
 
 #ifdef CONFIG_INIT_HELP
 static int help(int argc, char **argv){
-	size_t line_len,
-		   len;
+	size_t line_len = 0;
+	size_t len;
 	cmd_t *cmd;
 
 
-
-	line_len = 0;
 
 	list_for_each(cmd_lst, cmd){
 		if(cmd->name != 0x0 && cmd->name[0] != '\0' && cmd->exec != 0x0){

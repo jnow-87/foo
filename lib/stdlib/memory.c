@@ -103,14 +103,13 @@ void *malloc(size_t size) __weak_alias(__malloc);
 
 void *calloc(size_t n, size_t size){
 	void *p;
-	size_t x;
 
 
-	x = n * size;
-	p = malloc(x);
+	n *= size;
+	p = malloc(n);
 
 	if(p != 0x0)
-		memset(p, 0, x);
+		memset(p, 0, n);
 
 	return p;
 }

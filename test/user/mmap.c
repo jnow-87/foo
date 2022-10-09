@@ -21,15 +21,13 @@
 
 /* local functions */
 TEST(mmap){
-	int r;
+	int r = 0;
 	int fd_rd,
 		fd_wr;
 	void *mem;
 	char buf[8];
 	loop_cfg_t cfg;
 
-
-	r = 0;
 
 	ASSERT_INT_NEQ(fd_rd = open(DEVICE, O_RDWR), -1);
 	ASSERT_INT_NEQ(fd_wr = open(DEVICE, O_RDWR), -1);

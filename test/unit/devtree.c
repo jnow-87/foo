@@ -91,10 +91,8 @@ devtree_device_t const devroot = {
 
 /* local functions */
 TEST(devtree){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* devtree_find_memory_by_name() */
 	n += TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "memory-root"), &memroot);

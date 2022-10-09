@@ -32,11 +32,10 @@ static char putc(char c, struct FILE *stream);
 
 /* local functions */
 TEST(snprintf){
-	int n;
+	int n = 0;
 	char s[16];
 
 
-	n = 0;
 	n += TEST_INT_EQ(snprintf(s, 2, "%d", 100), 1);
 	n += TEST_STR_EQ(s, "1");
 
@@ -44,12 +43,9 @@ TEST(snprintf){
 }
 
 TEST(vfprintf){
-	unsigned int n;
+	unsigned int n = 0;
 	char tmp[3];
 	long long int len;
-
-
-	n = 0;
 
 
 	/* blank */
@@ -290,11 +286,9 @@ TEST(vfprintf){
 };
 
 TEST(vfprintf_inval){
+	int n = 0;
 	FILE fp = FILE_INITIALISER(0x0, 0x0, 0, 0x0);
-	int n;
 
-
-	n = 0;
 
 	n += test("12", "%#u", 12);
 
@@ -307,16 +301,15 @@ TEST(vfprintf_inval){
 
 	n += TEST_INT_EQ(fprintf(&fp, "%5s", "1"), 0);
 
-
 	return -n;
 }
 
 static int test(char const *ref, char const *s, ...){
-	int n;
-	size_t len;
-	char ref_ext[strlen(ref) + strlen(DUMMY_STR) + 1];
+	int n = 0;
 	char buf[BUF_SIZE];
 	FILE f = FILE_INITIALISER(0x0, buf, BUF_SIZE, 0x0);
+	size_t len;
+	char ref_ext[strlen(ref) + strlen(DUMMY_STR) + 1];
 	va_list lst;
 
 
@@ -328,7 +321,6 @@ static int test(char const *ref, char const *s, ...){
 	len += fprintf(&f, DUMMY_SPEC, DUMMY_VALUE);
 	va_end(lst);
 
-	n = 0;
 	n += TEST_INT_EQ(len, strlen(ref_ext));
 	n += TEST_STR_EQ(f.wbuf, ref_ext);
 

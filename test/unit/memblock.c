@@ -63,10 +63,8 @@ TEST(memblock_addresses){
  * \return 0x0
  */
 TEST(memblock_init){
-	unsigned int n;
+	unsigned int n = 0;
 
-
-	n = 0;
 
 	/* invalid args */
 	n += TEST_INT_EQ(memblock_init(0x0, 0), -E_INVAL);
@@ -88,16 +86,10 @@ TEST(memblock_init){
  * \return	0x0
  */
 TEST(memblock_alloc_inval){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
 
-	n = 0;
-
-	/* prepare pool: elements */
-	pool = 0x0;
-
-	/* check */
 	n += TEST_PTR_EQ(memblock_alloc(&pool, 0, 0), 0x0);
 	n += TEST_PTR_EQ(memblock_alloc(&pool, 0, 4), 0x0);
 
@@ -111,17 +103,12 @@ TEST(memblock_alloc_inval){
  * \return	0x0
  */
 TEST(memblock_alloc_empty){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
 
-	n = 0;
-
-	/* prepare pool: elements */
-	pool = 0x0;
 	INIT_EL();
 
-	/* check */
 	n += TEST_PTR_EQ(memblock_alloc(&pool, 2, 0), 0x0);
 	n += TEST_PTR_EQ(memblock_alloc(&pool, 2, 4), 0x0);
 
@@ -135,15 +122,12 @@ TEST(memblock_alloc_empty){
  * \return	0x0
  */
 TEST(memblock_alloc_small){
-	unsigned int n;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 	void *blk;
-	memblock_t *pool;
 
-
-	n = 0;
 
 	/* prepare pool: el0 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_head(pool, el0);
@@ -168,15 +152,12 @@ TEST(memblock_alloc_small){
  * 			and 3rd
  */
 TEST(memblock_alloc_perfect_fit){
-	unsigned int n;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 	void *blk;
-	memblock_t *pool;
 
-
-	n = 0;
 
 	/* prepare pool: el0 -> el1 -> el2 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el0);
@@ -218,15 +199,12 @@ TEST(memblock_alloc_perfect_fit){
  * 			2nd element is split
  */
 TEST(memblock_alloc_split_fit){
-	unsigned int n;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 	void *blk;
-	memblock_t *pool;
 
-
-	n = 0;
 
 	/* prepare pool: el0 -> el3 -> el2 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el0);
@@ -274,14 +252,11 @@ TEST(memblock_alloc_split_fit){
  * \return	pool with 2 elements
  */
 TEST(memblock_free_head_nomerge){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el2 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el2);
@@ -310,14 +285,11 @@ TEST(memblock_free_head_nomerge){
  * \return	pool with 1 element and merged length
  */
 TEST(memblock_free_head_merge){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el1 -> el2 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el1);
@@ -347,14 +319,11 @@ TEST(memblock_free_head_merge){
  * \return	pool with 1 element
  */
 TEST(memblock_free_tail){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el0 */
-	pool = 0x0;
 	INIT_EL();
 
 	/* free */
@@ -377,14 +346,11 @@ TEST(memblock_free_tail){
  * \return	pool with 2 elements
  */
 TEST(memblock_free_tail_nomerge){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el0 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el0);
@@ -413,14 +379,11 @@ TEST(memblock_free_tail_nomerge){
  * \return	pool with 1 element and merged length
  */
 TEST(memblock_free_tail_merge){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el0 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el0);
@@ -444,14 +407,11 @@ TEST(memblock_free_tail_merge){
  * \return	pool with 3 elements
  */
 TEST(memblock_free_mid_nomerge){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el0 -> el4 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el0);
@@ -486,14 +446,11 @@ TEST(memblock_free_mid_nomerge){
  * \return	pool with 2 elements
  */
 TEST(memblock_free_mid_frontmerge){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el0 -> el3 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el0);
@@ -523,14 +480,11 @@ TEST(memblock_free_mid_frontmerge){
  * \return	pool with 2 elements
  */
 TEST(memblock_free_mid_backmerge){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el0 -> el3 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el0);
@@ -560,14 +514,11 @@ TEST(memblock_free_mid_backmerge){
  * \return	pool with 1 element and merged length
  */
 TEST(memblock_free_mid_merge){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: el0 -> el1 -> el2 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el0);
@@ -590,17 +541,14 @@ TEST(memblock_free_mid_merge){
  * 			and merged afterwards through free
  */
 TEST(memblock_cycle){
-	unsigned int n;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 	void *blk0,
 		 *blk1,
 		 *blk2;
-	memblock_t *pool;
 
-
-	n = 0;
 
 	/* prepare pool: el0 -> el1 -> el2 */
-	pool = 0x0;
 	INIT_EL();
 
 	list_add_tail(pool, el3);
@@ -662,14 +610,11 @@ TEST(memblock_cycle){
  * \return	0
  */
 TEST(memblock_zero_free){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: empty */
-	pool = 0x0;
 	INIT_EL();
 
 	/* 2nd free of el0 */
@@ -685,14 +630,11 @@ TEST(memblock_zero_free){
  * \return	pool with 2 elements
  */
 TEST(memblock_double_free){
-	unsigned int n;
-	memblock_t *pool;
+	unsigned int n = 0;
+	memblock_t *pool = 0x0;
 
-
-	n = 0;
 
 	/* prepare pool: empty */
-	pool = 0x0;
 	INIT_EL();
 
 	/* 1st free of el0 */

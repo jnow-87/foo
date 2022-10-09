@@ -59,20 +59,16 @@ void int_foretell(int_num_t num){
 }
 
 void int_khdlr(int_num_t num){
-	uint8_t i,
-			j;
-	errno_t e;
+	errno_t e = errno;
 
-
-	e = errno;
-	errno = 0;
 
 	/* handle the given interrupt */
+	reset_errno();
 	call_hdlr(num);
 
 	/* handle foretold interrupts */
-	for(i=0; i<sizeof(foretold); i++){
-		for(j=0; j<8 && foretold[i]; j++){
+	for(uint8_t i=0; i<sizeof(foretold); i++){
+		for(uint8_t j=0; j<8 && foretold[i]; j++){
 			if(!(foretold[i] & (0x1 << j)))
 				continue;
 
@@ -88,7 +84,7 @@ void int_khdlr(int_num_t num){
 		}
 	}
 
-	errno = e;
+	set_errno(e);
 }
 
 

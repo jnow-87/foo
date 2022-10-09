@@ -235,11 +235,9 @@ static int event_inval(x86_hw_op_t *op){
 }
 
 static int overlay_malloc(void *param){
+	sc_malloc_t *p = (sc_malloc_t*)param;
 	void *brickos_addr;
-	sc_malloc_t *p;
 
-
-	p = (sc_malloc_t*)param;
 
 	if(p->size == 0)
 		return 0;
@@ -258,11 +256,9 @@ static int overlay_malloc(void *param){
 }
 
 static int overlay_free(void *param){
+	sc_malloc_t *p = (sc_malloc_t*)param;
 	void *brickos_addr;
-	sc_malloc_t *p;
 
-
-	p = (sc_malloc_t*)param;
 
 	p->p -= sizeof(brickos_addr);
 	memcpy(&brickos_addr, p->p, sizeof(brickos_addr));
@@ -276,10 +272,8 @@ static int overlay_free(void *param){
 }
 
 static int overlay_thread_create(void *param){
-	sc_thread_t *p;
+	sc_thread_t *p = (sc_thread_t*)param;
 
-
-	p = (sc_thread_t*)param;
 
 	sched_yield();
 
@@ -297,10 +291,8 @@ static int overlay_sigregister(void *param){
 }
 
 static int overlay_sigsend(void *param){
-	sc_signal_t *p;
+	sc_signal_t *p = (sc_signal_t*)param;
 
-
-	p = (sc_signal_t*)param;
 
 	if(sig_hdlr == 0x0)
 		LNX_EEXIT("signal handler not set\n");
@@ -317,10 +309,8 @@ static int overlay_sigsend(void *param){
 }
 
 static int overlay_mmap(void *param){
-	sc_fs_t *p;
+	sc_fs_t *p = (sc_fs_t*)param;
 
-
-	p = (sc_fs_t*)param;
 
 	// for a description of the x86 mmap overlay mechanism refer
 	// to the documentation of the mmap overlay within the kernel

@@ -71,10 +71,8 @@ err:
 driver_probe("i2c", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dev_data_t *i2c;
+	dev_data_t *i2c = (dev_data_t*)dev->payload;
 
-
-	i2c = (dev_data_t*)dev->payload;
 
 	mutex_unlock(&dev->node->mtx);
 
@@ -87,10 +85,8 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dev_data_t *i2c;
+	dev_data_t *i2c = (dev_data_t*)dev->payload;
 
-
-	i2c = (dev_data_t*)dev->payload;
 
 	mutex_unlock(&dev->node->mtx);
 
@@ -103,10 +99,8 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
-	dev_data_t *i2c;
+	dev_data_t *i2c = (dev_data_t*)dev->payload;
 
-
-	i2c = (dev_data_t*)dev->payload;
 
 	if(n != sizeof(dt_data_t))
 		return_errno(E_INVAL);

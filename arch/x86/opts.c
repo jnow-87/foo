@@ -26,10 +26,7 @@ x86_opts_t x86_opts = {
 
 /* global functions */
 int x86_opts_parse(void){
-	int i;
-
-
-	for(i=1; i<argc; i++){
+	for(int i=1; i<argc; i++){
 		switch(argv[i][1]){
 		case 'v':	x86_opts.debug = 1; break;
 		case 'i':	x86_opts.interactive = true; break;

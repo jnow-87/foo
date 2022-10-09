@@ -23,11 +23,9 @@
 
 /* local functions */
 TEST(vector_init){
-	int n;
+	int n = 0;
 	vector_t v;
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(vector_init(&v, sizeof(int), 20), 0);
 	n += TEST_INT_EQ(v.capacity, 20);
@@ -43,11 +41,10 @@ TEST(vector_init){
 }
 
 TEST(vector_destroy){
-	int n;
+	int n = 0;
 	vector_t v;
 
 
-	n = 0;
 	n += TEST_INT_EQ(vector_init(&v, sizeof(int), 20), 0);
 	vector_destroy(&v);
 
@@ -59,30 +56,25 @@ TEST(vector_destroy){
 }
 
 TEST(vector_add){
-	int n;
+	int n = 0;
 	int r;
 	vector_t v;
 
 
 	r = vector_init(&v, sizeof(int), 2);
-
-	n = 0;
 	n += TEST_INT_EQ(r, 0);
 
-	r = 10;
-	r = vector_add(&v, &r);
+	r = 10; r = vector_add(&v, &r);
 	n += TEST_INT_EQ(r, 0);
 	n += TEST_INT_EQ(v.capacity, 2);
 	n += TEST_INT_EQ(v.size, 1);
 
-	r = 20;
-	r = vector_add(&v, &r);
+	r = 20; r = vector_add(&v, &r);
 	n += TEST_INT_EQ(r, 0);
 	n += TEST_INT_EQ(v.capacity, 2);
 	n += TEST_INT_EQ(v.size, 2);
 
-	r = 30;
-	r = vector_add(&v, &r);
+	r = 30; r = vector_add(&v, &r);
 	n += TEST_INT_EQ(r, 0);
 	n += TEST_INT_EQ(v.capacity, 4);
 	n += TEST_INT_EQ(v.size, 3);
@@ -102,14 +94,12 @@ TEST(vector_add){
 }
 
 TEST(vector_rm){
-	int n;
+	int n = 0;
 	int r;
 	vector_t v;
 
 
 	r = vector_init(&v, sizeof(int), 20);
-
-	n = 0;
 	n += TEST_INT_EQ(r, 0);
 
 	r = 10; r = vector_add(&v, &r);
@@ -147,12 +137,10 @@ TEST(vector_rm){
 }
 
 TEST(vector_get){
-	int n;
+	int n = 0;
 	int r;
 	vector_t v;
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(vector_init(&v, sizeof(int), 20), 0);
 
@@ -174,15 +162,13 @@ TEST(vector_get){
 }
 
 TEST(vector_foreach){
-	int n;
+	int n = 0;
 	int r;
 	int *p;
 	vector_t v;
 
 
 	r = vector_init(&v, sizeof(int), 20);
-
-	n = 0;
 	n += TEST_INT_EQ(r, 0);
 
 	r = 10; r = vector_add(&v, &r); n += TEST_INT_EQ(r, 0);

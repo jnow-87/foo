@@ -37,25 +37,20 @@ static esc_t parse_esc(char const *s, size_t n);
 
 /* global functions */
 size_t readline_stdin(FILE *stream, char *line, size_t n){
+	bool shadowed = false;
+	size_t i = 0,
+		   end = 0,
+		   prev = 0;
+	char *hst = 0x0;
 	char c;
-	size_t i,
-		   end,
-		   prev;
 	int r;
-	char *hst;
 	char shadow[n];
-	bool shadowed;
 	esc_t esc;
 
 
-	i = 0;
-	end = 0;
-	prev = 0;
-	shadowed = false;
 	shadow[0] = 0;
-	hst = 0x0;
 
-	errno = 0;
+	reset_errno();
 	history_startover();
 
 	while(end < n && i < n){
@@ -201,17 +196,15 @@ err:
 	if(errno)
 		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
 
-	errno = 0;
+	reset_errno();
 
 	return 0;
 }
 
 size_t readline_regfile(FILE *stream, char *line, size_t n){
-	size_t i;
+	size_t i = 0;
 	int r;
 
-
-	i = 0;
 
 	while(i < n){
 		r = read(fileno(stream), line + i, 1);
@@ -232,10 +225,10 @@ size_t readline_regfile(FILE *stream, char *line, size_t n){
 
 
 err:
-	if(errno){
+	if(errno)
 		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
-		errno = 0;
-	}
+
+	reset_errno();
 
 	return 0;
 }

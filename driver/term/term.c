@@ -135,12 +135,10 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 }
 
 void term_rx_hdlr(int_num_t num, void *payload){
+	term_t *term = (term_t*)payload;
 	char buf[16];
 	size_t n;
-	term_t *term;
 
-
-	term = (term_t*)payload;
 
 	mutex_lock(&term->node->mtx);
 
@@ -158,12 +156,10 @@ void term_rx_hdlr(int_num_t num, void *payload){
 }
 
 void term_tx_hdlr(int_num_t num, void *payload){
+	term_t *term = (term_t*)payload;
 	size_t n;
-	term_t *term;
 	tx_dgram_t *dgram;
 
-
-	term = (term_t*)payload;
 
 	dgram = itask_query_payload(&term->tx_queue, tx_complete);
 
@@ -249,11 +245,10 @@ static errno_t error(term_t *term){
 }
 
 static int tx_complete(void *payload){
-	tx_dgram_t *dgram;
+	tx_dgram_t *dgram = (tx_dgram_t*)payload;
 	errno_t ecode;
 
 
-	dgram = (tx_dgram_t*)payload;
 	ecode = error(dgram->term);
 
 	if(ecode != 0)

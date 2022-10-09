@@ -65,14 +65,13 @@ int main(int argc, char **argv){
 
 /* local functions */
 static void export_memory_node(devtree_memory_t const *node, FILE *file){
-	size_t i;
 	devtree_memory_t const *child;
 
 
 	if(node->childs == 0x0)
 		return;
 
-	for(i=0; node->childs[i]!=0x0; i++){
+	for(size_t i=0; node->childs[i]!=0x0; i++){
 		child = node->childs[i];
 
 		fprintf(file, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", strcident(child->name), (unsigned long int)child->base, child->size);

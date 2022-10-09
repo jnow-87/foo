@@ -43,11 +43,11 @@ static ringbuf_t buf = RINGBUF_INITIALISER(buf_data, 10);
  *	\brief	sample given input pin and output its level
  */
 static int exec(int argc, char **argv){
-	uint8_t c;
-	size_t sample_interval;
-	bool use_int;
+	uint8_t c = 0;
+	bool use_int = false;
+	size_t sample_interval = 1000;
+	signal_t sig = SIG_USR1;
 	f_mode_t f_mode;
-	signal_t sig;
 
 
 	if(argc < 2)
@@ -62,9 +62,6 @@ static int exec(int argc, char **argv){
 	}
 
 	// try registering change interrupt
-	use_int = 0;
-	sig = SIG_USR1;
-
 	if(ioctl(pin_fd, IOCTL_CFGWR, &sig) == 0){
 		if(signal(sig, pin_change_hdlr) == pin_change_hdlr){
 			use_int = 1;
@@ -88,9 +85,6 @@ static int exec(int argc, char **argv){
 	fflush(stdout);
 
 	/* main loop */
-	sample_interval = 1000;
-	c = 0;
-
 	while(c != 'q'){
 		// sample pin
 		if(!use_int && read(pin_fd, &pin_lvl, 1) != 1)

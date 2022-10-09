@@ -53,13 +53,10 @@ TEST(queue_print){
 }
 
 TEST(queue_init){
-	unsigned int n;
-	queue_t *head,
-			*tail;
+	unsigned int n = 0;
+	queue_t *head = &el0;
+	queue_t *tail;
 
-
-	n = 0;
-	head = &el0;
 
 	queue_init(head, tail);
 
@@ -70,14 +67,11 @@ TEST(queue_init){
 }
 
 TEST(queue_enqueue){
-	unsigned int n;
-	queue_t *head,
-			*tail;
+	unsigned int n = 0;
+	queue_t *head = 0x0,
+			*tail = 0x0;
 
 
-	n = 0;
-	head = 0;
-	tail = 0;
 	INIT_EL();
 
 	// enqueue to empty queue
@@ -99,15 +93,12 @@ TEST(queue_enqueue){
 }
 
 TEST(queue_dequeue){
-	unsigned int n;
-	queue_t *head,
-			*tail,
-			*el;
+	unsigned int n = 0;
+	queue_t *head = 0x0,
+			*tail = 0x0;
+	queue_t *el;
 
 
-	n = 0;
-	head = 0;
-	tail = 0;
 	INIT_EL();
 
 	// prepare queue

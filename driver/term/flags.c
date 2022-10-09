@@ -27,20 +27,20 @@ static char *l_echo(char *s, size_t idx, size_t n, term_t *term);
 
 /* static variables */
 static flag_hdlr_t iflag_hdlr[] = {
-		i_crnl,
-		i_nlcr,
-		0x0
+	i_crnl,
+	i_nlcr,
+	0x0
 };
 
 static flag_hdlr_t oflag_hdlr[] = {
-		o_crnl,
-		o_nlcr,
-		0x0
+	o_crnl,
+	o_nlcr,
+	0x0
 };
 
 static flag_hdlr_t lflag_hdlr[] = {
-		l_echo,
-		0x0
+	l_echo,
+	0x0
 };
 
 static flag_hdlr_t *flag_hdlr[] = {
@@ -52,16 +52,12 @@ static flag_hdlr_t *flag_hdlr[] = {
 
 /* global functions */
 char *term_flags_apply(term_t *term, char *s, size_t n, size_t incr, term_flag_type_t fl_type, uint8_t flags){
-	size_t i,
-		   j,
-		   n_put;
-	char *x;
+	char *x = s;
+	size_t n_put;
 
 
-	x = s;
-
-	for(i=0; i<n; i+=incr){
-		for(j=0; flag_hdlr[fl_type][j]!=0x0; j++){
+	for(size_t i=0; i<n; i+=incr){
+		for(size_t j=0; flag_hdlr[fl_type][j]!=0x0; j++){
 			if((flags & (0x1 << j)) == 0)
 				continue;
 

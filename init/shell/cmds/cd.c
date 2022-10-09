@@ -16,10 +16,8 @@
 
 /* local functions */
 static int exec(int argc, char **argv){
-	char *path;
+	char *path = "/";
 
-
-	path = "/";
 
 	if(argc > 1)
 		path = argv[1];

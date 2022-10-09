@@ -120,10 +120,8 @@ thread_ctx_t *usignal_return(usignal_t *sig, struct thread_t *this_t, thread_ctx
 
 /* local functions */
 static int init(void){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	r |= sc_register(SC_SIGREGISTER, sc_hdlr_signal_register);
 	r |= sc_register(SC_SIGSEND, sc_hdlr_signal_send);
@@ -135,11 +133,9 @@ static int init(void){
 kernel_init(0, init);
 
 static int sc_hdlr_signal_register(void *param){
-	sc_signal_t *p;
+	sc_signal_t *p = (sc_signal_t*)param;
 	process_t *this_p;
 
-
-	p = (sc_signal_t*)param;
 
 	this_p = process_find(p->pid);
 
@@ -153,12 +149,10 @@ static int sc_hdlr_signal_register(void *param){
 }
 
 static int sc_hdlr_signal_send(void *param){
-	sc_signal_t *p;
+	sc_signal_t *p = (sc_signal_t*)param;
 	process_t *this_p;
 	thread_t *this_t;
 
-
-	p = (sc_signal_t*)param;
 
 	/* get target thread */
 	this_p = process_find(p->pid);

@@ -42,11 +42,11 @@ static void output(char c, pwm_cfg_t *pwm_cfg, unsigned int duty, size_t sample_
 
 /* local functions */
 static int exec(int argc, char **argv){
+	char c = 0;
+	unsigned int duty = 0;
+	size_t sample_int = 100;
 	int dev;
 	int fd_sample;
-	char c;
-	unsigned int duty;
-	size_t sample_int;
 	f_mode_t f_mode;
 	pwm_cfg_t cfg;
 
@@ -89,10 +89,6 @@ static int exec(int argc, char **argv){
 	fflush(stdout);
 
 	// init variables
-	sample_int = 100;
-	duty = 0;
-	c = 0;
-
 	// disable pwm
 	ioctl(dev, IOCTL_CFGRD, &cfg);
 	update_duty_cycle(&duty, 0, &cfg, dev);

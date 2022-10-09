@@ -73,10 +73,8 @@ err:
 driver_probe("loop,vram", probe);
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
-	dev_data_t *vram;
+	dev_data_t *vram = (dev_data_t*)dev->payload;
 
-
-	vram = (dev_data_t*)dev->payload;
 
 	if(n != sizeof(vram_cfg_t))
 		return_errno(E_INVAL);
@@ -91,10 +89,8 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 }
 
 static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n){
-	dev_data_t *vram;
+	dev_data_t *vram = (dev_data_t*)dev->payload;
 
-
-	vram = (dev_data_t*)dev->payload;
 
 	if(n > vram_npages(vram->cfg) * vram->cfg->width)
 		goto_errno(err, E_LIMIT);
@@ -107,10 +103,8 @@ err:
 }
 
 static int configure(vram_cfg_t *cfg, void *hw){
-	dev_data_t *vram;
+	dev_data_t *vram = (dev_data_t*)hw;
 
-
-	vram = (dev_data_t*)hw;
 
 	if(vram->ram == 0x0){
 		vram->cfg = cfg;
@@ -123,14 +117,11 @@ static int configure(vram_cfg_t *cfg, void *hw){
 }
 
 static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
-	size_t i;
-	dev_data_t *vram;
+	dev_data_t *vram = (dev_data_t*)hw;
 
-
-	vram = (dev_data_t*)hw;
 
 	if(vram->cfg->flags & VRFL_INVERSE){
-		for(i=0; i<cfg->width; i++)
+		for(size_t i=0; i<cfg->width; i++)
 			vram->ram[page * vram->cfg->width + i] = buf[i] ^ 0xff;
 	}
 	else

@@ -23,7 +23,6 @@ child_t *brickos_childs[BOS_NCHILDS] = { 0x0 };
 
 /* global functions */
 int brickos_init_childs(void){
-	unsigned int i;
 	char *argv[] = {
 		opts.kernel_image,
 		opts.verbosity > 0 ? "-v" : "",
@@ -37,7 +36,7 @@ int brickos_init_childs(void){
 	KERNEL = child_create("kernel");
 	APP = child_create("app");
 
-	for(i=0; i<BOS_NCHILDS; i++){
+	for(size_t i=0; i<BOS_NCHILDS; i++){
 		if(brickos_childs[i] == 0x0)
 			goto err;
 	}
@@ -62,20 +61,14 @@ err:
 }
 
 void brickos_destroy_childs(void){
-	unsigned int i;
-
-
-	for(i=0; i<BOS_NCHILDS; i++){
+	for(size_t i=0; i<BOS_NCHILDS; i++){
 		if(brickos_childs[i])
 			child_destroy(brickos_childs[i]);
 	}
 }
 
 char const *brickos_child_name(pid_t pid){
-	size_t i;
-
-
-	for(i=0; i<BOS_NCHILDS; i++){
+	for(size_t i=0; i<BOS_NCHILDS; i++){
 		if(brickos_childs[i]->pid == pid)
 			return brickos_childs[i]->name;
 	}
@@ -86,13 +79,10 @@ char const *brickos_child_name(pid_t pid){
 
 /* local functions */
 static void argv_sort(char **argv){
-	size_t i,
-		   j;
+	size_t j = 0;
 
 
-	j = 0;
-
-	for(i=0; argv[i]!=0x0; i++){
+	for(size_t i=0; argv[i]!=0x0; i++){
 		if(argv[i][0] != 0)
 			continue;
 

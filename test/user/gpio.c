@@ -39,13 +39,12 @@ static int test_ioctl(int fd, gpio_int_t mask, signal_t sig, errno_t expect);
  *	\brief	test to verify the gpio functions
  */
 TEST_LONG(gpio, "test gpio interface"){
-	int n;
+	int n = 0;
 	int fd_normal,
 		fd_strict;
 	gpio_int_t v;
 
 
-	n = 0;
 	reset_errno();
 
 	/* prepare */
@@ -91,12 +90,11 @@ TEST_LONG(gpio, "test gpio interface"){
 }
 
 static int test_read(int fd, gpio_int_t expect){
-	int n;
+	int n = 0;
 	gpio_int_t v;
 
 
 	v = ~expect;
-	n = 0;
 
 	n += TEST_INT_EQ(read(fd, &v, sizeof(v)), sizeof(v));
 	n += TEST_INT_EQ(v, expect);
@@ -105,10 +103,9 @@ static int test_read(int fd, gpio_int_t expect){
 }
 
 static int test_write(int fd, gpio_int_t v, gpio_int_t expect){
-	int n;
+	int n = 0;
 
 
-	n = 0;
 	n += TEST_INT_EQ(write(fd, &v, sizeof(v)), sizeof(v));
 	n += test_read(fd, expect);
 
@@ -116,11 +113,10 @@ static int test_write(int fd, gpio_int_t v, gpio_int_t expect){
 }
 
 static int test_ioctl(int fd, gpio_int_t mask, signal_t sig, errno_t expect){
-	int n;
+	int n = 0;
 	gpio_int_cfg_t cfg;
 
 
-	n = 0;
 	cfg.mask = mask;
 	cfg.sig = sig;
 

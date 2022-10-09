@@ -77,13 +77,11 @@ static int write_complete(void *payload);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	devfs_dev_t *dev;
 	devfs_ops_t ops;
 	dev_data_t *eeprom;
 
-
-	dtd = (dt_data_t*)dt_data;
 
 	/* allocate eeprom */
 	eeprom = kmalloc(sizeof(dev_data_t));
@@ -133,22 +131,19 @@ err_0:
 
 driver_probe("avr,eeprom", probe);
 
-static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
+static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
+	dt_data_t *dtd = ((dev_data_t*)dev->payload)->dtd;
 	size_t i;
-	char *buf;
-	dt_data_t *dtd;
 
-
-	buf = (char*)_buf;
-	dtd = ((dev_data_t*)dev->payload)->dtd;
 
 	if(fd->fp + n >= dtd->size){
-		errno = E_LIMIT;
+		set_errno(E_LIMIT);
+
 		return 0;
 	}
 
 	for(i=0; i<n; i++){
-		buf[i] = read_byte(fd->fp, dtd);
+		((char*)buf)[i] = read_byte(fd->fp, dtd);
 		fd->fp++;
 	}
 
@@ -156,13 +151,12 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *_buf, size_t n){
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dt_data_t *dtd;
+	dt_data_t *dtd = ((dev_data_t*)dev->payload)->dtd;
 
-
-	dtd = ((dev_data_t*)dev->payload)->dtd;
 
 	if(fd->fp + n >= dtd->size){
-		errno = E_LIMIT;
+		set_errno(E_LIMIT);
+
 		return 0;
 	}
 
@@ -173,13 +167,10 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 }
 
 static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *arg){
+	dt_data_t *dtd = ((dev_data_t*)dev->payload)->dtd;
+	seek_t *p = (seek_t*)arg;
 	size_t whence;
-	seek_t *p;
-	dt_data_t *dtd;
 
-
-	p = (seek_t*)arg;
-	dtd = ((dev_data_t*)dev->payload)->dtd;
 
 	switch(cmd){
 	case F_SEEK:
@@ -204,10 +195,7 @@ static int fcntl(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *arg){
 }
 
 static size_t write_noint(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t n){
-	size_t i;
-
-
-	for(i=0; i<n; i++){
+	for(size_t i=0; i<n; i++){
 		write_byte(buf[i], fd->fp, eeprom->dtd);
 		fd->fp++;
 	}
@@ -229,13 +217,11 @@ static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t
 }
 
 static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
-	eeprom_regs_t *regs;
+	eeprom_regs_t *regs = dtd->regs;
 	int_type_t imask;
 
 
 	DEBUG("write %#4.4x: %c (%#hhx)\n", dtd->base + offset, b, b);
-
-	regs = dtd->regs;
 
 	while(regs->eecr & (0x1 << EECR_EEPE));
 
@@ -260,12 +246,10 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
 }
 
 static char read_byte(size_t offset, dt_data_t *dtd){
+	eeprom_regs_t *regs = dtd->regs;
 	char c;
 	int_type_t imask;
-	eeprom_regs_t *regs;
 
-
-	regs = dtd->regs;
 
 	while(regs->eecr & (0x1 << EECR_EEPE));
 
@@ -283,11 +267,9 @@ static char read_byte(size_t offset, dt_data_t *dtd){
 }
 
 static void write_hdlr(int_num_t num, void *payload){
-	dev_data_t *eeprom;
+	dev_data_t *eeprom = (dev_data_t*)payload;
 	write_dgram_t *dgram;
 
-
-	eeprom = (dev_data_t*)payload;
 
 	/* disable eeprom interrupt */
 	// NOTE this is required since an interrupt is triggered

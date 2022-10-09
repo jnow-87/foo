@@ -266,15 +266,13 @@ static void parse_prereq(char const *map, size_t len){
 
 /* print CONFIG_ prerequisite */
 static void update_prereq(char const *m, int slen){
-	int i;
-
 	// return if already hashed
 	if(hashtbl_add(m, slen))
 		return;
 
 	printf(" \\\n    $(wildcard %s", conf_dir);
 
-	for(i=0; i<slen; i++){
+	for(int i=0; i<slen; i++){
 		if(m[i] == '_')	putchar('/');
 		else			putchar(tolower(m[i]));
 	}

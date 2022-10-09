@@ -36,10 +36,8 @@ int socket(net_family_t domain, sock_type_t type){
 int connect(int fd, sock_addr_t *addr, size_t addr_len){
 	size_t size = sizeof(socket_ioctl_t) + addr_len - sizeof(sock_addr_t);
 	char _p[size];
-	socket_ioctl_t *p;
+	socket_ioctl_t *p = (socket_ioctl_t*)_p;
 
-
-	p = (socket_ioctl_t*)_p;
 
 	p->addr_len = addr_len;
 	memcpy(&p->addr, addr, addr_len);
@@ -50,10 +48,8 @@ int connect(int fd, sock_addr_t *addr, size_t addr_len){
 int bind(int fd, sock_addr_t *addr, size_t addr_len){
 	size_t size = sizeof(socket_ioctl_t) + addr_len - sizeof(sock_addr_t);
 	char _p[size];
-	socket_ioctl_t *p;
+	socket_ioctl_t *p = (socket_ioctl_t*)_p;
 
-
-	p = (socket_ioctl_t*)_p;
 
 	p->addr_len = addr_len;
 	memcpy(&p->addr, addr, addr_len);
@@ -74,10 +70,8 @@ int listen(int fd, int backlog){
 int accept(int fd, sock_addr_t *addr, size_t *addr_len){
 	size_t size = sizeof(socket_ioctl_t) + *addr_len - sizeof(sock_addr_t);
 	char _p[size];
-	socket_ioctl_t *p;
+	socket_ioctl_t *p = (socket_ioctl_t*)_p;
 
-
-	p = (socket_ioctl_t*)_p;
 
 	p->addr_len = *addr_len;
 

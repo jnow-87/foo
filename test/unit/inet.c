@@ -14,12 +14,10 @@
 
 /* local functions */
 TEST(inet){
-	int n;
+	int n = 0;
 	char s[16];
 	inet_addr_t addr;
 
-
-	n = 0;
 
 	addr = inet_addr("192.168.0.1");
 	n += TEST_INT_EQ(addr & 0xff, 1);

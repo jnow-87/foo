@@ -35,7 +35,7 @@ static int diff(char const *file0, char const *file1);
 
 /* global functions */
 int main(int argc, char **argv){
-	int r;
+	int r = 0;
 	char *tmp_file_name;
 
 
@@ -57,8 +57,6 @@ int main(int argc, char **argv){
 		printf("generating temporary avr config header \"%s\"\n", tmp_file_name);
 
 	/* compute config variables */
-	r = 0;
-
 	r |= config_watchdog();
 
 	/* close tmp file */
@@ -79,11 +77,8 @@ end:
 
 /* local functions */
 static int arg_parse(int argc, char **argv){
-	int i;
-
-
 	/* parse */
-	for(i=1; i<argc; i++){
+	for(int i=1; i<argc; i++){
 		if(argv[i][0] == '-'){
 			switch(argv[i][1]){
 			case 'v':
@@ -110,24 +105,14 @@ static int arg_parse(int argc, char **argv){
 }
 
 static int diff(char const *file0, char const *file1){
-	int fd[2];
-	int i,
-		r;
-	char const *file[2];
+	int r = -1;
+	int fd[2] = { -1, -1 };
+	char const *file[2] = { file0, file1 };
+	char *buf[2] = { 0x0, 0x0 };
 	struct stat st[2];
-	char *buf[2];
 
 
-	file[0] = file0;
-	file[1] = file1;
-	fd[0] = -1;
-	fd[1] = -1;
-	buf[0] = 0;
-	buf[1] = 0;
-
-	r = -1;
-
-	for(i=0; i<2; i++){
+	for(int i=0; i<2; i++){
 		fd[i] = open(file[i], O_RDONLY);
 
 		if(fd[i] == -1 || stat(file[i], st + i))
@@ -143,7 +128,7 @@ static int diff(char const *file0, char const *file1){
 
 
 end_0:
-	for(i=0; i<2; i++){
+	for(int i=0; i<2; i++){
 		if(buf[i])
 			munmap(buf[i], st[i].st_size);
 

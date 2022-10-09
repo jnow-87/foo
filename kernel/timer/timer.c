@@ -87,10 +87,8 @@ void ktimer_time(time_t *t){
 
 /* local functions */
 static size_t to_ticks(uint32_t us){
-	size_t ticks;
+	size_t ticks = us / CYCLE_TIME_US;
 
-
-	ticks = us / CYCLE_TIME_US;
 
 	if(ticks == 0 || us - ticks * CYCLE_TIME_US > 0)
 		ticks++;

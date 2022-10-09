@@ -25,10 +25,8 @@ static int sc_hdlr_free(void *param);
 
 /* local functions */
 static int init(void){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	r |= sc_register(SC_MALLOC, sc_hdlr_malloc);
 	r |= sc_register(SC_FREE, sc_hdlr_free);
@@ -39,13 +37,12 @@ static int init(void){
 kernel_init(0, init);
 
 static int sc_hdlr_malloc(void *param){
+	sc_malloc_t *p = (sc_malloc_t*)param;
 	page_size_t psize;
-	sc_malloc_t *p;
 	page_t *page;
 	process_t *this_p;
 
 
-	p = (sc_malloc_t*)param;
 	this_p = sched_running()->parent;
 
 	DEBUG("size %zu\n", p->size);
@@ -84,13 +81,12 @@ static int sc_hdlr_malloc(void *param){
 }
 
 static int sc_hdlr_free(void *param){
+	sc_malloc_t *p = (sc_malloc_t*)param;
 	process_t *this_p;
 	thread_t const *this_t;
 	page_t *page;
-	sc_malloc_t *p;
 
 
-	p = (sc_malloc_t*)param;
 	this_t = sched_running();
 	this_p = this_t->parent;
 

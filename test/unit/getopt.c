@@ -22,10 +22,8 @@ static int test(char const *optstr, int argc, char **argv, char const *optopts, 
 
 /* local functions */
 TEST(getopt){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(optind, 1);
 
@@ -83,15 +81,11 @@ TEST(getopt){
 }
 
 static int test(char const *optstr, int argc, char **argv, char const *optopts, char **optargs){
+	int i = 0,
+		j = 0,
+		n = 0;
 	char opt;
-	int i,
-		j,
-		n;
 
-
-	i = 0;
-	j = 0;
-	n = 0;
 
 	getopt_reset();
 

@@ -27,12 +27,11 @@ static int volatile thread_cnt;
  *	\brief	test to SIG_KILL
  */
 TEST(thread_kill){
-	int r;
+	int r = 0;
 	process_info_t pinfo;
 	tid_t tid;
 
 
-	r = 0;
 	thread_cnt = 0;
 
 	/* prepare */

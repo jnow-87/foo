@@ -43,7 +43,6 @@ void getopt_reset(void){
 
 char getopt(int argc, char **argv, char const *optstr){
 	char *arg;
-	size_t i;
 
 
 	// scanning modes are not supported
@@ -71,7 +70,7 @@ char getopt(int argc, char **argv, char const *optstr){
 	/* parse option */
 	optopt = arg[charind];
 
-	for(i=0; optstr[i]!=0; i++){
+	for(size_t i=0; optstr[i]!=0; i++){
 		if(isalpha(optstr[i]) &&  optstr[i] == optopt)
 			return getarg(arg, optstr + i + 1, argc, argv);
 	}

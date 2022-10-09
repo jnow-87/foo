@@ -38,12 +38,11 @@ static tid_t tid;
  *			on a target thread
  */
 TEST(sigthread){
-	int r;
+	int r = 0;
 	unsigned int i;
 	process_info_t pinfo;
 
 
-	r = 0;
 	sig_recv = 0;
 	finished = false;
 	errors = 0;
@@ -96,10 +95,8 @@ static void hdlr(signal_t sig){
 }
 
 static int thread(void *arg){
-	size_t i;
+	size_t i = 0;
 
-
-	i = 0;
 
 	while(sig_recv < NSIG * 2 && i++ < RETRIES){
 		errors += TEST_INT_EQ(sleep(200, 0), 0);

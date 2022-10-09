@@ -54,10 +54,8 @@ bool term_esc_active(term_t *term){
 
 /* local functions */
 static void *parse_ctrl(term_t *term, char c){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	switch(c){
 	case '\033':	return parse_esc;
@@ -82,10 +80,8 @@ static void *parse_ctrl(term_t *term, char c){
 }
 
 static void *parse_esc(term_t *term, char c){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	switch(c){
 	case '[':	return parse_esc_square;
@@ -104,10 +100,8 @@ static void *parse_esc(term_t *term, char c){
 }
 
 static void *parse_esc_square(term_t *term, char c){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	switch(c){
 	/* cursor */
@@ -166,10 +160,8 @@ static void *parse_esc_square(term_t *term, char c){
 }
 
 static void *parser_number(term_t *term, char c){
-	term_esc_t *esc;
+	term_esc_t *esc = &term->esc;
 
-
-	esc = &term->esc;
 
 	if(c == ';'){
 		if(esc->nval == 0 || esc->nval > sizeof_array(esc->val))
@@ -201,10 +193,9 @@ static void *reset(term_t *term){
 }
 
 static int tab(term_t *term){
-	int r;
+	int r = 0;
 
 
-	r = 0;
 	r |= erase(term, TE_TO_END, term->cfg->tabs);
 	r |= term_cursor_move(term, 0, term->cfg->tabs, false);
 

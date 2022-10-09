@@ -22,10 +22,8 @@ typedef struct{
 
 /* local functions */
 TEST(strcmp){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(memcmp("foo", "foo", 4), 0);
 	n += TEST_INT_EQ(memcmp("foo", "bar", 4), 1);
@@ -44,10 +42,8 @@ TEST(strcmp){
 }
 
 TEST(strlen){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(strlen(""), 0);
 	n += TEST_INT_EQ(strlen("foo"), 3);
@@ -56,10 +52,8 @@ TEST(strlen){
 }
 
 TEST(strcnt){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(strcnt("", '%'), 0);
 	n += TEST_INT_EQ(strcnt("foo", '%'), 0);
@@ -71,11 +65,10 @@ TEST(strcnt){
 }
 
 TEST(strcat){
-	int n;
+	int n = 0;
 	char s[16];
 
 
-	n = 0;
 	strcpy(s, "foo");
 
 	s[3] = 0; n += TEST_STR_EQ(strcat(s, "bar"), s);
@@ -97,11 +90,10 @@ TEST(strcat){
 }
 
 TEST(strchr){
-	int n;
+	int n = 0;
 	char s[32];
 
 
-	n = 0;
 	strcpy(s, "1590 ahz\tAHZ1590 ahz\tAHZ");
 
 	n += TEST_STR_EQ(strchr(s, '1'), s + 0);
@@ -123,11 +115,9 @@ TEST(strchr){
 }
 
 TEST(strrchr){
-	int n;
+	int n = 0;
 	char s[32];
 
-
-	n = 0;
 
 	memset(s, '1', 32);
 	strcpy(s, "1590 ahz\tAHZ1590 ahz\tAHZ");
@@ -151,10 +141,8 @@ TEST(strrchr){
 }
 
 TEST(isoneof){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(isoneof(' ', 0x0), false);
 	n += TEST_INT_EQ(isoneof('a', ""), false);
@@ -166,12 +154,11 @@ TEST(isoneof){
 }
 
 TEST(strcpy){
-	int n;
+	int n = 0;
 	char d[5];
 	char s[] = "foo";
 
 
-	n = 0;
 	d[4] = 0;
 
 	memset(d, 'x', 4);
@@ -193,11 +180,9 @@ TEST(strcpy){
 }
 
 TEST(memscan){
-	int n;
+	int n = 0;
 	char s[] = "foobar";
 
-
-	n = 0;
 
 	n += TEST_PTR_EQ(memscan(s, 'f', strlen(s)), s + 0);
 	n += TEST_PTR_EQ(memscan(s, 'b', strlen(s)), s + 3);
@@ -208,15 +193,11 @@ TEST(memscan){
 }
 
 TEST(memnscan){
-	int n;
+	int n = 0;
+	size_t (*fp_zero)(char const *) = 0x0;
+	size_t (*fp_nonzero)(char const *) = strlen;
 	size_t (*fp_array[10])(char const *);
-	size_t (*fp_zero)(char const *);
-	size_t (*fp_nonzero)(char const *);
 
-
-	n = 0;
-	fp_zero = 0x0;
-	fp_nonzero = strlen;
 
 	memset(fp_array, 0x0, sizeof(fp_array));
 	n += TEST_PTR_EQ(memnscan(fp_array, &fp_zero, 10, sizeof(fp_zero)), fp_array + 0);
@@ -230,13 +211,11 @@ TEST(memnscan){
 }
 
 TEST(callbacks_set){
-	int n;
+	int n = 0;
 	cb_t pre,
 		 cbs,
 		 post;
 
-
-	n = 0;
 
 	memset(&pre, 0x0, sizeof(cb_t));
 	memset(&cbs, 0x0, sizeof(cb_t));
@@ -254,10 +233,9 @@ TEST(callbacks_set){
 }
 
 TEST(strerror){
-	int n;
+	int n = 0;
 
 
-	n = 0;
 	n += TEST_STR_EQ(strerror(0), "Success");
 	n += TEST_STR_EQ(strerror(E_UNKNOWN), "Unknown");
 	n += TEST_STR_EQ(strerror(0xfe), "Invalid errno");
@@ -266,11 +244,9 @@ TEST(strerror){
 }
 
 TEST(itoa){
-	int n;
+	int n = 0;
 	char s[16];
 
-
-	n = 0;
 
 	/* different base values */
 	n += TEST_STR_EQ(itoa(10, 8, s, 15), "12");
@@ -284,11 +260,9 @@ TEST(itoa){
 }
 
 TEST(strtol){
-	int n;
+	int n = 0;
 	char *s;
 
-
-	n = 0;
 
 	/* different base values */
 	n += TEST_INT_EQ(strtol("10", 0x0, 10), 10);
@@ -329,11 +303,9 @@ TEST(strtol){
 }
 
 TEST(strupr){
-	int n;
+	int n = 0;
 	char s[8];
 
-
-	n = 0;
 
 	n += TEST_STR_EQ(strupr(""), "");
 	n += TEST_STR_EQ(strupr("foo"), "FOO");
@@ -347,11 +319,9 @@ TEST(strupr){
 }
 
 TEST(strcident){
-	int n;
+	int n = 0;
 	char s[8];
 
-
-	n = 0;
 
 	n += TEST_STR_EQ(strcident(""), "");
 	n += TEST_STR_EQ(strcident("foobar"), "foobar");

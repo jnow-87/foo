@@ -73,12 +73,11 @@ static int move(test_data_t *td, uint16_t line, uint16_t column);
 
 /* local functions */
 TEST(vramtty_config){
-	int r;
+	int r = 0;
 	test_data_t td;
 	term_vram_cfg_t cfg;
 
 
-	r = 0;
 	ASSERT_INT_EQ(prepare(&td), 0);
 
 	// verify scroll and wrap flags are off
@@ -112,11 +111,9 @@ TEST(vramtty_config){
 }
 
 TEST(vramtty_write){
-	int r;
+	int r = 0;
 	test_data_t td;
 
-
-	r = 0;
 
 	ASSERT_INT_EQ(prepare(&td), 0);
 
@@ -128,11 +125,9 @@ TEST(vramtty_write){
 }
 
 TEST(vramtty_wrap){
-	int r;
+	int r = 0;
 	test_data_t td;
 
-
-	r = 0;
 
 	ASSERT_INT_EQ(prepare(&td), 0);
 
@@ -145,11 +140,9 @@ TEST(vramtty_wrap){
 }
 
 TEST(vramtty_cursor){
-	int r;
+	int r = 0;
 	test_data_t td;
 
-
-	r = 0;
 
 	ASSERT_INT_EQ(prepare(&td), 0);
 
@@ -214,11 +207,9 @@ TEST(vramtty_cursor){
 }
 
 TEST(vramtty_erase){
-	int r;
+	int r = 0;
 	test_data_t td;
 
-
-	r = 0;
 
 	ASSERT_INT_EQ(prepare(&td), 0);
 
@@ -238,12 +229,10 @@ TEST(vramtty_erase){
 }
 
 TEST(vramtty_scroll){
-	int r;
+	int r = 0;
 	test_data_t td;
 	term_vram_cfg_t cfg;
 
-
-	r = 0;
 
 	ASSERT_INT_EQ(prepare(&td), 0);
 	r += TEST_INT_EQ(ioctl(td.fd_term, IOCTL_CFGRD, &cfg), 0);
@@ -272,10 +261,8 @@ TEST(vramtty_scroll){
 }
 
 static int test_write(test_data_t *td, char *s, uint16_t line, uint16_t column, char *ref, bool move_cursor){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	TEST_LOG("write: %u,%u: %s\n", line, column, ref);
 
@@ -293,10 +280,8 @@ static int test_write(test_data_t *td, char *s, uint16_t line, uint16_t column, 
 }
 
 static int test_erase(test_data_t *td, char *s, uint16_t line, uint16_t column, erase_t type){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	TEST_LOG("erase: %u,%u %x\n", line, column, type);
 
@@ -326,11 +311,9 @@ static int test_erase(test_data_t *td, char *s, uint16_t line, uint16_t column, 
 }
 
 static int test_scroll(test_data_t *td, char *s, int16_t lines){
-	int r;
+	int r = 0;
 	int16_t i;
 
-
-	r = 0;
 
 	TEST_LOG("scroll: %d\n", lines);
 
@@ -398,21 +381,17 @@ static int clearscreen(test_data_t *td){
 }
 
 static int setscreen(test_data_t *td){
-	int r;
-	int16_t i,
-			j;
+	int r = 0;
 	char line[td->vram.columns];
 
 
-	r = 0;
-
-	for(i=0; i<td->vram.lines; i++){
+	for(int16_t i=0; i<td->vram.lines; i++){
 		memset(line, '0' + i, td->vram.columns);
 
 		r += move(td, i, 0);
 		r += TEST_INT_EQ(write(td->fd_term, line, td->vram.columns), td->vram.columns);
 
-		for(j=0; j<td->vram.columns; j++)
+		for(int16_t j=0; j<td->vram.columns; j++)
 			memcpy(td->ref.ram + i * td->ref.width + j * td->font->width, font_char('0' + i, td->font), td->font->width);
 	}
 
@@ -420,10 +399,7 @@ static int setscreen(test_data_t *td){
 }
 
 static int writestr(test_data_t *td, int16_t line, int16_t column, char *s){
-	int16_t i;
-
-
-	for(i=0; s[i]!=0; i++){
+	for(int16_t i=0; s[i]!=0; i++){
 		if((column + i) >= td->ref.columns){
 			// line wrap
 			line++;

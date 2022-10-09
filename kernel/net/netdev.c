@@ -84,10 +84,8 @@ err_0:
 }
 
 int netdev_release(devfs_dev_t *dev){
-	netdev_t *netdev;
+	netdev_t *netdev = (netdev_t*)dev->payload;
 
-
-	netdev = dev->payload;
 
 	if(devfs_dev_release(dev) != 0)
 		return -errno;
@@ -133,10 +131,9 @@ err:
 /* local functions */
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
 	size_t cfg_size;
-	netdev_t *netdev;
+	netdev_t *netdev = (netdev_t*)dev->payload;
 
 
-	netdev = dev->payload;
 	cfg_size = net_domain_cfg[netdev->domain].cfg_size;
 
 	if(n != cfg_size)

@@ -149,21 +149,25 @@ static size_t write_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 static size_t read(unsigned int *buf, size_t n, uint16_t volatile *ocr_reg){
 	if(n != sizeof(*buf)){
-		errno = E_INVAL;
+		set_errno(E_INVAL);
+
 		return 0;
 	}
 
 	*buf = *ocr_reg;
+
 	return sizeof(*buf);
 }
 
 static size_t write(unsigned int *buf, size_t n, uint16_t volatile *ocr_reg){
 	if(n != sizeof(*buf)){
-		errno = E_INVAL;
+		set_errno(E_INVAL);
+
 		return 0;
 	}
 
 	*ocr_reg = (*buf) & 0xffff;
+
 	return sizeof(*buf);
 }
 
@@ -179,11 +183,9 @@ static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg
 }
 
 static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd){
+	pwm_regs_t *regs = dtd->regs;
 	uint8_t pres;
-	pwm_regs_t *regs;
 
-
-	regs = dtd->regs;
 
 	/* check config */
 	if(cfg->mode != PWM_FAST && cfg->mode != PWM_PHASECORRECT)

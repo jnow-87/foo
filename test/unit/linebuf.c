@@ -27,10 +27,8 @@ static char readb[10];
 
 /* local functions */
 TEST(linebuf_reset){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* no change to empty buffer */
 	INIT();
@@ -69,10 +67,8 @@ TEST(linebuf_reset){
 }
 
 TEST(linebuf_read){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* normal read */
 	INIT();
@@ -101,10 +97,8 @@ TEST(linebuf_read){
 }
 
 TEST(linebuf_peek){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* normal read */
 	INIT();
@@ -138,10 +132,8 @@ TEST(linebuf_peek){
 }
 
 TEST(linebuf_write){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* normal write */
 	INIT();
@@ -159,10 +151,8 @@ TEST(linebuf_write){
 }
 
 TEST(linebuf_prefilled){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* init */
 	strcpy(buf, "dead");
@@ -181,10 +171,8 @@ TEST(linebuf_prefilled){
 }
 
 TEST(linebuf_contains_left){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* empty */
 	INIT();
@@ -214,10 +202,8 @@ TEST(linebuf_contains_left){
 }
 
 TEST(linebuf_empty){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	INIT();
 
@@ -240,10 +226,8 @@ TEST(linebuf_empty){
 }
 
 TEST(linebuf_full){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	INIT();
 

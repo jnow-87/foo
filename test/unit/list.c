@@ -62,12 +62,9 @@ TEST(list_print){
 }
 
 TEST(list_init){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = &el0;
 
-
-	n = 0;
-	head = &el0;
 
 	list_init(head);
 
@@ -78,12 +75,10 @@ TEST(list_init){
 }
 
 TEST(list_empty){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
 
-	n = 0;
-	head = 0x0;
 	INIT_EL();
 
 	n += TEST_INT_EQ(list_empty(head), true);
@@ -96,12 +91,10 @@ TEST(list_empty){
 }
 
 TEST(list_first_last){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
 
-	n = 0;
-	head = 0x0;
 	INIT_EL();
 
 	list_add_head(head, &el3);
@@ -113,12 +106,10 @@ TEST(list_first_last){
 }
 
 TEST(list_add_head){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
 
-	n = 0;
-	head = 0x0;
 	INIT_EL();
 
 	list_add_head(head, &el0);
@@ -134,12 +125,10 @@ TEST(list_add_head){
 }
 
 TEST(list_add_tail){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
 
-	n = 0;
-	head = 0x0;
 	INIT_EL();
 
 	list_add_tail(head, &el0);
@@ -155,12 +144,10 @@ TEST(list_add_tail){
 }
 
 TEST(list_add_in){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
 
-	n = 0;
-	head = 0x0;
 	INIT_EL();
 
 	list_add_tail(head, &el0);
@@ -176,11 +163,9 @@ TEST(list_add_in){
 }
 
 TEST(list_replace){
-	unsigned int n;
+	unsigned int n = 0;
 	tlist_t *head;
 
-
-	n = 0;
 
 	// replace within empty list
 	head = 0x0;
@@ -235,12 +220,10 @@ TEST(list_replace){
 }
 
 TEST(list_rm){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
 
-	n = 0;
-	head = 0x0;
 	INIT_EL();
 
 	list_add_tail(head, &el0);
@@ -272,12 +255,10 @@ TEST(list_rm){
 }
 
 TEST(list_contains){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
 
-	n = 0;
-	head = 0x0;
 	INIT_EL();
 
 	list_add_tail(head, &el0);
@@ -291,12 +272,9 @@ TEST(list_contains){
 }
 
 TEST(list_find){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
-
-	n = 0;
-	head = 0x0;
 
 	/* list_find() */
 	n += TEST_PTR_EQ(list_find(head, el, 2), 0x0);
@@ -342,12 +320,9 @@ TEST(list_find){
 }
 
 TEST(list_for_each){
-	unsigned int n;
-	tlist_t *head;
+	unsigned int n = 0;
+	tlist_t *head = 0x0;
 
-
-	n = 0;
-	head = 0x0;
 
 	for_each_rm(&head);
 

@@ -44,12 +44,11 @@ static size_t gets(char *s, size_t n, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	term_itf_t *itf;
 	dev_data_t *uart;
 
 
-	dtd = (dt_data_t*)dt_data;
 	itf = kcalloc(1, sizeof(term_itf_t));
 	uart = kmalloc(sizeof(dev_data_t));
 
@@ -90,11 +89,9 @@ err_0:
 driver_probe("x86,uart", probe);
 
 static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
-	dev_data_t *uart;
+	dev_data_t *uart = (dev_data_t*)hw;
 	x86_hw_op_t op;
 
-
-	uart = (dev_data_t*)hw;
 
 	op.num = HWO_UART_CFG;
 
@@ -114,10 +111,8 @@ static char putc(char c, void *hw){
 }
 
 static size_t putsn(char const *s, size_t n, void *hw){
-	dev_data_t *uart;
+	dev_data_t *uart = (dev_data_t*)hw;
 
-
-	uart = (dev_data_t*)hw;
 
 	if(s == 0x0)
 		goto_errno(err, E_INVAL);

@@ -26,10 +26,8 @@ static char readb[10];
 
 /* local functions */
 TEST(ringbuf_read){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* normal read */
 	INIT();
@@ -62,10 +60,8 @@ TEST(ringbuf_read){
 }
 
 TEST(ringbuf_write){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* normal write */
 	INIT();
@@ -92,10 +88,8 @@ TEST(ringbuf_write){
 }
 
 TEST(ringbuf_contains_left){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	/* empty */
 	INIT();
@@ -133,10 +127,8 @@ TEST(ringbuf_contains_left){
 }
 
 TEST(ringbuf_empty){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	INIT();
 
@@ -159,10 +151,8 @@ TEST(ringbuf_empty){
 }
 
 TEST(ringbuf_full){
-	int n;
+	int n = 0;
 
-
-	n = 0;
 
 	INIT();
 

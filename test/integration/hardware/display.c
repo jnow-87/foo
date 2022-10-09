@@ -85,7 +85,6 @@ void display_cleanup(void){
 }
 
 void display_poll(void){
-	uint16_t i;
 	struct timespec ts;
 
 
@@ -100,7 +99,7 @@ void display_poll(void){
 		return;
 
 	/* update screen */
-	for(i=0; i<ctx.npages; i++){
+	for(uint16_t i=0; i<ctx.npages; i++){
 		if(vram_isdirty(i, ctx.dirty))
 			draw_page(i);
 
@@ -153,20 +152,17 @@ int display_configure(int shm_id, uint8_t scale, vram_cfg_t *cfg){
 
 /* local functions */
 static void draw_page(uint16_t page){
-	uint16_t i,
-			 j;
-	uint8_t pixel_state;
 	uint8_t pixels;
 
 
-	for(pixel_state=0; pixel_state<2; pixel_state++){
+	for(uint8_t pixel_state=0; pixel_state<2; pixel_state++){
 		if(pixel_state == 0)	XSetForeground(ctx.dsp, ctx.gc, BlackPixel(ctx.dsp, ctx.screen));
 		else					XSetForeground(ctx.dsp, ctx.gc, WhitePixel(ctx.dsp, ctx.screen));
 
-		for(i=0; i<ctx.width; i++){
+		for(uint16_t i=0; i<ctx.width; i++){
 			pixels = ctx.ram[page * ctx.width + i];
 
-			for(j=0; j<8; j++){
+			for(uint16_t j=0; j<8; j++){
 				if(PIXEL_ISSET(pixels, j) == pixel_state)
 					draw_pixel(i, page * 8 + j, ctx.scale);
 			}
@@ -175,15 +171,11 @@ static void draw_page(uint16_t page){
 }
 
 static void draw_pixel(uint16_t x, uint16_t y, uint8_t scale){
-	uint16_t i,
-			 j;
-
-
 	x *= scale;
 	y *= scale;
 
-	for(i=0; i<scale; i++){
-		for(j=0; j<scale; j++)
+	for(uint16_t i=0; i<scale; i++){
+		for(uint16_t j=0; j<scale; j++)
 			XDrawPoint(ctx.dsp, ctx.win, ctx.gc, x + i, y + j);
 	}
 }

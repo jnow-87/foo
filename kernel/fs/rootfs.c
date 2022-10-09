@@ -333,7 +333,7 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	if(fd->node->type == FT_DIR)
 		goto_errno(err, E_INVAL);
 
-	file = fd->node->payload;
+	file = (rootfs_file_t*)fd->node->payload;
 
 	/* adjust file size if required */
 	f_size = MAX(fd->fp + n, file->capacity);
@@ -507,11 +507,9 @@ static void file_free(rootfs_file_t *file){
 }
 
 static int file_seek(fs_filed_t *fd, seek_t *p){
+	rootfs_file_t *file = (rootfs_file_t*)fd->node->payload;
 	size_t whence;
-	rootfs_file_t *file;
 
-
-	file = (rootfs_file_t*)fd->node->payload;
 
 	if(p->whence == SEEK_SET)		whence = 0;
 	else if(p->whence == SEEK_CUR)	whence = fd->fp;

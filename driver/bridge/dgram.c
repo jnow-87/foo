@@ -344,13 +344,10 @@ static int ackcmp(bridge_dgram_t *dgram, uint8_t byte, uint8_t ref){
 }
 
 static uint8_t checksum(void const *buf, size_t n){
-	uint8_t s;
-	size_t i;
+	uint8_t s = 0;
 
 
-	s = 0;
-
-	for(i=0; i<n; i++)
+	for(size_t i=0; i<n; i++)
 		s += ~((uint8_t*)buf)[i] + 1;
 
 	return s;

@@ -31,16 +31,13 @@ static size_t flputs(char const *s, size_t n, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	term_cfg_t *dtd = (term_cfg_t*)dt_data;
+	term_itf_t *dti = (term_itf_t*)dt_itf;
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	term_t *term;
-	term_cfg_t *dtd;
-	term_itf_t *dti;
 	klog_itf_t *klog;
 
-
-	dtd = (term_cfg_t*)dt_data;
-	dti = (term_itf_t*)dt_itf;
 
 	/* register device */
 	dev_ops.open = 0x0;
@@ -111,10 +108,8 @@ err_0:
 driver_probe("terminal", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	term_t *term;
+	term_t *term = (term_t*)dev->payload;
 
-
-	term = (term_t*)dev->payload;
 
 	/* read */
 	n = term_gets(term, buf, n);
@@ -139,10 +134,8 @@ err:
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	term_t *term;
+	term_t *term = (term_t*)dev->payload;
 
-
-	term = (term_t*)dev->payload;
 
 	if(flputs(buf, n, term) == 0 && n != 0)
 		goto_errno(err, term->errno);
@@ -157,10 +150,8 @@ err:
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
-	term_t *term;
+	term_t *term = (term_t*)dev->payload;
 
-
-	term = (term_t*)dev->payload;
 
 	if(n != sizeof(term_cfg_t) && n != (sizeof(term_cfg_t) + term->itf->cfg_size))
 		return_errno(E_INVAL);
@@ -195,12 +186,10 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 }
 
 static size_t flputs(char const *_s, size_t n, void *hw){
+	term_t *term = (term_t*)hw;
 	size_t n_put;
 	char s[n];
-	term_t *term;
 
-
-	term = (term_t*)hw;
 
 	memcpy(s, _s, n);
 

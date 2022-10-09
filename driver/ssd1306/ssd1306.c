@@ -85,17 +85,16 @@ static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	vram_itf_t *itf;
 
-
-	dtd = (dt_data_t*)dt_data;
-	dtd->i2c = dt_itf;
 
 	itf = kmalloc(sizeof(vram_itf_t));
 
 	if(itf == 0x0)
 		return 0x0;
+
+	dtd->i2c = dt_itf;
 
 	itf->configure = configure;
 	itf->write_page = write_page;
@@ -107,11 +106,9 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 driver_probe("ssd1306", probe);
 
 static int configure(vram_cfg_t *cfg, void *hw){
+	dt_data_t *dtd = (dt_data_t*)hw;
 	int r;
-	dt_data_t *dtd;
 
-
-	dtd = (dt_data_t*)hw;
 
 	r = I2C_WRITE(dtd->i2c, dtd->slave,
 		I2C_DATA(
@@ -143,18 +140,15 @@ static int configure(vram_cfg_t *cfg, void *hw){
 }
 
 static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
+	dt_data_t *dtd = (dt_data_t*)hw;
+	uint8_t cmd = CTRL_DATA_N;
 	int r;
-	uint8_t cmd;
-	dt_data_t *dtd;
 
-
-	dtd = (dt_data_t*)hw;
 
 	// set page address
 	r = I2C_WRITE(dtd->i2c, dtd->slave, I2C_DATA(CTRL_CMD_1, CMD_ADDR_PAGE_START | page));
 
 	// write data
-	cmd = CTRL_DATA_N;
 	r |= I2C_WRITE_N(dtd->i2c, dtd->slave, BLOBS(BLOB(&cmd, 1), BLOB(buf, cfg->width)));
 
 	return r;

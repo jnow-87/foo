@@ -121,27 +121,26 @@ void gpio_destroy(gpio_t *gpio){
 
 /* local functions */
 static int close(devfs_dev_t *dev, fs_filed_t *fd){
-	gpio_t *gpio;
+	gpio_t *gpio = (gpio_t*)dev->payload;
 	gpio_siglst_t *sig;
 
 
-	gpio = (gpio_t*)dev->payload;
 	sig = list_find_safe(gpio->sigs, fd, fd, &gpio->mtx);
 
 	return (sig != 0x0) ? int_clear(gpio, sig) : 0;
 }
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	gpio_t *gpio;
+	gpio_t *gpio = (gpio_t*)dev->payload;
+	gpio_int_t *v = (gpio_int_t*)buf;
 
 
 	if(n != sizeof(gpio_int_t))
 		goto_errno(err, E_LIMIT);
 
-	gpio = (gpio_t*)dev->payload;
-	*((gpio_int_t*)buf) = ((gpio->ops.read(gpio->hw) ^ gpio->cfg->invert_mask) & gpio->cfg->in_mask);
+	*v = ((gpio->ops.read(gpio->hw) ^ gpio->cfg->invert_mask) & gpio->cfg->in_mask);
 
-	DEBUG("%s read %#x\n", gpio->dev->node->name, *((gpio_int_t*)buf));
+	DEBUG("%s read %#x\n", gpio->dev->node->name, *v);
 
 	return n;
 
@@ -151,16 +150,13 @@ err:
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	gpio_t *gpio;
-	gpio_int_t c,
-			   v;
+	gpio_t *gpio = (gpio_t*)dev->payload;
+	gpio_int_t v = *((gpio_int_t*)buf);
+	gpio_int_t c;
 
 
 	if(n != sizeof(gpio_int_t))
 		goto_errno(err, E_LIMIT);
-
-	gpio = (gpio_t*)dev->payload;
-	v = *((gpio_int_t*)buf);
 
 	if(gpio->cfg->mode == GM_STRICT && (v & ~gpio->cfg->out_mask))
 		goto_errno(err, E_INVAL);
@@ -188,12 +184,11 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 }
 
 static void int_hdlr(int_num_t num, void *payload){
-	gpio_t *gpio;
+	gpio_t *gpio = (gpio_t*)payload;
 	gpio_siglst_t *sig;
 	gpio_int_t v;
 
 
-	gpio = (gpio_t*)payload;
 	v = gpio->ops.read(gpio->hw);
 
 	DEBUG("%s interrupt with %#x\n", gpio->dev->node->name, v);

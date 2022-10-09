@@ -80,15 +80,12 @@ static gpio_int_t rx(dev_data_t *mcp, uint8_t addr);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	uint8_t i;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
+	gpio_t *ports[NUM_PORTS] = { 0x0 };
 	size_t name_len = strlen(name);
 	char port_name[name_len + 2];
-	dt_data_t *dtd;
 	gpio_ops_t ops;
-	gpio_t *ports[NUM_PORTS] = { 0x0 };
 
-
-	dtd = (dt_data_t*)dt_data;
 
 	/* amend port configuration */
 	dtd->ports[0].num = PORT_A;
@@ -103,7 +100,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	strcpy(port_name, name);
 	port_name[name_len + 1] = 0;
 
-	for(i=0; i<NUM_PORTS; i++){
+	for(uint8_t i=0; i<NUM_PORTS; i++){
 		port_name[name_len] = 'a' + i;
 		ports[i] = gpio_create(port_name, &ops, &dtd->ports[i].cfg, dtd->ports + i);
 
@@ -115,7 +112,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 
 err:
-	for(i=0; i<NUM_PORTS; i++){
+	for(uint8_t i=0; i<NUM_PORTS; i++){
 		if(ports[i] != 0x0)
 			gpio_destroy(ports[i]);
 	}
@@ -139,10 +136,8 @@ static int write(gpio_int_t v, void *hw){
 }
 
 static int configure(dev_data_t *mcp, gpio_cfg_t *cfg){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	// device config
 	r |= MCP_WRITE(mcp,

@@ -58,11 +58,9 @@ void kernel(void){
 
 /* local functions */
 static void ktask(void){
-	ktask_t *task,
-			*rec_task;
+	ktask_t *rec_task = 0x0;
+	ktask_t *task;
 
-
-	rec_task = 0x0;
 
 	while(1){
 		task = ktask_next();

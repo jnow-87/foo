@@ -136,15 +136,13 @@ static char const *rx_patterns[] = {
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	term_itf_t *term = (term_itf_t*)dt_itf;
 	void *rxbuf;
 	esp_t *esp;
 	devfs_dev_t *dev;
 	netdev_itf_t itf;
-	term_itf_t *term;
 	term_cfg_t term_cfg;
 
-
-	term = (term_itf_t*)dt_itf;
 
 	if(term->rx_int == 0 || term->tx_int == 0){
 		WARN("uart does not support interrupts\n");
@@ -233,16 +231,11 @@ driver_probe("esp8266", probe);
 
 // socket callbacks
 static int configure(netdev_t *dev){
-	int r;
-	char *enc[] = {"0", "2", "3", "4"};
-	inetdev_cfg_t *cfg;
-	esp_t *esp;
+	esp_t *esp = (esp_t*)dev->payload;
+	inetdev_cfg_t *cfg = &esp->cfg;
+	char *enc[] = { "0", "2", "3", "4" };
+	int r = 0;
 
-
-	esp = (esp_t*)dev->payload;
-	cfg = &esp->cfg;
-
-	r = 0;
 
 	r |= cmd(esp, RESP_OK, r, "ATE0");					// disable echo
 	r |= cmd(esp, RESP_OK, r, "AT+CIPMUX=1");			// allow multiple connections
@@ -278,33 +271,26 @@ static int configure(netdev_t *dev){
 }
 
 static int connect(socket_t *sock){
-	inet_data_t *remote;
+	inet_data_t *remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
-
-	remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
 	return _connect(sock, &remote->addr, remote->port, 0);
 }
 
 static int bind(socket_t *sock){
-	inet_data_t *remote;
+	inet_data_t *remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
 
 	if(sock->type == SOCK_STREAM)
 		return 0;
 
-	remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
-
 	return _connect(sock, &remote->addr, 0, remote->port);
 }
 
 static int listen(socket_t *sock){
-	esp_t *esp;
-	inet_data_t *remote;
+	esp_t *esp = (esp_t*)sock->dev->payload;
+	inet_data_t *remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
-
-	esp = (esp_t*)sock->dev->payload;
-	remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
 	mutex_lock(&esp->mtx);
 
@@ -323,11 +309,9 @@ end:
 }
 
 static void close(socket_t *sock){
+	esp_t *esp = (esp_t*)sock->dev->payload;
 	int link_id;
-	esp_t *esp;
 
-
-	esp = (esp_t*)sock->dev->payload;
 
 	mutex_lock(&esp->mtx);
 
@@ -346,18 +330,14 @@ static void close(socket_t *sock){
 }
 
 static ssize_t send(socket_t *sock, void *buf, size_t n){
-	int r;
+	esp_t *esp = (esp_t*)sock->dev->payload;
+	inet_data_t *remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
+	int r = 0;
 	int link_id;
-	esp_t *esp;
-	inet_data_t *remote;
 
 
 	if(n == 0)
 		return 0;
-
-	r = 0;
-	esp = (esp_t*)sock->dev->payload;
-	remote = &((sock_addr_inet_t*)(&sock->addr))->inet_data;
 
 	mutex_lock(&esp->mtx);
 	link_id = get_link_id(esp, sock);
@@ -376,12 +356,10 @@ static ssize_t send(socket_t *sock, void *buf, size_t n){
 }
 
 static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uint16_t local_port){
+	esp_t *esp = (esp_t*)sock->dev->payload;
 	int link_id;
 	int r;
-	esp_t *esp;
 
-
-	esp = (esp_t*)sock->dev->payload;
 
 	mutex_lock(&esp->mtx);
 	link_id = get_link_id(esp, 0x0);
@@ -416,12 +394,10 @@ static int _connect(socket_t *sock, inet_addr_t *addr, uint16_t remote_port, uin
 
 // rx interrupt handling
 static void rx_hdlr(int_num_t num, void *payload){
+	esp_t *esp = (esp_t*)payload;
 	size_t len;
 	char buf[16];
-	esp_t *esp;
 
-
-	esp = (esp_t*)payload;
 
 	mutex_lock(&esp->mtx);
 
@@ -434,12 +410,10 @@ static void rx_hdlr(int_num_t num, void *payload){
 }
 
 static void rx_task(void *payload){
+	esp_t *esp = *((esp_t**)payload);
 	char c;
 	size_t n;
-	esp_t *esp;
 
-
-	esp = *((esp_t**)payload);
 
 	while(1){
 		mutex_lock(&esp->mtx);
@@ -511,13 +485,11 @@ static void *rx_skipline(esp_t *esp, char c){
 }
 
 static void *rx_datain_stream(esp_t *esp, char c){
-	bool is_last;
-	socket_t *sock;
+	bool is_last = (esp->rx.idx == esp->rx.len);
+	socket_t *sock = esp->rx.sock;
 
 
-	sock = esp->rx.sock;
 	esp->rx.idx++;
-	is_last = (esp->rx.idx == esp->rx.len);
 
 	if(is_last)
 		patmat_reset(esp->rx.parser);
@@ -533,14 +505,11 @@ static void *rx_datain_stream(esp_t *esp, char c){
 
 static void *rx_datain_dgram(esp_t *esp, char c){
 	void *res[4];
-	void *rx_hdlr;
-	socket_t *sock;
+	void *rx_hdlr = rx_datain_dgram;
+	socket_t *sock = esp->rx.sock;
 	sock_addr_inet_t remote;
 
 
-	rx_hdlr = rx_datain_dgram;
-
-	sock = esp->rx.sock;
 	esp->rx.dgram[esp->rx.idx] = (uint8_t)c;
 	esp->rx.idx++;
 
@@ -653,11 +622,9 @@ static void rx_act_ip_info(esp_t *esp){
 
 // tx interrupt handling
 static void tx_hdlr(int_num_t num, void *payload){
-	esp_t *esp;
+	esp_t *esp = (esp_t*)payload;
 	tx_dgram_t *dgram;
 
-
-	esp = (esp_t*)payload;
 
 	dgram = itask_query_payload(&esp->tx_queue, tx_complete);
 
@@ -674,13 +641,11 @@ static void tx_hdlr(int_num_t num, void *payload){
 }
 
 static int tx_complete(void *payload){
-	tx_dgram_t *dgram;
-	term_itf_t *term;
+	tx_dgram_t *dgram = (tx_dgram_t*)payload;
+	term_itf_t *term = dgram->term;
 	errno_t ecode;
 
 
-	dgram = (tx_dgram_t*)payload;
-	term = dgram->term;
 	ecode = term->error ? term->error(term->hw) : 0;
 
 	if(ecode != 0)
@@ -691,14 +656,11 @@ static int tx_complete(void *payload){
 
 // command handling
 static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...){
-	int r;
-	char c;
+	int r = 0;
 	char s[16];
 	size_t len;
 	va_list lst;
 
-
-	r = 0;
 
 	if(skip)
 		return 0;
@@ -707,7 +669,7 @@ static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...){
 
 	DEBUG("cmd \"%s\"\n", fmt);
 
-	for(c=*fmt; c!=0; c=*(++fmt)){
+	for(char c=*fmt; c!=0; c=*(++fmt)){
 		if(c == '%'){
 			c = *(++fmt);
 
@@ -749,10 +711,8 @@ static int cmd(esp_t *esp, response_t resp, bool skip, char const *fmt, ...){
 	ksignal_wait(&esp->sig, &esp->mtx);
 
 	if(esp->resp != resp){
+		set_errno((esp->resp == RESP_BUSY) ? E_INUSE : E_IO);
 		r = 1;
-
-		if(esp->resp == RESP_BUSY)	errno = E_INUSE;
-		else						errno = E_IO;
 	}
 
 	esp->resp = RESP_INVAL;
@@ -793,10 +753,7 @@ static int putsn(char const *s, size_t n, esp_t *esp){
 
 // utilities
 static int get_link_id(esp_t *esp, socket_t *sock){
-	uint8_t i;
-
-
-	for(i=0; i<CONFIG_ESP8266_LINK_COUNT; i++){
+	for(uint8_t i=0; i<CONFIG_ESP8266_LINK_COUNT; i++){
 		if(esp->links[i] == sock)
 			return i;
 	}

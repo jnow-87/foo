@@ -80,11 +80,9 @@ static int init(void){
 lib_init(1, init);
 
 static int signal_hdlr(void *arg){
+	signal_t sig = (signal_t)arg;
 	char dummy;
-	signal_t sig;
 
-
-	sig = (signal_t)arg;
 
 	if(hdlrs[sig] != 0x0){
 		hdlrs[sig](sig);

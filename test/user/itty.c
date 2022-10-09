@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/errno.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/term.h>
@@ -22,8 +23,8 @@
  * \brief	test to demonstrate non/blocking operation of stdin
  */
 TEST_LONG(tty, "test tty non/blocking io"){
-	size_t i,
-		   n;
+	size_t i = 0,
+		   n = 0;
 	char buf[20];
 	term_cfg_t cfg;
 	f_mode_t f_mode;
@@ -49,20 +50,17 @@ TEST_LONG(tty, "test tty non/blocking io"){
 	);
 
 	buf[0] = 'i';
-	errno = 0;
-	i = 0;
-	n = 0;
 
 	while(1){
 		// read
-		errno = 0;
+		reset_errno();
 		n = fread(buf, 1, stdin);
 		i++;
 
 		// error handling
 		if(errno){
 			printf(FG_RED "error " RESET_ATTR "read \"%s\" -", strerror(errno));
-			errno = 0;
+			reset_errno();
 
 			continue;
 		}

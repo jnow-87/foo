@@ -62,8 +62,8 @@ static opts_t opts = {
 
 /* local functions */
 static int exec(int argc, char **argv){
+	int r = 0;
 	int fd;
-	int r;
 
 
 	/* parse command line options */
@@ -95,7 +95,6 @@ static int exec(int argc, char **argv){
 		return 1;
 	}
 
-	r = 0;
 	r |= ioctl(fd, IOCTL_CFGWR, &opts.dev_cfg);
 	r |= ioctl(fd, IOCTL_CFGRD, &opts.dev_cfg);
 

@@ -27,12 +27,10 @@ static errno_t error(void *brdg);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	bridge_cfg_t *dtd = (bridge_cfg_t*)dt_data;
 	bridge_t *brdg;
-	bridge_cfg_t *dtd;
 	term_itf_t *itf;
 
-
-	dtd = (bridge_cfg_t*)dt_data;
 
 	brdg = bridge_create(0x0, dtd, 0x0);
 
@@ -111,11 +109,10 @@ err:
 }
 
 static errno_t error(void *brdg){
-	bridge_t *peer;
+	bridge_t *peer = ((bridge_t*)brdg)->peer;
 	errno_t ecode;
 
 
-	peer = ((bridge_t*)brdg)->peer;
 	ecode = peer->errno;
 	peer->errno = 0;
 

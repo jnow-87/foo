@@ -47,10 +47,8 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 driver_probe("vram,raw", probe);
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
-	vram_t *vram;
+	vram_t *vram = (vram_t*)dev->payload;
 
-
-	vram = (vram_t*)dev->payload;
 
 	if(n != sizeof(vram_cfg_t))
 		return_errno(E_INVAL);
@@ -63,10 +61,8 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 }
 
 static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n){
-	vram_t *vram;
+	vram_t *vram = (vram_t*)dev->payload;
 
-
-	vram = (vram_t*)dev->payload;
 
 	if(n != vram->npages * vram->cfg.width + vram_ndirty(vram->npages))
 		goto_errno(err, E_INVAL);

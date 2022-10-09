@@ -139,15 +139,13 @@ err:
 }
 
 size_t fread(void *p, size_t size, FILE *stream){
-	size_t n,
-		   rd;
+	size_t rd = 0;
+	size_t n;
 	ssize_t r;
 
 
 	if(stream == 0x0 || stream->rbuf == 0x0)
 		goto_errno(err_0, E_INVAL);
-
-	rd = 0;
 
 	mutex_lock(&stream->rd_mtx);
 
@@ -204,7 +202,6 @@ err_0:
 }
 
 size_t fwrite(void const *p, size_t size, FILE *stream){
-	size_t n;
 	ssize_t r;
 
 
@@ -218,7 +215,7 @@ size_t fwrite(void const *p, size_t size, FILE *stream){
 		memcpy(stream->wbuf + stream->widx, p, size);
 		stream->widx += size;
 
-		for(n=0; n<size; n++){
+		for(size_t n=0; n<size; n++){
 			if(((char*)p)[n] == '\n'){
 				if(fflush(stream) != 0)
 					goto err;
@@ -359,10 +356,8 @@ static int init(void){
 lib_init(1, init);
 
 static f_mode_t mode_parse(char const *mode){
-	f_mode_t fmode;
+	f_mode_t fmode = 0;
 
-
-	fmode = 0;
 
 	while(*mode){
 		switch(*mode){

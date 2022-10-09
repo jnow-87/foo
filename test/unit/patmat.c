@@ -32,7 +32,7 @@ static int test(patmat_t *pm, char const *input, ssize_t retval, size_t nexpect,
 
 /* local functions */
 TEST(patmat){
-	unsigned int n;
+	unsigned int n = 0;
 	char const *patterns[] = {
 		"%d ",
 		"%c%d ",
@@ -49,8 +49,6 @@ TEST(patmat){
 	};
 	patmat_t *pm;
 
-
-	n = 0;
 
 	pm = patmat_init(patterns, sizeof_array(patterns));
 
@@ -117,7 +115,7 @@ TEST(patmat){
 }
 
 TEST(patmat_error){
-	int n;
+	int n = 0;
 	char const *patterns[] = {
 		"%d ",
 	};
@@ -127,8 +125,6 @@ TEST(patmat_error){
 		"%d"
 	};
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(test(0x0, "", 0, 0, 0x0), -1);
 
@@ -161,26 +157,22 @@ TEST(patmat_error){
 }
 
 static int test(patmat_t *pm, char const *input, ssize_t retval, size_t nexpect, expect_t *expect){
-	int n;
-	size_t i;
+	int n = 0;
+	ssize_t index = (retval < 0) ? -1 : retval;
 	void *results[nexpect];
-	ssize_t index;
 
 
 	if(pm == 0x0)
 		return -1;
 
-	index = (retval < 0) ? -1 : retval;
-
 	patmat_reset(pm);
 
 	TEST_LOG("match \"%s\"\n", input);
 
-	n = 0;
 	n += TEST_INT_EQ(patmat_match_string(pm, input), retval);
 	n += TEST_INT_EQ(patmat_get_results(pm, results), index);
 
-	for(i=0; index>=0 && i<nexpect; i++){
+	for(size_t i=0; index>=0 && i<nexpect; i++){
 		switch(expect[i].type){
 		case PMS_INT:	n += TEST_INT_EQ(PATMAT_RESULT_INT(results, i), expect[i].result.i); break;
 		case PMS_CHAR:	n += TEST_INT_EQ(PATMAT_RESULT_CHAR(results, i), expect[i].result.c); break;

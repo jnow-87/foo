@@ -182,10 +182,7 @@ void sched_thread_bury(thread_t *this_t){
 /* local functions */
 #if CONFIG_NCORES > 1
 static int init_shallow(void){
-	size_t i;
-
-
-	for(i=1; i<CONFIG_NCORES; i++){
+	for(size_t i=1; i<CONFIG_NCORES; i++){
 		memcpy(kernel_threads + i, kernel_threads + 0, sizeof(thread_t));
 		running[i] = kernel_threads + i;
 	}
@@ -197,7 +194,6 @@ kernel_init(0, init_shallow);
 #endif // CONFIG_NCORES
 
 static int init_deep(void){
-	unsigned int i;
 	process_t *this_p;
 	thread_t *this_t;
 
@@ -208,7 +204,7 @@ static int init_deep(void){
 
 	/* init kernel threads */
 	// one thread per core
-	for(i=0; i<CONFIG_NCORES; i++){
+	for(size_t i=0; i<CONFIG_NCORES; i++){
 		this_t = kernel_threads + i;
 
 		// having the entry, stack and context points for kernel
@@ -298,15 +294,12 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
  * \pre	calls to thread_transition are protected through sched_lock
  */
 static void _thread_transition(thread_t *this_t, void *_queue){
-	thread_state_t queue,
-				   s;
+	thread_state_t queue = *((thread_state_t*)_queue),
+				   s = this_t->state;
 	sched_queue_t *e;
 
 
 	/* check for invalid state transition */
-	queue = *((thread_state_t*)_queue);
-	s = this_t->state;
-
 	if((queue == CREATED)
 	|| (s == DEAD)
 	|| (queue == RUNNING && s != READY)
@@ -336,10 +329,7 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 }
 
 static int thread_core(thread_t *this_t){
-	int core;
-
-
-	for(core=0; core<CONFIG_NCORES; core++){
+	for(size_t core=0; core<CONFIG_NCORES; core++){
 		if(running[core] == this_t)
 			return core;
 	}
@@ -350,10 +340,9 @@ static int thread_core(thread_t *this_t){
 
 #ifdef CONFIG_KERNEL_SMP
 static void thread_modify(void *payload){
-	sched_ipi_t *p;
+	sched_ipi_t *p = (sched_ipi_t*)payload;
 
 
-	p = (sched_ipi_t*)payload;
 	sched_thread_modify(p->this_t, p->op, p->payload, p->size);
 }
 #endif // CONFIG_KERNEL_SMP

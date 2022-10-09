@@ -56,13 +56,11 @@ static fs_node_t *netfs_root = 0x0;
 
 /* local functions */
 static int init(void){
-	int r;
+	int r = 0;
 	fs_ops_t ops;
 
 
 	/* register syscalls */
-	r = 0;
-
 	r |= sc_register(SC_SOCKET, sc_hdlr_socket);
 	r |= sc_register(SC_RECV, sc_hdlr_recv);
 	r |= sc_register(SC_SEND, sc_hdlr_send);
@@ -110,14 +108,13 @@ err_0:
 kernel_init(2, init);
 
 static int sc_hdlr_socket(void *param){
-	sc_socket_t *p;
+	sc_socket_t *p = (sc_socket_t*)param;
 	process_t *this_p;
 	socket_t *sock;
 	sock_addr_t addr;
 	fs_filed_t *fd;
 
 
-	p = (sc_socket_t*)param;
 	this_p = sched_running()->parent;
 
 	/* allocate socket */
@@ -150,20 +147,18 @@ err_0:
 }
 
 static int sc_hdlr_recv(void *param){
+	sc_socket_t *p = (sc_socket_t*)param;
+	sock_addr_t *addr = 0x0;
 	ssize_t r;
-	char buf[((sc_socket_t*)(param))->buf_len];
-	char _addr[((sc_socket_t*)(param))->addr_len];
-	sock_addr_t *addr;
-	sc_socket_t *p;
+	char buf[p->buf_len];
+	char _addr[p->addr_len];
 	fs_filed_t *fd;
 	fs_node_t *node;
 	process_t *this_p;
 
 
-	this_p = sched_running()->parent;
-
 	/* initials */
-	p = (sc_socket_t*)param;
+	this_p = sched_running()->parent;
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -171,7 +166,6 @@ static int sc_hdlr_recv(void *param){
 	if(fd == 0x0)
 		return_errno(E_INVAL);
 
-	addr = 0x0;
 	node = fd->node;
 
 	if(p->addr){
@@ -197,7 +191,7 @@ static int sc_hdlr_recv(void *param){
 
 	// avoid communicating end of resource to user space
 	if(errno == E_END)
-		errno = 0;
+		reset_errno();
 
 	/* update user space */
 	if(errno == 0){
@@ -214,26 +208,22 @@ end:
 }
 
 static int sc_hdlr_send(void *param){
-	char buf[((sc_socket_t*)param)->buf_len];
-	char _addr[((sc_socket_t*)param)->addr_len];
-	sc_socket_t *p;
+	sc_socket_t *p = (sc_socket_t*)param;;
+	sock_addr_t *addr = 0x0;
+	char buf[p->buf_len];
+	char _addr[p->addr_len];
 	fs_filed_t *fd;
 	process_t *this_p;
-	sock_addr_t *addr;
 
-
-	this_p = sched_running()->parent;
 
 	/* initials */
-	p = (sc_socket_t*)param;
+	this_p = sched_running()->parent;
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
 
 	if(fd == 0x0)
 		return_errno(E_INVAL);
-
-	addr = 0x0;
 
 	if(p->addr){
 		addr = (sock_addr_t*)_addr;
@@ -260,13 +250,12 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 }
 
 static int close(fs_filed_t *fd, process_t *this_p){
-	socket_t *sock;
+	socket_t *sock = (socket_t*)fd->node->payload;
 	netdev_t *dev;
 
 
 	fs_lock();
 
-	sock = (socket_t*)fd->node->payload;
 	dev = socket_bound(sock);
 
 	if(dev)
@@ -299,15 +288,11 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 }
 
 static int ioctl(fs_filed_t *fd, int request, void *arg, size_t n){
+	socket_ioctl_t *p = (socket_ioctl_t*)arg;
+	fs_node_t *node = fd->node;
+	socket_t *sock = (socket_t*)node->payload;
 	int r;
-	fs_node_t *node;
-	socket_t *sock;
-	socket_ioctl_t *p;
 
-
-	p = (socket_ioctl_t*)arg;
-	node = fd->node;
-	sock = (socket_t*)node->payload;
 
 	if(n != sizeof(socket_ioctl_t) + p->addr_len)
 		return_errno(E_INVAL);
@@ -427,13 +412,12 @@ static int accept(socket_t *sock, sock_addr_t *addr, size_t *addr_len){
 }
 
 static size_t recvfrom(fs_filed_t *fd, void *buf, size_t n, sock_addr_t *addr, size_t *addr_len){
-	socket_t *sock;
+	socket_t *sock = (socket_t*)fd->node->payload;
 
-
-	sock = (socket_t*)fd->node->payload;
 
 	if(socket_bound(sock) == 0x0 || socket_linked(sock) == 0x0){
-		errno = E_NOCONN;
+		set_errno(E_NOCONN);
+
 		return 0;
 	}
 
@@ -444,11 +428,10 @@ static size_t recvfrom(fs_filed_t *fd, void *buf, size_t n, sock_addr_t *addr, s
 }
 
 static ssize_t sendto(fs_filed_t *fd, void *buf, size_t n, sock_addr_t *addr, size_t addr_len){
-	socket_t *sock;
+	socket_t *sock = (socket_t*)fd->node->payload;
 	netdev_t *dev;
 
 
-	sock = (socket_t*)fd->node->payload;
 	dev = socket_bound(sock);;
 
 	if(sock->type == SOCK_DGRAM){

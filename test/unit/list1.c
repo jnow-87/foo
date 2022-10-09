@@ -47,13 +47,10 @@ static tlist_t el0 = { .el = 0, .s_ptr = el_names[0], .s_arr = "0" },
 
 /* local functions */
 TEST(list1_init){
-	unsigned int n;
-	tlist_t *head,
-			*tail;
+	unsigned int n = 0;
+	tlist_t *head = &el0;
+	tlist_t *tail;
 
-
-	n = 0;
-	head = &el0;
 
 	list1_init(head, tail);
 
@@ -63,14 +60,11 @@ TEST(list1_init){
 }
 
 TEST(list1_add_head){
-	unsigned int n;
-	tlist_t *head,
-			*tail;
+	unsigned int n = 0;
+	tlist_t *head = 0x0,
+			*tail = 0x0;
 
 
-	n = 0;
-	head = 0x0;
-	tail = 0x0;
 	INIT_EL();
 
 	list1_add_head(head, tail, &el0);
@@ -84,14 +78,11 @@ TEST(list1_add_head){
 }
 
 TEST(list1_add_tail){
-	unsigned int n;
-	tlist_t *head,
-			*tail;
+	unsigned int n = 0;
+	tlist_t *head = 0x0,
+			*tail = 0x0;
 
 
-	n = 0;
-	head = 0x0;
-	tail = 0x0;
 	INIT_EL();
 
 	list1_add_tail(head, tail, &el0);
@@ -105,14 +96,11 @@ TEST(list1_add_tail){
 }
 
 TEST(list1_rm){
-	unsigned int n;
-	tlist_t *head,
-			*tail;
+	unsigned int n = 0;
+	tlist_t *head = 0x0,
+			*tail = 0x0;
 
 
-	n = 0;
-	head = 0x0;
-	tail = 0x0;
 	INIT_EL();
 
 	list1_add_tail(head, tail, &el0);

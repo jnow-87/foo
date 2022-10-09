@@ -13,11 +13,9 @@
 
 /* local functions */
 TEST(iskheap){
-	unsigned int n;
+	unsigned int n = 0;
 	void *p;
 
-
-	n = 0;
 
 	n += TEST_INT_EQ(iskheap(0x0), false);
 	n += TEST_INT_EQ(iskheap(&n), false);

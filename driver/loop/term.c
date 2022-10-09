@@ -23,12 +23,10 @@ static size_t gets(char *s, size_t n, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	loop_cfg_t *dtd = (loop_cfg_t*)dt_data;
 	term_itf_t *itf;
 	ringbuf_t *loop;
-	loop_cfg_t *dtd;
 
-
-	dtd = (loop_cfg_t*)dt_data;
 
 	itf = kcalloc(1, sizeof(term_itf_t));
 	loop = kmalloc(sizeof(ringbuf_t) + dtd->size);

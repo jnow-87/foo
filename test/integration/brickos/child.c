@@ -57,7 +57,6 @@ child_t *child_create(char const *name){
 }
 
 void child_destroy(child_t *child){
-	size_t i;
 	child_pipe_t *pipe;
 
 
@@ -68,7 +67,7 @@ void child_destroy(child_t *child){
 		(void)waitpid(child->pid, 0x0, 0);
 	}
 
-	for(i=0; i<child->npipes; i++){
+	for(size_t i=0; i<child->npipes; i++){
 		pipe = child->pipes + i;
 
 		(void)close(pipe->fd_rd);
@@ -118,8 +117,7 @@ err_0:
 }
 
 void child_fork(child_t *child, char **argv){
-	size_t i;
-	int r;
+	int r = 0;
 	int fork_check_pipe[2];
 	child_pipe_t *p;
 	sigset_t sigs;
@@ -145,20 +143,19 @@ void child_fork(child_t *child, char **argv){
 
 	// child
 	case 0:
-		r = 0;
 		errno = 0;
 
 		// ensure communication signals are not blocked
 		r |= sigemptyset(&sigs);
 		r |= sigaddset(&sigs, CONFIG_TEST_INT_USR_SIG);
 
-		for(i=0; i<X86_INT_PRIOS; i++)
+		for(size_t i=0; i<X86_INT_PRIOS; i++)
 			r |= sigaddset(&sigs, CONFIG_TEST_INT_HW_SIG + i);
 
 		r |= pthread_sigmask(SIG_UNBLOCK, &sigs, 0x0);
 
 		// place pipes to specific fileno
-		for(i=0; i<child->npipes; i++){
+		for(size_t i=0; i<child->npipes; i++){
 			p = child->pipes + i;
 
 			if(fd_valid(p->tgt_fileno[0]) || fd_valid(p->tgt_fileno[1])){
@@ -199,7 +196,7 @@ void child_fork(child_t *child, char **argv){
 
 	(void)close(fork_check_pipe[0]);
 
-	for(i=0; i<child->npipes; i++){
+	for(size_t i=0; i<child->npipes; i++){
 		p = child->pipes + i;
 
 		(void)close(p->pipe_rd[1]);
@@ -259,13 +256,11 @@ static void nclose(int *fds, size_t n){
 }
 
 static bool fd_valid(int fd){
-	int eno;
+	int ecode = errno;
 
-
-	eno = errno;
 
 	if(fcntl(fd, F_GETFD) != 0){
-		errno = eno;
+		errno = ecode;
 
 		return false;
 	}

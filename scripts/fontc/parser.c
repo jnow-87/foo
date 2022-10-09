@@ -26,7 +26,6 @@ static int gettoken(FILE *fp, char *tk, size_t n);
 
 /* global functions */
 int parse_header(FILE *fp, font_header_t *hdr){
-	size_t i;
 	char tk[3][64];
 
 
@@ -34,7 +33,7 @@ int parse_header(FILE *fp, font_header_t *hdr){
 
 	while(1){
 		/* read tokens */
-		for(i=0; i<3; i++){
+		for(size_t i=0; i<3; i++){
 			if(gettoken(fp, tk[i], sizeof(tk[0])) != 0)
 				return -1;
 
@@ -72,10 +71,10 @@ int parse_header(FILE *fp, font_header_t *hdr){
 
 int parse_letter(FILE *fp, char *letter, font_header_t *hdr){
 	char c;
-	size_t i,
-		   j;
+	size_t j;
 
-	for(i=0; i<hdr->height; i++){
+
+	for(size_t i=0; i<hdr->height; i++){
 		j = 0;
 
 		while(j < hdr->width){
@@ -115,11 +114,9 @@ static int sanitise_header(font_header_t *hdr){
 }
 
 static int gettoken(FILE *fp, char *tk, size_t n){
+	size_t i = 0;
 	char c;
-	size_t i;
 
-
-	i = 0;
 
 	while(i < n){
 		if(fread(&c, 1, 1, fp) != 1)

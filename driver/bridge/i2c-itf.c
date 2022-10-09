@@ -55,14 +55,11 @@ static void reset(dev_data_t *i2c);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	bridge_cfg_t *dtd = (bridge_cfg_t*)dt_data;
+	i2c_t *dti = (i2c_t*)dt_itf;
 	dev_data_t *i2c;
 	bridge_t *brdg;
-	bridge_cfg_t *dtd;
-	i2c_t *dti;
 
-
-	dtd = (bridge_cfg_t*)dt_data;
-	dti = (i2c_t*)dt_itf;
 
 	// disable bridge tx interrupt to spare the tx handler function
 	dtd->tx_int = 0;
@@ -109,10 +106,8 @@ err_0:
 driver_probe("bridge,i2c-itf", probe);
 
 static void rx_hdlr(int_num_t num, void *payload){
-	dev_data_t *i2c;
+	dev_data_t *i2c = (dev_data_t*)payload;
 
-
-	i2c = (dev_data_t*)payload;
 
 	i2c->state = rx(i2c);
 
@@ -226,10 +221,7 @@ static int ack(dev_data_t *i2c, errno_t ecode){
 }
 
 static void reset(dev_data_t *i2c){
-	uint8_t i;
-
-
-	for(i=0; i<i2c->nbuf; i++)
+	for(uint8_t i=0; i<i2c->nbuf; i++)
 		kfree(i2c->bufs[i].buf);
 
 	kfree(i2c->bufs);

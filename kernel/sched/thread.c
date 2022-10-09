@@ -81,10 +81,8 @@ err_0:
 }
 
 void thread_destroy(struct thread_t *this_t){
-	process_t *this_p;
+	process_t *this_p = this_t->parent;
 
-
-	this_p = this_t->parent;
 
 	list_rm_safe(this_p->threads, this_t, &this_p->mtx);
 

@@ -22,7 +22,8 @@ int open(char const *path, f_mode_t mode){
 
 
 	if(path == 0x0 || *path == 0){
-		errno = E_INVAL;
+		set_errno(E_INVAL);
+
 		return -1;
 	}
 

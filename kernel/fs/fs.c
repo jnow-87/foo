@@ -39,11 +39,9 @@ static mutex_t fs_ro_mtx = NESTED_MUTEX_INITIALISER(),
 
 /* global functions */
 int fs_register(fs_ops_t *ops){
-	int id;
+	int id = 0;
 	fs_t *fs;
 
-
-	id = 0;
 
 	rw_lock();
 
@@ -102,7 +100,7 @@ void fs_unlock(void){
 }
 
 fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
-	int id;
+	int id = 0;
 	fs_filed_t *fd;
 
 
@@ -110,8 +108,6 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
 	rw_lock();
 
 	/* acquire descriptor id */
-	id = 0;
-
 	if(!list_empty(this_p->fds))
 		id = list_last(this_p->fds)->id + 1;
 

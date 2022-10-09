@@ -58,10 +58,7 @@ int kinit(void){
 
 /* local functions */
 static void exec_init_call(init_call_t *base, init_call_t *end){
-	init_call_t *p;
-
-
-	for(p=base; p<end; p++){
+	for(init_call_t *p=base; p<end; p++){
 		if(errno != 0)
 			return;
 

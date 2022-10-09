@@ -31,10 +31,8 @@ static int check_overlap(devtree_memory_t const *node);
 
 /* global functions */
 int main(int argc, char **argv){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	if(argc == 1){
 		print_layout(&__dt_memory_root);
@@ -60,7 +58,6 @@ int main(int argc, char **argv){
  * \brief	print the memory nodes defined in the device tree
  */
 static void print_layout(devtree_memory_t const *node){
-	unsigned int i;
 	char name[node != 0x0 ? strlen(node->name) : 1];
 
 
@@ -70,7 +67,7 @@ static void print_layout(devtree_memory_t const *node){
 	if(node != &__dt_memory_root){
 		strcpy(name, node->name);
 
-		for(i=0; i<strlen(name); i++){
+		for(size_t i=0; i<strlen(name); i++){
 			if(name[i] == '_')
 				name[i] = ' ';
 		}
@@ -88,7 +85,7 @@ static void print_layout(devtree_memory_t const *node){
 	if(node->childs == 0x0)
 		return;
 
-	for(i=0; node->childs[i]!=0x0; i++)
+	for(size_t i=0; node->childs[i]!=0x0; i++)
 		print_layout(node->childs[i]);
 }
 
@@ -97,13 +94,10 @@ static void print_layout(devtree_memory_t const *node){
  * 			device tree
  */
 static int check_availability(void){
-	unsigned int i;
-	int r;
+	int r = 0;
 
 
-	r = 0;
-
-	for(i=0; i<sizeof(required_nodes)/sizeof(*required_nodes); i++){
+	for(size_t i=0; i<sizeof(required_nodes)/sizeof(*required_nodes); i++){
 		if(devtree_find_memory_by_name(&__dt_memory_root, required_nodes[i]) == 0x0){
 			ERROR("device tree lacks node \"%s\"\n", required_nodes[i]);
 			r++;
@@ -118,16 +112,13 @@ static int check_availability(void){
  * 			the parent node
  */
 static int check_bounds(devtree_memory_t const *node){
-	unsigned int i;
-	int r;
+	int r = 0;
 
 
 	if(node == 0x0 || node->childs == 0x0)
 		return 0;
 
-	r = 0;
-
-	for(i=0; node->childs[i]!=0x0; i++){
+	for(size_t i=0; node->childs[i]!=0x0; i++){
 		r -= check_bounds(node->childs[i]);
 
 		if(node->size == 0)
@@ -147,20 +138,16 @@ static int check_bounds(devtree_memory_t const *node){
  * \brief	check if sibling nodes have overlapping address ranges
  */
 static int check_overlap(devtree_memory_t const *node){
-	unsigned int i,
-				 j;
-	int r;
+	int r = 0;
 
 
 	if(node == 0x0 || node->childs == 0x0)
 		return 0;
 
-	r = 0;
-
-	for(i=0; node->childs[i]!=0x0; i++){
+	for(size_t i=0; node->childs[i]!=0x0; i++){
 		r -= check_overlap(node->childs[i]);
 
-		for(j=i+1; node->childs[j]!=0x0; j++){
+		for(size_t j=i+1; node->childs[j]!=0x0; j++){
 			if(node->childs[i]->size == 0 || node->childs[j]->size == 0)
 				continue;
 

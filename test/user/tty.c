@@ -28,11 +28,9 @@ static int configure(int fd, term_iflags_t iflags, term_oflags_t oflags, term_lf
  * \brief	test to verify terminal iflags
  */
 TEST(tty_iflags){
+	int r = 0;
 	int fd;
-	int r;
 
-
-	r = 0;
 
 	ASSERT_INT_NEQ(fd = open(DEVICE, O_RDWR), -1);
 
@@ -55,11 +53,9 @@ TEST(tty_iflags){
  * \brief	test to verify terminal oflags
  */
 TEST(tty_oflags){
+	int r = 0;
 	int fd;
-	int r;
 
-
-	r = 0;
 
 	ASSERT_INT_NEQ(fd = open(DEVICE, O_RDWR), -1);
 
@@ -82,12 +78,10 @@ TEST(tty_oflags){
  * \brief	test to verify terminal lflags
  */
 TEST(tty_lflags){
+	int r = 0;
 	int fd;
-	int r;
 	char buf[4];
 
-
-	r = 0;
 
 	ASSERT_INT_NEQ(fd = open(DEVICE, O_RDWR), -1);
 
@@ -104,15 +98,11 @@ TEST(tty_lflags){
 }
 
 static int test(int fd, char const *in, char const *out){
-	int r;
-	size_t ilen,
-		   olen;
-	char buf[strlen(out)];
+	int r = 0;
+	size_t ilen = strlen(in),
+		   olen = strlen(out);
+	char buf[olen];
 
-
-	r = 0;
-	ilen = strlen(in);
-	olen = strlen(out);
 
 	r += TEST_INT_EQ(write(fd, (void*)in, ilen), ilen);
 	r += TEST_INT_EQ(read(fd, buf, olen), olen);

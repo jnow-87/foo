@@ -84,7 +84,8 @@ void sc_khdlr(sc_num_t num, void *param, size_t psize){
 
 	/* check syscall */
 	if(num >= NSYSCALLS || hdlr == 0x0){
-		errno = E_INVAL;
+		set_errno(E_INVAL);
+
 		return;
 	}
 
@@ -98,7 +99,7 @@ void sc_khdlr(sc_num_t num, void *param, size_t psize){
 
 	if(r != 0){
 		if(errno == 0)
-			errno = E_UNKNOWN;
+			set_errno(E_UNKNOWN);
 
 		DEBUG("syscall %d on %s:%u failed \"%s\" (%#x)\n", num, this_t->parent->name, this_t->tid, strerror(errno), r);
 	}

@@ -14,12 +14,9 @@
 
 /* global functions */
 bool inet_match_addr(netdev_t *dev, sock_addr_t *addr, size_t addr_len){
-	inetdev_cfg_t *cfg;
-	sock_addr_inet_t *inet_addr;
+	inetdev_cfg_t *cfg = (inetdev_cfg_t*)dev->hw.cfg;
+	sock_addr_inet_t *inet_addr = (sock_addr_inet_t*)addr;
 
-
-	cfg = (inetdev_cfg_t*)dev->hw.cfg;
-	inet_addr = (sock_addr_inet_t*)addr;
 
 	if(addr_len != sizeof(sock_addr_inet_t))
 		return false;

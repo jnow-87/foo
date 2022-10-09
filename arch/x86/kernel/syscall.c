@@ -126,7 +126,7 @@ static void sc_hdlr(int_num_t num, void *payload){
 		sc_khdlr(sc.num, sc.param, sc.size);
 
 	if(errno == 0)
-		errno = x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays);
+		set_errno(x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays));
 
 	/* set errno */
 	LNX_DEBUG("errno: %d\n", errno);

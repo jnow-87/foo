@@ -132,11 +132,11 @@ int vsnprintf(char *s, size_t n, char const *format, va_list lst){
 }
 
 int vfprintf(FILE *stream, char const *format, va_list lst){
+	size_t n = 0,
+		   blen = 0;
 	char const *fp;
 	size_t width,
 		   prec;
-	size_t n,
-		   blen;
 	len_t len;
 	fflag_t flags;
 	value_t v;
@@ -151,9 +151,6 @@ int vfprintf(FILE *stream, char const *format, va_list lst){
 
 	if(stream == 0x0)
 		return 0;
-
-	n = 0;
-	blen = 0;
 
 	while(*format){
 		if(*format != '%'){
@@ -246,10 +243,9 @@ spec_err:
 
 /* local functions */
 static size_t parse_flags(char const *format, fflag_t *flags){
-	size_t i;
+	size_t i = 0;
 
 
-	i = 0;
 	*flags = FFL_NONE;
 
 	while(1){
@@ -283,10 +279,9 @@ static size_t parse_flags(char const *format, fflag_t *flags){
 }
 
 static size_t parse_num(char const *format, va_list lst, size_t *num){
-	size_t i;
+	size_t i = 0;
 
 
-	i = 0;
 	*num = 0;
 
 	while(1){
@@ -504,15 +499,12 @@ static size_t put_char(FILE *stream, char c){
 }
 
 static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len, bool buf_inv, fflag_t flags, size_t width, size_t prec){
-	size_t i,
-		   n,
-		   n_sign,
-		   n_prefix;
+	size_t n = 0;
 	char sign,
 		 prefix[3];
+	size_t n_sign = 0,
+		   n_prefix = 0;
 
-
-	n = 0;
 
 	/* handle sign */
 	if(flags & FFL_SIGNED)			sign = '-';
@@ -565,7 +557,7 @@ static size_t put_spec(FILE *stream, char spec, char const *buf, size_t buf_len,
 	n += put_padding(stream, sign, n_sign);
 
 	/* print prefix */
-	for(i=0; i<n_prefix; i++)
+	for(size_t i=0; i<n_prefix; i++)
 		n += put_char(stream, prefix[i]);
 
 	/* left-pad zeroes */
@@ -594,11 +586,9 @@ static size_t put_padding(FILE *stream, char pad, size_t n){
 }
 
 static size_t put_buf(FILE *stream, char const *b, size_t n, bool inv){
+	int8_t dir = 1;
 	size_t i;
-	int8_t dir;
 
-
-	dir = 1;
 
 	if(inv){
 		b += n - 1;
@@ -688,11 +678,9 @@ static size_t convert(char const *format, fflag_t flags, value_t *v, char *buf){
 }
 
 static size_t utoa_inv(UINTTYPE v, char *s, unsigned int base, fflag_t flags){
-	unsigned int i;
+	unsigned int i = 0;
 	char d;
 
-
-	i = 0;
 
 	do{
 		d = (v % base) % 0xff;

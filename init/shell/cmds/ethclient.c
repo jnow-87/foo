@@ -137,14 +137,11 @@ static int client(int sock){
 }
 
 static int rx_loop(int sock){
+	unsigned int attempts = 0;
+	size_t sleep_ms = opts.rx_timeout_ms / 4;
 	int r;
-	unsigned int attempts;
-	size_t sleep_ms;
 	char buf[8];
 
-
-	attempts = 0;
-	sleep_ms = opts.rx_timeout_ms / 4;
 
 	while(1){
 		r = recv(sock, buf, 7);

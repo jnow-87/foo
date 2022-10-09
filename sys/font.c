@@ -19,13 +19,10 @@ extern font_t __start_fonts[],
 
 /* global functions */
 font_t *font_resolve(char const *name){
-	font_t *font;
-
-
 	if(name == 0x0 || strlen(name) == 0)
 		return __start_fonts;
 
-	for(font=__start_fonts; font!=__stop_fonts; font++){
+	for(font_t *font=__start_fonts; font!=__stop_fonts; font++){
 		if(strcmp(name, font->name) == 0)
 			return font;
 	}

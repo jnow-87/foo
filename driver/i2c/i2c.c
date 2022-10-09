@@ -166,15 +166,13 @@ static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 }
 
 static void int_hdlr(int_num_t num, void *payload){
+	i2c_t *i2c = (i2c_t*)payload;
 	int r;
 	bool master_cmd;
-	i2c_t *i2c;
 	i2c_state_t state;
 	i2c_dgram_t *dgram;
 	itask_queue_t *cmds;
 
-
-	i2c = (i2c_t*)payload;
 
 	mutex_lock(&i2c->mtx);
 
@@ -209,11 +207,9 @@ unlock:
 }
 
 static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
+	i2c_ops_t *ops = &i2c->ops;
 	uint8_t c;
-	i2c_ops_t *ops;
 
-
-	ops = &i2c->ops;
 
 	switch(state){
 	/* master start */
@@ -290,11 +286,9 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 }
 
 static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
+	i2c_ops_t *ops = &i2c->ops;
 	uint8_t c;
-	i2c_ops_t *ops;
 
-
-	ops = &i2c->ops;
 
 	switch(state){
 	case I2C_STATE_NEXT_CMD:

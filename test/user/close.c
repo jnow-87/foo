@@ -19,13 +19,11 @@
  * 			for the given file descriptor
  */
 TEST(close){
-	int r;
+	int r = 0;
 	char buf[20];
 	FILE *fp;
 	f_mode_t f_mode;
 
-
-	r = 0;
 
 	/* init file */
 	(void)unlink("dummy");

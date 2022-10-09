@@ -34,9 +34,7 @@ static struct item *hashtab[HASHSZ];
  * Lookup a value in the configuration string.
  */
 int hashtbl_lookup(char const *name, int n, unsigned int hash){
-	struct item *aux;
-
-	for(aux = hashtab[hash % HASHSZ]; aux; aux = aux->next){
+	for(struct item *aux=hashtab[hash % HASHSZ]; aux; aux=aux->next){
 		if(aux->hash == hash && aux->len == n &&
 		    memcmp(aux->name, name, n) == 0)
 			return 1;
@@ -76,14 +74,15 @@ int hashtbl_add(char const *name, int n){
  * Clear the set of configuration strings.
  */
 void hashtbl_clear(void){
-	struct item *aux, *next;
-	unsigned int i;
+	struct item *next;
 
-	for(i = 0; i < HASHSZ; i++){
-		for(aux = hashtab[i]; aux; aux = next){
+
+	for(size_t i=0; i<HASHSZ; i++){
+		for(struct item *aux=hashtab[i]; aux; aux=next){
 			next = aux->next;
 			free(aux);
 		}
+
 		hashtab[i] = NULL;
 	}
 }
@@ -92,9 +91,10 @@ void hashtbl_clear(void){
 /* local functions */
 unsigned int strhash(char const *str, unsigned int sz){
 	/* fnv32 hash */
-	unsigned int i, hash = 2166136261U;
+	unsigned int hash = 2166136261U;
 
-	for(i = 0; i < sz; i++)
+
+	for(size_t i=0; i<sz; i++)
 		hash =(hash ^ str[i]) * 0x01000193;
 	return hash;
 }

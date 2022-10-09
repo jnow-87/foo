@@ -61,7 +61,6 @@ static opts_t opts;
 /* local functions */
 static int exec(int argc, char **argv){
 	char opt;
-	int i;
 
 
 	opts = DEFAULT_OPTS();
@@ -82,7 +81,7 @@ static int exec(int argc, char **argv){
 	if(optind == argc)
 		return -readwrite(0, "stdin", true);
 
-	for(i=optind; i<argc; i++){
+	for(int i=optind; i<argc; i++){
 		if(cat(argv[i]) != 0)
 			return 1;
 	}
@@ -138,9 +137,8 @@ err_0:
 }
 
 static int readwrite(int fd, char const *file, bool interactive){
-	ssize_t i,
-			r;
 	uint8_t buf[opts.blocksize];
+	ssize_t r;
 
 
 	while(opts.length > 0 || opts.length == -1){
@@ -155,7 +153,7 @@ static int readwrite(int fd, char const *file, bool interactive){
 
 		/* write */
 		if(opts.hexdump){
-			for(i=0; i<r; i++)
+			for(ssize_t i=0; i<r; i++)
 				printf("%.2hhx", buf[i]);
 
 			fflush(stdout);

@@ -41,15 +41,11 @@ static int write(gpio_int_t v, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
+	gpio_regs_t *regs = dtd->regs;
+	gpio_cfg_t *cfg = &dtd->cfg;
 	gpio_ops_t ops;
-	gpio_regs_t *regs;
-	gpio_cfg_t *cfg;
 
-
-	dtd = (dt_data_t*)dt_data;
-	cfg = &dtd->cfg;
-	regs = dtd->regs;
 
 	/* create device */
 	ops.read = read;

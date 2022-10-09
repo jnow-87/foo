@@ -89,11 +89,10 @@ void socket_free(socket_t *sock){
 }
 
 int socket_listen(socket_t *sock, int backlog){
+	size_t size = sizeof(socket_t*) * backlog + 1;
 	void *buf;
-	size_t size;
 
 
-	size = sizeof(socket_t*) * backlog + 1;
 	buf = kmalloc(size);
 
 	if(buf == 0x0)
@@ -208,10 +207,8 @@ socket_t *socket_add_client_addr(socket_t *sock, sock_addr_t *addr, size_t addr_
 }
 
 socket_t *socket_get_client_socket(socket_t *sock){
-	socket_t *client;
+	socket_t *client = 0x0;
 
-
-	client = 0x0;
 
 	mutex_lock(&sock->mtx);
 
@@ -238,11 +235,9 @@ socket_t *socket_get_client_addr(socket_t *sock, sock_addr_t *addr, size_t *addr
 }
 
 int socket_datain_stream(socket_t *sock, void *buf, size_t n, bool signal){
-	size_t x;
+	size_t x = 0;
 	fs_node_t *node;
 
-
-	x = 0;
 
 	mutex_lock(&sock->mtx);
 

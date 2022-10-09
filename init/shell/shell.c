@@ -44,23 +44,19 @@ size_t shell_line = 0;
 
 /* global functions */
 int shell(char const *prompt, FILE *_stream){
+	int exec_err = 0,
+		r = 0;
+	FILE *stream = _stream;
+	stream_stack *streams = 0x0;
 	char buf[CONFIG_LINE_MAX];
 	int argc;
 	char **argv;
-	int exec_err,
-		r;
-	FILE *stream;
 	stat_t f_stat;
-	stream_stack *streams,
-				 *stackp;
+	stream_stack *stackp;
 	term_cfg_t cfg;
 
 
 	/* init */
-	r = 0;
-	exec_err = 0;
-	stream = _stream;
-	streams = 0x0;
 	shell_line = 0;
 	strncpy(shell_file, "stdin", NAME_MAX);
 
@@ -156,12 +152,12 @@ iter_clean:
 
 /* local functions */
 static int strsplit(char *line, int *_argc, char ***_argv){
-	unsigned int i,
-				 j,
+	unsigned int i = 0;
+	int argc = 0;
+	unsigned int j,
 				 len,
 				 start,
 				 arg_len;
-	int argc;
 	char **argv;
 
 
@@ -171,9 +167,6 @@ static int strsplit(char *line, int *_argc, char ***_argv){
 	len = strlen(line);
 
 	/* identify number of arguments within cmdline */
-	i = 0;
-	argc = 0;
-
 	while(i < len){
 		/* skip blanks */
 		if(line[i] == ' '){
@@ -310,6 +303,7 @@ static int strsplit(char *line, int *_argc, char ***_argv){
 
 		/* copy content from cmdline to argv[] */
 		j = 0;
+
 		for(; start<i; start++){
 			if(line[start] == '"')
 				continue;

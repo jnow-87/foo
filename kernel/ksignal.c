@@ -87,10 +87,8 @@ void ksignal_bcast(ksignal_t *sig){
 
 /* local functions */
 static void timeout_hdlr(void *payload){
-	timeout_data_t *p;
+	timeout_data_t *p = (timeout_data_t*)payload;
 
-
-	p = (timeout_data_t*)payload;
 
 	mutex_lock(p->mtx);
 	ksignal_send(p->sig);

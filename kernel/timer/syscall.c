@@ -25,10 +25,8 @@ static int sc_hdlr_time(void *param);
 
 /* local functions */
 static int init(void){
-	int r;
+	int r = 0;
 
-
-	r = 0;
 
 	r |= sc_register(SC_SLEEP, sc_hdlr_sleep);
 	r |= sc_register(SC_TIME, sc_hdlr_time);
@@ -39,13 +37,12 @@ static int init(void){
 kernel_init(0, init);
 
 static int sc_hdlr_sleep(void *param){
+	time_t *p = (time_t*)param;
 	int r;
 	ksignal_t sig;
 	mutex_t mtx;
-	time_t *p;
 
 
-	p = (time_t*)param;
 	ksignal_init(&sig);
 	mutex_init(&mtx, MTX_NOINT);
 

@@ -71,11 +71,10 @@ static size_t gets(char *s, size_t n, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	term_itf_t *itf;
 
 
-	dtd = (dt_data_t*)dt_data;
 	itf = kcalloc(1, sizeof(term_itf_t));
 
 	if(itf == 0x0)
@@ -98,15 +97,11 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 driver_probe("avr,spi", probe);
 
 static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
+	dt_data_t *dtd = (dt_data_t*)hw;
+	spi_regs_t *regs = dtd->regs;
+	spi_cfg_t *cfg = (spi_cfg_t*)hw_cfg;
 	uint8_t const pres_bits[] = { 0b100, 0b000, 0b101, 0b001, 0b110, 0b010, 0b011 };
-	spi_cfg_t *cfg;
-	dt_data_t *dtd;
-	spi_regs_t *regs;
 
-
-	dtd = (dt_data_t*)hw;
-	regs = dtd->regs;
-	cfg = (spi_cfg_t*)hw_cfg;
 
 	/* disable spi, triggering reset */
 	regs->spcr = 0x0;
@@ -135,10 +130,8 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 }
 
 static char putc(char c, void *hw){
-	spi_regs_t *regs;
+	spi_regs_t *regs = ((dt_data_t*)hw)->regs;
 
-
-	regs = ((dt_data_t*)hw)->regs;
 
 	regs->spdr = c;
 	while(!(regs->spsr & (0x1 << SPSR_SPIF)));
@@ -149,11 +142,9 @@ static char putc(char c, void *hw){
 }
 
 static size_t putsn(char const *s, size_t n, void *hw){
+	spi_regs_t *regs  = ((dt_data_t*)hw)->regs;
 	size_t i;
-	spi_regs_t *regs;
 
-
-	regs = ((dt_data_t*)hw)->regs;
 
 	if(s == 0x0)
 		goto_errno(err, E_INVAL);
@@ -173,10 +164,8 @@ err:
 }
 
 static size_t gets(char *s, size_t n, void *hw){
-	spi_regs_t *regs;
+	spi_regs_t *regs  = ((dt_data_t*)hw)->regs;
 
-
-	regs = ((dt_data_t*)hw)->regs;
 
 	if(n == 0)
 		return 0;

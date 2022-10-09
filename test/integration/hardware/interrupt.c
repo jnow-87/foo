@@ -175,14 +175,13 @@ void hw_int_return(int num, x86_priv_t target, unsigned int tid){
 
 /* local functions */
 static int_req_t *req_lookup(void){
-	size_t i;
 	int_req_t *req;
 
 
 	pthread_mutex_lock(&req_mtx);
 
 	while(1){
-		for(i=0; i<X86_INT_PRIOS; i++){
+		for(size_t i=0; i<X86_INT_PRIOS; i++){
 			if((req = requests[i]) != 0x0)
 				break;
 		}

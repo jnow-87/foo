@@ -53,12 +53,9 @@ TEST(stack_print){
 }
 
 TEST(stack_init){
-	unsigned int n;
-	stack_t *top;
+	unsigned int n = 0;
+	stack_t *top = &el0;
 
-
-	n = 0;
-	top = &el0;
 
 	stack_init(top);
 
@@ -68,12 +65,10 @@ TEST(stack_init){
 }
 
 TEST(stack_top){
-	unsigned int n;
-	stack_t *top;
+	unsigned int n = 0;
+	stack_t *top = 0x0;
 
 
-	n = 0;
-	top = 0;
 	INIT_EL();
 
 	n += TEST_PTR_EQ(stack_top(top), 0x0);
@@ -94,12 +89,10 @@ TEST(stack_top){
 }
 
 TEST(stack_push){
-	unsigned int n;
-	stack_t *top;
+	unsigned int n = 0;
+	stack_t *top = 0x0;
 
 
-	n = 0;
-	top = 0;
 	INIT_EL();
 
 	// push to empty stack
@@ -119,13 +112,11 @@ TEST(stack_push){
 }
 
 TEST(stack_pop){
-	unsigned int n;
-	stack_t *top,
+	unsigned int n = 0;
+	stack_t *top = 0x0,
 			*el;
 
 
-	n = 0;
-	top = 0;
 	INIT_EL();
 
 	// prepare

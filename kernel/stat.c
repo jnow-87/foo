@@ -17,9 +17,6 @@ extern stat_call_t __kernel_stat_base[],
 
 /* global functions */
 void kstat(){
-	stat_call_t *p;
-
-
-	for(p=__kernel_stat_base; p<__kernel_stat_end; p++)
+	for(stat_call_t *p=__kernel_stat_base; p<__kernel_stat_end; p++)
 		(*p)();
 }

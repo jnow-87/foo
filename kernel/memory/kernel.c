@@ -37,7 +37,7 @@ void *kmalloc(size_t n){
 	mutex_unlock(&kmem_mtx);
 
 	if(n != 0 && p == 0x0)
-		errno = E_NOMEM;
+		set_errno(E_NOMEM);
 
 	return p;
 }
@@ -56,14 +56,13 @@ void *kpalloc(size_t n){
 
 void *kcalloc(size_t n, size_t size){
 	void *p;
-	size_t x;
 
 
-	x = n * size;
-	p = kmalloc(x);
+	n *= size;
+	p = kmalloc(n);
 
 	if(p != 0x0)
-		memset(p, 0, x);
+		memset(p, 0, n);
 
 	return p;
 }

@@ -22,12 +22,10 @@
  * 			has advanced according to the sleep interval
  */
 TEST(sleep){
-	int r;
+	int r = 0;
 	uint32_t t0,
 			 t1;
 
-
-	r = 0;
 
 	r += TEST_INT_NEQ(t0 = time_ms(), 0);
 	r += TEST_INT_EQ(sleep(PERIOD_MS, 0), 0);

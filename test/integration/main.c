@@ -76,8 +76,7 @@ static thread_cfg_t threads[] = {
 
 /* global functions */
 int main(int argc, char **argv){
-	size_t i;
-	int r;
+	int r = 0;
 	int sig_fd;
 	sigset_t sig_lst;
 
@@ -88,8 +87,6 @@ int main(int argc, char **argv){
 	/* init signal handling */
 	verify_signals();
 
-	r = 0;
-
 	r |= sigemptyset(&sig_lst);
 	r |= sigaddset(&sig_lst, SIGINT);
 	r |= sigaddset(&sig_lst, SIGPIPE);
@@ -97,7 +94,7 @@ int main(int argc, char **argv){
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_USR_SIG);
 	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
 
-	for(i=0; i<X86_INT_PRIOS; i++)
+	for(size_t i=0; i<X86_INT_PRIOS; i++)
 		r |= sigaddset(&sig_lst, CONFIG_TEST_INT_HW_SIG + i);
 
 	// ensure none of the threads gets any of the above signals
@@ -117,7 +114,7 @@ int main(int argc, char **argv){
 		EEXIT("creating child processes failed\n");
 
 	/* create threads */
-	for(i=0; i<sizeof_array(threads); i++){
+	for(size_t i=0; i<sizeof_array(threads); i++){
 		if((threads[i].when & opts.app_mode) == 0)
 			continue;
 
@@ -142,10 +139,8 @@ int main(int argc, char **argv){
 
 /* local functions */
 static void *thread_wrapper(void *arg){
-	thread_cfg_t *cfg;
+	thread_cfg_t *cfg = (thread_cfg_t*)arg;
 
-
-	cfg = (thread_cfg_t*)arg;
 
 	if(cfg->init && cfg->init() != 0)
 		EEXIT("%s thread init failed %s\n", cfg->name, strerror(errno));
@@ -195,21 +190,19 @@ static int signal_hdlr(int fd){
 }
 
 static void verify_signals(){
-	size_t i,
-		   j;
 	int rt_sigs[X86_INT_PRIOS + 1];
 
 
 	rt_sigs[X86_INT_PRIOS] = CONFIG_TEST_INT_USR_SIG;
 
-	for(i=0; i<X86_INT_PRIOS; i++)
+	for(size_t i=0; i<X86_INT_PRIOS; i++)
 		rt_sigs[i] = CONFIG_TEST_INT_HW_SIG + i;
 
-	for(i=0; i<X86_INT_PRIOS + 1; i++){
+	for(size_t i=0; i<X86_INT_PRIOS + 1; i++){
 		if(rt_sigs[i] < SIGRTMIN || rt_sigs[i] > SIGRTMAX)
 			EEXIT("%d is not a real-time signal (%d - %d\n", rt_sigs[i], SIGRTMIN, SIGRTMAX);
 
-		for(j=0; j<X86_INT_PRIOS + 1; j++){
+		for(size_t j=0; j<X86_INT_PRIOS + 1; j++){
 			if(i != j && rt_sigs[i] == rt_sigs[j])
 				EEXIT("signal %u used multiple times\n", rt_sigs[i])
 		}
@@ -225,10 +218,7 @@ static void exit_hdlr(int status, void *arg){
 }
 
 static void cleanup(void){
-	size_t i;
-
-
-	for(i=0; i<sizeof_array(threads); i++){
+	for(size_t i=0; i<sizeof_array(threads); i++){
 		DEBUG(1, "terminating %s thread\n", threads[i].name);
 
 		/**
@@ -248,7 +238,7 @@ static void cleanup(void){
 	DEBUG(1, "terminating child processes\n");
 	brickos_destroy_childs();
 
-	for(i=0; i<sizeof_array(threads); i++){
+	for(size_t i=0; i<sizeof_array(threads); i++){
 		if((threads[i].when & opts.app_mode) == 0 || threads[i].cleanup == 0x0)
 			continue;
 

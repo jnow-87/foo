@@ -97,11 +97,9 @@ err_0:
 }
 
 void bridge_destroy(bridge_t *brdg){
-	bridge_cfg_t *cfg;
+	bridge_cfg_t *cfg = brdg->cfg;
 	bridge_dgram_t *dgram;
 
-
-	cfg = brdg->cfg;
 
 	if(cfg->rx_int)
 		int_release(cfg->rx_int);
@@ -130,10 +128,8 @@ int16_t bridge_write(bridge_t *brdg, void *buf, uint8_t n){
 
 /* local functions */
 static int16_t rw(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t type){
-	bridge_t *peer;
+	bridge_t *peer = brdg->peer;
 
-
-	peer = brdg->peer;
 
 	if(!callbacks_set(&peer->ops, bridge_ops_t))
 		return_errno(E_NOIMP);
@@ -212,12 +208,10 @@ static int16_t poll(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t ty
 }
 
 static void int_hdlr(int_num_t num, void *payload){
-	bridge_t *brdg;
+	bridge_t *brdg = (bridge_t*)payload;
 	bridge_dgram_t *dgram;
 	int_num_t cplt_int;
 
-
-	brdg = (bridge_t*)payload;
 
 	mutex_lock(&brdg->mtx);
 

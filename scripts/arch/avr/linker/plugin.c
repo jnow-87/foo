@@ -26,7 +26,7 @@ static int plugin_ioverflow_det(FILE *ofile, char *bin_type);
 
 /* global functions */
 int main(int argc, char **argv){
-	int r;
+	int r = 0;
 	char *ofile_name;
 	char *bin_type;
 	FILE *ofile;
@@ -57,8 +57,6 @@ int main(int argc, char **argv){
 		printf("open output file failed \"%s\"\n", strerror(errno));
 		return 1;
 	}
-
-	r = 0;
 
 #if (defined(CONFIG_BUILD_DEBUG) && defined(CONFIG_IOVERFLOW_DET))
 	r |= plugin_ioverflow_det(ofile, bin_type);
