@@ -14,10 +14,8 @@
 
 /* local functions */
 static int exec(int argc, char **argv){
-	int status;
+	int status = 0;
 
-
-	status = 0;
 
 	if(argc > 1)
 		status = atoi(argv[1]);

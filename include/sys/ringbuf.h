@@ -15,11 +15,11 @@
 
 
 /* macros */
-#define RINGBUF_INITIALISER(_data, _size) (ringbuf_t){ \
+#define RINGBUF_INITIALISER(_buf, _size) (ringbuf_t){ \
 	.rd = _size - 1, \
 	.wr = 0, \
 	.size = _size, \
-	.data = _data, \
+	.buf = _buf, \
 }
 
 
@@ -29,18 +29,18 @@ typedef struct{
 		   wr,
 		   size;
 
-	void *data;
+	void *buf;
 } ringbuf_t;
 
 
 /* prototypes */
-void ringbuf_init(ringbuf_t *buf, void *data, size_t n);
-size_t ringbuf_read(ringbuf_t *buf, void *data, size_t n);
-size_t ringbuf_write(ringbuf_t *buf, void *data, size_t n);
-size_t ringbuf_contains(ringbuf_t *buf);
-size_t ringbuf_left(ringbuf_t *buf);
-bool ringbuf_empty(ringbuf_t *buf);
-bool ringbuf_full(ringbuf_t *buf);
+void ringbuf_init(ringbuf_t *ring, void *buf, size_t n);
+size_t ringbuf_read(ringbuf_t *ring, void *buf, size_t n);
+size_t ringbuf_write(ringbuf_t *ring, void *buf, size_t n);
+size_t ringbuf_contains(ringbuf_t *ring);
+size_t ringbuf_left(ringbuf_t *ring);
+bool ringbuf_empty(ringbuf_t *ring);
+bool ringbuf_full(ringbuf_t *ring);
 
 
 #endif // SYS_RINGBUF_H

@@ -430,6 +430,7 @@ bool menu_has_prompt(struct menu *menu)
 {
 	if (!menu->prompt)
 		return false;
+
 	return true;
 }
 
@@ -475,8 +476,10 @@ char const *menu_get_prompt(struct menu *menu)
 {
 	if (menu->prompt)
 		return menu->prompt->text;
+
 	else if (menu->sym)
 		return menu->sym->name;
+
 	return NULL;
 }
 

@@ -12,9 +12,9 @@
 
 
 typedef struct{
-	size_t (*puts)(char const *s, size_t n, void *data);
+	size_t (*puts)(char const *s, size_t n, void *hw);
 
-	void *data;
+	void *hw;
 } klog_itf_t;
 
 

@@ -81,16 +81,11 @@
  * 			1 otherwise
  */
 #define _TEST_EVAL(eq, cmp, n, fmt, expr, ref)({ \
-	typeof(ref) _result, \
-				_ref; \
-	int _eq, \
-		_passed; \
+	typeof(ref) _result = expr, \
+				_ref = ref; \
+	int _eq = cmp(_result, _ref, n), \
+		_passed = (_eq == eq); \
 	\
-	\
-	_result = expr; \
-	_ref = ref; \
-	_eq = cmp(_result, _ref, n); \
-	_passed = (_eq == eq); \
 	\
 	TEST_LOG("(%s = " fmt ") %s " fmt " [%s]\n", \
 		#expr, \

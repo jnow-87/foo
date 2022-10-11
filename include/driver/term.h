@@ -72,20 +72,20 @@ typedef struct{
 
 typedef struct{
 	/* callbacks */
-	int (*configure)(term_cfg_t *term_cfg, void *hw_cfg, void *data);
+	int (*configure)(term_cfg_t *term_cfg, void *hw_cfg, void *hw);
 
-	char (*putc)(char c, void *data);
-	size_t (*puts)(char const *s, size_t n, void *data);
-	size_t (*gets)(char *s, size_t n, void *data);
+	char (*putc)(char c, void *hw);
+	size_t (*puts)(char const *s, size_t n, void *hw);
+	size_t (*gets)(char *s, size_t n, void *hw);
 
-	int (*cursor)(uint16_t line, uint16_t column, bool toggle, void *data);
-	int (*scroll)(int16_t lines, void *data);
+	int (*cursor)(uint16_t line, uint16_t column, bool toggle, void *hw);
+	int (*scroll)(int16_t lines, void *hw);
 	int (*erase)(term_erase_t type, uint16_t n, void *hw);
 
-	errno_t (*error)(void *data);
+	errno_t (*error)(void *hw);
 
 	/* hardware description */
-	void *data,
+	void *hw,
 		 *cfg;
 	uint8_t cfg_size;
 
@@ -97,7 +97,7 @@ typedef struct term_t{
 	term_cfg_t *cfg;
 	fs_node_t *node;
 
-	term_itf_t *hw;
+	term_itf_t *itf;
 
 	ringbuf_t rx_buf;
 	itask_queue_t tx_queue;
@@ -110,14 +110,14 @@ typedef struct term_t{
 
 
 /* prototypes */
-term_t *term_create(term_itf_t *hw, term_cfg_t *cfg, fs_node_t *node);
+term_t *term_create(term_itf_t *itf, term_cfg_t *cfg, fs_node_t *node);
 void term_destroy(term_t *term);
 
 size_t term_gets(term_t *term, char *s, size_t n);
 size_t term_puts(term_t *term, char const *s, size_t n);
 
-void term_rx_hdlr(int_num_t num, void *term);
-void term_tx_hdlr(int_num_t num, void *term);
+void term_rx_hdlr(int_num_t num, void *payload);
+void term_tx_hdlr(int_num_t num, void *payload);
 
 char *term_flags_apply(term_t *term, char *s, size_t n, size_t incr, term_flag_type_t fl_type, uint8_t flags);
 

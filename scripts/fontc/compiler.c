@@ -26,10 +26,10 @@ static void convert_vert(char const *letter, uint8_t *hex, font_header_t *hdr);
 
 /* global functions */
 int compile_font(FILE *ifp, FILE *ofp, font_header_t *hdr){
-	int r;
+	int r = 0;
 
 
-	r = font_header(ofp, hdr);
+	r |= font_header(ofp, hdr);
 	r |= font_letters(ifp, ofp, hdr);
 	r |= font_footer(ofp);
 
@@ -57,7 +57,7 @@ static int font_header(FILE *fp, font_header_t *hdr){
 			"\t.height = %zu,\n"
 			"\t.width = %zu,\n"
 			"\n"
-			"\t.data = {\n"
+			"\t.chars = {\n"
 			,
 			hdr->name, opts.vertical ? "_vert" : "",
 			hdr->name,
@@ -79,14 +79,11 @@ static int font_footer(FILE *fp){
 }
 
 static int font_letters(FILE *ifp, FILE *ofp, font_header_t *hdr){
-	size_t i,
-		   nsyms,
+	size_t nsyms = 0,
 		   nhex = opts.vertical ? hdr->height : hdr->width;
 	char letter[hdr->height * hdr->width];
 	uint8_t hex[nhex];
 
-
-	nsyms = 0;
 
 	while(1){
 		/* read */
@@ -104,7 +101,7 @@ static int font_letters(FILE *ifp, FILE *ofp, font_header_t *hdr){
 		if(fprintf(ofp, "\t\t(uint8_t []){ ") <= 0)
 			return ERROR("writing file\n");
 
-		for(i=0; i<nhex; i++){
+		for(size_t i=0; i<nhex; i++){
 			if(fprintf(ofp, "0x%2.2hhx%s", hex[i], ((i + 1 == nhex) ? " },\n" : ", ")) <= 0)
 				return ERROR("writing file");
 		}
@@ -114,7 +111,7 @@ static int font_letters(FILE *ifp, FILE *ofp, font_header_t *hdr){
 
 	if(nsyms != hdr->last_char - hdr->first_char + 1){
 		return ERROR(
-			"missmatch in number of symbols: header %zu - %zu + 1 = %zu, data %zu\n",
+			"missmatch in number of symbols: header %zu - %zu + 1 = %zu, chars %zu\n",
 			hdr->last_char,
 			hdr->first_char,
 			hdr->last_char - hdr->first_char + 1,
@@ -126,27 +123,19 @@ static int font_letters(FILE *ifp, FILE *ofp, font_header_t *hdr){
 }
 
 static void convert_hor(char const *letter, uint8_t *hex, font_header_t *hdr){
-	size_t w,
-		   h;
-
-
 	memset(hex, 0x0, hdr->width);
 
-	for(w=0; w<hdr->width; w++){
-		for(h=0; h<hdr->height; h++)
+	for(size_t w=0; w<hdr->width; w++){
+		for(size_t h=0; h<hdr->height; h++)
 			hex[w] |= ((letter[hdr->width * h + w] == ' ') ? 0 : 1) << h;
 	}
 }
 
 static void convert_vert(char const *letter, uint8_t *hex, font_header_t *hdr){
-	size_t w,
-		   h;
-
-
 	memset(hex, 0x0, hdr->height);
 
-	for(h=0; h<hdr->height; h++){
-		for(w=0; w<hdr->width; w++)
+	for(size_t h=0; h<hdr->height; h++){
+		for(size_t w=0; w<hdr->width; w++)
 			hex[h] |= ((letter[hdr->width * h + w] == ' ') ? 0 : 1) << (hdr->width - w - 1);
 	}
 }

@@ -99,8 +99,8 @@ static int client(int sock){
 		return ERROR("fcntl(set mode): %s\n", strerror(errno));
 
 	addr.domain = AF_INET;
-	addr.data.addr = opts.ip;
-	addr.data.port = opts.port;
+	addr.inet_data.addr = opts.ip;
+	addr.inet_data.port = opts.port;
 
 	if(connect(sock, (sock_addr_t*)&addr, sizeof(sock_addr_inet_t)) != 0)
 		return ERROR("connect(): %s\n", strerror(errno));
@@ -137,17 +137,14 @@ static int client(int sock){
 }
 
 static int rx_loop(int sock){
+	unsigned int attempts = 0;
+	size_t sleep_ms = opts.rx_timeout_ms / 4;
 	int r;
-	unsigned int attempts;
-	size_t sleep_ms;
-	char data[8];
+	char buf[8];
 
-
-	attempts = 0;
-	sleep_ms = opts.rx_timeout_ms / 4;
 
 	while(1){
-		r = recv(sock, data, 7);
+		r = recv(sock, buf, 7);
 
 		if(r < 0)
 			return ERROR("recv(): %s\n", strerror(errno));
@@ -162,8 +159,8 @@ static int rx_loop(int sock){
 		}
 
 		attempts = 0;
-		data[r] = 0;
-		printf("recv: %s\n", data);
+		buf[r] = 0;
+		printf("recv: %s\n", buf);
 	}
 }
 

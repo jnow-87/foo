@@ -30,7 +30,7 @@ typedef struct datagram_t{
 
 	size_t len,
 		   idx;
-	uint8_t *data;
+	void *buf;
 
 	sock_addr_t addr;		// NOTE addr has to be the last member of this
 							// struct since it has a flexible array member
@@ -60,7 +60,7 @@ typedef struct{
 	int (*listen)(socket_t *sock);
 	void (*close)(socket_t *sock);
 
-	ssize_t (*send)(socket_t *sock, void *data, size_t data_len);
+	ssize_t (*send)(socket_t *sock, void *buf, size_t n);
 
 	void *cfg;
 } netdev_itf_t;
@@ -72,7 +72,7 @@ typedef struct netdev_t{
 	net_family_t domain;
 
 	netdev_itf_t hw;
-	void *data;
+	void *payload;
 } netdev_t;
 
 typedef struct{
@@ -85,7 +85,7 @@ typedef struct{
 
 /* prototypes */
 // network device function
-devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t *itf, void *data);
+devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t *itf, void *payload);
 int netdev_release(devfs_dev_t *dev);
 
 netdev_t *netdev_bind(socket_t *sock, sock_addr_t *addr, size_t addr_len);
@@ -108,10 +108,10 @@ socket_t *socket_add_client_addr(socket_t *sock, sock_addr_t *addr, size_t addr_
 socket_t *socket_get_client_socket(socket_t *sock);
 socket_t *socket_get_client_addr(socket_t *sock, sock_addr_t *addr, size_t *addr_len);
 
-int socket_datain_stream(socket_t *sock, uint8_t *data, size_t len, bool signal);
-int socket_dataout_stream(socket_t *sock, void *data, size_t data_len);
-int socket_datain_dgram(socket_t *sock, sock_addr_t *addr, size_t addr_len, uint8_t *data, size_t len);
-int socket_dataout_dgram(socket_t *sock, void *data, size_t data_len, sock_addr_t *addr, size_t *addr_len);
+int socket_datain_stream(socket_t *sock, void *buf, size_t n, bool signal);
+int socket_dataout_stream(socket_t *sock, void *buf, size_t n);
+int socket_datain_dgram(socket_t *sock, void *buf, size_t n, sock_addr_t *addr, size_t addr_len);
+int socket_dataout_dgram(socket_t *sock, void *buf, size_t n, sock_addr_t *addr, size_t *addr_len);
 
 
 /* external variables */

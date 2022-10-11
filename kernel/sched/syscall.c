@@ -21,25 +21,23 @@
 
 
 /* static/local prototypes */
-static int sc_hdlr_sched_yield(void *p);
+static int sc_hdlr_sched_yield(void *param);
 
-static int sc_hdlr_process_create(void *p);
-static int sc_hdlr_process_info(void *p);
+static int sc_hdlr_process_create(void *param);
+static int sc_hdlr_process_info(void *param);
 
-static int sc_hdlr_thread_create(void *p);
-static int sc_hdlr_thread_info(void *p);
-static int sc_hdlr_nice(void *p);
-static int sc_hdlr_exit(void *p);
+static int sc_hdlr_thread_create(void *param);
+static int sc_hdlr_thread_info(void *param);
+static int sc_hdlr_nice(void *param);
+static int sc_hdlr_exit(void *param);
 
 
 /* local functions */
 static int init(void){
-	int r;
+	int r = 0;
 
 
 	/* register syscalls */
-	r = E_OK;
-
 	r |= sc_register(SC_SCHEDYIELD, sc_hdlr_sched_yield);
 
 	r |= sc_register(SC_PROCCREATE, sc_hdlr_process_create);
@@ -55,13 +53,13 @@ static int init(void){
 
 kernel_init(2, init);
 
-static int sc_hdlr_sched_yield(void *p){
+static int sc_hdlr_sched_yield(void *param){
 	sched_trigger();
-	return E_OK;
+	return 0;
 }
 
-static int sc_hdlr_process_create(void *_p){
-	sc_process_t *p = (sc_process_t*)_p;
+static int sc_hdlr_process_create(void *param){
+	sc_process_t *p = (sc_process_t*)param;
 	char name[p->name_len + 1];
 	char args[p->args_len + 1];
 	process_t *this_p,
@@ -88,31 +86,27 @@ static int sc_hdlr_process_create(void *_p){
 
 	p->pid = new->pid;
 
-	return E_OK;
+	return 0;
 }
 
-static int sc_hdlr_process_info(void *_p){
-	sc_process_t *p;
+static int sc_hdlr_process_info(void *param){
+	sc_process_t *p = (sc_process_t*)param;
 	process_t *this_p;
 
 
-	p = (sc_process_t*)_p;
 	this_p = sched_running()->parent;
-
 	p->pid = this_p->pid;
 
-	return E_OK;
+	return 0;
 }
 
-static int sc_hdlr_thread_create(void *_p){
-	sc_thread_t *p;
+static int sc_hdlr_thread_create(void *param){
+	sc_thread_t *p = (sc_thread_t*)param;
 	thread_t *new;
 	process_t *this_p;
 
 
-	p = (sc_thread_t*)_p;
 	this_p = sched_running()->parent;
-
 	p->tid = 0;
 
 	DEBUG("create thread for \"%s\" at %p, arg %p\n", this_p->name, p->entry, p->arg);
@@ -128,46 +122,41 @@ static int sc_hdlr_thread_create(void *_p){
 
 	p->tid = new->tid;
 
-	return E_OK;
+	return 0;
 }
 
-static int sc_hdlr_thread_info(void *_p){
-	sc_thread_t *p;
+static int sc_hdlr_thread_info(void *param){
+	sc_thread_t *p = (sc_thread_t*)param;
 	thread_t const *this_t;
 
 
-	p = (sc_thread_t*)_p;
 	this_t = sched_running();
 
 	p->tid = this_t->tid;
 	p->priority = this_t->priority;
 	p->affinity = this_t->affinity;
 
-	return E_OK;
+	return 0;
 }
 
-static int sc_hdlr_nice(void *_p){
-	sc_thread_t *p;
+static int sc_hdlr_nice(void *param){
+	sc_thread_t *p = (sc_thread_t*)param;
 	thread_t const *this_t;
 
 
-	p = (sc_thread_t*)_p;
 	this_t = sched_running();
-
 	((thread_t*)this_t)->priority += p->priority;
-
 	p->priority = this_t->priority;
 
-	return E_OK;
+	return 0;
 }
 
-static int sc_hdlr_exit(void *_p){
-	sc_exit_t *p;
+static int sc_hdlr_exit(void *param){
+	sc_exit_t *p = (sc_exit_t*)param;
 	thread_t *this_t,
 			 *sibl;
 
 
-	p = (sc_exit_t*)_p;
 	this_t = (thread_t*)sched_running();
 
 	DEBUG("%s.%u exit with status %d\n", this_t->parent->name, this_t->tid, p->status);
@@ -189,5 +178,5 @@ static int sc_hdlr_exit(void *_p){
 	sched_thread_bury(this_t);
 	sched_trigger();
 
-	return E_OK;
+	return 0;
 }

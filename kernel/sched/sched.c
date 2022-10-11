@@ -40,7 +40,7 @@ typedef struct{
 	thread_modifier_t op;
 
 	size_t size;
-	char data[];
+	uint8_t payload[];
 } sched_ipi_t;
 
 
@@ -51,10 +51,10 @@ static void _thread_transition(thread_t *this_t, void *queue);
 static int thread_core(thread_t *this_t);
 
 #ifdef CONFIG_KERNEL_SMP
-static void thread_modify(void *p);
+static void thread_modify(void *payload);
 #endif // CONFIG_KERNEL_SMP
 
-static void cleanup(void *p);
+static void cleanup(void *payload);
 
 
 /* static variables */
@@ -133,7 +133,7 @@ thread_t const *sched_running_nopanic(void){
 	return running[PIR];
 }
 
-void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, size_t size){
+void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *payload, size_t size){
 #ifdef CONFIG_KERNEL_SMP
 	int core;
 	sched_ipi_t *ipi;
@@ -154,14 +154,14 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *data, siz
 		ipi->this_t = this_t;
 		ipi->op = op;
 		ipi->size = size;
-		memcpy(ipi->data, data, size);
+		memcpy(ipi->payload, payload, size);
 
 		if(ipi_send(core, thread_modify, ipi, sizeof(sched_ipi_t) + size) != 0)
 			kpanic("trigger ipi failed \"%s\"\n", strerror(errno));
 	}
 	else
 #endif // CONFIG_KERNEL_SMP
-		op(this_t, data);
+		op(this_t, payload);
 
 	mutex_unlock(&sched_mtx);
 }
@@ -182,22 +182,18 @@ void sched_thread_bury(thread_t *this_t){
 /* local functions */
 #if CONFIG_NCORES > 1
 static int init_shallow(void){
-	size_t i;
-
-
-	for(i=1; i<CONFIG_NCORES; i++){
+	for(size_t i=1; i<CONFIG_NCORES; i++){
 		memcpy(kernel_threads + i, kernel_threads + 0, sizeof(thread_t));
 		running[i] = kernel_threads + i;
 	}
 
-	return E_OK;
+	return 0;
 }
 
 kernel_init(0, init_shallow);
 #endif // CONFIG_NCORES
 
 static int init_deep(void){
-	unsigned int i;
 	process_t *this_p;
 	thread_t *this_t;
 
@@ -208,7 +204,7 @@ static int init_deep(void){
 
 	/* init kernel threads */
 	// one thread per core
-	for(i=0; i<CONFIG_NCORES; i++){
+	for(size_t i=0; i<CONFIG_NCORES; i++){
 		this_t = kernel_threads + i;
 
 		// having the entry, stack and context points for kernel
@@ -251,7 +247,7 @@ static int init_deep(void){
 	if(ktask_create(cleanup, 0x0, 0, 0x0, true) != 0)
 		goto err;
 
-	return E_OK;
+	return 0;
 
 
 err:
@@ -298,15 +294,12 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
  * \pre	calls to thread_transition are protected through sched_lock
  */
 static void _thread_transition(thread_t *this_t, void *_queue){
-	thread_state_t queue,
-				   s;
+	thread_state_t queue = *((thread_state_t*)_queue),
+				   s = this_t->state;
 	sched_queue_t *e;
 
 
 	/* check for invalid state transition */
-	queue = *((thread_state_t*)_queue);
-	s = this_t->state;
-
 	if((queue == CREATED)
 	|| (s == DEAD)
 	|| (queue == RUNNING && s != READY)
@@ -336,10 +329,7 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 }
 
 static int thread_core(thread_t *this_t){
-	int core;
-
-
-	for(core=0; core<CONFIG_NCORES; core++){
+	for(size_t core=0; core<CONFIG_NCORES; core++){
 		if(running[core] == this_t)
 			return core;
 	}
@@ -349,12 +339,11 @@ static int thread_core(thread_t *this_t){
 
 
 #ifdef CONFIG_KERNEL_SMP
-static void thread_modify(void *_p){
-	sched_ipi_t *p;
+static void thread_modify(void *payload){
+	sched_ipi_t *p = (sched_ipi_t*)payload;
 
 
-	p = (sched_ipi_t*)_p;
-	sched_thread_modify(p->this_t, p->op, p->data, p->size);
+	sched_thread_modify(p->this_t, p->op, p->payload, p->size);
 }
 #endif // CONFIG_KERNEL_SMP
 
@@ -362,7 +351,7 @@ static void thread_modify(void *_p){
  * \brief	recurring task used to cleanup terminated threads
  * 			and processes
  */
-static void cleanup(void *p){
+static void cleanup(void *payload){
 	sched_queue_t *e;
 	process_t *this_p;
 	thread_t *this_t;

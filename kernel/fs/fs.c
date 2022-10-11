@@ -39,11 +39,9 @@ static mutex_t fs_ro_mtx = NESTED_MUTEX_INITIALISER(),
 
 /* global functions */
 int fs_register(fs_ops_t *ops){
-	int id;
+	int id = 0;
 	fs_t *fs;
 
-
-	id = 0;
 
 	rw_lock();
 
@@ -102,7 +100,7 @@ void fs_unlock(void){
 }
 
 fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
-	int id;
+	int id = 0;
 	fs_filed_t *fd;
 
 
@@ -110,8 +108,6 @@ fs_filed_t *fs_fd_alloc(fs_node_t *node, process_t *this_p, f_mode_t mode){
 	rw_lock();
 
 	/* acquire descriptor id */
-	id = 0;
-
 	if(!list_empty(this_p->fds))
 		id = list_last(this_p->fds)->id + 1;
 
@@ -246,7 +242,7 @@ int fs_fd_wait(fs_filed_t *fd, ksignal_t *sig, mutex_t *mtx){
 	return 0;
 }
 
-fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *data, int fs_id){
+fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *payload, int fs_id){
 	fs_t *fs;
 	fs_node_t *node;
 
@@ -282,7 +278,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 
 	node->parent = parent;
 	node->childs = 0x0;
-	node->data = data;
+	node->payload = payload;
 
 	mutex_init(&node->mtx, MTX_NOINT);
 	ksignal_init(&node->datain_sig);
@@ -326,7 +322,7 @@ int fs_node_destroy(fs_node_t *node){
 		goto_errno(err, E_INUSE);
 
 	list_for_each(node->childs, child){
-		if(fs_node_destroy(child) != E_OK)
+		if(fs_node_destroy(child) != 0)
 			goto err;
 	}
 
@@ -338,7 +334,7 @@ int fs_node_destroy(fs_node_t *node){
 
 	fs_unlock();
 
-	return E_OK;
+	return 0;
 
 
 err:
@@ -423,7 +419,7 @@ static int fs_node_find_unsafe(fs_node_t **start, char const **path){
 		*start = child;
 
 		if(child->type == FT_LNK)
-			*start = child->data;
+			*start = child->payload;
 
 		// skip '/'
 		while(**path == '/' && **path != 0)

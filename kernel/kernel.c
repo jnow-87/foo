@@ -30,10 +30,10 @@ kopt_t kopt = KOPT_INITIALISER();
 /* global functions */
 void kernel(void){
 	/* init */
-	if(kinit() != E_OK)
+	if(kinit() != 0)
 		kpanic("kernel init error \"%s\"\n", strerror(errno));
 
-	if(driver_load() != E_OK)
+	if(driver_load() != 0)
 		kpanic("driver init error \"%s\"\n", strerror(errno));
 
 	/* kernel statistics */
@@ -58,11 +58,9 @@ void kernel(void){
 
 /* local functions */
 static void ktask(void){
-	ktask_t *task,
-			*rec_task;
+	ktask_t *rec_task = 0x0;
+	ktask_t *task;
 
-
-	rec_task = 0x0;
 
 	while(1){
 		task = ktask_next();
@@ -80,7 +78,7 @@ static void ktask(void){
 			rec_task = task;
 
 		/* execute task */
-		task->hdlr(task->data);
+		task->hdlr(task->payload);
 		ktask_complete(task);
 	}
 }

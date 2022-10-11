@@ -23,10 +23,9 @@ char *strcpy(char *dest, char const *src){
 }
 
 size_t strlen(char const *s){
-	size_t i;
+	size_t i = 0;
 
 
-	i = 0;
 	while(s[i]) i++;
 
 	return i;
@@ -48,10 +47,8 @@ int strcmp(char const *s0, char const *s1){
 }
 
 size_t strcnt(char const *s, char c){
-	size_t n;
+	size_t n = 0;
 
-
-	n = 0;
 
 	while(*s){
 		if(*(s++) == c)
@@ -103,10 +100,8 @@ bool isoneof(char c, char const *s){
 }
 
 void *memcpy(void *dest, void const *src, size_t n){
-	size_t i;
+	size_t i = n;
 
-
-	i = n;
 
 	/* TODO optimise */
 	if(src < dest && src + n > dest){
@@ -135,10 +130,7 @@ void *memset(void *p, char c, size_t n){
 }
 
 int memcmp(void const *s0, void const *s1, size_t n){
-	size_t i;
-
-
-	for(i=0; i<n; i++){
+	for(size_t i=0; i<n; i++){
 		if(((char*)s0)[i] < ((char*)s1)[i])			return -1;
 		else if(((char*)s0)[i] > ((char*)s1)[i])	return 1;
 	}
@@ -150,11 +142,8 @@ void *memscan(void *addr, char c, size_t n){
 	return memnscan(addr, &c, n, 1);
 }
 
-void *memnscan(void *s0, void *s1, ssize_t nmemb, size_t size){
-	ssize_t i;
-
-
-	for(i=0; i<nmemb; i++){
+void *memnscan(void *s0, void *s1, size_t nmemb, size_t size){
+	for(size_t i=0; i<nmemb; i++){
 		if(memcmp(s0 + i * size, s1, size) == 0)
 			return s0 + i * size;
 	}
@@ -188,15 +177,13 @@ char const *strerror(errno_t errnum){
 	return err_str[errnum];
 }
 
-char *itoa(int v, unsigned int base, char *s, size_t len){
+char *itoa(int v, unsigned int base, char *s, size_t n){
+	size_t i = 0;
 	char d;
-	char inv_s[len];
-	size_t i;
+	char inv_s[n];
 
 
 	/* convert int to (inverted) string */
-	i = 0;
-
 	do{
 		d = (v % base) % 0xff;
 		v /= base;
@@ -205,17 +192,17 @@ char *itoa(int v, unsigned int base, char *s, size_t len){
 		else		inv_s[i] = 'a' + d - 10;
 
 		i++;
-	}while(v != 0 && i < len);
+	}while(v != 0 && i < n);
 
 	/* check if the entire number could be converted */
 	if(v != 0)
 		return 0x0;
 
 	/* reverse string */
-	len = i;
+	n = i;
 
-	for(i=0; i<len; i++)
-		s[i] = inv_s[len - 1 - i];
+	for(i=0; i<n; i++)
+		s[i] = inv_s[n - 1 - i];
 	s[i] = 0;
 
 	return s;
@@ -226,14 +213,12 @@ int atoi(char const *s){
 }
 
 long int strtol(char const *p, char **endp, int base){
-	int sign;
-	long int r,
-			 x;
+	int sign = 1;
+	long int r = 0;
+	long int x;
 
 
 	/* check optional sign */
-	sign = 1;
-
 	if(*p == '-'){
 		sign = -1;
 		p++;
@@ -257,8 +242,6 @@ long int strtol(char const *p, char **endp, int base){
 	}
 
 	/* parse number */
-	r = 0;
-
 	while(*p != 0){
 		if(*p >= '0' && *p <= '9')			x = *p - '0';
 		else if(*p >= 'a' && *p <= 'f')		x = *p - 'a' + 10;
@@ -286,11 +269,11 @@ char *strupr(char const *s){
 	return strupr_r(s, _s, NAME_MAX + 1);
 }
 
-char *strupr_r(char const *s, char *buf, size_t len){
+char *strupr_r(char const *s, char *buf, size_t n){
 	size_t i;
 
 
-	for(i=0; s[i]!=0 && i<len; i++){
+	for(i=0; s[i]!=0 && i<n; i++){
 		if(s[i] >= 'a' && s[i] <= 'z')	buf[i] = s[i] - 32;
 		else							buf[i] = s[i];
 	}
@@ -307,11 +290,11 @@ char *strcident(char const *s){
 	return strcident_r(s, _s, NAME_MAX + 1);
 }
 
-char *strcident_r(char const *s, char *buf, size_t len){
+char *strcident_r(char const *s, char *buf, size_t n){
 	size_t i;
 
 
-	for(i=0; s[i]!=0 && i<len; i++){
+	for(i=0; s[i]!=0 && i<n; i++){
 		switch(s[i]){
 		case '-':	buf[i] = '_'; break;
 		default:	buf[i] = s[i]; break;
@@ -326,10 +309,8 @@ char *strcident_r(char const *s, char *buf, size_t len){
 
 /* local functions */
 static char const *strchr_base(char const *s, int c, char const *end){
-	int dir;
+	int dir = end ? -1 : 1;
 
-
-	dir = end ? -1 : 1;
 
 	while(1){
 		if(*s == c)

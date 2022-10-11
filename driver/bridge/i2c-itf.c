@@ -30,42 +30,36 @@ typedef enum{
 
 typedef struct{
 	bridge_t *brdg;
-	i2c_t *i2c;
-
 	dev_state_t state;
 
 	i2cbrdg_hdr_t hdr;
+	void *buf;
 
 	uint8_t nbuf;
 	blob_t *bufs;
-
-	void *buf;
 } dev_data_t;
 
 
 /* local/static prototypes */
-static void rx_hdlr(int_num_t num, void *data);
+static void rx_hdlr(int_num_t num, void *payload);
 
-static int rx(dev_data_t *dev);
-static int rx_header(dev_data_t *dev, i2cbrdg_hdr_t *hdr);
-static int rx_payload_len(dev_data_t *dev, i2cbrdg_hdr_t *hdr);
-static int rx_payload(dev_data_t *dev, i2cbrdg_hdr_t *hdr);
-static void exec(dev_data_t *dev, i2cbrdg_hdr_t *hdr);
+static int rx(dev_data_t *i2c);
+static int rx_header(dev_data_t *i2c, i2cbrdg_hdr_t *hdr);
+static int rx_payload_len(dev_data_t *i2c, i2cbrdg_hdr_t *hdr);
+static int rx_payload(dev_data_t *i2c, i2cbrdg_hdr_t *hdr);
+static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr);
 
-static int ack(dev_data_t *dev, errno_t ecode);
-static void reset(dev_data_t *dev);
+static int ack(dev_data_t *i2c, errno_t ecode);
+static void reset(dev_data_t *i2c);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dev_data_t *dev;
+	bridge_cfg_t *dtd = (bridge_cfg_t*)dt_data;
+	i2c_t *dti = (i2c_t*)dt_itf;
+	dev_data_t *i2c;
 	bridge_t *brdg;
-	bridge_cfg_t *dtd;
-	i2c_t *dti;
 
-
-	dtd = (bridge_cfg_t*)dt_data;
-	dti = (i2c_t*)dt_itf;
 
 	// disable bridge tx interrupt to spare the tx handler function
 	dtd->tx_int = 0;
@@ -84,24 +78,23 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(brdg == 0)
 		goto err_0;
 
-	dev = kcalloc(1, sizeof(dev_data_t));
+	i2c = kcalloc(1, sizeof(dev_data_t));
 
-	if(dev == 0x0)
+	if(i2c == 0x0)
 		goto err_1;
 
-	dev->brdg = brdg;
-	dev->i2c = dti;
+	i2c->brdg = brdg;
 
-	reset(dev);
+	reset(i2c);
 
-	if(int_register(dtd->rx_int, rx_hdlr, dev) != 0)
+	if(int_register(dtd->rx_int, rx_hdlr, i2c) != 0)
 		goto err_2;
 
 	return 0x0;
 
 
 err_2:
-	kfree(dev);
+	kfree(i2c);
 
 err_1:
 	bridge_destroy(brdg);
@@ -112,36 +105,34 @@ err_0:
 
 driver_probe("bridge,i2c-itf", probe);
 
-static void rx_hdlr(int_num_t num, void *data){
-	dev_data_t *dev;
+static void rx_hdlr(int_num_t num, void *payload){
+	dev_data_t *i2c = (dev_data_t*)payload;
 
 
-	dev = (dev_data_t*)data;
+	i2c->state = rx(i2c);
 
-	dev->state = rx(dev);
+	if(i2c->state == DS_ERROR)
+		return reset(i2c);
 
-	if(dev->state == DS_ERROR)
-		return reset(dev);
-
-	if(dev->state != DS_EXEC)
+	if(i2c->state != DS_EXEC)
 		return;
 
-	exec(dev, &dev->hdr);
-	reset(dev);
+	exec(i2c, &i2c->hdr);
+	reset(i2c);
 }
 
-static int rx(dev_data_t *dev){
-	switch(dev->state){
-	case DS_HEADER:			return rx_header(dev, &dev->hdr);
-	case DS_PAYLOAD_LEN:	return rx_payload_len(dev, &dev->hdr);
-	case DS_PAYLOAD:		return rx_payload(dev, &dev->hdr);
+static int rx(dev_data_t *i2c){
+	switch(i2c->state){
+	case DS_HEADER:			return rx_header(i2c, &i2c->hdr);
+	case DS_PAYLOAD_LEN:	return rx_payload_len(i2c, &i2c->hdr);
+	case DS_PAYLOAD:		return rx_payload(i2c, &i2c->hdr);
 	default:				return DS_ERROR;
 	}
 }
 
-static int rx_header(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
+static int rx_header(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	/* read header */
-	if(i2cbrdg_read(dev->brdg, hdr, sizeof(i2cbrdg_hdr_t)) != 0)
+	if(i2cbrdg_read(i2c->brdg, hdr, sizeof(i2cbrdg_hdr_t)) != 0)
 		return DS_ERROR;
 
 	DEBUG("%s: slave = %u, nbuf = %zu, len = %zu\n",
@@ -153,16 +144,16 @@ static int rx_header(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
 
 	/* allocate buffers */
 	if(hdr->nbuf > 1 || hdr->len > CONFIG_BRIDGE_I2C_INLINE_DATA){
-		dev->bufs = kmalloc(hdr->nbuf * sizeof(blob_t));
+		i2c->bufs = kmalloc(hdr->nbuf * sizeof(blob_t));
 
-		if(hdr->cmd == I2C_CMD_READ && dev->bufs)
-			dev->bufs[0].data = kmalloc(hdr->len);
+		if(hdr->cmd == I2C_CMD_READ && i2c->bufs)
+			i2c->bufs[0].buf = kmalloc(hdr->len);
 
-		dev->buf = dev->bufs[0].data;
+		i2c->buf = i2c->bufs[0].buf;
 	}
 
 	/* send ack */
-	if(ack(dev, errno) != 0)
+	if(ack(i2c, errno) != 0)
 		return DS_ERROR;
 
 	if(hdr->cmd == I2C_CMD_WRITE && (hdr->nbuf > 1 || hdr->len > CONFIG_BRIDGE_I2C_INLINE_DATA))
@@ -171,33 +162,33 @@ static int rx_header(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
 	return DS_EXEC;
 }
 
-static int rx_payload_len(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
+static int rx_payload_len(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	uint8_t len;
 
 
-	if(i2cbrdg_read(dev->brdg, &len, 1) != 0)
+	if(i2cbrdg_read(i2c->brdg, &len, 1) != 0)
 		return DS_ERROR;
 
-	dev->bufs[dev->nbuf].data = kmalloc(len);
-	dev->bufs[dev->nbuf].len = len;
-	dev->buf = dev->bufs[0].data;
+	i2c->bufs[i2c->nbuf].buf = kmalloc(len);
+	i2c->bufs[i2c->nbuf].len = len;
+	i2c->buf = i2c->bufs[0].buf;
 
-	if(ack(dev, errno) != 0)
+	if(ack(i2c, errno) != 0)
 		return DS_ERROR;
 
 	return DS_PAYLOAD;
 }
 
-static int rx_payload(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
-	if(i2cbrdg_read(dev->brdg, dev->bufs[dev->nbuf].data, dev->bufs[dev->nbuf].len) != 0)
+static int rx_payload(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
+	if(i2cbrdg_read(i2c->brdg, i2c->bufs[i2c->nbuf].buf, i2c->bufs[i2c->nbuf].len) != 0)
 		return DS_ERROR;
 
-	dev->nbuf++;
+	i2c->nbuf++;
 
-	return (dev->nbuf == hdr->nbuf) ? DS_EXEC : DS_PAYLOAD_LEN;
+	return (i2c->nbuf == hdr->nbuf) ? DS_EXEC : DS_PAYLOAD_LEN;
 }
 
-static void exec(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
+static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	int r;
 
 
@@ -206,40 +197,37 @@ static void exec(dev_data_t *dev, i2cbrdg_hdr_t *hdr){
 
 	if(hdr->cmd == I2C_CMD_WRITE){
 		r = (hdr->nbuf == 1)
-		  ? i2c_write(dev->brdg->hw, hdr->slave, dev->buf, hdr->len)
-		  : i2c_write_n(dev->brdg->hw, hdr->slave, dev->bufs, dev->nbuf)
+		  ? i2c_write(i2c->brdg->hw, hdr->slave, i2c->buf, hdr->len)
+		  : i2c_write_n(i2c->brdg->hw, hdr->slave, i2c->bufs, i2c->nbuf)
 		;
 	}
 	else
-		r = i2c_read(dev->brdg->hw, hdr->slave, dev->buf, hdr->len);
+		r = i2c_read(i2c->brdg->hw, hdr->slave, i2c->buf, hdr->len);
 
-	if(ack(dev, ((r == 0) ? E_OK : (errno ? errno : E_AGAIN))) != 0)
+	if(ack(i2c, ((r == 0) ? 0 : (errno ? errno : E_AGAIN))) != 0)
 		return;
 
 	if(hdr->cmd == I2C_CMD_READ)
-		(void)i2cbrdg_write(dev->brdg, dev->buf, hdr->len);
+		(void)i2cbrdg_write(i2c->brdg, i2c->buf, hdr->len);
 }
 
-static int ack(dev_data_t *dev, errno_t ecode){
+static int ack(dev_data_t *i2c, errno_t ecode){
 	DEBUG("ack: %d\n", ecode);
 
 	BUILD_ASSERT(sizeof(errno_t) == 1);
-	(void)i2cbrdg_write(dev->brdg, &ecode, 1);
+	(void)i2cbrdg_write(i2c->brdg, &ecode, 1);
 
 	return ecode;
 }
 
-static void reset(dev_data_t *dev){
-	uint8_t i;
+static void reset(dev_data_t *i2c){
+	for(uint8_t i=0; i<i2c->nbuf; i++)
+		kfree(i2c->bufs[i].buf);
 
+	kfree(i2c->bufs);
 
-	for(i=0; i<dev->nbuf; i++)
-		kfree(dev->bufs[i].data);
-
-	kfree(dev->bufs);
-
-	dev->state = DS_HEADER;
-	dev->nbuf = 0;
-	dev->bufs = 0x0;
-	dev->buf = dev->hdr.data;
+	i2c->state = DS_HEADER;
+	i2c->nbuf = 0;
+	i2c->bufs = 0x0;
+	i2c->buf = i2c->hdr.buf;
 }

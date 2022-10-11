@@ -59,9 +59,8 @@ lib_init(0, init);
 
 /* local functions */
 static void user_hdlr(int sig){
-	char const *line;
-	size_t i;
 	int r;
+	char const *line;
 	user_cmd_t *cmd;
 
 
@@ -71,7 +70,7 @@ static void user_hdlr(int sig){
 	if(line == 0x0)
 		return;
 
-	for(i=0; i<sizeof_array(cmds); i++){
+	for(size_t i=0; i<sizeof_array(cmds); i++){
 		if(strncmp(line, cmds[i].name, strlen(cmds[i].name)) == 0){
 			cmd = cmds + i;
 			break;

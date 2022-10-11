@@ -18,7 +18,7 @@
 
 
 /* local/static prototypes */
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n);
 
 
@@ -46,27 +46,23 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 driver_probe("vram,raw", probe);
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
-	vram_t *vram;
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
+	vram_t *vram = (vram_t*)dev->payload;
 
-
-	vram = (vram_t*)dev->data;
 
 	if(n != sizeof(vram_cfg_t))
 		return_errno(E_INVAL);
 
 	switch(request){
-	case IOCTL_CFGRD:	memcpy(data, &vram->cfg, n); return E_OK;
-	case IOCTL_CFGWR:	return vram_configure(vram, data);
+	case IOCTL_CFGRD:	memcpy(arg, &vram->cfg, n); return 0;
+	case IOCTL_CFGWR:	return vram_configure(vram, arg);
 	default:			return_errno(E_NOSUP);
 	};
 }
 
 static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n){
-	vram_t *vram;
+	vram_t *vram = (vram_t*)dev->payload;
 
-
-	vram = (vram_t*)dev->data;
 
 	if(n != vram->npages * vram->cfg.width + vram_ndirty(vram->npages))
 		goto_errno(err, E_INVAL);

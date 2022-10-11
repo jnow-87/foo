@@ -38,17 +38,13 @@ static float err_abs(float cycle_time_us, float prescale, unsigned int mul);
 
 /* global functions */
 int config_watchdog(void){
-	unsigned int ps,
-				 ps_min,
-				 mul;
-	float tgt_cycle_time;
+	float tgt_cycle_time = MIN(CONFIG_SCHED_CYCLETIME_US, CONFIG_KTIMER_CYCLETIME_US);
+	float err_min = FLT_MAX;
+	unsigned int ps_min = 0;
+	unsigned int mul;
 	float err,
-		  err_min,
 		  err_per;
 
-
-	err_min = FLT_MAX;
-	tgt_cycle_time = MIN(CONFIG_SCHED_CYCLETIME_US, CONFIG_KTIMER_CYCLETIME_US);
 
 	if(arg.verbose){
 		printf("\ntarget scheduler cycle time: %.3fms\n", CONFIG_SCHED_CYCLETIME_US / 1000.0);
@@ -63,9 +59,7 @@ int config_watchdog(void){
 
 	/* identify watchdog prescale value that results in the minimal deviation
 	 * between scheduler and watchdog frequency */
-	ps_min = 0;
-
-	for(ps=1048576; ps>=2048; ps/=2){
+	for(unsigned int ps=1048576; ps>=2048; ps/=2){
 		mul = cycle_time_multiple(tgt_cycle_time, ps);
 		err = err_abs(tgt_cycle_time, ps, mul);
 

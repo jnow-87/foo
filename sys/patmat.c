@@ -46,7 +46,6 @@ static spec_cfg_t specs[] = {
 
 /* global functions */
 patmat_t *patmat_init(char const **patterns, ssize_t npat){
-	ssize_t i;
 	patmat_t *pm;
 
 
@@ -55,7 +54,7 @@ patmat_t *patmat_init(char const **patterns, ssize_t npat){
 	if(pm == 0x0)
 		goto err_0;
 
-	for(i=0; i<npat; i++){
+	for(ssize_t i=0; i<npat; i++){
 		if(pattern_init(pm->patterns + i, patterns[i]) != 0)
 			goto err_1;
 	}
@@ -74,27 +73,20 @@ err_0:
 }
 
 void patmat_destroy(patmat_t *pm){
-	ssize_t i;
-
-
-	for(i=0; i<pm->npat; i++)
+	for(ssize_t i=0; i<pm->npat; i++)
 		pattern_destroy(pm->patterns + i);
 
 	sys_free(pm);
 }
 
 void patmat_reset(patmat_t *pm){
-	ssize_t i;
-
-
-	for(i=0; i<pm->npat; i++)
+	for(ssize_t i=0; i<pm->npat; i++)
 		pattern_reset(pm->patterns + i);
 
 	pm->last_match = -1;
 }
 
 ssize_t patmat_get_results(patmat_t *pm, void **results){
-	size_t i;
 	patmat_pattern_t *pat;
 
 
@@ -103,8 +95,8 @@ ssize_t patmat_get_results(patmat_t *pm, void **results){
 
 	pat = pm->patterns + pm->last_match;
 
-	for(i=0; i<pat->nspec; i++)
-		results[i] = pat->specs[i]->data;
+	for(size_t i=0; i<pat->nspec; i++)
+		results[i] = pat->specs[i]->payload;
 
 	return pm->last_match;
 }
@@ -117,17 +109,14 @@ ssize_t patmat_get_results(patmat_t *pm, void **results){
  * 			else			the index of the pattern that matched
  */
 ssize_t patmat_match_char(patmat_t *pm, char c){
-	ssize_t i;
-	size_t matchable;
+	size_t matchable = 0;
 	patmat_pattern_t *pat;
 
 
 	if(c <= 0)
 		return PM_NOMATCH;
 
-	matchable = 0;
-
-	for(i=0; i<pm->npat; i++){
+	for(ssize_t i=0; i<pm->npat; i++){
 		pat = pm->patterns + i;
 
 		if(pat->state != PM_MATCHABLE)
@@ -179,8 +168,7 @@ ssize_t patmat_match_string(patmat_t *pm, char const *s){
  * \pre		pat is zero initialised
  */
 static int pattern_init(patmat_pattern_t *pat, char const *text){
-	size_t i,
-		   j;
+	size_t spec = 0;
 
 
 	/* allocate pattern */
@@ -199,20 +187,18 @@ static int pattern_init(patmat_pattern_t *pat, char const *text){
 		goto err_1;
 
 	/* allocate individual specifiers */
-	j = 0;
-
-	for(i=0; text[i]!=0; i++){
+	for(size_t i=0; text[i]!=0; i++){
 		if(text[i] == '%'){
-			pat->specs[j] = spec_alloc(text + i + 1);
+			pat->specs[spec] = spec_alloc(text + i + 1);
 
-			if(pat->specs[j] == 0x0)
+			if(pat->specs[spec] == 0x0)
 				goto err_1;
 
 			// pattern is not allowed to end on a specifier
-			if(text[i + pat->specs[j]->len + 1] == 0)
+			if(text[i + pat->specs[spec]->len + 1] == 0)
 				goto err_1;
 
-			j++;
+			spec++;
 		}
 	}
 
@@ -229,10 +215,7 @@ err_0:
 }
 
 static void pattern_destroy(patmat_pattern_t *pat){
-	size_t i;
-
-
-	for(i=0; i<pat->nspec && pat->specs; i++)
+	for(size_t i=0; i<pat->nspec && pat->specs; i++)
 		sys_free(pat->specs[i]);
 
 	sys_free(pat->specs);
@@ -240,7 +223,6 @@ static void pattern_destroy(patmat_pattern_t *pat){
 }
 
 static void pattern_reset(patmat_pattern_t *pat){
-	size_t i;
 	patmat_spec_t *spec;
 
 
@@ -248,22 +230,20 @@ static void pattern_reset(patmat_pattern_t *pat){
 	pat->pat_idx = 0;
 	pat->spec_idx = 0;
 
-	for(i=0; i<pat->nspec; i++){
+	for(size_t i=0; i<pat->nspec; i++){
 		spec = pat->specs[i];
 
 		spec->chars_matched = 0;
 
 		if(specs[spec->specifier].size != 0)
-			memset(spec->data, 0, specs[spec->specifier].size);
+			memset(spec->payload, 0, specs[spec->specifier].size);
 	}
 }
 
 static patmat_state_t pattern_match(patmat_pattern_t *pat, char c){
-	char c_pat;
-	patmat_spec_t *spec;
+	char c_pat = pat->text[pat->pat_idx];
+	patmat_spec_t *spec = pat->specs[pat->spec_idx];
 
-
-	c_pat = pat->text[pat->pat_idx];
 
 	/* literal match */
 	if(c == c_pat){
@@ -276,8 +256,6 @@ static patmat_state_t pattern_match(patmat_pattern_t *pat, char c){
 		return PM_NOMATCH;
 
 	/* check if end of current specifier is reached */
-	spec = pat->specs[pat->spec_idx];
-
 	if(pat->text[pat->pat_idx + spec->len + 1] == c){
 		if(!spec_completed(spec, pat->text))
 			return PM_NOMATCH;
@@ -305,9 +283,9 @@ static bool match_int(char c, patmat_spec_t *spec){
 	if(c < '0' || c > '9')
 		return false;
 
-	memcpy(&num, spec->data, sizeof(int));
+	memcpy(&num, spec->payload, sizeof(int));
 	num = num * 10 + c - '0';
-	memcpy(spec->data, &num, sizeof(int));
+	memcpy(spec->payload, &num, sizeof(int));
 
 	spec->chars_matched++;
 
@@ -318,33 +296,31 @@ static bool match_char(char c, patmat_spec_t *spec){
 	if(spec->chars_matched != 0)
 		return false;
 
-	spec->data[0] = c;
+	spec->payload[0] = c;
 	spec->chars_matched++;
 
 	return true;
 }
 
 static bool match_string(char c, patmat_spec_t *spec){
-	spec->data[spec->chars_matched] = c;
+	spec->payload[spec->chars_matched] = c;
 	spec->chars_matched++;
 
 	return true;
 }
 
 static patmat_spec_t *spec_alloc(char const *spec){
+	spec_cfg_t *cfg = 0x0;
 	size_t i,
 		   size;
 	char *end;
 	patmat_spec_t *s;
-	spec_cfg_t *cfg;
 
 
 	/* parse data size */
 	size = strtol(spec, &end, 10);
 
 	/* get specifier */
-	cfg = 0x0;
-
 	for(i=0; i<sizeof_array(specs); i++){
 		if(specs[i].specifier == *end){
 			cfg = specs + i;
@@ -382,7 +358,7 @@ static bool spec_completed(patmat_spec_t *spec, char const *pattern){
 
 	/* terminate strings */
 	if(spec->specifier == PMS_STR)
-		spec->data[spec->chars_matched] = 0;
+		spec->payload[spec->chars_matched] = 0;
 
 	return true;
 }

@@ -30,13 +30,11 @@ static unsigned int sig_recv;
  *	\brief	test to verify user-space signals
  */
 TEST(sigself){
-	int r;
-	unsigned int i;
+	int r = 0;
 	process_info_t pinfo;
 	thread_info_t tinfo;
 
 
-	r = 0;
 	sig_recv = 0;
 
 	r += TEST_INT_EQ(process_info(&pinfo), 0);
@@ -44,7 +42,7 @@ TEST(sigself){
 	r += TEST_PTR_EQ(signal(SIGNAL, 0x0), 0x0);
 	r += TEST_PTR_EQ(signal(SIGNAL, hdlr), hdlr);
 
-	for(i=0; i<NSIG; i++)
+	for(size_t i=0; i<NSIG; i++)
 		r += TEST_INT_EQ(signal_send(SIGNAL, pinfo.pid, tinfo.tid), 0);
 
 	r += TEST_INT_EQ(sig_recv, NSIG);

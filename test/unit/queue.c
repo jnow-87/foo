@@ -53,61 +53,52 @@ TEST(queue_print){
 }
 
 TEST(queue_init){
-	unsigned int n;
-	queue_t *head,
-			*tail;
+	int r = 0;
+	queue_t *head = &el0;
+	queue_t *tail;
 
-
-	n = 0;
-	head = &el0;
 
 	queue_init(head, tail);
 
-	n += TEST_PTR_EQ(head->next, 0);
-	n += TEST_PTR_EQ(tail, head);
+	r += TEST_PTR_EQ(head->next, 0);
+	r += TEST_PTR_EQ(tail, head);
 
-	return -n;
+	return -r;
 }
 
 TEST(queue_enqueue){
-	unsigned int n;
-	queue_t *head,
-			*tail;
+	int r = 0;
+	queue_t *head = 0x0,
+			*tail = 0x0;
 
 
-	n = 0;
-	head = 0;
-	tail = 0;
 	INIT_EL();
 
 	// enqueue to empty queue
 	queue_enqueue(head, tail, &el0);
 
-	n += TEST_PTR_EQ(head, &el0);
-	n += TEST_PTR_EQ(tail, &el0);
-	n += TEST_PTR_EQ(el0.next, 0);
+	r += TEST_PTR_EQ(head, &el0);
+	r += TEST_PTR_EQ(tail, &el0);
+	r += TEST_PTR_EQ(el0.next, 0);
 
 	// enqueue in non-empty queue
 	queue_enqueue(head, tail, &el1);
 
-	n += TEST_PTR_EQ(head, &el0);
-	n += TEST_PTR_EQ(tail, &el1);
-	n += TEST_PTR_EQ(el0.next, &el1);
-	n += TEST_PTR_EQ(el1.next, 0);
+	r += TEST_PTR_EQ(head, &el0);
+	r += TEST_PTR_EQ(tail, &el1);
+	r += TEST_PTR_EQ(el0.next, &el1);
+	r += TEST_PTR_EQ(el1.next, 0);
 
-	return -n;
+	return -r;
 }
 
 TEST(queue_dequeue){
-	unsigned int n;
-	queue_t *head,
-			*tail,
-			*el;
+	int r = 0;
+	queue_t *head = 0x0,
+			*tail = 0x0;
+	queue_t *el;
 
 
-	n = 0;
-	head = 0;
-	tail = 0;
 	INIT_EL();
 
 	// prepare queue
@@ -117,25 +108,25 @@ TEST(queue_dequeue){
 	// dequeue from non-empty queue
 	el = dequeue(&head, &tail);
 
-	n += TEST_PTR_EQ(head, &el1);
-	n += TEST_PTR_EQ(tail, &el1);
-	n += TEST_PTR_EQ(el, &el0);
+	r += TEST_PTR_EQ(head, &el1);
+	r += TEST_PTR_EQ(tail, &el1);
+	r += TEST_PTR_EQ(el, &el0);
 
 	// dequeue last element
 	el = dequeue(&head, &tail);
 
-	n += TEST_PTR_EQ(head, 0);
-	n += TEST_PTR_EQ(tail, 0);
-	n += TEST_PTR_EQ(el, &el1);
+	r += TEST_PTR_EQ(head, 0);
+	r += TEST_PTR_EQ(tail, 0);
+	r += TEST_PTR_EQ(el, &el1);
 
 	// dequeue from empty empty queue
 	el = dequeue(&head, &tail);
 
-	n += TEST_PTR_EQ(head, 0);
-	n += TEST_PTR_EQ(tail, 0);
-	n += TEST_PTR_EQ(el, 0);
+	r += TEST_PTR_EQ(head, 0);
+	r += TEST_PTR_EQ(tail, 0);
+	r += TEST_PTR_EQ(el, 0);
 
-	return -n;
+	return -r;
 }
 
 static queue_t *dequeue(queue_t **head, queue_t **tail){

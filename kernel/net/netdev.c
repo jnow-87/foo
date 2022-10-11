@@ -23,7 +23,7 @@
 
 
 /* local/static prototypes */
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 
 
 /* global variables */
@@ -38,7 +38,7 @@ static mutex_t net_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t *itf, void *data){
+devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t *itf, void *payload){
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	netdev_t *netdev;
@@ -55,7 +55,7 @@ devfs_dev_t *netdev_register(char const *name, net_family_t domain, netdev_itf_t
 
 	netdev->domain = domain;
 	netdev->hw = *itf;
-	netdev->data = data;
+	netdev->payload = payload;
 
 	/* register device */
 	dev_ops.open = 0x0;
@@ -84,10 +84,8 @@ err_0:
 }
 
 int netdev_release(devfs_dev_t *dev){
-	netdev_t *netdev;
+	netdev_t *netdev = (netdev_t*)dev->payload;
 
-
-	netdev = dev->data;
 
 	if(devfs_dev_release(dev) != 0)
 		return -errno;
@@ -131,12 +129,11 @@ err:
 
 
 /* local functions */
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
 	size_t cfg_size;
-	netdev_t *netdev;
+	netdev_t *netdev = (netdev_t*)dev->payload;
 
 
-	netdev = dev->data;
 	cfg_size = net_domain_cfg[netdev->domain].cfg_size;
 
 	if(n != cfg_size)
@@ -144,16 +141,16 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, netdev->hw.cfg, cfg_size);
-		return E_OK;
+		memcpy(arg, netdev->hw.cfg, cfg_size);
+		return 0;
 
 	case IOCTL_CFGWR:
-		memcpy(netdev->hw.cfg, data, cfg_size);
+		memcpy(netdev->hw.cfg, arg, cfg_size);
 
-		if(netdev->hw.configure(netdev) != E_OK)
+		if(netdev->hw.configure(netdev) != 0)
 			return -errno;
 
-		return E_OK;
+		return 0;
 
 	default:
 		return_errno(E_NOSUP);

@@ -26,7 +26,7 @@
 /* types */
 typedef struct{
 	char const *compatible;
-	void * (*probe)(char const *name, void *data, void *itf);
+	void * (*probe)(char const *name, void *dt_data, void *dt_itf);
 } driver_t;
 
 

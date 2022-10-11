@@ -67,10 +67,8 @@ static list1_t *dummy_tail __unused = 0x0;	// a stack does not require a tail po
  */
 #define stack_pop(top)({ \
 	LIST_TYPE_COMPAT(*top); \
-	typeof(top) _el; \
+	typeof(top) _el = list_first(top); \
 	\
-	\
-	_el = list_first(top); \
 	\
 	if(_el != 0x0) \
 		_list1_rm_head((list1_t**)&top, &dummy_tail); \

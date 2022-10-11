@@ -20,7 +20,7 @@ void *gc_all(size_t size) __alias(gcov_malloc);
 void gcov_free(void *ptr);
 void gc_f(void *ptr) __alias(gcov_free);
 
-void *gc_m(void *addr, size_t len, int prot, int flags, int fd, unsigned long int offset) __alias(gcov_mmap);
+void *gc_m(void *addr, size_t n, int prot, int flags, int fd, unsigned long int offset) __alias(gcov_mmap);
 
 
 /* static variables */
@@ -53,6 +53,6 @@ void gcov_free(void *ptr){
 	memblock_free(&gcov_heap, ptr);
 }
 
-void *gcov_mmap(void *addr, size_t len, int prot, int flags, int fd, unsigned long int offset){
-	return lnx_mmap(addr, len, prot, flags, fd, offset);
+void *gcov_mmap(void *addr, size_t n, int prot, int flags, int fd, unsigned long int offset){
+	return lnx_mmap(addr, n, prot, flags, fd, offset);
 }

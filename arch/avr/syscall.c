@@ -39,6 +39,12 @@
 #endif // CONFIG_AVR_ISA_AVR4
 
 
+/* local/static prototypes */
+#ifdef BUILD_KERNEL
+static void sc_hdlr(int_num_t num, void *payload);
+#endif // BUILD_KERNEL
+
+
 /* global functions */
 int avr_sc(sc_num_t num, void *param, size_t psize){
 	sc_t volatile sc;
@@ -63,13 +69,21 @@ int avr_sc(sc_num_t num, void *param, size_t psize){
 	if(sc.errno)
 		return_errno(sc.errno);
 
-	return E_OK;
+	return 0;
 }
 
 
 /* local functions */
 #ifdef BUILD_KERNEL
-static void sc_hdlr(int_num_t num, void *data){
+static int init(void){
+	return int_register(AVR_NUM_HW_INTS, sc_hdlr, 0x0);
+}
+
+platform_init(0, init);
+#endif // BUILD_KERNEL
+
+#ifdef BUILD_KERNEL
+static void sc_hdlr(int_num_t num, void *payload){
 	sc_t *sc;
 
 
@@ -80,10 +94,4 @@ static void sc_hdlr(int_num_t num, void *data){
 }
 #endif // BUILD_KERNEL
 
-#ifdef BUILD_KERNEL
-static int init(void){
-	return int_register(AVR_NUM_HW_INTS, sc_hdlr, 0x0);
-}
 
-platform_init(0, init);
-#endif // BUILD_KERNEL

@@ -86,19 +86,17 @@ void _start(thread_entry_t entry, void *arg){
 
 /* local functions */
 static int main_arg(int argc, char *args){
+	int arg = 1;
 	char *argv[argc + 1];
-	int i,
-		j;
 
 
 	/* assign argument strings */
-	j = 1;
 	argv[0] = args;
 	argv[argc] = 0x0;
 
-	for(i=0; j<argc; i++){
+	for(int i=0; arg<argc; i++){
 		if(args[i] == 0)
-			argv[j++] = args + i + 1;
+			argv[arg++] = args + i + 1;
 	}
 
 	/* call */
@@ -117,21 +115,16 @@ static int main_arg(int argc, char *args){
  * \return	number of sub-strings in argc
  */
 static int args_split(char *args){
-	unsigned int i, j;
-	int argc;
-	char c;
+	size_t arg = 0;
+	int argc = 0;
+	char c = ' ';
 
 
-
-	argc = 0;
-	j = 0;
-	c = ' ';
-
-	for(i=0; args[i]!=0; i++){
+	for(size_t i=0; args[i]!=0; i++){
 		if((args[i] == '"' && c == '"')										// end of quoted section
 		|| ((args[i] == ' ' || args[i] == '\t') && c != '"' && c != ' ')	// end of string
 		){
-			args[j++] = 0;
+			args[arg++] = 0;
 			argc++;
 
 			c = ' ';
@@ -144,7 +137,7 @@ static int args_split(char *args){
 			if(args[i] == '\\' && (args[i + 1] == '\\' || args[i + 1] == '"'))
 				i++;
 
-			args[j++] = args[i];
+			args[arg++] = args[i];
 
 			// update last character if
 			// not inside a quoted string
@@ -153,8 +146,8 @@ static int args_split(char *args){
 		}
 	}
 
-	if(j > 0 && args[j - 1] != 0){
-		args[j] = 0;
+	if(arg > 0 && args[arg - 1] != 0){
+		args[arg] = 0;
 		argc++;
 	}
 

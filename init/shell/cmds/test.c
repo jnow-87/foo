@@ -107,14 +107,13 @@ command("test", exec);
 
 static int run(test_t *tests, size_t num, bool summary, char const *log_name){
 	int r;
-	size_t i;
 	unsigned int results[2] = { 0 };
 
 
 	if(log_name)
 		log = fopen(log_name, "w");
 
-	for(i=0; i<num; i++){
+	for(size_t i=0; i<num; i++){
 		if(summary)
 			printf(" %s... ", tests[i].name);
 
@@ -149,7 +148,7 @@ static int run(test_t *tests, size_t num, bool summary, char const *log_name){
 }
 
 static int help(char const *cmd_name, char const *error){
-	size_t i;
+	size_t i = 0;
 	test_t *test;
 
 
@@ -157,7 +156,6 @@ static int help(char const *cmd_name, char const *error){
 
 	printf("\ntests:\n\t%6.6s    %15.15s    %s\n", "Number", "Name", "Description");
 
-	i = 0;
 	test_for_each_type(test, user_interactive)
 		printf("\t%6d    %15.15s    %s\n", i++, test->name, test->descr);
 

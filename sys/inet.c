@@ -16,19 +16,15 @@
 
 /* global functions */
 inet_addr_t inet_addr(char *s){
-	int8_t i,
-		   j,
-		   len = strlen(s);
+	uint8_t j = 0,
+			len = strlen(s);
+	inet_addr_t iaddr = 0;
 	char addr[len + 1];
-	inet_addr_t iaddr;
 
 
 	strcpy(addr, s);
 
-	iaddr = 0;
-	j = 0;
-
-	for(i=0; i<=len; i++){
+	for(int8_t i=0; i<=len; i++){
 		if(addr[i] == '.' || addr[i] == 0){
 			addr[i] = 0;
 			iaddr = (iaddr << 8) | atoi(addr + j);
@@ -47,8 +43,8 @@ char *inet_ntoa(inet_addr_t addr){
 	return inet_ntoa_r(addr, ip, 16);
 }
 
-char *inet_ntoa_r(inet_addr_t addr, char *s, size_t len){
-	snprintf(s, len, "%hhu.%hhu.%hhu.%hhu",
+char *inet_ntoa_r(inet_addr_t addr, char *s, size_t n){
+	snprintf(s, n, "%hhu.%hhu.%hhu.%hhu",
 		(uint8_t)bits(addr, 24, 0xff),
 		(uint8_t)bits(addr, 16, 0xff),
 		(uint8_t)bits(addr, 8, 0xff),

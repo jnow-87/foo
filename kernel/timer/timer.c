@@ -48,7 +48,7 @@ void ktimer_tick(void){
 
 	list_for_each(timer_lst, t){
 		if(--t->ticks == 0){
-			t->hdlr(t->data);
+			t->hdlr(t->payload);
 			t->ticks = t->base;
 
 			if(t->base == 0)
@@ -59,9 +59,9 @@ void ktimer_tick(void){
 	mutex_unlock(&timer_mtx);
 }
 
-void ktimer_register(ktimer_t *timer, uint32_t period_us, ktimer_hdlr_t hdlr, void *data, bool periodic){
+void ktimer_register(ktimer_t *timer, uint32_t period_us, ktimer_hdlr_t hdlr, void *payload, bool periodic){
 	timer->hdlr = hdlr;
-	timer->data = data;
+	timer->payload = payload;
 	timer->ticks = to_ticks(period_us);
 	timer->base = periodic ? timer->ticks : 0;
 
@@ -87,10 +87,8 @@ void ktimer_time(time_t *t){
 
 /* local functions */
 static size_t to_ticks(uint32_t us){
-	size_t ticks;
+	size_t ticks = us / CYCLE_TIME_US;
 
-
-	ticks = us / CYCLE_TIME_US;
 
 	if(ticks == 0 || us - ticks * CYCLE_TIME_US > 0)
 		ticks++;

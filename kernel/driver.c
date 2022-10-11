@@ -40,37 +40,31 @@ int driver_load(void){
 
 /* local functions */
 static int probe_childs(devtree_device_t const * const *childs, void *itf){
-	size_t i;
-
-
 	if(childs == 0x0){
 		if(itf && iskheap(itf))
 			kfree(itf);
 
-		return E_OK;
+		return 0;
 	}
 
-	for(i=0; childs[i]!=0x0; i++){
-		if(probe(childs[i], itf) != E_OK){
+	for(size_t i=0; childs[i]!=0x0; i++){
+		if(probe(childs[i], itf) != 0){
 			FATAL("driver probe error for \"%s\": %s\n", childs[i]->name, strerror(errno));
 			return -errno;
 		}
 	}
 
-	return E_OK;
+	return 0;
 }
 
 static int probe(devtree_device_t const *node, void *itf){
-	driver_t *e;
-
-
-	for(e=__driver_base; e!=__driver_end; e++){
+	for(driver_t *e=__driver_base; e!=__driver_end; e++){
 		if(strcmp(e->compatible, node->compatible) != 0)
 			continue;
 
 		INFO("probe driver \"%s\" for \"%s\"\n", e->compatible, node->name);
 
-		itf = e->probe(node->name, (void*)node->data, itf);
+		itf = e->probe(node->name, (void*)node->payload, itf);
 
 		if(errno)
 			return -errno;
@@ -79,7 +73,7 @@ static int probe(devtree_device_t const *node, void *itf){
 			return probe_childs(node->childs, itf);
 
 		if(node->childs == 0x0)
-			return E_OK;
+			return 0;
 
 		FATAL("no driver interface for \"%s\" childs\n", node->name);
 
@@ -88,5 +82,5 @@ static int probe(devtree_device_t const *node, void *itf){
 
 	INFO("no compatible driver found for \"%s\"\n", node->name);
 
-	return E_OK;
+	return 0;
 }

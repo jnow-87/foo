@@ -24,7 +24,7 @@ typedef struct devtree_device_t{
 	char const *name,
 			   *compatible;
 
-	void const *data;
+	void const *payload;
 
 	struct devtree_device_t const *parent;
 	struct devtree_device_t const * const *childs;

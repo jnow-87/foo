@@ -82,6 +82,7 @@ void traps(void){
 	static char test[] __attribute__((aligned(sizeof(int)))) = "CONF";
 	int *p =(int *)test;
 
+
 	if(*p != INT_CONF){
 		fprintf(stderr, "fixdep: sizeof(int) != 4 or wrong endianness? %#x\n",
 			*p);

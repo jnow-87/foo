@@ -45,19 +45,19 @@ bool _list2_contains(list2_t *head, list2_t *el){
 	return __list2_contains(head, el, prev, next);
 }
 
-list2_t *_list2_find(list2_t *head, size_t mem_offset, void const *ref, size_t size){
+list2_t *_list2_find(list2_t *head, size_t mem_offset, void const *ref, size_t n){
 	list2_t *el;
 
 
 	list_for_each(head, el){
-		if(memcmp(((char*)el) + mem_offset, ref, size) == 0)
+		if(memcmp(((char*)el) + mem_offset, ref, n) == 0)
 			return el;
 	}
 
 	return 0x0;
 }
 
-list2_t *_list2_find_str(list2_t *head, size_t mem_offset, char const *ref, size_t len, bool is_array){
+list2_t *_list2_find_str(list2_t *head, size_t mem_offset, char const *ref, size_t n, bool is_array){
 	list2_t *el;
 	char *s;
 
@@ -66,11 +66,11 @@ list2_t *_list2_find_str(list2_t *head, size_t mem_offset, char const *ref, size
 		if(is_array)	s = ((char*)el) + mem_offset;
 		else			s = *((char**)(((char*)el) + mem_offset));
 
-		if(len == 0){
+		if(n == 0){
 			if(strcmp(s, ref) == 0)
 				return el;
 		}
-		else if(strncmp(s, ref, len) == 0)
+		else if(strncmp(s, ref, n) == 0)
 			return el;
 	}
 

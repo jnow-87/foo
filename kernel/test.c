@@ -16,12 +16,10 @@
 
 /* global functions */
 void ktest(){
+	size_t failed = 0;
 	int r;
-	size_t failed;
 	test_t *test;
 
-
-	failed = 0;
 
 	kprintf(KMSG_ANY, "execute kernel tests\n");
 

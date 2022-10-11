@@ -64,9 +64,8 @@ int user_input_help(void){
 }
 
 void user_input_process(void){
-	size_t i;
+	user_cmd_t *cmd = 0x0;
 	char *line;
-	user_cmd_t *cmd;
 	HIST_ENTRY *last;
 
 
@@ -89,9 +88,7 @@ void user_input_process(void){
 	}
 
 	/* identify the command */
-	cmd = 0x0;
-
-	for(i=0; i<sizeof_array(cmds); i++){
+	for(size_t i=0; i<sizeof_array(cmds); i++){
 		if(strncmp(line, cmds[i].name, strlen(cmds[i].name)) == 0){
 			cmd = cmds + i;
 			break;
@@ -135,24 +132,21 @@ static void cmd_quit(char const *line){
 }
 
 static void cmd_tick(char const *line){
-	long int n,
-			 i;
+	long int n;
 
 
 	n = strtol(line, 0x0, 10);
 	n = (n == 0) ? 1 : n;
 
-	for(i=0; i<n; i++){
+	for(long int i=0; i<n; i++){
 		printf("tick %u/%u\n", i + 1, n);
 		hw_int_request(INT_TIMER, 0x0, PRIV_HARDWARE, 0);
 	}
 }
 
 static void cmd_signal(char const *line){
-	child_t *tgt;
+	child_t *tgt = 0x0;
 
-
-	tgt = 0x0;
 
 	if(strcmp(line, "kernel") == 0)		tgt = KERNEL;
 	else if(strcmp(line, "app") == 0)	tgt = APP;

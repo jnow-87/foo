@@ -36,17 +36,15 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(vram_cfg_t *cfg, void *hw);
-static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw);
+static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	vram_itf_t *itf;
 	dev_data_t *dsp;
 
-
-	dtd = (dt_data_t*)dt_data;
 
 	dsp = kcalloc(1, sizeof(dev_data_t));
 	itf = kmalloc(sizeof(vram_itf_t));
@@ -73,12 +71,11 @@ err:
 driver_probe("x11", probe);
 
 static int configure(vram_cfg_t *cfg, void *hw){
+	dev_data_t *dsp = (dev_data_t*)hw;
 	uint16_t npages;
-	dev_data_t *dsp;
 	x86_hw_op_t op;
 
 
-	dsp = (dev_data_t*)hw;
 	npages = vram_npages(cfg);
 
 	if(dsp->shm != 0x0)
@@ -117,13 +114,11 @@ err_0:
 	return -errno;
 }
 
-static int write_page(uint8_t *data, size_t page, vram_cfg_t *cfg, void *hw){
-	dev_data_t *dsp;
+static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
+	dev_data_t *dsp = (dev_data_t*)hw;
 
 
-	dsp = (dev_data_t*)hw;
-
-	memcpy(dsp->ram + page * cfg->width, data, cfg->width);
+	memcpy(dsp->ram + page * cfg->width, buf, cfg->width);
 	vram_makedirty(page, dsp->dirty, true);
 
 	return 0;

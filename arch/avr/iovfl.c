@@ -15,13 +15,17 @@
 #include <sys/register.h>
 
 
-/* local functions */
-static void iovfl_hdlr(int_num_t num, void *data){
-	kpanic("instruction memory overflow\n");
-}
+/* local/static prototypes */
+static void iovfl_hdlr(int_num_t num, void *payload);
 
+
+/* local functions */
 static int init(void){
-	return int_register(AVR_NUM_HW_INTS + 1, iovl_hdlr, 0x0);
+	return int_register(AVR_NUM_HW_INTS + 1, iovfl_hdlr, 0x0);
 }
 
 platform_init(0, init);
+
+static void iovfl_hdlr(int_num_t num, void *payload){
+	kpanic("instruction memory overflow\n");
+}

@@ -67,7 +67,7 @@ static int dump_file(fs_node_t *node){
 	int bos_id,
 		lnx_id;
 	size_t n;
-	char data[32];
+	char buf[32];
 	fs_filed_t *fd;
 	process_t *this_p;
 
@@ -86,12 +86,12 @@ static int dump_file(fs_node_t *node){
 		return -1;
 
 	while(1){
-		n = node->ops->read(fd, data, sizeof(data));
+		n = node->ops->read(fd, buf, sizeof(buf));
 
 		if(n <= 0)
 			break;
 
-		lnx_write(lnx_id, data, n);
+		lnx_write(lnx_id, buf, n);
 	}
 
 	fs_fd_release(fd);

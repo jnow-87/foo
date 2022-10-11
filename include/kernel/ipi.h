@@ -12,11 +12,11 @@
 
 
 /* types */
-typedef void (*ipi_hdlr_t)(void *data);
+typedef void (*ipi_hdlr_t)(void *payload);
 
 
 /* prototypes */
-int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *data, size_t size);
+int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *buf, size_t n);
 void ipi_khdlr(void);
 
 

@@ -43,7 +43,7 @@ typedef struct patmat_spec_t{
 	size_t len;
 	size_t chars_matched;
 
-	char data[];
+	uint8_t payload[];
 } patmat_spec_t;
 
 typedef struct{

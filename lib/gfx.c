@@ -93,40 +93,30 @@ void gfx_clearscreen(gfx_ctx_t *gc){
 }
 
 void gfx_draw_point(gfx_ctx_t *gc, gfx_uint_t x, gfx_uint_t y){
-	uint16_t page;
+	uint16_t page = y / 8;
 
-
-	page = y / 8;
 
 	gc->mem[page * gc->cfg.width + x] |= (0x1 << (y & 0x7));
 	vram_makedirty(page, gc->dirty, true);
 }
 
 void gfx_draw_points(gfx_ctx_t *gc, gfx_vec2d_t *pts, size_t n){
-	size_t i;
-
-
-	for(i=0; i<n; i++)
+	for(size_t i=0; i<n; i++)
 		gfx_draw_point(gc, pts[i].x, pts[i].y);
 }
 
 void gfx_draw_line(gfx_ctx_t *gc, gfx_uint_t x0, gfx_uint_t y0, gfx_uint_t x1, gfx_uint_t y1){
-	gfx_int_t i,
-			  x,
-			  y,
-			  max;
+	gfx_int_t x = x1 - x0,
+			  y = y1 - y0,
+			  max = MAX(ABS(x), ABS(y));
 	delta_t dx,
 			dy;
 
 
-	x = x1 - x0;
-	y = y1 - y0;
-	max = MAX(ABS(x), ABS(y));
-
 	delta_init(&dx, x, max);
 	delta_init(&dy, y, max);
 
-	for(i=0; i<=max; i++){
+	for(gfx_int_t i=0; i<=max; i++){
 		gfx_draw_point(gc, x0, y0);
 
 		x0 += delta_inc(&dx);
@@ -135,11 +125,7 @@ void gfx_draw_line(gfx_ctx_t *gc, gfx_uint_t x0, gfx_uint_t y0, gfx_uint_t x1, g
 }
 
 void gfx_draw_polygone(gfx_ctx_t *gc, gfx_vec2d_t *pts, size_t n){
-	size_t i,
-		   j;
-
-
-	for(i=0, j=1; i<n; i++, j++){
+	for(size_t i=0, j=1; i<n; i++, j++){
 		if(j >= n)
 			j = 0;
 
@@ -161,14 +147,11 @@ void gfx_draw_rectangle(gfx_ctx_t *gc, gfx_uint_t x, gfx_uint_t y, gfx_uint_t wi
 }
 
 void gfx_draw_string(gfx_ctx_t *gc, gfx_uint_t x, gfx_uint_t y, char const *s){
-	size_t i;
-	uint16_t page,
-			 column;
+	uint16_t page = y / 8;
+	uint16_t column;
 
 
-	page = y / 8;
-
-	for(i=0; s[i]!=0; i++){
+	for(size_t i=0; s[i]!=0; i++){
 		column = x + i * gc->font->width;
 
 		if(column >= gc->cfg.width)
@@ -194,14 +177,10 @@ static void delta_init(delta_t *d, gfx_int_t num, gfx_uint_t denom){
 }
 
 static int8_t delta_inc(delta_t *d){
-	gfx_uint_t v0,
-			   v1,
-			   d_2;
+	gfx_uint_t v0 = d->v,
+			   v1 = d->v + d->num,
+			   d_2 = d->denom >> 1;
 
-
-	v0 = d->v;
-	v1 = d->v + d->num;
-	d_2 = d->denom >> 1;
 
 	d->v = (v1 >= d->denom) ? 0 : v1;
 

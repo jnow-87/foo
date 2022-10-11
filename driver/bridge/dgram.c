@@ -31,7 +31,7 @@
 
 
 /* local/static prototypes */
-static void dgram_init_data(bridge_dgram_t *dgram, void *data, uint8_t len, bridge_t *brdg);
+static void dgram_init_data(bridge_dgram_t *dgram, void *buf, uint8_t n, bridge_t *brdg);
 
 static int rx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t *byte);
 static bridge_dgram_state_t rx_payload(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte);
@@ -45,7 +45,7 @@ static bridge_dgram_state_t ack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t b
 static bridge_dgram_state_t nack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_error_t ecode);
 static int ackcmp(bridge_dgram_t *dgram, uint8_t byte, uint8_t ref);
 
-static uint8_t checksum(uint8_t const *data, size_t n);
+static uint8_t checksum(void const *buf, size_t n);
 
 static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t ecode);
 
@@ -71,19 +71,19 @@ bridge_dgram_t *dgram_alloc_rx(bridge_t *brdg){
 	return dgram;
 }
 
-bridge_dgram_t *dgram_alloc_tx(bridge_t *brdg, void const *data, uint8_t len){
+bridge_dgram_t *dgram_alloc_tx(bridge_t *brdg, void const *buf, uint8_t n){
 	bridge_dgram_t *dgram;
 
 
-	dgram = kmalloc(sizeof(bridge_dgram_t) + len);
+	dgram = kmalloc(sizeof(bridge_dgram_t) + n);
 
 	if(dgram == 0x0)
 		return 0x0;
 
-	dgram->data = (void*)dgram + sizeof(bridge_dgram_t);
-	memcpy(dgram->data, data, len);
+	dgram->buf = (void*)dgram + sizeof(bridge_dgram_t);
+	memcpy(dgram->buf, buf, n);
 
-	dgram_init(dgram, BDT_WRITE, dgram->data, len, brdg);
+	dgram_init(dgram, BDT_WRITE, dgram->buf, n, brdg);
 	list_add_tail(brdg->tx_dgrams, dgram);
 
 	return dgram;
@@ -92,7 +92,7 @@ bridge_dgram_t *dgram_alloc_tx(bridge_t *brdg, void const *data, uint8_t len){
 void dgram_free(bridge_dgram_t *dgram, bridge_t *brdg){
 	if(dgram->type == BDT_READ){
 		list_rm(brdg->rx_dgrams, dgram);
-		kfree(dgram->data);
+		kfree(dgram->buf);
 	}
 	else
 		list_rm(brdg->tx_dgrams, dgram);
@@ -100,17 +100,17 @@ void dgram_free(bridge_dgram_t *dgram, bridge_t *brdg){
 	kfree(dgram);
 }
 
-void dgram_init(bridge_dgram_t *dgram, bridge_dgram_type_t type, void *data, uint8_t len, bridge_t *brdg){
+void dgram_init(bridge_dgram_t *dgram, bridge_dgram_type_t type, void *buf, uint8_t n, bridge_t *brdg){
 	memset(dgram, 0, sizeof(bridge_dgram_t));
 
 	dgram->type = type;
 	dgram->state = BDS_CTRL_BYTE;
 	dgram->estate = BDS_ERROR;
 
-	dgram_init_data(dgram, data, len, brdg);
+	dgram_init_data(dgram, buf, n, brdg);
 
 	if(type == BDT_WRITE)
-		dgram->checksum = checksum(data, len);
+		dgram->checksum = checksum(buf, n);
 }
 
 int dgram_init_retry(bridge_dgram_t *dgram){
@@ -139,10 +139,10 @@ bridge_dgram_state_t dgram_read(bridge_dgram_t *dgram, bridge_t *brdg){
 		return hdrcmp(brdg, dgram, byte, CTRLBYTE(brdg), BDS_CTRL_BYTE_ACK);
 
 	case BDS_DATA_LEN:
-		if(dgram->data == 0x0)
+		if(dgram->buf == 0x0)
 			dgram_init_data(dgram, kmalloc(byte), byte, brdg);
 
-		if(dgram->data == 0x0)
+		if(dgram->buf == 0x0)
 			return nack(brdg, dgram, byte, BDE_NOMEM);
 
 		return hdrcmp(brdg, dgram, byte, dgram->len, BDS_DATA_LEN_ACK);
@@ -159,7 +159,7 @@ bridge_dgram_state_t dgram_read(bridge_dgram_t *dgram, bridge_t *brdg){
 		if(dgram->chunksize)
 			return BDS_DATA;
 
-		csum = checksum(dgram->data, dgram->len);
+		csum = checksum(dgram->buf, dgram->len);
 
 		if(csum != dgram->checksum)
 			seterr(dgram, BDE_CHECKSUM);
@@ -218,7 +218,7 @@ bridge_dgram_state_t dgram_write(bridge_dgram_t *dgram, bridge_t *brdg){
 		return tx_payload(brdg, dgram);
 
 	case BDS_DATA_ACK:
-		if(ackcmp(dgram, byte, ((uint8_t*)dgram->data)[dgram->offset - 1]) != 0)
+		if(ackcmp(dgram, byte, ((uint8_t*)dgram->buf)[dgram->offset - 1]) != 0)
 			return BDS_ERROR;
 
 		if(dgram->chunksize)
@@ -248,10 +248,10 @@ errno_t dgram_errno(bridge_dgram_t *dgram){
 
 
 /* local functions */
-static void dgram_init_data(bridge_dgram_t *dgram, void *data, uint8_t len, bridge_t *brdg){
-	dgram->len = len;
+static void dgram_init_data(bridge_dgram_t *dgram, void *buf, uint8_t n, bridge_t *brdg){
+	dgram->len = n;
 	dgram->chunksize = CHUNKSIZE(dgram, brdg);
-	dgram->data = data;
+	dgram->buf = buf;
 }
 
 static int rx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t *byte){
@@ -259,7 +259,7 @@ static int rx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t *byte){
 		if(errno != E_AGAIN)
 			return -1;
 
-		set_errno(E_OK);
+		reset_errno();
 	}
 
 	PROTO_DEBUG(dgram, "read %#hhx/~%#hhx\n", *byte, ~(*byte));
@@ -268,7 +268,7 @@ static int rx(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t *byte){
 }
 
 static bridge_dgram_state_t rx_payload(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte){
-	((uint8_t*)dgram->data)[dgram->offset] = byte;
+	((uint8_t*)dgram->buf)[dgram->offset] = byte;
 
 	dgram->offset++;
 	dgram->chunksize--;
@@ -294,7 +294,7 @@ static bridge_dgram_state_t tx_payload(bridge_t *brdg, bridge_dgram_t *dgram){
 	uint8_t byte;
 
 
-	byte = ((uint8_t*)dgram->data)[dgram->offset];
+	byte = ((uint8_t*)dgram->buf)[dgram->offset];
 
 	dgram->offset++;
 	dgram->chunksize--;
@@ -343,15 +343,12 @@ static int ackcmp(bridge_dgram_t *dgram, uint8_t byte, uint8_t ref){
 	return 0;
 }
 
-static uint8_t checksum(uint8_t const *data, size_t n){
-	uint8_t s;
-	size_t i;
+static uint8_t checksum(void const *buf, size_t n){
+	uint8_t s = 0;
 
 
-	s = 0;
-
-	for(i=0; i<n; i++)
-		s += ~data[i] + 1;
+	for(size_t i=0; i<n; i++)
+		s += ~((uint8_t*)buf)[i] + 1;
 
 	return s;
 }

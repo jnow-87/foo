@@ -58,16 +58,13 @@ int kinit(void){
 
 /* local functions */
 static void exec_init_call(init_call_t *base, init_call_t *end){
-	init_call_t *p;
-
-
-	for(p=base; p<end; p++){
-		if(errno != E_OK)
+	for(init_call_t *p=base; p<end; p++){
+		if(errno != 0)
 			return;
 
 		DEBUG("%s()...\n", p->name);
 
-		if(p->call() != E_OK)
+		if(p->call() != 0)
 			FATAL("%s() failed \"%s\"\n", p->name, strerror(errno));
 	}
 }

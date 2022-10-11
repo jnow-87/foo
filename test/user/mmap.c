@@ -21,15 +21,13 @@
 
 /* local functions */
 TEST(mmap){
-	int r;
+	int r = 0;
 	int fd_rd,
 		fd_wr;
 	void *mem;
 	char buf[8];
 	loop_cfg_t cfg;
 
-
-	r = 0;
 
 	ASSERT_INT_NEQ(fd_rd = open(DEVICE, O_RDWR), -1);
 	ASSERT_INT_NEQ(fd_wr = open(DEVICE, O_RDWR), -1);
@@ -40,7 +38,7 @@ TEST(mmap){
 	/* try mapping a too large block */
 	r += TEST_PTR_EQ(mmap(fd_wr, cfg.size + 1), 0x0);
 	r += TEST_INT_EQ(errno, E_LIMIT);
-	set_errno(E_OK);
+	reset_errno();
 
 	/* write + read through mmaped block */
 	ASSERT_PTR_NEQ(mem = mmap(fd_wr, cfg.size), 0x0);

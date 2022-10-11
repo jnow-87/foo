@@ -41,13 +41,10 @@ static int erase(term_erase_t type, uint16_t n, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	vram_cfg_t *dtd = (vram_cfg_t*)dt_data;
+	vram_itf_t *dti = (vram_itf_t*)dt_itf;
 	dev_data_t *term;
-	vram_itf_t *dti;
-	vram_cfg_t *dtd;
 
-
-	dti = (vram_itf_t*)dt_itf;
-	dtd = (vram_cfg_t*)dt_data;
 
 	term = kmalloc(sizeof(dev_data_t));
 
@@ -71,7 +68,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	term->itf.erase = erase;
 	term->itf.error = 0x0;
 
-	term->itf.data = term;
+	term->itf.hw = term;
 	term->itf.cfg = &term->vram->cfg;
 	term->itf.cfg_size = sizeof(vram_cfg_t);
 	term->itf.rx_int = 0;
@@ -90,12 +87,9 @@ err_0:
 driver_probe("vram,term", probe);
 
 static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
-	dev_data_t *term;
-	vram_cfg_t *cfg;
+	dev_data_t *term = (dev_data_t*)hw;
+	vram_cfg_t *cfg = (vram_cfg_t*)hw_cfg;
 
-
-	term = (dev_data_t*)hw;
-	cfg = (vram_cfg_t*)hw_cfg;
 
 	term_cfg->lines = cfg->height / term->font->height;
 	term_cfg->columns = cfg->width / term->font->width;
@@ -104,10 +98,8 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 }
 
 static char putc(char c, void *hw){
-	dev_data_t *term;
+	dev_data_t *term = (dev_data_t*)hw;
 
-
-	term = (dev_data_t*)hw;
 
 	if(vram_write_block(term->vram, term->line, term->column, font_char(c, term->font), term->font->width, 1) != 0)
 		return ~c;
@@ -116,13 +108,10 @@ static char putc(char c, void *hw){
 }
 
 static size_t putsn(char const *s, size_t n, void *hw){
-	size_t i;
-	dev_data_t *term;
+	dev_data_t *term = (dev_data_t*)hw;
 
 
-	term = (dev_data_t*)hw;
-
-	for(i=0; i<n; i++){
+	for(size_t i=0; i<n; i++){
 		if(putc(s[i], hw) != s[i])
 			return n;
 
@@ -139,37 +128,30 @@ static size_t gets(char *s, size_t n, void *hw){
 }
 
 static int cursor(uint16_t line, uint16_t column, bool toggle, void *hw){
-	dev_data_t *term;
+	dev_data_t *term = (dev_data_t*)hw;
 
-
-	term = (dev_data_t*)hw;
 
 	term->line = line * term->font->height / 8;
 	term->column = column * term->font->width;
 
 	if(!toggle)
-		return E_OK;
+		return 0;
 
 	return vram_invert_page(term->vram, term->line, term->column, term->font->width);
 }
 
 static int scroll(int16_t lines, void *hw){
-	dev_data_t *term;
+	dev_data_t *term = (dev_data_t*)hw;
 
-
-	term = (dev_data_t*)hw;
 
 	return vram_scroll(term->vram, lines * term->font->height / 8);
 }
 
 static int erase(term_erase_t type, uint16_t n, void *hw){
-	int r;
+	dev_data_t *term = (dev_data_t*)hw;
+	int r = 0;
 	uint16_t x;
-	dev_data_t *term;
 
-
-	 r = 0;
-	term = (dev_data_t*)hw;
 
 	/* clear multiple lines */
 	if(type & TE_MULTILINE){

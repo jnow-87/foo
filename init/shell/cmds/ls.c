@@ -21,13 +21,11 @@
 
 /* local functions */
 static int exec(int argc, char **argv){
+	char *path = ".";
 	int dir;
-	char *path;
 	dir_ent_t entry;
 	stat_t f_stat;
 
-
-	path = ".";
 
 	if(argc > 1)
 		path = argv[1];

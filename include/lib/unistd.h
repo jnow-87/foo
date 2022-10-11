@@ -27,7 +27,7 @@
 #define usleep(us)	sleep(0, us)
 
 // ioctl
-#define ioctl(fd, cmd, data)	ionctl(fd, cmd, data, sizeof(*data))
+#define ioctl(fd, cmd, arg)	ionctl(fd, cmd, arg, sizeof(*arg))
 
 
 /* types */
@@ -53,8 +53,8 @@ int close(int fd);
 ssize_t read(int fd, void *buf, size_t n);
 ssize_t write(int fd, void *buf, size_t n);
 
-int ionctl(int fd, int cmd, void *data, size_t data_len);
-int fcntl(int fd, int request, void *data, size_t data_len);
+int ionctl(int fd, int cmd, void *arg, size_t arg_len);
+int fcntl(int fd, int request, void *arg, size_t arg_len);
 
 void *mmap(int fd, size_t n);
 void munmap(void *addr);
@@ -101,8 +101,8 @@ int sleep(size_t ms, size_t us);
 # define close(fd)							CALL_DISABLED(close, CONFIG_SC_FILESYSTEM)
 # define read(fd, buf, n)					CALL_DISABLED(read, CONFIG_SC_FILESYSTEM)
 # define write(fd, buf, n)					CALL_DISABLED(write, CONFIG_SC_FILESYSTEM)
-# define ionctl(fd, cmd, data, data_len)	CALL_DISABLED(ionctl, CONFIG_SC_FILESYSTEM)
-# define fcntl(fd, request, data, data_len)	CALL_DISABLED(fcntl, CONFIG_SC_FILESYSTEM)
+# define ionctl(fd, cmd, arg, arg_len)		CALL_DISABLED(ionctl, CONFIG_SC_FILESYSTEM)
+# define fcntl(fd, request, arg, arg_len)	CALL_DISABLED(fcntl, CONFIG_SC_FILESYSTEM)
 # define chdir(path)						CALL_DISABLED(chdir, CONFIG_SC_FILESYSTEM)
 # define rmdir(path)						CALL_DISABLED(rmdir, CONFIG_SC_FILESYSTEM)
 #endif // CONFIG_SC_FILESYSTEM

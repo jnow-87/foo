@@ -40,15 +40,13 @@ unsigned int x86_hw_op_active_tid = 0;
 /* global functions */
 void x86_hw_op_write(x86_hw_op_t *op){
 	static unsigned int seq_num = 0;
-	int ack;
+	int ack = 0;
 
 
 	op->src = HW_OP_SRC;
 	op->tid = x86_hw_op_active_tid;
 
 	lnx_kill(lnx_getppid(), CONFIG_TEST_INT_HW_SIG);
-
-	ack = 0;
 
 	while(!ack){
 		lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, &op->seq, sizeof(op->seq));
@@ -60,10 +58,8 @@ void x86_hw_op_write(x86_hw_op_t *op){
 }
 
 void x86_hw_op_write_writeback(x86_hw_op_t *op){
-	unsigned int seq_num;
+	unsigned int seq_num = op->seq;
 
-
-	seq_num = op->seq;
 
 	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, op, sizeof(*op));
 	CHECK_SEQ_NUM(op->seq, seq_num);
@@ -94,13 +90,13 @@ void x86_hw_op_read_writeback(x86_hw_op_t *op){
 	CHECK_SEQ_NUM(seq_num, op->seq);
 }
 
-void x86_hw_int_trigger(int_num_t num, void *data){
+void x86_hw_int_trigger(int_num_t num, void *payload){
 	x86_hw_op_t op;
 
 
 	op.num = HWO_INT_TRIGGER;
 	op.int_ctrl.num = num;
-	op.int_ctrl.data = data;
+	op.int_ctrl.payload = payload;
 
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);

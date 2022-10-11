@@ -17,5 +17,5 @@
 int bin_load_raw(void *binary, process_t *this_p){
 	this_p->entry = (process_entry_t)binary;
 
-	return E_OK;
+	return 0;
 }

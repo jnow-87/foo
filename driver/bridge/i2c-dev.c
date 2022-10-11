@@ -30,13 +30,11 @@ static int ack_check(i2c_t *i2c);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	bridge_cfg_t *dtd = (bridge_cfg_t*)dt_data;
 	bridge_t *brdg;
-	bridge_cfg_t *dtd;
 	i2c_t *itf;
 	i2c_ops_t ops;
 
-
-	dtd = (bridge_cfg_t*)dt_data;
 
 	if(dtd->rx_int != 0 || dtd->tx_int != 0)
 		goto_errno(err_0, E_INVAL);
@@ -77,7 +75,6 @@ static int write(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n){
 }
 
 static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
-	size_t i;
 	i2cbrdg_hdr_t hdr;
 
 
@@ -85,7 +82,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	if(n > 255)
 		return_errno(E_LIMIT);
 
-	for(i=0; i<n; i++){
+	for(size_t i=0; i<n; i++){
 		if(bufs[i].len > 255)
 			return_errno(E_LIMIT);
 	}
@@ -97,7 +94,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	hdr.len = bufs[0].len;
 
 	if(cmd == I2C_CMD_WRITE && bufs[0].len <= CONFIG_BRIDGE_I2C_INLINE_DATA)
-		memcpy(hdr.data, bufs[0].data, bufs[0].len);
+		memcpy(hdr.buf, bufs[0].buf, bufs[0].len);
 
 	DEBUG("%s: slave = %u, len = %zu\n", (cmd == I2C_CMD_READ) ? "read" : "write", slave, n);
 
@@ -109,7 +106,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 
 	/* write payload if not already sent with the header */
 	if(cmd == I2C_CMD_WRITE && (n > 1 || bufs[0].len > CONFIG_BRIDGE_I2C_INLINE_DATA)){
-		for(i=0; i<n; i++){
+		for(size_t i=0; i<n; i++){
 			// write payload length
 			if(i2cbrdg_write(i2c->hw, (uint8_t*)(&bufs[i].len), 1) != 0)
 				goto end;
@@ -118,7 +115,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 				goto end;
 
 			// write payload
-			if(i2cbrdg_write(i2c->hw, bufs[i].data, bufs[i].len) != 0)
+			if(i2cbrdg_write(i2c->hw, bufs[i].buf, bufs[i].len) != 0)
 				goto end;
 		}
 	}
@@ -129,7 +126,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 
 	/* read data */
 	if(cmd == I2C_CMD_READ)
-		i2cbrdg_read(i2c->hw, bufs[0].data, bufs[0].len);
+		i2cbrdg_read(i2c->hw, bufs[0].buf, bufs[0].len);
 
 end:
 	DEBUG("complete: %s\n", strerror(errno));

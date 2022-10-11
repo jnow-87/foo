@@ -26,8 +26,9 @@ pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char c
 	p.args = args;
 	p.args_len = strlen(args);
 
-	if(sc(SC_PROCCREATE, &p) != E_OK)
+	if(sc(SC_PROCCREATE, &p) != 0)
 		return 0;
+
 	return p.pid;
 }
 

@@ -31,12 +31,9 @@ static int volatile ecode;
  *	\brief	test process and thread termination
  */
 TEST_LONG(exit, "exit"){
-	size_t i;
-
-
 	ecode = 0;
 
-	for(i=0; i<NTHREAD; i++)
+	for(size_t i=0; i<NTHREAD; i++)
 		ASSERT_INT_NEQ(thread_create(thread, 0x0), 0);
 
 	return thread(0x0);

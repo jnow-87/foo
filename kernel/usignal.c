@@ -23,9 +23,9 @@
 
 
 /* local/static prototypes */
-static int sc_hdlr_signal_register(void *p);
-static int sc_hdlr_signal_send(void *p);
-static int sc_hdlr_signal_return(void *p);
+static int sc_hdlr_signal_register(void *param);
+static int sc_hdlr_signal_send(void *param);
+static int sc_hdlr_signal_return(void *param);
 
 
 /* global functions */
@@ -54,7 +54,7 @@ int usignal_send(thread_t *this_t, signal_t num){
 
 	list_add_tail_safe(this_t->signals, sig, &this_t->mtx);
 
-	return E_OK;
+	return 0;
 }
 
 void usignal_destroy(struct thread_t *this_t){
@@ -120,10 +120,8 @@ thread_ctx_t *usignal_return(usignal_t *sig, struct thread_t *this_t, thread_ctx
 
 /* local functions */
 static int init(void){
-	int r;
+	int r = 0;
 
-
-	r = E_OK;
 
 	r |= sc_register(SC_SIGREGISTER, sc_hdlr_signal_register);
 	r |= sc_register(SC_SIGSEND, sc_hdlr_signal_send);
@@ -134,12 +132,10 @@ static int init(void){
 
 kernel_init(0, init);
 
-static int sc_hdlr_signal_register(void *_p){
-	sc_signal_t *p;
+static int sc_hdlr_signal_register(void *param){
+	sc_signal_t *p = (sc_signal_t*)param;
 	process_t *this_p;
 
-
-	p = (sc_signal_t*)_p;
 
 	this_p = process_find(p->pid);
 
@@ -149,16 +145,14 @@ static int sc_hdlr_signal_register(void *_p){
 	DEBUG("%s: %p\n", this_p->name, p->hdlr);
 	this_p->sig_hdlr = p->hdlr;
 
-	return E_OK;
+	return 0;
 }
 
-static int sc_hdlr_signal_send(void *_p){
-	sc_signal_t *p;
+static int sc_hdlr_signal_send(void *param){
+	sc_signal_t *p = (sc_signal_t*)param;
 	process_t *this_p;
 	thread_t *this_t;
 
-
-	p = (sc_signal_t*)_p;
 
 	/* get target thread */
 	this_p = process_find(p->pid);
@@ -175,7 +169,7 @@ static int sc_hdlr_signal_send(void *_p){
 	return usignal_send(this_t, p->sig);
 }
 
-static int sc_hdlr_signal_return(void *_p){
+static int sc_hdlr_signal_return(void *param){
 	thread_t *this_t;
 
 
@@ -187,5 +181,5 @@ static int sc_hdlr_signal_return(void *_p){
 	stack_pop(this_t->ctx_stack);
 	mutex_unlock(&this_t->mtx);
 
-	return E_OK;
+	return 0;
 }

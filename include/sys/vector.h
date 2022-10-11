@@ -16,12 +16,12 @@
 
 /* macros */
 #define vector_for_each(v, p) \
-	for(p=(v)->data; p<(typeof(p))((v)->data+(v)->dt_size*(v)->size); p++)
+	for(p=(v)->buf; p<(typeof(p))((v)->buf+(v)->dt_size*(v)->size); p++)
 
 
 /* types */
 typedef struct{
-	void *data;
+	void *buf;
 
 	size_t dt_size;
 
@@ -34,7 +34,7 @@ typedef struct{
 int vector_init(vector_t *v, size_t dt_size, size_t capa);
 void vector_destroy(vector_t *v);
 
-int vector_add(vector_t *v, void *data);
+int vector_add(vector_t *v, void *buf);
 void vector_rm(vector_t *v, size_t idx);
 
 void *vector_get(vector_t *v, size_t idx);

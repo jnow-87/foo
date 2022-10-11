@@ -13,19 +13,17 @@
 
 /* local functions */
 TEST(iskheap){
-	unsigned int n;
+	int r = 0;
 	void *p;
 
 
-	n = 0;
-
-	n += TEST_INT_EQ(iskheap(0x0), false);
-	n += TEST_INT_EQ(iskheap(&n), false);
+	r += TEST_INT_EQ(iskheap(0x0), false);
+	r += TEST_INT_EQ(iskheap(&r), false);
 
 	p = kmalloc(2);
-	n += TEST_PTR_NEQ(p, 0x0);
-	n += TEST_INT_EQ(iskheap(p), true);
+	r += TEST_PTR_NEQ(p, 0x0);
+	r += TEST_INT_EQ(iskheap(p), true);
 	kfree(p);
 
-	return -n;
+	return -r;
 }

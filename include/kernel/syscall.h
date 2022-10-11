@@ -19,7 +19,7 @@
 
 /* macors */
 #ifndef CONFIG_KERNEL_SYSCALL
-# define sc_khdlr(num, param, psize)	E_OK
+# define sc_khdlr(num, param, psize)	0
 #endif // CONFIG_KERNEL_SYSCALL
 
 
@@ -31,8 +31,8 @@
  *
  * \post	errno is set accordingly if an error occurred
  *
- * \return	E_OK	on success
- * 			<0		on error
+ * \return	0	on success
+ * 			<0	on error
  */
 typedef int (*sc_hdlr_t)(void *param);
 

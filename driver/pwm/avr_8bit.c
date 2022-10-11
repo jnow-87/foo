@@ -65,7 +65,7 @@ static size_t read_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t read(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg);
 static size_t write(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg);
-static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
+static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd);
 static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs);
 
@@ -124,58 +124,60 @@ err_0:
 driver_probe("avr,pwm8", probe);
 
 static size_t read_a(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	return read(buf, n, &((dt_data_t*)dev->data)->regs->ocra);
+	return read(buf, n, &((dt_data_t*)dev->payload)->regs->ocra);
 }
 
 static size_t write_a(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	return write(buf, n, &((dt_data_t*)dev->data)->regs->ocra);
+	return write(buf, n, &((dt_data_t*)dev->payload)->regs->ocra);
 }
 
 static size_t read_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	return read(buf, n, &((dt_data_t*)dev->data)->regs->ocrb);
+	return read(buf, n, &((dt_data_t*)dev->payload)->regs->ocrb);
 }
 
 static size_t write_b(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	return write(buf, n, &((dt_data_t*)dev->data)->regs->ocrb);
+	return write(buf, n, &((dt_data_t*)dev->payload)->regs->ocrb);
 }
 
 static size_t read(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg){
 	if(n != sizeof(*buf)){
-		errno = E_INVAL;
+		set_errno(E_INVAL);
+
 		return 0;
 	}
 
 	*buf = *ocr_reg;
+
 	return sizeof(*buf);
 }
 
 static size_t write(unsigned int *buf, size_t n, uint8_t volatile *ocr_reg){
 	if(n != sizeof(*buf)){
-		errno = E_INVAL;
+		set_errno(E_INVAL);
+
 		return 0;
 	}
 
 	*ocr_reg = (*buf) & 0xff;
+
 	return sizeof(*buf);
 }
 
-static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
+static int ioctl(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
 	if(n != sizeof(pwm_cfg_t))
 		return_errno(E_INVAL);
 
 	switch(request){
-	case IOCTL_CFGRD:	return config_get(data, ((dt_data_t*)dev->data)->regs);
-	case IOCTL_CFGWR:	return config_set(data, dev->data);
+	case IOCTL_CFGRD:	return config_get(arg, ((dt_data_t*)dev->payload)->regs);
+	case IOCTL_CFGWR:	return config_set(arg, dev->payload);
 	default:			return_errno(E_NOSUP);
 	}
 }
 
 static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd){
+	pwm_regs_t *regs = dtd->regs;
 	uint8_t pres;
-	pwm_regs_t *regs;
 
-
-	regs = dtd->regs;
 
 	/* check config */
 	if(cfg->mode != PWM_FAST && cfg->mode != PWM_PHASECORRECT)
@@ -218,7 +220,7 @@ static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd){
 	// 		later updates to the registers would overwrite the user applied
 	// 		settings
 
-	return E_OK;
+	return 0;
 }
 
 static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs){
@@ -240,5 +242,5 @@ static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs){
 	default: cfg->prescaler = PWM_PRES_MAX;
 	}
 
-	return E_OK;
+	return 0;
 }

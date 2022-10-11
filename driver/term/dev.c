@@ -24,23 +24,20 @@
 /* local/static prototypes */
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 
-static size_t flputs(char const *s, size_t n, void *term);
+static size_t flputs(char const *s, size_t n, void *hw);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	term_cfg_t *dtd = (term_cfg_t*)dt_data;
+	term_itf_t *dti = (term_itf_t*)dt_itf;
 	devfs_dev_t *dev;
 	devfs_ops_t dev_ops;
 	term_t *term;
-	term_cfg_t *dtd;
-	term_itf_t *dti;
 	klog_itf_t *klog;
 
-
-	dtd = (term_cfg_t*)dt_data;
-	dti = (term_itf_t*)dt_itf;
 
 	/* register device */
 	dev_ops.open = 0x0;
@@ -62,7 +59,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(term == 0x0)
 		goto err_1;
 
-	dev->data = term;
+	dev->payload = term;
 
 	/* register interrupt */
 	if(dti->rx_int && int_register(dti->rx_int, term_rx_hdlr, term) != 0)
@@ -75,7 +72,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		term->node->timeout_us = 0;
 
 	/* init term */
-	if(dti->configure != 0x0 && dti->configure(term->cfg, dti->cfg, dti->data) != 0)
+	if(dti->configure != 0x0 && dti->configure(term->cfg, dti->cfg, dti->hw) != 0)
 		goto err_4;
 
 	/* create terminal interface */
@@ -85,7 +82,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_4;
 
 	klog->puts = flputs;
-	klog->data = term;
+	klog->hw = term;
 
 	return klog;
 
@@ -111,10 +108,8 @@ err_0:
 driver_probe("terminal", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	term_t *term;
+	term_t *term = (term_t*)dev->payload;
 
-
-	term = (term_t*)dev->data;
 
 	/* read */
 	n = term_gets(term, buf, n);
@@ -133,16 +128,14 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 
 err:
-	term->errno = E_OK;
+	term->errno = 0;
 
 	return 0;
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	term_t *term;
+	term_t *term = (term_t*)dev->payload;
 
-
-	term = (term_t*)dev->data;
 
 	if(flputs(buf, n, term) == 0 && n != 0)
 		goto_errno(err, term->errno);
@@ -151,56 +144,52 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 
 err:
-	term->errno = E_OK;
+	term->errno = 0;
 
 	return 0;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n){
-	term_t *term;
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
+	term_t *term = (term_t*)dev->payload;
 
 
-	term = (term_t*)dev->data;
-
-	if(n != sizeof(term_cfg_t) && n != (sizeof(term_cfg_t) + term->hw->cfg_size))
+	if(n != sizeof(term_cfg_t) && n != (sizeof(term_cfg_t) + term->itf->cfg_size))
 		return_errno(E_INVAL);
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(data, term->cfg, sizeof(term_cfg_t));
+		memcpy(arg, term->cfg, sizeof(term_cfg_t));
 
 		if(n > sizeof(term_cfg_t))
-			memcpy(data + sizeof(term_cfg_t), term->hw->cfg, term->hw->cfg_size);
+			memcpy(arg + sizeof(term_cfg_t), term->itf->cfg, term->itf->cfg_size);
 
-		return E_OK;
+		return 0;
 
 	case IOCTL_CFGWR:
 		if(n > sizeof(term_cfg_t)){
-			if(term->hw->configure == 0x0)
+			if(term->itf->configure == 0x0)
 				return_errno(E_NOSUP);
 
-			if(term->hw->configure(data, data + sizeof(term_cfg_t), term->hw->data) != 0)
+			if(term->itf->configure(arg, arg + sizeof(term_cfg_t), term->itf->hw) != 0)
 				return -errno;
 
-			memcpy(term->hw->cfg, data + sizeof(term_cfg_t), term->hw->cfg_size);
+			memcpy(term->itf->cfg, arg + sizeof(term_cfg_t), term->itf->cfg_size);
 		}
 
-		memcpy(term->cfg, data, sizeof(term_cfg_t));
+		memcpy(term->cfg, arg, sizeof(term_cfg_t));
 
-		return E_OK;
+		return 0;
 
 	default:
 		return_errno(E_NOSUP);
 	}
 }
 
-static size_t flputs(char const *_s, size_t n, void *_term){
+static size_t flputs(char const *_s, size_t n, void *hw){
+	term_t *term = (term_t*)hw;
 	size_t n_put;
 	char s[n];
-	term_t *term;
 
-
-	term = (term_t*)_term;
 
 	memcpy(s, _s, n);
 

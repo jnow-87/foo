@@ -59,7 +59,7 @@
 typedef void (*lnx_sig_hdlr_t)(int sig);
 
 typedef struct{
-	uint64_t data[16];
+	uint64_t sigs[16];
 } lnx_sigset_t;
 
 typedef enum{
@@ -124,7 +124,7 @@ long int lnx_fcntl(int fd, long int cmd, long int arg);
 void lnx_chdir(char const *path);
 void lnx_mkdir(char const *path, int mode);
 
-void *lnx_mmap(void *addr, size_t len, int prot, int flags, int fd, unsigned long int offset);
+void *lnx_mmap(void *addr, size_t n, int prot, int flags, int fd, unsigned long int offset);
 
 int lnx_dprintf(int fd, char const *fmt, ...);
 int lnx_vdprintf(int fd, char const *fmt, va_list lst);

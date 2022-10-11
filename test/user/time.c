@@ -17,15 +17,12 @@
  * \brief	test to ensure time() returns monotonic increasing values
  */
 TEST(time){
-	int i,
-		r;
+	int r = 0;
 	uint32_t t0,
 			 t1;
 
 
-	r = 0;
-
-	for(i=0; i<10; i++){
+	for(size_t i=0; i<10; i++){
 		r += TEST_INT_NEQ(t0 = time_ms(), 0);
 		r += TEST_INT_EQ(sleep(50, 0), 0);
 		r += TEST_INT_NEQ(t1 = time_ms(), 0);

@@ -63,7 +63,7 @@ child_t *hw_event_dequeue(void);
 
 // interrupt handling
 void hw_int_process(void);
-void hw_int_request(int num, void *data, x86_priv_t src, unsigned int tid);
+void hw_int_request(int num, void *payload, x86_priv_t src, unsigned int tid);
 void hw_int_return(int num, x86_priv_t target, unsigned int tid);
 
 // interrupt timers

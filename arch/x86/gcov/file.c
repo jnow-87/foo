@@ -106,14 +106,9 @@ int gcov_fclose(FILE *stream){
 }
 
 size_t gcov_fread(void *ptr, size_t size, size_t nmemb, FILE *stream){
-	ssize_t r;
-
-
 	CHECK_FP(stream);
 
-	r = lnx_read(stream->fileno, ptr, size * nmemb);
-
-	return r;
+	return lnx_read(stream->fileno, ptr, size * nmemb);
 }
 
 size_t gcov_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream){
@@ -125,25 +120,15 @@ size_t gcov_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream){
 }
 
 int gcov_fseek(FILE *stream, long offset, int whence){
-	long int r;
-
-
 	CHECK_FP(stream);
 
-	r = lnx_lseek(stream->fileno, offset, whence);
-
-	return r;
+	return lnx_lseek(stream->fileno, offset, whence);
 }
 
 long gcov_ftell(FILE *stream){
-	long int r;
-
-
 	CHECK_FP(stream);
 
-	r = lnx_lseek(stream->fileno, 0, 1);
-
-	return r;
+	return lnx_lseek(stream->fileno, 0, 1);
 }
 
 int gcov_fcntl(int fd, int cmd, ...){

@@ -96,6 +96,7 @@ struct property *sym_get_choice_prop(struct symbol *sym)
 
 	for_all_choices(sym, prop)
 		return prop;
+
 	return NULL;
 }
 
@@ -105,6 +106,7 @@ struct property *sym_get_env_prop(struct symbol *sym)
 
 	for_all_properties(sym, prop, P_ENV)
 		return prop;
+
 	return NULL;
 }
 
@@ -473,6 +475,7 @@ bool sym_tristate_within_range(struct symbol *sym, tristate val)
 		return false;
 	if (sym_is_choice_value(sym) && sym->visible == yes)
 		return val == yes;
+
 	return val >= sym->rev_dep.tri && val <= sym->visible;
 }
 
@@ -1094,23 +1097,30 @@ static struct symbol *sym_check_expr_deps(struct expr *e)
 
 	if (!e)
 		return NULL;
+
 	switch (e->type) {
 	case E_OR:
 	case E_AND:
 		sym = sym_check_expr_deps(e->left.expr);
 		if (sym)
 			return sym;
+
 		return sym_check_expr_deps(e->right.expr);
+
 	case E_NOT:
 		return sym_check_expr_deps(e->left.expr);
+
 	case E_EQUAL:
 	case E_UNEQUAL:
 		sym = sym_check_deps(e->left.sym);
 		if (sym)
 			return sym;
+
 		return sym_check_deps(e->right.sym);
+
 	case E_SYMBOL:
 		return sym_check_deps(e->left.sym);
+
 	default:
 		break;
 	}
@@ -1251,6 +1261,7 @@ struct symbol *prop_get_symbol(struct property *prop)
 	if (prop->expr && (prop->expr->type == E_SYMBOL ||
 			   prop->expr->type == E_LIST))
 		return prop->expr->left.sym;
+
 	return NULL;
 }
 

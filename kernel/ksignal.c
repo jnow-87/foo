@@ -25,7 +25,7 @@ typedef struct{
 
 
 /* local/static prototypes */
-static void timeout_hdlr(void *data);
+static void timeout_hdlr(void *payload);
 
 
 /* global functions */
@@ -62,7 +62,7 @@ int ksignal_timedwait(ksignal_t *sig, mutex_t *mtx, uint32_t timeout_us){
 	ksignal_wait(sig, mtx);
 	ktimer_release(&timer);
 
-	return E_OK;
+	return 0;
 }
 
 void ksignal_send(ksignal_t *sig){
@@ -86,13 +86,11 @@ void ksignal_bcast(ksignal_t *sig){
 
 
 /* local functions */
-static void timeout_hdlr(void *_data){
-	timeout_data_t *data;
+static void timeout_hdlr(void *payload){
+	timeout_data_t *p = (timeout_data_t*)payload;
 
 
-	data = (timeout_data_t*)_data;
-
-	mutex_lock(data->mtx);
-	ksignal_send(data->sig);
-	mutex_unlock(data->mtx);
+	mutex_lock(p->mtx);
+	ksignal_send(p->sig);
+	mutex_unlock(p->mtx);
 }

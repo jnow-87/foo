@@ -81,7 +81,7 @@ typedef struct bridge_dgram_t{
 	uint8_t len,
 			offset,
 			chunksize;
-	void *data;
+	void *buf;
 
 	uint8_t attempts;
 	bridge_dgram_state_t estate;
@@ -141,8 +141,8 @@ typedef struct bridge_t{
 bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw);
 void bridge_destroy(bridge_t *brdg);
 
-int16_t bridge_read(bridge_t *brdg, void *data, uint8_t n);
-int16_t bridge_write(bridge_t *brdg, void *data, uint8_t n);
+int16_t bridge_read(bridge_t *brdg, void *buf, uint8_t n);
+int16_t bridge_write(bridge_t *brdg, void *buf, uint8_t n);
 
 errno_t dgram_errno(bridge_dgram_t *dgram);
 

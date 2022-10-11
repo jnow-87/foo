@@ -23,7 +23,7 @@ typedef struct{
 			height,
 			width;
 
-	uint8_t *data[];
+	uint8_t *chars[];
 } font_t;
 
 

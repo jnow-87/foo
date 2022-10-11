@@ -98,7 +98,7 @@ static int init(void){
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);
 
-	return E_OK;
+	return 0;
 }
 
 core_init(init);

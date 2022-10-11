@@ -30,7 +30,7 @@ typedef struct{
 	 * 					further data
 	 * \param	mode	mode to consider when opening the device
 	 *
-	 * \return	E_OK on success. On error a value smaller than 0 is returned and
+	 * \return	0 on success. On error a value smaller than 0 is returned and
 	 * 			errno is set appropriately.
 	 */
 	int (*open)(struct devfs_dev_t *dev, fs_filed_t *fd, f_mode_t mode);
@@ -42,7 +42,7 @@ typedef struct{
 	 * \param	fd		Target file descriptor. The descriptor must not be released by
 	 * 					this callback.
 	 *
-	 * \return	E_OK on success. On error a value smaller than 0 is returned and
+	 * \return	0 on success. On error a value smaller than 0 is returned and
 	 * 			errno is set appropriately.
 	 */
 	int (*close)(struct devfs_dev_t *dev, fs_filed_t *fd);
@@ -80,14 +80,14 @@ typedef struct{
 	 * \param	fd			target file descriptor
 	 * \param	request		Operation to perform. Behaviour depends on the individual
 	 * 						file system implementation.
-	 * \param	data		additional data that might be required to perform the
+	 * \param	arg			additional data that might be required to perform the
 	 * 						request (kernel memory)
-	 * \param	n			size of the memory pointed to by data
+	 * \param	n			size of the memory pointed to by arg
 	 *
-	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
+	 * \return	0 on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
-	int (*ioctl)(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *data, size_t n);
+	int (*ioctl)(struct devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 
 	/**
 	 * \brief	Perform the requested command on the given file descriptor fd.
@@ -96,13 +96,13 @@ typedef struct{
 	 * \param	fd			target file descriptor
 	 * \param	request		Command to perform. Behaviour depends on the individual
 	 * 						file system implementation.
-	 * \param	data		additional data that might be required to perform the
+	 * \param	arg			additional data that might be required to perform the
 	 * 						request (kernel memory)
 	 *
-	 * \return	E_OK on success. If an error occurred a value smaller than 0 is
+	 * \return	0 on success. If an error occurred a value smaller than 0 is
 	 * 			returned and errno is set appropriately.
 	 */
-	int (*fcntl)(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *data);
+	int (*fcntl)(struct devfs_dev_t *dev, fs_filed_t *fd, int cmd, void *arg);
 
 	/**
 	 * \brief	Get a user-space address for the memory associated with the target device.
@@ -120,12 +120,12 @@ typedef struct devfs_dev_t{
 	devfs_ops_t ops;
 	fs_node_t *node;
 
-	void *data;
+	void *payload;
 } devfs_dev_t;
 
 
 /* prototypes */
-devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data);
+devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *payload);
 int devfs_dev_release(devfs_dev_t *dev);
 
 

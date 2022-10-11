@@ -22,16 +22,18 @@ int open(char const *path, f_mode_t mode){
 
 
 	if(path == 0x0 || *path == 0){
-		errno = E_INVAL;
+		set_errno(E_INVAL);
+
 		return -1;
 	}
 
-	p.data = (void*)path;
-	p.data_len = strlen(path) + 1;
+	p.payload = (void*)path;
+	p.payload_len = strlen(path) + 1;
 	p.mode = mode;
 
-	if(sc(SC_OPEN, &p) != E_OK)
+	if(sc(SC_OPEN, &p) != 0)
 		return -1;
+
 	return p.fd;
 }
 
@@ -44,10 +46,11 @@ int dup2(int old_fd, int new_fd){
 
 
 	p.fd = new_fd;
-	p.data = &old_fd;
+	p.payload = &old_fd;
 
-	if(sc(SC_DUP, &p) != E_OK)
+	if(sc(SC_DUP, &p) != 0)
 		return -1;
+
 	return p.fd;
 }
 
@@ -57,8 +60,9 @@ int close(int fd){
 
 	p.fd = fd;
 
-	if(sc(SC_CLOSE, &p) != E_OK)
+	if(sc(SC_CLOSE, &p) != 0)
 		return -1;
+
 	return 0;
 }
 
@@ -67,12 +71,13 @@ ssize_t read(int fd, void *buf, size_t n){
 
 
 	p.fd = fd;
-	p.data = buf;
-	p.data_len = n;
+	p.payload = buf;
+	p.payload_len = n;
 
-	if(sc(SC_READ, &p) != E_OK)
+	if(sc(SC_READ, &p) != 0)
 		return -1;
-	return p.data_len;
+
+	return p.payload_len;
 }
 
 ssize_t write(int fd, void *buf, size_t n){
@@ -80,39 +85,42 @@ ssize_t write(int fd, void *buf, size_t n){
 
 
 	p.fd = fd;
-	p.data = buf;
-	p.data_len = n;
+	p.payload = buf;
+	p.payload_len = n;
 
-	if(sc(SC_WRITE, &p) != E_OK)
+	if(sc(SC_WRITE, &p) != 0)
 		return -1;
-	return p.data_len;
+
+	return p.payload_len;
 }
 
-int ionctl(int fd, int cmd, void *data, size_t data_len){
+int ionctl(int fd, int cmd, void *arg, size_t arg_len){
 	sc_fs_t p;
 
 
 	p.fd = fd;
 	p.cmd = cmd;
-	p.data = data;
-	p.data_len = data_len;
+	p.payload = arg;
+	p.payload_len = arg_len;
 
-	if(sc(SC_IOCTL, &p) != E_OK)
+	if(sc(SC_IOCTL, &p) != 0)
 		return -1;
+
 	return 0;
 }
 
-int fcntl(int fd, int request, void *data, size_t data_len){
+int fcntl(int fd, int request, void *arg, size_t arg_len){
 	sc_fs_t p;
 
 
 	p.fd = fd;
 	p.cmd = request;
-	p.data = data;
-	p.data_len = data_len;
+	p.payload = arg;
+	p.payload_len = arg_len;
 
-	if(sc(SC_FCNTL, &p) != E_OK)
+	if(sc(SC_FCNTL, &p) != 0)
 		return -1;
+
 	return 0;
 }
 
@@ -121,19 +129,20 @@ void *mmap(int fd, size_t n){
 
 
 	p.fd = fd;
-	p.data = 0x0;
-	p.data_len = n;
+	p.payload = 0x0;
+	p.payload_len = n;
 
-	if(sc(SC_MMAP, &p) != E_OK)
+	if(sc(SC_MMAP, &p) != 0)
 		return 0x0;
-	return p.data;
+
+	return p.payload;
 }
 
 void munmap(void *addr){
 	sc_fs_t p;
 
 
-	p.data = addr;
+	p.payload = addr;
 
 	(void)sc(SC_MMAP, &p);
 }
@@ -142,11 +151,12 @@ int unlink(char const *path){
 	sc_fs_t p;
 
 
-	p.data = (void*)path;
-	p.data_len = strlen(path) + 1;
+	p.payload = (void*)path;
+	p.payload_len = strlen(path) + 1;
 
-	if(sc(SC_RMNODE, &p) != E_OK)
+	if(sc(SC_RMNODE, &p) != 0)
 		return -1;
+
 	return 0;
 }
 
@@ -167,6 +177,7 @@ int mkdir(char const *_path){
 
 	if(fd < 0)
 		return -1;
+
 	return close(fd);
 }
 
@@ -174,11 +185,12 @@ int chdir(char const *path){
 	sc_fs_t p;
 
 
-	p.data = (void*)path;
-	p.data_len = strlen(path) + 1;
+	p.payload = (void*)path;
+	p.payload_len = strlen(path) + 1;
 
-	if(sc(SC_CHDIR, &p) != E_OK)
+	if(sc(SC_CHDIR, &p) != 0)
 		return -1;
+
 	return 0;
 }
 

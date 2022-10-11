@@ -58,11 +58,10 @@ ssize_t lnx_read(int fd, void *buf, size_t n){
 }
 
 void lnx_read_fix(int fd, void *buf, size_t n){
-	size_t i;
 	ssize_t r;
 
 
-	for(i=0; i<n; i+=r){
+	for(size_t i=0; i<n; i+=r){
 		r = lnx_read(fd, buf + i, n - i);
 
 		if(r <= 0)

@@ -97,16 +97,13 @@ int main(int argc, char **argv){
 
 /* local functions */
 static void complement_node(memory_node_t *node){
-	void *min,
-		 *max;
+	void *min = (void*)0xffffffff,
+		 *max = 0x0;
 	memory_node_t *child;
 
 
 	if(node == 0x0 || list_empty(node->childs))
 		return;
-
-	min = (void*)0xffffffff;
-	max = 0x0;
 
 	list_for_each(node->childs, child){
 		complement_node(child);

@@ -94,7 +94,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 	cwd->ref_cnt++;
 
 	/* load binary */
-	if(bin_load(binary, bin_type, this_p) != E_OK)
+	if(bin_load(binary, bin_type, this_p) != 0)
 		goto err_3;
 
 	/* create first thread */

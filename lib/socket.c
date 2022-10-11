@@ -27,18 +27,17 @@ int socket(net_family_t domain, sock_type_t type){
 	p.type = type;
 	p.addr = &addr;
 
-	if(sc(SC_SOCKET, &p) != E_OK)
+	if(sc(SC_SOCKET, &p) != 0)
 		return -1;
+
 	return p.fd;
 }
 
 int connect(int fd, sock_addr_t *addr, size_t addr_len){
 	size_t size = sizeof(socket_ioctl_t) + addr_len - sizeof(sock_addr_t);
 	char _p[size];
-	socket_ioctl_t *p;
+	socket_ioctl_t *p = (socket_ioctl_t*)_p;
 
-
-	p = (socket_ioctl_t*)_p;
 
 	p->addr_len = addr_len;
 	memcpy(&p->addr, addr, addr_len);
@@ -49,10 +48,8 @@ int connect(int fd, sock_addr_t *addr, size_t addr_len){
 int bind(int fd, sock_addr_t *addr, size_t addr_len){
 	size_t size = sizeof(socket_ioctl_t) + addr_len - sizeof(sock_addr_t);
 	char _p[size];
-	socket_ioctl_t *p;
+	socket_ioctl_t *p = (socket_ioctl_t*)_p;
 
-
-	p = (socket_ioctl_t*)_p;
 
 	p->addr_len = addr_len;
 	memcpy(&p->addr, addr, addr_len);
@@ -61,20 +58,24 @@ int bind(int fd, sock_addr_t *addr, size_t addr_len){
 }
 
 int listen(int fd, int backlog){
-	return ioctl(fd, IOCTL_LISTEN, &backlog);
+	socket_ioctl_t p;
+
+
+	p.backlog = backlog;
+	p.addr_len = 0;
+
+	return ioctl(fd, IOCTL_LISTEN, &p);
 }
 
 int accept(int fd, sock_addr_t *addr, size_t *addr_len){
 	size_t size = sizeof(socket_ioctl_t) + *addr_len - sizeof(sock_addr_t);
 	char _p[size];
-	socket_ioctl_t *p;
+	socket_ioctl_t *p = (socket_ioctl_t*)_p;
 
-
-	p = (socket_ioctl_t*)_p;
 
 	p->addr_len = *addr_len;
 
-	if(ionctl(fd, IOCTL_ACCEPT, p, size) != E_OK)
+	if(ionctl(fd, IOCTL_ACCEPT, p, size) != 0)
 		return -1;
 
 	*addr_len = p->addr_len;
@@ -83,44 +84,45 @@ int accept(int fd, sock_addr_t *addr, size_t *addr_len){
 	return p->fd;
 }
 
-ssize_t recv(int fd, void *data, size_t data_len){
-	return recvfrom(fd, data, data_len, 0x0, 0x0);
+ssize_t recv(int fd, void *buf, size_t n){
+	return recvfrom(fd, buf, n, 0x0, 0x0);
 }
 
-ssize_t recvfrom(int fd, void *data, size_t data_len, sock_addr_t *addr, size_t *addr_len){
+ssize_t recvfrom(int fd, void *buf, size_t n, sock_addr_t *addr, size_t *addr_len){
 	sc_socket_t p;
 
 
 	p.fd = fd;
-	p.data = data;
-	p.data_len = data_len;
+	p.buf = buf;
+	p.buf_len = n;
 	p.addr = addr;
 	p.addr_len = addr_len ? *addr_len : 0;
 
-	if(sc(SC_RECV, &p) != E_OK)
+	if(sc(SC_RECV, &p) != 0)
 		return -1;
 
 	if(addr_len)
 		*addr_len = p.addr_len;
 
-	return p.data_len;
+	return p.buf_len;
 }
 
-ssize_t send(int fd, void *data, size_t data_len){
-	return sendto(fd, data, data_len, 0x0, 0);
+ssize_t send(int fd, void *buf, size_t n){
+	return sendto(fd, buf, n, 0x0, 0);
 }
 
-ssize_t sendto(int fd, void *data, size_t data_len, sock_addr_t *addr, size_t addr_len){
+ssize_t sendto(int fd, void *buf, size_t n, sock_addr_t *addr, size_t addr_len){
 	sc_socket_t p;
 
 
 	p.fd = fd;
-	p.data = data;
-	p.data_len = data_len;
+	p.buf = buf;
+	p.buf_len = n;
 	p.addr = addr;
 	p.addr_len = addr_len;
 
-	if(sc(SC_SEND, &p) != E_OK)
+	if(sc(SC_SEND, &p) != 0)
 		return -1;
-	return p.data_len;
+
+	return p.buf_len;
 }

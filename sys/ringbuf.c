@@ -13,46 +13,46 @@
 
 
 /* global functions */
-void ringbuf_init(ringbuf_t *buf, void *data, size_t n){
-	*buf = RINGBUF_INITIALISER(data, n);
+void ringbuf_init(ringbuf_t *ring, void *buf, size_t n){
+	*ring = RINGBUF_INITIALISER(buf, n);
 }
 
-size_t ringbuf_read(ringbuf_t *buf, void *data, size_t n){
+size_t ringbuf_read(ringbuf_t *ring, void *buf, size_t n){
 	size_t i;
 
 
-	for(i=0; i<n && (buf->rd + 1) % buf->size != buf->wr; i++){
-		buf->rd = (buf->rd + 1) % buf->size;
-		((char*)data)[i] = ((char*)buf->data)[buf->rd];
+	for(i=0; i<n && (ring->rd + 1) % ring->size != ring->wr; i++){
+		ring->rd = (ring->rd + 1) % ring->size;
+		((char*)buf)[i] = ((char*)ring->buf)[ring->rd];
 	}
 
 	return i;
 }
 
-size_t ringbuf_write(ringbuf_t *buf, void *data, size_t n){
+size_t ringbuf_write(ringbuf_t *ring, void *buf, size_t n){
 	size_t i;
 
 
-	for(i=0; i<n && buf->wr != buf->rd; i++){
-		((char*)buf->data)[buf->wr] = ((char*)data)[i];
-		buf->wr = (buf->wr + 1) % buf->size;
+	for(i=0; i<n && ring->wr != ring->rd; i++){
+		((char*)ring->buf)[ring->wr] = ((char*)buf)[i];
+		ring->wr = (ring->wr + 1) % ring->size;
 	}
 
 	return i;
 }
 
-size_t ringbuf_contains(ringbuf_t *buf){
-	return buf->size - ringbuf_left(buf) - 1;
+size_t ringbuf_contains(ringbuf_t *ring){
+	return ring->size - ringbuf_left(ring) - 1;
 }
 
-size_t ringbuf_left(ringbuf_t *buf){
-	return (buf->rd - buf->wr) + (buf->rd < buf->wr ? buf->size : 0);
+size_t ringbuf_left(ringbuf_t *ring){
+	return (ring->rd - ring->wr) + (ring->rd < ring->wr ? ring->size : 0);
 }
 
-bool ringbuf_empty(ringbuf_t *buf){
-	return ((buf->rd + 1) % buf->size != buf->wr) ? false : true;
+bool ringbuf_empty(ringbuf_t *ring){
+	return ((ring->rd + 1) % ring->size != ring->wr) ? false : true;
 }
 
-bool ringbuf_full(ringbuf_t *buf){
-	return buf->wr == buf->rd ? true : false;
+bool ringbuf_full(ringbuf_t *ring){
+	return ring->wr == ring->rd ? true : false;
 }

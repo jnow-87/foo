@@ -18,7 +18,6 @@
 #include <sys/errno.h>
 #include <sys/mutex.h>
 #include <sys/string.h>
-#include <sys/ringbuf.h>
 
 
 /* local/static prototypes */
@@ -29,7 +28,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
 static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
 
-static void int_hdlr(int_num_t num, void *i2c);
+static void int_hdlr(int_num_t num, void *payload);
 
 static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
 static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
@@ -166,16 +165,14 @@ static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 	);
 }
 
-static void int_hdlr(int_num_t num, void *_i2c){
+static void int_hdlr(int_num_t num, void *payload){
+	i2c_t *i2c = (i2c_t*)payload;
 	int r;
 	bool master_cmd;
-	i2c_t *i2c;
 	i2c_state_t state;
 	i2c_dgram_t *dgram;
 	itask_queue_t *cmds;
 
-
-	i2c = (i2c_t*)_i2c;
 
 	mutex_lock(&i2c->mtx);
 
@@ -184,7 +181,7 @@ static void int_hdlr(int_num_t num, void *_i2c){
 
 	master_cmd = (i2c->cfg->mode == I2C_MODE_MASTER && !(state & I2C_STATE_BIT_SLAVE));
 	cmds = master_cmd ? &i2c->master_cmds : &i2c->slave_cmds;
-	dgram = itask_query_data(cmds, 0x0);
+	dgram = itask_query_payload(cmds, 0x0);
 
 	if(dgram == 0x0)
 		goto unlock;
@@ -202,7 +199,7 @@ static void int_hdlr(int_num_t num, void *_i2c){
 	/* transfer complete */
 	itask_complete(cmds, -r);
 
-	if(itask_query_data(&i2c->master_cmds, 0x0) || itask_query_data(&i2c->slave_cmds, 0x0))
+	if(itask_query_payload(&i2c->master_cmds, 0x0) || itask_query_payload(&i2c->slave_cmds, 0x0))
 		int_foretell(i2c->cfg->int_num);
 
 unlock:
@@ -210,11 +207,9 @@ unlock:
 }
 
 static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
+	i2c_ops_t *ops = &i2c->ops;
 	uint8_t c;
-	i2c_ops_t *ops;
 
-
-	ops = &i2c->ops;
 
 	switch(state){
 	/* master start */
@@ -241,18 +236,18 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 	/* master write */
 	case I2C_STATE_MST_SLAW_DATA_ACK:
-		linebuf_read(&dgram->data, &c, 1);
+		linebuf_read(&dgram->buf, &c, 1);
 
 		// fall through
 	case I2C_STATE_MST_SLAW_DATA_NACK:
 		DEBUG("(n)ack (%#hhx)\n", state);
 
-		if((linebuf_empty(&dgram->data) && buffer_load(dgram) == -1) || state == I2C_STATE_MST_SLAW_DATA_NACK)
-			return complete(i2c, E_OK, true);
+		if((linebuf_empty(&dgram->buf) && buffer_load(dgram) == -1) || state == I2C_STATE_MST_SLAW_DATA_NACK)
+			return complete(i2c, 0, true);
 
 		// fall through
 	case I2C_STATE_MST_SLAW_ACK:
-		linebuf_peek(&dgram->data, &c, 1);
+		linebuf_peek(&dgram->buf, &c, 1);
 		DEBUG("sla-w (%#hhx): %#hhx\n", state, c);
 
 		ops->byte_write(c, true, i2c->hw);
@@ -263,16 +258,16 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_MST_SLAR_DATA_ACK:
 	case I2C_STATE_MST_SLAR_DATA_NACK:
 		c = ops->byte_read(i2c->hw);
-		linebuf_write(&dgram->data, &c, 1);
+		linebuf_write(&dgram->buf, &c, 1);
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
-		if(linebuf_empty(&dgram->data) || state == I2C_STATE_MST_SLAR_DATA_NACK)
-			return complete(i2c, E_OK, true);
+		if(linebuf_empty(&dgram->buf) || state == I2C_STATE_MST_SLAR_DATA_NACK)
+			return complete(i2c, 0, true);
 
 		// fall through
 	case I2C_STATE_MST_SLAR_ACK:
 		DEBUG("sla-r (%#hhx)\n", state);
-		ops->ack((linebuf_left(&dgram->data) > 1), i2c->hw);
+		ops->ack((linebuf_left(&dgram->buf) > 1), i2c->hw);
 		break;
 
 
@@ -291,11 +286,9 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 }
 
 static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
+	i2c_ops_t *ops = &i2c->ops;
 	uint8_t c;
-	i2c_ops_t *ops;
 
-
-	ops = &i2c->ops;
 
 	switch(state){
 	case I2C_STATE_NEXT_CMD:
@@ -309,11 +302,11 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_BCAST_DATA_ACK:
 	case I2C_STATE_SLA_BCAST_DATA_NACK:
 		c = ops->byte_read(i2c->hw);
-		linebuf_write(&dgram->data, &c, 1);
+		linebuf_write(&dgram->buf, &c, 1);
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
 		if(state == I2C_STATE_SLA_SLAW_DATA_NACK || state == I2C_STATE_SLA_BCAST_DATA_NACK)
-			return complete(i2c, E_OK, false);
+			return complete(i2c, 0, false);
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
@@ -323,7 +316,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_SLAW_MATCH:
 	case I2C_STATE_SLA_BCAST_MATCH:
 		DEBUG("match (%#hhx)\n", state);
-		ops->ack(!(linebuf_full(&dgram->data)), i2c->hw);
+		ops->ack(!(linebuf_full(&dgram->buf)), i2c->hw);
 		break;
 
 
@@ -333,28 +326,28 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_SLAR_DATA_LAST_ACK:
 		DEBUG("(n)ack (%#hhx)\n", state);
 
-		if(linebuf_empty(&dgram->data)){
-			itask_complete(&i2c->slave_cmds, E_OK);
-			dgram = itask_query_data(&i2c->slave_cmds, 0x0);
+		if(linebuf_empty(&dgram->buf)){
+			itask_complete(&i2c->slave_cmds, 0);
+			dgram = itask_query_payload(&i2c->slave_cmds, 0x0);
 		}
 
 		if(state == I2C_STATE_SLA_SLAR_DATA_LAST_ACK || state == I2C_STATE_SLA_SLAR_DATA_NACK || dgram == 0x0)
-			return complete(i2c, E_OK, false);
+			return complete(i2c, 0, false);
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
 	// 		command will be continued once the slave transmission has beem finished
 	case I2C_STATE_SLA_SLAR_ARBLOST_ADDR_MATCH:
 	case I2C_STATE_SLA_SLAR_ADDR_MATCH:
-		linebuf_read(&dgram->data, &c, 1);
+		linebuf_read(&dgram->buf, &c, 1);
 		DEBUG("write (%#hhx): %#hhx\n", state, c);
 
-		ops->byte_write(c, (linebuf_contains(&dgram->data) == 0), i2c->hw);
+		ops->byte_write(c, (linebuf_contains(&dgram->buf) == 0), i2c->hw);
 		break;
 
 	case I2C_STATE_SLA_SLAW_STOP:
 		DEBUG("stop (%#hhx)\n", state);
-		return complete(i2c, E_OK, false);
+		return complete(i2c, 0, false);
 
 
 	/* no state change */
@@ -383,8 +376,8 @@ static int buffer_load(i2c_dgram_t *dgram){
 		return -1;
 
 	linebuf_init(
-		&dgram->data,
-		dgram->blobs->data,
+		&dgram->buf,
+		dgram->blobs->buf,
 		dgram->blobs->len,
 		(dgram->cmd == I2C_CMD_WRITE) ? dgram->blobs->len : 0
 	);

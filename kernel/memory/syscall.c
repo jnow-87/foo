@@ -19,16 +19,14 @@
 
 
 /* local/static prototypes */
-static int sc_hdlr_malloc(void *p);
-static int sc_hdlr_free(void *p);
+static int sc_hdlr_malloc(void *param);
+static int sc_hdlr_free(void *param);
 
 
 /* local functions */
 static int init(void){
-	int r;
+	int r = 0;
 
-
-	r = E_OK;
 
 	r |= sc_register(SC_MALLOC, sc_hdlr_malloc);
 	r |= sc_register(SC_FREE, sc_hdlr_free);
@@ -38,14 +36,13 @@ static int init(void){
 
 kernel_init(0, init);
 
-static int sc_hdlr_malloc(void *_p){
+static int sc_hdlr_malloc(void *param){
+	sc_malloc_t *p = (sc_malloc_t*)param;
 	page_size_t psize;
-	sc_malloc_t *p;
 	page_t *page;
 	process_t *this_p;
 
 
-	p = (sc_malloc_t*)_p;
 	this_p = sched_running()->parent;
 
 	DEBUG("size %zu\n", p->size);
@@ -80,17 +77,16 @@ static int sc_hdlr_malloc(void *_p){
 
 	DEBUG("result %p\n", p->p);
 
-	return E_OK;
+	return 0;
 }
 
-static int sc_hdlr_free(void *_p){
+static int sc_hdlr_free(void *param){
+	sc_malloc_t *p = (sc_malloc_t*)param;
 	process_t *this_p;
 	thread_t const *this_t;
 	page_t *page;
-	sc_malloc_t *p;
 
 
-	p = (sc_malloc_t*)_p;
 	this_t = sched_running();
 	this_p = this_t->parent;
 
@@ -113,5 +109,5 @@ static int sc_hdlr_free(void *_p){
 
 	mutex_unlock(&this_p->mtx);
 
-	return E_OK;
+	return 0;
 }

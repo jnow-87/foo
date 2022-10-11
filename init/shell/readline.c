@@ -32,30 +32,25 @@ typedef enum{
 
 
 /* local/static prototypes */
-static esc_t parse_esc(char const *s, size_t len);
+static esc_t parse_esc(char const *s, size_t n);
 
 
 /* global functions */
 size_t readline_stdin(FILE *stream, char *line, size_t n){
+	bool shadowed = false;
+	size_t i = 0,
+		   end = 0,
+		   prev = 0;
+	char *hst = 0x0;
 	char c;
-	size_t i,
-		   end,
-		   prev;
 	int r;
-	char *hst;
 	char shadow[n];
-	bool shadowed;
 	esc_t esc;
 
 
-	i = 0;
-	end = 0;
-	prev = 0;
-	shadowed = false;
 	shadow[0] = 0;
-	hst = 0x0;
 
-	errno = E_OK;
+	reset_errno();
 	history_startover();
 
 	while(end < n && i < n){
@@ -201,17 +196,15 @@ err:
 	if(errno)
 		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
 
-	errno = E_OK;
+	reset_errno();
 
 	return 0;
 }
 
 size_t readline_regfile(FILE *stream, char *line, size_t n){
-	size_t i;
+	size_t i = 0;
 	int r;
 
-
-	i = 0;
 
 	while(i < n){
 		r = read(fileno(stream), line + i, 1);
@@ -232,24 +225,24 @@ size_t readline_regfile(FILE *stream, char *line, size_t n){
 
 
 err:
-	if(errno){
+	if(errno)
 		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
-		errno = E_OK;
-	}
+
+	reset_errno();
 
 	return 0;
 }
 
 
 /* local functions */
-static esc_t parse_esc(char const *s, size_t len){
+static esc_t parse_esc(char const *s, size_t n){
 	static esc_t const codes[] = {
 		ESC_UP, ESC_DOWN, ESC_RIGHT, ESC_LEFT
 	};
 	unsigned char i;
 
 
-	if(len < 3 || *s != '\e' || *(s + 1) != '[')
+	if(n < 3 || *s != '\e' || *(s + 1) != '[')
 		return ESC_NONE;
 
 	i = *(s + 2) - 'A';

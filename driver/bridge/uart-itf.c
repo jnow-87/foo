@@ -21,16 +21,13 @@ static int writeb(uint8_t b, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	bridge_cfg_t *dtd = (bridge_cfg_t*)dt_data;
+	term_itf_t *dti = (term_itf_t*)dt_itf;
 	bridge_ops_t ops;
-	bridge_cfg_t *dtd;
-	term_itf_t *dti;
 	term_cfg_t term;
 
 
-	dtd = (bridge_cfg_t*)dt_data;
-	dti = (term_itf_t*)dt_itf;
-
-	if(dti->configure != 0x0 && dti->configure(&term, dti->cfg, dti->data) != 0)
+	if(dti->configure != 0x0 && dti->configure(&term, dti->cfg, dti->hw) != 0)
 		return 0x0;
 
 	ops.readb = readb;
@@ -46,25 +43,21 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 driver_probe("bridge,uart-itf", probe);
 
-static int readb(uint8_t *b, void *_hw){
-	term_itf_t *hw;
+static int readb(uint8_t *b, void *hw){
+	term_itf_t *term = (term_itf_t*)hw;
 
 
-	hw = (term_itf_t*)_hw;
-
-	if(hw->gets((char*)b, 1, hw->data) == 0)
+	if(term->gets((char*)b, 1, term->hw) == 0)
 		return_errno(errno ? errno : E_AGAIN);
 
 	return 0;
 }
 
-static int writeb(uint8_t b, void *_hw){
-	term_itf_t *hw;
+static int writeb(uint8_t b, void *hw){
+	term_itf_t *term = (term_itf_t*)hw;
 
 
-	hw = (term_itf_t*)_hw;
-
-	if(hw->puts((char*)&b, 1, hw->data) != 1)
+	if(term->puts((char*)&b, 1, term->hw) != 1)
 		return_errno(E_IO);
 
 	return 0;

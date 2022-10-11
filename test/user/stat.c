@@ -18,12 +18,10 @@
  * \brief	test to verify stat()
  */
 TEST(stat){
-	int r;
+	int r = 0;
 	FILE *fp;
 	stat_t s;
 
-
-	r = 0;
 
 	/* prepare test file */
 	unlink("dummy");

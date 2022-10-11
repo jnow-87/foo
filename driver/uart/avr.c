@@ -81,19 +81,18 @@ typedef struct{
 
 
 /* local/static prototypes */
-static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data);
-static char putc(char c, void *data);
-static size_t putsn(char const *s, size_t n, void *data);
-static size_t gets(char *s, size_t n, void *data);
+static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw);
+static char putc(char c, void *hw);
+static size_t putsn(char const *s, size_t n, void *hw);
+static size_t gets(char *s, size_t n, void *hw);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	term_itf_t *itf;
 
 
-	dtd = (dt_data_t*)dt_data;
 	itf = kcalloc(1, sizeof(term_itf_t));
 
 	if(itf == 0x0)
@@ -104,7 +103,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	itf->puts = putsn;
 	itf->gets = gets;
 
-	itf->data = dtd;
+	itf->hw = dtd;
 	itf->cfg = &dtd->cfg;
 	itf->cfg_size = sizeof(uart_cfg_t);
 	itf->rx_int = dtd->rx_int;
@@ -115,17 +114,13 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 driver_probe("avr,uart", probe);
 
-static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
+static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
+	dt_data_t *dtd = (dt_data_t*)hw;
+	uart_regs_t *regs = dtd->regs;
+	uart_cfg_t *cfg = (uart_cfg_t*)hw_cfg;
 	uint8_t const parity_bits[] = { 0b00, 0b11, 0b10 };
 	unsigned int brate;
-	dt_data_t *dtd;
-	uart_regs_t *regs;
-	uart_cfg_t *cfg;
 
-
-	dtd = (dt_data_t*)data;
-	regs = dtd->regs;
-	cfg = (uart_cfg_t*)hw_cfg;
 
 	/* compute baud rate */
 	if(cfg->baudrate > 115200)
@@ -165,14 +160,12 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *data){
 				| (cfg->stopb << UCSRC_USBS)
 				;
 
-	return E_OK;
+	return 0;
 }
 
-static char putc(char c, void *data){
-	uart_regs_t *regs;
+static char putc(char c, void *hw){
+	uart_regs_t *regs = ((dt_data_t*)hw)->regs;
 
-
-	regs = ((dt_data_t*)data)->regs;
 
 	while(!(regs->ucsra & (0x1 << UCSRA_UDRE)));
 	regs->udr = c;
@@ -180,12 +173,10 @@ static char putc(char c, void *data){
 	return c;
 }
 
-static size_t putsn(char const *s, size_t n, void *data){
+static size_t putsn(char const *s, size_t n, void *hw){
+	uart_regs_t *regs = ((dt_data_t*)hw)->regs;
 	size_t i;
-	uart_regs_t *regs;
 
-
-	regs = ((dt_data_t*)data)->regs;
 
 	if(s == 0x0)
 		goto_errno(err, E_INVAL);
@@ -202,16 +193,12 @@ err:
 	return 0;
 }
 
-static size_t gets(char *s, size_t n, void *data){
-	size_t i;
-	uart_regs_t *regs;
+static size_t gets(char *s, size_t n, void *hw){
+	uart_regs_t *regs = ((dt_data_t*)hw)->regs;
+	size_t i = 0;
 
-
-	regs = ((dt_data_t*)data)->regs;
 
 	/* read data */
-	i = 0;
-
 	while(i < n && (regs->ucsra & (0x1 << UCSRA_RXC))){
 		if(regs->ucsra & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE)))
 			goto_errno(err, E_IO);

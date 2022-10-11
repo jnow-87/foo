@@ -37,7 +37,7 @@ typedef struct{
 
 typedef struct{
 	member_type_t type;
-	void *data;
+	void *payload;
 } member_t;
 
 typedef struct device_node_t{
@@ -49,7 +49,7 @@ typedef struct device_node_t{
 	char const *name,
 			   *compatible;
 
-	vector_t data;			/**< vector of member_t elements */
+	vector_t payload;			/**< vector of member_t elements */
 } device_node_t;
 
 typedef struct memory_node_t{

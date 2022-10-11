@@ -106,7 +106,6 @@ void test_log(char const *fmt, ...){
 /* local functions */
 static int test_log_open(char const *name){
 	log = fopen(name, "w");
-
 	stderr = log;
 
 	if(log == 0x0)

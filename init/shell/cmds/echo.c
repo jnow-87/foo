@@ -50,7 +50,6 @@ static opts_t opts;
 
 /* local functions */
 static int exec(int argc, char **argv){
-	int i;
 	char opt;
 
 
@@ -67,7 +66,7 @@ static int exec(int argc, char **argv){
 	}
 
 	/* echo non-option arguments */
-	for(i=optind; i<argc; i++){
+	for(int i=optind; i<argc; i++){
 		if(echo(argv[i], i + 1 >= argc) != 0)
 			return ERROR("write");
 	}

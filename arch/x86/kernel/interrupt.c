@@ -66,7 +66,6 @@ x86_hw_op_t *x86_int_op(void){
 
 /* local functions */
 static int init(void){
-	size_t i;
 	lnx_sigset_t blocked;
 
 
@@ -82,12 +81,12 @@ static int init(void){
 	//		awaiting the hardware-op acknowledgement for the higher priority interrupt
 	//		while the kernel is unable to send it, since the signal handler for the
 	//		higher priority interrupt cannot be called-
-	for(i=1; i<=X86_INT_PRIOS; i++){
+	for(size_t i=1; i<=X86_INT_PRIOS; i++){
 		lnx_sigaction(CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - i, int_hdlr, &blocked);
 		lnx_sigaddset(&blocked, CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - i);
 	}
 
-	return E_OK;
+	return 0;
 }
 
 platform_init(0, init);

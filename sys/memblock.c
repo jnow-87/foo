@@ -18,14 +18,14 @@
 
 
 /* global functions */
-int memblock_init(memblock_t *pool, size_t len){
+int memblock_init(memblock_t *pool, size_t n){
 	if(pool == 0x0)
 		return_errno(E_INVAL);
 
 	list_init(pool);
-	pool->len = len;
+	pool->len = n;
 
-	return E_OK;
+	return 0;
 }
 
 void *memblock_alloc(memblock_t **pool, size_t n, size_t align){
@@ -68,15 +68,12 @@ void *memblock_alloc(memblock_t **pool, size_t n, size_t align){
 }
 
 int memblock_free(memblock_t **pool, void *addr){
-	memblock_t *blk,
-			   *el;
+	memblock_t *blk = addr - sizeof(memblock_t);
+	memblock_t *el;
 
 
 	if(addr == 0x0)
-		return E_OK;
-
-	/* get block address */
-	blk = addr - sizeof(memblock_t);
+		return 0;
 
 	/* search for element with higher address */
 	list_for_each(*pool, el){
@@ -136,5 +133,5 @@ int memblock_free(memblock_t **pool, void *addr){
 		}
 	}
 
-	return E_OK;
+	return 0;
 }

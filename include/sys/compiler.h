@@ -13,8 +13,8 @@
 
 /* macros */
 // stringify
-#define STRGIFY(s)		#s
-#define STR(s)			STRGIFY(s)
+#define STRGIFY(s)						#s
+#define STR(s)							STRGIFY(s)
 
 // error and warnings
 #define BUILD_ASSERT(cond)				((void)sizeof(char[1 - 2*!(cond)]))

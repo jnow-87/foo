@@ -47,8 +47,7 @@ CPP_ASSERT(invalid sleep mode - check kernel config)
 
 void avr_core_panic(thread_ctx_t const *tc){
 #ifdef CONFIG_KERNEL_PRINTF
-	uint8_t i,
-			j;
+	uint8_t reg;
 	uint16_t ret_addr_hi,
 			 ret_addr_lo,
 			 int_vec_addr_hi,
@@ -81,9 +80,9 @@ void avr_core_panic(thread_ctx_t const *tc){
 
 		kprintf(KMSG_ANY, "general purpose registers\n");
 
-		for(i=0; i<32; i++){
-			j = i / 4 + (i % 4) * 8;
-			kprintf(KMSG_ANY, "\t%2.2u: %#2.2x", j, tc->gpr[j]);
+		for(uint8_t i=0; i<32; i++){
+			reg = i / 4 + (i % 4) * 8;
+			kprintf(KMSG_ANY, "\t%2.2u: %#2.2x", reg, tc->gpr[reg]);
 
 			if(i % 4 == 3)
 				kprintf(KMSG_ANY, "\n");
@@ -124,7 +123,7 @@ static int init(void){
 	mreg_w(PRR1, 0xff);
 #endif // PRR1
 
-	return E_OK;
+	return 0;
 }
 
 core_init(init);

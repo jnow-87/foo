@@ -16,16 +16,16 @@
 
 /* types */
 struct item{
-	struct item	*next;
-	unsigned int	len;
-	unsigned int	hash;
-	char		name[0];
+	struct item *next;
+	unsigned int len,
+				 hash;
+	char name[0];
 };
 
 
 /* prototypes */
-int hashtbl_lookup(char const *name, int len, unsigned int hash);
-int hashtbl_add(char const *name, int len);
+int hashtbl_lookup(char const *name, int n, unsigned int hash);
+int hashtbl_add(char const *name, int n);
 void hashtbl_clear(void);
 
 

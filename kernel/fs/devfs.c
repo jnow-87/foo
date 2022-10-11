@@ -29,13 +29,13 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 static int close(fs_filed_t *fd, process_t *this_p);
 static size_t read(fs_filed_t *fd, void *buf, size_t n);
 static size_t write(fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(fs_filed_t *fd, int request, void *data, size_t n);
-static int fcntl(fs_filed_t *fd, int cmd, void *data);
+static int ioctl(fs_filed_t *fd, int request, void *arg, size_t n);
+static int fcntl(fs_filed_t *fd, int cmd, void *arg);
 static void *mmap(fs_filed_t *fd, size_t n);
 
 
 /* global functions */
-devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
+devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *payload){
 	devfs_dev_t *dev;
 	fs_node_t *node;
 
@@ -53,7 +53,7 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *data){
 		goto err_1;
 
 	dev->ops = *ops;
-	dev->data = data;
+	dev->payload = payload;
 	dev->node = node;
 
 	return dev;
@@ -72,19 +72,19 @@ int devfs_dev_release(devfs_dev_t *dev){
 
 	fs_lock();
 
-	node = list_find(devfs_root->childs, data, dev);
+	node = list_find(devfs_root->childs, payload, dev);
 
 	if(node == 0x0)
 		goto_errno(err, E_INVAL);
 
-	if(fs_node_destroy(node) != E_OK)
+	if(fs_node_destroy(node) != 0)
 		goto err;
 
 	fs_unlock();
 
 	kfree(dev);
 
-	return E_OK;
+	return 0;
 
 
 err:
@@ -121,7 +121,7 @@ static int init(void){
 	if(devfs_root == 0x0)
 		goto err_1;
 
-	return E_OK;
+	return 0;
 
 
 err_1:
@@ -134,11 +134,10 @@ err_0:
 kernel_init(2, init);
 
 static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *this_p){
+	devfs_dev_t *dev = (devfs_dev_t*)start->payload;
 	fs_filed_t *fd;
-	devfs_dev_t *dev;
 
 
-	dev = (devfs_dev_t*)start->data;
 	fd = fs_fd_alloc(start, this_p, mode);
 
 	if(fd == 0x0)
@@ -147,7 +146,7 @@ static int open(fs_node_t *start, char const *path, f_mode_t mode, process_t *th
 	if(dev->ops.open == 0x0)
 		return fd->id;
 
-	if(dev->ops.open(dev, fd, mode) != E_OK)
+	if(dev->ops.open(dev, fd, mode) != 0)
 		goto err;
 
 	return fd->id;
@@ -160,19 +159,16 @@ err:
 }
 
 static int close(fs_filed_t *fd, process_t *this_p){
-	int r;
-	devfs_dev_t *dev;
+	int r = 0;
+	devfs_dev_t *dev = (devfs_dev_t*)fd->node->payload;
 
 
 	fs_lock();
 
-	r = E_OK;
-	dev = (devfs_dev_t*)fd->node->data;
-
 	if(dev->ops.close != 0x0)
 		r = dev->ops.close(dev, fd);
 
-	if(r == E_OK)
+	if(r == 0)
 		fs_fd_free(fd, this_p);
 
 	fs_unlock();
@@ -181,10 +177,8 @@ static int close(fs_filed_t *fd, process_t *this_p){
 }
 
 static size_t read(fs_filed_t *fd, void *buf, size_t n){
-	devfs_dev_t *dev;
+	devfs_dev_t *dev = (devfs_dev_t*)fd->node->payload;
 
-
-	dev = (devfs_dev_t*)fd->node->data;
 
 	if(dev->ops.read != 0x0)
 		return dev->ops.read(dev, fd, buf, n);
@@ -195,10 +189,8 @@ static size_t read(fs_filed_t *fd, void *buf, size_t n){
 }
 
 static size_t write(fs_filed_t *fd, void *buf, size_t n){
-	devfs_dev_t *dev;
+	devfs_dev_t *dev = (devfs_dev_t*)fd->node->payload;
 
-
-	dev = (devfs_dev_t*)fd->node->data;
 
 	if(dev->ops.write != 0x0)
 		return dev->ops.write(dev, fd, buf, n);
@@ -208,47 +200,39 @@ static size_t write(fs_filed_t *fd, void *buf, size_t n){
 	return 0;
 }
 
-static int ioctl(fs_filed_t *fd, int request, void *data, size_t n){
-	devfs_dev_t *dev;
+static int ioctl(fs_filed_t *fd, int request, void *arg, size_t n){
+	devfs_dev_t *dev = (devfs_dev_t*)fd->node->payload;
 
-
-	dev = (devfs_dev_t*)fd->node->data;
 
 	if(dev->ops.ioctl == 0x0)
 		return_errno(E_NOIMP);
 
-	return dev->ops.ioctl(dev, fd, request, data, n);
+	return dev->ops.ioctl(dev, fd, request, arg, n);
 }
 
-static int fcntl(fs_filed_t *fd, int cmd, void *data){
-	devfs_dev_t *dev;
-	stat_t *stat;
+static int fcntl(fs_filed_t *fd, int cmd, void *arg){
+	devfs_dev_t *dev = (devfs_dev_t*)fd->node->payload;
+	stat_t *stat = (stat_t*)arg;
 
-
-	dev = (devfs_dev_t*)fd->node->data;
 
 	switch(cmd){
 	case F_STAT:
-		stat = (stat_t*)data;
-
 		stat->type = fd->node->type;
 		stat->size = 0;
 
-		return E_OK;
+		return 0;
 
 	default:
 		if(dev->ops.fcntl == 0x0)
 			return_errno(E_NOIMP);
 
-		return dev->ops.fcntl(dev, fd, cmd, data);
+		return dev->ops.fcntl(dev, fd, cmd, arg);
 	};
 }
 
 static void *mmap(fs_filed_t *fd, size_t n){
-	devfs_dev_t *dev;
+	devfs_dev_t *dev = (devfs_dev_t *)fd->node->payload;
 
-
-	dev = (devfs_dev_t *)fd->node->data;
 
 	if(dev->ops.mmap != 0x0)
 		return dev->ops.mmap(dev, fd, n);

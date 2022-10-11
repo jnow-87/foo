@@ -96,10 +96,9 @@ char *history_newer(void){
 
 /* local functions */
 static int print(int argc, char **argv){
-	size_t i;
+	size_t i = 1;
 
 
-	i = 1;
 	rd = list_last(history);
 
 	do{

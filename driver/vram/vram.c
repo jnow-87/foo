@@ -22,7 +22,7 @@
 
 
 /* local/static prototypes */
-static void refresh_hdlr(void *data);
+static void refresh_hdlr(void *payload);
 
 
 /* global functions */
@@ -74,7 +74,7 @@ int vram_configure(vram_t *vram, vram_cfg_t *cfg){
 
 	vram->cfg = *cfg;
 
-	return E_OK;
+	return 0;
 }
 
 int vram_write_page(vram_t *vram, size_t page, size_t column, size_t n, uint8_t pattern){
@@ -86,12 +86,11 @@ int vram_write_page(vram_t *vram, size_t page, size_t column, size_t n, uint8_t 
 	memset(vram->ram + (page * vram->cfg.width) + column, pattern, n);
 	vram_makedirty(page, vram->dirty, true);
 
-	return E_OK;
+	return 0;
 }
 
 int vram_write_pages(vram_t *vram, size_t start, size_t npages, uint8_t pattern){
-	size_t i,
-		   chunk;
+	size_t chunk;
 
 
 	if(start + npages > vram->npages)
@@ -103,14 +102,14 @@ int vram_write_pages(vram_t *vram, size_t start, size_t npages, uint8_t pattern)
 	memset(vram->ram + (start * vram->cfg.width), pattern, chunk * vram->cfg.width);
 	memset(vram->ram, pattern, (npages - chunk) * vram->cfg.width);
 
-	for(i=start; npages!=0; npages--, i++){
+	for(size_t i=start; npages!=0; npages--, i++){
 		if(i == vram->npages)
 			i = 0;
 
 		vram_makedirty(i, vram->dirty, true);
 	}
 
-	return E_OK;
+	return 0;
 }
 
 int vram_write_pattern(vram_t *vram, uint8_t pattern){
@@ -118,49 +117,40 @@ int vram_write_pattern(vram_t *vram, uint8_t pattern){
 }
 
 int vram_write_block(vram_t *vram, size_t page, size_t column, uint8_t *block, size_t bsize, size_t n){
-	size_t i;
-
-
 	if(page >= vram->npages || column + n * bsize > vram->cfg.width)
 		return_errno(E_INVAL);
 
 	page = RAMIDX(vram, page);
 
-	for(i=0; i<n; i++)
+	for(size_t i=0; i<n; i++)
 		memcpy(vram->ram + (page * vram->cfg.width) + column + i * bsize, block, bsize);
 
 	vram_makedirty(page, vram->dirty, true);
 
-	return E_OK;
+	return 0;
 }
 
 int vram_invert_page(vram_t *vram, size_t page, size_t column, size_t n){
-	size_t i;
-
-
 	if(page >= vram->npages)
 		return_errno(E_INVAL);
 
 	page = RAMIDX(vram, page);
 
-	for(i=0; i<n; i++)
+	for(size_t i=0; i<n; i++)
 		vram->ram[page * vram->cfg.width + column + i] ^= 0xff;
 
 	vram_makedirty(page, vram->dirty, true);
 
-	return E_OK;
+	return 0;
 }
 
 int vram_invert_pages(vram_t *vram, size_t start, size_t npages){
-	size_t i;
-
-
-	for(i=0; i<npages; i++){
+	for(size_t i=0; i<npages; i++){
 		if(vram_invert_page(vram, start + i, 0, vram->cfg.width) != 0)
 			return -errno;
 	}
 
-	return E_OK;
+	return 0;
 }
 
 int vram_scroll(vram_t *vram, ssize_t npages){
@@ -177,16 +167,12 @@ int vram_scroll(vram_t *vram, ssize_t npages){
 
 
 /* local functions */
-static void refresh_hdlr(void *data){
-	size_t i,
-		   page;
-	vram_t *vram;
+static void refresh_hdlr(void *payload){
+	vram_t *vram = (vram_t*)payload;
+	size_t page = vram->page_offset;
 
 
-	vram = (vram_t*)data;
-	page = vram->page_offset;
-
-	for(i=0; i<vram->npages; i++, page++){
+	for(size_t i=0; i<vram->npages; i++, page++){
 		if(page >= vram->npages)
 			page = 0;
 

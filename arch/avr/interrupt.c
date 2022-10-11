@@ -49,6 +49,7 @@ int_type_t avr_int_enable(int_type_t mask){
 int_type_t avr_int_enabled(void){
 	if(mreg_r(SREG) & (0x1 << SREG_I))
 		return INT_GLOBAL;
+
 	return INT_NONE;
 }
 

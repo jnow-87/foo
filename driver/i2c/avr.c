@@ -76,11 +76,9 @@ static void byte_write(uint8_t c, bool ack, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	i2c_ops_t ops;
 
-
-	dtd = (dt_data_t*)dt_data;
 
 	ops.configure = configure;
 	ops.state = state;
@@ -99,13 +97,10 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 driver_probe("avr,i2c", probe);
 
 static int configure(i2c_cfg_t *cfg, void *hw){
+	dt_data_t *dtd = (dt_data_t*)hw;
+	i2c_regs_t *regs = dtd->regs;
 	uint8_t brate;
-	dt_data_t *dtd;
-	i2c_regs_t *regs;
 
-
-	dtd = (dt_data_t*)hw;
-	regs = dtd->regs;
 
 	/* check config */
 	// max 400 kHz
@@ -138,14 +133,12 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
 			   ;
 
-	return E_OK;
+	return 0;
 }
 
 static i2c_state_t state(void *hw){
-	i2c_regs_t *regs;
+	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
-
-	regs = ((dt_data_t*)hw)->regs;
 
 	if((regs->twcr & (0x1 << TWCR_TWINT)) == 0)
 		return I2C_STATE_NONE;
@@ -182,10 +175,8 @@ static i2c_state_t state(void *hw){
 }
 
 static void start(void *hw){
-	i2c_regs_t *regs;
+	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
-
-	regs = ((dt_data_t*)hw)->regs;
 
 	regs->twcr |= (0x1 << TWCR_TWSTA)
 			   |  (0x1 << TWCR_TWINT)
@@ -193,20 +184,16 @@ static void start(void *hw){
 }
 
 static void ack(bool ack, void *hw){
-	i2c_regs_t *regs;
+	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
-
-	regs = ((dt_data_t*)hw)->regs;
 
 	regs->twcr &= ~(0x1 << TWCR_TWEA);
 	regs->twcr |= ((ack ? 0x1 : 0x0) << TWCR_TWEA) | (0x1 << TWCR_TWINT);
 }
 
 static void slave_mode(bool addressable, bool stop, void *hw){
-	i2c_regs_t *regs;
+	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
-
-	regs = ((dt_data_t*)hw)->regs;
 
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
 			   | ((addressable ? 0x1 : 0x0) << TWCR_TWEA)
@@ -217,10 +204,8 @@ static void slave_mode(bool addressable, bool stop, void *hw){
 }
 
 static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw){
-	i2c_regs_t *regs;
+	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
-
-	regs = ((dt_data_t*)hw)->regs;
 
 	regs->twdr = (slave << TWDR_ADDR) | (((cmd & I2C_CMD_READ) ? 0x1 : 0x0) << TWDR_RW);
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))

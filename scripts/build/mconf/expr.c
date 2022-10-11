@@ -52,6 +52,7 @@ struct expr *expr_alloc_and(struct expr *e1, struct expr *e2)
 {
 	if (!e1)
 		return e2;
+
 	return e2 ? expr_alloc_two(E_AND, e1, e2) : e1;
 }
 
@@ -59,6 +60,7 @@ struct expr *expr_alloc_or(struct expr *e1, struct expr *e2)
 {
 	if (!e1)
 		return e2;
+
 	return e2 ? expr_alloc_two(E_OR, e1, e2) : e1;
 }
 

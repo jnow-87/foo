@@ -26,7 +26,7 @@ typedef struct{
 } dt_data_t;
 
 typedef struct{
-	i2c_t *i2c;
+	i2c_t *itf;
 	dt_data_t *cfg;
 } dev_data_t;
 
@@ -34,22 +34,22 @@ typedef struct{
 /* local/static prototypes */
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf, size_t n);
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dev_data_t *data;
+	dev_data_t *i2c;
 	devfs_ops_t ops;
 
 
-	data = kmalloc(sizeof(dev_data_t));
+	i2c = kmalloc(sizeof(dev_data_t));
 
-	if(data == 0x0)
+	if(i2c == 0x0)
 		goto err;
 
-	data->i2c = dt_itf;
-	data->cfg = dt_data;
+	i2c->itf = dt_itf;
+	i2c->cfg = dt_data;
 
 	/* register device */
 	ops.open = 0x0;
@@ -59,7 +59,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.ioctl = ioctl;
 	ops.mmap = 0x0;
 
-	(void)devfs_dev_register(name, &ops, data);
+	(void)devfs_dev_register(name, &ops, i2c);
 
 	return 0x0;
 
@@ -71,14 +71,12 @@ err:
 driver_probe("i2c", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dev_data_t *data;
+	dev_data_t *i2c = (dev_data_t*)dev->payload;
 
-
-	data = (dev_data_t*)dev->data;
 
 	mutex_unlock(&dev->node->mtx);
 
-	if(i2c_read(data->i2c, data->cfg->slave, buf, n) != 0)
+	if(i2c_read(i2c->itf, i2c->cfg->slave, buf, n) != 0)
 		n = 0;
 
 	mutex_lock(&dev->node->mtx);
@@ -87,14 +85,12 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dev_data_t *data;
+	dev_data_t *i2c = (dev_data_t*)dev->payload;
 
-
-	data = (dev_data_t*)dev->data;
 
 	mutex_unlock(&dev->node->mtx);
 
-	if(i2c_write(data->i2c, data->cfg->slave, buf, n) != 0)
+	if(i2c_write(i2c->itf, i2c->cfg->slave, buf, n) != 0)
 		n = 0;
 
 	mutex_lock(&dev->node->mtx);
@@ -102,29 +98,27 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	return n;
 }
 
-static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *buf, size_t n){
-	dev_data_t *data;
+static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
+	dev_data_t *i2c = (dev_data_t*)dev->payload;
 
-
-	data = (dev_data_t*)dev->data;
 
 	if(n != sizeof(dt_data_t))
 		return_errno(E_INVAL);
 
 	switch(request){
 	case IOCTL_CFGRD:
-		memcpy(buf, data->cfg, n);
+		memcpy(arg, i2c->cfg, n);
 		break;
 
 	case IOCTL_CFGWR:
-		memcpy(data->cfg, buf, n);
+		memcpy(i2c->cfg, arg, n);
 		break;
 
 	default:
 		goto_errno(err, E_NOSUP);
 	}
 
-	return E_OK;
+	return 0;
 
 
 err:

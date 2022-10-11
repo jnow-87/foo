@@ -77,28 +77,28 @@ int export_devices_c(device_node_t *node, FILE *fp){
 		fprintf(fp, "\t0x0\n};\n\n");
 	}
 
-	/* data */
-	m = vector_get(&node->data, 0);
+	/* payload */
+	m = vector_get(&node->payload, 0);
 
-	if(node->data.size > 1 || (m != 0x0 && m->type != MT_BASE_ADDR)){
+	if(node->payload.size > 1 || (m != 0x0 && m->type != MT_BASE_ADDR)){
 		n_int = 0;
 		n_reg = 0;
 		n_base = 0;
 
-		fprintf(fp, "// __dt_%s data\n", node_cname);
+		fprintf(fp, "// __dt_%s payload\n", node_cname);
 
 		// struct definition
 		fprintf(fp, "struct{\n");
 
-		vector_for_each(&node->data, m){
+		vector_for_each(&node->payload, m){
 			switch(m->type){
 			case MT_REG_LIST:
-				vector_for_each((vector_t*)m->data, p)
+				vector_for_each((vector_t*)m->payload, p)
 					fprintf(fp, "\tvoid *reg%zu;\n", n_reg++);
 				break;
 
 			case MT_INT_LIST:
-				int_lst = m->data;
+				int_lst = m->payload;
 
 				vector_for_each(int_lst->lst, p)
 					fprintf(fp, "\tuint%d_t int%zu;\n", int_lst->size, n_int++);
@@ -125,29 +125,29 @@ int export_devices_c(device_node_t *node, FILE *fp){
 		n_reg = 0;
 		n_base = 0;
 
-		// data
-		fprintf(fp, " const __dt_%s_data = {\n", node_cname);
+		// payload
+		fprintf(fp, " const __dt_%s_payload = {\n", node_cname);
 
-		vector_for_each(&node->data, m){
+		vector_for_each(&node->payload, m){
 			switch(m->type){
 			case MT_REG_LIST:
-				vector_for_each((vector_t*)m->data, p)
+				vector_for_each((vector_t*)m->payload, p)
 					fprintf(fp, "\t.reg%zu = (void*)%#x,\n", n_reg++, *p);
 				break;
 
 			case MT_INT_LIST:
-				int_lst = m->data;
+				int_lst = m->payload;
 
 				vector_for_each(int_lst->lst, p)
 					fprintf(fp, "\t.int%zu = %u,\n", n_int++, *p);
 				break;
 
 			case MT_BASE_ADDR:
-				fprintf(fp, "\t.base%zu = (void*)%#x,\n", n_base++, m->data);
+				fprintf(fp, "\t.base%zu = (void*)%#x,\n", n_base++, m->payload);
 				break;
 
 			case MT_STRING:
-				fprintf(fp, "\t.string%zu = \"%s\",\n", n_base++, m->data);
+				fprintf(fp, "\t.string%zu = \"%s\",\n", n_base++, m->payload);
 				break;
 
 			case MT_SIZE:
@@ -167,17 +167,17 @@ int export_devices_c(device_node_t *node, FILE *fp){
 	fprintf(fp, "\t.name = \"%s\",\n", node->name);
 	fprintf(fp, "\t.compatible = \"%s\",\n", node->compatible);
 
-	m = vector_get(&node->data, 0);
+	m = vector_get(&node->payload, 0);
 
-	if(node->data.size == 1 && m->type == MT_BASE_ADDR)	fprintf(fp, "\t.data = %p,\n", m->data);
-	else if(m == 0x0 || m->data == 0x0)					fprintf(fp, "\t.data = 0x0,\n");
-	else												fprintf(fp, "\t.data = &__dt_%s_data,\n", node_cname);
+	if(node->payload.size == 1 && m->type == MT_BASE_ADDR)	fprintf(fp, "\t.payload = %p,\n", m->payload);
+	else if(m == 0x0 || m->payload == 0x0)					fprintf(fp, "\t.payload = 0x0,\n");
+	else													fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_cname);
 
-	if(node->parent)									fprintf(fp, "\t.parent = &__dt_%s,\n", strcident(node->parent->name));
-	else												fprintf(fp, "\t.parent = 0x0,\n");
+	if(node->parent)										fprintf(fp, "\t.parent = &__dt_%s,\n", strcident(node->parent->name));
+	else													fprintf(fp, "\t.parent = 0x0,\n");
 
-	if(!list_empty(node->childs))						fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_cname);
-	else												fprintf(fp, "\t.childs = 0x0,\n");
+	if(!list_empty(node->childs))							fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_cname);
+	else													fprintf(fp, "\t.childs = 0x0,\n");
 
 	fprintf(fp, "};\n\n\n");
 

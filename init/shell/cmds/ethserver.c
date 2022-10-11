@@ -99,8 +99,8 @@ static int server(int sock){
 
 
 	addr.domain = AF_INET;
-	addr.data.addr = INET_ADDR_ANY;
-	addr.data.port = opts.port;
+	addr.inet_data.addr = INET_ADDR_ANY;
+	addr.inet_data.port = opts.port;
 
 	if(bind(sock, (sock_addr_t*)&addr, sizeof(sock_addr_inet_t)) != 0)
 		return ERROR("bind(): %s\n", strerror(errno));
@@ -119,7 +119,7 @@ static int server(int sock){
 		if(sock < 0)
 			return ERROR("accept(): %s\n", strerror(errno));
 
-		printf("client: %s on port %u\n", inet_ntoa(addr.data.addr), addr.data.port);
+		printf("client: %s on port %u\n", inet_ntoa(addr.inet_data.addr), addr.inet_data.port);
 	}
 
 	rx_loop(sock);
@@ -135,13 +135,13 @@ static int server(int sock){
 static void rx_loop(int sock){
 	int r;
 	char s[16];
-	char *data;
+	char *buf;
 	sock_addr_inet_t remote;
 	size_t addr_len;
 
 
 	strcpy(s, "echo: ");
-	data = s + 6;
+	buf = s + 6;
 
 	printf("rx loop quits if \"q\" is received\n");
 
@@ -149,21 +149,21 @@ static void rx_loop(int sock){
 		addr_len = sizeof(remote);
 		memset(&remote, 0, addr_len);
 
-		r = recvfrom(sock, data, 9, (sock_addr_t*)&remote, &addr_len);
+		r = recvfrom(sock, buf, 9, (sock_addr_t*)&remote, &addr_len);
 
 		if(r < 0){
 			printf("error: %d %s\n", r, strerror(errno));
 			break;
 		}
 
-		data[r] = 0;
+		buf[r] = 0;
 
 		if(opts.type == SOCK_DGRAM)
-			printf("recv %s:%u: %s\n", inet_ntoa(remote.data.addr), remote.data.port, data);
+			printf("recv %s:%u: %s\n", inet_ntoa(remote.inet_data.addr), remote.inet_data.port, buf);
 		else
-			printf("recv: %s\n", data);
+			printf("recv: %s\n", buf);
 
-		if(strcmp(data, "q") == 0)
+		if(strcmp(buf, "q") == 0)
 			break;
 
 		if(opts.echo){

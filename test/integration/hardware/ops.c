@@ -92,10 +92,8 @@ void hw_op_write_sig(x86_hw_op_t *op, child_t *tgt, int sig){
 }
 
 void hw_op_write_writeback(x86_hw_op_t *op, child_t *tgt){
-	unsigned int seq_num;
+	unsigned int seq_num = op->seq;
 
-
-	seq_num = op->seq;
 
 	child_read(tgt, 0, op, sizeof(*op));
 	CHECK_SEQ_NUM(op->seq, seq_num);
@@ -108,10 +106,8 @@ void hw_op_write_writeback(x86_hw_op_t *op, child_t *tgt){
 
 void hw_op_read(x86_hw_op_t *op, child_t *src){
 	static unsigned int seq_num[2] = { 0 };
-	x86_priv_t idx;
+	x86_priv_t idx = (src == KERNEL) ? PRIV_KERNEL : PRIV_USER;
 
-
-	idx = (src == KERNEL) ? PRIV_KERNEL : PRIV_USER;
 
 	child_write(src, 0, seq_num + idx, sizeof(seq_num[0]));
 
@@ -242,7 +238,7 @@ static int event_exit(x86_hw_op_t *op){
 }
 
 static int event_int_trigger(x86_hw_op_t *op){
-	hw_int_request(op->int_ctrl.num, op->int_ctrl.data, op->src, op->tid);
+	hw_int_request(op->int_ctrl.num, op->int_ctrl.payload, op->src, op->tid);
 
 	return 0;
 }
@@ -282,10 +278,8 @@ static int event_int_state(x86_hw_op_t *op){
 }
 
 static int event_syscall_return(x86_hw_op_t *op){
-	x86_hw_op_t app_op;
+	x86_hw_op_t app_op = *op;
 
-
-	app_op = *op;
 
 	if(app_op.src != PRIV_KERNEL)
 		EEXIT("syscall return only supposed to be triggered by kernel\n");
@@ -320,10 +314,8 @@ static int event_display_config(x86_hw_op_t *op){
 }
 
 static int event_setup(x86_hw_op_t *op){
-	x86_hw_op_t app_op;
+	x86_hw_op_t app_op = *op;
 
-
-	app_op = *op;
 
 	child_lock(APP);
 
@@ -344,10 +336,8 @@ static int event_inval(x86_hw_op_t *op){
 }
 
 static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op){
-	x86_hw_op_t app_op;
+	x86_hw_op_t app_op = *op;
 
-
-	app_op = *op;
 
 	if(op->src != PRIV_KERNEL)
 		EEXIT("copy from/to user only supposed to be triggered by kernel\n");

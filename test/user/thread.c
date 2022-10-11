@@ -36,12 +36,11 @@ static tid_t volatile tids_ref[NTHREAD],
  * 			also sleep() and mutex functions are tested.
  */
 TEST(thread_create){
-	int r;
+	int r = 0;
 	size_t i;
 	tid_t tid;
 
 
-	r = 0;
 	errors = 0;
 	finished = 0;
 
@@ -70,14 +69,11 @@ TEST(thread_create){
 }
 
 static int thread(void *arg){
-	int r;
+	int r = 0;
+	unsigned int *tid = (unsigned int*)arg;
 	thread_info_t info;
-	unsigned int *tid;
 
 
-	tid = (unsigned int*)arg;
-
-	r = 0;
 	r += TEST_INT_EQ(thread_info(&info), 0);
 
 	*tid = info.tid;

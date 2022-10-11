@@ -234,7 +234,9 @@ static ssize_t compat_getline(char **lineptr, size_t *n, FILE *stream)
 			*lineptr = line;
 			if (slen == 0)
 				return -1;
+
 			return slen;
+
 		default:
 			if (add_byte(c, &line, slen, n) < 0)
 				goto e_out;

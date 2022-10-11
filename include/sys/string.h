@@ -39,19 +39,19 @@ void *memcpy(void *dest, void const *src, size_t n);
 void *memset(void *p, char c, size_t n);
 int memcmp(void const *s0, void const *s1, size_t n);
 void *memscan(void *addr, char c, size_t n);
-void *memnscan(void *s0, void *s1, ssize_t nmemb, size_t size);
+void *memnscan(void *s0, void *s1, size_t nmemb, size_t size);
 
 char const *strerror(errno_t errno);
 
-char *itoa(int v, unsigned int base, char *s, size_t len);
+char *itoa(int v, unsigned int base, char *s, size_t n);
 int atoi(char const *s);
 long int strtol(char const *p, char **endp, int base);
 
 char *strupr(char const *s);
-char *strupr_r(char const *s, char *buf, size_t len);
+char *strupr_r(char const *s, char *buf, size_t n);
 
 char *strcident(char const *s);
-char *strcident_r(char const *s, char *buf, size_t len);
+char *strcident_r(char const *s, char *buf, size_t n);
 
 
 #endif // SYS_STRING_H
