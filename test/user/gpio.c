@@ -39,7 +39,7 @@ static int test_ioctl(int fd, gpio_int_t mask, signal_t sig, errno_t expect);
  *	\brief	test to verify the gpio functions
  */
 TEST_LONG(gpio, "test gpio interface"){
-	int n = 0;
+	int r = 0;
 	int fd_normal,
 		fd_strict;
 	gpio_int_t v;
@@ -52,77 +52,77 @@ TEST_LONG(gpio, "test gpio interface"){
 	ASSERT_INT_NEQ(fd_strict = open(DEV_STRICT, O_RDWR), -1);
 
 	/* normal cases */
-	n += test_write(fd_normal, 0xae, EXPECT(0xae));
-	n += test_write(fd_normal, 0x0, EXPECT(0x0));
-	n += test_ioctl(fd_normal, 0xff, SIG_USR0, 0);
+	r += test_write(fd_normal, 0xae, EXPECT(0xae));
+	r += test_write(fd_normal, 0x0, EXPECT(0x0));
+	r += test_ioctl(fd_normal, 0xff, SIG_USR0, 0);
 
 	/* error cases */
 	// read more than sizeof(gpio_int_t)
-	n += TEST_INT_EQ(read(fd_normal, &v, sizeof(v) * 2), -1);
-	n += TEST_INT_EQ(errno, E_LIMIT);
+	r += TEST_INT_EQ(read(fd_normal, &v, sizeof(v) * 2), -1);
+	r += TEST_INT_EQ(errno, E_LIMIT);
 	reset_errno();
 
 	// write more than sizeof(gpio_int_t)
-	n += TEST_INT_EQ(write(fd_normal, &v, sizeof(v) * 2), -1);
-	n += TEST_INT_EQ(errno, E_LIMIT);
+	r += TEST_INT_EQ(write(fd_normal, &v, sizeof(v) * 2), -1);
+	r += TEST_INT_EQ(errno, E_LIMIT);
 	reset_errno();
 
 	// write bits other than in the devices out_mask
 	// shall be ok in normal mode but give an error in strict mode
-	n += test_write(fd_normal, 0xff, EXPECT(0xff));
+	r += test_write(fd_normal, 0xff, EXPECT(0xff));
 
 	v = 0xff;
-	n += TEST_INT_EQ(write(fd_strict, &v, sizeof(v)), -1);
-	n += TEST_INT_EQ(errno, E_INVAL);
+	r += TEST_INT_EQ(write(fd_strict, &v, sizeof(v)), -1);
+	r += TEST_INT_EQ(errno, E_INVAL);
 	reset_errno();
 
 	// ioctl invalid signal
-	n += test_ioctl(fd_normal, 0xff, SIG_USR0 - 1, E_INVAL);
-	n += test_ioctl(fd_normal, 0xff, SIG_MAX, E_INVAL);
-	n += test_ioctl(fd_strict, 0xff, SIG_USR0, E_INVAL);
+	r += test_ioctl(fd_normal, 0xff, SIG_USR0 - 1, E_INVAL);
+	r += test_ioctl(fd_normal, 0xff, SIG_MAX, E_INVAL);
+	r += test_ioctl(fd_strict, 0xff, SIG_USR0, E_INVAL);
 
 	/* cleanup */
 	// close device
-	n += TEST_INT_EQ(close(fd_normal), 0);
-	n += TEST_INT_EQ(close(fd_strict), 0);
+	r += TEST_INT_EQ(close(fd_normal), 0);
+	r += TEST_INT_EQ(close(fd_strict), 0);
 
-	return -n;
+	return -r;
 }
 
 static int test_read(int fd, gpio_int_t expect){
-	int n = 0;
+	int r = 0;
 	gpio_int_t v;
 
 
 	v = ~expect;
 
-	n += TEST_INT_EQ(read(fd, &v, sizeof(v)), sizeof(v));
-	n += TEST_INT_EQ(v, expect);
+	r += TEST_INT_EQ(read(fd, &v, sizeof(v)), sizeof(v));
+	r += TEST_INT_EQ(v, expect);
 
-	return -n;
+	return -r;
 }
 
 static int test_write(int fd, gpio_int_t v, gpio_int_t expect){
-	int n = 0;
+	int r = 0;
 
 
-	n += TEST_INT_EQ(write(fd, &v, sizeof(v)), sizeof(v));
-	n += test_read(fd, expect);
+	r += TEST_INT_EQ(write(fd, &v, sizeof(v)), sizeof(v));
+	r += test_read(fd, expect);
 
-	return n;
+	return r;
 }
 
 static int test_ioctl(int fd, gpio_int_t mask, signal_t sig, errno_t expect){
-	int n = 0;
+	int r = 0;
 	gpio_int_cfg_t cfg;
 
 
 	cfg.mask = mask;
 	cfg.sig = sig;
 
-	n += TEST_INT_EQ(ioctl(fd, IOCTL_CFGWR, &cfg), expect ? -1 : 0);
-	n += TEST_INT_EQ(errno, expect);
+	r += TEST_INT_EQ(ioctl(fd, IOCTL_CFGWR, &cfg), expect ? -1 : 0);
+	r += TEST_INT_EQ(errno, expect);
 	reset_errno();
 
-	return -n;
+	return -r;
 }

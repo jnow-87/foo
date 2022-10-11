@@ -14,23 +14,23 @@
 
 /* local functions */
 TEST(memmock){
-	int n = 0;
+	int r = 0;
 	void *p;
 
 
 	/* disabled memory mock */
 	memmock_alloc_fail = -1;
-	n += TEST_PTR_NEQ(p = malloc(16), 0x0); free(p);
-	n += TEST_PTR_NEQ(p = calloc(1, 16), 0x0); free(p);
+	r += TEST_PTR_NEQ(p = malloc(16), 0x0); free(p);
+	r += TEST_PTR_NEQ(p = calloc(1, 16), 0x0); free(p);
 
 	/* immediate fail */
 	memmock_alloc_fail = 0;
-	n += TEST_PTR_EQ(malloc(16), 0x0);
-	n += TEST_PTR_NEQ(p = malloc(16), 0x0); free(p);
+	r += TEST_PTR_EQ(malloc(16), 0x0);
+	r += TEST_PTR_NEQ(p = malloc(16), 0x0); free(p);
 
 	memmock_alloc_fail = 0;
-	n += TEST_PTR_EQ(calloc(1, 16), 0x0);
-	n += TEST_PTR_NEQ(p = calloc(1, 16), 0x0); free(p);
+	r += TEST_PTR_EQ(calloc(1, 16), 0x0);
+	r += TEST_PTR_NEQ(p = calloc(1, 16), 0x0); free(p);
 
 	/* fail after some attempts */
 	// successful allocations cannot be tested since the
@@ -41,8 +41,8 @@ TEST(memmock){
 	free(malloc(16));
 	free(malloc(16));
 
-	n += TEST_PTR_EQ(malloc(16), 0x0);
-	n += TEST_PTR_NEQ(p = malloc(16), 0x0); free(p);
+	r += TEST_PTR_EQ(malloc(16), 0x0);
+	r += TEST_PTR_NEQ(p = malloc(16), 0x0); free(p);
 
 	memmock_alloc_fail = 3;
 
@@ -50,8 +50,8 @@ TEST(memmock){
 	free(calloc(1, 16));
 	free(calloc(1, 16));
 
-	n += TEST_PTR_EQ(calloc(1, 16), 0x0);
-	n += TEST_PTR_NEQ(p = calloc(1, 16), 0x0); free(p);
+	r += TEST_PTR_EQ(calloc(1, 16), 0x0);
+	r += TEST_PTR_NEQ(p = calloc(1, 16), 0x0); free(p);
 
-	return -n;
+	return -r;
 }

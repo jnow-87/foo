@@ -53,43 +53,43 @@ TEST(stack_print){
 }
 
 TEST(stack_init){
-	unsigned int n = 0;
+	int r = 0;
 	stack_t *top = &el0;
 
 
 	stack_init(top);
 
-	n += TEST_PTR_EQ(top->next, 0);
+	r += TEST_PTR_EQ(top->next, 0);
 
-	return -n;
+	return -r;
 }
 
 TEST(stack_top){
-	unsigned int n = 0;
+	int r = 0;
 	stack_t *top = 0x0;
 
 
 	INIT_EL();
 
-	n += TEST_PTR_EQ(stack_top(top), 0x0);
+	r += TEST_PTR_EQ(stack_top(top), 0x0);
 
 	stack_push(top, &el0);
-	n += TEST_PTR_EQ(stack_top(top), &el0);
+	r += TEST_PTR_EQ(stack_top(top), &el0);
 
 	stack_push(top, &el1);
-	n += TEST_PTR_EQ(stack_top(top), &el1);
+	r += TEST_PTR_EQ(stack_top(top), &el1);
 
 	(void)pop(&top);
-	n += TEST_PTR_EQ(stack_top(top), &el0);
+	r += TEST_PTR_EQ(stack_top(top), &el0);
 
 	(void)pop(&top);
-	n += TEST_PTR_EQ(stack_top(top), 0x0);
+	r += TEST_PTR_EQ(stack_top(top), 0x0);
 
-	return -n;
+	return -r;
 }
 
 TEST(stack_push){
-	unsigned int n = 0;
+	int r = 0;
 	stack_t *top = 0x0;
 
 
@@ -98,21 +98,21 @@ TEST(stack_push){
 	// push to empty stack
 	stack_push(top, &el0);
 
-	n += TEST_PTR_EQ(top, &el0);
-	n += TEST_PTR_EQ(el0.next, 0);
+	r += TEST_PTR_EQ(top, &el0);
+	r += TEST_PTR_EQ(el0.next, 0);
 
 	// push to non-empty stack
 	stack_push(top, &el1);
 
-	n += TEST_PTR_EQ(top, &el1);
-	n += TEST_PTR_EQ(el1.next, &el0);
-	n += TEST_PTR_EQ(el0.next, 0);
+	r += TEST_PTR_EQ(top, &el1);
+	r += TEST_PTR_EQ(el1.next, &el0);
+	r += TEST_PTR_EQ(el0.next, 0);
 
-	return -n;
+	return -r;
 }
 
 TEST(stack_pop){
-	unsigned int n = 0;
+	int r = 0;
 	stack_t *top = 0x0,
 			*el;
 
@@ -126,22 +126,22 @@ TEST(stack_pop){
 	// pop from non-empty stack
 	el = pop(&top);
 
-	n += TEST_PTR_EQ(top, &el0);
-	n += TEST_PTR_EQ(el, &el1);
+	r += TEST_PTR_EQ(top, &el0);
+	r += TEST_PTR_EQ(el, &el1);
 
 	// pop last element
 	el = pop(&top);
 
-	n += TEST_PTR_EQ(top, 0);
-	n += TEST_PTR_EQ(el, &el0);
+	r += TEST_PTR_EQ(top, 0);
+	r += TEST_PTR_EQ(el, &el0);
 
 	// pop from empty stack
 	el = pop(&top);
 
-	n += TEST_PTR_EQ(top, 0);
-	n += TEST_PTR_EQ(el, 0);
+	r += TEST_PTR_EQ(top, 0);
+	r += TEST_PTR_EQ(el, 0);
 
-	return -n;
+	return -r;
 }
 
 static stack_t *pop(stack_t **top){

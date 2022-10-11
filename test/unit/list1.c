@@ -47,20 +47,20 @@ static tlist_t el0 = { .el = 0, .s_ptr = el_names[0], .s_arr = "0" },
 
 /* local functions */
 TEST(list1_init){
-	unsigned int n = 0;
+	int r = 0;
 	tlist_t *head = &el0;
 	tlist_t *tail;
 
 
 	list1_init(head, tail);
 
-	n += TEST_PTR_EQ(head->next, 0x0);
+	r += TEST_PTR_EQ(head->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 TEST(list1_add_head){
-	unsigned int n = 0;
+	int r = 0;
 	tlist_t *head = 0x0,
 			*tail = 0x0;
 
@@ -70,15 +70,15 @@ TEST(list1_add_head){
 	list1_add_head(head, tail, &el0);
 	list1_add_head(head, tail, &el1);
 
-	n += TEST_PTR_EQ(head, &el1);
-	n += TEST_PTR_EQ(el1.next, &el0);
-	n += TEST_PTR_EQ(el0.next, 0x0);
+	r += TEST_PTR_EQ(head, &el1);
+	r += TEST_PTR_EQ(el1.next, &el0);
+	r += TEST_PTR_EQ(el0.next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 TEST(list1_add_tail){
-	unsigned int n = 0;
+	int r = 0;
 	tlist_t *head = 0x0,
 			*tail = 0x0;
 
@@ -88,15 +88,15 @@ TEST(list1_add_tail){
 	list1_add_tail(head, tail, &el0);
 	list1_add_tail(head, tail, &el1);
 
-	n += TEST_PTR_EQ(head, &el0);
-	n += TEST_PTR_EQ(el0.next, &el1);
-	n += TEST_PTR_EQ(el1.next, 0x0);
+	r += TEST_PTR_EQ(head, &el0);
+	r += TEST_PTR_EQ(el0.next, &el1);
+	r += TEST_PTR_EQ(el1.next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 TEST(list1_rm){
-	unsigned int n = 0;
+	int r = 0;
 	tlist_t *head = 0x0,
 			*tail = 0x0;
 
@@ -110,20 +110,20 @@ TEST(list1_rm){
 	// remove middle element
 	list1_rm_head(head, tail);
 
-	n += TEST_PTR_EQ(head, &el1);
-	n += TEST_PTR_EQ(el1.next, &el2);
-	n += TEST_PTR_EQ(el2.next, 0x0);
+	r += TEST_PTR_EQ(head, &el1);
+	r += TEST_PTR_EQ(el1.next, &el2);
+	r += TEST_PTR_EQ(el2.next, 0x0);
 
 	// remove tail element
 	list1_rm_head(head, tail);
 
-	n += TEST_PTR_EQ(head, &el2);
-	n += TEST_PTR_EQ(el2.next, 0x0);
+	r += TEST_PTR_EQ(head, &el2);
+	r += TEST_PTR_EQ(el2.next, 0x0);
 
 	// remove head element
 	list1_rm_head(head, tail);
 
-	n += TEST_PTR_EQ(head, 0x0);
+	r += TEST_PTR_EQ(head, 0x0);
 
-	return -n;
+	return -r;
 }

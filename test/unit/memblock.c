@@ -63,21 +63,21 @@ TEST(memblock_addresses){
  * \return 0x0
  */
 TEST(memblock_init){
-	unsigned int n = 0;
+	int r = 0;
 
 
 	/* invalid args */
-	n += TEST_INT_EQ(memblock_init(0x0, 0), -E_INVAL);
+	r += TEST_INT_EQ(memblock_init(0x0, 0), -E_INVAL);
 
 	/* prepare element */
 	memblock_init(el0, 10);
 
 	/* check */
-	n += TEST_INT_EQ(el0->len, 10);
-	n += TEST_PTR_EQ(el0->prev, el0);
-	n += TEST_PTR_EQ(el0->next, 0);
+	r += TEST_INT_EQ(el0->len, 10);
+	r += TEST_PTR_EQ(el0->prev, el0);
+	r += TEST_PTR_EQ(el0->next, 0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -86,14 +86,14 @@ TEST(memblock_init){
  * \return	0x0
  */
 TEST(memblock_alloc_inval){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
-	n += TEST_PTR_EQ(memblock_alloc(&pool, 0, 0), 0x0);
-	n += TEST_PTR_EQ(memblock_alloc(&pool, 0, 4), 0x0);
+	r += TEST_PTR_EQ(memblock_alloc(&pool, 0, 0), 0x0);
+	r += TEST_PTR_EQ(memblock_alloc(&pool, 0, 4), 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -103,16 +103,16 @@ TEST(memblock_alloc_inval){
  * \return	0x0
  */
 TEST(memblock_alloc_empty){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
 	INIT_EL();
 
-	n += TEST_PTR_EQ(memblock_alloc(&pool, 2, 0), 0x0);
-	n += TEST_PTR_EQ(memblock_alloc(&pool, 2, 4), 0x0);
+	r += TEST_PTR_EQ(memblock_alloc(&pool, 2, 0), 0x0);
+	r += TEST_PTR_EQ(memblock_alloc(&pool, 2, 4), 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -122,7 +122,7 @@ TEST(memblock_alloc_empty){
  * \return	0x0
  */
 TEST(memblock_alloc_small){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 	void *blk;
 
@@ -136,9 +136,9 @@ TEST(memblock_alloc_small){
 	blk = memblock_alloc(&pool, SIZE_EL0, 0);
 
 	/* check blk */
-	n += TEST_PTR_EQ(blk, 0x0);
+	r += TEST_PTR_EQ(blk, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -152,7 +152,7 @@ TEST(memblock_alloc_small){
  * 			and 3rd
  */
 TEST(memblock_alloc_perfect_fit){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 	void *blk;
 
@@ -168,25 +168,25 @@ TEST(memblock_alloc_perfect_fit){
 	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), 0);
 
 	/* check blk */
-	n += TEST_PTR_EQ(blk, (void*)el1 + sizeof(memblock_t));
+	r += TEST_PTR_EQ(blk, (void*)el1 + sizeof(memblock_t));
 
 	/*expected pool: el0 -> el2 */
 	// check el0 (el1 should be removed)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0);
-	n += TEST_PTR_EQ(el0->prev, el2);
-	n += TEST_PTR_EQ(el0->next, el2);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0);
+	r += TEST_PTR_EQ(el0->prev, el2);
+	r += TEST_PTR_EQ(el0->next, el2);
 
 	// check el1 (no changes)
-	n += TEST_INT_EQ(el1->len, SIZE_EL1);
-	n += TEST_PTR_EQ(el1->prev, el0);
-	n += TEST_PTR_EQ(el1->next, el2);
+	r += TEST_INT_EQ(el1->len, SIZE_EL1);
+	r += TEST_PTR_EQ(el1->prev, el0);
+	r += TEST_PTR_EQ(el1->next, el2);
 
 	// check el2 (el1 should be removed)
-	n += TEST_INT_EQ(el2->len, SIZE_EL2);
-	n += TEST_PTR_EQ(el2->prev, el0);
-	n += TEST_PTR_EQ(el2->next, 0x0);
+	r += TEST_INT_EQ(el2->len, SIZE_EL2);
+	r += TEST_PTR_EQ(el2->prev, el0);
+	r += TEST_PTR_EQ(el2->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -199,7 +199,7 @@ TEST(memblock_alloc_perfect_fit){
  * 			2nd element is split
  */
 TEST(memblock_alloc_split_fit){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 	void *blk;
 
@@ -215,33 +215,33 @@ TEST(memblock_alloc_split_fit){
 	blk = memblock_alloc(&pool, 4 + sizeof(memblock_t), 4);
 
 	/* check blk */
-	n += TEST_PTR_EQ(blk, (void*)el3 + sizeof(memblock_t));
+	r += TEST_PTR_EQ(blk, (void*)el3 + sizeof(memblock_t));
 
 	/* expected pool: el0 -> new -> el2 */
 	// set blk to the new free block within pool
 	blk += 4 + sizeof(memblock_t);
 
 	// check el0 (el3 should be replaced by the new block)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0);
-	n += TEST_PTR_EQ(el0->prev, el2);
-	n += TEST_PTR_EQ(el0->next, blk);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0);
+	r += TEST_PTR_EQ(el0->prev, el2);
+	r += TEST_PTR_EQ(el0->next, blk);
 
 	// check el3 (updated len)
-	n += TEST_INT_EQ(el3->len, 4 + 2 * sizeof(memblock_t));
-	n += TEST_PTR_EQ(el3->prev, el0);
-	n += TEST_PTR_EQ(el3->next, el2);
+	r += TEST_INT_EQ(el3->len, 4 + 2 * sizeof(memblock_t));
+	r += TEST_PTR_EQ(el3->prev, el0);
+	r += TEST_PTR_EQ(el3->next, el2);
 
 	// check new block (remaining size of el3 and linked between el1 and el2)
-	n += TEST_INT_EQ(((memblock_t*)blk)->len, SIZE_EL3 - (4 + 2 * sizeof(memblock_t)));
-	n += TEST_PTR_EQ(((memblock_t*)blk)->prev, el0);
-	n += TEST_PTR_EQ(((memblock_t*)blk)->next, el2);
+	r += TEST_INT_EQ(((memblock_t*)blk)->len, SIZE_EL3 - (4 + 2 * sizeof(memblock_t)));
+	r += TEST_PTR_EQ(((memblock_t*)blk)->prev, el0);
+	r += TEST_PTR_EQ(((memblock_t*)blk)->next, el2);
 
 	// check el2 (el3 should be replace by the new block)
-	n += TEST_INT_EQ(el2->len, SIZE_EL2);
-	n += TEST_PTR_EQ(el2->prev, blk);
-	n += TEST_PTR_EQ(el2->next, 0x0);
+	r += TEST_INT_EQ(el2->len, SIZE_EL2);
+	r += TEST_PTR_EQ(el2->prev, blk);
+	r += TEST_PTR_EQ(el2->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -252,7 +252,7 @@ TEST(memblock_alloc_split_fit){
  * \return	pool with 2 elements
  */
 TEST(memblock_free_head_nomerge){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -262,20 +262,20 @@ TEST(memblock_free_head_nomerge){
 	list_add_tail(pool, el2);
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (linked at head of el2)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0);
-	n += TEST_PTR_EQ(el0->prev, el2);
-	n += TEST_PTR_EQ(el0->next, el2);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0);
+	r += TEST_PTR_EQ(el0->prev, el2);
+	r += TEST_PTR_EQ(el0->next, el2);
 
 	// check el2 (el0 linked in front)
-	n += TEST_INT_EQ(el2->len, SIZE_EL2);
-	n += TEST_PTR_EQ(el2->prev, el0);
-	n += TEST_PTR_EQ(el2->next, 0x0);
+	r += TEST_INT_EQ(el2->len, SIZE_EL2);
+	r += TEST_PTR_EQ(el2->prev, el0);
+	r += TEST_PTR_EQ(el2->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -285,7 +285,7 @@ TEST(memblock_free_head_nomerge){
  * \return	pool with 1 element and merged length
  */
 TEST(memblock_free_head_merge){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -296,20 +296,20 @@ TEST(memblock_free_head_merge){
 	list_add_tail(pool, el2);
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (len merged with el1)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0 + SIZE_EL1);
-	n += TEST_PTR_EQ(el0->prev, el2);
-	n += TEST_PTR_EQ(el0->next, el2);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0 + SIZE_EL1);
+	r += TEST_PTR_EQ(el0->prev, el2);
+	r += TEST_PTR_EQ(el0->next, el2);
 
 	// check el2 (el0 linked in front)
-	n += TEST_INT_EQ(el2->len, SIZE_EL2);
-	n += TEST_PTR_EQ(el2->prev, el0);
-	n += TEST_PTR_EQ(el2->next, 0x0);
+	r += TEST_INT_EQ(el2->len, SIZE_EL2);
+	r += TEST_PTR_EQ(el2->prev, el0);
+	r += TEST_PTR_EQ(el2->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -319,7 +319,7 @@ TEST(memblock_free_head_merge){
  * \return	pool with 1 element
  */
 TEST(memblock_free_tail){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -327,15 +327,15 @@ TEST(memblock_free_tail){
 	INIT_EL();
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (el2 linked at back)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0);
-	n += TEST_PTR_EQ(el0->prev, el0);
-	n += TEST_PTR_EQ(el0->next, 0x0);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0);
+	r += TEST_PTR_EQ(el0->prev, el0);
+	r += TEST_PTR_EQ(el0->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -346,7 +346,7 @@ TEST(memblock_free_tail){
  * \return	pool with 2 elements
  */
 TEST(memblock_free_tail_nomerge){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -356,20 +356,20 @@ TEST(memblock_free_tail_nomerge){
 	list_add_tail(pool, el0);
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (el2 linked at back)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0);
-	n += TEST_PTR_EQ(el0->prev, el2);
-	n += TEST_PTR_EQ(el0->next, el2);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0);
+	r += TEST_PTR_EQ(el0->prev, el2);
+	r += TEST_PTR_EQ(el0->next, el2);
 
 	// check el2 (linked to el0)
-	n += TEST_INT_EQ(el2->len, SIZE_EL2);
-	n += TEST_PTR_EQ(el2->prev, el0);
-	n += TEST_PTR_EQ(el2->next, 0x0);
+	r += TEST_INT_EQ(el2->len, SIZE_EL2);
+	r += TEST_PTR_EQ(el2->prev, el0);
+	r += TEST_PTR_EQ(el2->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -379,7 +379,7 @@ TEST(memblock_free_tail_nomerge){
  * \return	pool with 1 element and merged length
  */
 TEST(memblock_free_tail_merge){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -389,15 +389,15 @@ TEST(memblock_free_tail_merge){
 	list_add_tail(pool, el0);
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 */
 	// check el0 (len merged with el1)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0 + SIZE_EL1);
-	n += TEST_PTR_EQ(el0->prev, el0);
-	n += TEST_PTR_EQ(el0->next, 0x0);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0 + SIZE_EL1);
+	r += TEST_PTR_EQ(el0->prev, el0);
+	r += TEST_PTR_EQ(el0->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -407,7 +407,7 @@ TEST(memblock_free_tail_merge){
  * \return	pool with 3 elements
  */
 TEST(memblock_free_mid_nomerge){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -418,25 +418,25 @@ TEST(memblock_free_mid_nomerge){
 	list_add_tail(pool, el4);
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 -> el2 -> el4 */
 	// check el0 (el2 linked at back)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0);
-	n += TEST_PTR_EQ(el0->prev, el4);
-	n += TEST_PTR_EQ(el0->next, el2);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0);
+	r += TEST_PTR_EQ(el0->prev, el4);
+	r += TEST_PTR_EQ(el0->next, el2);
 
 	// check el2 (linked between el0 and el4)
-	n += TEST_INT_EQ(el2->len, SIZE_EL2);
-	n += TEST_PTR_EQ(el2->prev, el0);
-	n += TEST_PTR_EQ(el2->next, el4);
+	r += TEST_INT_EQ(el2->len, SIZE_EL2);
+	r += TEST_PTR_EQ(el2->prev, el0);
+	r += TEST_PTR_EQ(el2->next, el4);
 
 	// check el4 (el2 linked in front)
-	n += TEST_INT_EQ(el4->len, SIZE_EL4);
-	n += TEST_PTR_EQ(el4->prev, el2);
-	n += TEST_PTR_EQ(el4->next, 0x0);
+	r += TEST_INT_EQ(el4->len, SIZE_EL4);
+	r += TEST_PTR_EQ(el4->prev, el2);
+	r += TEST_PTR_EQ(el4->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -446,7 +446,7 @@ TEST(memblock_free_mid_nomerge){
  * \return	pool with 2 elements
  */
 TEST(memblock_free_mid_frontmerge){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -457,20 +457,20 @@ TEST(memblock_free_mid_frontmerge){
 	list_add_tail(pool, el3);
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 -> el3 */
 	// check el0 (len merged with el1)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0 + SIZE_EL1);
-	n += TEST_PTR_EQ(el0->prev, el3);
-	n += TEST_PTR_EQ(el0->next, el3);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0 + SIZE_EL1);
+	r += TEST_PTR_EQ(el0->prev, el3);
+	r += TEST_PTR_EQ(el0->next, el3);
 
 	// check el3 (no changes)
-	n += TEST_INT_EQ(el3->len, SIZE_EL3);
-	n += TEST_PTR_EQ(el3->prev, el0);
-	n += TEST_PTR_EQ(el3->next, 0x0);
+	r += TEST_INT_EQ(el3->len, SIZE_EL3);
+	r += TEST_PTR_EQ(el3->prev, el0);
+	r += TEST_PTR_EQ(el3->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -480,7 +480,7 @@ TEST(memblock_free_mid_frontmerge){
  * \return	pool with 2 elements
  */
 TEST(memblock_free_mid_backmerge){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -491,20 +491,20 @@ TEST(memblock_free_mid_backmerge){
 	list_add_tail(pool, el3);
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el2 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 -> el2 */
 	// check el0 (linked el2 at back)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0);
-	n += TEST_PTR_EQ(el0->prev, el2);
-	n += TEST_PTR_EQ(el0->next, el2);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0);
+	r += TEST_PTR_EQ(el0->prev, el2);
+	r += TEST_PTR_EQ(el0->next, el2);
 
 	// check el2 (linked as tail and merged with el3)
-	n += TEST_INT_EQ(el2->len, SIZE_EL2 + SIZE_EL3);
-	n += TEST_PTR_EQ(el2->prev, el0);
-	n += TEST_PTR_EQ(el2->next, 0x0);
+	r += TEST_INT_EQ(el2->len, SIZE_EL2 + SIZE_EL3);
+	r += TEST_PTR_EQ(el2->prev, el0);
+	r += TEST_PTR_EQ(el2->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -514,7 +514,7 @@ TEST(memblock_free_mid_backmerge){
  * \return	pool with 1 element and merged length
  */
 TEST(memblock_free_mid_merge){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -525,15 +525,15 @@ TEST(memblock_free_mid_merge){
 	list_add_tail(pool, el2);
 
 	/* free */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el1 + sizeof(memblock_t)), 0);
 
 	/* expected pool: el0 */
 	// check el0 (linked el2 at back)
-	n += TEST_INT_EQ(el0->len, SIZE_EL0 + SIZE_EL1 + SIZE_EL2);
-	n += TEST_PTR_EQ(el0->prev, el0);
-	n += TEST_PTR_EQ(el0->next, 0x0);
+	r += TEST_INT_EQ(el0->len, SIZE_EL0 + SIZE_EL1 + SIZE_EL2);
+	r += TEST_PTR_EQ(el0->prev, el0);
+	r += TEST_PTR_EQ(el0->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -541,7 +541,7 @@ TEST(memblock_free_mid_merge){
  * 			and merged afterwards through free
  */
 TEST(memblock_cycle){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 	void *blk0,
 		 *blk1,
@@ -559,48 +559,48 @@ TEST(memblock_cycle){
 	blk2 = memblock_alloc(&pool, 4, 8);
 
 	/* addresses expected to be in line */
-	n += TEST_PTR_EQ(blk0, (void*)el3 + sizeof(memblock_t));
-	n += TEST_PTR_EQ(blk1, (void*)el3 + 2 * sizeof(memblock_t) + 4);
-	n += TEST_PTR_EQ(blk2, (void*)el3 + 3 * sizeof(memblock_t) + 8);
+	r += TEST_PTR_EQ(blk0, (void*)el3 + sizeof(memblock_t));
+	r += TEST_PTR_EQ(blk1, (void*)el3 + 2 * sizeof(memblock_t) + 4);
+	r += TEST_PTR_EQ(blk2, (void*)el3 + 3 * sizeof(memblock_t) + 8);
 
 	/* expected pool: empty */
-	n += TEST_PTR_EQ(pool, 0x0);
+	r += TEST_PTR_EQ(pool, 0x0);
 
 	/* free blk2 */
-	n += TEST_INT_EQ(memblock_free(&pool, blk2), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, blk2), 0);
 
 	/* expected pool: 1 element */
-	n += TEST_PTR_EQ(pool, blk2 - sizeof(memblock_t));
-	n += TEST_INT_EQ(pool->len, SIZE_EL3 - (2 * sizeof(memblock_t) + 8));
-	n += TEST_PTR_EQ(pool->prev, pool);
-	n += TEST_PTR_EQ(pool->next, 0x0);
+	r += TEST_PTR_EQ(pool, blk2 - sizeof(memblock_t));
+	r += TEST_INT_EQ(pool->len, SIZE_EL3 - (2 * sizeof(memblock_t) + 8));
+	r += TEST_PTR_EQ(pool->prev, pool);
+	r += TEST_PTR_EQ(pool->next, 0x0);
 
 	/* free blk0 */
-	n += TEST_INT_EQ(memblock_free(&pool, blk0), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, blk0), 0);
 
 	/* expected pool: 2 elements */
-	n += TEST_PTR_EQ(pool, blk0 - sizeof(memblock_t));
+	r += TEST_PTR_EQ(pool, blk0 - sizeof(memblock_t));
 
 	// check 1st pool entry
-	n += TEST_INT_EQ(pool->len, 4 + sizeof(memblock_t));
-	n += TEST_PTR_EQ(pool->prev, blk2 - sizeof(memblock_t));
-	n += TEST_PTR_EQ(pool->next, blk2 - sizeof(memblock_t));
+	r += TEST_INT_EQ(pool->len, 4 + sizeof(memblock_t));
+	r += TEST_PTR_EQ(pool->prev, blk2 - sizeof(memblock_t));
+	r += TEST_PTR_EQ(pool->next, blk2 - sizeof(memblock_t));
 
 	// check 2nd pool entry
-	n += TEST_INT_EQ(pool->next->len, SIZE_EL3 - (2 * sizeof(memblock_t) + 8));
-	n += TEST_PTR_EQ(pool->next->prev, pool);
-	n += TEST_PTR_EQ(pool->next->next, 0x0);
+	r += TEST_INT_EQ(pool->next->len, SIZE_EL3 - (2 * sizeof(memblock_t) + 8));
+	r += TEST_PTR_EQ(pool->next->prev, pool);
+	r += TEST_PTR_EQ(pool->next->next, 0x0);
 
 	/* free blk1 */
-	n += TEST_INT_EQ(memblock_free(&pool, blk1), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, blk1), 0);
 
 	/* expected pool: 1 element */
-	n += TEST_PTR_EQ(pool, blk0 - sizeof(memblock_t));
-	n += TEST_INT_EQ(pool->len, SIZE_EL3);
-	n += TEST_PTR_EQ(pool->prev, pool);
-	n += TEST_PTR_EQ(pool->next, 0x0);
+	r += TEST_PTR_EQ(pool, blk0 - sizeof(memblock_t));
+	r += TEST_INT_EQ(pool->len, SIZE_EL3);
+	r += TEST_PTR_EQ(pool->prev, pool);
+	r += TEST_PTR_EQ(pool->next, 0x0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -610,7 +610,7 @@ TEST(memblock_cycle){
  * \return	0
  */
 TEST(memblock_zero_free){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -618,9 +618,9 @@ TEST(memblock_zero_free){
 	INIT_EL();
 
 	/* 2nd free of el0 */
-	n += TEST_INT_EQ(memblock_free(&pool, 0x0), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, 0x0), 0);
 
-	return -n;
+	return -r;
 }
 
 /**
@@ -630,7 +630,7 @@ TEST(memblock_zero_free){
  * \return	pool with 2 elements
  */
 TEST(memblock_double_free){
-	unsigned int n = 0;
+	int r = 0;
 	memblock_t *pool = 0x0;
 
 
@@ -638,10 +638,10 @@ TEST(memblock_double_free){
 	INIT_EL();
 
 	/* 1st free of el0 */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), 0);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), 0);
 
 	/* 2nd free of el0 */
-	n += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), -E_INVAL);
+	r += TEST_INT_EQ(memblock_free(&pool, (void*)el0 + sizeof(memblock_t)), -E_INVAL);
 
-	return -n;
+	return -r;
 }
