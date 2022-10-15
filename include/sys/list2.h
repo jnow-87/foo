@@ -31,8 +31,11 @@
  * \return	none
  */
 #define __list2_init(head, prev_name, next_name){ \
-	(head)->prev_name = (head); \
-	(head)->next_name = 0x0; \
+	typeof(head)_head = head; \
+	\
+	\
+	_head->prev_name = _head; \
+	_head->next_name = 0x0; \
 }
 
 /**
@@ -46,14 +49,15 @@
  * \return	none
  */
 #define __list2_add_head(head, el, prev_name, next_name){ \
+	typeof(head) _head = head; \
 	typeof(el) _el = (el); \
 	\
 	\
-	_el->next_name = (head); \
-	_el->prev_name = ((head) == 0x0 ? _el : (head)->prev_name); \
+	_el->next_name = _head; \
+	_el->prev_name = (_head == 0x0 ? _el : _head->prev_name); \
 	\
-	if((head) != 0x0) \
-		(head)->prev_name = _el; \
+	if(_head != 0x0) \
+		_head->prev_name = _el; \
 	\
 	(head) = _el; \
 }
@@ -69,19 +73,20 @@
  * \return	none
  */
 #define __list2_add_tail(head, el, prev_name, next_name){ \
+	typeof(head) _head = head; \
 	typeof(el) _el = (el); \
 	\
 	\
 	_el->next_name = 0x0; \
 	\
-	if((head) == 0x0){ \
+	if(_head == 0x0){ \
 		(head) = _el; \
 		_el->prev_name = _el; \
 	} \
 	else{ \
-		_el->prev_name = (head)->prev_name; \
-		(head)->prev_name->next_name = _el; \
-		(head)->prev_name = _el; \
+		_el->prev_name = _head->prev_name; \
+		_head->prev_name->next_name = _el; \
+		_head->prev_name = _el; \
 	} \
 }
 
@@ -120,22 +125,24 @@
  * \return	none
  */
 #define __list2_replace(head, old, new, prev_name, next_name){ \
-	typeof(new) _new = (new); \
+	typeof(head) _head = head; \
+	typeof(old) _old = old; \
+	typeof(new) _new = new; \
 	\
 	\
-	if((head) == 0x0){ \
+	if(_head == 0x0){ \
 		(head) = _new; \
 		_new->prev_name = _new; \
 		_new->next_name = 0x0; \
 	} \
 	else{ \
-		_new->prev_name = ((head)->next_name == 0x0) ? _new : (old)->prev_name; \
-		_new->next_name = (old)->next_name; \
+		_new->prev_name = (_head->next_name == 0x0) ? _new : _old->prev_name; \
+		_new->next_name = _old->next_name; \
 		\
-		if((old)->next_name)	(old)->next_name->prev_name = _new; \
-		else					(head)->prev_name = _new; \
+		if(_old->next_name)		_old->next_name->prev_name = _new; \
+		else					_head->prev_name = _new; \
 		\
-		if((old) != (head))		(old)->prev_name->next_name = _new; \
+		if(_old != _head)		_old->prev_name->next_name = _new; \
 		else					(head) = _new; \
 	} \
 }
@@ -151,12 +158,16 @@
  * \return	none
  */
 #define __list2_rm(head, el, prev_name, next_name){ \
-	if((el) != (head))			(el)->prev_name->next_name = (el)->next_name; \
+	typeof(head) _head = head; \
+	typeof(el) _el = el; \
 	\
-	if((el)->next_name != 0x0)	(el)->next_name->prev_name = (el)->prev_name; \
-	else						(head)->prev_name = (el)->prev_name; \
 	\
-	if((el) == (head))			(head) = (el)->next_name; \
+	if(_el != _head)			_el->prev_name->next_name = _el->next_name; \
+	\
+	if(_el->next_name != 0x0)	_el->next_name->prev_name = _el->prev_name; \
+	else						_head->prev_name = _el->prev_name; \
+	\
+	if(_el == _head)			(head) = _el->next_name; \
 }
 
 /**
@@ -168,8 +179,12 @@
  * \return	pointer to the last element
  * 			0x0 in case of an empty list
  */
-#define __list2_last(head, prev_name) \
-	((head) ? (head)->prev_name : 0x0)
+#define __list2_last(head, prev_name)({ \
+	typeof(head) _head = head; \
+	\
+	\
+	(_head ? _head->prev_name : 0x0); \
+})
 
 /**
  * \brief	check if the given element is part of the list
@@ -183,14 +198,16 @@
  * 			false otherwise
  */
 #define __list2_contains(head, el, prev_name, next_name)({ \
-	typeof(head) _head = (head); \
-\
+	typeof(head) _head = head; \
+	typeof(el) _el = el; \
+	\
+	\
 	for(;_head!=0x0; _head=_head->next_name){ \
-		if(_head == (el)) \
+		if(_head == _el) \
 			break; \
 	} \
 \
-	(_head == (el)); \
+	(_head == _el); \
 })
 
 

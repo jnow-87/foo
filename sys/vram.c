@@ -14,11 +14,11 @@
 
 /* global functions */
 uint16_t vram_npages(vram_cfg_t *cfg){
-	return MAX(1, cfg->height / 8);
+	return MAX(1u, cfg->height / 8u);
 }
 
 uint16_t vram_ndirty(uint16_t npages){
-	return MAX(1, npages / 8);
+	return MAX(1u, npages / 8u);
 }
 
 bool vram_isdirty(uint16_t page, uint8_t *dirty){

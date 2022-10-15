@@ -30,8 +30,11 @@
  * \return	none
  */
 #define __list1_init(head, tail, next_name){ \
-	(head)->next_name = 0x0; \
-	(tail) = (head); \
+	typeof(head) _head = head; \
+	\
+	\
+	_head->next_name = 0x0; \
+	(tail) = _head; \
 }
 
 /**
@@ -45,14 +48,15 @@
  * \return	none
  */
 #define __list1_add_head(head, tail, el, next_name){ \
-	typeof(el) _el = (el); \
+	typeof(head) _head = head; \
+	typeof(el) _el = el; \
 	\
 	\
-	_el->next_name = (head); \
+	_el->next_name = _head; \
 	(head) = _el; \
 	\
 	if((tail) == 0x0) \
-		(tail) = (head); \
+		(tail) = _head; \
 }
 
 /**

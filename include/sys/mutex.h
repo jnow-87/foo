@@ -28,7 +28,7 @@
 
 #ifdef BUILD_KERNEL
 # define _MUTEX_INITIALISER(_attr) (mutex_t){ \
-	.attr = (_attr), \
+	.attr = _attr, \
 	.nest_cnt = 0, \
 	.lock = LOCK_CLEAR, \
 	.imask = 0, \
@@ -37,7 +37,7 @@
 # define NOINT_MUTEX_INITIALISER() _MUTEX_INITIALISER(MTX_NOINT)
 #else
 # define _MUTEX_INITIALISER(_attr) (mutex_t){ \
-	.attr = (_attr), \
+	.attr = _attr, \
 	.nest_cnt = 0, \
 	.lock = LOCK_CLEAR, \
 }

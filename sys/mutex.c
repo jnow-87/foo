@@ -23,7 +23,14 @@
 
 /* macros */
 #ifdef BUILD_KERNEL
-# define LOCK_ID_EQ(id0, id1)	((id0).pid == (id1).pid && (id0).tid == (id1).tid)
+# define LOCK_ID_EQ(id0, id1)({ \
+	typeof(id0) _id0 = id0; \
+	typeof(id1) _id1 = id1; \
+	\
+	\
+	(_id0.pid == _id1.pid) && (_id0.tid == _id1.tid); \
+})
+
 # define LOCK_ID ({ \
 	thread_t const *_this_t = sched_running(); \
 	lock_id_t _id = (lock_id_t){ \

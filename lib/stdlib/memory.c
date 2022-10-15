@@ -67,7 +67,7 @@ void *__malloc(size_t size){
 	/* allocate from kernel */
 	// adjust size
 	p.size = ALIGNP2(size + sizeof(memblock_t) + sizeof(block_t), 4);
-	p.size = MAX(CONFIG_MALLOC_MIN_SIZE, p.size);
+	p.size = MAX((size_t)CONFIG_MALLOC_MIN_SIZE, p.size);
 
 	// syscall
 	addr = 0x0;
