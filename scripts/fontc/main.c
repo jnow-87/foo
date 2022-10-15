@@ -23,7 +23,6 @@ static FILE *open(char const *file, char const *mode);
 /* global functions */
 int main(int argc, char **argv){
 	FILE *fp_font,
-		 *fp_hdr,
 		 *fp_src;
 	font_header_t hdr;
 
@@ -35,7 +34,7 @@ int main(int argc, char **argv){
 	fp_font = open(opts.font, "r");
 	fp_src = open(opts.source, "w");
 
-	if(fp_font == 0x0 || (fp_hdr == 0x0 && fp_src == 0x0))
+	if(fp_font == 0x0 || fp_src == 0x0)
 		goto err;
 
 	/* parse font header */
@@ -54,9 +53,6 @@ int main(int argc, char **argv){
 	if(fp_src)
 		fclose(fp_src);
 
-	if(fp_hdr)
-		fclose(fp_hdr);
-
 	fclose(fp_font);
 
 	return 0;
@@ -65,9 +61,6 @@ int main(int argc, char **argv){
 err:
 	if(fp_font)
 		fclose(fp_font);
-
-	if(fp_hdr)
-		fclose(fp_hdr);
 
 	if(fp_src)
 		fclose(fp_src);
