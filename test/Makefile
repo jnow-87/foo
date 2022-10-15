@@ -21,7 +21,7 @@ utest-y := main.utest.o mock/ sys/ unit/ lib/
 uttest-y := main.utest.o mock/ unit/
 
 # target flags
-uttest-cppflags := -I"include/lib"
+uttest-cppflags := -Iinclude/lib
 
 # ensure a rebuild if indirect dependencies are updated
 uttest-y += $(build_tree)/lib/libbrick.a
@@ -55,7 +55,7 @@ ifeq ($(CONFIG_CODE_COVERAGE),y)
   itest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
 endif
 
-itest-cppflags := -I"include/lib"
+itest-cppflags := -Iinclude/lib
 
 itest-ldlibs := \
 	$(ldlibs-app) \

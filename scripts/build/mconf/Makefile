@@ -14,7 +14,7 @@ mconfig-y := zconf.tab.o mconf.o lxdialog/
 
 
 mconfig-hostldlibs := -lncurses
-mconfig-hostcppflags := -I"$(loc_src_tree)" -I"$(loc_build_tree)" -DYYDEBUG -DCURSES_LOC="<ncurses.h>"
+mconfig-hostcppflags := -I$(loc_src_tree) -I$(loc_build_tree) -DYYDEBUG -DCURSES_LOC="<ncurses.h>"
 mconfig-hostcflags := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -Wno-missing-field-initializers -Wno-sign-compare -Wno-implicit-fallthrough -Wno-shadow
 mconfig-yaccflags := --name-prefix=zconf
 mconfig-lexflags := --prefix=zconf
@@ -26,7 +26,7 @@ $(loc_build_tree)/zconf.tab.host.o: $(loc_build_tree)/zconf.lex.c $(loc_build_tr
 confheader-y := confheader.o zconf.tab.o
 
 
-confheader-hostcppflags := -I"$(loc_src_tree)" -I"$(loc_build_tree)" -DYYDEBUG
+confheader-hostcppflags := -I$(loc_src_tree) -I$(loc_build_tree) -DYYDEBUG
 confheader-hostcflags := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -Wno-shadow
 confheader-yaccflags := --name-prefix=zconf
 confheader-lexflags := --prefix=zconf

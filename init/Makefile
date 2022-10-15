@@ -24,7 +24,7 @@ init-y += \
 ####
 
 init-cppflags-y := \
-	-I"include/lib" \
+	-Iinclude/lib \
 	-I$(loc_src_tree)
 
 init-ldlibs-y += \

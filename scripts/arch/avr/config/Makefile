@@ -12,4 +12,4 @@ hostbin-y := avrconfig
 avrconfig-y := main.o watchdog.o
 
 
-watchdog-hostcppflags += -I"include/"
+watchdog-hostcppflags += -Iinclude

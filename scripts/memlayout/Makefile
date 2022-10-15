@@ -12,5 +12,5 @@ hostbin-y := memlayout
 memlayout-y := main.o sys/
 
 
-hostcppflags-y := -I"include/"
+hostcppflags-y := -Iinclude
 hostcflags-y := -fno-builtin

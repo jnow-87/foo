@@ -17,7 +17,7 @@ itestfw-y += $(build_tree)/sys/libhost.a
 
 
 itestfw-hostcppflags += \
-	-I"$(src_tree)/include/" \
+	-I$(src_tree)/include \
 	-I$(loc_src_tree)
 
 itestfw-hostcflags += -fno-builtin

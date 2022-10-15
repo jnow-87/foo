@@ -95,8 +95,8 @@ cppflags := \
 	$(CONFIG_CPPFLAGS) \
 	$(cppflags) \
 	-std=gnu99 \
-	-I"$(src_tree)/include/" \
-	-I"$(build_tree)/" \
+	-I$(src_tree)/include \
+	-I$(build_tree) \
 	-DBUILD_ARCH_HEADER="$(CONFIG_ARCH_HEADER)"
 
 ldlibs := \
@@ -146,7 +146,7 @@ hostcppflags := \
 	$(CONFIG_HOSTCPPFLAGS) \
 	$(hostcppflags) \
 	-std=gnu99 \
-	-I"$(build_tree)/" \
+	-I$(build_tree) \
 	-DBUILD_ARCH_HEADER="$(CONFIG_ARCH_HEADER)" \
 	-DBUILD_HOST
 

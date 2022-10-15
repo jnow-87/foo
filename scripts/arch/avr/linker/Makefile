@@ -12,7 +12,7 @@ hostbin-y := gen_lds_plugin
 gen_lds_plugin-y := plugin.o sys/
 
 
-hostcppflags-y := -I"include/"
+hostcppflags-y := -Iinclude
 hostcflags-y := \
 	-Wno-unused-function \
 	-fno-builtin
