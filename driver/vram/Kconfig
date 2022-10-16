@@ -9,11 +9,11 @@
 
 menuconfig DRIVER_VRAM
 	bool "Video ram"
-	select KERNEL_DEVFS
 
 if DRIVER_VRAM
 	config VRAM_RAW
 		bool "devfs device driver"
+		select KERNEL_DEVFS
 
 	config VRAM_TERM
 		bool "Terminal driver"

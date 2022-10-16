@@ -86,6 +86,7 @@ static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw);
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd = (dt_data_t*)dt_data;
+	i2c_t *dti = (i2c_t*)dt_itf;
 	vram_itf_t *itf;
 
 
@@ -94,7 +95,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(itf == 0x0)
 		return 0x0;
 
-	dtd->i2c = dt_itf;
+	dtd->i2c = dti;
 
 	itf->configure = configure;
 	itf->write_page = write_page;

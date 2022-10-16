@@ -77,6 +77,7 @@ static gpio_int_t rx(dev_data_t *mcp, uint8_t addr);
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd = (dt_data_t*)dt_data;
+	i2c_t *dti = (i2c_t*)dt_itf;
 	gpio_t *ports[NUM_PORTS] = { 0x0 };
 	size_t name_len = strlen(name);
 	char port_name[name_len + 2];
@@ -85,9 +86,9 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 	/* amend port configuration */
 	dtd->ports[0].num = PORT_A;
-	dtd->ports[0].hw = dt_itf;
+	dtd->ports[0].hw = dti;
 	dtd->ports[1].num = PORT_B;
-	dtd->ports[1].hw = dt_itf;
+	dtd->ports[1].hw = dti;
 
 	/* create and configure gpio devices */
 	ops.read = read;

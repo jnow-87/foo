@@ -1,0 +1,49 @@
+#
+# Copyright (C) 2022 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+# eeprom
+config AVR_EEPROM
+	bool "eeprom driver"
+	select KERNEL_DEVFS
+	select KERNEL_INTTASK
+
+config AVR_EEPROM_DEBUG
+	bool "eeprom debug messages"
+	depends on AVR_EEPROM && KERNEL_MSG_DEBUG
+	default n
+
+# gpio
+config AVR_GPIO
+	bool "gpio driver"
+	select GPIO_INT_WIDTH_8
+
+# i2c
+config AVR_I2C
+	bool "i2c driver"
+
+# pwm
+config AVR_PWM8
+	bool "pwm (8 bit) driver"
+	select KERNEL_DEVFS
+
+config AVR_PWM16
+	bool "pwm (16 bit) driver"
+	select KERNEL_DEVFS
+
+# spi
+config AVR_SPI
+	bool "spi driver"
+
+config AVR_SPI_DEBUG
+	bool "spi debug messages"
+	depends on AVR_SPI && KERNEL_MSG_DEBUG
+	default n
+
+# uart
+config AVR_UART
+	bool "uart driver"

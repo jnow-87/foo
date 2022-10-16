@@ -13,6 +13,7 @@ menuconfig DRIVER_TERM
 	select KERNEL_SIGNAL
 	select KERNEL_INTTASK
 	select SYS_RINGBUFFER
+	select DRIVER_UART
 
 if DRIVER_TERM
 	config TERM_RXBUF_SIZE

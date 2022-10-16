@@ -1,0 +1,13 @@
+#
+# Copyright (C) 2022 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+config DRIVER_MCP23017
+	bool "mcp23017 i2c i/o expander"
+	select DRIVER_I2C
+	select DRIVER_GPIO

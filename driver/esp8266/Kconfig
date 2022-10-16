@@ -8,10 +8,12 @@
 
 
 menuconfig DRIVER_ESP8266
-	bool "ESP8266 wlan module"
+	bool "esp8266 wlan driver"
 	select KERNEL_NET
 	select KERNEL_SIGNAL
+	select KERNEL_INTTASK
 	select SYS_PATTERN_MATCH
+	select DRIVER_UART
 
 if DRIVER_ESP8266
 	config ESP8266_LINK_COUNT

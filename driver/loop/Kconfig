@@ -21,6 +21,7 @@ if DRIVER_LOOPBACK
 
 	config LOOP_VRAM
 		bool "Loopback video ram"
+		select KERNEL_DEVFS
 
 	config LOOP_DEBUG
 		bool "Enable debug messages"

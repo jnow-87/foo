@@ -8,15 +8,39 @@
 
 
 source driver/loop/Kconfig
-source driver/term/Kconfig
-source driver/uart/Kconfig
-source driver/gpio/Kconfig
-source driver/pwm/Kconfig
-source driver/spi/Kconfig
-source driver/eeprom/Kconfig
-source driver/i2c/Kconfig
 source driver/esp8266/Kconfig
-source driver/bridge/Kconfig
-source driver/vram/Kconfig
+source driver/mcp23017/Kconfig
 source driver/ssd1306/Kconfig
 source driver/x11/Kconfig
+
+#
+# interfaces
+#
+
+source driver/bridge/Kconfig
+source driver/i2c/Kconfig
+source driver/gpio/Kconfig
+source driver/term/Kconfig
+source driver/vram/Kconfig
+
+#
+# platform
+#
+menu "platform drivers (avr)"
+	depends on AVR
+	source driver/avr/Kconfig
+endmenu
+
+menu "platform drivers (x86)"
+	depends on X86
+	source driver/x86/Kconfig
+endmenu
+
+menu "hidden"
+	visible if 0
+
+	config DRIVER_UART
+		bool "uart driver"
+		select AVR_UART if AVR
+		select X86_UART if X86
+endmenu
