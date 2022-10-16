@@ -101,7 +101,7 @@ void mutex_unlock(mutex_t *m);
 
 
 /* disabled-call macros */
-#if defined(BUILD_LIBSYS) && !defined(CONFIG_LIB_MUTEX)
+#if defined(BUILD_LIBBRICK) && !defined(CONFIG_LIB_MUTEX)
 # define mutex_init(m, attr)	CALL_DISABLED(mutex_init, CONFIG_LIB_MUTEX)
 # define mutex_lock(m)			CALL_DISABLED(mutex_lock, CONFIG_LIB_MUTEX)
 # define mutex_trylock(m)		CALL_DISABLED(mutex_trylock, CONFIG_LIB_MUTEX)

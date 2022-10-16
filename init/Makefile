@@ -10,10 +10,13 @@
 bin-y := init.elf
 
 
-init-y := main.o shell/ scripts/linker/app_$(CONFIG_ARCH).lds $(loc_src_tree)/lists.lds
+init-y := main.o shell/
 
-# ensure init is rebuild if libsys is updated
-init-y += $(build_tree)/lib/libsys.a
+# ensure a rebuild if indirect dependencies are updated
+init-y += \
+	scripts/linker/app_$(CONFIG_ARCH).lds \
+	$(loc_src_tree)/lists.lds \
+	$(build_tree)/lib/libbrick.a
 
 
 ####
@@ -28,5 +31,5 @@ init-ldlibs-y += \
 	$(ldlibs-app) \
 	-T$(loc_src_tree)/lists.lds \
 	-Tapp_$(CONFIG_ARCH).lds \
-	-lsys \
+	-lbrick \
 	-lgcc

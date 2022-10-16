@@ -49,7 +49,7 @@
 
 	"CompileFlags": {
 		"Add": [
-			"-DBUILD_LIBSYS",
+			"-DBUILD_LIBBRICK",
 		],
 	},
 }

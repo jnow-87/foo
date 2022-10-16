@@ -7,10 +7,10 @@
 
 
 
-obj-nobuiltin-y := libsys.o
+obj-nobuiltin-y := libbrick.o
 
 # check if $(arch) is empty to avoid make infinite loop
 ifneq ($(CONFIG_ARCH),)
   obj-y += $(CONFIG_ARCH)/
-  libsys-y += $(loc_build_tree)/$(CONFIG_ARCH)/libsys.o
+  libbrick-y += $(loc_build_tree)/$(CONFIG_ARCH)/libbrick.o
 endif
