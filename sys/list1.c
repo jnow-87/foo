@@ -8,22 +8,37 @@
 
 
 #include <sys/list.h>
-#include <sys/list1.h>
 
 
 /* global functions */
 void _list1_init(list1_t *head, list1_t **tail){
-	__list1_init(head, *tail, next);
+	head->next = 0x0;
+	*tail = head;
 }
 
 void _list1_add_head(list1_t **head, list1_t **tail, list1_t *el){
-	__list1_add_head(*head, *tail, el, next);
+	el->next = *head;
+	*head = el;
+
+	if(*tail == 0x0)
+		*tail = *head;
 }
 
 void _list1_add_tail(list1_t **head, list1_t **tail, list1_t *el){
-	__list1_add_tail(*head, *tail, el, next);
+	el->next = 0x0;
+
+	if(*tail != 0x0)
+		(*tail)->next = el;
+
+	*tail = el;
+
+	if(*head == 0x0)
+		*head = el;
 }
 
 void _list1_rm_head(list1_t **head, list1_t **tail){
-	__list1_rm_head(*head, *tail, next);
+	if(*tail == *head)
+		*tail = 0x0;
+
+	*head = (*head)->next;
 }
