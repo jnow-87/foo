@@ -11,7 +11,7 @@
 #include <kernel/opt.h>
 #include <kernel/panic.h>
 #include <kernel/sched.h>
-#include <kernel/task.h>
+#include <kernel/ktask.h>
 #include <kernel/driver.h>
 #include <sys/errno.h>
 #include <sys/string.h>
