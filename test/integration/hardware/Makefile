@@ -7,7 +7,4 @@
 
 
 
-hostobj-y := state.o ops.o interrupt.o timer.o uart.o display.o sys.o
-
-
-sys-y := $(build_tree)/sys/vram.o
+hostobj-y := state.o ops.o interrupt.o timer.o uart.o display.o

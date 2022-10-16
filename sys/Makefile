@@ -73,6 +73,20 @@ libsys-y := $(patsubst %.o,%.libsys.o,$(libsys-y))
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_tree)/%.c,)
 
 
+# libhost
+hostlib-y += libhost.a
+
+libhost-y := \
+	list1.o \
+	list2.o \
+	string.o \
+	vector.o \
+	vram.o
+
+#  libhost-hostcflags := -nostdinc
+libhost-hostcppflags-y := -Iinclude
+
+
 ####
 ## device tree
 ####
