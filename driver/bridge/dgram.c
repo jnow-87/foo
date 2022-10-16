@@ -21,7 +21,6 @@
 
 /* macros */
 #define CTRLBYTE(brdg)			((brdg)->cfg->chunksize)
-#define CHUNKSIZE(dgram, brdg)	(MIN((brdg)->cfg->chunksize, (dgram)->len - (dgram)->offset))
 
 #ifdef CONFIG_BRIDGE_DEBUG_PROTOCOL
 # define PROTO_DEBUG(dgram, fmt, ...)	DEBUG("%s: " fmt, dgram_state(dgram), ##__VA_ARGS__)
@@ -46,6 +45,7 @@ static bridge_dgram_state_t nack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t 
 static int ackcmp(bridge_dgram_t *dgram, uint8_t byte, uint8_t ref);
 
 static uint8_t checksum(void const *buf, size_t n);
+static uint8_t chunksize(bridge_dgram_t *dgram, bridge_t *brdg);
 
 static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t ecode);
 
@@ -250,7 +250,7 @@ errno_t dgram_errno(bridge_dgram_t *dgram){
 /* local functions */
 static void dgram_init_data(bridge_dgram_t *dgram, void *buf, uint8_t n, bridge_t *brdg){
 	dgram->len = n;
-	dgram->chunksize = CHUNKSIZE(dgram, brdg);
+	dgram->chunksize = chunksize(dgram, brdg);
 	dgram->buf = buf;
 }
 
@@ -276,7 +276,7 @@ static bridge_dgram_state_t rx_payload(bridge_t *brdg, bridge_dgram_t *dgram, ui
 	if(dgram->chunksize)
 		return BDS_DATA;
 
-	dgram->chunksize = CHUNKSIZE(dgram, brdg);
+	dgram->chunksize = chunksize(dgram, brdg);
 
 	return ack(brdg, dgram, byte, BDS_DATA_ACK);
 }
@@ -302,7 +302,7 @@ static bridge_dgram_state_t tx_payload(bridge_t *brdg, bridge_dgram_t *dgram){
 	if(dgram->chunksize)
 		return tx(brdg, dgram, byte, BDS_DATA);
 
-	dgram->chunksize = CHUNKSIZE(dgram, brdg);
+	dgram->chunksize = chunksize(dgram, brdg);
 
 	return tx(brdg, dgram, byte, BDS_DATA_TX);
 }
@@ -351,6 +351,10 @@ static uint8_t checksum(void const *buf, size_t n){
 		s += ~((uint8_t*)buf)[i] + 1;
 
 	return s;
+}
+
+static uint8_t chunksize(bridge_dgram_t *dgram, bridge_t *brdg){
+	return MIN(brdg->cfg->chunksize, dgram->len - dgram->offset);
 }
 
 static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t ecode){

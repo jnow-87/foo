@@ -15,7 +15,7 @@
 /* macros */
 #define INIT()		ringbuf_init(&ring, buf, 10)
 #define READ(n)		ringbuf_read(&ring, readb, n)
-#define WRITE(s)	ringbuf_write(&ring, s, strlen(s))
+#define WRITE(s)	({ typeof(s) _s = s; ringbuf_write(&ring, _s, strlen(_s)); })
 
 
 /* static variables */

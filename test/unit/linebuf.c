@@ -16,7 +16,7 @@
 #define INIT()		linebuf_init(&line, buf, 10, 0)
 #define READ(n)		linebuf_read(&line, readb, n)
 #define PEEK(n)		linebuf_peek(&line, readb, n)
-#define WRITE(s)	linebuf_write(&line, s, strlen(s))
+#define WRITE(s)	({ typeof(s) _s = s; linebuf_write(&line, _s, strlen(_s)); })
 
 
 /* static variables */

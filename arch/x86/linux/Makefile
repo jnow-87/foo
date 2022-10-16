@@ -10,7 +10,7 @@
 # kernel
 obj-y := syscall.o file.o signal.o process.o time.o shm.o mmap.o
 
-# libsys
-obj-nobuiltin-y := libsys.o
+# libbrick
+obj-nobuiltin-y := libbrick.o
 
-libsys-y := $(patsubst %.o,%.libsys.o,$(obj-y))
+libbrick-y := $(patsubst %.o,%.libbrick.o,$(obj-y))

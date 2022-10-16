@@ -27,10 +27,8 @@ static list1_t *dummy_tail __unused = 0x0;	// a stack does not require a tail po
  *
  * \param	top		pointer to the stack
  */
-#define stack_init(top){ \
-	LIST_TYPE_COMPAT(*top); \
-	_list1_init((list1_t*)top, &dummy_tail); \
-}
+#define stack_init(top) \
+	list1_init(top, dummy_tail)
 
 /**
  * \brief	get the top element on the stack without
@@ -42,6 +40,7 @@ static list1_t *dummy_tail __unused = 0x0;	// a stack does not require a tail po
  */
 #define stack_top(top)({ \
 	LIST_TYPE_COMPAT(*top); \
+	\
 	top; \
 })
 
@@ -51,11 +50,8 @@ static list1_t *dummy_tail __unused = 0x0;	// a stack does not require a tail po
  * \param	top		pointer to the stack
  * \param	el		pointer to the target element
  */
-#define stack_push(top, el){ \
-	LIST_TYPE_COMPAT(*top); \
-	LIST_TYPE_COMPAT(*el); \
-	_list1_add_head((list1_t**)&top, &dummy_tail, (list1_t*)el); \
-}
+#define stack_push(top, el) \
+	list1_add_head(top, dummy_tail, el); \
 
 /**
  * \brief	remove an element from the stack, returning
@@ -66,12 +62,13 @@ static list1_t *dummy_tail __unused = 0x0;	// a stack does not require a tail po
  * \return	pointer to the element
  */
 #define stack_pop(top)({ \
-	LIST_TYPE_COMPAT(*top); \
-	typeof(top) _el = list_first(top); \
+	typeof(top) _el; \
 	\
+	\
+	_el = list_first(top); \
 	\
 	if(_el != 0x0) \
-		_list1_rm_head((list1_t**)&top, &dummy_tail); \
+		list1_rm_head(top, dummy_tail); \
 	\
 	_el; \
 })

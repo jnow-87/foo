@@ -12,7 +12,7 @@
 
 
 #include <kernel/ksignal.h>
-#include <kernel/task.h>
+#include <kernel/ktask.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>

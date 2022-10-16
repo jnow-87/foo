@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include <arch/x86/hardware.h>
 #include <sys/types.h>
-#include <sys/list2.h>
+#include <sys/list.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/brickos.h>
@@ -121,7 +121,7 @@ void hw_int_request(int num, void *payload, x86_priv_t src, unsigned int tid){
 	req->id = req_id++;
 	DEBUG(0, "[%u] enqueue %s interrupt requested by %s\n", req->id, X86_INT_NAME(num), X86_PRIV_NAME(src));
 
-	__list2_add_tail(requests[priorities[req->num]], req, prev, next);
+	list_add_tail(requests[priorities[req->num]], req);
 	pthread_cond_signal(&req_sig);
 
 	pthread_mutex_unlock(&req_mtx);
@@ -155,7 +155,7 @@ void hw_int_return(int num, x86_priv_t target, unsigned int tid){
 	if(req == 0x0 || req->pending)
 		EEXIT("invalid interrupt request list\n");
 
-	__list2_rm(requests[priorities[num]], req, prev, next);
+	list_rm(requests[priorities[num]], req);
 
 	pthread_cond_signal(&req_sig);
 	pthread_mutex_unlock(&req_mtx);
@@ -204,8 +204,8 @@ static void req_postpone(int_req_t *req){
 	pthread_mutex_lock(&req_mtx);
 
 	prio = priorities[req->num];
-	__list2_rm(requests[prio], req, prev, next);
-	__list2_add_tail(requests[prio], req, prev, next);
+	list_rm(requests[prio], req);
+	list_add_tail(requests[prio], req);
 
 	pthread_mutex_unlock(&req_mtx);
 }

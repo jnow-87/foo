@@ -15,14 +15,9 @@
 
 
 /* macros */
-#define PATMAT_RESULT_INT(results, idx) \
-	(*((int*)((results)[idx])))
-
-#define PATMAT_RESULT_CHAR(results, idx) \
-	(*((char*)((results)[idx])))
-
-#define PATMAT_RESULT_STR(results, idx) \
-	((results)[idx])
+#define PATMAT_RESULT_INT(results, idx)		(*((int*)((results)[idx])))
+#define PATMAT_RESULT_CHAR(results, idx)	(*((char*)((results)[idx])))
+#define PATMAT_RESULT_STR(results, idx)		((results)[idx])
 
 
 /* types */

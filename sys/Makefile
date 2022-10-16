@@ -45,10 +45,10 @@ hostobj-y := \
 	patmat.o \
 	inet.o
 
-# libsys
-obj-nobuiltin-y := libsys.o
+# libbrick
+obj-nobuiltin-y := libbrick.o
 
-libsys-y := \
+libbrick-y := \
 	errno.o \
 	string.o \
 	ctype.o \
@@ -57,20 +57,34 @@ libsys-y := \
 	vector.o \
 	devtree.o
 
-libsys-$(CONFIG_SC_DYNMEM) += memblock.o
-libsys-$(CONFIG_LIB_MUTEX) += mutex.o
-libsys-$(CONFIG_LIB_STREAM) += stream.o
-libsys-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
-libsys-$(CONFIG_SYS_LINEBUFFER) += linebuf.o
-libsys-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
-libsys-$(CONFIG_KERNEL_NET) += inet.o
-libsys-$(CONFIG_FONTS) += font.o fonts/
-libsys-$(CONFIG_DRIVER_VRAM) += vram.o
+libbrick-$(CONFIG_SC_DYNMEM) += memblock.o
+libbrick-$(CONFIG_LIB_MUTEX) += mutex.o
+libbrick-$(CONFIG_LIB_STREAM) += stream.o
+libbrick-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
+libbrick-$(CONFIG_SYS_LINEBUFFER) += linebuf.o
+libbrick-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o
+libbrick-$(CONFIG_KERNEL_NET) += inet.o
+libbrick-$(CONFIG_FONTS) += font.o fonts/
+libbrick-$(CONFIG_DRIVER_VRAM) += vram.o
 
-libsys-y := $(patsubst %.o,%.libsys.o,$(libsys-y))
+libbrick-y := $(patsubst %.o,%.libbrick.o,$(libbrick-y))
 
-# custom rules to generate separate objects files for src files that are reuired by kernel and libsys
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_tree)/%.c,)
+# custom rules to generate separate objects files for src files that are required by kernel and libbrick
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libbrick.o,    $(loc_src_tree)/%.c,)
+
+
+# libhost
+hostlib-y += libhost.a
+
+libhost-y := \
+	list1.o \
+	list2.o \
+	string.o \
+	vector.o \
+	vram.o
+
+#  libhost-hostcflags := -nostdinc
+libhost-hostcppflags-y := -Iinclude
 
 
 ####

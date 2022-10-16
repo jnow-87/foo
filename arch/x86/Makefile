@@ -11,15 +11,15 @@
 obj-y := hardware.o atomic.o opts.o syscall.o kernel/ linux/
 obj-$(CONFIG_CODE_COVERAGE) += gcov/ gcov/libgcov.a
 
-# libsys
-obj-nobuiltin-y := libsys.o
+# libbrick
+obj-nobuiltin-y := libbrick.o
 
-libsys-y := hardware.libsys.o atomic.libsys.o opts.libsys.o syscall.libsys.o lib/ $(loc_build_tree)/linux/libsys.o
-libsys-$(CONFIG_CODE_COVERAGE) += $(loc_build_tree)/gcov/libsys.o $(loc_build_tree)/gcov/libgcov.a
+libbrick-y := hardware.libbrick.o atomic.libbrick.o opts.libbrick.o syscall.libbrick.o lib/ $(loc_build_tree)/linux/libbrick.o
+libbrick-$(CONFIG_CODE_COVERAGE) += $(loc_build_tree)/gcov/libbrick.o $(loc_build_tree)/gcov/libgcov.a
 
 
-# custom rules to generate separate object files for src files that are reuired by kernel and libsys
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_tree)/%.c,)
+# custom rules to generate separate object files for src files that are required by kernel and libbrick
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libbrick.o,    $(loc_src_tree)/%.c,)
 
 
 ####

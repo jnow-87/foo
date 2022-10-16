@@ -44,12 +44,14 @@
 // list interface
 #define list_init(head){ \
 	LIST_TYPE_COMPAT2(*head); \
+	\
 	_list2_init((list2_t*)head); \
 }
 
 #define list_add_head(head, el){ \
 	LIST_TYPE_COMPAT2(*head); \
 	LIST_TYPE_COMPAT2(*el); \
+	\
 	_list2_add_head((list2_t**)(&(head)), (list2_t*)(el)); \
 }
 
@@ -59,6 +61,7 @@
 #define list_add_tail(head, el){ \
 	LIST_TYPE_COMPAT2(*head); \
 	LIST_TYPE_COMPAT2(*el); \
+	\
 	_list2_add_tail((list2_t**)(&(head)), (list2_t*)(el)); \
 }
 
@@ -69,6 +72,7 @@
 	LIST_TYPE_COMPAT2(*el); \
 	LIST_TYPE_COMPAT2(*front); \
 	LIST_TYPE_COMPAT2(*back); \
+	\
 	_list2_add_in((list2_t*)(el), (list2_t*)(front), (list2_t*)(back)); \
 }
 
@@ -79,6 +83,7 @@
 	LIST_TYPE_COMPAT2(*head); \
 	LIST_TYPE_COMPAT2(*old); \
 	LIST_TYPE_COMPAT2(*new); \
+	\
 	_list2_replace((list2_t**)(&(head)), (list2_t*)(old), (list2_t*)(new)); \
 }
 
@@ -88,6 +93,7 @@
 #define list_rm(head, el){ \
 	LIST_TYPE_COMPAT2(*head); \
 	LIST_TYPE_COMPAT2(*el); \
+	\
 	_list2_rm((list2_t**)(&(head)), (list2_t*)(el)); \
 }
 
@@ -97,6 +103,7 @@
 #define list1_init(head, tail){ \
 	LIST_TYPE_COMPAT(*head); \
 	LIST_TYPE_COMPAT(*tail); \
+	\
 	_list1_init((list1_t*)head, (list1_t**)&(tail)); \
 }
 
@@ -104,6 +111,7 @@
 	LIST_TYPE_COMPAT(*head); \
 	LIST_TYPE_COMPAT(*tail); \
 	LIST_TYPE_COMPAT(*el); \
+	\
 	_list1_add_head((list1_t**)(&(head)), (list1_t**)(&(tail)), (list1_t*)(el)); \
 }
 
@@ -114,6 +122,7 @@
 	LIST_TYPE_COMPAT(*head); \
 	LIST_TYPE_COMPAT(*tail); \
 	LIST_TYPE_COMPAT(*el); \
+	\
 	_list1_add_tail((list1_t**)(&(head)), (list1_t**)(&(tail)), (list1_t*)(el)); \
 }
 
@@ -123,6 +132,7 @@
 #define list1_rm_head(head, tail){ \
 	LIST_TYPE_COMPAT(*head); \
 	LIST_TYPE_COMPAT(*tail); \
+	\
 	_list1_rm_head((list1_t**)(&(head)), (list1_t**)(&(tail))); \
 }
 
@@ -133,17 +143,22 @@
 
 #define list_first_safe(head, mtx)({ \
 	typeof(head) _el; \
+	\
+	\
 	LOCK_SECTION(mtx, _el = list_first(head)); \
 	_el; \
 })
 
 #define list_last(head)({ \
 	LIST_TYPE_COMPAT2(*head); \
+	\
 	(typeof(head))_list2_last((list2_t*)(head)); \
 })
 
 #define list_last_safe(head, mtx)({ \
 	typeof(head) _el; \
+	\
+	\
 	LOCK_SECTION(mtx, _el = list_last(head)); \
 	_el; \
 })
@@ -151,45 +166,62 @@
 #define list_contains(head, el)({ \
 	LIST_TYPE_COMPAT2(*head); \
 	LIST_TYPE_COMPAT2(*el); \
+	\
 	_list2_contains((list2_t*)(head), (list2_t*)(el)); \
 })
 
 #define list_contains_safe(head, el, mtx)({ \
 	bool _r; \
+	\
+	\
 	LOCK_SECTION(mtx, _r = list_contains(head, el)); \
 	_r; \
 })
 
 #define list_find(head, member, value)({ \
-	LIST_TYPE_COMPAT2(*head); \
 	typeof(value) _value = value; \
+	\
+	\
+	LIST_TYPE_COMPAT2(*head); \
+	\
 	(typeof(head))_list2_find((list2_t*)(head), offsetofvar(*(head), member), (void*)(&(_value)), sizeof(value)); \
 })
 
 #define list_find_safe(head, member, value, mtx)({ \
 	typeof(head) _el; \
+	\
+	\
 	LOCK_SECTION(mtx, _el = list_find(head, member, value)); \
 	_el; \
 })
 
 #define list_find_str(head, member, str)({ \
 	LIST_TYPE_COMPAT2(*head); \
+	\
 	list_find_strn(head, member, str, 0); \
 })
 
 #define list_find_str_safe(head, member, str, mtx)({ \
 	typeof(head) _el; \
+	\
+	\
 	LOCK_SECTION(mtx, _el = list_find_str(head, member, str)); \
 	_el; \
 })
 
 #define list_find_strn(head, member, str, n)({ \
+	typeof(head) _head = head; \
+	\
+	\
 	LIST_TYPE_COMPAT2(*head); \
-	(typeof(head))_list2_find_str((list2_t*)(head), offsetofvar(*(head), member), str, n, ((void*)((head)->member) == (void*)(&((head)->member)) ? true : false)); \
+	\
+	(typeof(head))_list2_find_str((list2_t*)_head, offsetofvar(*_head, member), str, n, ((void*)(_head->member) == (void*)(&(_head->member)) ? true : false)); \
 })
 
 #define list_find_strn_safe(head, member, str, n, mtx)({ \
 	typeof(head) _el; \
+	\
+	\
 	LOCK_SECTION(mtx, _el = list_find_strn(head, member, str, n)); \
 	_el; \
 })
@@ -198,6 +230,8 @@
 
 #define list_empty_safe(head, mtx)({ \
 	int _r; \
+	\
+	\
 	LOCK_SECTION(mtx, _r = list_empty(head)); \
 	_r; \
 })
@@ -206,7 +240,8 @@
 	__list_for_each(head, el, next)
 
 #define __list_for_each(head, el, next_name) \
-	el=(head); \
+	el = head; \
+	\
 	for(typeof(head) next=((head) == 0x0 ? 0x0 : (head)->next_name); (el)!=0x0; (el)=(next_name), next=(next == 0x0 ? 0 : next->next_name))
 
 

@@ -129,6 +129,38 @@ TEST(queue_dequeue){
 	return -r;
 }
 
+TEST(queue_empty){
+	int r = 0;
+	queue_t *head = 0x0,
+			*tail = 0x0;
+
+
+	INIT_EL();
+
+	r += TEST_INT_EQ(queue_empty(head), true);
+
+	queue_enqueue(head, tail, &el0);
+
+	r += TEST_INT_EQ(queue_empty(head), false);
+
+	return -r;
+}
+
+TEST(queue_head){
+	int r = 0;
+	queue_t *head = 0x0,
+			*tail = 0x0;
+
+
+	INIT_EL();
+
+	queue_enqueue(head, tail, &el3);
+
+	r += TEST_PTR_EQ(queue_head(head), &el3);
+
+	return -r;
+}
+
 static queue_t *dequeue(queue_t **head, queue_t **tail){
 	return queue_dequeue(*head, *tail);
 }

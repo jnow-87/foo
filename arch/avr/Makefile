@@ -14,14 +14,14 @@ obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o
 obj-$(CONFIG_IOVERFLOW_DET) += iovfl.o
 
-# libsys
-obj-nobuiltin-y := libsys.o
+# libbrick
+obj-nobuiltin-y := libbrick.o
 
-libsys-y := libstart.o init.o syscall.libsys.o atomic.libsys.o
+libbrick-y := libstart.o init.o syscall.libbrick.o atomic.libbrick.o
 
 
-# custom rules to generate separate object files for src files that are reuired by kernel and libsys
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libsys.o,    $(loc_src_tree)/%.c,)
+# custom rules to generate separate object files for src files that are required by kernel and libbrick
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libbrick.o,    $(loc_src_tree)/%.c,)
 
 
 ####

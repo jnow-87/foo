@@ -17,7 +17,7 @@
 /* macros */
 #if defined(BUILD_KERNEL)
 # define HW_OP_SRC	PRIV_KERNEL
-#elif defined(BUILD_LIBSYS)
+#elif defined(BUILD_LIBBRICK)
 # define HW_OP_SRC	PRIV_USER
 #else
 CPP_ASSERT(invalid build config)

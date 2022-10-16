@@ -16,7 +16,7 @@
 
 
 /* macros */
-#define PAGESIZE_BYTES(psize)	((0x1 << (2 * psize)) * 4096)
+#define PAGESIZE_BYTES(psize)	((0x1 << (2 * (psize))) * 4096)
 
 
 /* incomplete types */

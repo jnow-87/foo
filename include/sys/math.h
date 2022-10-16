@@ -11,28 +11,54 @@
 #define SYS_MATH_H
 
 
-#include <config/config.h>
+#ifndef BUILD_HOST
+# include <config/config.h>
+#else
+# include <math.h>
+#endif // BUILD_HOST
 
 
 /* macros */
-#define ABS(x) (((x) > 0) ? (x) : (-(x)))
-#define MIN(x, y)			((x) > (y) ? (y) : (x))
-#define MAX(x, y)			((x) > (y) ? (x) : (y))
+#define ABS(v)({ \
+	typeof(v) _v = v; \
+	\
+	\
+	(_v > 0) ? _v : -_v; \
+})
+
+#define CMP(x, y, op)({ \
+	typeof(x) _x = x; \
+	typeof(y) _y = y; \
+	\
+	\
+	(_x op _y) ? _x : _y; \
+})
+
+#define MIN(x, y)	CMP(x, y, <)
+#define MAX(x, y)	CMP(x, y, >)
+
 
 // requires base to be power of 2
-#define ALIGNP2(x, base)	(((x) + ((base) - 1)) & (~((base) - 1)))
+#define ALIGNP2(x, base)({ \
+	typeof(x) _x = x; \
+	typeof(base) _base = base; \
+	\
+	\
+	(_x + _base - 1) & (~(_base - 1)); \
+})
 
 
 /* prototypes */
+#ifndef BUILD_HOST
 unsigned int log(unsigned int x, unsigned long base);
 unsigned long long pow(unsigned long long x, unsigned long long y);
 unsigned int powi(unsigned int x, unsigned int y);
 
-#if !defined(CONFIG_NOFLOAT) || CONFIG_NOFLOAT == 0
+# if !defined(CONFIG_NOFLOAT) || CONFIG_NOFLOAT == 0
 double powd(double x, double y);
 float powf(float x, float y);
 long double powl(long double x, long double y);
-#endif // CONFIG_NOFLOAT
-
+# endif // CONFIG_NOFLOAT
+#endif // BUILD_HOST
 
 #endif // SYS_MATH_H

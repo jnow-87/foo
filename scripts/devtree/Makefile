@@ -10,9 +10,12 @@
 hostbin-y := dtc
 
 
-dtc-y := main.o options.o export.o lexer.lex.o parser.tab.o $(build_tree)/sys/vector.o $(build_tree)/sys/list2.o $(build_tree)/sys/string.o
+dtc-y := main.o options.o export.o lexer.lex.o parser.tab.o
 
-## additional dependencies for generated headers
+# ensure a rebuild if indirect dependencies are updated
+dtc-y += $(build_tree)/sys/libhost.a
+
+# additional dependencies for generated headers
 $(loc_build_tree)/parser.tab.host.o: $(loc_build_tree)/lexer.lex.host.o
 $(loc_build_tree)/lexer.lex.host.o: $(loc_build_tree)/parser.tab.c
 $(loc_build_tree)/main.host.o: $(loc_build_tree)/parser.tab.c
@@ -27,3 +30,6 @@ hostcppflags-y := \
 
 hostcflags-y := \
 	-fno-builtin
+
+hostldlibs-y := \
+	-L$(build_tree)/sys -lhost

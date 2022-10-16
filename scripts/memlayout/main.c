@@ -7,6 +7,7 @@
 
 
 
+#include <sys/compiler.h>
 #include <sys/devtree.h>
 #include <sys/escape.h>
 #include <stdio.h>
@@ -17,8 +18,22 @@
 /* macros */
 #define ERROR(msg, ...) fprintf(stderr, FG_RED "error" RESET_ATTR ": " msg, __VA_ARGS__)
 
-#define CONTAINS(n0, n1)	(((n0)->base <= (n1)->base) && ((n1)->base + (n1)->size <= (n0)->base + (n0)->size))
-#define OVERLAPS(n0, n1)	(((n0)->base < (n1)->base + (n1)->size) && ((n1)->base < (n0)->base + (n0)->size))
+#define CONTAINS(n0, n1)({ \
+	typeof(n0) _n0 = n0; \
+	typeof(n1) _n1 = n1; \
+	\
+	\
+	(_n0->base <= _n1->base && _n1->base + _n1->size <= _n0->base + _n0->size); \
+})
+
+#define OVERLAPS(n0, n1)({ \
+	typeof(n0) _n0 = n0; \
+	typeof(n1) _n1 = n1; \
+	\
+	\
+	(_n0->base < _n1->base + _n1->size && _n1->base < _n0->base + _n0->size); \
+})
+
 
 
 /* local/static prototypes */
@@ -97,7 +112,7 @@ static int check_availability(void){
 	int r = 0;
 
 
-	for(size_t i=0; i<sizeof(required_nodes)/sizeof(*required_nodes); i++){
+	for(size_t i=0; i<sizeof_array(required_nodes); i++){
 		if(devtree_find_memory_by_name(&__dt_memory_root, required_nodes[i]) == 0x0){
 			ERROR("device tree lacks node \"%s\"\n", required_nodes[i]);
 			r++;

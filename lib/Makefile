@@ -6,10 +6,10 @@
 #
 
 
-lib-y := libsys.a
+lib-y := libbrick.a
 obj-y := init.o unistd/ stdlib/ stdio/ 
 
-libsys-y := $(build_tree)/sys/libsys.o $(build_tree)/arch/libsys.o $(loc_build_tree)/obj.o
+libbrick-y := $(build_tree)/sys/libbrick.o $(build_tree)/arch/libbrick.o $(loc_build_tree)/obj.o
 
 obj-$(CONFIG_SC_TIME) += time.o
 obj-$(CONFIG_SC_SCHED) += sched.o
@@ -24,4 +24,4 @@ hostobj-$(CONFIG_LIB_GETOPT) += getopt.o
 # flags
 ####
 
-libsys-cppflags-y += -DBUILD_LIBSYS
+libbrick-cppflags-y += -DBUILD_LIBBRICK

@@ -11,11 +11,9 @@
 #define KERNEL_TASK_H
 
 
+#include <config/config.h>
+#include <kernel/ktaskqueue.h>
 #include <sys/types.h>
-
-
-/* incomplete types */
-struct ktask_queue_t;
 
 
 /* types */
@@ -30,8 +28,9 @@ typedef struct ktask_t{
 	struct ktask_t *prev,
 				   *next;
 
-	struct ktask_queue_t *dep_queue;
-	struct ktask_t *queue_next;
+#ifdef CONFIG_KERNEL_KTASK_QUEUE
+	ktask_queue_t *dep_queue;
+#endif // CONFIG_KERNEL_KTASK_QUEUE
 
 	ktask_flag_t flags;
 
@@ -39,20 +38,14 @@ typedef struct ktask_t{
 	uint8_t payload[];
 } ktask_t;
 
-typedef struct ktask_queue_t{
-	ktask_t * volatile head,
-			* volatile tail;
-} ktask_queue_t;
-
 
 /* prototypes */
 int ktask_create(ktask_hdlr_t hdlr, void *payload, size_t size, ktask_queue_t *dep_queue, bool recurring);
-void ktask_complete(ktask_t *task);
-ktask_t *ktask_next(void);
 
-ktask_queue_t *ktask_queue_create(void);
-void ktask_queue_destroy(ktask_queue_t *queue);
-void ktask_queue_flush(ktask_queue_t *queue);
+void ktask_complete(ktask_t *task);
+void ktask_cancel(ktask_t *task);
+
+ktask_t *ktask_next(void);
 
 
 #endif // KERNEL_TASK_H

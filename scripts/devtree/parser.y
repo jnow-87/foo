@@ -52,32 +52,34 @@
 	// node validation
 	#define NODE_VALIDATE_DEVICES(node)({ \
 		char const **name; \
+		typeof(node) _node = node; \
 		\
 		\
-		if(node->compatible == 0x0 || *node->compatible == 0) \
+		if(_node->compatible == 0x0 || *_node->compatible == 0) \
 			PARSER_ERROR("undefined member \"compatible\"\n"); \
 		\
 		vector_for_each(&node_names, name){ \
-			if(strcmp(*name, (node)->name) == 0) \
+			if(strcmp(*name, _node->name) == 0) \
 				PARSER_ERROR("node with name \"%s\" already exists\n", *name); \
 		} \
 		\
-		vector_add(&node_names, &((node)->name)); \
+		vector_add(&node_names, &_node->name); \
 	})
 
 	#define NODE_VALIDATE_MEMORY(node)({ \
 		char const **name; \
+		typeof(node) _node = node; \
 		\
 		\
-		if(node->size == 0 && node->childs == 0x0) \
-			PARSER_ERROR("zero size for node \"%s\"\n", node->name); \
+		if(_node->size == 0 && _node->childs == 0x0) \
+			PARSER_ERROR("zero size for node \"%s\"\n", _node->name); \
 		\
 		vector_for_each(&node_names, name){ \
-			if(strcmp(*name, (node)->name) == 0) \
+			if(strcmp(*name, _node->name) == 0) \
 				PARSER_ERROR("node with name \"%s\" already exists\n", *name); \
 		} \
 		\
-		vector_add(&node_names, &((node)->name)); \
+		vector_add(&node_names, &_node->name); \
 	})
 
 	// vector allocate
@@ -96,7 +98,11 @@
 
 	// vector add
 	#define INT_LIST_ADD(v, payload){ \
-		if(!payload.empty && vector_add(v, &payload.val) != 0) \
+		typeof(v) _v = v; \
+		typeof(payload) _payload = payload; \
+		\
+		\
+		if(!_payload.empty && vector_add(_v, &_payload.val) != 0) \
 			PARSER_ERROR("adding to vector\n"); \
 	}
 
@@ -133,22 +139,24 @@
 	}
 
 	// string alloc
-	#define STRALLOC(_s, len)({ \
-		char *s; \
+	#define STRALLOC(s, len)({ \
+		typeof(len) _len = len; \
+		typeof(s) _s = s; \
+		char *_new; \
 		\
 		\
-		if(len + 1 > NAME_MAX) \
-			PARSER_ERROR("identifier \"%*.*s\" too long, maximum length %u\n", len, len, _s, NAME_MAX); \
+		if(_len + 1 > NAME_MAX) \
+			PARSER_ERROR("identifier \"%*.*s\" too long, maximum length %u\n", _len, _len, _s, NAME_MAX); \
 		\
-		s = malloc(len + 1); \
+		_new = malloc(_len + 1); \
 		\
-		if(s == 0x0) \
+		if(_new == 0x0) \
 			PARSER_ERROR("out of memory allocating string\n"); \
 		\
-		memcpy(s, _s, len); \
-		s[len] = 0; \
+		memcpy(_new, _s, _len); \
+		_new[_len] = 0; \
 		\
-		s; \
+		_new; \
 	})
 
 	// parser error message

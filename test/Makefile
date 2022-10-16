@@ -21,13 +21,12 @@ utest-y := main.utest.o mock/ sys/ unit/ lib/
 uttest-y := main.utest.o mock/ unit/
 
 # target flags
-uttest-cppflags := -I"include/lib"
+uttest-cppflags := -Iinclude/lib
+
+# ensure a rebuild if indirect dependencies are updated
+uttest-y += $(build_tree)/lib/libbrick.a
 
 main.utest-cppflags := -DTESTS=unit
-
-# ensure itest is rebuild if libs are updated and
-# libs exist before building itest
-uttest-y += $(build_tree)/lib/libsys.a
 
 ifeq ($(CONFIG_CODE_COVERAGE),y)
   uttest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
@@ -36,7 +35,7 @@ endif
 uttest-ldlibs := \
 	$(ldlibs-app) \
 	-Tapp_$(CONFIG_ARCH).lds \
-	-lsys \
+	-lbrick \
 	-lgcc
 
 # host flags
@@ -49,26 +48,25 @@ main.utest-hostcppflags := $(main.utest-cppflags)
 # itest
 itest-y := main.itest.o user/ scripts/linker/app_$(CONFIG_ARCH).lds
 
-# ensure itest is rebuild if libs are updated and
-# libs exist before building itest
-itest-y += $(build_tree)/lib/libsys.a
+# ensure a rebuild if indirect dependencies are updated
+itest-y += $(build_tree)/lib/libbrick.a
 
 ifeq ($(CONFIG_CODE_COVERAGE),y)
   itest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a
 endif
 
-itest-cppflags := -I"include/lib"
+itest-cppflags := -Iinclude/lib
 
 itest-ldlibs := \
 	$(ldlibs-app) \
 	-Tapp_$(CONFIG_ARCH).lds \
-	-lsys \
+	-lbrick \
 	-lgcc
 
 main.itest-cppflags := -DTESTS=user_noninteractive
 
 
-# custom rules to generate separate objects files for src files that are reuired by kernel and libsys
+# custom rules to generate separate objects files for src files that are required by kernel and libbrick
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.utest.o,      $(loc_src_tree)/%.c)
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.utest.host.o, $(loc_src_tree)/%.c, host)
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.itest.o,      $(loc_src_tree)/%.c)

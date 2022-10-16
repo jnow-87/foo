@@ -75,7 +75,7 @@ static size_t puts(char const *s, size_t n, void *brdg){
 
 
 	for(i=0; i<n; i+=x){
-		x = MIN(n - i, 255);
+		x = MIN(n - i, 255u);
 		x = bridge_write(brdg, (char*)s + i, x);
 
 		if(x <= 0)
@@ -91,7 +91,7 @@ static size_t gets(char *s, size_t n, void *brdg){
 
 
 	for(i=0; i<n; i+=x){
-		x = MIN(n - i, 255);
+		x = MIN(n - i, 255u);
 		x = bridge_read(brdg, s + i, x);
 
 		if(x < 0)

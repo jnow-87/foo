@@ -20,7 +20,7 @@
 #include <kernel/rootfs.h>
 #include <kernel/syscall.h>
 #include <kernel/panic.h>
-#include <kernel/task.h>
+#include <kernel/ktask.h>
 #include <kernel/ipi.h>
 #include <sys/errno.h>
 #include <sys/list.h>

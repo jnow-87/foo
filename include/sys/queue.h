@@ -58,5 +58,11 @@
 	_el; \
 })
 
+#define queue_empty(head) \
+	list_empty(head)
+
+#define queue_head(head) \
+	list_first(head)
+
 
 #endif // SYS_QUEUE_H

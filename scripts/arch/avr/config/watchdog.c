@@ -14,7 +14,13 @@
 
 
 /* macros */
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MIN(a, b)({ \
+	typeof(a) _a = a; \
+	typeof(b) _b = _b; \
+	\
+	\
+	(_a < _b) ? _a : _b; \
+})
 
 // ensure CONFIG-variables have viable values
 #if (!defined(CONFIG_SCHED_CYCLETIME_US) && !defined(CONFIG_KTIMER_CYCLETIME_US))

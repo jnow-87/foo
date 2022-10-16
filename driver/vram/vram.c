@@ -17,12 +17,9 @@
 #include <sys/vram.h>
 
 
-/* macros */
-#define RAMIDX(vram, page)	(((page) + (vram)->page_offset) % (vram)->npages)
-
-
 /* local/static prototypes */
 static void refresh_hdlr(void *payload);
+static size_t ramidx(vram_t *vram, size_t page);
 
 
 /* global functions */
@@ -81,7 +78,7 @@ int vram_write_page(vram_t *vram, size_t page, size_t column, size_t n, uint8_t 
 	if(page >= vram->npages || column + n > vram->cfg.width)
 		return_errno(E_INVAL);
 
-	page = RAMIDX(vram, page);
+	page = ramidx(vram, page);
 
 	memset(vram->ram + (page * vram->cfg.width) + column, pattern, n);
 	vram_makedirty(page, vram->dirty, true);
@@ -96,7 +93,7 @@ int vram_write_pages(vram_t *vram, size_t start, size_t npages, uint8_t pattern)
 	if(start + npages > vram->npages)
 		return_errno(E_INVAL);
 
-	start = RAMIDX(vram, start);
+	start = ramidx(vram, start);
 
 	chunk = MIN(npages, vram->npages - start);
 	memset(vram->ram + (start * vram->cfg.width), pattern, chunk * vram->cfg.width);
@@ -120,7 +117,7 @@ int vram_write_block(vram_t *vram, size_t page, size_t column, uint8_t *block, s
 	if(page >= vram->npages || column + n * bsize > vram->cfg.width)
 		return_errno(E_INVAL);
 
-	page = RAMIDX(vram, page);
+	page = ramidx(vram, page);
 
 	for(size_t i=0; i<n; i++)
 		memcpy(vram->ram + (page * vram->cfg.width) + column + i * bsize, block, bsize);
@@ -134,7 +131,7 @@ int vram_invert_page(vram_t *vram, size_t page, size_t column, size_t n){
 	if(page >= vram->npages)
 		return_errno(E_INVAL);
 
-	page = RAMIDX(vram, page);
+	page = ramidx(vram, page);
 
 	for(size_t i=0; i<n; i++)
 		vram->ram[page * vram->cfg.width + column + i] ^= 0xff;
@@ -184,4 +181,8 @@ static void refresh_hdlr(void *payload){
 
 		vram_makedirty(page, vram->dirty, false);
 	}
+}
+
+static size_t ramidx(vram_t *vram, size_t page){
+	return (page + vram->page_offset) % vram->npages;
 }

@@ -95,8 +95,8 @@ cppflags := \
 	$(CONFIG_CPPFLAGS) \
 	$(cppflags) \
 	-std=gnu99 \
-	-I"$(src_tree)/include/" \
-	-I"$(build_tree)/" \
+	-I$(src_tree)/include \
+	-I$(build_tree) \
 	-DBUILD_ARCH_HEADER="$(CONFIG_ARCH_HEADER)"
 
 ldlibs := \
@@ -146,7 +146,7 @@ hostcppflags := \
 	$(CONFIG_HOSTCPPFLAGS) \
 	$(hostcppflags) \
 	-std=gnu99 \
-	-I"$(build_tree)/" \
+	-I$(build_tree) \
 	-DBUILD_ARCH_HEADER="$(CONFIG_ARCH_HEADER)" \
 	-DBUILD_HOST
 
@@ -200,7 +200,7 @@ endif
 
 kernel := $(build_tree)/kernel/kimg.elf
 init := $(build_tree)/init/init.elf
-libsys := $(build_tree)/lib/libsys.a
+libbrick := $(build_tree)/lib/libbrick.a
 sysroot := $(build_tree)/sysroot
 recent := recent
 
@@ -242,7 +242,7 @@ all: check_config check_memlayout $(lib) $(hostlib) $(bin) $(hostbin)
 		@[ -e $(recent) ] && rm $(recent); \
 		ln -s $(build_tree) $(recent); \
 		[ ! $$? -eq 0 ] && echo -e '\033[31munable to create symbolic link "recent"\n\033[0m'; \
-		$(sysroot_create) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(kernel) $(libsys) \
+		$(sysroot_create) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(kernel) $(libbrick) \
 	)
 
 ####
