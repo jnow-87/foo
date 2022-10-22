@@ -8,53 +8,41 @@
 
 
 menuconfig DRIVER_BRIDGE
-	bool "Bridge driver"
+	bool "bridge driver"
 	select KERNEL_SIGNAL
 	select KERNEL_INTTASK
 	select SYS_RINGBUFFER
 
 if DRIVER_BRIDGE
-	menuconfig BRIDGE_UART
-		bool "UART bridge"
-		select DRIVER_UART
+	config BRIDGE_UART_DEV
+		bool "uART bridge device"
 
-	if BRIDGE_UART
-		config BRIDGE_UART_DEV
-			bool "UART bridge device"
+	config BRIDGE_UART_ITF
+		bool "uART bridge interface"
 
-		config BRIDGE_UART_ITF
-			bool "UART bridge interface"
-	endif # BRIDGE_UART
+	config BRIDGE_I2C_DEV
+		bool "i2c bridge device"
 
-	menuconfig BRIDGE_I2C
-		bool "i2c bridge"
-		select DRIVER_I2C
+	config BRIDGE_I2C_ITF
+		bool "i2c bridge interface"
 
-	if BRIDGE_I2C
-		config BRIDGE_I2C_DEV
-			bool "i2c bridge device"
-
-		config BRIDGE_I2C_ITF
-			bool "i2c bridge interface"
-
-		config BRIDGE_I2C_INLINE_DATA
-			int "i2c bridge inline data [bytes]"
-			range 1 128
-			default 8
-			depends on BRIDGE_I2C
-	endif # BRIDGE_I2C
+	config BRIDGE_I2C_INLINE_DATA
+		int "i2c bridge inline data size [bytes]"
+		range 1 128
+		default 8
+		depends on BRIDGE_I2C_DEV || BRIDGE_I2C_ITF
 
 	config BRIDGE_RETRY_LIMIT
-		int "Number of tolerated errors before aborting a transmission"
+		int "number of tolerated errors before aborting a transmission"
 		default 3
 
 	config BRIDGE_DEBUG
-		bool "Enable debug messages"
-		depends on KERNEL_MSG_DEBUG
+		bool "enable debug messages"
+		select KERNEL_LOG_DEBUG
 		default n
 
 	config BRIDGE_DEBUG_PROTOCOL
-		bool "Enable protocol debug messages"
-		depends on KERNEL_MSG_DEBUG && BRIDGE_DEBUG
+		bool "enable protocol debug messages"
+		select BRIDGE_DEBUG
 		default n
 endif # DRIVER_BRIDGE

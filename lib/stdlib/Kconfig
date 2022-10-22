@@ -9,10 +9,10 @@
 
 if SC_DYNMEM
 	config MALLOC_MIN_SIZE
-		int "Minimum size to be used for malloc syscalls"
+		int "minimum size to be used for malloc syscalls"
 		default 128
 
 	config MALLOC_ALIGN
-		int "Alignment to be used for malloc (has to be a power of 2)"
+		int "alignment to be used for malloc (has to be a power of 2)"
 		default 4
 endif # SC_DYNMEM

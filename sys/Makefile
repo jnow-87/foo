@@ -20,7 +20,7 @@ obj-y := \
 	devtree.o \
 	devicetree.o
 
-obj-$(CONFIG_KERNEL_PRINTF) += stream.o
+obj-$(CONFIG_KERNEL_LOG) += stream.o
 obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
 obj-$(CONFIG_SYS_LINEBUFFER) += linebuf.o
 obj-$(CONFIG_SYS_PATTERN_MATCH) += patmat.o

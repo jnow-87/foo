@@ -12,4 +12,4 @@ obj-$(CONFIG_LOOP_TERM) += term.o
 obj-$(CONFIG_LOOP_VRAM) += vram.o
 
 
-cppflags-$(CONFIG_LOOP_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+cppflags-$(CONFIG_LOOP_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

@@ -8,21 +8,24 @@
 
 
 menuconfig DRIVER_I2C
-	bool "I2C driver"
+	bool "i2c driver"
 	select SYS_LINEBUFFER
+	select AVR_I2C if AVR
+	select X86_I2C if X86
 
 if DRIVER_I2C
-	config I2C_DEVFS_DEV
-		bool "devfs device driver"
+	config I2C_RAW
+		bool "raw i2c device"
 		select KERNEL_DEVFS
 		default n
 
 	config I2C_RXBUF_SIZE
-		int "Rx buffer size"
+		int "rx buffer size"
 		default 16
 
 	config I2C_DEBUG
-		bool "Enable debug messages"
-		depends on KERNEL_MSG_DEBUG
+		bool "i2c debug messages"
+		depends on DRIVER_I2C
+		select KERNEL_LOG_DEBUG
 		default n
 endif # DRIVER_I2C

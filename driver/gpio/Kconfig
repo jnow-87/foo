@@ -11,18 +11,40 @@ menuconfig DRIVER_GPIO
 	bool "gpio driver"
 	select KERNEL_DEVFS
 	select SC_SIGNAL
+	select AVR_GPIO if AVR
+	select X86_GPIO if X86
 
 if DRIVER_GPIO
-	config GPIO_INT_WIDTH
-		int "gpio register width [bits]"
-		default 8
+	choice
+		prompt "gpio register width"
 
-	config DRIVER_MCP23017
-		bool "mcp23017 i2c I/O expander"
-		select DRIVER_I2C
+		config GPIO_INT_WIDTH_8
+			bool "8 bit"
+
+		config GPIO_INT_WIDTH_16
+			bool "16 bit"
+
+		config GPIO_INT_WIDTH_32
+			bool "32 bit"
+
+		config GPIO_INT_WIDTH_64
+			bool "64 bit"
+	endchoice
 
 	config GPIO_DEBUG
-		bool "Enable debug messages"
-		depends on KERNEL_MSG_DEBUG
+		bool "enable debug messages"
+		select KERNEL_LOG_DEBUG
 		default n
+
+	menu "hidden"
+		visible if 0
+
+		config GPIO_INT_WIDTH
+			int "gpio register width"
+			default 8	if GPIO_INT_WIDTH_8
+			default 16	if GPIO_INT_WIDTH_16
+			default 32	if GPIO_INT_WIDTH_32
+			default 64	if GPIO_INT_WIDTH_64
+			default 8
+	endmenu
 endif # DRIVER_GPIO

@@ -9,9 +9,5 @@
 
 obj-y := gpio.o
 
-obj-$(CONFIG_AVR) += avr.o
-obj-$(CONFIG_X86) += x86.o
-obj-$(CONFIG_DRIVER_MCP23017) += mcp23017.o
 
-
-cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

@@ -30,9 +30,9 @@ brdg0-right-i2c = {
 	   0,				// interrupt number
 	];
 
-#ifdef CONFIG_I2C_DEVFS_DEV
+#ifdef CONFIG_I2C_RAW
 # include "../common/i2c0-raw.dts"
-#endif // CONFIG_I2C_DEVFS_DEV
+#endif // CONFIG_I2C_RAW
 
 #ifdef CONFIG_DRIVER_MCP23017
 # include "../common/mcp23017.dts"

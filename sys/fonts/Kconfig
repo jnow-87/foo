@@ -8,4 +8,4 @@
 
 
 config FONT_SYSTEM_VERT
-	bool "System font vertical"
+	bool "system font vertical"

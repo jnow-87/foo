@@ -8,14 +8,14 @@
 
 
 menuconfig DRIVER_VRAM
-	bool "Video ram"
-	select KERNEL_DEVFS
+	bool "video ram"
 
 if DRIVER_VRAM
 	config VRAM_RAW
 		bool "devfs device driver"
+		select KERNEL_DEVFS
 
 	config VRAM_TERM
-		bool "Terminal driver"
+		bool "terminal driver"
 		select FONTS
 endif # DRIVER_VRAM

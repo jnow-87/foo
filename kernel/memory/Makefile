@@ -12,4 +12,4 @@ obj-y := kernel.o user.o page.o
 obj-$(CONFIG_SC_DYNMEM) += syscall.o
 
 
-cppflags-$(CONFIG_SC_DYNMEM_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+cppflags-$(CONFIG_SC_DYNMEM_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

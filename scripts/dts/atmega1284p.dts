@@ -17,25 +17,28 @@ memory = {
 devices = {
 #include "avr/uart0.dts"
 
-#ifdef CONFIG_DRIVER_EEPROM
+#ifdef CONFIG_AVR_EEPROM
 # include "avr/eeprom0.dts"
-#endif // CONFIG_DRIVER_EEPROM
+#endif // CONFIG_AVR_EEPROM
 
-#ifdef CONFIG_DRIVER_PWM
+#ifdef CONFIG_AVR_PWM8
 # include "avr/pwm0-8.dts"
+#endif // CONFIG_AVR_PWM8
+
+#ifdef CONFIG_AVR_PWM16
 # include "avr/pwm1-16.dts"
-#endif // CONFIG_DRIVER_PWM
+#endif // CONFIG_AVR_PWM16
 
 #ifdef CONFIG_DRIVER_GPIO
 # include "avr/gpio-ports.dts"
 #endif // CONFIG_DRIVER_GPIO
 
-#ifdef CONFIG_DRIVER_SPI
+#ifdef CONFIG_AVR_SPI
 # include "avr/spi0.dts"
-#endif // CONFIG_DRIVER_SPI
+#endif // CONFIG_AVR_SPI
 
 #ifdef CONFIG_DRIVER_I2C
-# ifndef CONFIG_BRIDGE_I2C
+# if !(defined(CONFIG_BRIDGE_I2C_DEV) || defined(CONFIG_BRIDGE_I2C_ITF))
 #  include "avr/i2c0.dts"
 # endif // CONFIG_BRIDGE_I2C
 #endif // CONFIG_DRIVER_I2C

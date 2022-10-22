@@ -7,5 +7,8 @@
 
 
 
-config DRIVER_X11
-	bool "x11 display"
+obj-$(CONFIG_X86_GPIO) += gpio.o
+obj-$(CONFIG_X86_UART) += uart.o
+
+
+gpio-cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

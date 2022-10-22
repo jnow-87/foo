@@ -135,7 +135,7 @@ hostcflags := \
 
 hostcxxflags := \
 	$(HOSTCXXFLAGS) \
-	$(CONFIG_HOSTCCCFLAGS) \
+	$(CONFIG_HOSTCXXFLAGS) \
 	$(hostcxxflags) \
 	$(warnflags) \
 	-O2 \

@@ -7,20 +7,12 @@
 
 
 
-#include <config/config.h>
 #include <arch/arch.h>
-#include <kernel/interrupt.h>
-
-#ifdef BUILD_KERNEL
-# include <kernel/init.h>
-# include <kernel/syscall.h>
-# include <kernel/sched.h>
-#endif // BUILD_KERNEL
-
+#include <arch/avr/register.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/register.h>
-#include <sys/compiler.h>
+#include <sys/syscall.h>
 #include <sys/devicetree.h>
 
 
@@ -37,12 +29,6 @@
 #else
 # define SYSCALL(addr)	asm volatile("call " STRGIFY(addr));
 #endif // CONFIG_AVR_ISA_AVR4
-
-
-/* local/static prototypes */
-#ifdef BUILD_KERNEL
-static void sc_hdlr(int_num_t num, void *payload);
-#endif // BUILD_KERNEL
 
 
 /* global functions */
@@ -71,27 +57,3 @@ int avr_sc(sc_num_t num, void *param, size_t psize){
 
 	return 0;
 }
-
-
-/* local functions */
-#ifdef BUILD_KERNEL
-static int init(void){
-	return int_register(AVR_NUM_HW_INTS, sc_hdlr, 0x0);
-}
-
-platform_init(0, init);
-#endif // BUILD_KERNEL
-
-#ifdef BUILD_KERNEL
-static void sc_hdlr(int_num_t num, void *payload){
-	sc_t *sc;
-
-
-	sc = (sc_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
-
-	sc_khdlr(sc->num, sc->param, sc->size);
-	sc->errno = errno;
-}
-#endif // BUILD_KERNEL
-
-

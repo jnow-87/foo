@@ -31,23 +31,23 @@ typedef enum{
 #define KMSG_ANY	(KMSG_FATAL | KMSG_WARN | KMSG_DEBUG | KMSG_INFO | KMSG_STAT)
 
 // general print macros
-#if (defined(CONFIG_KERNEL_MSG_FATAL) && !defined(BUILD_KERNEL_MSG_FATAL_DISABLE))
+#if (defined(CONFIG_KERNEL_LOG_FATAL) && !defined(BUILD_KERNEL_LOG_FATAL_DISABLE))
 # define FATAL(fmt, ...)	cprintf(KMSG_FATAL, FG_RED "[FTL]" RESET_ATTR " %25.25s:%-5u %-20.20s    " FG_RED fmt RESET_ATTR, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 # define FATAL(fmt, ...)	{}
-#endif // CONFIG_KERNEL_MSG_FATAL
+#endif // CONFIG_KERNEL_LOG_FATAL
 
-#if (defined(CONFIG_KERNEL_MSG_WARN) && !defined(BUILD_KERNEL_MSG_WARN_DISABLE))
+#if (defined(CONFIG_KERNEL_LOG_WARN) && !defined(BUILD_KERNEL_LOG_WARN_DISABLE))
 # define WARN(fmt, ...)		cprintf(KMSG_WARN, FG_YELLOW "[WRN]" RESET_ATTR " %25.25s:%-5u %-20.20s    " FG_YELLOW fmt RESET_ATTR, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 # define WARN(fmt, ...)		{}
-#endif // CONFIG_KERNEL_MSG_WARN
+#endif // CONFIG_KERNEL_LOG_WARN
 
-#if (defined(CONFIG_KERNEL_MSG_INFO) && !defined(BUILD_KERNEL_MSG_INFO_DISABLE))
+#if (defined(CONFIG_KERNEL_LOG_INFO) && !defined(BUILD_KERNEL_LOG_INFO_DISABLE))
 # define INFO(fmt, ...)		cprintf(KMSG_INFO, fmt, ##__VA_ARGS__)
 #else
 # define INFO(fmt, ...)		{}
-#endif // CONFIG_KERNEL_MSG_INFO
+#endif // CONFIG_KERNEL_LOG_INFO
 
 #if (defined(CONFIG_KERNEL_STAT) && !defined(BUILD_KERNEL_STAT_DISABLE))
 # define STAT(fmt, ...)		kprintf(KMSG_STAT, fmt, ##__VA_ARGS__)
@@ -56,30 +56,30 @@ typedef enum{
 #endif // CONFIG_KERNEL_STAT
 
 // debug print macros
-#if (defined(BUILD_KERNEL_MSG_DEBUG) && !defined(BUILD_KERNEL_MSG_DEBUG_DISABLE))
+#if (defined(BUILD_KERNEL_LOG_DEBUG) && !defined(BUILD_KERNEL_LOG_DEBUG_DISABLE))
 # define DEBUG(fmt, ...)	cprintf(KMSG_DEBUG, "[DBG] %25.25s:%-5u %-20.20s    "fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 # define DEBUG(fmt, ...)	{}
 #endif
 
 // kprintf
-#if CONFIG_KERNEL_PRINTF
+#if CONFIG_KERNEL_LOG
 # ifdef CONFIG_KERNEL_SMP
 #  define cprintf(lvl, fmt, ...)	kprintf(lvl, "[%u] " fmt, PIR, ##__VA_ARGS__)
 # else
 #  define cprintf(lvl, fmt, ...) 	kprintf(lvl, fmt, ##__VA_ARGS__)
 # endif // CONFIG_KERNEL_SMP
-#endif // CONFIG_KERNEL_PRINTF
+#endif // CONFIG_KERNEL_LOG
 
 
 /* prototypes */
-#if CONFIG_KERNEL_PRINTF
+#if CONFIG_KERNEL_LOG
 void kprintf(kmsg_t lvl, char const *format, ...);
 void kvprintf(kmsg_t lvl, char const *format, va_list lst);
 #else
 # define kprintf(lvl, fmt, ...)		{}
 # define kvprintf(lvl, fmt, ...)	{}
-#endif // CONFIG_KERNEL_PRINTF
+#endif // CONFIG_KERNEL_LOG
 
 
 #endif // KERNEL_PRINTF_H

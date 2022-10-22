@@ -7,5 +7,7 @@
 
 
 
-config DRIVER_X11
-	bool "x11 display"
+config DRIVER_MCP23017
+	bool "mcp23017 i2c i/o expander"
+	select DRIVER_I2C
+	select DRIVER_GPIO

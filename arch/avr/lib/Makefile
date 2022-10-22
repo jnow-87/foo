@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017 Jan Nowotsch
+# Copyright (C) 2022 Jan Nowotsch
 # Author Jan Nowotsch	<jan.nowotsch@gmail.com>
 #
 # Released under the terms of the GNU GPL v2.0
@@ -7,5 +7,4 @@
 
 
 
-config DRIVER_UART
-	bool "UART driver"
+obj-y := start.o

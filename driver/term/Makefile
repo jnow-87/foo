@@ -7,4 +7,4 @@
 
 
 
-obj-y := term.o flags.o esc.o cursor.o dev.o
+obj-y := term.o flags.o esc.o cursor.o raw.o

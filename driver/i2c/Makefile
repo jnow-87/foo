@@ -9,8 +9,7 @@
 
 obj-y := i2c.o
 
-obj-$(CONFIG_I2C_DEVFS_DEV) += dev.o
-obj-$(CONFIG_AVR) += avr.o
+obj-$(CONFIG_I2C_RAW) += raw.o
 
 
-cppflags-$(CONFIG_I2C_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+cppflags-$(CONFIG_I2C_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

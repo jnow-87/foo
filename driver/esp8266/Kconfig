@@ -8,18 +8,20 @@
 
 
 menuconfig DRIVER_ESP8266
-	bool "ESP8266 wlan module"
+	bool "esp8266 wlan driver"
 	select KERNEL_NET
 	select KERNEL_SIGNAL
+	select KERNEL_INTTASK
 	select SYS_PATTERN_MATCH
+	select DRIVER_UART
 
 if DRIVER_ESP8266
 	config ESP8266_LINK_COUNT
-		int "Number of supported links"
+		int "number of supported links"
 		default 5
 
 	config ESP8266_DEBUG
-		bool "Enable debug messages"
-		depends on KERNEL_MSG_DEBUG
+		bool "enable debug messages"
+		select KERNEL_LOG_DEBUG
 		default n
 endif # DRIVER_ESP8266

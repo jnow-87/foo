@@ -8,47 +8,47 @@
 
 
 config TEST_INT_KERNEL_IMAGE
-	qstring "Default kernel image"
+	qstring "default kernel image"
 	default "recent/kernel/kimg.elf"
 
 config TEST_INT_APP_BINARY
-	qstring "Default application binary"
+	qstring "default application binary"
 	default "recent/init/init.elf"
 
 config TEST_INT_FS_EXPORT_ROOT
-	qstring "Directory to export the brickos file system to"
+	qstring "directory to export the brickos file system to"
 	default "recent/test/integration/brickos-fs-export"
 
 config TEST_INT_HW_PIPE_RD
-	int "Host test data pipe input fileno"
+	int "host test data pipe input fileno"
 	default 17
 
 config TEST_INT_HW_PIPE_WR
-	int "Host test data pipe output fileno"
+	int "host test data pipe output fileno"
 	default 18
 
 config TEST_INT_USR_PIPE_RD
-	int "Host test control pipe input fileno"
+	int "host test control pipe input fileno"
 	default 19
 
 config TEST_INT_USR_PIPE_WR
-	int "Host test control pipe output fileno"
+	int "host test control pipe output fileno"
 	default 20
 
 config TEST_INT_HW_SIG
-	int "Host test signal for hardware operations"
+	int "host test signal for hardware operations"
 	range 34 64
 	default 35
 
 config TEST_INT_USR_SIG
-	int "Host test signal for user operations"
+	int "host test signal for user operations"
 	range 34 64
 	default 34
 
 config TEST_INT_CONT_SIG
-	int "Host test continue signal SIGCONT"
+	int "host test continue signal SIGCONT"
 	default 18
 
 config TEST_INT_UART_SIG
-	int "Host test uart signal"
+	int "host test uart signal"
 	default 10

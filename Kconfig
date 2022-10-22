@@ -13,7 +13,7 @@ mainmenu "brickos configuration"
 # processor type
 #
 # {{{
-menu "Processor"
+menu "processor"
 	source "arch/Kconfig"
 endmenu
 # }}}
@@ -22,7 +22,7 @@ endmenu
 # kernel
 #
 # {{{
-menu "Kernel"
+menu "kernel"
 	source kernel/Kconfig
 endmenu
 # }}}
@@ -31,7 +31,7 @@ endmenu
 # device driver
 #
 # {{{
-menu "Device driver"
+menu "device driver"
 	source "driver/Kconfig"
 endmenu
 # }}}
@@ -40,7 +40,7 @@ endmenu
 # sys
 #
 # {{{
-menu "Sys"
+menu "sys"
 	source "sys/Kconfig"
 endmenu
 # }}}
@@ -49,7 +49,7 @@ endmenu
 # libsys
 #
 # {{{
-menu "Libsys"
+menu "libsys"
 	source lib/Kconfig
 endmenu
 # }}}
@@ -58,7 +58,7 @@ endmenu
 # init
 #
 # {{{
-menu "Init"
+menu "init"
 	source init/Kconfig
 endmenu
 # }}}
@@ -67,7 +67,7 @@ endmenu
 # test
 #
 # {{{
-menu "Test"
+menu "test"
 	source test/integration/Kconfig
 endmenu
 # }}}
@@ -76,10 +76,10 @@ endmenu
 # build system
 #
 # {{{
-menu "Build system"
+menu "build system"
 	# build type
 	choice
-		prompt "Build type"
+		prompt "build type"
 
 		config BUILD_DEBUG
 			bool "debug"
@@ -88,47 +88,47 @@ menu "Build system"
 			bool "release"
 	endchoice
 
-	menu "Hidden"
+	menu "hidden"
 		visible if 0
 
 		config BUILD_TYPE
-			string "Build type"
+			string "build type"
 			default "debug" if BUILD_DEBUG
 			default "release" if BUILD_RELEASE
 	endmenu
 
 	# AVR programmer
-	menu "AVR programmer"
+	menu "aVR programmer"
 		depends on AVR
 
 		config AVR_FUSER
-			string "Fuser"
+			string "fuser"
 			default "avrfuser"
 
 		config AVR_PROG
-			string "Programmer"
+			string "programmer"
 			default "avrdude"
 
 		config AVR_DEBUGGER
-			string "Debugger"
+			string "debugger"
 			default "avarice"
 
 		choice
-			prompt "Programmer type"
+			prompt "programmer type"
 
 			config AVR_DRAGON_JTAG
-				bool "AVR Dragon JTAG"
+				bool "aVR Dragon JTAG"
 				depends on ATMEGA1284P
 
 			config AVR_DRAGON_ISP
-				bool "AVR Dragon ISP"
+				bool "aVR Dragon ISP"
 
 			config AVR_STK500V2
-				bool "STK500v2"
+				bool "sTK500v2"
 		endchoice
 
 		choice
-			prompt "Programmer port"
+			prompt "programmer port"
 
 			config AVR_PROG_PORT_USB
 				bool "usb"
@@ -138,27 +138,27 @@ menu "Build system"
 		endchoice
 
 		config AVR_PROG_UART_DEV
-			string "Uart device"
+			string "uart device"
 			default "/dev/ttyUSB0"
 			depends on AVR_PROG_PORT_UART
 
-		menu "Hidden"
+		menu "hidden"
 			visible if 0
 
 			config AVR_PROG_PORT
-				string "Programmer port"
+				string "programmer port"
 				default "usb" if AVR_PROG_PORT_USB
 				default AVR_PROG_UART_DEV if AVR_PROG_PORT_UART
 				default "unknown programmer port"
 
 			config AVR_PROG_DEBUG_ARGS
-				string "Programmer debug arguments"
+				string "programmer debug arguments"
 				default "--debugwire" if AVR_DRAGON_ISP || AVR_STK500V2
 				default "--dragon --jtag $(CONFIG_AVR_PROG_PORT) --jtag-bitrate $(shell echo '$(CONFIG_SYSTEM_CLOCK_HZ) / (4 * 1000)' | bc -q)kHz" if AVR_DRAGON_JTAG
 				default ""
 
 			config AVR_PROG_TYPE
-				string "Programmer"
+				string "programmer"
 				default "dragon_jtag" if AVR_DRAGON_JTAG
 				default "dragon_isp" if AVR_DRAGON_ISP
 				default "stk500v2" if AVR_STK500V2
@@ -172,16 +172,16 @@ menu "Build system"
 		default "build/$(CONFIG_PROCESSOR)/$(CONFIG_BUILD_TYPE)"
 
 	config CODE_COVERAGE
-		bool "Code coverage support"
+		bool "code coverage support"
 		default n
 
 	# toolchain prefixes
 	config TOOLCHAIN_PREFIX
-		string "Target toolchain prefix"
+		string "target toolchain prefix"
 		default "avr-" if AVR
 		default ""
 
-	menu "Hidden"
+	menu "hidden"
 		visible if 0
 
 		config CC
@@ -206,10 +206,10 @@ menu "Build system"
 	endmenu
 
 	config HOSTTOOLCHAIN_PREFIX
-		string "Host toolchain prefix"
+		string "host toolchain prefix"
 		default ""
 
-	menu "Hidden"
+	menu "hidden"
 		visible if 0
 
 		config HOSTCC
@@ -234,7 +234,7 @@ menu "Build system"
 	endmenu
 
 	# toolchain flags
-	menu "Target flags"
+	menu "target flags"
 		config CFLAGS
 			string CFLAGS
 
@@ -257,7 +257,7 @@ menu "Build system"
 			string ARCHFLAGS
 	endmenu
 
-	menu "Host flags"
+	menu "host flags"
 		config HOSTCFLAGS
 			string HOSTCFLAGS
 

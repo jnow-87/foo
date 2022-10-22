@@ -1,0 +1,27 @@
+#
+# Copyright (C) 2022 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+#
+# gpio
+#
+config X86_GPIO
+	bool "gpio driver"
+
+#
+# i2c
+#
+config X86_I2C
+	bool "i2c driver"
+	select DRIVER_BRIDGE
+	select BRIDGE_I2C_DEV
+
+#
+# uart
+#
+config X86_UART
+	bool "uart driver"

@@ -8,20 +8,20 @@
 
 
 # kernel
-obj-y := start.o init.o isr.o interrupt.o core.o thread.o syscall.o atomic.o
-
-obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
-obj-$(CONFIG_KERNEL_TIMER) += timer.o
-obj-$(CONFIG_IOVERFLOW_DET) += iovfl.o
+obj-y := \
+	atomic.o \
+	init.o \
+	syscall.o \
+	kernel/
 
 # libbrick
 obj-nobuiltin-y := libbrick.o
 
-libbrick-y := libstart.o init.o syscall.libbrick.o atomic.libbrick.o
-
-
-# custom rules to generate separate object files for src files that are required by kernel and libbrick
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libbrick.o,    $(loc_src_tree)/%.c,)
+libbrick-y := \
+	atomic.o \
+	init.o \
+	syscall.o \
+	lib/
 
 
 ####

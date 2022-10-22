@@ -8,12 +8,12 @@
 
 
 config FS_OP_TIMEOUT_US
-	int "File node timeout [us]"
+	int "file node timeout [us]"
 	default 1000000
 
 config ROOTFS_INIT_FILE_SIZE
-	int "Initial file size of rootfs files"
+	int "initial file size of rootfs files"
 	default 512
 
 config KERNEL_DEVFS
-	bool "Device file system support"
+	bool "device file system support"
