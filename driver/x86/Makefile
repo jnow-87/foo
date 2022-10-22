@@ -11,4 +11,4 @@ obj-$(CONFIG_X86_GPIO) += gpio.o
 obj-$(CONFIG_X86_UART) += uart.o
 
 
-gpio-cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+gpio-cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

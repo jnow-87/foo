@@ -38,12 +38,11 @@ if DRIVER_BRIDGE
 
 	config BRIDGE_DEBUG
 		bool "enable debug messages"
-		depends on KERNEL_MSG_DEBUG
+		select KERNEL_LOG_DEBUG
 		default n
 
 	config BRIDGE_DEBUG_PROTOCOL
 		bool "enable protocol debug messages"
-		depends on KERNEL_MSG_DEBUG
 		select BRIDGE_DEBUG
 		default n
 endif # DRIVER_BRIDGE

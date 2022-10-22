@@ -16,5 +16,5 @@ obj-$(CONFIG_AVR_SPI) += spi.o
 obj-$(CONFIG_AVR_UART) += uart.o
 
 
-eeprom-cppflags-$(CONFIG_EEPROM_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
-spi-cppflags-$(CONFIG_SPI_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+eeprom-cppflags-$(CONFIG_EEPROM_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG
+spi-cppflags-$(CONFIG_SPI_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

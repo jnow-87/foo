@@ -46,17 +46,17 @@ CPP_ASSERT(invalid sleep mode - check kernel config)
 }
 
 void avr_core_panic(thread_ctx_t const *tc){
-#ifdef CONFIG_KERNEL_PRINTF
+#ifdef CONFIG_KERNEL_LOG
 	uint8_t reg;
 	uint16_t ret_addr_hi,
 			 ret_addr_lo,
 			 int_vec_addr_hi,
 			 int_vec_addr_lo;
-#endif // CONFIG_KERNEL_PRINTF
+#endif // CONFIG_KERNEL_LOG
 
 
 	/* dump registers */
-#ifdef CONFIG_KERNEL_PRINTF
+#ifdef CONFIG_KERNEL_LOG
 	if(tc != 0x0){
 		ret_addr_hi = (lo8(tc->ret_addr) * 2) >> 8;
 		ret_addr_lo = ((lo8(tc->ret_addr) << 8) | hi8(tc->ret_addr)) * 2;
@@ -90,7 +90,7 @@ void avr_core_panic(thread_ctx_t const *tc){
 	}
 	else
 		kprintf(KMSG_ANY, "unknown thread context\n");
-#endif // CONFIG_KERNEL_PRINTF
+#endif // CONFIG_KERNEL_LOG
 
 	/* halt core */
 	// set sleep mode to power down

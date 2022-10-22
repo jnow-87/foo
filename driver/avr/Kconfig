@@ -14,7 +14,8 @@ config AVR_EEPROM
 
 config AVR_EEPROM_DEBUG
 	bool "eeprom debug messages"
-	depends on AVR_EEPROM && KERNEL_MSG_DEBUG
+	depends on AVR_EEPROM
+	select KERNEL_LOG_DEBUG
 	default n
 
 # gpio
@@ -41,7 +42,8 @@ config AVR_SPI
 
 config AVR_SPI_DEBUG
 	bool "spi debug messages"
-	depends on AVR_SPI && KERNEL_MSG_DEBUG
+	depends on AVR_SPI
+	select KERNEL_LOG_DEBUG
 	default n
 
 # uart

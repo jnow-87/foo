@@ -10,4 +10,4 @@
 obj-y := inet.o netdev.o socket.o
 
 
-cppflags-$(CONFIG_SC_SOCKET_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+cppflags-$(CONFIG_SC_SOCKET_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

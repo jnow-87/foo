@@ -25,6 +25,7 @@ if DRIVER_I2C
 
 	config I2C_DEBUG
 		bool "i2c debug messages"
-		depends on DRIVER_I2C && KERNEL_MSG_DEBUG
+		depends on DRIVER_I2C
+		select KERNEL_LOG_DEBUG
 		default n
 endif # DRIVER_I2C

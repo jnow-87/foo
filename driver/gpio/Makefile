@@ -10,4 +10,4 @@
 obj-y := gpio.o
 
 
-cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_MSG_DEBUG
+cppflags-$(CONFIG_GPIO_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

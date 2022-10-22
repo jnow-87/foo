@@ -15,6 +15,32 @@ config KERNEL_SMP
 	bool "build an SMP system"
 	default n
 
+config KERNEL_LOG
+	bool "kernel log"
+
+config KERNEL_LOG_SIZE
+	int "kernel log buffer size"
+	depends on KERNEL_LOG
+	default 10
+
+config KERNEL_LOG_INIT
+	bool "print kernel init messages"
+	depends on KERNEL_LOG
+	select KERNEL_LOG_INFO
+	select KERNEL_LOG_WARN
+
+config KERNEL_LOG_FATAL
+	bool "print kernel FATAL messages"
+	depends on KERNEL_LOG
+
+config KERNEL_LOG_WARN
+	bool "print kernel WARNING messages"
+	depends on KERNEL_LOG
+
+config KERNEL_LOG_INFO
+	bool "print kernel INFO messages"
+	depends on KERNEL_LOG
+
 menu "hidden"
 	visible if 0
 
@@ -26,6 +52,25 @@ menu "hidden"
 		bool "kernel virtual memory support"
 		default n	if KERNEL_NO_VIRT_MEM
 		default y
+
+	config KERNEL_SIGNAL
+		bool "kernel signal support"
+		select KERNEL_TIMER
+		default n
+
+	config KERNEL_INTTASK
+		bool "kernel interrupt tasks"
+		select KERNEL_SIGNAL
+		default n
+
+	config KERNEL_KTASK_QUEUE
+		bool "ktask dependency queue"
+		default n
+
+	config KERNEL_LOG_DEBUG
+		bool "print kernel DEBUG messages"
+		select KERNEL_LOG
+		default n
 endmenu
 # }}}
 
@@ -43,7 +88,8 @@ endmenu
 menu "system calls"
 	config SC_DEBUG
 		bool "global system call debug"
-		depends on KERNEL_SYSCALL && KERNEL_MSG_DEBUG
+		depends on KERNEL_SYSCALL
+		select KERNEL_LOG_DEBUG
 		default n
 
 	config SC_FILESYSTEM
@@ -57,7 +103,8 @@ menu "system calls"
 
 	config SC_FILESYSTEM_DEBUG
 		bool "file system debug messages"
-		depends on SC_FILESYSTEM && KERNEL_MSG_DEBUG
+		depends on SC_FILESYSTEM
+		select KERNEL_LOG_DEBUG
 		default n
 
 	config SC_DYNMEM
@@ -70,7 +117,8 @@ menu "system calls"
 
 	config SC_DYNMEM_DEBUG
 		bool "dynamic memory debug messages"
-		depends on SC_DYNMEM && KERNEL_MSG_DEBUG
+		depends on SC_DYNMEM
+		select KERNEL_LOG_DEBUG
 		select PRINTF_SIZET
 		default n
 
@@ -84,7 +132,8 @@ menu "system calls"
 
 	config SC_SCHED_DEBUG
 		bool "scheduler, process and thread control debug messages"
-		depends on SC_SCHED && KERNEL_MSG_DEBUG
+		depends on SC_SCHED
+		select KERNEL_LOG_DEBUG
 		default n
 
 	config SC_SIGNAL
@@ -243,84 +292,12 @@ endif
 # }}}
 
 #
-# miscellaneous features
+# test & debug
 #
-# {{{
-config KERNEL_SIGNAL
-	bool "kernel signal support"
-	select KERNEL_TIMER
-	default n
+config KERNEL_TEST
+	bool "execute 'kernel_test()' on boot"
 
-config KERNEL_INTTASK
-	bool "kernel interrupt tasks"
-	select KERNEL_SIGNAL
-	default n
-
-menu "hidden"
-	visible if 0
-
-	config KERNEL_KTASK_QUEUE
-		bool "ktask dependency queue"
-		default n
-endmenu
-# }}}
-
-#
-# test and debug
-#
-# {{{
-menuconfig KERNEL_DEBUG
-	bool "test and debug"
-	select DRIVER_TERM
-
-if KERNEL_DEBUG
-	config KERNEL_LOG_SIZE
-		int "kernel log buffer size"
-		default 10
-
-	menu "debug messages"
-		config KERNEL_MSG_INIT
-			bool "print kernel init messages"
-			select KERNEL_PRINTF
-			select KERNEL_MSG_INFO
-			select KERNEL_MSG_WARN
-
-		config KERNEL_MSG_FATAL
-			bool "print kernel FATAL messages"
-			select KERNEL_PRINTF
-
-		config KERNEL_MSG_WARN
-			bool "print kernel WARNING messages"
-			select KERNEL_PRINTF
-
-		config KERNEL_MSG_INFO
-			bool "print kernel INFO messages"
-			select KERNEL_PRINTF
-
-		config KERNEL_MSG_DEBUG
-			bool "print kernel DEBUG messages"
-			select KERNEL_PRINTF
-			help
-				Specific debug messages, e.g. for syscalls, need to be enabled individually
-
-		menu "hidden"
-			visible if 0
-
-			config KERNEL_PRINTF
-				bool "kernel printf"
-
-			config KERNEL_NO_MSG_INIT
-				bool "inverse of KERNEL_MSG_INIT"
-				default y if !KERNEL_MSG_INIT
-				default n if KERNEL_MSG_INIT
-		endmenu
-	endmenu
-
-	config KERNEL_TEST
-		bool "execute 'kernel_test()' on boot"
-
-	config KERNEL_STAT
-		bool "execute 'kernel_stat()' on boot"
-		select KERNEL_PRINTF
-endif
+config KERNEL_STAT
+	bool "execute 'kernel_stat()' on boot"
+	select KERNEL_LOG
 # }}}

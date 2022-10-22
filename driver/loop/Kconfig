@@ -25,6 +25,6 @@ if DRIVER_LOOPBACK
 
 	config LOOP_DEBUG
 		bool "enable debug messages"
-		depends on KERNEL_MSG_DEBUG
+		select KERNEL_LOG_DEBUG
 		default n
 endif # DRIVER_LOOPBACK
