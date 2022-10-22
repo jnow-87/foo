@@ -8,7 +8,7 @@
 
 
 menuconfig DRIVER_TERM
-	bool "Terminal driver"
+	bool "terminal driver"
 	select KERNEL_DEVFS
 	select KERNEL_SIGNAL
 	select KERNEL_INTTASK
@@ -17,6 +17,6 @@ menuconfig DRIVER_TERM
 
 if DRIVER_TERM
 	config TERM_RXBUF_SIZE
-		int "Rx buffer size"
+		int "rx buffer size"
 		default 16
 endif # DRIVER_TERM

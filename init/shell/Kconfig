@@ -7,7 +7,7 @@
 
 
 
-menu "Commands"
+menu "commands"
 	config INIT_HELP
 		bool "help"
 
@@ -60,11 +60,11 @@ menu "Commands"
 		select LIB_GETOPT
 
 	config INIT_TEST_UNIT
-		bool "Include unit tests"
+		bool "include unit tests"
 		depends on INIT_TEST
 endmenu
 
 config LINE_MAX
-	int "Max. length of input lines"
+	int "max. length of input lines"
 	default 32	if AVR
 	default 256

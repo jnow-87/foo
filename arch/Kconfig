@@ -12,10 +12,10 @@
 #
 # {{{
 choice
-	prompt "Processor type"
+	prompt "processor type"
 
 	config AVR
-		bool "AVR"
+		bool "aVR"
 		select NOFLOAT
 		select KERNEL_NO_VIRT_MEM
 
@@ -27,7 +27,7 @@ choice
 		select REGISTER_WIDTH_64
 endchoice
 
-menu "Processor features"
+menu "processor features"
 	if AVR
 		source "arch/avr/Kconfig"
 	endif
@@ -37,16 +37,16 @@ menu "Processor features"
 	endif
 endmenu
 
-menu "Hidden"
+menu "hidden"
 	visible if 0
 
 	config ARCH
-		string "Architecture"
+		string "architecture"
 		default "avr"	if AVR
 		default "x86"	if X86
 	
 	config PROCESSOR
-		string "Processor"
+		string "processor"
 		default AVR_MCU	if AVR
 		default "x86"	if X86
 
@@ -63,7 +63,7 @@ menu "Hidden"
 		bool "64-bit"
 
 	config ADDR_WIDTH
-		int "Address width"
+		int "address width"
 		default 8	if ADDR_WIDTH_8
 		default 16	if ADDR_WIDTH_16
 		default 32	if ADDR_WIDTH_32
@@ -83,7 +83,7 @@ menu "Hidden"
 		bool "64-bit"
 
 	config REGISTER_WIDTH
-		int "Address width"
+		int "address width"
 		default 8	if REGISTER_WIDTH_8
 		default 16	if REGISTER_WIDTH_16
 		default 32	if REGISTER_WIDTH_32
@@ -91,7 +91,7 @@ menu "Hidden"
 		default 64
 
 	config NOFLOAT
-		bool "Enable floating point support"
+		bool "enable floating point support"
 		default n
 endmenu
 # }}}
@@ -101,15 +101,15 @@ endmenu
 #
 # {{{
 config NCORES
-	int "Number of cores"
+	int "number of cores"
 	default 1
 
 config CORE_MASK
-	hex "Core mask"
+	hex "core mask"
 	range 0x1 0x0fffffff
 	default 0x1
 
 config DEVICE_TREE
-	string "Device tree script"
+	string "device tree script"
 	default "scripts/dts/$(CONFIG_PROCESSOR).dts"
 # }}}

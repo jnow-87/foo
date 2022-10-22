@@ -8,23 +8,23 @@
 
 
 menuconfig DRIVER_LOOPBACK
-	bool "Loopback"
+	bool "loopback"
 
 if DRIVER_LOOPBACK
 	config LOOP_BLOCK
-		bool "Loopback block device"
+		bool "loopback block device"
 		select KERNEL_DEVFS
 
 	config LOOP_TERM
-		bool "Loopback terminal"
+		bool "loopback terminal"
 		select SYS_RINGBUFFER
 
 	config LOOP_VRAM
-		bool "Loopback video ram"
+		bool "loopback video ram"
 		select KERNEL_DEVFS
 
 	config LOOP_DEBUG
-		bool "Enable debug messages"
+		bool "enable debug messages"
 		depends on KERNEL_MSG_DEBUG
 		default n
 endif # DRIVER_LOOPBACK

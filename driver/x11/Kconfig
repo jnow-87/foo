@@ -8,4 +8,4 @@
 
 
 config DRIVER_X11
-	bool "X11 display"
+	bool "x11 display"

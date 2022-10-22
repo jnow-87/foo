@@ -16,12 +16,12 @@ menu stdio
 endmenu
 
 menuconfig LIB_GFX
-	bool "Graphics library"
+	bool "graphics library"
 	select FONTS
 
 if LIB_GFX
 	config GFX_INT_WIDTH
-		int "Integer type width"
+		int "integer type width"
 		default 16
 endif
 
@@ -29,11 +29,11 @@ config LIB_GETOPT
 	bool "getopt library"
 	default n
 
-menu "Hidden"
+menu "hidden"
 	visible if 0
 
 	config LIB_MUTEX
-		bool "Mutex"
+		bool "mutex"
 		select SC_SCHED		# mutex requires thread_info()
 		default n
 endmenu

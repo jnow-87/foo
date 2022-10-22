@@ -7,6 +7,6 @@
 
 
 
-menu "Shell"
+menu "shell"
 source init/shell/Kconfig
 endmenu

@@ -8,5 +8,5 @@
 
 
 config NET_RXBUF_SIZE
-	int "Rx buffer size"
+	int "rx buffer size"
 	default 16

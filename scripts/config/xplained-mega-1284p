@@ -4,13 +4,13 @@
 #
 
 #
-# Processor
+# processor
 #
 CONFIG_AVR=y
 # CONFIG_X86 is not set
 
 #
-# Processor features
+# processor features
 #
 CONFIG_ATMEGA1284P=y
 CONFIG_AVR_MCU=atmega1284p
@@ -57,19 +57,19 @@ CONFIG_CORE_MASK=0x1
 CONFIG_DEVICE_TREE=scripts/dts/$(CONFIG_PROCESSOR).dts
 
 #
-# Kernel
+# kernel
 #
 # CONFIG_KERNEL_SMP is not set
 CONFIG_KERNEL_NO_VIRT_MEM=y
 # CONFIG_KERNEL_VIRT_MEM is not set
 
 #
-# Memory configuration
+# memory configuration
 #
 CONFIG_KMALLOC_ALIGN=0
 
 #
-# System calls
+# system calls
 #
 # CONFIG_SC_DEBUG is not set
 CONFIG_SC_FILESYSTEM=y
@@ -86,7 +86,7 @@ CONFIG_KERNEL_SYSCALL=y
 CONFIG_INT_VIRTUALS=0
 
 #
-# Init binary settings
+# init binary settings
 #
 CONFIG_INIT_BINARY=0x9000
 CONFIG_INIT_BINTYPE_RAW=y
@@ -94,14 +94,14 @@ CONFIG_INIT_BINTYPE_RAW=y
 CONFIG_INIT_ARGS="inittab"
 
 #
-# Binary loader support
+# binary loader support
 #
 CONFIG_BINLOADER_RAW=y
 # CONFIG_BINLOADER_ELF is not set
 CONFIG_INIT_BINTYPE=0
 
 #
-# Scheduler settigns
+# scheduler settigns
 #
 CONFIG_SCHED_PREEMPTIVE=y
 # CONFIG_SCHED_COOPERATIVE is not set
@@ -111,14 +111,14 @@ CONFIG_SCHED_PRIO_DEFAULT=0
 CONFIG_SCHED_AFFINITY_DEFAULT=0x1
 
 #
-# Timer settings
+# timer settings
 #
 CONFIG_KTIMER_CYCLETIME_US=31250
 CONFIG_KTIMER_ERR_MAX=5
 CONFIG_KERNEL_TIMER=y
 
 #
-# File system
+# file system
 #
 CONFIG_FS_OP_TIMEOUT_US=1000000
 CONFIG_ROOTFS_INIT_FILE_SIZE=16
@@ -131,7 +131,7 @@ CONFIG_KERNEL_DEBUG=y
 CONFIG_KERNEL_LOG_SIZE=32
 
 #
-# Debug messages
+# debug messages
 #
 # CONFIG_KERNEL_MSG_INIT is not set
 CONFIG_KERNEL_MSG_FATAL=y
@@ -144,7 +144,7 @@ CONFIG_KERNEL_NO_MSG_INIT=y
 # CONFIG_KERNEL_STAT is not set
 
 #
-# Device driver
+# device driver
 #
 # CONFIG_DRIVER_LOOPBACK is not set
 # CONFIG_DRIVER_ESP8266 is not set
@@ -171,7 +171,7 @@ CONFIG_AVR_UART=y
 CONFIG_DRIVER_UART=y
 
 #
-# Sys
+# sys
 #
 # CONFIG_PRINTF_MINIMAL is not set
 # CONFIG_PRINTF_LONG is not set
@@ -186,7 +186,7 @@ CONFIG_SYS_RINGBUFFER=y
 # CONFIG_SYS_PATTERN_MATCH is not set
 
 #
-# Libsys
+# libsys
 #
 
 #
@@ -206,15 +206,15 @@ CONFIG_LIB_GETOPT=y
 CONFIG_LIB_MUTEX=y
 
 #
-# Init
+# init
 #
 
 #
-# Shell
+# shell
 #
 
 #
-# Commands
+# commands
 #
 CONFIG_INIT_HELP=y
 CONFIG_INIT_CD=y
@@ -235,7 +235,7 @@ CONFIG_INIT_TEST=y
 CONFIG_LINE_MAX=32
 
 #
-# Test
+# test
 #
 CONFIG_TEST_INT_KERNEL_IMAGE="recent/kernel/kimg.elf"
 CONFIG_TEST_INT_APP_BINARY="recent/test/itest.elf"
@@ -250,14 +250,14 @@ CONFIG_TEST_INT_CONT_SIG=18
 CONFIG_TEST_INT_UART_SIG=10
 
 #
-# Build system
+# build system
 #
 CONFIG_BUILD_DEBUG=y
 # CONFIG_BUILD_RELEASE is not set
 CONFIG_BUILD_TYPE=debug
 
 #
-# AVR programmer
+# aVR programmer
 #
 CONFIG_AVR_FUSER=avrfuser
 CONFIG_AVR_PROG=avrdude
@@ -286,7 +286,7 @@ CONFIG_HOSTAR=$(HOSTCONFIG_TOOLCHAIN_PREFIX)ar
 CONFIG_HOSTLD=$(HOSTCONFIG_TOOLCHAIN_PREFIX)ld
 
 #
-# Target flags
+# target flags
 #
 CONFIG_CFLAGS=-Os -flto
 CONFIG_CXXFLAGS=-Os -flto
@@ -297,7 +297,7 @@ CONFIG_LDLIBS=
 CONFIG_ARCHFLAGS=
 
 #
-# Host flags
+# host flags
 #
 CONFIG_HOSTCFLAGS=
 CONFIG_HOSTCXXFLAGS=

@@ -8,7 +8,7 @@
 
 
 choice
-	prompt "Scheduler type"
+	prompt "scheduler type"
 
 	config SCHED_PREEMPTIVE
 		bool "preemptive"
@@ -18,19 +18,19 @@ choice
 endchoice
 
 config SCHED_CYCLETIME_US
-	int "Scheduler cycle time [us]"
+	int "scheduler cycle time [us]"
 	depends on SCHED_PREEMPTIVE
 	default 500000
 
 config SCHED_ERR_MAX
-	int "Maximal scheduler error [%]"
+	int "maximal scheduler error [%]"
 	depends on SCHED_PREEMPTIVE
 	default 5
 
 config SCHED_PRIO_DEFAULT
-	int "Default process priority"
+	int "default process priority"
 	default 0
 
 config SCHED_AFFINITY_DEFAULT
-	hex "Default process affinity"
+	hex "default process affinity"
 	default 0x1

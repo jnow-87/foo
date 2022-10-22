@@ -8,17 +8,17 @@
 
 
 menuconfig DRIVER_BRIDGE
-	bool "Bridge driver"
+	bool "bridge driver"
 	select KERNEL_SIGNAL
 	select KERNEL_INTTASK
 	select SYS_RINGBUFFER
 
 if DRIVER_BRIDGE
 	config BRIDGE_UART_DEV
-		bool "UART bridge device"
+		bool "uART bridge device"
 
 	config BRIDGE_UART_ITF
-		bool "UART bridge interface"
+		bool "uART bridge interface"
 
 	config BRIDGE_I2C_DEV
 		bool "i2c bridge device"
@@ -33,16 +33,16 @@ if DRIVER_BRIDGE
 		depends on BRIDGE_I2C_DEV || BRIDGE_I2C_ITF
 
 	config BRIDGE_RETRY_LIMIT
-		int "Number of tolerated errors before aborting a transmission"
+		int "number of tolerated errors before aborting a transmission"
 		default 3
 
 	config BRIDGE_DEBUG
-		bool "Enable debug messages"
+		bool "enable debug messages"
 		depends on KERNEL_MSG_DEBUG
 		default n
 
 	config BRIDGE_DEBUG_PROTOCOL
-		bool "Enable protocol debug messages"
+		bool "enable protocol debug messages"
 		depends on KERNEL_MSG_DEBUG
 		select BRIDGE_DEBUG
 		default n

@@ -11,11 +11,11 @@ config X86_GCOV_HEAP_SIZE
 	int "libgcov heap size"
 	default 512
 
-menu "Hidden"
+menu "hidden"
 	visible if 0
 
 	# architecture defining header
 	config ARCH_HEADER
-		string "Arch Header"
+		string "arch Header"
 		default "<arch/$(CONFIG_ARCH)/x86.h>" if X86
 endmenu

@@ -12,18 +12,18 @@
 #
 # {{{
 config KERNEL_SMP
-	bool "Build an SMP system"
+	bool "build an SMP system"
 	default n
 
-menu "Hidden"
+menu "hidden"
 	visible if 0
 
 	config KERNEL_NO_VIRT_MEM
-		bool "Kernel virtual memory support"
+		bool "kernel virtual memory support"
 		default n
 
 	config KERNEL_VIRT_MEM
-		bool "Kernel virtual memory support"
+		bool "kernel virtual memory support"
 		default n	if KERNEL_NO_VIRT_MEM
 		default y
 endmenu
@@ -32,7 +32,7 @@ endmenu
 #
 # kernel memory layout
 #
-menu "Memory configuration"
+menu "memory configuration"
 	source "kernel/memory/Kconfig"
 endmenu
 
@@ -40,14 +40,14 @@ endmenu
 # system calls
 #
 # {{{
-menu "System calls"
+menu "system calls"
 	config SC_DEBUG
-		bool "Global system call debug"
+		bool "global system call debug"
 		depends on KERNEL_SYSCALL && KERNEL_MSG_DEBUG
 		default n
 
 	config SC_FILESYSTEM
-		bool "File system"
+		bool "file system"
 		select KERNEL_SYSCALL
 		select SC_DYNMEM
 		select LIB_MUTEX
@@ -56,12 +56,12 @@ menu "System calls"
 			File system syscalls such as open, close, read, write.
 
 	config SC_FILESYSTEM_DEBUG
-		bool "File system debug messages"
+		bool "file system debug messages"
 		depends on SC_FILESYSTEM && KERNEL_MSG_DEBUG
 		default n
 
 	config SC_DYNMEM
-		bool "Dynamic memory"
+		bool "dynamic memory"
 		select KERNEL_SYSCALL
 		select LIB_MUTEX
 		default y
@@ -69,13 +69,13 @@ menu "System calls"
 			This includes malloc and free.
 
 	config SC_DYNMEM_DEBUG
-		bool "Dynamic memory debug messages"
+		bool "dynamic memory debug messages"
 		depends on SC_DYNMEM && KERNEL_MSG_DEBUG
 		select PRINTF_SIZET
 		default n
 
 	config SC_SCHED
-		bool "Scheduler, process and thread control"
+		bool "scheduler, process and thread control"
 		select KERNEL_SYSCALL
 		select SC_SIGNAL
 		default y
@@ -83,12 +83,12 @@ menu "System calls"
 			Syscalls for process and thread creation and control as well as scheduler calls.
 
 	config SC_SCHED_DEBUG
-		bool "Scheduler, process and thread control debug messages"
+		bool "scheduler, process and thread control debug messages"
 		depends on SC_SCHED && KERNEL_MSG_DEBUG
 		default n
 
 	config SC_SIGNAL
-		bool "User-space signal support"
+		bool "user-space signal support"
 		select KERNEL_SYSCALL
 		select KERNEL_IPI if KERNEL_SMP
 		default n
@@ -96,12 +96,12 @@ menu "System calls"
 			User space signaling mechanism.
 
 	config SC_SIGNAL_DEBUG
-		bool "Signal debug messages"
+		bool "signal debug messages"
 		depends on SC_SIGNAL
 		default n
 
 	config SC_TIME
-		bool "Time"
+		bool "time"
 		select KERNEL_SYSCALL
 		select KERNEL_TIMER
 		select KERNEL_SIGNAL
@@ -110,25 +110,25 @@ menu "System calls"
 			Timer syscalls, such as sleep and time.
 
 	config SC_SOCKET
-		bool "Socket"
+		bool "socket"
 		select KERNEL_NET
 		default n
 		help
 			Socket family of syscalls
 
 	config SC_SOCKET_DEBUG
-		bool "Socket debug messages"
+		bool "socket debug messages"
 		depends on SC_SOCKET
 		default n
 
-	menu "Hidden"
+	menu "hidden"
 		visible if 0
 
 		config KERNEL_SYSCALL
-			bool "Kernel syscall"
+			bool "kernel syscall"
 
 		config KERNEL_IPI
-			bool "Inter-processor interrupts"
+			bool "inter-processor interrupts"
 	endmenu
 endmenu
 # }}}
@@ -138,7 +138,7 @@ endmenu
 #
 # {{{
 config INT_VIRTUALS
-	int "Virtual interrupts"
+	int "virtual interrupts"
 	default 0
 # }}}
 
@@ -146,39 +146,39 @@ config INT_VIRTUALS
 # init binary
 #
 # {{{
-menu "Init binary settings"
+menu "init binary settings"
 	config INIT_BINARY
-		hex "Address of the init binary"
+		hex "address of the init binary"
 
 	choice
-		prompt "Init binary type"
+		prompt "init binary type"
 
 		config INIT_BINTYPE_RAW
-			bool "INIT_BINARY points to the init entry address"
+			bool "iNIT_BINARY points to the init entry address"
 			select BINLOADER_RAW
 
 		config INIT_BINARY_ELF
-			bool "INIT_BINARY points to an ELF file"
+			bool "iNIT_BINARY points to an ELF file"
 			select BINLOADER_ELF
 	endchoice
 
 	config INIT_ARGS
-		qstring "Init argument string"
+		qstring "init argument string"
 		default ""
 
-	menu "Binary loader support"
+	menu "binary loader support"
 		config BINLOADER_RAW
-			bool "Raw binaries"
+			bool "raw binaries"
 
 		config BINLOADER_ELF
-			bool "ELF binaries"
+			bool "eLF binaries"
 	endmenu
 
-	menu "Hidden"
+	menu "hidden"
 		visible if 0
 
 		config INIT_BINTYPE
-			int "Init binary type"
+			int "init binary type"
 			default 0	if INIT_BINTYPE_RAW
 			default 1	if INIT_BINARY_ELF
 	endmenu
@@ -189,7 +189,7 @@ endmenu
 # scheduler
 #
 # {{{
-menu "Scheduler settigns"
+menu "scheduler settigns"
 	source "kernel/sched/Kconfig"
 endmenu
 # }}}
@@ -198,23 +198,23 @@ endmenu
 # timer
 #
 # {{{
-menu "Timer settings"
+menu "timer settings"
 	depends on KERNEL_TIMER
 
 	config KTIMER_CYCLETIME_US
-		int "Kernel timer cycle time [us]"
+		int "kernel timer cycle time [us]"
 		default 500000
 
 	config KTIMER_ERR_MAX
-		int "Maximal kernel timer error [%]"
+		int "maximal kernel timer error [%]"
 		default 5
 endmenu
 
-menu "Hidden"
+menu "hidden"
 	visible if 0
 	
 	config KERNEL_TIMER
-		bool "Timer"
+		bool "timer"
 endmenu
 # }}}
 
@@ -222,7 +222,7 @@ endmenu
 # file system
 #
 # {{{
-menu "File system"
+menu "file system"
 	source "kernel/fs/Kconfig"
 endmenu
 # }}}
@@ -232,7 +232,7 @@ endmenu
 #
 # {{{
 menuconfig KERNEL_NET
-	bool "Networking infrastructure"
+	bool "networking infrastructure"
 	select KERNEL_DEVFS
 	select KERNEL_SIGNAL
 	select SYS_RINGBUFFER
@@ -247,16 +247,16 @@ endif
 #
 # {{{
 config KERNEL_SIGNAL
-	bool "Kernel signal support"
+	bool "kernel signal support"
 	select KERNEL_TIMER
 	default n
 
 config KERNEL_INTTASK
-	bool "Kernel interrupt tasks"
+	bool "kernel interrupt tasks"
 	select KERNEL_SIGNAL
 	default n
 
-menu "Hidden"
+menu "hidden"
 	visible if 0
 
 	config KERNEL_KTASK_QUEUE
@@ -270,57 +270,57 @@ endmenu
 #
 # {{{
 menuconfig KERNEL_DEBUG
-	bool "Test and debug"
+	bool "test and debug"
 	select DRIVER_TERM
 
 if KERNEL_DEBUG
 	config KERNEL_LOG_SIZE
-		int "Kernel log buffer size"
+		int "kernel log buffer size"
 		default 10
 
-	menu "Debug messages"
+	menu "debug messages"
 		config KERNEL_MSG_INIT
-			bool "Print kernel init messages"
+			bool "print kernel init messages"
 			select KERNEL_PRINTF
 			select KERNEL_MSG_INFO
 			select KERNEL_MSG_WARN
 
 		config KERNEL_MSG_FATAL
-			bool "Print kernel FATAL messages"
+			bool "print kernel FATAL messages"
 			select KERNEL_PRINTF
 
 		config KERNEL_MSG_WARN
-			bool "Print kernel WARNING messages"
+			bool "print kernel WARNING messages"
 			select KERNEL_PRINTF
 
 		config KERNEL_MSG_INFO
-			bool "Print kernel INFO messages"
+			bool "print kernel INFO messages"
 			select KERNEL_PRINTF
 
 		config KERNEL_MSG_DEBUG
-			bool "Print kernel DEBUG messages"
+			bool "print kernel DEBUG messages"
 			select KERNEL_PRINTF
 			help
 				Specific debug messages, e.g. for syscalls, need to be enabled individually
 
-		menu "Hidden"
+		menu "hidden"
 			visible if 0
 
 			config KERNEL_PRINTF
-				bool "Kernel printf"
+				bool "kernel printf"
 
 			config KERNEL_NO_MSG_INIT
-				bool "Inverse of KERNEL_MSG_INIT"
+				bool "inverse of KERNEL_MSG_INIT"
 				default y if !KERNEL_MSG_INIT
 				default n if KERNEL_MSG_INIT
 		endmenu
 	endmenu
 
 	config KERNEL_TEST
-		bool "Execute 'kernel_test()' on boot"
+		bool "execute 'kernel_test()' on boot"
 
 	config KERNEL_STAT
-		bool "Execute 'kernel_stat()' on boot"
+		bool "execute 'kernel_stat()' on boot"
 		select KERNEL_PRINTF
 endif
 # }}}

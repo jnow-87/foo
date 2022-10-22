@@ -13,27 +13,27 @@
 # {{{
 if KERNEL_PRINTF || LIB_STREAM
 	config PRINTF_MINIMAL
-		bool "Minimalistic printf (disable long and exotic specifiers)"
+		bool "minimalistic printf (disable long and exotic specifiers)"
 
 	if !PRINTF_MINIMAL
 		config PRINTF_LONG
-			bool "Enable support for printf 'l' (long) specifier"
+			bool "enable support for printf 'l' (long) specifier"
 
 		config PRINTF_LONGLONG
-			bool "Enable support for printf 'll' (long long) specifier"
+			bool "enable support for printf 'll' (long long) specifier"
 			select PRINTF_LONG
 
 		config PRINTF_INTMAX
-			bool "Enable support for printf 'j' (intmax_t) specifier"
+			bool "enable support for printf 'j' (intmax_t) specifier"
 
 		config PRINTF_SIZET
-			bool "Enable support for printf 'z' (size_t) specifier"
+			bool "enable support for printf 'z' (size_t) specifier"
 
 		config PRINTF_PTRDIFF
-			bool "Enable support for printf 't' (ptrdiff_t) specifier"
+			bool "enable support for printf 't' (ptrdiff_t) specifier"
 
 		config PRINTF_LONGDOUBLE
-			bool "Enable support for printf 'L' (long double) specifier"
+			bool "enable support for printf 'L' (long double) specifier"
 			depends on !NOFLOAT
 	endif # PRINTF_MINIMAL
 endif # KERNEL_PRINTF || LIB_STREAM
@@ -44,7 +44,7 @@ endif # KERNEL_PRINTF || LIB_STREAM
 #
 # {{{
 menuconfig FONTS
-	bool "Fonts"
+	bool "fonts"
 
 if FONTS
 	source "sys/fonts/Kconfig"
@@ -56,23 +56,23 @@ endif
 #
 # {{{
 config NAME_MAX
-	int "Maximum name length"
+	int "maximum name length"
 	default 16
 	range 4 4096
 
-menu "Hidden"
+menu "hidden"
 	visible if 0
 
 	config SYS_RINGBUFFER
-		bool "Ring buffer"
+		bool "ring buffer"
 		default n
 
 	config SYS_LINEBUFFER
-		bool "Line buffer"
+		bool "line buffer"
 		default n
 
 	config SYS_PATTERN_MATCH
-		bool "Pattern matching api"
+		bool "pattern matching api"
 		default n
 endmenu
 # }}}

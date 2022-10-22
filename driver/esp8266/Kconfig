@@ -17,11 +17,11 @@ menuconfig DRIVER_ESP8266
 
 if DRIVER_ESP8266
 	config ESP8266_LINK_COUNT
-		int "Number of supported links"
+		int "number of supported links"
 		default 5
 
 	config ESP8266_DEBUG
-		bool "Enable debug messages"
+		bool "enable debug messages"
 		depends on KERNEL_MSG_DEBUG
 		default n
 endif # DRIVER_ESP8266

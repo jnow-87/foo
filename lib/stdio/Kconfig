@@ -17,6 +17,6 @@ config LIB_STREAM
 	default y
 
 config FILE_BUF_SIZE
-	int "Buffer size for FILE structures"
+	int "buffer size for FILE structures"
 	depends on SC_FILESYSTEM
 	default 16
