@@ -7,10 +7,8 @@
 
 
 
-#include <sys/errno.h>
 #include <unistd.h>
-#include <string.h>
-#include <stdio.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -23,7 +21,7 @@ static int exec(int argc, char **argv){
 		path = argv[1];
 
 	if(chdir(path) != 0)
-		return cmd_help(argv[0], "[<path>]", strerror(errno), 0);
+		return -ERROR("chdir");
 
 	return 0;
 }

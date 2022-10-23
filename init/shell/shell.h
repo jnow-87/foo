@@ -12,16 +12,19 @@
 
 
 #include <sys/types.h>
+#include <sys/errno.h>
+#include <sys/string.h>
 #include <stdio.h>
 
 
 /* macros */
-#define SHELL_ERROR(msg, ...) \
-	fprintf(stderr, "%s:%u " msg, shell_file, shell_line, ##__VA_ARGS__);
+#define ERROR(msg, ...)		shell_error(msg, ##__VA_ARGS__)
+#define SHERROR(msg, ...)	ERROR("%s:%u " msg, shell_file, shell_line, ##__VA_ARGS__)
 
 
 /* prototypes */
 int shell(char const *prompt, FILE *stream);
+int shell_error(char const *fmt, ...);
 
 
 /* external variables */

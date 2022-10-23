@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <sys/string.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -24,11 +25,6 @@
 	.newline = true, \
 	.escape = false, \
 }
-
-#define ERROR(msg)({ \
-	fprintf(stderr, "error: %s: %s\n", msg, strerror(errno)); \
-	1; \
-})
 
 
 /* types */
@@ -68,7 +64,7 @@ static int exec(int argc, char **argv){
 	/* echo non-option arguments */
 	for(int i=optind; i<argc; i++){
 		if(echo(argv[i], i + 1 >= argc) != 0)
-			return ERROR("write");
+			return -ERROR("write");
 	}
 
 	if(opts.newline)
@@ -76,7 +72,7 @@ static int exec(int argc, char **argv){
 
 	fflush(stdout);
 
-	return errno ? ERROR("flush") : 0;
+	return errno ? -ERROR("flush") : 0;
 }
 
 command("echo", exec);

@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -23,22 +24,18 @@ static int exec(int argc, char **argv){
 	if(argc < 2)
 		return cmd_help(argv[0], "<file>", "missing arguments", 0);
 
-	if(stat(argv[1], &f_stat) != 0){
-		fprintf(stderr, "file not found\n");
-		return 1;
-	}
+	if(stat(argv[1], &f_stat) != 0)
+		return -ERROR("stat");
 
 	if(f_stat.type == FT_DIR){
-		fprintf(stderr, "%s is a directory, do you want to delete it?\n", argv[1]);
+		printf("%s is a directory, do you want to delete it?\n", argv[1]);
 
 		if(fgetc(stdin) != 'y')
 			return 0;
 	}
 
-	if(unlink(argv[1]) != 0){
-		fprintf(stderr, "error \"%s\"\n", strerror(errno));
-		return 1;
-	}
+	if(unlink(argv[1]) != 0)
+		return -ERROR("unlink");
 
 	return 0;
 }

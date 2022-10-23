@@ -48,7 +48,7 @@ void cmd_init(void){
 	/* init command list */
 	for(cmd=__cmds_start; cmd!=__cmds_end; cmd++){
 		if(cmd->exec == 0x0){
-			fprintf(stderr, "Null pointer command callback for \"%s\", ignoring command\n", cmd->name);
+			ERROR("missing exec callback for %s, ignoring command", cmd->name);
 			continue;
 		}
 
@@ -64,10 +64,8 @@ int cmd_exec(int argc, char **argv){
 	/* get command */
 	cmd = list_find_str(cmd_lst, name, argv[0]);
 
-	if(cmd == 0x0){
-		SHELL_ERROR("unknown command %s\n", argv[0]);
-		return -E_INVAL;
-	}
+	if(cmd == 0x0)
+		return SHERROR("unknown command %s", argv[0]);
 
 	reset_errno();
 
@@ -77,10 +75,8 @@ int cmd_exec(int argc, char **argv){
 			stdout_dup = redirect_init(stdout, argv[i + 1], argv[i]);
 			i++;
 
-			if(stdout_dup < 0){
-				fprintf(stderr, "redirecting output to \"%s\" failed \"%s\"\n", argv[i], strerror(errno));
-				return -errno;
-			}
+			if(stdout_dup < 0)
+				return ERROR("redirecting output to %s", argv[i]);
 		}
 	}
 
@@ -94,10 +90,8 @@ int cmd_exec(int argc, char **argv){
 
 	/* revert output redirection */
 	if(stdout_dup != -1){
-		if(redirect_revert(stdout, stdout_dup) != 0){
-			printf("reverting output redirection failed \"%s\"\n", strerror(errno));
-			return -1;
-		}
+		if(redirect_revert(stdout, stdout_dup) != 0)
+			return ERROR("reverting output redirection");
 	}
 
 	return 0;
@@ -111,8 +105,10 @@ int cmd_help(char const *name, char const *args, char const *error, size_t nopts
 	va_list lst;
 
 
-	if(error && error[0] != 0)
-		fprintf(stderr, "%s\n\n", error);
+	if(error && error[0] != 0){
+		ERROR("%s", error);
+		printf("\n");
+	}
 
 	printf("usage: %s %s%s\n", name, (nopts > 0) ? "[options] " : "", args);
 

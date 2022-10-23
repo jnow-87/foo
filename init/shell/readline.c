@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <shell/shell.h>
 #include <shell/history.h>
 
 
@@ -194,7 +195,7 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 
 err:
 	if(errno)
-		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
+		ERROR("readline on fd %d", fileno(stream));
 
 	reset_errno();
 
@@ -226,7 +227,7 @@ size_t readline_regfile(FILE *stream, char *line, size_t n){
 
 err:
 	if(errno)
-		fprintf(stderr, "readline error on fd %d \"%s\"\n", fileno(stream), strerror(errno));
+		ERROR("readline on fd %d", fileno(stream));
 
 	reset_errno();
 

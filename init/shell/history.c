@@ -52,7 +52,7 @@ void history_add(char *line){
 		rd = e;
 	}
 	else
-		SHELL_ERROR("cannot add to history, %s\n", strerror(errno));
+		SHERROR("cannot add to history, %s\n", strerror(errno));
 }
 
 void history_startover(void){

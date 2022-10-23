@@ -15,6 +15,7 @@
 #include <sys/ioctl.h>
 #include <sys/stack.h>
 #include <sys/escape.h>
+#include <sys/stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -107,7 +108,7 @@ int shell(char const *prompt, FILE *_stream){
 
 		/* process command line */
 		if(strsplit(buf, &argc, &argv) < 0){
-			SHELL_ERROR("error parsing line, %s\n", strerror(errno));
+			SHERROR("parsing line");
 			continue;
 		}
 
@@ -117,7 +118,7 @@ int shell(char const *prompt, FILE *_stream){
 			stackp = malloc(sizeof(stream_stack));
 
 			if(stackp == 0x0){
-				SHELL_ERROR("run %s failed, %s\n", argv[0], strerror(errno));
+				SHERROR("running %s", argv[0]);
 				goto iter_clean;
 			}
 
@@ -131,7 +132,7 @@ int shell(char const *prompt, FILE *_stream){
 			stream = fopen(argv[0], "r");
 
 			if(stream == 0x0)
-				SHELL_ERROR("open script %s failed, %s\n", argv[0], strerror(errno));
+				SHERROR("opening script %s", argv[0]);
 
 			// update globals
 			strncpy(shell_file, argv[0], NAME_MAX);
@@ -147,6 +148,26 @@ iter_clean:
 
 		free(argv);
 	}
+}
+
+int shell_error(char const *fmt, ...){
+	va_list lst;
+
+
+	va_start(lst, fmt);
+
+	fprintf(stderr, "error: ");
+	vfprintf(stderr, fmt, lst);
+
+	if(errno)
+		fprintf(stderr, ": %s", strerror(errno));
+
+	fprintf(stderr, "\n");
+	fflush(stderr);
+
+	va_end(lst);
+
+	return -1;
 }
 
 

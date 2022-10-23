@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <gfx.h>
 #include <shell/cmd.h>
+#include <shell/shell.h>
 #include <sys/string.h>
 
 
@@ -25,10 +26,8 @@ static int exec(int argc, char **argv){
 
 	gc = gfx_alloc((argc > 1) ? argv[1] : DEFAULT_DEV);
 
-	if(gc == 0x0){
-		fprintf(stderr, "error creating gfx context: %s\n", strerror(errno));
-		return 1;
-	}
+	if(gc == 0x0)
+		return -ERROR("creating gfx context");
 
 	gfx_draw_point(gc, gc->cfg.width / 2, 1);
 	gfx_draw_points(
