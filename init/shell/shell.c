@@ -20,9 +20,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <readline.h>
 #include <shell/cmd.h>
 #include <shell/shell.h>
-#include <shell/readline.h>
 
 
 /* types */
@@ -172,6 +172,14 @@ int shell_error(char const *fmt, ...){
 
 
 /* local functions */
+static int history(int argc, char **argv){
+	readline_history();
+
+	return 0;
+}
+
+command("history", history);
+
 static int strsplit(char *line, int *_argc, char ***_argv){
 	unsigned int i = 0;
 	int argc = 0;

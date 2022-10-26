@@ -13,12 +13,11 @@
 #include <sys/errno.h>
 #include <sys/term.h>
 #include <sys/escape.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <shell/shell.h>
-#include <shell/history.h>
+#include <sys/string.h>
+#include <lib/unistd.h>
+#include <lib/stdio.h>
+#include <lib/stdlib.h>
+#include "history.h"
 
 
 /* types */
@@ -52,7 +51,7 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 	shadow[0] = 0;
 
 	reset_errno();
-	history_startover();
+	history_reset();
 
 	while(end < n && i < n){
 		/* get a character */
@@ -146,11 +145,11 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 				break;
 
 			case ESC_UP:
-				hst = history_older();
+				hst = history_prev();
 				break;
 
 			case ESC_DOWN:
-				hst = history_newer();
+				hst = history_next();
 				break;
 
 			default:
@@ -194,9 +193,6 @@ size_t readline_stdin(FILE *stream, char *line, size_t n){
 
 
 err:
-	if(errno)
-		ERROR("readline on fd %d", fileno(stream));
-
 	reset_errno();
 
 	return 0;
@@ -226,12 +222,13 @@ size_t readline_regfile(FILE *stream, char *line, size_t n){
 
 
 err:
-	if(errno)
-		ERROR("readline on fd %d", fileno(stream));
-
 	reset_errno();
 
 	return 0;
+}
+
+void readline_history(void){
+	history_dump();
 }
 
 

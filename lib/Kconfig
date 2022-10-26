@@ -29,6 +29,15 @@ config LIB_GETOPT
 	bool "getopt library"
 	default n
 
+config LIB_READLINE
+	bool "readline library"
+	default n
+
+config READLINE_HISTORY
+	bool "readline history support"
+	depends on LIB_READLINE
+	default n
+
 menu "hidden"
 	visible if 0
 
