@@ -6,6 +6,6 @@
 #
 
 
-obj-y := readline.o
+obj-y := readline.o line.o
 
 obj-$(CONFIG_READLINE_HISTORY) += history.o

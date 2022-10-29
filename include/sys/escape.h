@@ -11,8 +11,11 @@
 #define SYS_ESCAPE_H
 
 
+#include <sys/types.h>
+
+
 /* macros */
-// names ascii codes
+// named ascii codes
 #define END_OF_TEXT	3
 #define END_OF_TX	4
 
@@ -53,6 +56,62 @@
 #define STORE_POS	"\033[s"
 #define RESTORE_POS	"\033[u"
 #define SET_POS		"\033[%d;%dH"
+
+
+/* types */
+typedef enum{
+	// control codes
+	ESC_INVAL = 0,
+	ESC_PARTIAL,
+
+	// terminal escape codes
+	ESC_BACKSPACE,
+	ESC_BELL,
+	ESC_CARRIAGE_RETURN,
+	ESC_DELETE,
+	ESC_FORM_FEED,
+	ESC_NEWLINE,
+	ESC_TAB,
+	ESC_VERT_TAB,
+	ESC_END_OF_TEXT,
+	ESC_CTRL_C = ESC_END_OF_TEXT,
+	ESC_END_OF_TX,
+	ESC_CTRL_D = ESC_END_OF_TX,
+
+	ESC_CURSOR_MOVE_UP,
+	ESC_CURSOR_MOVE_UP_HOME,
+	ESC_CURSOR_MOVE_DOWN,
+	ESC_CURSOR_MOVE_DOWN_HOME,
+	ESC_CURSOR_MOVE_LEFT,
+	ESC_CURSOR_MOVE_RIGHT,
+	ESC_CURSOR_MOVE_HOME,
+	ESC_CURSOR_SCROLL_DOWN,
+	ESC_CURSOR_SCROLL_UP,
+	ESC_CURSOR_SET_COLUMN,
+	ESC_CURSOR_RESTORE,
+	ESC_CURSOR_SAVE,
+
+	ESC_ERASE_IN_DISPLAY,
+	ESC_ERASE_IN_LINE,
+
+	ESC_SCROLL_SET,
+	ESC_WRAP_CLR,
+	ESC_WRAP_SET,
+} esc_t;
+
+typedef struct esc_state_t{
+	esc_t (*hdlr)(struct esc_state_t *esc, char c);
+
+	unsigned int val[2];
+	uint8_t nval;
+} esc_state_t;
+
+
+/* prototypes */
+void esc_init(esc_state_t *esc);
+bool esc_active(esc_state_t *esc);
+
+esc_t esc_parse(esc_state_t *esc, char c);
 
 
 #endif // SYS_ESCAPE_H

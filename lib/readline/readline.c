@@ -7,187 +7,95 @@
 
 
 
+#include <config/config.h>
 #include <sys/types.h>
-#include <sys/compiler.h>
-#include <sys/ioctl.h>
 #include <sys/errno.h>
-#include <sys/term.h>
 #include <sys/escape.h>
-#include <sys/string.h>
-#include <lib/unistd.h>
+#include <sys/stat.h>
 #include <lib/stdio.h>
 #include <lib/stdlib.h>
+#include <lib/unistd.h>
+#include "line.h"
 #include "history.h"
 
 
-/* types */
-typedef enum{
-	ESC_NONE = 0,
-	ESC_INVAL,
-	ESC_UP,
-	ESC_DOWN,
-	ESC_LEFT,
-	ESC_RIGHT,
-} esc_t;
-
-
 /* local/static prototypes */
-static esc_t parse_esc(char const *s, size_t n);
+static size_t read_chardev(int fd, char *line, size_t n);
+static size_t read_file(int fd, char *line, size_t n);
 
 
 /* global functions */
-size_t readline_stdin(FILE *stream, char *line, size_t n){
-	bool shadowed = false;
-	size_t i = 0,
-		   end = 0,
-		   prev = 0;
-	char *hst = 0x0;
+size_t readline(FILE *stream, char *line, size_t n){
+	stat_t stat;
+
+
+	if(fstat(fileno(stream), &stat) < 0)
+		return 0;
+
+	if(stat.type == FT_CHR)
+		return read_chardev(fileno(stream), line, n);
+
+	return read_file(fileno(stream), line, n);
+}
+
+void readline_history(void){
+#ifdef CONFIG_READLINE_HISTORY
+	history_dump();
+#else
+	printf("readline history is disabled\n");
+#endif // CONFIG_READLINE_HISTORY
+}
+
+
+/* local functions */
+static size_t read_chardev(int fd, char *line, size_t n){
 	char c;
-	int r;
 	char shadow[n];
-	esc_t esc;
+	int r;
+	esc_state_t esc;
+	line_state_t lstate;
 
 
-	shadow[0] = 0;
-
+	esc_init(&esc);
+	line_init(&lstate, line, shadow, n, fd);
 	reset_errno();
-	history_reset();
 
-	while(end < n && i < n){
-		/* get a character */
-		r = read(fileno(stream), &c, 1);
+#ifdef CONFIG_READLINE_HISTORY
+	history_reset(&lstate);
+#endif // CONFIG_READLINE_HISTORY
 
-		if(r < 0)
-			goto err;
+	while(!line_limit(&lstate)){
+		r = read(fd, &c, 1);
 
 		if(r == 0)
 			continue;
 
-		/* special character handling */
-		// end of line
-		if(c == '\n'){
-			write(fileno(stream), "\n", 1);
-			line[end] = 0;
+		if(r < 0)
+			goto err;
 
-			if(end != 0)
-				history_add(line);
+		switch(esc_parse(&esc, c)){
+		case ESC_PARTIAL:			// fall through
+		case ESC_FORM_FEED:			// fall through
+		case ESC_CARRIAGE_RETURN:	// fall through
+		case ESC_TAB:
+			break;
 
-			return end;
-		}
+		case ESC_NEWLINE:
+			return line_complete(&lstate);
 
-		// backspace
-		if(c == 127){
-			if(i != end || i == 0)
-				continue;
+		case ESC_CTRL_C:			exit(1); break;
+		case ESC_CTRL_D:			exit(0); break;
 
-			write(fileno(stream), "\b \b", 3);
+#ifdef CONFIG_READLINE_HISTORY
+		case ESC_CURSOR_MOVE_UP:	history_cycle(&lstate, history_prev); break;
+		case ESC_CURSOR_MOVE_DOWN:	history_cycle(&lstate, history_next); break;
+#endif // CONFIG_READLINE_HISTORY
 
-			end--;
-			i = end;
-			continue;
-		}
+		case ESC_CURSOR_MOVE_LEFT:	line_cursor_left(&lstate); break;
+		case ESC_CURSOR_MOVE_RIGHT:	line_cursor_right(&lstate); break;
 
-		if(c == CTRL_C)
-			exit(1);
-
-		if(c == CTRL_D)
-			exit(0);
-
-		// skip windows line ending
-		if(c == '\r')
-			continue;
-
-		// begin of escape sequence
-		if(c == '\e'){
-			prev = i;
-			i = end;	// escape sequences are recorded to the end of the line
-		}
-
-		/* update line */
-		line[i] = c;
-
-		// print current character if not in an escape sequence
-		if(line[end] != '\e'){
-			if(i == end)
-				end++;
-
-			write(fileno(stream), &c, 1);
-		}
-
-		i++;
-
-		/* parse escape sequences */
-		if(line[end] == '\e'){
-			esc = parse_esc(line + end, i - end);
-
-			// sequence not yet complete
-			if(esc == ESC_NONE)
-				continue;
-
-			// sequence complete
-			// restore line index
-			i = prev;
-
-			// escape action
-			switch(esc){
-			case ESC_LEFT:
-				if(i > 0){
-					write(fileno(stream), line + end, 3);
-					i--;
-				}
-				break;
-
-			case ESC_RIGHT:
-				if(i < end){
-					write(fileno(stream), line + end, 3);
-					i++;
-				}
-				break;
-
-			case ESC_UP:
-				hst = history_prev();
-				break;
-
-			case ESC_DOWN:
-				hst = history_next();
-				break;
-
-			default:
-				break;
-			};
-
-			// update the line content after moving through the command history
-			if((esc == ESC_UP || esc == ESC_DOWN)){
-				// save current line to the shadow buffer
-				if(esc == ESC_UP && !shadowed){
-					strncpy(shadow, line, end);
-					shadow[end] = 0;
-					shadowed = true;
-				}
-
-				// restore current line from shadow buffer
-				if(esc == ESC_DOWN && hst == 0x0){
-					strcpy(line, shadow);
-					shadowed = false;
-				}
-
-				// update current line with history line
-				if(hst)
-					strcpy(line, hst);
-
-				// update the terminal
-				if(hst || !shadowed){
-					end = strlen(line);
-					i = end;
-
-					fputs(RESTORE_POS CLEARLINE, stdout);	// restore pos to end of input prompt
-					fwrite(line, end, stdout);
-					fflush(stdout);
-				}
-			}
-
-			// end current escape sequence handling
-			line[end] = 0;
+		case ESC_DELETE:			line_char_del(&lstate); break;
+		default:					line_char_add(&lstate, c); break;
 		}
 	}
 
@@ -198,20 +106,26 @@ err:
 	return 0;
 }
 
-size_t readline_regfile(FILE *stream, char *line, size_t n){
+static size_t read_file(int fd, char *line, size_t n){
 	size_t i = 0;
 	int r;
 
 
 	while(i < n){
-		r = read(fileno(stream), line + i, 1);
+		r = read(fd, line + i, 1);
+
+		if(r == 0)
+			break;
 
 		if(r < 0)
 			goto err;
 
-		if(r == 0 || line[i] == '\n'){
-			line[i] = 0;
-			return i;
+		if(line[i] == 0 || line[i] == '\n'){
+			// don't return empty lines
+			if(i == 0)
+				continue;
+
+			break;
 		}
 
 		if(line[i] == '\r')
@@ -220,33 +134,13 @@ size_t readline_regfile(FILE *stream, char *line, size_t n){
 		i++;
 	}
 
+	line[i] = 0;
+
+	return i;
+
 
 err:
 	reset_errno();
 
 	return 0;
-}
-
-void readline_history(void){
-	history_dump();
-}
-
-
-/* local functions */
-static esc_t parse_esc(char const *s, size_t n){
-	static esc_t const codes[] = {
-		ESC_UP, ESC_DOWN, ESC_RIGHT, ESC_LEFT
-	};
-	unsigned char i;
-
-
-	if(n < 3 || *s != '\e' || *(s + 1) != '[')
-		return ESC_NONE;
-
-	i = *(s + 2) - 'A';
-
-	if(i > sizeof_array(codes))
-		return ESC_INVAL;
-
-	return codes[i];
 }

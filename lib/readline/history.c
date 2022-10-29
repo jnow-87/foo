@@ -8,10 +8,13 @@
 
 
 #include <config/config.h>
+#include <sys/types.h>
 #include <sys/list.h>
 #include <sys/string.h>
+#include <sys/escape.h>
 #include <lib/stdio.h>
 #include <lib/stdlib.h>
+#include "line.h"
 #include "history.h"
 
 
@@ -31,9 +34,11 @@ static int direction = 0;
 
 
 /* global functions */
-void history_reset(void){
+void history_reset(line_state_t *state){
 	next = history;
 	direction = 0;
+
+	WRITE(state->fd, STORE_POS);
 }
 
 void history_dump(void){
@@ -69,6 +74,39 @@ void history_add(char *line){
 	strcpy(e->line, line);
 	list_add_head(history, e);
 	next = e;
+}
+
+void history_cycle(line_state_t *state, char * (*cycle)(void)){
+	char *hst;
+
+
+	hst = cycle();
+
+	// restore line from shadow buffer
+	if(cycle == history_next && hst == 0x0){
+		strcpy(state->line, state->shadow_line);
+		state->shadowed = false;
+	}
+
+	// save line to the shadow buffer
+	if(cycle == history_prev && !state->shadowed){
+		strncpy(state->shadow_line, state->line, state->last);
+		state->shadow_line[state->last] = 0;
+		state->shadowed = true;
+	}
+
+	// update line with history buffer
+	if(hst != 0x0)
+		strcpy(state->line, hst);
+
+	// update the terminal
+	if(hst != 0x0 || !state->shadowed){
+		state->last = strlen(state->line);
+		state->pos = state->last;
+
+		WRITE(state->fd, RESTORE_POS CLEARLINE);
+		write(state->fd, state->line, state->last);
+	}
 }
 
 char *history_prev(void){

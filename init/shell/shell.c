@@ -74,7 +74,6 @@ int shell(char const *prompt, FILE *_stream){
 		/* shell prompt */
 		if(stream == stdin){
 			fputs(prompt, stdout);
-			fputs(STORE_POS, stdout);
 			fflush(stdout);
 			exec_err = 0;
 		}
@@ -82,12 +81,10 @@ int shell(char const *prompt, FILE *_stream){
 		/* read input */
 		shell_line++;
 
-		if(!exec_err && stream){
-			if(stream == stdin)	r = (readline_stdin(stream, buf, CONFIG_LINE_MAX) == 0);
-			else				r = (readline_regfile(stream, buf, CONFIG_LINE_MAX) == 0);
-		}
+		if(!exec_err && stream)
+			r = readline(stream, buf, CONFIG_LINE_MAX);
 
-		if(exec_err || r || stream == 0x0){
+		if(exec_err || r == 0 || stream == 0x0){
 			stackp = stack_pop(streams);
 
 			if(stackp){
