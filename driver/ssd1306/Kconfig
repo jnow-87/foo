@@ -8,5 +8,5 @@
 
 
 config DRIVER_SSD1306
-	bool "sSD1306 i2c display"
+	bool "ssd1306 i2c display"
 	select DRIVER_I2C

@@ -46,10 +46,10 @@ endmenu
 # }}}
 
 #
-# libsys
+# libbrick
 #
 # {{{
-menu "libsys"
+menu "libbrick"
 	source lib/Kconfig
 endmenu
 # }}}
