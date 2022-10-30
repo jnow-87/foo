@@ -30,7 +30,7 @@ int main(int argc, char **argv){
 			r = fstat(fileno(fp), &stat);
 
 			if(r == 0 && stat.type == FT_REG){
-				r = shell("", fp);
+				r = shell_script(fp, argv[1], 0);
 				printf("\"%s\" returned with %d\n", argv[1], r);
 			}
 			else
@@ -44,7 +44,7 @@ int main(int argc, char **argv){
 
 	/* fallback shell */
 	printf("execute fallback shell\n");
-	shell(FG_BLUE "::: " RESET_ATTR, stdin);
+	shell_term(FG_BLUE "::: " RESET_ATTR);
 
 	return 0;
 }

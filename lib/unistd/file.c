@@ -80,12 +80,12 @@ ssize_t read(int fd, void *buf, size_t n){
 	return p.payload_len;
 }
 
-ssize_t write(int fd, void *buf, size_t n){
+ssize_t write(int fd, void const *buf, size_t n){
 	sc_fs_t p;
 
 
 	p.fd = fd;
-	p.payload = buf;
+	p.payload = (void*)buf;
 	p.payload_len = n;
 
 	if(sc(SC_WRITE, &p) != 0)

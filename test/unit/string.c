@@ -8,6 +8,7 @@
 
 
 #include <sys/compiler.h>
+#include <sys/ctype.h>
 #include <sys/errno.h>
 #include <sys/string.h>
 #include <test/test.h>
@@ -18,6 +19,11 @@ typedef struct{
 	void (*foo)(void);
 	void (*bar)(void);
 } cb_t;
+
+
+/* local/static prototypes */
+static int test_deesc(char const *s, char const *ref);
+static int esc_resolve(int c);
 
 
 /* local functions */
@@ -136,6 +142,24 @@ TEST(strrchr){
 	r += TEST_STR_EQ(strrchr(s, 'H'), s + 22);
 	r += TEST_STR_EQ(strrchr(s, 0), s + 24);
 	r += TEST_PTR_EQ(strrchr(s, 'x'), 0x0);
+
+	return -r;
+}
+
+TEST(strpchr){
+	int r = 0;
+	char s[32];
+
+
+	strcpy(s, "1590 ahz\tAHZ1590 ahz\tAHZ");
+
+	r += TEST_STR_EQ(strpchr(s, isdigit), s + 0);
+	r += TEST_STR_EQ(strpchr(s, isblank), s + 4);
+	r += TEST_STR_EQ(strpchr(s, isalpha), s + 5);
+	r += TEST_STR_EQ(strpchr(s, isupper), s + 9);
+
+	strcpy(s, "noctrl");
+	r += TEST_STR_EQ(strpchr(s, iscntrl), s + strlen(s));
 
 	return -r;
 }
@@ -331,4 +355,38 @@ TEST(strcident){
 	r += TEST_STR_EQ(strcident_r("foo_bar", s, 5), "foo_b");
 
 	return -r;
+}
+
+TEST(strdeesc){
+	int r = 0;
+
+
+	r += test_deesc("noesc", "noesc");
+	r += test_deesc("\\a", "\a");
+	r += test_deesc("\\\\", "\\");
+	r += test_deesc("\\x", "\\x");
+	r += test_deesc("ls \\\"foo\\\"", "ls \"foo\"");
+	r += test_deesc("ls \\\\\"foo\\\\\"", "ls \\\"foo\\\"");
+
+	return -r;
+}
+
+static int test_deesc(char const *s, char const *ref){
+	size_t len = strlen(s);
+	char line[len + 1];
+
+
+	strcpy(line, s);
+	strdeesc(line, len, esc_resolve);
+
+	return TEST_STR_EQ(line, ref);
+}
+
+static int esc_resolve(int c){
+	switch(c){
+	case 'a':	return '\a';
+	case '\\':	return '\\';
+	case '"':	return '"';
+	default:	return ESC_RESOLVE_NONE;
+	}
 }

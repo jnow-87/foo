@@ -87,6 +87,13 @@ char const *strrchr(char const *s, int c){
 	return strchr_base(s + strlen(s), c, s);
 }
 
+char const *strpchr(char const *s, int (*cmp)(int)){
+	while(*s != 0 && !cmp(*s))
+		s++;
+
+	return s;
+}
+
 bool isoneof(char c, char const *s){
 	if(s == 0x0)
 		return false;
@@ -304,6 +311,25 @@ char *strcident_r(char const *s, char *buf, size_t n){
 	buf[i] = 0;
 
 	return buf;
+}
+
+void strdeesc(char *s, size_t n, int (*resolve)(int)){
+	char *e = s + n;
+
+
+	for(char *c=s; c+1<e; c++){
+		if(*c != '\\')
+			continue;
+
+		*c = resolve(c[1]);
+
+		if(*c != ESC_RESOLVE_NONE){
+			memcpy(c + 1, c + 2, e - c - 1);
+			*(--e) = 0;
+		}
+		else
+			*c = '\\';
+	}
 }
 
 
