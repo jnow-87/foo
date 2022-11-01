@@ -118,7 +118,8 @@ static int sc_hdlr_socket(void *param){
 	this_p = sched_running()->parent;
 
 	/* allocate socket */
-	copy_from_user(&addr, p->addr, sizeof(sock_addr_t), this_p);
+	if(copy_from_user(&addr, p->addr, sizeof(sock_addr_t), this_p) != 0)
+		goto err_0;
 
 	sock = socket_alloc(p->type, addr.domain, net_domain_cfg[addr.domain].addr_len);
 
@@ -148,10 +149,9 @@ err_0:
 
 static int sc_hdlr_recv(void *param){
 	sc_socket_t *p = (sc_socket_t*)param;
-	sock_addr_t *addr = 0x0;
 	ssize_t r;
 	char buf[p->buf_len];
-	char _addr[p->addr_len];
+	char addr[p->addr_len];
 	fs_filed_t *fd;
 	fs_node_t *node;
 	process_t *this_p;
@@ -159,6 +159,10 @@ static int sc_hdlr_recv(void *param){
 
 	/* initials */
 	this_p = sched_running()->parent;
+
+	if(p->addr && copy_from_user(addr, p->addr, p->addr_len, this_p) != 0)
+		return -errno;
+
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -168,16 +172,11 @@ static int sc_hdlr_recv(void *param){
 
 	node = fd->node;
 
-	if(p->addr){
-		addr = (sock_addr_t*)_addr;
-		copy_from_user(addr, p->addr, p->addr_len, this_p);
-	}
-
 	/* call read callback if implemented */
 	mutex_lock(&node->mtx);
 
 	while(1){
-		r = recvfrom(fd, buf, p->buf_len, addr, (addr ? &p->addr_len : 0x0));
+		r = recvfrom(fd, buf, p->buf_len, (p->addr ? (sock_addr_t*)addr : 0x0), (p->addr ? &p->addr_len : 0x0));
 
 		if(r || errno || fs_fd_wait(fd, &node->datain_sig, &node->mtx) != 0)
 			break;
@@ -195,10 +194,8 @@ static int sc_hdlr_recv(void *param){
 
 	/* update user space */
 	if(errno == 0){
-		copy_to_user(p->buf, buf, p->buf_len, this_p);
-
-		if(addr)
-			copy_to_user(p->addr, addr, p->addr_len, this_p);
+		if(copy_to_user(p->buf, buf, p->buf_len, this_p) == 0 && p->addr)
+			(void)copy_to_user(p->addr, addr, p->addr_len, this_p);
 	}
 
 end:
@@ -209,15 +206,21 @@ end:
 
 static int sc_hdlr_send(void *param){
 	sc_socket_t *p = (sc_socket_t*)param;;
-	sock_addr_t *addr = 0x0;
 	char buf[p->buf_len];
-	char _addr[p->addr_len];
+	char addr[p->addr_len];
 	fs_filed_t *fd;
 	process_t *this_p;
 
 
 	/* initials */
 	this_p = sched_running()->parent;
+
+	if(p->addr && copy_from_user(addr, p->addr, p->addr_len, this_p) != 0)
+		return -errno;
+
+	if(copy_from_user(buf, p->buf, p->buf_len, this_p) != 0)
+		return -errno;
+
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -225,16 +228,9 @@ static int sc_hdlr_send(void *param){
 	if(fd == 0x0)
 		return_errno(E_INVAL);
 
-	if(p->addr){
-		addr = (sock_addr_t*)_addr;
-		copy_from_user(addr, p->addr, p->addr_len, this_p);
-	}
-
 	/* handle send */
-	copy_from_user(buf, p->buf, p->buf_len, this_p);
-
 	mutex_lock(&fd->node->mtx);
-	p->buf_len = sendto(fd, buf, p->buf_len, addr, p->addr_len);
+	p->buf_len = sendto(fd, buf, p->buf_len, (p->addr ? (sock_addr_t*)addr : 0x0), p->addr_len);
 	mutex_unlock(&fd->node->mtx);
 
 	DEBUG("sent %d bytes, \"%s\"\n", p->buf_len, strerror(errno));

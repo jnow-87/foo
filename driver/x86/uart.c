@@ -114,9 +114,6 @@ static size_t putsn(char const *s, size_t n, void *hw){
 	dev_data_t *uart = (dev_data_t*)hw;
 
 
-	if(s == 0x0)
-		goto_errno(err, E_INVAL);
-
 	lnx_write(uart->fd, s, n);
 
 	// the x86 hardware simulated by the test framework doesn't support

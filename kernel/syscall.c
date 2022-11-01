@@ -7,8 +7,8 @@
 
 
 
-#include <arch/memory.h>
 #include <arch/interrupt.h>
+#include <kernel/memory.h>
 #include <kernel/kprintf.h>
 #include <kernel/syscall.h>
 #include <kernel/sched.h>
@@ -90,7 +90,8 @@ void sc_khdlr(sc_num_t num, void *param, size_t psize){
 	}
 
 	/* copy arguments to kernel space */
-	copy_from_user(kparam, param, psize, this_t->parent);
+	if(copy_from_user(kparam, param, psize, this_t->parent) != 0)
+		return;
 
 	/* execute callback */
 	int_enable(INT_ALL);
@@ -107,5 +108,5 @@ void sc_khdlr(sc_num_t num, void *param, size_t psize){
 		WARN("uncaught error for syscall %d: %s\n", (int)num, strerror(errno));
 
 	/* copy result to user space */
-	copy_to_user(param, kparam, psize, this_t->parent);
+	(void)copy_to_user(param, kparam, psize, this_t->parent);
 }

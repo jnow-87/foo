@@ -7,9 +7,9 @@
 
 
 
-#include <arch/core.h>
 #include <arch/memory.h>
 #include <kernel/init.h>
+#include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <kernel/syscall.h>
 #include <kernel/rootfs.h>
@@ -68,7 +68,9 @@ static int sc_hdlr_open(void *param){
 
 	/* initials */
 	this_p = sched_running()->parent;
-	copy_from_user(path, p->payload, p->payload_len, this_p);
+
+	if(copy_from_user(path, p->payload, p->payload_len, this_p) != 0)
+		return -errno;
 
 	/* identify file system and call its open callback */
 	mutex_lock(&this_p->mtx);
@@ -94,7 +96,10 @@ static int sc_hdlr_dup(void *param){
 
 	/* initials */
 	this_p = sched_running()->parent;
-	copy_from_user(&old_id, p->payload, sizeof(int), this_p);
+
+	if(copy_from_user(&old_id, p->payload, sizeof(int), this_p) != 0)
+		return -errno;
+
 	old_fd = fs_fd_acquire(old_id, this_p);
 
 	DEBUG("oldfd %d%s, newfd %d\n", old_id, (old_fd == 0x0 ? " (invalid)" : ""), p->fd);
@@ -192,7 +197,7 @@ static int sc_hdlr_read(void *param){
 
 	/* update user space */
 	if(errno == 0)
-		copy_to_user(p->payload, buf, p->payload_len, this_p);
+		(void)copy_to_user(p->payload, buf, p->payload_len, this_p);
 
 end:
 	fs_fd_release(fd);
@@ -210,6 +215,10 @@ static int sc_hdlr_write(void *param){
 
 	/* initials */
 	this_p = sched_running()->parent;
+
+	if(copy_from_user(buf, p->payload, p->payload_len, this_p) != 0)
+		return -errno;
+
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -224,8 +233,6 @@ static int sc_hdlr_write(void *param){
 		goto_errno(end, E_NOIMP);
 
 	DEBUG("offset %d, len %u\n", fd->fp, p->payload_len);
-
-	copy_from_user(buf, p->payload, p->payload_len, this_p);
 
 	mutex_lock(&node->mtx);
 	p->payload_len = node->ops->write(fd, buf, p->payload_len);
@@ -249,6 +256,10 @@ static int sc_hdlr_ioctl(void *param){
 
 	/* initials */
 	this_p = sched_running()->parent;
+
+	if(copy_from_user(payload, p->payload, p->payload_len, this_p) != 0)
+		return -errno;
+
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -264,15 +275,13 @@ static int sc_hdlr_ioctl(void *param){
 
 	DEBUG("cmd %d\n", p->cmd);
 
-	copy_from_user(payload, p->payload, p->payload_len, this_p);
-
 	mutex_lock(&node->mtx);
 	(void)node->ops->ioctl(fd, p->cmd, payload, p->payload_len);
 	mutex_unlock(&node->mtx);
 
 	/* update user space */
 	if(errno == 0)
-		copy_to_user(p->payload, payload, p->payload_len, this_p);
+		(void)copy_to_user(p->payload, payload, p->payload_len, this_p);
 
 end:
 	fs_fd_release(fd);
@@ -283,7 +292,6 @@ end:
 static int sc_hdlr_fcntl(void *param){
 	sc_fs_t *p = (sc_fs_t*)param;
 	char payload[p->payload_len];
-	int r;
 	fs_filed_t *fd;
 	fs_node_t *node;
 	process_t *this_p;
@@ -291,6 +299,10 @@ static int sc_hdlr_fcntl(void *param){
 
 	/* initials */
 	this_p = sched_running()->parent;
+
+	if(copy_from_user(payload, p->payload, p->payload_len, this_p) != 0)
+		return -errno;
+
 	fd = fs_fd_acquire(p->fd, this_p);
 
 	DEBUG("fd %d%s\n", p->fd, (fd == 0x0 ? " (invalid)" : ""));
@@ -303,28 +315,24 @@ static int sc_hdlr_fcntl(void *param){
 	/* call fcntl callback if implemented */
 	DEBUG("cmd %d\n", p->cmd);
 
-	copy_from_user(payload, p->payload, p->payload_len, this_p);
-
 	mutex_lock(&node->mtx);
 
-	r = fcntl(fd, p->cmd, payload, this_p);
-
-	if(r == -E_NOIMP){
+	if(fcntl(fd, p->cmd, payload, this_p) == -E_NOIMP){
 		if(node->ops->fcntl != 0x0){
 			reset_errno();
-			r = node->ops->fcntl(fd, p->cmd, payload);
+			(void)node->ops->fcntl(fd, p->cmd, payload);
 		}
 	}
 
 	mutex_unlock(&node->mtx);
 
 	/* update user space */
-	if(r == 0)
-		copy_to_user(p->payload, payload, p->payload_len, this_p);
+	if(errno == 0)
+		(void)copy_to_user(p->payload, payload, p->payload_len, this_p);
 
 	fs_fd_release(fd);
 
-	return r;
+	return -errno;
 }
 
 static int sc_hdlr_mmap(void *param){
@@ -354,7 +362,7 @@ static int sc_hdlr_mmap(void *param){
 	mutex_lock(&node->mtx);
 
 	if(p->payload == 0x0)	p->payload = node->ops->mmap(fd, p->payload_len);
-	else				umunmap(p->payload);
+	else					umunmap(p->payload);
 
 	mutex_unlock(&node->mtx);
 
@@ -373,7 +381,9 @@ static int sc_hdlr_rmnode(void *param){
 
 	/* initials */
 	this_p = sched_running()->parent;
-	copy_from_user(path, p->payload, p->payload_len, this_p);
+
+	if(copy_from_user(path, p->payload, p->payload_len, this_p) != 0)
+		return -errno;
 
 	DEBUG("%s\n", path);
 
@@ -384,6 +394,7 @@ static int sc_hdlr_rmnode(void *param){
 
 	if(root->ops->node_rm == 0x0)
 		return_errno(E_NOIMP);
+
 	return root->ops->node_rm(root, path);
 }
 
@@ -396,7 +407,9 @@ static int sc_hdlr_chdir(void *param){
 
 	/* initials */
 	this_p = sched_running()->parent;
-	copy_from_user(path, p->payload, p->payload_len, this_p);
+
+	if(copy_from_user(path, p->payload, p->payload_len, this_p) != 0)
+		return -errno;
 
 	DEBUG("sc chdir: %s\n", path);
 

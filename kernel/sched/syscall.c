@@ -8,9 +8,8 @@
 
 
 #include <config/config.h>
-#include <arch/core.h>
-#include <arch/memory.h>
 #include <kernel/init.h>
+#include <kernel/memory.h>
 #include <kernel/syscall.h>
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
@@ -55,6 +54,7 @@ kernel_init(2, init);
 
 static int sc_hdlr_sched_yield(void *param){
 	sched_trigger();
+
 	return 0;
 }
 
@@ -66,13 +66,14 @@ static int sc_hdlr_process_create(void *param){
 			  *new;
 
 
-	p->pid = 0;
-
 	/* process arguments */
 	this_p = sched_running()->parent;
 
-	copy_from_user(name, p->name, p->name_len + 1, this_p);
-	copy_from_user(args, p->args, p->args_len + 1, this_p);
+	if(copy_from_user(name, p->name, p->name_len + 1, this_p) != 0)
+		return -errno;
+
+	if(copy_from_user(args, p->args, p->args_len + 1, this_p) != 0)
+		return -errno;
 
 	/* create process */
 	DEBUG("create process \"%s\" with args \"%s\"\n", name, args);
@@ -107,7 +108,6 @@ static int sc_hdlr_thread_create(void *param){
 
 
 	this_p = sched_running()->parent;
-	p->tid = 0;
 
 	DEBUG("create thread for \"%s\" at %p, arg %p\n", this_p->name, p->entry, p->arg);
 

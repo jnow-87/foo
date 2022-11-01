@@ -49,8 +49,8 @@ typedef struct{
 	int (*page_entry_inval_va)(void *virt_addr, bool sync_cores);
 	int (*page_entry_search)(struct page_t const *param, struct page_t *result);
 
-	void (*copy_from_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
-	void (*copy_to_user)(void *target, void const *src, unsigned int n, struct process_t const *this_p);
+	int (*copy_from_user)(void *kernel, void const *user, size_t n, struct process_t const *this_p);
+	int (*copy_to_user)(void *user, void const *kernel, size_t n, struct process_t const *this_p);
 
 	/* interrupts */
 	int_type_t (*int_enable)(int_type_t mask);

@@ -16,6 +16,7 @@
 #include <arch/interrupt.h>
 #include <arch/memory.h>
 #include <kernel/init.h>
+#include <kernel/memory.h>
 #include <kernel/syscall.h>
 #include <kernel/interrupt.h>
 #include <kernel/thread.h>
@@ -118,7 +119,8 @@ static void sc_hdlr(int_num_t num, void *payload){
 		op.int_ctrl.payload
 	);
 
-	copy_from_user(&sc, op.int_ctrl.payload, sizeof(sc), this_t->parent);
+	if(copy_from_user(&sc, op.int_ctrl.payload, sizeof(sc), this_t->parent) != 0)
+		goto end;
 
 	LNX_DEBUG("syscall(num = %u, param = %p, psize = %u)\n", sc.num, sc.param, sc.size);
 
@@ -130,10 +132,11 @@ static void sc_hdlr(int_num_t num, void *payload){
 		set_errno(x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays));
 
 	/* set errno */
+end:
 	LNX_DEBUG("errno: %d\n", errno);
 	sc.errno = errno;
 
-	copy_to_user(op.int_ctrl.payload, &sc, sizeof(sc), this_t->parent);
+	(void)copy_to_user(op.int_ctrl.payload, &sc, sizeof(sc), this_t->parent);
 
 	op.num = HWO_SYSCALL_RETURN;
 
@@ -182,7 +185,8 @@ static int overlay_exit(void *param){
 	sc_exit_t kparam;
 
 
-	copy_from_user(&kparam, param, sizeof(kparam), sched_running()->parent);
+	if(copy_from_user(&kparam, param, sizeof(kparam), sched_running()->parent) != 0)
+		return -errno;
 
 	if(!kparam.kill_siblings)
 		return 0;
@@ -211,7 +215,8 @@ static int overlay_mmap(void *param){
 	this_p = sched_running()->parent;
 	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
 
-	copy_from_user(&kparam, param, sizeof(kparam), this_p);
+	if(copy_from_user(&kparam, param, sizeof(kparam), this_p) != 0)
+		return -errno;
 
 	// In order for mmap to work in the x86 setup the kernel heap is created
 	// as a shared memory region. Hence, instead of returning the mmaped address
@@ -225,7 +230,5 @@ static int overlay_mmap(void *param){
 
 	kparam.payload -= (ptrdiff_t)kheap->base;
 
-	copy_to_user(param, &kparam, sizeof(kparam), this_p);
-
-	return 0;
+	return copy_to_user(param, &kparam, sizeof(kparam), this_p);
 }
