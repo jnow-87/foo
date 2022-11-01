@@ -7,10 +7,13 @@
 
 
 
+#include <config/config.h>
 #include <sys/types.h>
 #include <sys/limits.h>
 #include <sys/string.h>
 #include <sys/errno.h>
+#include <sys/math.h>
+#include <sys/stream.h>
 
 
 /* local/static prototypes */
@@ -176,10 +179,27 @@ char const *strerror(errno_t errnum){
 		"Unknown",
 		"Invalid errno"
 	};
+#ifdef CONFIG_EXTENDED_ERRNO
+# ifndef BUILD_HOST
+	static char err_info[64];
+	size_t offset;
+# endif // BUILD_HOST
+#endif // CONFIG_EXTENDED_ERRNO
 
 
 	if(errnum > E_UNKNOWN)
 		errnum = E_UNKNOWN + 1;
+
+#ifdef CONFIG_EXTENDED_ERRNO
+# ifndef BUILD_HOST
+	if(errnum != 0){
+		offset = MAX(0, (ssize_t)(strlen(errno_file) - sizeof(err_info) - 36));
+		snprintf(err_info, sizeof(err_info), "%s (%s:%u)", err_str[errnum], errno_file + offset, errno_line);
+
+		return err_info;
+	}
+# endif // BUILD_HOST
+#endif // CONFIG_EXTENDED_ERRNO
 
 	return err_str[errnum];
 }
