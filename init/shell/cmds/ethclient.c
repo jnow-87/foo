@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <socket.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -24,8 +25,6 @@
 #define OPTS \
 	"-t <timeout>", "time to wait for incoming data [ms]", \
 	"-h", "print this help message"
-
-#define ERROR(fmt, ...)({ fprintf(stderr, "error " fmt, ##__VA_ARGS__); -1; })
 
 
 /* types */
@@ -69,12 +68,12 @@ static int exec(int argc, char **argv){
 	sock = socket(AF_INET, opts.type);
 
 	if(sock < 0)
-		return ERROR("socket(): %s\n", strerror(errno));
+		return -ERROR("creating socket");
 
 	(void)client(sock);
 
 	if(close(sock) != 0)
-		return ERROR("close(): %s\n", strerror(errno));
+		return -ERROR("closing socket");
 
 	return 0;
 }
@@ -91,19 +90,19 @@ static int client(int sock){
 
 
 	if(fcntl(sock, F_MODE_GET, &f_mode, sizeof(f_mode_t)) != 0)
-		return ERROR("fcntl(get mode): %s\n", strerror(errno));
+		return ERROR("fcntl(get mode)");
 
 	f_mode |= O_NONBLOCK;
 
 	if(fcntl(sock, F_MODE_SET, &f_mode, sizeof(f_mode_t)) != 0)
-		return ERROR("fcntl(set mode): %s\n", strerror(errno));
+		return ERROR("fcntl(set mode)");
 
 	addr.domain = AF_INET;
 	addr.inet_data.addr = opts.ip;
 	addr.inet_data.port = opts.port;
 
 	if(connect(sock, (sock_addr_t*)&addr, sizeof(sock_addr_inet_t)) != 0)
-		return ERROR("connect(): %s\n", strerror(errno));
+		return ERROR("connect");
 
 	while(1){
 		write(1, "cl$ ", 4);
@@ -113,7 +112,7 @@ static int client(int sock){
 
 		while(i < 15 && c != '\n'){
 			if(read(0, &c, 1) != 1)
-				return ERROR("read(stdin): %s\n", strerror(errno));
+				return ERROR("read(stdin)");
 
 			if(c == '\r')
 				continue;
@@ -125,7 +124,7 @@ static int client(int sock){
 		line[i - 1] = 0;
 
 		if(send(sock, line, i) != i)
-			return ERROR("send(): %s\n", strerror(errno));
+			return ERROR("send");
 
 		(void)rx_loop(sock);
 
@@ -147,7 +146,7 @@ static int rx_loop(int sock){
 		r = recv(sock, buf, 7);
 
 		if(r < 0)
-			return ERROR("recv(): %s\n", strerror(errno));
+			return ERROR("recv");
 
 		if(attempts > 5)
 			return 0;

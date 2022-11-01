@@ -16,6 +16,7 @@
 #include <kernel/ksignal.h>
 #include <kernel/fs.h>
 #include <sys/errno.h>
+#include <sys/escape.h>
 #include <sys/mutex.h>
 #include <sys/ringbuf.h>
 #include <sys/term.h>
@@ -105,7 +106,7 @@ typedef struct term_t{
 	errno_t errno;
 
 	term_cursor_t cursor;
-	term_esc_t esc;
+	esc_state_t esc;
 } term_t;
 
 

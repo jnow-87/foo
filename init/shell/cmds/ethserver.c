@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <socket.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -24,8 +25,6 @@
 #define OPTS \
 	"-e", "send a reply on incoming data", \
 	"-h", "print this help message"
-
-#define ERROR(fmt, ...)({ fprintf(stderr, "error " fmt, ##__VA_ARGS__); -1; })
 
 
 /* types */
@@ -80,12 +79,12 @@ static int exec(int argc, char **argv){
 	sock = socket(AF_INET, opts.type);
 
 	if(sock < 0)
-		return ERROR("socket(): %s\n", strerror(errno));
+		return -ERROR("opening socket");
 
 	(void)server(sock);
 
 	if(close(sock) != 0)
-		return ERROR("server close(): %s\n", strerror(errno));
+		return -ERROR("shutting down server");
 
 	return 0;
 }
@@ -103,10 +102,10 @@ static int server(int sock){
 	addr.inet_data.port = opts.port;
 
 	if(bind(sock, (sock_addr_t*)&addr, sizeof(sock_addr_inet_t)) != 0)
-		return ERROR("bind(): %s\n", strerror(errno));
+		return ERROR("binding server");
 
 	if(opts.type == SOCK_STREAM && listen(sock, 2) != 0)
-		return ERROR("liste(): %s\n", strerror(errno));
+		return ERROR("listening");
 
 	printf("server awaiting connection\n");
 
@@ -117,7 +116,7 @@ static int server(int sock){
 		sock = accept(sock, (sock_addr_t*)&addr, &addr_len);
 
 		if(sock < 0)
-			return ERROR("accept(): %s\n", strerror(errno));
+			return ERROR("accepting client");
 
 		printf("client: %s on port %u\n", inet_ntoa(addr.inet_data.addr), addr.inet_data.port);
 	}
@@ -126,7 +125,7 @@ static int server(int sock){
 
 	if(opts.type == SOCK_STREAM){
 		if(close(sock) != 0)
-			return ERROR("client close(): %s\n", strerror(errno));
+			return ERROR("shutting down client");
 	}
 
 	return 0;
@@ -152,7 +151,7 @@ static void rx_loop(int sock){
 		r = recvfrom(sock, buf, 9, (sock_addr_t*)&remote, &addr_len);
 
 		if(r < 0){
-			printf("error: %d %s\n", r, strerror(errno));
+			ERROR("recv %d", r);
 			break;
 		}
 
@@ -170,7 +169,7 @@ static void rx_loop(int sock){
 			r = strlen(s);
 
 			if(sendto(sock, s, strlen(s), (sock_addr_t*)&remote, addr_len) != r)
-				printf("send error: %s\n", strerror(errno));
+				ERROR("send");
 		}
 	}
 }

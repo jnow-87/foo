@@ -10,3 +10,12 @@
 menu "shell"
 source init/shell/Kconfig
 endmenu
+
+menu "hidden"
+	visible if 0
+	config INIT_SHELL
+		bool "shell"
+		select LIB_READLINE
+		select READLINE_HISTORY
+		default y
+endmenu

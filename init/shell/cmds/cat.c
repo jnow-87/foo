@@ -14,6 +14,7 @@
 #include <sys/errno.h>
 #include <sys/fcntl.h>
 #include <sys/escape.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -32,11 +33,6 @@
 	.blocksize = 8, \
 	.offset = 0, \
 }
-
-#define ERROR(file, msg)({ \
-	fprintf(stderr, "error:%s: %s: %s\n", file, msg, strerror(errno)); \
-	-1; \
-})
 
 
 /* types */
@@ -133,7 +129,7 @@ err_1:
 	close(fd);
 
 err_0:
-	return ERROR(file, "open");
+	return ERROR("opening %s", file);
 }
 
 static int readwrite(int fd, char const *file, bool interactive){
@@ -149,7 +145,7 @@ static int readwrite(int fd, char const *file, bool interactive){
 			break;
 
 		if(r < 0 || errno)
-			return ERROR(file, "read");
+			return ERROR("reading %s", file);
 
 		/* write */
 		if(opts.hexdump){
@@ -159,7 +155,7 @@ static int readwrite(int fd, char const *file, bool interactive){
 			fflush(stdout);
 		}
 		else if(write(1, buf, r) != r)
-			return ERROR(file, "write");
+			return ERROR("writing %s", file);
 
 		if(opts.length > 0)
 			opts.length--;

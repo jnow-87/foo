@@ -18,6 +18,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -56,16 +57,14 @@ static int exec(int argc, char **argv){
 	/* init device */
 	pin_fd = open(argv[1], O_RDONLY);
 
-	if(pin_fd < 0){
-		printf("open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
-		return 1;
-	}
+	if(pin_fd < 0)
+		return ERROR("opening %s", argv[1]);
 
 	// try registering change interrupt
 	if(ioctl(pin_fd, IOCTL_CFGWR, &sig) == 0){
 		if(signal(sig, pin_change_hdlr) == pin_change_hdlr){
 			use_int = 1;
-			printf("use pin interrupt for sampling\n");
+			printf("using pin interrupt for sampling\n");
 		}
 	}
 

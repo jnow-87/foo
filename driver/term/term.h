@@ -24,8 +24,5 @@ int term_cursor_show(term_t *term, bool show);
 
 int term_esc_handle(term_t *term, char c);
 
-void term_esc_reset(term_t *term);
-bool term_esc_active(term_t *term);
-
 
 #endif // TERM_H

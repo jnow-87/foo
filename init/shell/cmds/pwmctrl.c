@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -57,17 +58,13 @@ static int exec(int argc, char **argv){
 	/* open pwm and sample pin files */
 	dev = open(argv[1], O_RDWR);
 
-	if(dev < 0){
-		fprintf(stderr, "open device \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
-		return 1;
-	}
+	if(dev < 0)
+		return -ERROR("opening device %s", argv[1]);
 
 	fd_sample = open(argv[2], O_RDONLY);
 
-	if(fd_sample < 0){
-		fprintf(stderr, "open sample pin \"%s\" failed \"%s\"\n", argv[2], strerror(errno));
-		return 1;
-	}
+	if(fd_sample < 0)
+		return -ERROR("opening sample pin %s", argv[2]);
 
 	/* make stdin non-blocking */
 	fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t));
@@ -152,7 +149,7 @@ static void update_duty_cycle(unsigned int *cur, int8_t inc, pwm_cfg_t *pwm_cfg,
 	else											*cur = t;
 
 	if(write(dev, cur, sizeof(*cur)) <= 0)
-		fprintf(stderr, "write to device failed \"%s\"\n", strerror(errno));
+		ERROR("writing to device");
 
 	/* disable pwm */
 	if(*cur == 0){

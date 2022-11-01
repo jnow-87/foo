@@ -17,6 +17,7 @@ obj-$(CONFIG_SC_SIGNAL) += signal.o
 obj-$(CONFIG_SC_SOCKET) += socket.o
 obj-$(CONFIG_LIB_GETOPT) += getopt.o
 obj-$(CONFIG_LIB_GFX) += gfx.o
+obj-$(CONFIG_LIB_READLINE) += readline/
 
 hostobj-$(CONFIG_LIB_GETOPT) += getopt.o
 

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -40,15 +41,11 @@ static int exec(int argc, char **argv){
 	/* apply configuration */
 	fd = open(argv[1], O_RDWR);
 
-	if(fd < 0){
-		fprintf(stderr, "can't open device %s \"%s\"\n", argv[1], strerror(errno));
-		return 1;
-	}
+	if(fd < 0)
+		return -ERROR("opening %s", argv[1]);
 
-	if(ioctl(fd, IOCTL_CFGWR, &slave) != 0){
-		fprintf(stderr, "ioctl error \"%s\"\n", strerror(errno));
-		return 1;
-	}
+	if(ioctl(fd, IOCTL_CFGWR, &slave) != 0)
+		return -ERROR("ioctl");
 
 	return 0;
 }

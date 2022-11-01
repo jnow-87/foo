@@ -7,8 +7,8 @@
 
 
 
-#ifndef INIT_READLINE
-#define INIT_READLINE
+#ifndef LIB_READLINE_H
+#define LIB_READLINE_H
 
 
 #include <sys/types.h>
@@ -16,8 +16,8 @@
 
 
 /* prototypes */
-size_t readline_stdin(FILE *stream, char *line, size_t n);
-size_t readline_regfile(FILE *stream, char *line, size_t n);
+size_t readline(FILE *stream, char *line, size_t n);
+void readline_history(void);
 
 
-#endif // INIT_READLINE
+#endif // LIB_READLINE_H

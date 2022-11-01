@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <getopt.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -28,10 +29,8 @@
 	"-h <host>", "set host name"
 
 #define OPTS_STRCPY(opts, attr, val){ \
-	if(sizeof((opts).attr) <= strlen(val)){ \
-		fprintf(stderr, "%s too long, max. %d", #attr, sizeof((opts).attr)); \
-		return CMD_HELP(argv[0], ""); \
-	} \
+	if(sizeof((opts).attr) <= strlen(val)) \
+		return ERROR("%s too long, max. %d", #attr, sizeof((opts).attr)); \
 	\
 	strcpy((opts).attr, val); \
 }
@@ -71,7 +70,7 @@ static int exec(int argc, char **argv){
 		return 1;
 
 	/* printf configuation */
-	printf("applying following configuration to %s\n", opts.dev);
+	printf("configuration for %s\n", opts.dev);
 	printf("    mode: %s\n", (opts.dev_cfg.mode == INET_AP ? "AP" : "CLIENT"));
 	printf("    ssid: %s\n", opts.dev_cfg.ssid);
 	printf("    password: %s\n", opts.dev_cfg.password);
@@ -90,16 +89,14 @@ static int exec(int argc, char **argv){
 	/* apply configuration */
 	fd = open(opts.dev, O_RDWR);
 
-	if(fd < 0){
-		fprintf(stderr, "error opening device \"%s\"\n", strerror(errno));
-		return 1;
-	}
+	if(fd < 0)
+		return -ERROR("opening device");
 
 	r |= ioctl(fd, IOCTL_CFGWR, &opts.dev_cfg);
 	r |= ioctl(fd, IOCTL_CFGRD, &opts.dev_cfg);
 
 	if(r != 0)
-		fprintf(stderr, "error configuring device \"%s\"\n", strerror(errno));
+		ERROR("configure device");
 
 	if(r == 0 && opts.dev_cfg.dhcp){
 		printf("\ndhcp configuration\n");

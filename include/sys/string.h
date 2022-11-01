@@ -16,6 +16,8 @@
 
 
 /* macros */
+#define ESC_RESOLVE_NONE	127
+
 #define strncpy(d, s, n)	(char*)memcpy(d, s, n)
 #define strncmp(d, s, n)	memcmp(d, s, n)
 
@@ -32,6 +34,7 @@ char *strcat(char *dest, char const *src);
 char *strncat(char *dest, char const *src, size_t n);
 char const *strchr(char const *s, int c);
 char const *strrchr(char const *s, int c);
+char const *strpchr(char const *s, int (*cmp)(int));
 
 bool isoneof(char c, char const *s);
 
@@ -52,6 +55,8 @@ char *strupr_r(char const *s, char *buf, size_t n);
 
 char *strcident(char const *s);
 char *strcident_r(char const *s, char *buf, size_t n);
+
+void strdeesc(char *s, size_t n, int (*resolve)(int));
 
 
 #endif // SYS_STRING_H

@@ -7,4 +7,4 @@
 
 
 
-obj-y := shell.o readline.o history.o cmd.o cmds/
+obj-y := shell.o cmd.o cmds/

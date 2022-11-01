@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/escape.h>
 #include <test/test.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -98,9 +99,7 @@ static int exec(int argc, char **argv){
 		return run(__start_tests_unit, NUM_UNIT_TESTS, true, log_name);
 #endif // CONFIG_INIT_TEST_UNIT
 
-	printf("Invalid test number\n\n");
-
-	return 1;
+	return -ERROR("invalid test number");
 }
 
 command("test", exec);

@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -32,15 +33,13 @@ static int exec(int argc, char **argv){
 
 	dir = open(path, O_RDONLY);
 
-	if(dir < 0){
-		fprintf(stderr, "open \"%s\" failed \"%s\"\n", argv[1], strerror(errno));
-		return 1;
-	}
+	if(dir < 0)
+		return -ERROR("opening %s", argv[1]);
 
 	while(1){
 		if(read(dir, &entry, sizeof(dir_ent_t)) <= 0){
 			if(errno)
-				fprintf(stderr, "read error \"%s\"\n", strerror(errno));
+				ERROR("reading");
 
 			break;
 		}

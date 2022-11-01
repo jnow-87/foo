@@ -16,6 +16,7 @@
 #include <driver/term.h>
 #include <sys/types.h>
 #include <sys/ctype.h>
+#include <sys/escape.h>
 #include <sys/mutex.h>
 #include <sys/ringbuf.h>
 #include "term.h"
@@ -85,7 +86,7 @@ term_t *term_create(term_itf_t *itf, term_cfg_t *cfg, fs_node_t *node){
 	term->itf = itf;
 	term->errno = 0;
 
-	term_esc_reset(term);
+	esc_init(&term->esc);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
 	itask_queue_init(&term->tx_queue);
 
@@ -205,7 +206,7 @@ static size_t puts_poll(term_t *term, char const *s, size_t n){
 		return 0;
 
 	for(i=0, j=0; i<n; i++){
-		if(!isprint(s[i]) || term_esc_active(term) || term->cursor.column + (i - j) >= term->cfg->columns){
+		if(!isprint(s[i]) || esc_active(&term->esc) || term->cursor.column + (i - j) >= term->cfg->columns){
 			j += puts(term, s + j, i - j);
 
 			if(j != i || putc(term, s[i]) != s[i])
@@ -224,7 +225,7 @@ static size_t puts_poll(term_t *term, char const *s, size_t n){
 }
 
 static char putc(term_t *term, char c){
-	if(!CANON(term) || (!term_esc_active(term) && isprint(c))){
+	if(!CANON(term) || (!esc_active(&term->esc) && isprint(c))){
 		if(term->itf->putc(c, term->itf->hw) != c || term_cursor_move(term, 0, 1, false) != 0)
 			return ~c;
 

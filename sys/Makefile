@@ -10,6 +10,7 @@
 # kernel
 obj-y := \
 	errno.o \
+	escape.o \
 	string.o \
 	ctype.o \
 	memblock.o \
@@ -31,6 +32,7 @@ obj-$(CONFIG_DRIVER_VRAM) += vram.o
 # host
 hostobj-y := \
 	errno.o \
+	escape.o \
 	string.o \
 	ctype.o \
 	stream.o \
@@ -50,6 +52,7 @@ obj-nobuiltin-y := libbrick.o
 
 libbrick-y := \
 	errno.o \
+	escape.o \
 	string.o \
 	ctype.o \
 	list1.o \

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <shell/shell.h>
 #include <shell/cmd.h>
 
 
@@ -19,10 +20,8 @@ static int exec(int argc, char **argv){
 	if(argc < 2)
 		return cmd_help(argv[0], "<directory>", "missing arguments", 0);
 
-	if(mkdir(argv[1]) != 0){
-		fprintf(stderr, "error \"%s\"\n", strerror(errno));
-		return 1;
-	}
+	if(mkdir(argv[1]) != 0)
+		return -ERROR("mkdir");
 
 	return 0;
 }

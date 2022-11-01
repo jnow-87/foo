@@ -6,7 +6,6 @@
 #
 
 
+obj-y := readline.o line.o
 
-config DRIVER_SSD1306
-	bool "ssd1306 i2c display"
-	select DRIVER_I2C
+obj-$(CONFIG_READLINE_HISTORY) += history.o

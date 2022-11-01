@@ -51,7 +51,7 @@ int dup2(int old_fd, int new_fd);
 int close(int fd);
 
 ssize_t read(int fd, void *buf, size_t n);
-ssize_t write(int fd, void *buf, size_t n);
+ssize_t write(int fd, void const *buf, size_t n);
 
 int ionctl(int fd, int cmd, void *arg, size_t arg_len);
 int fcntl(int fd, int request, void *arg, size_t arg_len);
