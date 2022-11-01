@@ -13,6 +13,7 @@
 #include <kernel/kprintf.h>
 #include <driver/bridge.h>
 #include <driver/i2c.h>
+#include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/blob.h>
 #include <sys/errno.h>
@@ -214,7 +215,7 @@ static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 static int ack(dev_data_t *i2c, errno_t ecode){
 	DEBUG("ack: %d\n", ecode);
 
-	BUILD_ASSERT(sizeof(errno_t) == 1);
+	STATIC_ASSERT(sizeof(errno_t) == 1);
 	(void)i2cbrdg_write(i2c->brdg, &ecode, 1);
 
 	return ecode;

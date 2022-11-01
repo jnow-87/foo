@@ -20,6 +20,7 @@
 #include <kernel/interrupt.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
+#include <sys/compiler.h>
 #include <sys/devtree.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
@@ -67,6 +68,8 @@ static overlay_t overlays[] = {
 	{ .call = 0x0,			.loc = OLOC_NONE },
 };
 
+STATIC_ASSERT(sizeof_array(overlays) == NSYSCALLS);
+
 
 /* global functions */
 int x86_sc(sc_num_t num, void *param, size_t psize){
@@ -93,8 +96,6 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 /* local functions */
 static int init(void){
-	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
-
 	return int_register(INT_SYSCALL, sc_hdlr, 0x0);
 }
 

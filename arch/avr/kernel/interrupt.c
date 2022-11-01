@@ -57,10 +57,6 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *ctx){
 	int_num_t num;
 
 
-	/* check sizes for thread_ctx_t members with non-basic types */
-	BUILD_ASSERT(sizeof(ctx->next) == (CONFIG_ADDR_WIDTH == 16 ? 2 : 1));
-	BUILD_ASSERT(sizeof(ctx->type) == 1);
-
 	/* save context */
 	ctx->this = ctx;
 	ctx->type = ctx_type(ctx);

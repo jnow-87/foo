@@ -98,7 +98,7 @@ typedef unsigned long long int	uintmax_t;
 typedef long long int			ptrdiff_t;
 #  define PTRDIFF_T				unsigned long long int
 # else // CONFIG_REGISTER_WIDTH
-CPP_ASSERT(invalid address width in configuration)
+STATIC_ASSERT(!"invalid address width in configuration");
 # endif // CONFIG_REGISTER_WIDTH
 #else // BUILD_HOST
 # include <inttypes.h>

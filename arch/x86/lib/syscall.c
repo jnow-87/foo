@@ -74,6 +74,8 @@ static ops_t ops[] = {
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
+STATIC_ASSERT(sizeof_array(ops) == HWO_NOPS + 1);
+
 // syscall overlays
 static overlay_t overlays[] = {
 	{ .call = 0x0,						.loc = OLOC_NONE },
@@ -104,6 +106,8 @@ static overlay_t overlays[] = {
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 };
+
+STATIC_ASSERT(sizeof_array(overlays) == NSYSCALLS);
 
 // memory/heap overlay data
 static uint8_t mem_blob[DEVTREE_APP_HEAP_SIZE];
@@ -167,9 +171,6 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 /* local functions */
 static int init(void){
-	BUILD_ASSERT(sizeof_array(ops) == HWO_NOPS + 1);
-	BUILD_ASSERT(sizeof_array(overlays) == NSYSCALLS);
-
 	lnx_sigaction(CONFIG_TEST_INT_HW_SIG, hw_event_hdlr, 0x0);
 
 	app_heap = (void*)mem_blob;

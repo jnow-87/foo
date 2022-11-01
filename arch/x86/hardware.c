@@ -20,7 +20,7 @@
 #elif defined(BUILD_LIBBRICK)
 # define HW_OP_SRC	PRIV_USER
 #else
-CPP_ASSERT(invalid build config)
+STATIC_ASSERT(!"invalid build config");
 #endif // BUILD_KERNEL
 
 #define CHECK_SEQ_NUM(num, ref){ \

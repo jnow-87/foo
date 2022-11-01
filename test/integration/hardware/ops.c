@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <arch/x86/hardware.h>
+#include <sys/compiler.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/child.h>
@@ -70,6 +71,8 @@ static ops_cfg_t hw_ops[] = {
 	{ .name = "setup",			.hdlr = event_setup },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
+
+STATIC_ASSERT(sizeof_array(hw_ops) == HWO_NOPS + 1);
 
 
 /* global functions */
@@ -134,8 +137,6 @@ void hw_event_process(void){
 	child_t *src,
 			*op_src;
 
-
-	BUILD_ASSERT(sizeof_array(hw_ops) == HWO_NOPS + 1);
 
 	src = hw_event_dequeue();
 

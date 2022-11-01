@@ -101,8 +101,8 @@
 #  define ULLONG_MAX	18446744073709551615U
 #  define UINTMAX_MAX	ULLONG_MAX
 #  define SIZE_MAX		ULLONG_MAX
-# else
-CPP_ASSERT(invalid address width in configuration)
+# else // CONFIG_REGISTER_WIDTH
+STATIC_ASSERT(!"invalid address width in configuration");
 # endif // CONFIG_REGISTER_WIDTH
 
 # define NAME_MAX		CONFIG_NAME_MAX

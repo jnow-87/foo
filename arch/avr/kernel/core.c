@@ -34,7 +34,7 @@ void avr_core_sleep(void){
 #elif defined(CONFIG_SLEEPMODE_EXTSTANDBY)
 		(0x7 << SMCR_SM)
 #else
-CPP_ASSERT(invalid sleep mode - check kernel config)
+STATIC_ASSERT(!"invalid sleep mode - check kernel config");
 #endif // CONFIG_SLEEPMODE
 	);
 
