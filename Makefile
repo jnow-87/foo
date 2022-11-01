@@ -187,10 +187,6 @@ ifeq ($(CONFIG_CODE_COVERAGE),y)
   cflags += -fprofile-arcs -ftest-coverage --coverage
   cxxflags += -fprofile-arcs -ftest-coverage --coverage
   ldlibs += -lgcov
-
-  hostcflags += -fprofile-arcs -ftest-coverage --coverage
-  hostcxxflags += -fprofile-arcs -ftest-coverage --coverage
-  hostldlibs += -lgcov
 endif
 
 

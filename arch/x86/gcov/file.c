@@ -164,5 +164,5 @@ int gcov_fprintf(FILE *stream, char const *format, ...){
 }
 
 int gcov_vfprintf(FILE *stream, char const *format, va_list ap){
-	return lnx_vdprintf(2, format, ap);
+	return -1;
 }
