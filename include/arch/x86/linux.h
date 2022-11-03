@@ -12,6 +12,7 @@
 
 
 #include <arch/x86/opts.h>
+#include <sys/compiler.h>
 #include <sys/stdarg.h>
 #include <sys/types.h>
 #include <sys/escape.h>

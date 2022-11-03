@@ -25,6 +25,7 @@
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/mutex.h>
+#include <sys/string.h>
 
 
 /* types */

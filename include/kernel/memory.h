@@ -109,6 +109,9 @@ void umunmap(void *addr);
 page_t *page_alloc(struct process_t *this_p, page_size_t psize);
 void page_free(struct process_t *this_p, page_t *page);
 
+int copy_from_user(void *kernel, void const *user, size_t n, struct process_t *this_p);
+int copy_to_user(void *user, void const *kernel, size_t n, struct process_t *this_p);
+
 #ifdef CONFIG_KERNEL_VIRT_MEM
 void *addr_virt_to_phys(void *va);
 void *addr_phys_to_virt(void *pa);

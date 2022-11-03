@@ -11,8 +11,22 @@
 #define SYS_ERRNO_H
 
 
+#include <config/config.h>
+
+
 /* macros */
-#define set_errno(e_code)			{ errno = e_code; }
+#ifdef CONFIG_EXTENDED_ERRNO
+# define set_errno(e_code){ \
+	errno = e_code; \
+	errno_file = __FILE__; \
+	errno_line = __LINE__; \
+}
+#else
+# define set_errno(e_code){ \
+	errno = e_code; \
+}
+#endif // CONFIG_EXTENDED_ERRNO
+
 #define reset_errno()				set_errno(0)
 #define return_errno(e_code)		{ set_errno(e_code); return (-e_code); }
 #define goto_errno(label, e_code)	{ set_errno(e_code); goto label; }
@@ -38,6 +52,11 @@ typedef enum{
 
 /* external variables */
 extern errno_t errno;
+
+#ifdef CONFIG_EXTENDED_ERRNO
+extern char const *errno_file;
+extern unsigned int errno_line;
+#endif // CONFIG_EXTENDED_ERRNO
 
 
 #endif // SYS_ERRNO_H

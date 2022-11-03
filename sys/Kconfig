@@ -55,6 +55,12 @@ endif
 # miscellaneous
 #
 # {{{
+config EXTENDED_ERRNO
+	bool "extended errno informtion"
+	depends on BUILD_DEBUG
+	help
+		enable tracking of file and line number when setting errno
+
 config NAME_MAX
 	int "maximum name length"
 	default 16

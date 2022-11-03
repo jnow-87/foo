@@ -146,9 +146,6 @@ static size_t putsn(char const *s, size_t n, void *hw){
 	size_t i;
 
 
-	if(s == 0x0)
-		goto_errno(err, E_INVAL);
-
 	for(i=0; i<n; i++, s++){
 		regs->spdr = *s;
 		while(!(regs->spsr & (0x1 << SPSR_SPIF)));

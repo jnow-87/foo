@@ -80,6 +80,34 @@ bool iskheap(void *addr){
 	return addr >= kmem_dt_node->base && addr < kmem_dt_node->base + kmem_dt_node->size;
 }
 
+int copy_from_user(void *kernel, void const *user, size_t n, struct process_t *this_p){
+	if(user == 0x0)
+		return_errno(E_INVAL);
+
+	if(arch_ops_kernel.copy_from_user != 0x0)
+		return arch_ops_kernel.copy_from_user(kernel, user, n, this_p);
+
+	memcpy(kernel, user, n);
+
+	return 0;
+
+
+err:
+	return 0x0;
+}
+
+int copy_to_user(void *user, void const *kernel, size_t n, struct process_t *this_p){
+	if(user == 0x0)
+		return_errno(E_INVAL);
+
+	if(arch_ops_kernel.copy_to_user != 0x0)
+		return arch_ops_kernel.copy_to_user(user, kernel, n, this_p);
+
+	memcpy(user, kernel, n);
+
+	return 0;
+}
+
 #ifdef CONFIG_KERNEL_VIRT_MEM
 void *addr_virt_to_phys(void *va){
 	// TODO

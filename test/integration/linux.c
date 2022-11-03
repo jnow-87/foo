@@ -18,8 +18,8 @@ static void lnx_verify_constants(void) __unused;
 
 /* local functions */
 static void lnx_verify_constants(void){
-	BUILD_ASSERT(LNX_O_RDONLY == O_RDONLY);
-	BUILD_ASSERT(LNX_O_WRONLY == O_WRONLY);
-	BUILD_ASSERT(LNX_O_RDWR == O_RDWR);
-	BUILD_ASSERT(LNX_O_CREAT == O_CREAT);
+	STATIC_ASSERT(LNX_O_RDONLY == O_RDONLY);
+	STATIC_ASSERT(LNX_O_WRONLY == O_WRONLY);
+	STATIC_ASSERT(LNX_O_RDWR == O_RDWR);
+	STATIC_ASSERT(LNX_O_CREAT == O_CREAT);
 }

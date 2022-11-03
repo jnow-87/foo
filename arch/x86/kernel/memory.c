@@ -26,38 +26,42 @@ static int kheap_shmid = -1;
 
 
 /* global functions */
-void x86_copy_from_user(void *target, void const *src, unsigned int n, struct process_t const *this_p){
+int x86_copy_from_user(void *kernel, void const *user, size_t n, struct process_t const *this_p){
 	x86_hw_op_t op;
 
 
 	op.num = HWO_COPY_FROM_USER;
-	op.copy.addr = (void*)src;
+	op.copy.addr = (void*)user;
 	op.copy.n = n;
 
-	LNX_DEBUG("copy_from(addr = %p, size = %u)\n", src, n);
+	LNX_DEBUG("copy_from(addr = %p, size = %u)\n", user, n);
 
 	x86_hw_op_write(&op);
-	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, target, n);
+	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, kernel, n);
 	x86_hw_op_write_writeback(&op);
 
 	LNX_DEBUG("  status: %d\n", op.retval);
+
+	return op.retval;
 }
 
-void x86_copy_to_user(void *target, void const *src, unsigned int n, struct process_t const *this_p){
+int x86_copy_to_user(void *user, void const *kernel, size_t n, struct process_t const *this_p){
 	x86_hw_op_t op;
 
 
 	op.num = HWO_COPY_TO_USER;
-	op.copy.addr = target;
+	op.copy.addr = user;
 	op.copy.n = n;
 
-	LNX_DEBUG("copy_to(addr = %p, size = %u)\n", target, n);
+	LNX_DEBUG("copy_to(addr = %p, size = %u)\n", user, n);
 
 	x86_hw_op_write(&op);
-	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, src, n);
+	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, kernel, n);
 	x86_hw_op_write_writeback(&op);
 
 	LNX_DEBUG("  status: %d\n", op.retval);
+
+	return op.retval;
 }
 
 void x86_memory_cleanup(void){
