@@ -7,7 +7,10 @@
 
 
 
-# check if $(arch) is empty to avoid make infinite loop
-ifneq ($(wildcard $(loc_src_tree)/$(CONFIG_ARCH)),)
-  hostobj-y += $(CONFIG_ARCH)/
+# check if CONFIG_ARCH is set and a corresponding directory exists
+# to avoid overwriting make targets
+ifneq ($(CONFIG_ARCH),)
+  ifneq ($(wildcard $(loc_src_tree)/$(CONFIG_ARCH)),)
+    hostobj-y += $(CONFIG_ARCH)/
+  endif
 endif
