@@ -9,7 +9,6 @@
 
 %option prefix="devtree"
 %option noyywrap
-%option nounput
 %option noinput
 
 %{
@@ -26,6 +25,13 @@
 		devtreelloc.first_column = devtree_col; \
 		devtreelloc.last_column = devtree_col + devtreeleng; \
 		devtree_col += devtreeleng; \
+	}
+
+	/* make yyunput available outside of the lexer */
+	static void yyunput(int c, char *buf_ptr);
+
+	void devtreeunput(char c){
+		yyunput(c, (yytext_ptr));
 	}
 %}
 

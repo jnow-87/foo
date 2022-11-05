@@ -97,12 +97,8 @@
 	})
 
 	// vector add
-	#define INT_LIST_ADD(v, payload){ \
-		typeof(v) _v = v; \
-		typeof(payload) _payload = payload; \
-		\
-		\
-		if(!_payload.empty && vector_add(_v, &_payload.val) != 0) \
+	#define INT_LIST_ADD(v, val){ \
+		if(vector_add(v, &val) != 0) \
 			PARSER_ERROR("adding to vector\n"); \
 	}
 
@@ -171,6 +167,8 @@
 
 
 	/* prototypes */
+	extern void devtreeunput(char c);
+
 	static int devtreeerror(char const *file, device_node_t *devices_root, memory_node_t *memory_root, char const *s);
 	static void cleanup(void);
 %}
@@ -209,11 +207,6 @@
 	unsigned int i;
 
 	struct{
-		bool empty;
-		unsigned int val;
-	} opt_int;
-
-	struct{
 		char *s;
 		unsigned int len;
 	} str;
@@ -247,61 +240,57 @@
 %type <memory> memory
 %type <memory> memory-attr
 %type <int_lst> int-list
-%type <opt_int> int-list-val
+%type <int_lst> opt-int
 
 
 %%
 
 
 /* start */
-start : error															{ cleanup(); YYABORT; }
-	  | section-lst														{ cleanup(); }
+start : error														{ cleanup(); YYABORT; }
+	  | section-lst													{ cleanup(); }
 	  ;
 
 /* sections */
-section-lst : %empty													{ }
-			| section-lst section ';'									{ }
+section-lst : %empty												{ }
+			| section-lst section ';'								{ }
 			;
 
-section : SEC_DEVICES '=' '{' devices-lst '}'							{ }
-		| SEC_MEMORY '=' '{' memory-lst '}'								{ }
+section : SEC_DEVICES '=' '{' devices-lst '}'						{ }
+		| SEC_MEMORY '=' '{' memory-lst '}'							{ }
 		;
 
 /* node lists */
-devices-lst : %empty { } | devices-lst devices ';'						{ NODE_VALIDATE_DEVICES($2); $2->parent = devices_root; list_add_tail(devices_root->childs, $2); };
-memory-lst : %empty { } | memory-lst memory ';'							{ NODE_VALIDATE_MEMORY($2); $2->parent = memory_root; list_add_tail(memory_root->childs, $2); };
+devices-lst : %empty { } | devices-lst devices ';'					{ NODE_VALIDATE_DEVICES($2); $2->parent = devices_root; list_add_tail(devices_root->childs, $2); };
+memory-lst : %empty { } | memory-lst memory ';'						{ NODE_VALIDATE_MEMORY($2); $2->parent = memory_root; list_add_tail(memory_root->childs, $2); };
 
 /* nodes */
-devices : IDFR '=' '{' devices-attr '}'									{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); };
-memory : IDFR '=' '{' memory-attr '}'									{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); };
+devices : IDFR '=' '{' devices-attr '}'								{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); };
+memory : IDFR '=' '{' memory-attr '}'								{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); };
 
 /* node attributes */
-devices-attr : %empty													{ $$ = NODE_ALLOC_DEVICES(); }
-			| devices-attr devices ';'									{ $$ = $1; NODE_VALIDATE_DEVICES($2); $2->parent = $$; list_add_tail($$->childs, $2); }
-			| devices-attr NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = STRALLOC($4.s, $4.len); }
-			| devices-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
-			| devices-attr NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
-			| devices-attr NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
-			| devices-attr NA_STRING '=' STRING ';'						{ $$ = $1; MEMBER_ADD($$, MT_STRING, STRALLOC($4.s, $4.len)); }
-			;
+devices-attr : %empty												{ $$ = NODE_ALLOC_DEVICES(); }
+			 | devices-attr devices ';'								{ $$ = $1; NODE_VALIDATE_DEVICES($2); $2->parent = $$; list_add_tail($$->childs, $2); }
+			 | devices-attr NA_COMPATIBLE '=' STRING ';'			{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = STRALLOC($4.s, $4.len); }
+			 | devices-attr NA_BASEADDR '=' INT ';'					{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
+			 | devices-attr NA_REG '=' int-list ';'					{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $4); }
+			 | devices-attr NA_INT '<' INT '>' '=' int-list ';'		{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $7)); }
+			 | devices-attr NA_STRING '=' STRING ';'				{ $$ = $1; MEMBER_ADD($$, MT_STRING, STRALLOC($4.s, $4.len)); }
+			 ;
 
-memory-attr : %empty													{ $$ = NODE_ALLOC_MEMORY(); }
-			| memory-attr memory ';'									{ $$ = $1; NODE_VALIDATE_MEMORY($2); $2->parent = $$; list_add_tail($$->childs, $2); }
-			| memory-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
-			| memory-attr NA_SIZE '=' INT ';'							{ $$ = $1; $$->size = (size_t)$4; }
+memory-attr : %empty												{ $$ = NODE_ALLOC_MEMORY(); }
+			| memory-attr memory ';'								{ $$ = $1; NODE_VALIDATE_MEMORY($2); $2->parent = $$; list_add_tail($$->childs, $2); }
+			| memory-attr NA_BASEADDR '=' INT ';'					{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
+			| memory-attr NA_SIZE '=' INT ';'						{ $$ = $1; $$->size = (size_t)$4; }
 			;
 
 /* basic types */
-int-list : int-list-val													{ $$ = INT_LIST_ALLOC(); INT_LIST_ADD($$, $1); }
-		 | int-list opt-com int-list-val								{ $$ = $1; INT_LIST_ADD($$, $3); }
+int-list : '[' opt-int ']'											{ $$ = $2; }
+		 | '[' opt-int ',' ']'										{ $$ = $2; }
 		 ;
 
-int-list-val : %empty													{ $$.empty = true; }
-			 | INT														{ $$.empty = false; $$.val = $1; }
-			 ;
-
-opt-com : %empty														{ }
-		| ','															{ }
+opt-int : %empty													{ $$ = INT_LIST_ALLOC(); devtreeunput(','); }
+		| opt-int ',' INT											{ $$ = $1; INT_LIST_ADD($$, $3); }
 		;
 
 
