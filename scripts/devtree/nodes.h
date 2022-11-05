@@ -64,4 +64,21 @@ typedef struct memory_node_t{
 } memory_node_t;
 
 
+/* prototypes */
+int nodes_init(void);
+void nodes_cleanup(void);
+
+device_node_t *device_root(void);
+device_node_t *device_node_alloc(void);
+int device_node_add_child(device_node_t *parent, device_node_t *node);
+int device_node_add_member(device_node_t *node, member_type_t type, void *payload);
+int device_node_set_compatible(device_node_t *node, char const *compatible);
+
+memory_node_t *memory_root(void);
+memory_node_t *memory_node_alloc(void);
+int memory_node_add_child(memory_node_t *parent, memory_node_t *node);
+
+void *node_intlist_alloc(size_t size, void *payload);
+
+
 #endif // DEVTREE_NODE_H

@@ -7,6 +7,7 @@
 
 
 
+#include <sys/list.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -14,6 +15,7 @@
 #include <parser.tab.h>
 #include <export.h>
 #include <options.h>
+#include <nodes.h>
 
 
 /* local/static prototypes */
@@ -24,26 +26,18 @@ static void complement_node(memory_node_t *node);
 int main(int argc, char **argv){
 	FILE *fp;
 	int r;
-	device_node_t devices_root;
-	memory_node_t memory_root;
 
 
-	/* parse arguments */
 	opt_parse(argc, argv);
 
 	/* parse device tree */
-	memset(&devices_root, 0, sizeof(device_node_t));
-	devices_root.name = "devices_root";
-	devices_root.compatible = "";
+	if(nodes_init() != 0)
+		goto err_0;
 
-	memset(&memory_root, 0, sizeof(memory_node_t));
-	memory_root.name = "memory_root";
+	if(devtreeparse(options.ifile_name) != 0)
+		goto err_1;
 
-	if(devtreeparse(options.ifile_name, &devices_root, &memory_root) != 0)
-		return 2;
-
-	/* complement node data */
-	complement_node(&memory_root);
+	complement_node(memory_root());
 
 	/* write output file */
 	fp = stdout;
@@ -55,9 +49,8 @@ int main(int argc, char **argv){
 
 	if(fp == 0x0){
 		fprintf(stderr, "open \"%s\" failed \"%s\"\n", options.ofile_name, strerror(errno));
-		return 3;
+		goto err_1;
 	}
-
 
 	r = 0;
 
@@ -65,33 +58,43 @@ int main(int argc, char **argv){
 	case FMT_C:
 		r |= export_c_header(fp);
 
-		if(options.export_sections & DT_DEVICES)	r |= export_devices_c(&devices_root, fp);
-		if(options.export_sections & DT_MEMORY)		r |= export_memory_c(&memory_root, fp);
+		if(options.export_sections & DT_DEVICES)	r |= export_device_c(device_root(), fp);
+		if(options.export_sections & DT_MEMORY)		r |= export_memory_c(memory_root(), fp);
 		break;
 
 	case FMT_HEADER:
 		r |= export_header_header(fp);
 
-		if(options.export_sections & DT_DEVICES)	r |= export_devices_header(&devices_root, fp);
-		if(options.export_sections & DT_MEMORY)		r |= export_memory_header(&memory_root, fp);
+		if(options.export_sections & DT_DEVICES)	r |= export_device_header(device_root(), fp);
+		if(options.export_sections & DT_MEMORY)		r |= export_memory_header(memory_root(), fp);
 		break;
 
 	case FMT_MAKE:
 		r |= export_make_header(fp);
 
-		if(options.export_sections & DT_DEVICES)	r |= export_devices_make(&devices_root, fp);
-		if(options.export_sections & DT_MEMORY)		r |= export_memory_make(&memory_root, fp);
+		if(options.export_sections & DT_DEVICES)	r |= export_device_make(device_root(), fp);
+		if(options.export_sections & DT_MEMORY)		r |= export_memory_make(memory_root(), fp);
 		break;
 	}
 
+	if(r != 0)
+		goto err_2;
+
+	nodes_cleanup();
 	fclose(fp);
 
-	if(r != 0 && fp != stdout){
-		unlink(argv[2]);
-		return 4;
-	}
-
 	return 0;
+
+
+err_2:
+	if(fp != stdout)
+		unlink(argv[2]);
+
+err_1:
+	nodes_cleanup();
+
+err_0:
+	return 1;
 }
 
 

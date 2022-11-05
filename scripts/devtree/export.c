@@ -14,7 +14,7 @@
 #include <sys/list.h>
 #include <sys/escape.h>
 #include <options.h>
-#include <node.h>
+#include <nodes.h>
 
 
 /* global functions */
@@ -40,19 +40,20 @@ int export_c_header(FILE *fp){
 	return 0;
 }
 
-int export_devices_c(device_node_t *node, FILE *fp){
+int export_device_c(device_node_t *node, FILE *fp){
+	size_t name_len = strlen(node->name) + 1;
 	int r;
 	size_t n_int,
 		   n_reg,
 		   n_base;
 	unsigned int *p;
-	char node_cname[NAME_MAX + 1];
+	char node_cname[name_len];
 	member_int_t *int_lst;
 	member_t *m;
 	device_node_t *child;
 
 
-	strcident_r(node->name, node_cname, NAME_MAX + 1);
+	strcident_r(node->name, node_cname, name_len);
 
 	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node_cname);
 
@@ -183,7 +184,7 @@ int export_devices_c(device_node_t *node, FILE *fp){
 
 	/* export childs */
 	list_for_each(node->childs, child){
-		if((r = export_devices_c(child, fp)))
+		if((r = export_device_c(child, fp)))
 			return r;
 	}
 
@@ -191,12 +192,13 @@ int export_devices_c(device_node_t *node, FILE *fp){
 }
 
 int export_memory_c(memory_node_t *node, FILE *fp){
+	size_t name_len = strlen(node->name) + 1;
 	int r;
-	char node_cname[NAME_MAX + 1];
+	char node_cname[name_len];
 	memory_node_t *child;
 
 
-	strcident_r(node->name, node_cname, NAME_MAX + 1);
+	strcident_r(node->name, node_cname, name_len);
 
 	fprintf(fp, "/**\n *\t__dt_%s\n */\n", node_cname);
 
@@ -256,7 +258,7 @@ int export_header_header(FILE *fp){
 	return 0;
 }
 
-int export_devices_header(device_node_t *node, FILE *fp){
+int export_device_header(device_node_t *node, FILE *fp){
 	device_node_t *child;
 
 
@@ -265,7 +267,7 @@ int export_devices_header(device_node_t *node, FILE *fp){
 
 	/* export childs */
 	list_for_each(node->childs, child)
-		(void)export_devices_header(child, fp);
+		(void)export_device_header(child, fp);
 
 	return 0;
 }
@@ -298,7 +300,7 @@ int export_make_header(FILE *fp){
 	return 0;
 }
 
-int export_devices_make(device_node_t *node, FILE *fp){
+int export_device_make(device_node_t *node, FILE *fp){
 	device_node_t *child;
 
 
@@ -307,7 +309,7 @@ int export_devices_make(device_node_t *node, FILE *fp){
 
 	/* export childs */
 	list_for_each(node->childs, child)
-		(void)export_devices_make(child, fp);
+		(void)export_device_make(child, fp);
 
 	return 0;
 }

@@ -48,7 +48,7 @@ devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root
 
 
 /* external variables */
-extern devtree_device_t const __dt_devices_root;
+extern devtree_device_t const __dt_device_root;
 extern devtree_memory_t const __dt_memory_root;
 
 
