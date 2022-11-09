@@ -26,12 +26,14 @@
 	#define YYERROR_VERBOSE
 	#define YYDEBUG	1
 
-
 	// parser error message
 	#define EABORT(expr){ \
 		if((expr) != 0) \
 			YYERROR; \
 	}
+
+	// helper
+	#define NODE_ADD_CHILD(parent, child)	node_add_child((base_node_t*)parent, (base_node_t*)child)
 
 
 	/* local/static variables */
@@ -126,7 +128,7 @@
 
 /* start */
 start : error														{ cleanup(); YYABORT; }
-	  | section-lst													{ cleanup(); }
+	  | section-lst													{ cleanup(); memory_node_complement(memory_root()); }
 	  ;
 
 /* sections */
@@ -140,10 +142,10 @@ section : SEC_DEVICES '=' '{' devices-lst '}'						{ }
 
 /* node lists */
 devices-lst : %empty												{ }
-			| devices-lst device ';'								{ EABORT(device_node_add_child(device_root(), $2)); };
+			| devices-lst device ';'								{ EABORT(NODE_ADD_CHILD(device_root(), $2)); };
 
 memory-lst : %empty													{ }
-		   | memory-lst memory ';'									{ EABORT(memory_node_add_child(memory_root(), $2)); };
+		   | memory-lst memory ';'									{ EABORT(NODE_ADD_CHILD(memory_root(), $2)); };
 
 /* nodes */
 device : IDFR '=' '{' devices-attr '}'								{ $$ = $4; $$->name = stralloc($1.s, $1.len); EABORT($$->name == 0x0); };
@@ -151,8 +153,8 @@ memory : IDFR '=' '{' memory-attr '}'								{ $$ = $4; $$->name = stralloc($1.s
 
 /* node attributes */
 devices-attr : %empty												{ $$ = device_node_alloc(); EABORT($$ == 0x0); }
-			 | devices-attr device ';'								{ $$ = $1; EABORT(device_node_add_child($$, $2)); }
-			 | devices-attr NA_COMPATIBLE '=' STRING ';'			{ $$ = $1; EABORT(device_node_set_compatible($$, stralloc($4.s, $4.len))); }
+			 | devices-attr device ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
+			 | devices-attr NA_COMPATIBLE '=' STRING ';'			{ $$ = $1; $$->compatible = stralloc($4.s, $4.len); EABORT($$->compatible == 0x0); }
 			 | devices-attr NA_BASEADDR '=' INT ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_BASE_ADDR, (void*)(unsigned long int)$4)); }
 			 | devices-attr NA_REG '=' int-list ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_REG_LIST, $4)); }
 			 | devices-attr NA_INT '<' INT '>' '=' int-list ';'		{ $$ = $1; EABORT(device_node_add_member($$, MT_INT_LIST, node_intlist_alloc($4, $7))); }
@@ -160,7 +162,7 @@ devices-attr : %empty												{ $$ = device_node_alloc(); EABORT($$ == 0x0); 
 			 ;
 
 memory-attr : %empty												{ $$ = memory_node_alloc(); EABORT($$ == 0x0); }
-			| memory-attr memory ';'								{ $$ = $1; EABORT(memory_node_add_child($$, $2)); }
+			| memory-attr memory ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
 			| memory-attr NA_BASEADDR '=' INT ';'					{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
 			| memory-attr NA_SIZE '=' INT ';'						{ $$ = $1; $$->size = (size_t)$4; }
 			;

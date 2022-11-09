@@ -11,22 +11,31 @@
 #define DEVTREE_NODE_H
 
 
+#include <sys/compiler.h>
 #include <sys/vector.h>
 #include <stdio.h>
 
 
+/* macros */
+#define BASE_NODE_COMPATIBLE(node_type) \
+	STATIC_ASSERT(offsetof(node_type, prev) == offsetof(base_node_t, prev)); \
+	STATIC_ASSERT(offsetof(node_type, next) == offsetof(base_node_t, next)); \
+	STATIC_ASSERT(offsetof(node_type, parent) == offsetof(base_node_t, parent)); \
+	STATIC_ASSERT(offsetof(node_type, childs) == offsetof(base_node_t, childs)); \
+	STATIC_ASSERT(offsetof(node_type, type) == offsetof(base_node_t, type)); \
+	STATIC_ASSERT(offsetof(node_type, name) == offsetof(base_node_t, name));
+
+
 /* types */
 typedef enum{
-	NT_SEC_DRIVER = 1,
-	NT_SEC_MEMORY,
-	NT_DATA,
+	NT_DEVICE = 1,
+	NT_MEMORY,
 } node_type_t;
 
 typedef enum{
 	MT_BASE_ADDR = 1,
 	MT_REG_LIST,
 	MT_INT_LIST,
-	MT_SIZE,
 	MT_STRING,
 } member_type_t;
 
@@ -40,17 +49,30 @@ typedef struct{
 	void *payload;
 } member_t;
 
+typedef struct base_node_t{
+	struct base_node_t *prev,
+					   *next,
+					   *parent,
+					   *childs;
+
+	node_type_t type;
+	char const *name;
+} base_node_t;
+
 typedef struct device_node_t{
 	struct device_node_t *prev,
 						 *next,
 						 *parent,
 						 *childs;
 
+	node_type_t type;
 	char const *name,
 			   *compatible;
 
 	vector_t payload;			/**< vector of member_t elements */
 } device_node_t;
+
+BASE_NODE_COMPATIBLE(device_node_t)
 
 typedef struct memory_node_t{
 	struct memory_node_t *prev,
@@ -58,26 +80,27 @@ typedef struct memory_node_t{
 						 *parent,
 						 *childs;
 
+	node_type_t type;
 	char const *name;
 	void *base;
 	size_t size;
 } memory_node_t;
 
+BASE_NODE_COMPATIBLE(memory_node_t)
+
 
 /* prototypes */
 int nodes_init(void);
-void nodes_cleanup(void);
 
 device_node_t *device_root(void);
 device_node_t *device_node_alloc(void);
-int device_node_add_child(device_node_t *parent, device_node_t *node);
 int device_node_add_member(device_node_t *node, member_type_t type, void *payload);
-int device_node_set_compatible(device_node_t *node, char const *compatible);
 
 memory_node_t *memory_root(void);
 memory_node_t *memory_node_alloc(void);
-int memory_node_add_child(memory_node_t *parent, memory_node_t *node);
+void memory_node_complement(memory_node_t *node);
 
+int node_add_child(base_node_t *parent, base_node_t *child);
 void *node_intlist_alloc(size_t size, void *payload);
 
 

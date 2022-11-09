@@ -17,6 +17,7 @@
 
 
 /* local/static prototypes */
+static void *alloc_node(size_t size, node_type_t type);
 static int add_name(char const *name);
 
 static int validate_device(device_node_t *node);
@@ -32,17 +33,15 @@ static vector_t node_names;
 /* global functions */
 int nodes_init(void){
 	memset(&root_device, 0, sizeof(device_node_t));
+	root_device.type = NT_DEVICE;
 	root_device.name = "device_root";
 	root_device.compatible = "";
 
 	memset(&root_memory, 0, sizeof(memory_node_t));
+	root_memory.type = NT_MEMORY;
 	root_memory.name = "memory_root";
 
 	return vector_init(&node_names, sizeof(char*), 16);
-}
-
-void nodes_cleanup(void){
-	vector_destroy(&node_names);
 }
 
 device_node_t *device_root(void){
@@ -53,7 +52,7 @@ device_node_t *device_node_alloc(void){
 	device_node_t *node;
 
 
-	node = calloc(1, sizeof(device_node_t));
+	node = alloc_node(sizeof(device_node_t), NT_DEVICE);
 
 	if(node == 0x0)
 		goto err_0;
@@ -68,19 +67,7 @@ err_1:
 	free(node);
 
 err_0:
-	devtree_parser_error("device node allocation failed");
-
 	return 0x0;
-}
-
-int device_node_add_child(device_node_t *parent, device_node_t *node){
-	if(validate_device(node) != 0)
-		return -1;
-
-	node->parent = parent;
-	list_add_tail(parent->childs, node);
-
-	return 0;
 }
 
 int device_node_add_member(device_node_t *node, member_type_t type, void *payload){
@@ -96,37 +83,54 @@ int device_node_add_member(device_node_t *node, member_type_t type, void *payloa
 	return 0;
 }
 
-int device_node_set_compatible(device_node_t *node, char const *compatible){
-	if(node->compatible != 0x0)
-		return devtree_parser_error("attribute \"compatible\" already set");
-
-	node->compatible = compatible;
-
-	return 0;
-}
-
 memory_node_t *memory_root(void){
 	return &root_memory;
 }
 
 memory_node_t *memory_node_alloc(void){
-	memory_node_t *node;
-
-
-	node = calloc(1, sizeof(memory_node_t));
-
-	if(node == 0x0)
-		devtree_parser_error("memory node allocation failed");
-
-	return node;
+	return alloc_node(sizeof(memory_node_t), NT_MEMORY);
 }
 
-int memory_node_add_child(memory_node_t *parent, memory_node_t *node){
-	if(validate_memory(node) != 0)
+void memory_node_complement(memory_node_t *node){
+	void *min = (void*)0xffffffff,
+		 *max = 0x0;
+	memory_node_t *child;
+
+
+	if(node == 0x0 || list_empty(node->childs))
+		return;
+
+	list_for_each(node->childs, child){
+		memory_node_complement(child);
+
+		if(min > child->base)
+			min = child->base;
+
+		if(max < child->base + child->size)
+			max = child->base + child->size;
+	}
+
+	if(node->size == 0){
+		node->base = min;
+		node->size = max - min;
+	}
+}
+
+int node_add_child(base_node_t *parent, base_node_t *child){
+	int r;
+
+
+	switch(child->type){
+	case NT_DEVICE:	r = validate_device((device_node_t*)child); break;
+	case NT_MEMORY:	r = validate_memory((memory_node_t*)child); break;
+	default:		r = devtree_parser_error("invalid node type %d", child->type);
+	}
+
+	if(r != 0 || add_name(child->name))
 		return -1;
 
-	node->parent = parent;
-	list_add_tail(parent->childs, node);
+	child->parent = parent;
+	list_add_tail(parent->childs, child);
 
 	return 0;
 }
@@ -154,6 +158,26 @@ err:
 
 
 /* local functions */
+static void *alloc_node(size_t size, node_type_t type){
+	base_node_t *node;
+
+
+	node = calloc(1, size);
+
+	if(node == 0x0)
+		goto err;
+
+	node->type = type;
+
+	return node;
+
+
+err:
+	devtree_parser_error("node allocation failed");
+
+	return 0x0;
+}
+
 static int add_name(char const *name){
 	char const **xname;
 
@@ -170,12 +194,12 @@ static int validate_device(device_node_t *node){
 	if(node->compatible == 0x0 || *node->compatible == 0)
 		return devtree_parser_error("attribute \"compatible\" not set");
 
-	return add_name(node->name);
+	return 0;
 }
 
 static int validate_memory(memory_node_t *node){
 	if(node->size == 0 && node->childs == 0x0)
 		return devtree_parser_error("zero-size memory node \"%s\"", node->name);
 
-	return add_name(node->name);
+	return 0;
 }
