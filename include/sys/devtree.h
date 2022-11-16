@@ -26,7 +26,6 @@ typedef struct devtree_device_t{
 
 	void const *payload;
 
-	struct devtree_device_t const *parent;
 	struct devtree_device_t const * const *childs;
 } devtree_device_t;
 
@@ -35,7 +34,6 @@ typedef struct devtree_memory_t{
 	void *base;
 	uint32_t size;
 
-	struct devtree_memory_t const *parent;
 	struct devtree_memory_t const * const *childs;
 } devtree_memory_t;
 

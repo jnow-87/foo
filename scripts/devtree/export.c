@@ -183,9 +183,6 @@ static void base_definition(FILE *fp, base_node_t *node, char const *node_ident)
 		break;
 	}
 
-	if(node->parent)				fprintf(fp, "\t.parent = &__dt_%s,\n", strcident(node->parent->name));
-	else							fprintf(fp, "\t.parent = 0x0,\n");
-
 	if(!list_empty(node->childs))	fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_ident);
 	else							fprintf(fp, "\t.childs = 0x0,\n");
 
