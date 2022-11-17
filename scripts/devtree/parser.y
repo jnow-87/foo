@@ -119,6 +119,7 @@
 %type <device> devices-attr
 %type <memory> memory
 %type <memory> memory-attr
+%type <i> int
 %type <int_lst> int-list
 %type <int_lst> opt-int
 
@@ -155,16 +156,16 @@ memory : IDFR '=' '{' memory-attr '}'								{ $$ = $4; $$->name = stralloc($1.s
 devices-attr : %empty												{ $$ = device_node_alloc(); EABORT($$ == 0x0); }
 			 | devices-attr device ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
 			 | devices-attr NA_COMPATIBLE '=' STRING ';'			{ $$ = $1; $$->compatible = stralloc($4.s, $4.len); EABORT($$->compatible == 0x0); }
-			 | devices-attr NA_BASEADDR '=' INT ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_BASE_ADDR, (void*)(unsigned long int)$4)); }
+			 | devices-attr NA_BASEADDR '=' int ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_BASE_ADDR, (void*)(unsigned long int)$4)); }
 			 | devices-attr NA_REG '=' int-list ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_REG_LIST, $4)); }
-			 | devices-attr NA_INT '<' INT '>' '=' int-list ';'		{ $$ = $1; EABORT(device_node_add_member($$, MT_INT_LIST, node_intlist_alloc($4, $7))); }
+			 | devices-attr NA_INT '<' int '>' '=' int-list ';'		{ $$ = $1; EABORT(device_node_add_member($$, MT_INT_LIST, node_intlist_alloc($4, $7))); }
 			 | devices-attr NA_STRING '=' STRING ';'				{ $$ = $1; EABORT(device_node_add_member($$, MT_STRING, stralloc($4.s, $4.len))); }
 			 ;
 
 memory-attr : %empty												{ $$ = memory_node_alloc(); EABORT($$ == 0x0); }
 			| memory-attr memory ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
-			| memory-attr NA_BASEADDR '=' INT ';'					{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
-			| memory-attr NA_SIZE '=' INT ';'						{ $$ = $1; $$->size = (size_t)$4; }
+			| memory-attr NA_BASEADDR '=' int ';'					{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
+			| memory-attr NA_SIZE '=' int ';'						{ $$ = $1; $$->size = (size_t)$4; }
 			;
 
 /* basic types */
@@ -173,8 +174,12 @@ int-list : '[' opt-int ']'											{ $$ = $2; }
 		 ;
 
 opt-int : %empty													{ $$ = intlist_alloc(); EABORT($$ == 0x0); devtreeunput(','); }
-		| opt-int ',' INT											{ $$ = $1; EABORT(intlist_add($$, $3)); }
+		| opt-int ',' int											{ $$ = $1; EABORT(intlist_add($$, $3)); }
 		;
+
+int : INT															{ $$ = $1; }
+	| int '+' INT													{ $$ += $3; }
+	;
 
 
 %%
