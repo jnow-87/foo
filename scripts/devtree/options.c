@@ -63,6 +63,7 @@ void opt_parse(int argc, char **argv){
 				if(strcmp(tk, "all") == 0)			options.export_sections = DT_ALL;
 				else if(strcmp(tk, "devices") == 0)	options.export_sections |= DT_DEVICES;
 				else if(strcmp(tk, "memory") == 0)	options.export_sections |= DT_MEMORY;
+				else if(strcmp(tk, "arch") == 0)	options.export_sections |= DT_ARCH;
 				else								help(argv[0], "unknown device tree section \"%s\"\n", tk);
 			}
 			break;
@@ -120,8 +121,8 @@ static void help(char const *prg_name, char const *msg, ...){
 		"    -o, --output    <output file>     output file\n"
 		"    -f, --format    <format>          output file format, either of c, header and make\n"
 		"    -s, --sections  <section list>    comma separated list of device tree sections\n"
-		"                                      to be exported, available sections are devices,\n"
-		"                                      memory and all\n"
+		"                                      to be exported, available sections are arch,\n"
+		"                                      devices, memory and all\n"
 		"    -h, --help                        print this help message\n"
 		,
 		prg_name

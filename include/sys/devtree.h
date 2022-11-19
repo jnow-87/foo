@@ -37,6 +37,10 @@ typedef struct devtree_memory_t{
 	struct devtree_memory_t const * const *childs;
 } devtree_memory_t;
 
+typedef struct{
+	struct devtree_device_t const * const *childs;
+} devtree_arch_t;
+
 
 /* prototypes */
 devtree_device_t const *devtree_find_device_by_name(devtree_device_t const *root, char const *name);
@@ -48,6 +52,7 @@ devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root
 /* external variables */
 extern devtree_device_t const __dt_device_root;
 extern devtree_memory_t const __dt_memory_root;
+extern devtree_arch_t const __dt_arch_root;
 
 
 #endif // SYS_DEVTREE_H

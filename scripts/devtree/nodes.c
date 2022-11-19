@@ -16,6 +16,13 @@
 #include <nodes.h>
 
 
+/* macros */
+#define ARCH_ASSERT_MISSING(member, default){ \
+	if(root_arch.member == default) \
+		return devtree_parser_error("missing arch attribute '" #member "'"); \
+}
+
+
 /* local/static prototypes */
 static void *alloc_node(size_t size, node_type_t type);
 static int add_name(char const *name);
@@ -27,6 +34,7 @@ static int validate_memory(memory_node_t *node);
 /* static variables */
 static device_node_t root_device;
 static memory_node_t root_memory;
+static arch_node_t root_arch;
 static vector_t node_names;
 
 
@@ -40,6 +48,10 @@ int nodes_init(void){
 	memset(&root_memory, 0, sizeof(memory_node_t));
 	root_memory.type = NT_MEMORY;
 	root_memory.name = "memory_root";
+
+	memset(&root_arch, 0, sizeof(arch_node_t));
+	root_arch.type = NT_ARCH;
+	root_arch.name = "arch_root";
 
 	return vector_init(&node_names, sizeof(char*), 16);
 }
@@ -114,6 +126,14 @@ void memory_node_complement(memory_node_t *node){
 		node->base = min;
 		node->size = max - min;
 	}
+}
+
+arch_node_t *arch_root(void){
+	return &root_arch;
+}
+
+int arch_validate(void){
+	return 0;
 }
 
 int node_add_child(base_node_t *parent, base_node_t *child){

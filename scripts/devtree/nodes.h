@@ -30,6 +30,7 @@
 typedef enum{
 	NT_DEVICE = 1,
 	NT_MEMORY,
+	NT_ARCH,
 } node_type_t;
 
 typedef enum{
@@ -88,6 +89,17 @@ typedef struct memory_node_t{
 
 BASE_NODE_COMPATIBLE(memory_node_t)
 
+typedef struct arch_node_t{
+	struct arch_node_t *prev,
+					   *next,
+					   *parent;
+	device_node_t *childs;
+
+	node_type_t type;
+	char const *name;
+} arch_node_t;
+
+BASE_NODE_COMPATIBLE(arch_node_t)
 
 /* prototypes */
 int nodes_init(void);
@@ -99,6 +111,9 @@ int device_node_add_member(device_node_t *node, member_type_t type, void *payloa
 memory_node_t *memory_root(void);
 memory_node_t *memory_node_alloc(void);
 void memory_node_complement(memory_node_t *node);
+
+arch_node_t *arch_root(void);
+int arch_validate(void);
 
 int node_add_child(base_node_t *parent, base_node_t *child);
 void *node_intlist_alloc(size_t size, void *payload);

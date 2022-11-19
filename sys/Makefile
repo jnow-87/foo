@@ -110,10 +110,10 @@ $(devtree_src): $(devtree_preproc) $(dtc)
 	$(call compile_file,$(dtc) --format=c --sections=all -o $@ $<)
 
 $(devtree_header): $(devtree_preproc) $(dtc)
-	$(call compile_file,$(dtc) --format=header --sections=memory -o $@ $<)
+	$(call compile_file,$(dtc) --format=header --sections=memory$(comma)arch -o $@ $<)
 
 $(devtree_make): $(devtree_preproc) $(dtc)
-	$(call compile_file,$(dtc) --format=make --sections=memory -o $@ $<)
+	$(call compile_file,$(dtc) --format=make --sections=memory$(comma)arch -o $@ $<)
 
 
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,      $(devtree_src),)

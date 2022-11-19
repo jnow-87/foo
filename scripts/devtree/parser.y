@@ -93,6 +93,7 @@
 
 	device_node_t *device;
 	memory_node_t *memory;
+	arch_node_t *arch;
 	vector_t *int_lst;
 }
 
@@ -105,6 +106,7 @@
 // sections
 %token SEC_DEVICES
 %token SEC_MEMORY
+%token SEC_ARCH
 
 // node attributes
 %token NA_COMPATIBLE
@@ -129,7 +131,7 @@
 
 /* start */
 start : error														{ cleanup(); YYABORT; }
-	  | section-lst													{ cleanup(); memory_node_complement(memory_root()); }
+	  | section-lst													{ EABORT(arch_validate()); memory_node_complement(memory_root()); cleanup(); }
 	  ;
 
 /* sections */
@@ -139,6 +141,7 @@ section-lst : %empty												{ }
 
 section : SEC_DEVICES '=' '{' devices-lst '}'						{ }
 		| SEC_MEMORY '=' '{' memory-lst '}'							{ }
+		| SEC_ARCH '=' '{' arch-lst '}'								{ }
 		;
 
 /* node lists */
@@ -147,6 +150,10 @@ devices-lst : %empty												{ }
 
 memory-lst : %empty													{ }
 		   | memory-lst memory ';'									{ EABORT(NODE_ADD_CHILD(memory_root(), $2)); };
+
+arch-lst : %empty													{ }
+		 | arch-lst device ';'										{ EABORT(NODE_ADD_CHILD(arch_root(), $2)); }
+		 ;
 
 /* nodes */
 device : IDFR '=' '{' devices-attr '}'								{ $$ = $4; $$->name = stralloc($1.s, $1.len); EABORT($$->name == 0x0); };

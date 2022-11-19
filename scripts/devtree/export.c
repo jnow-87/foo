@@ -38,12 +38,15 @@ static void traverse(FILE *fp, base_node_t *node, write_attr_t write_attr);
 
 static void device_makevars(FILE *fp, base_node_t *node, char const *node_ident);
 static void memory_makevars(FILE *fp, base_node_t *node, char const *node_ident);
+static void arch_makevars(FILE *fp, base_node_t *node, char const *node_ident);
 static void device_macros(FILE *fp, base_node_t *node, char const *node_ident);
 static void memory_macros(FILE *fp, base_node_t *node, char const *node_ident);
+static void arch_macros(FILE *fp, base_node_t *node, char const *node_ident);
 static void base_declaration(FILE *fp, base_node_t *node, char const *node_ident);
 static void base_definition(FILE *fp, base_node_t *node, char const *node_ident);
 static void device_definition(FILE *fp, base_node_t *node, char const *node_ident);
 static void memory_definition(FILE *fp, base_node_t *node, char const *node_ident);
+static void arch_definition(FILE *fp, base_node_t *node, char const *node_ident);
 
 static void file_header(FILE *fp, char const *start_comment, char const *end_comment);
 static void section_header(FILE *fp, char const *start_comment, char const *end_comment, char const *s);
@@ -77,6 +80,11 @@ void export_make(FILE *fp){
 		MAKE_SECTION_HEADER(fp, "memory variables");
 		traverse(fp, (base_node_t*)memory_root(), memory_makevars);
 	}
+
+	if(options.export_sections & DT_ARCH){
+		MAKE_SECTION_HEADER(fp, "arch variables");
+		traverse(fp, (base_node_t*)arch_root(), arch_makevars);
+	}
 }
 
 void export_header(FILE *fp){
@@ -91,6 +99,11 @@ void export_header(FILE *fp){
 	if(options.export_sections & DT_MEMORY){
 		SRC_SECTION_HEADER(fp, "memory macros");
 		traverse(fp, (base_node_t*)memory_root(), memory_macros);
+	}
+
+	if(options.export_sections & DT_ARCH){
+		SRC_SECTION_HEADER(fp, "arch macros");
+		traverse(fp, (base_node_t*)arch_root(), arch_macros);
 	}
 
 	include_guard_bottom(fp);
@@ -114,6 +127,14 @@ void export_source(FILE *fp){
 
 		SRC_SECTION_HEADER(fp, "memory node definitions");
 		traverse(fp, (base_node_t*)memory_root(), base_definition);
+	}
+
+	if(options.export_sections & DT_ARCH){
+		SRC_SECTION_HEADER(fp, "arch node declarations");
+		traverse(fp, (base_node_t*)arch_root(), base_declaration);
+
+		SRC_SECTION_HEADER(fp, "arch node definitions");
+		traverse(fp, (base_node_t*)arch_root(), base_definition);
 	}
 }
 
@@ -146,6 +167,14 @@ static void memory_makevars(FILE *fp, base_node_t *node, char const *node_ident)
 	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", node_ident, mem->size);
 }
 
+static void arch_makevars(FILE *fp, base_node_t *node, char const *node_ident){
+	arch_node_t *arch = (arch_node_t*)node;
+
+
+	if(node->type != NT_ARCH)
+		return;
+}
+
 static void device_macros(FILE *fp, base_node_t *node, char const *node_ident){
 	fprintf(fp, "#define DEVTREE_%s_COMPATIBLE %zu\n", strupr(node_ident), ((device_node_t*)node)->compatible);
 }
@@ -158,6 +187,14 @@ static void memory_macros(FILE *fp, base_node_t *node, char const *node_ident){
 
 	fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", node_ident, mem->base);
 	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", node_ident, mem->size);
+}
+
+static void arch_macros(FILE *fp, base_node_t *node, char const *node_ident){
+	arch_node_t *arch = (arch_node_t*)node;
+
+
+	if(arch->type != NT_ARCH)
+		return;
 }
 
 static void base_declaration(FILE *fp, base_node_t *node, char const *node_ident){
@@ -177,6 +214,7 @@ static void base_definition(FILE *fp, base_node_t *node, char const *node_ident)
 	switch(node->type){
 	case NT_DEVICE:	device_definition(fp, node, node_ident); break;
 	case NT_MEMORY:	memory_definition(fp, node, node_ident); break;
+	case NT_ARCH:	arch_definition(fp, node, node_ident); break;
 
 	default:
 		WARN(node, "unexpected node type (%d)\n", node->type);
@@ -210,6 +248,16 @@ static void memory_definition(FILE *fp, base_node_t *node, char const *node_iden
 	fprintf(fp, "\t.name = \"%s\",\n", mem->name);
 	fprintf(fp, "\t.base = (void*)%#x,\n", mem->base);
 	fprintf(fp, "\t.size = %zu,\n", mem->size);
+}
+
+static void arch_definition(FILE *fp, base_node_t *node, char const *node_ident){
+	arch_node_t *arch = (arch_node_t*)node;
+
+
+	if(node->type == NT_ARCH){
+	}
+	else if(node->type == NT_DEVICE)
+		device_definition(fp, node, node_ident);
 }
 
 static void file_header(FILE *fp, char const *start_comment, char const *end_comment){

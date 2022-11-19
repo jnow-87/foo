@@ -51,6 +51,7 @@
 	/* sections */
 "devices"						{ return SEC_DEVICES; }
 "memory"						{ return SEC_MEMORY; }
+"arch"							{ return SEC_ARCH; }
 
 	/* node attributes */
 "compatible"					{ return NA_COMPATIBLE; }
