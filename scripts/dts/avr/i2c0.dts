@@ -27,9 +27,9 @@ i2c0 = {
 	   1,				// broadcast (enabled)
 	   1,				// address
 #ifdef CONFIG_DRIVER_SSD1306
-	   0,				// interrupt number
+	   0,				// interrupt
 #else
-	   26,
+	   26,				// interrupt (twi)
 #endif // CONFIG_DRIVER_SSD1306
 	];
 

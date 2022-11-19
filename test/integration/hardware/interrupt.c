@@ -13,6 +13,7 @@
 #include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/list.h>
+#include <sys/devicetree.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 #include <brickos/brickos.h>
@@ -59,7 +60,7 @@ static size_t priorities[] = {
 	0,	// INT_UART1
 };
 
-STATIC_ASSERT(sizeof_array(priorities) == ARCH_NUM_INTS);
+STATIC_ASSERT(sizeof_array(priorities) == DEVTREE_ARCH_NUM_INTS);
 
 
 /* global functions */

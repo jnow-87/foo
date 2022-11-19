@@ -17,8 +17,8 @@ uart1 = {
 	int<8> = [ 0x10 ];	// PRR0_PRUSART1
 
 	int<8> = [
-		28,				// uart1 rx interrupt
-		30,				// uart1 tx interrupt (disabled)
+		28,				// rx interrupt (uart1)
+		30,				// tx interrupt (uart1)
 	];
 
 	// cfg (uart_cfg_t)

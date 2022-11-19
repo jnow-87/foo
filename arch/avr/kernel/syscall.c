@@ -20,7 +20,7 @@ static void sc_hdlr(int_num_t num, void *payload);
 
 /* local functions */
 static int init(void){
-	return int_register(AVR_NUM_HW_INTS, sc_hdlr, 0x0);
+	return int_register(INT_SYSCALL, sc_hdlr, 0x0);
 }
 
 platform_init(0, init);

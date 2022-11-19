@@ -12,6 +12,7 @@
 
 
 #include <sys/compiler.h>
+#include <sys/types.h>
 #include <sys/vector.h>
 #include <stdio.h>
 
@@ -97,6 +98,9 @@ typedef struct arch_node_t{
 
 	node_type_t type;
 	char const *name;
+
+	int8_t num_ints,
+		   num_vints;
 } arch_node_t;
 
 BASE_NODE_COMPATIBLE(arch_node_t)

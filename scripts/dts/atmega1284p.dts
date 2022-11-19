@@ -10,6 +10,10 @@
 #include <config/config.h>
 
 
+arch = {
+#include "avr/arch-atmega1284p.dts"
+};
+
 memory = {
 #include "avr/memory-atmega1284p.dts"
 };

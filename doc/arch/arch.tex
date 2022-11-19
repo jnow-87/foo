@@ -29,11 +29,6 @@
 			\item \lstinline{struct thread_ctx_t}: struct to store the processor context
 		\end{itemize}
 
-	\subsection{Constants}
-		\begin{itemize}
-			\item \lstinline{ARCH_NUM_INTS}: number of hardware interrupts
-		\end{itemize}
-
 	\subsection{Callback Functions}
 		The callback functions are registers by defining variables of type \hyperref[structarch__ops__kernel__t]{arch\_ops\_kernel\_t} and \hyperref[structarch__ops__common__t]{arch\_ops\_common\_t} named \lstinline{arch_ops_kernel} and \lstinline{arch_ops_common}. Further, in order to get access to the architecture specific data, a variable of type \lstinline{arch_info_t}, named \lstinline{arch_info} needs to be declared.
 

@@ -183,15 +183,6 @@ endmenu
 # }}}
 
 #
-# interrupts
-#
-# {{{
-config INT_VIRTUALS
-	int "virtual interrupts"
-	default 0
-# }}}
-
-#
 # init binary
 #
 # {{{

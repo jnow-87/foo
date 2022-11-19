@@ -15,10 +15,11 @@
 #include <kernel/sched.h>
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <sys/devicetree.h>
 
 
 /* macros */
-#define NUM_INTS	(ARCH_NUM_INTS + CONFIG_INT_VIRTUALS)
+#define NUM_INTS	(DEVTREE_ARCH_NUM_INTS + DEVTREE_ARCH_NUM_VINTS)
 
 
 /* local/static prototypes */

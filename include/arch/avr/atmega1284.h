@@ -102,10 +102,8 @@
 /**
  *	interrupt vectors
  */
-// number of interrupts
-#define AVR_NUM_HW_INTS		35
-
 // interrupt numbers
+#define INT_RESET			0
 #define INT_0				1
 #define INT_1				2
 #define INT_2				3
@@ -140,6 +138,10 @@
 #define INT_TIMER3_COMPA	32
 #define INT_TIMER3_COMPB	33
 #define INT_TIMER3_OVFL		34
+
+// software interrupts
+#define INT_SYSCALL			35
+#define INT_IOVFL			36
 
 
 #endif // ARCH_ATMEGA1284_H

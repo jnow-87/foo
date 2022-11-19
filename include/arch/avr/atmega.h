@@ -47,9 +47,6 @@
 #define AVR_ASYNC_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
 #define AVR_FLASH_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
 
-// interrupt handling
-#define ARCH_NUM_INTS		(AVR_NUM_HW_INTS + 2)	// +2 for the pseude interrupts (syscall, instruction overflow)
-
 #if defined(CONFIG_AVR_ISA_AVR51) || defined(CONFIG_AVR_XMEGA)
 # define XCALL				call
 # define XJMP				jmp

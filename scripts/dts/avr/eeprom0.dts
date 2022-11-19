@@ -18,5 +18,5 @@ eeprom0 = {
 		4096,			// size
 	];
 
-	int<8> = [ 25 ];	// eeprom ready interrupt
+	int<8> = [ 25 ];	// interrupt (eeprom)
 };

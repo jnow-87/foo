@@ -173,6 +173,9 @@ static void arch_makevars(FILE *fp, base_node_t *node, char const *node_ident){
 
 	if(node->type != NT_ARCH)
 		return;
+
+	fprintf(fp, "DEVTREE_ARCH_NUM_INTS := %u\n", arch->num_ints);
+	fprintf(fp, "DEVTREE_ARCH_NUM_VINTS := %u\n", arch->num_vints);
 }
 
 static void device_macros(FILE *fp, base_node_t *node, char const *node_ident){
@@ -195,6 +198,9 @@ static void arch_macros(FILE *fp, base_node_t *node, char const *node_ident){
 
 	if(arch->type != NT_ARCH)
 		return;
+
+	fprintf(fp, "#define DEVTREE_ARCH_NUM_INTS %u\n", arch->num_ints);
+	fprintf(fp, "#define DEVTREE_ARCH_NUM_VINTS %u\n", arch->num_vints);
 }
 
 static void base_declaration(FILE *fp, base_node_t *node, char const *node_ident){
@@ -255,6 +261,8 @@ static void arch_definition(FILE *fp, base_node_t *node, char const *node_ident)
 
 
 	if(node->type == NT_ARCH){
+		fprintf(fp, "\t.num_ints = %u,\n", arch->num_ints);
+		fprintf(fp, "\t.num_vints = %u,\n", arch->num_vints);
 	}
 	else if(node->type == NT_DEVICE)
 		device_definition(fp, node, node_ident);

@@ -112,6 +112,8 @@
 %token NA_COMPATIBLE
 %token NA_BASEADDR
 %token NA_REG
+%token NA_INTERRUPTS
+%token NA_VIRTUAL_INTERRUPTS
 %token NA_INT
 %token NA_SIZE
 %token NA_STRING
@@ -153,6 +155,8 @@ memory-lst : %empty													{ }
 
 arch-lst : %empty													{ }
 		 | arch-lst device ';'										{ EABORT(NODE_ADD_CHILD(arch_root(), $2)); }
+		 | arch-lst NA_INTERRUPTS '=' int ';'						{ arch_root()->num_ints = $4; }
+		 | arch-lst NA_VIRTUAL_INTERRUPTS '=' int ';'				{ arch_root()->num_vints = $4; }
 		 ;
 
 /* nodes */

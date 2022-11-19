@@ -57,6 +57,8 @@
 "compatible"					{ return NA_COMPATIBLE; }
 "baseaddr"						{ return NA_BASEADDR; }
 "reg"							{ return NA_REG; }
+"num-ints"						{ return NA_INTERRUPTS; }
+"num-vints"						{ return NA_VIRTUAL_INTERRUPTS; }
 "int"							{ return NA_INT; }
 "size"							{ return NA_SIZE; }
 "string"						{ return NA_STRING; }

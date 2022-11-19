@@ -17,8 +17,8 @@ uart0 = {
 	int<8> = [ 0x2 ];		// PRR0_PRUSART0
 
 	int<8> = [
-		20,					// uart0 rx interrupt
-		22,					// uart0 tx interrupt
+		20,					// rx interrupt (uart0)
+		22,					// tx interrupt (uart0)
 	];
 
 	// cfg (uart_cfg_t)
