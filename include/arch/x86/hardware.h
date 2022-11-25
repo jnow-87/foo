@@ -54,8 +54,7 @@ typedef enum{
 } x86_priv_t;
 
 typedef enum{
-	HWO_EXIT = 0,
-	HWO_INT_TRIGGER,
+	HWO_INT_TRIGGER = 0,
 	HWO_INT_RETURN,
 	HWO_INT_SET,
 	HWO_INT_STATE,

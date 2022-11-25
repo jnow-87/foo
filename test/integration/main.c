@@ -163,7 +163,11 @@ static int signal_hdlr(int fd){
 
 		switch(info.ssi_signo){
 		case SIGCHLD:
-			ERROR("%s process stopped with status %d\n", brickos_child_name(info.ssi_pid), info.ssi_status);
+			exit_status = info.ssi_status;
+			DEBUG(1, "recv child-exit from %s with status %d\n", brickos_child_name(info.ssi_pid), exit_status);
+
+			if(exit_status != 0)
+				ERROR("%s process stopped with status %d\n", brickos_child_name(info.ssi_pid), exit_status);
 
 			// fall through
 		case SIGINT:
