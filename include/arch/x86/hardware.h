@@ -57,7 +57,6 @@ typedef enum{
 	HWO_INT_TRIGGER = 0,
 	HWO_INT_RETURN,
 	HWO_INT_SET,
-	HWO_INT_STATE,
 	HWO_SYSCALL_RETURN,
 	HWO_COPY_FROM_USER,
 	HWO_COPY_TO_USER,
@@ -82,7 +81,7 @@ typedef struct{
 
 		struct{
 			int num;
-			int en;
+			bool en;
 			void *payload;
 		} int_ctrl;
 

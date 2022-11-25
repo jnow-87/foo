@@ -24,20 +24,13 @@ static void int_hdlr(int sig);
 
 
 /* static variables */
+static int_type_t int_mask = INT_NONE;
 static x86_hw_op_t *int_op = 0x0;
 
 
 /* global functions */
 int_type_t x86_int_enabled(void){
-	x86_hw_op_t op;
-
-
-	op.num = HWO_INT_STATE;
-
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
-
-	return (op.int_ctrl.en ? INT_GLOBAL : INT_NONE);
+	return int_mask;
 }
 
 int_type_t x86_int_enable(int_type_t mask){
@@ -45,13 +38,17 @@ int_type_t x86_int_enable(int_type_t mask){
 	int_type_t s;
 
 
-	s = x86_int_enabled();
+	s = int_mask;
 
-	op.num = HWO_INT_SET;
-	op.int_ctrl.en = (mask == INT_NONE ? 0 : 1);
+	if(int_mask != mask){
+		int_mask = mask;
 
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
+		op.num = HWO_INT_SET;
+		op.int_ctrl.en = (mask != INT_NONE);
+
+		x86_hw_op_write(&op);
+		x86_hw_op_write_writeback(&op);
+	}
 
 	return s;
 }
@@ -98,6 +95,8 @@ static void int_hdlr(int sig){
 
 
 	/* preamble */
+	int_mask = INT_NONE;
+
 	// acknowledge request
 	x86_hw_op_read(&op);
 	op.retval = 0;
@@ -156,4 +155,6 @@ static void int_hdlr(int sig){
 
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);
+
+	int_mask = INT_GLOBAL;
 }

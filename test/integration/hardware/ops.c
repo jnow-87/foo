@@ -39,7 +39,6 @@ typedef struct{
 static int event_int_trigger(x86_hw_op_t *op);
 static int event_int_return(x86_hw_op_t *op);
 static int event_int_set(x86_hw_op_t *op);
-static int event_int_state(x86_hw_op_t *op);
 static int event_syscall_return(x86_hw_op_t *op);
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
@@ -60,7 +59,6 @@ static ops_cfg_t hw_ops[] = {
 	{ .name = "int_trigger",	.hdlr = event_int_trigger },
 	{ .name = "int_return",		.hdlr = event_int_return },
 	{ .name = "int_set",		.hdlr = event_int_set },
-	{ .name = "int_state",		.hdlr = event_int_state },
 	{ .name = "syscall_return",	.hdlr = event_syscall_return },
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
@@ -254,13 +252,6 @@ static int event_int_set(x86_hw_op_t *op){
 	hw_state.int_enabled = op->int_ctrl.en;
 
 	return op->int_ctrl.en == hw_state.int_enabled ? 0 : -1;
-}
-
-static int event_int_state(x86_hw_op_t *op){
-	op->int_ctrl.en = hw_state.int_enabled;
-	DEBUG(2, "  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
-
-	return 0;
 }
 
 static int event_syscall_return(x86_hw_op_t *op){
