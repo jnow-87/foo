@@ -132,15 +132,21 @@ void hw_op_read_writeback(x86_hw_op_t *op, child_t *src){
 	CHECK_SEQ_NUM(op->seq, seq_num);
 }
 
+#include <unistd.h>
 void hw_event_process(void){
 	x86_hw_op_t op;
 	child_t *src,
 			*op_src;
 
 
+	usleep(3000);
 	src = hw_event_dequeue();
 
 	hw_state_lock();
+//	DEBUG(0, FG_RED "locked from evt" RESET_ATTR " %s\n",
+//		src == KERNEL ? "kernel" : "user"
+//	);
+
 	child_lock(src);
 
 	hw_op_read(&op, src);
@@ -160,7 +166,7 @@ void hw_event_process(void){
 			op.num
 		);
 
-		hw_op_read_ack(src, 1);
+		hw_op_read_ack(src, op.seq + 1);
 
 		if(op.num >= HWO_NOPS)
 			EEXIT("  [%u] invalid hardware-op %d from %s\n", op.seq, op.num, src->name);
@@ -175,9 +181,9 @@ void hw_event_process(void){
 
 		op.retval = hw_ops[op.num].hdlr(&op);
 
+		DEBUG(2, "  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
 		hw_op_read_writeback(&op, src);
 
-		DEBUG(2, "  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
 		hw_state.stats.event_ack++;
 	}
 	else{
@@ -185,14 +191,24 @@ void hw_event_process(void){
 		hw_state.stats.event_nack++;
 
 		hw_event_enqueue(src);
+//		DEBUG(0, "postpone\n");
 	}
 
 	child_unlock(src);
+//	DEBUG(0, FG_GREEN "unlocked from evt" RESET_ATTR "\n");
+
+//	if(src == KERNEL)
+//		usleep(100000);
+
 	hw_state_unlock();
 }
 
 void hw_event_enqueue(child_t *src){
 	pthread_mutex_lock(&event_mtx);
+
+//	if(events[src == KERNEL ? 0 : 1] != 0)
+//		ERROR("more than one active event for %s\n", src == KERNEL ? "kernel" : "app");
+//		EEXIT("more than one active event for %s\n", src == KERNEL ? "kernel" : "app");
 
 	if(++events[src == KERNEL ? 0 : 1] == 0)
 		EEXIT("event overflow\n");
@@ -318,6 +334,7 @@ static int event_setup(x86_hw_op_t *op){
 	x86_hw_op_t app_op = *op;
 
 
+	return 0;
 	child_lock(APP);
 
 	hw_op_write(&app_op, APP);

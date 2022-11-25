@@ -40,11 +40,11 @@ void hw_state_lock(void){
 }
 
 void hw_state_unlock(void){
-	pthread_cond_signal(&hw_state_changed);
-	pthread_mutex_unlock(&hw_state_mtx);
-
 	hw_state.locked = false;
 	hw_state_print();
+
+	pthread_cond_signal(&hw_state_changed);
+	pthread_mutex_unlock(&hw_state_mtx);
 }
 
 void hw_state_wait(void){

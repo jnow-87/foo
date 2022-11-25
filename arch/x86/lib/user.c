@@ -41,6 +41,8 @@ static user_cmd_t cmds[] = {
 
 /* global functions */
 static int init(void){
+//	lnx_nanosleep(15000000000);
+
 	if(!x86_opts.interactive)
 		return 0;
 

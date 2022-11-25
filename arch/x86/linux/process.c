@@ -43,11 +43,13 @@ void lnx_exit(int code){
 
 
 	/* signal exit to hardware */
-	op.num = HWO_EXIT;
-	op.exit.retval = code;
+	if(code == 0){
+		op.num = HWO_EXIT;
+		op.exit.retval = code;
 
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
+		x86_hw_op_write(&op);
+		x86_hw_op_write_writeback(&op);
+	}
 
 	/* actually exit process */
 	(void)lnx_syscall(LNX_SYS_EXIT, (unsigned long int[6]){code, 0, 0, 0, 0, 0}, 0);

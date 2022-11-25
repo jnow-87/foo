@@ -73,12 +73,18 @@ static thread_t *running[CONFIG_NCORES] = { kernel_threads + 0 };
 
 
 /* global functions */
+#include <arch/x86/linux.h>
 void sched_yield(void){
 	char dummy;
 
 
-	if(int_enabled() == INT_NONE)
+	if(int_enabled() == INT_NONE){
+		LNX_ERROR("ints disabled\n");
+		while(1){
+			lnx_nanosleep(1000000000);
+		}
 		kpanic("interrupts are disabled, syscall not allowed\n");
+	}
 
 	// actual thread switches are only performed in interrupt
 	// service routines as it is required for syscalls

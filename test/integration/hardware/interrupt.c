@@ -70,6 +70,10 @@ void hw_int_process(void){
 	req = req_lookup();
 
 	hw_state_lock();
+//	DEBUG(0, FG_RED "locked from int %s %s" RESET_ATTR "\n",
+//		X86_PRIV_NAME(req->src),
+//		X86_INT_NAME(req->num)
+//	);
 
 	while(!hw_state.int_enabled){
 		hw_state_wait();
@@ -90,6 +94,7 @@ void hw_int_process(void){
 		hw_state.stats.int_nack++;
 	}
 
+//	DEBUG(0, FG_GREEN "unlocked from int" RESET_ATTR "\n");
 	hw_state_unlock();
 }
 

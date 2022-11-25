@@ -28,6 +28,7 @@ kopt_t kopt = KOPT_INITIALISER();
 
 
 /* global functions */
+#include <arch/x86/linux.h>
 void kernel(void){
 	/* init */
 	if(kinit() != 0)
@@ -41,6 +42,8 @@ void kernel(void){
 
 	/* kernel test */
 	ktest();
+
+	lnx_nanosleep(5000000000);
 
 	/* enable interrupts */
 	int_enable(INT_ALL);

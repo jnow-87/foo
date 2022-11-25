@@ -153,6 +153,7 @@ static void *thread_wrapper(void *arg){
 }
 
 static int signal_hdlr(int fd){
+	static size_t nevt[2] = { 0 };
 	struct signalfd_siginfo info;
 	child_t *src;
 
@@ -178,7 +179,8 @@ static int signal_hdlr(int fd){
 		case CONFIG_TEST_INT_HW_SIG:
 			src = ((pid_t)info.ssi_pid == KERNEL->pid) ? KERNEL : APP;
 
-			DEBUG(2, "enqueue hardware event from %s\n", src->name);
+			DEBUG(2, "enqueue hardware event %zu from %s\n", nevt[((pid_t)info.ssi_pid == KERNEL->pid) ? 0 : 1], src->name);
+			nevt[((pid_t)info.ssi_pid == KERNEL->pid) ? 0 : 1] += 1;
 			hw_event_enqueue(src);
 			break;
 

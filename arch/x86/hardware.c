@@ -32,6 +32,21 @@ STATIC_ASSERT(!"invalid build config");
 		LNX_EEXIT("sequence number mismatch: %u expected %u\n", _num, _ref); \
 }
 
+static char const *ops_name[] = {
+	"exit",
+	"int_trigger",
+	"int_return",
+	"int_set",
+	"int_state",
+	"syscall_return",
+	"copy_from_user",
+	"copy_to_user",
+	"uart_config",
+	"display_config",
+	"setup",
+	"invalid",
+};
+
 
 /* global variables */
 unsigned int x86_hw_op_active_tid = 0;
@@ -40,12 +55,16 @@ unsigned int x86_hw_op_active_tid = 0;
 /* global functions */
 void x86_hw_op_write(x86_hw_op_t *op){
 	static unsigned int seq_num = 0;
-	int ack = 0;
+	unsigned int ack = 0;
 
 
 	op->src = HW_OP_SRC;
 	op->tid = x86_hw_op_active_tid;
 
+//	if(seq_num > 30)
+//		lnx_exit(123);
+//
+	LNX_DEBUG("trigger event %u %s\n", seq_num, ops_name[op->num]);
 	lnx_kill(lnx_getppid(), CONFIG_TEST_INT_HW_SIG);
 
 	while(!ack){
@@ -54,6 +73,12 @@ void x86_hw_op_write(x86_hw_op_t *op){
 
 		lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, op, sizeof(*op));
 		lnx_read(CONFIG_TEST_INT_HW_PIPE_RD, &ack, sizeof(ack));
+
+		if(!ack){
+			LNX_DEBUG("nack\n");
+		}
+		else
+			CHECK_SEQ_NUM(ack, op->seq + 1);
 	}
 }
 
