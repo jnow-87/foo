@@ -33,10 +33,8 @@
 # define DEBUG_STR		"[init]  "
 # define DEBUG_COLOR	FG_KOBALT
 
-# define LNX_SYSCALL_ERROR_EXIT(fmt, ...){ \
-	LNX_ERROR("error in linux syscall "); \
-	LNX_EEXIT(fmt "\n", ##__VA_ARGS__); \
-}
+# define LNX_SYSCALL_ERROR_EXIT(fmt, ...) \
+	LNX_EEXIT("error in linux syscall: " fmt "\n", ##__VA_ARGS__)
 #endif // BUILD_KERNEL
 
 #define lnx_printf(fmt, ...) lnx_dprintf(1, fmt, ##__VA_ARGS__)
