@@ -10,13 +10,10 @@
 #include <config/config.h>
 #include <arch/arch.h>
 #include <kernel/timer.h>
+#include <kernel/sched.h>
 #include <sys/types.h>
 #include <sys/list.h>
 #include <sys/mutex.h>
-
-
-/* macros */
-#define CYCLE_TIME_US	((uint32_t)(CONFIG_KTIMER_CYCLETIME_US + arch_info(kernel_timer_err_us)))
 
 
 /* local/static prototypes */
@@ -25,6 +22,10 @@ static void to_time(void);
 
 
 /* static variables */
+#ifdef CONFIG_SCHED_PREEMPTIVE
+static size_t sched_ticks = 0;
+#endif // CONFIG_SCHED_PREEMPTIVE
+
 static ktimer_t *timer_lst = 0x0;
 static mutex_t timer_mtx = NOINT_MUTEX_INITIALISER();
 
@@ -37,10 +38,20 @@ void ktimer_tick(void){
 	ktimer_t *t;
 
 
-	/* increment time */
-	time_us += CYCLE_TIME_US;
+	/* trigger scheduler */
+#ifdef CONFIG_SCHED_PREEMPTIVE
+	sched_ticks++;
 
-	if(time_us + CYCLE_TIME_US + 1001000 < time_us)
+	if(sched_ticks >= CONFIG_SCHED_KTIMER_MUL){
+		sched_ticks = 0;
+		sched_trigger();
+	}
+#endif // CONFIG_SCHED_PREEMPTIVE
+
+	/* increment time */
+	time_us += CONFIG_KTIMER_CYCLETIME_US;
+
+	if(time_us + CONFIG_KTIMER_CYCLETIME_US + 1001000 < time_us)
 		to_time();
 
 	/* update timer */
@@ -87,10 +98,10 @@ void ktimer_time(time_t *t){
 
 /* local functions */
 static size_t to_ticks(uint32_t us){
-	size_t ticks = us / CYCLE_TIME_US;
+	size_t ticks = us / CONFIG_KTIMER_CYCLETIME_US;
 
 
-	if(ticks == 0 || us - ticks * CYCLE_TIME_US > 0)
+	if(ticks == 0 || us - ticks * CONFIG_KTIMER_CYCLETIME_US > 0)
 		ticks++;
 
 	return ticks;

@@ -74,11 +74,6 @@ static int init(void){
 platform_init(0, init);
 
 static void stats(void){
-#ifdef CONFIG_SCHED_CYCLETIME_US
-	STAT("scheduler cycle time: " STRVAL(CONFIG_SCHED_CYCLETIME_US) "us\n");
-	STAT("scheduler error: " STRVAL(AVRCONFIG_SCHED_ERROR_US) "us\n");
-#endif // CONFIG_SCHED_CYCLETIME_US
-
 #ifdef CONFIG_KTIMER_CYCLETIME_US
 	STAT("kernel time base: " STRVAL(CONFIG_KTIMER_CYCLETIME_US) "us\n");
 	STAT("kernel time base error: " STRVAL(AVRCONFIG_KTIMER_ERROR_US) "us\n");
@@ -88,26 +83,14 @@ static void stats(void){
 kernel_stat(stats);
 
 static void timer_hdlr(int_num_t num, void *payload){
-	static size_t timer = 0,
-				  sched = 0;
+	static size_t timer = 0;
 
 
 	timer++;
-	sched++;
 
 	/* trigger kernel timer */
-#ifdef CONFIG_KERNEL_TIMER
 	if(timer == AVRCONFIG_KTIMER_FACTOR){
 		timer = 0;
 		ktimer_tick();
 	}
-#endif // CONFIG_KERNEL_TIMER
-
-	/* trigger scheduler */
-#ifdef CONFIG_SCHED_PREEMPTIVE
-	if(sched == AVRCONFIG_SCHED_FACTOR){
-		sched = 0;
-		sched_tick();
-	}
-#endif // CONFIG_SCHED_PREEMPTIVE
 }

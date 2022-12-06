@@ -40,7 +40,6 @@
 /* types */
 typedef enum{
 	INT_TIMER = 0,
-	INT_SCHED,
 	INT_SYSCALL,
 	INT_UART0,
 	INT_UART1,

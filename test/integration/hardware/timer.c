@@ -15,41 +15,15 @@
 #include <hardware/hardware.h>
 
 
-/* macros */
-#define CYCLE_TIME_US	((size_t)MIN(CONFIG_KTIMER_CYCLETIME_US, CONFIG_SCHED_CYCLETIME_US))
-#define TIMER_FACTOR 	(CONFIG_KTIMER_CYCLETIME_US / CYCLE_TIME_US)
-#define SCHED_FACTOR	(CONFIG_SCHED_CYCLETIME_US / CYCLE_TIME_US)
-
-
 /* global functions */
 void hw_timer(void){
-	static size_t timer = 0;
 	struct timespec ts;
 
 
-	ts.tv_sec = CYCLE_TIME_US / 1000000;
-	ts.tv_nsec = (CYCLE_TIME_US % 1000000) * 1000;
+	ts.tv_sec = CONFIG_KTIMER_CYCLETIME_US / 1000000;
+	ts.tv_nsec = (CONFIG_KTIMER_CYCLETIME_US % 1000000) * 1000;
 
 	while(nanosleep(&ts, &ts) && errno == EINTR);
 
-	if(++timer == TIMER_FACTOR){
-		hw_int_request(INT_TIMER, 0x0, PRIV_HARDWARE, 0);
-		timer = 0;
-	}
-}
-
-void hw_sched_timer(void){
-	static size_t timer = 0;
-	struct timespec ts;
-
-
-	ts.tv_sec = CYCLE_TIME_US / 1000000;
-	ts.tv_nsec = (CYCLE_TIME_US % 1000000) * 1000;
-
-	while(nanosleep(&ts, &ts) && errno == EINTR);
-
-	if(++timer == SCHED_FACTOR){
-		hw_int_request(INT_SCHED, 0x0, PRIV_HARDWARE, 0);
-		timer = 0;
-	}
+	hw_int_request(INT_TIMER, 0x0, PRIV_HARDWARE, 0);
 }

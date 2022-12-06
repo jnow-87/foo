@@ -67,7 +67,6 @@ static thread_cfg_t threads[] = {
 	THREAD("interrupts",		AM_ALWAYS,			0x0,				hw_int_process,		0x0),
 	THREAD("hardware-event",	AM_ALWAYS,			0x0,				hw_event_process,	0x0),
 	THREAD("timer",				AM_NONINTERACTIVE,	0x0,				hw_timer,			0x0),
-	THREAD("sched_timer",		AM_NONINTERACTIVE,	0x0,				hw_sched_timer,		0x0),
 	THREAD("user-input",		AM_INTERACTIVE,		user_input_help,	user_input_process,	user_input_cleanup),
 	THREAD("uart",				AM_ALWAYS,			uart_init,			uart_poll,			uart_cleanup),
 	THREAD("display",			AM_ALWAYS,			display_init,		display_poll,		display_cleanup),

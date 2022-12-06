@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <arch/x86/hardware.h>
+#include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/list.h>
 #include <user/debug.h>
@@ -53,13 +54,12 @@ static pthread_cond_t req_sig = PTHREAD_COND_INITIALIZER;
 
 static size_t priorities[] = {
 	0,	// INT_TIMER
-	// to prevent issues with the active thread, scheduler
-	// and syscall interrupts need to have the same priority
-	1,	// INT_SCHED
 	1,	// INT_SYSCALL
 	0,	// INT_UART0
 	0,	// INT_UART1
 };
+
+STATIC_ASSERT(sizeof_array(priorities) == ARCH_NUM_INTS);
 
 
 /* global functions */

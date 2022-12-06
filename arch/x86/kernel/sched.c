@@ -7,25 +7,44 @@
 
 
 
+#include <arch/interrupt.h>
 #include <arch/x86/linux.h>
-#include <arch/x86/hardware.h>
-#include <kernel/init.h>
-#include <kernel/interrupt.h>
+#include <kernel/thread.h>
 #include <kernel/sched.h>
 
 
-/* local/static prototypes */
-static void sched_hdlr(int_num_t num, void *payload);
+/* global functions */
+void x86_sched_trigger(void){
+	int_type_t imask;
 
 
-/* local functions */
-static int init(void){
-	return int_register(INT_SCHED, sched_hdlr, 0x0);
+	imask = int_enabled();
+	sched_trigger();
+	int_enable(imask);	// disabled by sched_trigger()
 }
 
-platform_init(0, init);
+void x86_sched_yield(void){
+	thread_t const *this_t;
 
-static void sched_hdlr(int_num_t num, void *payload){
-	LNX_DEBUG("scheduler interrupt\n");
-	sched_tick();
+
+	this_t = sched_running();
+
+	while(sched_running() == this_t){
+		lnx_pause();
+	}
+}
+
+void x86_sched_wait(thread_t const *this_t){
+	while(sched_running() != this_t){
+		lnx_pause();
+	}
+}
+
+void x86_sched_force(thread_t const *this_t){
+	if(this_t->state != READY)
+		return;
+
+	while(sched_running() != this_t){
+		x86_sched_trigger();
+	}
 }

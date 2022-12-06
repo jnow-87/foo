@@ -10,6 +10,7 @@
 #include <config/config.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
+#include <arch/x86/sched.h>
 #include <kernel/init.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
@@ -26,6 +27,7 @@ static void int_hdlr(int sig);
 /* static variables */
 static int_type_t int_mask = INT_NONE;
 static x86_hw_op_t *int_op = 0x0;
+static bool prevent_sched_transition = false;
 
 
 /* global functions */
@@ -108,6 +110,11 @@ static void int_hdlr(int sig){
 	int_op = &op;
 	this_t = sched_running();
 
+	// ensure the active thread is not changed if
+	// the interrupt occured while serving a syscall
+	if(op.int_ctrl.num == INT_SYSCALL && this_t->parent->pid != 0)
+		prevent_sched_transition = true;
+
 	LNX_DEBUG("[%u] %s interrupt on %s(pid = %u, tid = %u)\n",
 		op.seq,
 		X86_INT_NAME(op.int_ctrl.num),
@@ -126,6 +133,9 @@ static void int_hdlr(int sig){
 
 	/* handle interrupt */
 	int_khdlr(op.int_ctrl.num);
+
+	if(prevent_sched_transition && this_t->parent != sched_running()->parent)
+		x86_sched_force(this_t);
 
 	/* epilogue */
 	this_t = sched_running();
@@ -155,6 +165,9 @@ static void int_hdlr(int sig){
 
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);
+
+	if(op.int_return.num == INT_SYSCALL && this_t->parent->pid != 0)
+		prevent_sched_transition = false;
 
 	int_mask = INT_GLOBAL;
 }
