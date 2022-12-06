@@ -8,6 +8,7 @@
 
 
 #include <stdint.h>
+#include <unistd.h>
 #include <time.h>
 #include <errno.h>
 #include <sys/math.h>
@@ -24,6 +25,7 @@
 
 /* types */
 typedef struct{
+	bool ready;
 	Display *dsp;
 	int screen;
 	Window win;
@@ -64,6 +66,7 @@ int display_init(void){
 	ctx.screen = XDefaultScreen(ctx.dsp);
 	ctx.gc = XDefaultGC(ctx.dsp, ctx.screen);
 	ctx.refresh_ms = 1000;
+	ctx.ready = true;
 
 	return 0;
 }
@@ -110,6 +113,10 @@ void display_poll(void){
 }
 
 int display_configure(int shm_id, uint8_t scale, vram_cfg_t *cfg){
+	while(!ctx.ready){
+		usleep(10000);
+	}
+
 	ctx.refresh_ms = cfg->refresh_ms;
 
 	if(ctx.win != 0)
