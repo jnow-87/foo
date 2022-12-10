@@ -40,7 +40,6 @@
 /* types */
 typedef enum{
 	INT_TIMER = 0,
-	INT_SCHED,
 	INT_SYSCALL,
 	INT_UART0,
 	INT_UART1,
@@ -54,11 +53,9 @@ typedef enum{
 } x86_priv_t;
 
 typedef enum{
-	HWO_EXIT = 0,
-	HWO_INT_TRIGGER,
+	HWO_INT_TRIGGER = 0,
 	HWO_INT_RETURN,
 	HWO_INT_SET,
-	HWO_INT_STATE,
 	HWO_SYSCALL_RETURN,
 	HWO_COPY_FROM_USER,
 	HWO_COPY_TO_USER,
@@ -83,7 +80,7 @@ typedef struct{
 
 		struct{
 			int num;
-			int en;
+			bool en;
 			void *payload;
 		} int_ctrl;
 

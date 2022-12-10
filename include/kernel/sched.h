@@ -15,14 +15,6 @@
 #include <kernel/thread.h>
 
 
-/* macros */
-#ifdef CONFIG_SCHED_PREEMPTIVE
-# define sched_tick()	sched_trigger()
-#else
-# define sched_tick()
-#endif // CONFIG_SCHED_PREEMPTIVE
-
-
 /* types */
 typedef void (*thread_modifier_t)(thread_t *this_t, void *payload);
 

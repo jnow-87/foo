@@ -12,20 +12,16 @@ choice
 
 	config SCHED_PREEMPTIVE
 		bool "preemptive"
+		select KTIMER
 
 	config SCHED_COOPERATIVE
 		bool "cooperative"
 endchoice
 
-config SCHED_CYCLETIME_US
-	int "scheduler cycle time [us]"
+config SCHED_KTIMER_MUL
+	int "kernel timer scheduler multiple"
 	depends on SCHED_PREEMPTIVE
-	default 500000
-
-config SCHED_ERR_MAX
-	int "maximal scheduler error [%]"
-	depends on SCHED_PREEMPTIVE
-	default 5
+	default 1
 
 config SCHED_PRIO_DEFAULT
 	int "default process priority"

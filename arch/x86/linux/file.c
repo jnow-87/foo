@@ -40,7 +40,7 @@ void lnx_close(int fd){
 	r = lnx_syscall(LNX_SYS_CLOSE, (unsigned long int[6]){ fd, 0, 0, 0, 0, 0 }, 1);
 
 	if(r != 0)
-		LNX_SYSCALL_ERROR_EXIT("%d != %d", r, 0);
+		LNX_SYSCALL_ERROR_EXIT("%d != %d\n", r, 0);
 }
 
 ssize_t lnx_read(int fd, void *buf, size_t n){
@@ -134,7 +134,7 @@ void lnx_chdir(char const *path){
 	);
 
 	if(r != 0)
-		LNX_SYSCALL_ERROR_EXIT("%d != %d", r, 0);
+		LNX_SYSCALL_ERROR_EXIT("%d != %d\n", r, 0);
 }
 
 void lnx_mkdir(char const *path, int mode){
@@ -159,7 +159,7 @@ void lnx_mkdir(char const *path, int mode){
 		return;
 
 	default:
-		LNX_SYSCALL_ERROR_EXIT("%d != %d", r, 0);
+		LNX_SYSCALL_ERROR_EXIT("%d != %d\n", r, 0);
 	}
 }
 

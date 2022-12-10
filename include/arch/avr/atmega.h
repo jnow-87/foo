@@ -105,7 +105,6 @@ static arch_ops_common_t const arch_ops_common = {
 // architecture info
 static arch_info_t const arch_info = {
 	.kernel_timer_err_us = AVRCONFIG_KTIMER_ERROR_US,
-	.sched_timer_err_us = AVRCONFIG_SCHED_ERROR_US,
 };
 # endif // BUILD_HOST
 #endif // ASM

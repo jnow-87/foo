@@ -11,6 +11,7 @@
 #include <arch/x86/hardware.h>
 #include <arch/x86/init.h>
 #include <arch/x86/syscall.h>
+#include <arch/x86/sched.h>
 #include <arch/x86/interrupt.h>
 #include <arch/x86/rootfs.h>
 #include <arch/interrupt.h>
@@ -84,10 +85,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 	// Kernel and user thread yield calls need to be differentiated since the
 	// kernel thread yields from the kernel main loop while a user thread
-	// yields from within a syscall, i.e. from within a signal context. To
-	// prevent issues with the active thread, scheduler and syscall interrupts
-	// need to have the same priority, i.e. use the same x86 signal. Hence an
-	// active syscall cannot be interrupted by a scheduler interrupt.
+	// yields from within a syscall, i.e. from within a signal context.
 	if(this_t->parent->pid != 0)	yield_user(this_t);
 	else							yield_kernel();
 
@@ -144,41 +142,27 @@ end:
 	x86_hw_op_write_writeback(&op);
 }
 
-
 static void yield_user(thread_t const *this_t){
-	int_type_t imask;
+	x86_sched_trigger();
 
-
-	/* wait for an interrupt */
-	imask = int_enabled();
-
-	// re-schedule
-	sched_trigger();
-	int_enable(imask);	// disabled by sched_trigger()
-
-	// wait for this_t to become ready
 	while(this_t->state != READY){
 		lnx_pause();
 	}
 
-	/* re-schedule this_t */
-	while(sched_running() != this_t){
-		sched_trigger();
-	}
-
-	int_enable(imask);	// disabled by sched_trigger()
+	x86_sched_force(this_t);
 }
 
 static void yield_kernel(void){
-	x86_hw_int_trigger(INT_SCHED, 0x0);
+	thread_t const *kernel;
 
-	/* suspend till kernel is scheduled again */
-	while(1){
-		lnx_pause();
 
-		if(sched_running()->parent->pid == 0)
-			break;
-	}
+	kernel = sched_running();
+
+	// NOTE to improve performance the hardware would need
+	//      to be notified of the thread change, since
+	//      otherwise no syscalls from init are issued
+	x86_sched_yield();
+	x86_sched_wait(kernel);
 }
 
 static int overlay_exit(void *param){

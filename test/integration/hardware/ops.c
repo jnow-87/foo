@@ -36,11 +36,9 @@ typedef struct{
 
 
 /* local/static prototypes */
-static int event_exit(x86_hw_op_t *op);
 static int event_int_trigger(x86_hw_op_t *op);
 static int event_int_return(x86_hw_op_t *op);
 static int event_int_set(x86_hw_op_t *op);
-static int event_int_state(x86_hw_op_t *op);
 static int event_syscall_return(x86_hw_op_t *op);
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
@@ -58,11 +56,9 @@ static pthread_mutex_t event_mtx = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t event_sig = PTHREAD_COND_INITIALIZER;
 
 static ops_cfg_t hw_ops[] = {
-	{ .name = "exit",			.hdlr = event_exit },
 	{ .name = "int_trigger",	.hdlr = event_int_trigger },
 	{ .name = "int_return",		.hdlr = event_int_return },
 	{ .name = "int_set",		.hdlr = event_int_set },
-	{ .name = "int_state",		.hdlr = event_int_state },
 	{ .name = "syscall_return",	.hdlr = event_syscall_return },
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
@@ -225,19 +221,6 @@ child_t *hw_event_dequeue(void){
 
 
 /* local functions */
-static int event_exit(x86_hw_op_t *op){
-	DEBUG(0, "  [%u] exit code: %d\n", op->seq, op->exit.retval);
-
-	if(op->exit.retval != 0){
-		ERROR("unexpected exit from %s, exit code %d\n",
-			(op->src == PRIV_KERNEL) ? KERNEL->name : APP->name,
-			op->exit.retval
-		);
-	}
-
-	exit(op->exit.retval);
-}
-
 static int event_int_trigger(x86_hw_op_t *op){
 	hw_int_request(op->int_ctrl.num, op->int_ctrl.payload, op->src, op->tid);
 
@@ -269,13 +252,6 @@ static int event_int_set(x86_hw_op_t *op){
 	hw_state.int_enabled = op->int_ctrl.en;
 
 	return op->int_ctrl.en == hw_state.int_enabled ? 0 : -1;
-}
-
-static int event_int_state(x86_hw_op_t *op){
-	op->int_ctrl.en = hw_state.int_enabled;
-	DEBUG(2, "  [%u] int state: %d\n", op->seq, op->int_ctrl.en);
-
-	return 0;
 }
 
 static int event_syscall_return(x86_hw_op_t *op){

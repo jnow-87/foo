@@ -15,6 +15,5 @@ obj-y := \
 	syscall.o \
 	thread.o
 
-obj-$(CONFIG_SCHED_PREEMPTIVE) += timer.o
 obj-$(CONFIG_KERNEL_TIMER) += timer.o
 obj-$(CONFIG_IOVERFLOW_DET) += iovfl.o

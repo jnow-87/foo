@@ -60,11 +60,9 @@ static int overlay_mmap(void *param);
 static int volatile syscall_return_pending = 0;
 
 static ops_t ops[] = {
-	{ .name = "exit",			.hdlr = event_inval },
 	{ .name = "int_trigger",	.hdlr = event_inval },
 	{ .name = "int_return",		.hdlr = event_inval },
 	{ .name = "int_set",		.hdlr = event_inval },
-	{ .name = "int_state",		.hdlr = event_inval },
 	{ .name = "syscall_return",	.hdlr = event_syscall_return },
 	{ .name = "copy_from_user",	.hdlr = event_copy_from_user },
 	{ .name = "copy_to_user",	.hdlr = event_copy_to_user },
