@@ -25,3 +25,12 @@ num-vints = 0
 #endif // CONFIG_BRIDGE_UART_DEV
 ;
 
+timer-cycle-time-us = 31250; 
+timer-int = 8;
+
+plt = {
+	compatible = "avr,platform";
+
+	// config (avr_platform_cfg_t)
+	int<8> = [ 0x1 ];	// watchdog prescaler (4096 -> 31.250ms)
+};

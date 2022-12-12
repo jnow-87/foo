@@ -59,6 +59,8 @@
 "reg"							{ return NA_REG; }
 "num-ints"						{ return NA_INTERRUPTS; }
 "num-vints"						{ return NA_VIRTUAL_INTERRUPTS; }
+"timer-cycle-time-us"			{ return NA_TIMER_CYCLE_TIME_US; }
+"timer-int"						{ return NA_TIMER_INT; }
 "int"							{ return NA_INT; }
 "size"							{ return NA_SIZE; }
 "string"						{ return NA_STRING; }

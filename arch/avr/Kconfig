@@ -121,31 +121,6 @@ endmenu
 #  }}}
 
 #
-# scheduler/timer
-#
-# {{{
-choice
-	prompt "timer interrupt"
-
-	config TIMER_INT_WATCHDOG
-		bool "wATCHDOG"
-endchoice
-
-config WATCHDOG_CLOCK_HZ
-	int "watchdog clock [HZ]"
-	depends on TIMER_INT_WATCHDOG
-	default 1024
-
-menu "hidden"
-	visible if 0
-
-	config TIMER_INT
-		string "scheduler/timer interrupt"
-		default "INT_WATCHDOG"	if	TIMER_INT_WATCHDOG
-endmenu
-# }}}
-
-#
 # sleep modes
 #
 # {{{

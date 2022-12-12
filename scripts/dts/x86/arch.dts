@@ -10,3 +10,6 @@
 // interrupts
 num-ints = 4;
 num-vints = 4;
+
+timer-cycle-time-us = 100000;
+timer-int = 0;

@@ -54,6 +54,8 @@ int nodes_init(void){
 	root_arch.name = "arch_root";
 	root_arch.num_ints = -1;
 	root_arch.num_vints = -1;
+	root_arch.timer_cycle_time_us = 0;
+	root_arch.timer_int = -1;
 
 	return vector_init(&node_names, sizeof(char*), 16);
 }
@@ -137,6 +139,8 @@ arch_node_t *arch_root(void){
 int arch_validate(void){
 	ARCH_ASSERT_MISSING(num_ints, -1);
 	ARCH_ASSERT_MISSING(num_vints, -1);
+	ARCH_ASSERT_MISSING(timer_cycle_time_us, 0);
+	ARCH_ASSERT_MISSING(timer_int, -1);
 
 	return 0;
 }

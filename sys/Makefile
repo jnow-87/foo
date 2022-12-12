@@ -58,7 +58,8 @@ libbrick-y := \
 	list1.o \
 	list2.o \
 	vector.o \
-	devtree.o
+	devtree.o \
+	devicetree.o
 
 libbrick-$(CONFIG_SC_DYNMEM) += memblock.o
 libbrick-$(CONFIG_LIB_MUTEX) += mutex.o
@@ -116,8 +117,9 @@ $(devtree_make): $(devtree_preproc) $(dtc)
 	$(call compile_file,$(dtc) --format=make --sections=memory$(comma)arch -o $@ $<)
 
 
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,      $(devtree_src),)
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o, $(devtree_src), host)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,          $(devtree_src),)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o,     $(devtree_src), host)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.libbrick.o, $(devtree_src),)
 
 
 # include devicetree.make if it already exists

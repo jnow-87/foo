@@ -114,6 +114,8 @@
 %token NA_REG
 %token NA_INTERRUPTS
 %token NA_VIRTUAL_INTERRUPTS
+%token NA_TIMER_CYCLE_TIME_US
+%token NA_TIMER_INT
 %token NA_INT
 %token NA_SIZE
 %token NA_STRING
@@ -157,6 +159,8 @@ arch-lst : %empty													{ }
 		 | arch-lst device ';'										{ EABORT(NODE_ADD_CHILD(arch_root(), $2)); }
 		 | arch-lst NA_INTERRUPTS '=' int ';'						{ arch_root()->num_ints = $4; }
 		 | arch-lst NA_VIRTUAL_INTERRUPTS '=' int ';'				{ arch_root()->num_vints = $4; }
+		 | arch-lst NA_TIMER_CYCLE_TIME_US '=' int ';'				{ arch_root()->timer_cycle_time_us = $4; }
+		 | arch-lst NA_TIMER_INT '=' int ';'						{ arch_root()->timer_int = $4; }
 		 ;
 
 /* nodes */

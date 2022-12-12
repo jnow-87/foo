@@ -71,6 +71,10 @@ menu "hidden"
 		bool "print kernel DEBUG messages"
 		select KERNEL_LOG
 		default n
+
+	config KERNEL_TIMER
+		bool "timer"
+		default n
 endmenu
 # }}}
 
@@ -231,30 +235,6 @@ endmenu
 # {{{
 menu "scheduler settigns"
 	source "kernel/sched/Kconfig"
-endmenu
-# }}}
-
-#
-# timer
-#
-# {{{
-menu "timer settings"
-	depends on KERNEL_TIMER
-
-	config KTIMER_CYCLETIME_US
-		int "kernel timer cycle time [us]"
-		default 500000
-
-	config KTIMER_ERR_MAX
-		int "maximal kernel timer error [%]"
-		default 5
-endmenu
-
-menu "hidden"
-	visible if 0
-	
-	config KERNEL_TIMER
-		bool "timer"
 endmenu
 # }}}
 

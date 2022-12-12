@@ -71,11 +71,6 @@ typedef struct{
 	/* syscall */
 	int (*sc)(sc_num_t num, void *param, size_t psize);
 } arch_ops_common_t;
-
-typedef struct{
-	int kernel_timer_err_us,
-		sched_timer_err_us;
-} arch_info_t;
 #endif // ASM
 
 
@@ -87,9 +82,6 @@ typedef struct{
 
 #define arch_common_call(p, err_ret) \
 	(arch_ops_common.p == 0x0) ? (err_ret) : arch_ops_common.p
-
-#define arch_info(c) \
-	arch_info.c
 
 
 /* include architecture header */

@@ -21,7 +21,6 @@
 #ifndef ASM
 # ifndef BUILD_HOST
 
-#  include <config/avrconfig.h>
 #  include <arch/arch.h>
 #  include <arch/avr/core.h>
 #  include <arch/avr/register.h>
@@ -34,7 +33,6 @@
 #  include <arch/avr/syscall.h>
 #  include <arch/avr/atomic.h>
 #  include <sys/types.h>
-
 # endif // BUILD_HOST
 #endif // ASM
 
@@ -56,6 +54,16 @@
 # define XJMP				rjmp
 # define INT_VEC_SIZE		2
 #endif
+
+
+/* types */
+#ifndef ASM
+# ifndef BUILD_HOST
+typedef struct{
+	uint8_t watchdog_prescaler;
+} avr_platform_cfg_t;
+# endif // BUILD_HOST
+#endif // ASM
 
 
 /* static variables */
@@ -97,11 +105,6 @@ static arch_ops_common_t const arch_ops_common = {
 
 	/* syscall */
 	.sc = avr_sc,
-};
-
-// architecture info
-static arch_info_t const arch_info = {
-	.kernel_timer_err_us = AVRCONFIG_KTIMER_ERROR_US,
 };
 # endif // BUILD_HOST
 #endif // ASM

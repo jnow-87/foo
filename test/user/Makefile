@@ -15,7 +15,6 @@ interactive-$(CONFIG_DRIVER_GPIO) += gpioint.o
 interactive-$(CONFIG_DRIVER_I2C) += i2c.o
 
 non-interactive-y := \
-	$(build_tree)/sys/devicetree.o \
 	close.o \
 	thread.o \
 	stat.o \

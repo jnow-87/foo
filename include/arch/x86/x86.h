@@ -60,12 +60,6 @@ static arch_ops_common_t const arch_ops_common = {
 	/* syscall */
 	.sc = x86_sc,
 };
-
-// architecture info
-static arch_info_t const arch_info = {
-	.kernel_timer_err_us = 0,
-	.sched_timer_err_us = 0,
-};
 #endif // ASM
 
 

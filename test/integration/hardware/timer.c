@@ -11,6 +11,7 @@
 #include <time.h>
 #include <errno.h>
 #include <sys/math.h>
+#include <sys/devicetree.h>
 #include <user/debug.h>
 #include <hardware/hardware.h>
 
@@ -20,8 +21,8 @@ void hw_timer(void){
 	struct timespec ts;
 
 
-	ts.tv_sec = CONFIG_KTIMER_CYCLETIME_US / 1000000;
-	ts.tv_nsec = (CONFIG_KTIMER_CYCLETIME_US % 1000000) * 1000;
+	ts.tv_sec = DEVTREE_ARCH_TIMER_CYCLE_TIME_US / 1000000;
+	ts.tv_nsec = (DEVTREE_ARCH_TIMER_CYCLE_TIME_US % 1000000) * 1000;
 
 	while(nanosleep(&ts, &ts) && errno == EINTR);
 

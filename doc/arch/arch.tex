@@ -30,10 +30,10 @@
 		\end{itemize}
 
 	\subsection{Callback Functions}
-		The callback functions are registers by defining variables of type \hyperref[structarch__ops__kernel__t]{arch\_ops\_kernel\_t} and \hyperref[structarch__ops__common__t]{arch\_ops\_common\_t} named \lstinline{arch_ops_kernel} and \lstinline{arch_ops_common}. Further, in order to get access to the architecture specific data, a variable of type \lstinline{arch_info_t}, named \lstinline{arch_info} needs to be declared.
+		The callback functions are registers by defining variables of type \hyperref[structarch__ops__kernel__t]{arch\_ops\_kernel\_t} and \hyperref[structarch__ops__common__t]{arch\_ops\_common\_t} named \lstinline{arch_ops_kernel} and \lstinline{arch_ops_common}.
 
 	\subsection{Interrupt Handling and Nesting}
-		The architecture layer is responsible for handling all interrupts and passing control to the kernel where necessary, e.g. for system calls and timer interrupts. For all interrupts that pass control to the kernel, the interrupted thread's context needs to be saved properly and stored to the currently running thread, cf. \hyperref[kernel_2sched_8c_a34a33397e7197f803feffb423ce6717a]{sched\_running()}. That is, such interrupts may be used as preemption points and cause the active thread to switch.
+		The architecture layer is responsible for handling interrupts and passing control to the kernel where necessary, e.g. for system calls. For all interrupts that pass control to the kernel, the interrupted thread's context needs to be saved properly and stored to the currently running thread, cf. \hyperref[kernel_2sched_8c_a34a33397e7197f803feffb423ce6717a]{sched\_running()}. That is, such interrupts may be used as preemption points and cause the active thread to switch.
 
 		In general the architecture layer may decide on interrupt nesting. However, in most cases it should be sufficient to let the kernel decide.
 
@@ -65,7 +65,7 @@
 
 	\subsection{Build System}
 		\begin{itemize}
-			\item libsys.o shall containing all objects that are required to be linked against applications
+			\item libbrick.o shall containing all objects that are required to be linked against applications
 			\item linker script scripts/linker/kernel\_$<$arch$>$.lds
 			\item memory layout print (optional): scripts/memlayout/main.c, if target specific sections are required
 				\begin{itemize}

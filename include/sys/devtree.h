@@ -41,15 +41,20 @@ typedef struct{
 	uint8_t num_ints,
 			num_vints;
 
+	size_t timer_cycle_time_us;
+	uint8_t timer_int;
+
 	struct devtree_device_t const * const *childs;
 } devtree_arch_t;
 
 
 /* prototypes */
 devtree_device_t const *devtree_find_device_by_name(devtree_device_t const *root, char const *name);
-devtree_device_t const *devtree_find_device_by_comp(devtree_device_t const *root, char const *name);
+devtree_device_t const *devtree_find_device_by_comp(devtree_device_t const *root, char const *comp);
 
 devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root, char const *name);
+
+void const *devtree_arch_payload(char const *comp);
 
 
 /* external variables */
