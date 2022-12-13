@@ -20,7 +20,6 @@
 
 #ifndef ASM
 # ifndef BUILD_HOST
-
 #  include <arch/arch.h>
 #  include <arch/avr/core.h>
 #  include <arch/avr/register.h>
@@ -33,17 +32,18 @@
 #  include <arch/avr/syscall.h>
 #  include <arch/avr/atomic.h>
 #  include <sys/types.h>
+#  include <sys/devtree.h>
 # endif // BUILD_HOST
 #endif // ASM
 
 
 /* macros */
-// clocks
-#define AVR_CPU_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
-#define AVR_IO_CLOCK_HZ		CONFIG_SYSTEM_CLOCK_HZ
-#define AVR_ADC_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
-#define AVR_ASYNC_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
-#define AVR_FLASH_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
+#define AVR_SYSTEM_CLOCK_HZ	(((avr_platform_cfg_t*)devtree_arch_payload("avr,platform"))->system_clock_hz)
+#define AVR_CPU_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
+#define AVR_IO_CLOCK_HZ		AVR_SYSTEM_CLOCK_HZ
+#define AVR_ADC_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
+#define AVR_ASYNC_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
+#define AVR_FLASH_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
 
 #if defined(CONFIG_AVR_ISA_AVR51) || defined(CONFIG_AVR_XMEGA)
 # define XCALL				call
@@ -60,6 +60,9 @@
 #ifndef ASM
 # ifndef BUILD_HOST
 typedef struct{
+	uint32_t system_clock_hz;
+	uint8_t system_clock_prescaler;
+
 	uint8_t watchdog_prescaler;
 } avr_platform_cfg_t;
 # endif // BUILD_HOST

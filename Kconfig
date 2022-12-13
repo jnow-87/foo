@@ -142,6 +142,11 @@ menu "build system"
 			default "/dev/ttyUSB0"
 			depends on AVR_PROG_PORT_UART
 
+		config AVR_JTAG_BASE_CLOCK_HZ
+			int "avr jtag clock [Hz]"
+			default 1000000
+			depends on AVR_DRAGON_JTAG
+
 		menu "hidden"
 			visible if 0
 
@@ -154,7 +159,7 @@ menu "build system"
 			config AVR_PROG_DEBUG_ARGS
 				string "programmer debug arguments"
 				default "--debugwire" if AVR_DRAGON_ISP || AVR_STK500V2
-				default "--dragon --jtag $(CONFIG_AVR_PROG_PORT) --jtag-bitrate $(shell echo '$(CONFIG_SYSTEM_CLOCK_HZ) / (4 * 1000)' | bc -q)kHz" if AVR_DRAGON_JTAG
+				default "--dragon --jtag $(CONFIG_AVR_PROG_PORT) --jtag-bitrate $(shell echo '$(CONFIG_AVR_JTAG_BASE_CLOCK_HZ) / (4 * 1000)' | bc -q)kHz" if AVR_DRAGON_JTAG
 				default ""
 
 			config AVR_PROG_TYPE

@@ -15,15 +15,7 @@
 //   1 syscall
 //   1 instruction overflow
 num-ints = 37;
-num-vints = 0
-#ifdef CONFIG_BRIDGE_I2C_ITF
-	+ 2
-#endif // CONFIG_BRIDGE_I2C_ITF
-
-#ifdef CONFIG_BRIDGE_UART_DEV
-	+ 2
-#endif // CONFIG_BRIDGE_UART_DEV
-;
+num-vints = 0;
 
 timer-cycle-time-us = 31250; 
 timer-int = 8;
@@ -32,7 +24,7 @@ plt = {
 	compatible = "avr,platform";
 
 	// config (avr_platform_cfg_t)
-	int<32> = [ 20000000 ];	// system clock [Hz]
+	int<32> = [ 11059200 ];	// system clock [Hz]
 	int<8> = [ 0 ];			// system clock prescale (1)
 	int<8> = [ 0x1 ];		// watchdog prescaler (4096 -> 31.250ms)
 };
