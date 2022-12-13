@@ -52,15 +52,8 @@
 
 	\subsection{Kconfig}
 		\begin{itemize}
-			\item respective \quote{Processor type} has to be added
-			\item the following CONFIG-variables need to be defined
-				\begin{itemize}
-					\item \lstinline{CONFIG_ARCH}
-					\item \lstinline{CONFIG_PROCESSOR}
-					\item \lstinline{CONFIG_ADDR_WIDTH.*}
-					\item \lstinline{CONFIG_REGISTER_WIDTH.*}
-					\item \lstinline{CONFIG_ARCH_HEADER}
-				\end{itemize}
+			\item a respective \quote{Processor type} has to be added
+			\item the \it{hidden} CONFIG variables in \lstinline{arch/Kconfig} need to be defined/selected
 		\end{itemize}
 
 	\subsection{Build System}

@@ -53,11 +53,6 @@ menu "hidden"
 	config AVR_XMEGA
 		bool "xmega mcu"
 		default n
-
-	# architecture defining header
-	config ARCH_HEADER
-		string "arch header"
-		default "<arch/$(CONFIG_ARCH)/atmega.h>" if AVR
 endmenu
 # }}}
 

@@ -50,6 +50,11 @@ menu "hidden"
 		default AVR_MCU	if AVR
 		default "x86"	if X86
 
+	config ARCH_HEADER
+		string "arch header"
+		default "<arch/$(CONFIG_ARCH)/atmega.h>"	if AVR
+		default "<arch/$(CONFIG_ARCH)/x86.h>"		if X86
+
 	config ADDR_WIDTH_8
 		bool "8-bit"
 
