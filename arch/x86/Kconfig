@@ -16,6 +16,6 @@ menu "hidden"
 
 	# architecture defining header
 	config ARCH_HEADER
-		string "arch Header"
+		string "arch header"
 		default "<arch/$(CONFIG_ARCH)/x86.h>" if X86
 endmenu

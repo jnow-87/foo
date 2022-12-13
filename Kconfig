@@ -98,7 +98,7 @@ menu "build system"
 	endmenu
 
 	# AVR programmer
-	menu "aVR programmer"
+	menu "avr programmer"
 		depends on AVR
 
 		config AVR_FUSER
@@ -117,14 +117,14 @@ menu "build system"
 			prompt "programmer type"
 
 			config AVR_DRAGON_JTAG
-				bool "aVR Dragon JTAG"
+				bool "avr dragon jtag"
 				depends on ATMEGA1284P
 
 			config AVR_DRAGON_ISP
-				bool "aVR Dragon ISP"
+				bool "avr dragon isp"
 
 			config AVR_STK500V2
-				bool "sTK500v2"
+				bool "stk500v2"
 		endchoice
 
 		choice

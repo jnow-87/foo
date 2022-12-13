@@ -233,7 +233,7 @@ CONFIG_BUILD_DEBUG=y
 CONFIG_BUILD_TYPE=debug
 
 #
-# aVR programmer
+# avr programmer
 #
 CONFIG_AVR_FUSER=avrfuser
 CONFIG_AVR_PROG=avrdude

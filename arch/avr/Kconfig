@@ -12,10 +12,10 @@
 #
 # {{{
 choice
-	prompt "target MCU"
+	prompt "target mcu"
 		
 	config ATMEGA1284P
-		bool "atmega1284P"
+		bool "atmega1284p"
 		select ADDR_WIDTH_16
 		select REGISTER_WIDTH_8
 		select AVR_ISA_AVR51
@@ -27,36 +27,36 @@ menu "hidden"
 	visible if 0
 
 	config AVR_MCU
-		string "mCU"
+		string "mcu"
 		default "atmega1284p" if ATMEGA1284P
-		default "unknown MCU"
+		default "unknown mcu"
 
 	config AVR_ISA_AVR4
-		bool "aVR4"
+		bool "avr4"
 
 	config AVR_ISA_AVR51
-		bool "aVR51"
+		bool "avr51"
 
 	config AVR_ISA
-		string "iSA"
+		string "isa"
 		default "avr4"	if AVR_ISA_AVR4
 		default "avr51"	if AVR_ISA_AVR51
 
 	config AVR_RAMPZ
-		bool "rAMPZ"
+		bool "rampz"
 		default n
 
 	config AVR_ATMEGA
-		bool "atmega MCU"
+		bool "atmega mcu"
 		default n
 
 	config AVR_XMEGA
-		bool "xmega MCU"
+		bool "xmega mcu"
 		default n
 
 	# architecture defining header
 	config ARCH_HEADER
-		string "arch Header"
+		string "arch header"
 		default "<arch/$(CONFIG_ARCH)/atmega.h>" if AVR
 endmenu
 # }}}

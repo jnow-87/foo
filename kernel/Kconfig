@@ -12,7 +12,7 @@
 #
 # {{{
 config KERNEL_SMP
-	bool "build an SMP system"
+	bool "build an smp system"
 	default n
 
 config KERNEL_LOG
@@ -198,11 +198,11 @@ menu "init binary settings"
 		prompt "init binary type"
 
 		config INIT_BINTYPE_RAW
-			bool "iNIT_BINARY points to the init entry address"
+			bool "INIT_BINARY points to the init entry address"
 			select BINLOADER_RAW
 
 		config INIT_BINARY_ELF
-			bool "iNIT_BINARY points to an ELF file"
+			bool "INIT_BINARY points to an elf file"
 			select BINLOADER_ELF
 	endchoice
 
@@ -215,7 +215,7 @@ menu "init binary settings"
 			bool "raw binaries"
 
 		config BINLOADER_ELF
-			bool "eLF binaries"
+			bool "elf binaries"
 	endmenu
 
 	menu "hidden"

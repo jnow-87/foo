@@ -15,10 +15,10 @@ menuconfig DRIVER_BRIDGE
 
 if DRIVER_BRIDGE
 	config BRIDGE_UART_DEV
-		bool "uART bridge device"
+		bool "uart bridge device"
 
 	config BRIDGE_UART_ITF
-		bool "uART bridge interface"
+		bool "uart bridge interface"
 
 	config BRIDGE_I2C_DEV
 		bool "i2c bridge device"
