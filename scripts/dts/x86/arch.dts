@@ -7,6 +7,9 @@
 
 
 
+addr-width = 64;
+reg-width = 64;
+
 // interrupts
 num-ints = 4;
 num-vints = 4;

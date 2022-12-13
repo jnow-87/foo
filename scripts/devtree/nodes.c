@@ -22,6 +22,11 @@
 		return devtree_parser_error("missing arch attribute '" #member "'"); \
 }
 
+#define ARCH_ASSERT_POW2(member){ \
+	if(num_set_bits(root_arch.member) != 1) \
+		return devtree_parser_error("arch attribute '" #member "' not a power of 2"); \
+}
+
 
 /* local/static prototypes */
 static void *alloc_node(size_t size, node_type_t type);
@@ -29,6 +34,8 @@ static int add_name(char const *name);
 
 static int validate_device(device_node_t *node);
 static int validate_memory(memory_node_t *node);
+
+static size_t num_set_bits(unsigned long long v);
 
 
 /* static variables */
@@ -52,6 +59,8 @@ int nodes_init(void){
 	memset(&root_arch, 0, sizeof(arch_node_t));
 	root_arch.type = NT_ARCH;
 	root_arch.name = "arch_root";
+	root_arch.addr_width = 0;
+	root_arch.reg_width = 0;
 	root_arch.num_ints = -1;
 	root_arch.num_vints = -1;
 	root_arch.timer_cycle_time_us = 0;
@@ -137,10 +146,15 @@ arch_node_t *arch_root(void){
 }
 
 int arch_validate(void){
+	ARCH_ASSERT_MISSING(addr_width, 0);
+	ARCH_ASSERT_MISSING(reg_width, 0);
 	ARCH_ASSERT_MISSING(num_ints, -1);
 	ARCH_ASSERT_MISSING(num_vints, -1);
 	ARCH_ASSERT_MISSING(timer_cycle_time_us, 0);
 	ARCH_ASSERT_MISSING(timer_int, -1);
+
+	ARCH_ASSERT_POW2(addr_width);
+	ARCH_ASSERT_POW2(reg_width);
 
 	return 0;
 }
@@ -231,4 +245,16 @@ static int validate_memory(memory_node_t *node){
 		return devtree_parser_error("zero-size memory node \"%s\"", node->name);
 
 	return 0;
+}
+
+static size_t num_set_bits(unsigned long long v){
+	size_t n = 0;
+
+
+	for(size_t i=0; i<64; i++){
+		n += (v & 0x1);
+		v >>= 1;
+	}
+
+	return n;
 }

@@ -11,9 +11,9 @@
 #define AVR_THREAD_H
 
 
-#include <config/config.h>
 #include <sys/compiler.h>
 #include <sys/types.h>
+#include <sys/devicetree.h>
 #include <sys/thread.h>
 
 
@@ -43,7 +43,7 @@ typedef struct thread_ctx_t{
 		 *ret_addr;				/**< thread return address on interrupt */
 } thread_ctx_t;
 
-STATIC_ASSERT(sizeof(((thread_ctx_t*)(0))->next) == (CONFIG_ADDR_WIDTH == 16 ? 2 : 1));
+STATIC_ASSERT(sizeof(((thread_ctx_t*)(0))->next) == (DEVTREE_ARCH_ADDR_WIDTH == 16 ? 2 : 1));
 STATIC_ASSERT(sizeof(((thread_ctx_t*)(0))->type) == 1);
 
 

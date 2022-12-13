@@ -112,6 +112,8 @@
 %token NA_COMPATIBLE
 %token NA_BASEADDR
 %token NA_REG
+%token NA_ADDR_WIDTH
+%token NA_REG_WIDTH
 %token NA_INTERRUPTS
 %token NA_VIRTUAL_INTERRUPTS
 %token NA_TIMER_CYCLE_TIME_US
@@ -157,6 +159,8 @@ memory-lst : %empty													{ }
 
 arch-lst : %empty													{ }
 		 | arch-lst device ';'										{ EABORT(NODE_ADD_CHILD(arch_root(), $2)); }
+		 | arch-lst NA_ADDR_WIDTH '=' int ';'						{ arch_root()->addr_width = $4; }
+		 | arch-lst NA_REG_WIDTH '=' int ';'						{ arch_root()->reg_width = $4; }
 		 | arch-lst NA_INTERRUPTS '=' int ';'						{ arch_root()->num_ints = $4; }
 		 | arch-lst NA_VIRTUAL_INTERRUPTS '=' int ';'				{ arch_root()->num_vints = $4; }
 		 | arch-lst NA_TIMER_CYCLE_TIME_US '=' int ';'				{ arch_root()->timer_cycle_time_us = $4; }

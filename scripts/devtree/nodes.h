@@ -99,6 +99,9 @@ typedef struct arch_node_t{
 	node_type_t type;
 	char const *name;
 
+	uint8_t addr_width,
+			reg_width;
+
 	int8_t num_ints,
 		   num_vints;
 

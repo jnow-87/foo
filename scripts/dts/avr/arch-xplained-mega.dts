@@ -10,6 +10,9 @@
 #include <config/config.h>
 
 
+addr-width = 16;
+reg-width = 8;
+
 // interrupts
 //  35 hardwares
 //   1 syscall

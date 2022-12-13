@@ -23,8 +23,6 @@ choice
 		bool "x86 (host test)"
 		select NOFLOAT
 		select KERNEL_NO_VIRT_MEM
-		select ADDR_WIDTH_64
-		select REGISTER_WIDTH_64
 endchoice
 
 menu "processor features"
@@ -54,46 +52,6 @@ menu "hidden"
 		string "arch header"
 		default "<arch/$(CONFIG_ARCH)/atmega.h>"	if AVR
 		default "<arch/$(CONFIG_ARCH)/x86.h>"		if X86
-
-	config ADDR_WIDTH_8
-		bool "8-bit"
-
-	config ADDR_WIDTH_16
-		bool "16-bit"
-
-	config ADDR_WIDTH_32
-		bool "32-bit"
-
-	config ADDR_WIDTH_64
-		bool "64-bit"
-
-	config ADDR_WIDTH
-		int "address width"
-		default 8	if ADDR_WIDTH_8
-		default 16	if ADDR_WIDTH_16
-		default 32	if ADDR_WIDTH_32
-		default 64	if ADDR_WIDTH_64
-		default 64
-
-	config REGISTER_WIDTH_8
-		bool "8-bit"
-
-	config REGISTER_WIDTH_16
-		bool "16-bit"
-
-	config REGISTER_WIDTH_32
-		bool "32-bit"
-
-	config REGISTER_WIDTH_64
-		bool "64-bit"
-
-	config REGISTER_WIDTH
-		int "address width"
-		default 8	if REGISTER_WIDTH_8
-		default 16	if REGISTER_WIDTH_16
-		default 32	if REGISTER_WIDTH_32
-		default 64	if REGISTER_WIDTH_64
-		default 64
 
 	config NOFLOAT
 		bool "enable floating point support"

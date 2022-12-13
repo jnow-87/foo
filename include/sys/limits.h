@@ -14,10 +14,14 @@
 #include <config/config.h>
 #include <sys/compiler.h>
 
+#ifndef BUILD_HOST
+# include <sys/devicetree.h>
+#endif // BUILD_HOST
+
 
 /* macros */
 #ifndef BUILD_HOST
-# if CONFIG_REGISTER_WIDTH == 8
+# if DEVTREE_ARCH_REG_WIDTH == 8
 // signed types
 #  define CHAR_BIT		8
 #  define CHAR_MAX		SCHAR_MAX
@@ -45,7 +49,7 @@
 #  define ULLONG_MAX	18446744073709551615U
 #  define UINTMAX_MAX	ULLONG_MAX
 #  define SIZE_MAX		UINT_MAX
-# elif CONFIG_REGISTER_WIDTH == 32
+# elif DEVTREE_ARCH_REG_WIDTH == 32
 // signed types
 #  define CHAR_BIT		8
 #  define CHAR_MAX		SCHAR_MAX
@@ -73,7 +77,7 @@
 #  define ULLONG_MAX	18446744073709551615U
 #  define UINTMAX_MAX	ULLONG_MAX
 #  define SIZE_MAX		UINT_MAX
-# elif CONFIG_REGISTER_WIDTH == 64
+# elif DEVTREE_ARCH_REG_WIDTH == 64
 // signed types
 #  define CHAR_BIT		8
 #  define CHAR_MAX		SCHAR_MAX
@@ -101,9 +105,9 @@
 #  define ULLONG_MAX	18446744073709551615U
 #  define UINTMAX_MAX	ULLONG_MAX
 #  define SIZE_MAX		ULLONG_MAX
-# else // CONFIG_REGISTER_WIDTH
+# else // DEVTREE_ARCH_REG_WIDTH
 STATIC_ASSERT(!"invalid address width in configuration");
-# endif // CONFIG_REGISTER_WIDTH
+# endif // DEVTREE_ARCH_REG_WIDTH
 
 # define NAME_MAX		CONFIG_NAME_MAX
 # define FILENAME_MAX	CONFIG_NAME_MAX

@@ -11,8 +11,11 @@
 #define SYS_TYPES_H
 
 
-#include <config/config.h>
 #include <sys/compiler.h>
+
+#ifndef BUILD_HOST
+# include <sys/devicetree.h>
+#endif // BUILD_HOST
 
 
 /* macros */
@@ -35,7 +38,7 @@ typedef void					*addr_t;
 
 /* fixed-width types */
 #ifndef BUILD_HOST
-# if CONFIG_REGISTER_WIDTH == 8
+# if DEVTREE_ARCH_REG_WIDTH == 8
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
 
@@ -54,7 +57,7 @@ typedef unsigned long long int	uintmax_t;
 
 typedef int16_t					ptrdiff_t;
 #  define PTRDIFF_T				unsigned int
-# elif CONFIG_REGISTER_WIDTH == 32
+# elif DEVTREE_ARCH_REG_WIDTH == 32
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
 
@@ -74,7 +77,7 @@ typedef unsigned long long int	uintmax_t;
 
 typedef long long int			ptrdiff_t;
 #  define PTRDIFF_T				unsigned long long int
-# elif CONFIG_REGISTER_WIDTH == 64
+# elif DEVTREE_ARCH_REG_WIDTH == 64
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
 
@@ -97,9 +100,9 @@ typedef unsigned long long int	uintmax_t;
 
 typedef long long int			ptrdiff_t;
 #  define PTRDIFF_T				unsigned long long int
-# else // CONFIG_REGISTER_WIDTH
+# else // DEVTREE_ARCH_REG_WIDTH
 STATIC_ASSERT(!"invalid address width in configuration");
-# endif // CONFIG_REGISTER_WIDTH
+# endif // DEVTREE_ARCH_REG_WIDTH
 #else // BUILD_HOST
 # include <inttypes.h>
 # include <stddef.h>
