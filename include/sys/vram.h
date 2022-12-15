@@ -37,7 +37,7 @@ typedef struct{
 	uint8_t flags;		/**< cf. vram_flags_t */
 
 	uint16_t refresh_ms;
-} __packed vram_cfg_t;
+} vram_cfg_t;
 
 
 /* prototypes */

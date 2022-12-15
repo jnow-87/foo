@@ -13,6 +13,7 @@
 #include <kernel/thread.h>
 #include <kernel/memory.h>
 #include <sys/devtree.h>
+#include <sys/devicetree.h>
 #include <sys/mutex.h>
 #include <sys/thread.h>
 #include <sys/list.h>
@@ -42,7 +43,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	/* set thread attributes */
 	this_t->state = CREATED;
-	this_t->affinity = CONFIG_CORE_MASK;
+	this_t->affinity = DEVTREE_ARCH_CORE_MASK;
 	this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
 	this_t->entry = entry;
 	this_t->parent = this_p;

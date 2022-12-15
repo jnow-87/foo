@@ -9,11 +9,12 @@
 
 #include <config/config.h>
 #include <arch/arch.h>
+#include <sys/devicetree.h>
 
 
 /* macros */
 .macro	vector num
-	.if (\num < ARCH_NUM_INTS)
+	.if (\num < DEVTREE_ARCH_NUM_INTS)
 		.if(\num == 0)					// reset
 			.global __vector_\num
 			XJMP	__isr_reset
@@ -167,7 +168,7 @@ __isr_int:
 	push	r1
 	push	r1
 
-#if (CONFIG_ADDR_WIDTH == 16)
+#if (DEVTREE_ARCH_ADDR_WIDTH == 16)
 	push	r1
 	push	r1
 #endif
@@ -190,7 +191,7 @@ __isr_int:
 	sts		SPH, r25
 
 	/* pop thread_ctx_t dummy bytes */
-#if (CONFIG_ADDR_WIDTH == 16)
+#if (DEVTREE_ARCH_ADDR_WIDTH == 16)
 	pop		r16
 	pop		r16
 #endif

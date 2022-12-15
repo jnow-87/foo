@@ -12,7 +12,7 @@
 #
 # {{{
 config KERNEL_SMP
-	bool "build an SMP system"
+	bool "build an smp system"
 	default n
 
 config KERNEL_LOG
@@ -70,6 +70,10 @@ menu "hidden"
 	config KERNEL_LOG_DEBUG
 		bool "print kernel DEBUG messages"
 		select KERNEL_LOG
+		default n
+
+	config KERNEL_TIMER
+		bool "timer"
 		default n
 endmenu
 # }}}
@@ -183,15 +187,6 @@ endmenu
 # }}}
 
 #
-# interrupts
-#
-# {{{
-config INT_VIRTUALS
-	int "virtual interrupts"
-	default 0
-# }}}
-
-#
 # init binary
 #
 # {{{
@@ -203,11 +198,11 @@ menu "init binary settings"
 		prompt "init binary type"
 
 		config INIT_BINTYPE_RAW
-			bool "iNIT_BINARY points to the init entry address"
+			bool "INIT_BINARY points to the init entry address"
 			select BINLOADER_RAW
 
 		config INIT_BINARY_ELF
-			bool "iNIT_BINARY points to an ELF file"
+			bool "INIT_BINARY points to an elf file"
 			select BINLOADER_ELF
 	endchoice
 
@@ -220,7 +215,7 @@ menu "init binary settings"
 			bool "raw binaries"
 
 		config BINLOADER_ELF
-			bool "eLF binaries"
+			bool "elf binaries"
 	endmenu
 
 	menu "hidden"
@@ -240,30 +235,6 @@ endmenu
 # {{{
 menu "scheduler settigns"
 	source "kernel/sched/Kconfig"
-endmenu
-# }}}
-
-#
-# timer
-#
-# {{{
-menu "timer settings"
-	depends on KERNEL_TIMER
-
-	config KTIMER_CYCLETIME_US
-		int "kernel timer cycle time [us]"
-		default 500000
-
-	config KTIMER_ERR_MAX
-		int "maximal kernel timer error [%]"
-		default 5
-endmenu
-
-menu "hidden"
-	visible if 0
-	
-	config KERNEL_TIMER
-		bool "timer"
 endmenu
 # }}}
 

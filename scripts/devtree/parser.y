@@ -12,12 +12,13 @@
 
 /* header */
 %{
+	#include <sys/escape.h>
 	#include <stdio.h>
+	#include <stdarg.h>
 	#include <limits.h>
 	#include <string.h>
-	#include <sys/compiler.h>
 	#include <lexer.lex.h>
-	#include <node.h>
+	#include <nodes.h>
 
 
 	/* macros */
@@ -25,174 +26,51 @@
 	#define YYERROR_VERBOSE
 	#define YYDEBUG	1
 
-	// node allocate
-	#define NODE_ALLOC_DEVICES()({ \
-		device_node_t *n; \
-		\
-		\
-		if((n = calloc(1, sizeof(device_node_t))) == 0x0) \
-			PARSER_ERROR("allocating node\n"); \
-		\
-		if(vector_init(&n->payload, sizeof(member_t), 16) != 0) \
-			PARSER_ERROR("init member vector\n"); \
-		\
-		n; \
-	})
-
-	#define NODE_ALLOC_MEMORY()({ \
-		memory_node_t *n; \
-		\
-		\
-		if((n = calloc(1, sizeof(memory_node_t))) == 0x0) \
-			PARSER_ERROR("allocating node\n"); \
-		\
-		n; \
-	})
-
-	// node validation
-	#define NODE_VALIDATE_DEVICES(node)({ \
-		char const **name; \
-		typeof(node) _node = node; \
-		\
-		\
-		if(_node->compatible == 0x0 || *_node->compatible == 0) \
-			PARSER_ERROR("undefined member \"compatible\"\n"); \
-		\
-		vector_for_each(&node_names, name){ \
-			if(strcmp(*name, _node->name) == 0) \
-				PARSER_ERROR("node with name \"%s\" already exists\n", *name); \
-		} \
-		\
-		vector_add(&node_names, &_node->name); \
-	})
-
-	#define NODE_VALIDATE_MEMORY(node)({ \
-		char const **name; \
-		typeof(node) _node = node; \
-		\
-		\
-		if(_node->size == 0 && _node->childs == 0x0) \
-			PARSER_ERROR("zero size for node \"%s\"\n", _node->name); \
-		\
-		vector_for_each(&node_names, name){ \
-			if(strcmp(*name, _node->name) == 0) \
-				PARSER_ERROR("node with name \"%s\" already exists\n", *name); \
-		} \
-		\
-		vector_add(&node_names, &_node->name); \
-	})
-
-	// vector allocate
-	#define INT_LIST_ALLOC()({ \
-		vector_t *v; \
-		\
-		\
-		if((v = malloc(sizeof(vector_t))) == 0x0) \
-			PARSER_ERROR("allocating vector\n"); \
-		\
-		if(vector_init(v, sizeof(unsigned int), 16) != 0) \
-			PARSER_ERROR("init vector\n"); \
-		\
-		v; \
-	})
-
-	// vector add
-	#define INT_LIST_ADD(v, payload){ \
-		typeof(v) _v = v; \
-		typeof(payload) _payload = payload; \
-		\
-		\
-		if(!_payload.empty && vector_add(_v, &_payload.val) != 0) \
-			PARSER_ERROR("adding to vector\n"); \
-	}
-
-
-	// check if a member is already present
-	#define MEMBER_PRESENT(node, member, empty_val)({ \
-		if((node)->member != (empty_val)) \
-			PARSER_ERROR("member \"" STR(member) "\" already set\n"); \
-	})
-
-	// allocate integer member
-	#define MEMBER_ALLOC_INTLIST(int_size, payload)({ \
-		member_int_t *l; \
-		\
-		\
-		if((l = malloc(sizeof(member_int_t))) == 0x0) \
-			PARSER_ERROR("allocating integer list\n"); \
-		\
-		l->size = (int_size); \
-		l->lst = (payload); \
-		l; \
-	})
-
-	// add member to node
-	#define MEMBER_ADD(node, mem_type, val){ \
-		member_t m; \
-		\
-		\
-		m.type = (mem_type); \
-		m.payload = (val); \
-		\
-		if(vector_add(&(node)->payload, &m) != 0) \
-			PARSER_ERROR("adding member \"" STR(mem_type) "\"\n"); \
-	}
-
-	// string alloc
-	#define STRALLOC(s, len)({ \
-		typeof(len) _len = len; \
-		typeof(s) _s = s; \
-		char *_new; \
-		\
-		\
-		if(_len + 1 > NAME_MAX) \
-			PARSER_ERROR("identifier \"%*.*s\" too long, maximum length %u\n", _len, _len, _s, NAME_MAX); \
-		\
-		_new = malloc(_len + 1); \
-		\
-		if(_new == 0x0) \
-			PARSER_ERROR("out of memory allocating string\n"); \
-		\
-		memcpy(_new, _s, _len); \
-		_new[_len] = 0; \
-		\
-		_new; \
-	})
-
 	// parser error message
-	#define PARSER_ERROR(s, ...){ \
-		fprintf(stderr, FG_VIOLETT "%s" RESET_ATTR ":" FG_GREEN "%d:%d" RESET_ATTR " token \"%s\" -- " s, file, devtreelloc.first_line, devtreelloc.first_column, devtreetext, ##__VA_ARGS__); \
-		YYERROR; \
+	#define EABORT(expr){ \
+		if((expr) != 0) \
+			YYERROR; \
 	}
+
+	// helper
+	#define NODE_ADD_CHILD(parent, child)	node_add_child((base_node_t*)parent, (base_node_t*)child)
+
 
 	/* local/static variables */
 	static FILE *fp = 0;
-	static vector_t node_names;
+	static char const *dt_script = 0x0;
 
 
 	/* prototypes */
-	static int devtreeerror(char const *file, device_node_t *devices_root, memory_node_t *memory_root, char const *s);
+	void devtreeunput(char c);
+
+
+	/* local/static prototypes */
+	static int devtreeerror(char const *file, char const *s);
+
 	static void cleanup(void);
+
+	static void *stralloc(char const *s, size_t len);
+	static vector_t *intlist_alloc(void);
+	static int intlist_add(vector_t *lst, unsigned int val);
 %}
 
 %code requires{
-	#include <sys/escape.h>
-	#include <sys/list.h>
 	#include <sys/vector.h>
-	#include <node.h>
+	#include <nodes.h>
+
+
+	/* prototypes */
+	int devtree_parser_error(char const *fmt, ...);
 }
 
 /* parse paramters */
 %parse-param { char const *file }
-%parse-param { device_node_t *devices_root }
-%parse-param { memory_node_t *memory_root }
 
 /* init code */
 %initial-action{
-	/* init node name list */
-	vector_init(&node_names, sizeof(char*), 16);
-
 	/* open input file */
+	dt_script = file;
 	fp = fopen(file, "r");
 
 	if(fp == 0){
@@ -209,17 +87,13 @@
 	unsigned int i;
 
 	struct{
-		bool empty;
-		unsigned int val;
-	} opt_int;
-
-	struct{
 		char *s;
 		unsigned int len;
 	} str;
 
-	device_node_t *devices;
+	device_node_t *device;
 	memory_node_t *memory;
+	arch_node_t *arch;
 	vector_t *int_lst;
 }
 
@@ -232,91 +106,188 @@
 // sections
 %token SEC_DEVICES
 %token SEC_MEMORY
+%token SEC_ARCH
 
 // node attributes
 %token NA_COMPATIBLE
 %token NA_BASEADDR
 %token NA_REG
+%token NA_ADDR_WIDTH
+%token NA_REG_WIDTH
+%token NA_CORE_MASK
+%token NA_INTERRUPTS
+%token NA_VIRTUAL_INTERRUPTS
+%token NA_TIMER_CYCLE_TIME_US
+%token NA_TIMER_INT
 %token NA_INT
 %token NA_SIZE
 %token NA_STRING
 
 /* non-terminals */
-%type <devices> devices
-%type <devices> devices-attr
+%type <device> device
+%type <device> devices-attr
 %type <memory> memory
 %type <memory> memory-attr
+%type <i> int
 %type <int_lst> int-list
-%type <opt_int> int-list-val
+%type <int_lst> opt-int
 
 
 %%
 
 
 /* start */
-start : error															{ cleanup(); YYABORT; }
-	  | section-lst														{ cleanup(); }
+start : error														{ cleanup(); YYABORT; }
+	  | section-lst													{ EABORT(arch_validate()); memory_node_complement(memory_root()); cleanup(); }
 	  ;
 
 /* sections */
-section-lst : %empty													{ }
-			| section-lst section ';'									{ }
+section-lst : %empty												{ }
+			| section-lst section ';'								{ }
 			;
 
-section : SEC_DEVICES '=' '{' devices-lst '}'							{ }
-		| SEC_MEMORY '=' '{' memory-lst '}'								{ }
+section : SEC_DEVICES '=' '{' devices-lst '}'						{ }
+		| SEC_MEMORY '=' '{' memory-lst '}'							{ }
+		| SEC_ARCH '=' '{' arch-lst '}'								{ }
 		;
 
 /* node lists */
-devices-lst : %empty { } | devices-lst devices ';'						{ NODE_VALIDATE_DEVICES($2); $2->parent = devices_root; list_add_tail(devices_root->childs, $2); };
-memory-lst : %empty { } | memory-lst memory ';'							{ NODE_VALIDATE_MEMORY($2); $2->parent = memory_root; list_add_tail(memory_root->childs, $2); };
+devices-lst : %empty												{ }
+			| devices-lst device ';'								{ EABORT(NODE_ADD_CHILD(device_root(), $2)); };
+
+memory-lst : %empty													{ }
+		   | memory-lst memory ';'									{ EABORT(NODE_ADD_CHILD(memory_root(), $2)); };
+
+arch-lst : %empty													{ }
+		 | arch-lst device ';'										{ EABORT(NODE_ADD_CHILD(arch_root(), $2)); }
+		 | arch-lst NA_ADDR_WIDTH '=' int ';'						{ arch_root()->addr_width = $4; }
+		 | arch-lst NA_REG_WIDTH '=' int ';'						{ arch_root()->reg_width = $4; }
+		 | arch-lst NA_CORE_MASK '=' int ';'						{ arch_root()->core_mask = $4; }
+		 | arch-lst NA_INTERRUPTS '=' int ';'						{ arch_root()->num_ints = $4; }
+		 | arch-lst NA_VIRTUAL_INTERRUPTS '=' int ';'				{ arch_root()->num_vints = $4; }
+		 | arch-lst NA_TIMER_CYCLE_TIME_US '=' int ';'				{ arch_root()->timer_cycle_time_us = $4; }
+		 | arch-lst NA_TIMER_INT '=' int ';'						{ arch_root()->timer_int = $4; }
+		 ;
 
 /* nodes */
-devices : IDFR '=' '{' devices-attr '}'									{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); };
-memory : IDFR '=' '{' memory-attr '}'									{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); };
+device : IDFR '=' '{' devices-attr '}'								{ $$ = $4; $$->name = stralloc($1.s, $1.len); EABORT($$->name == 0x0); };
+memory : IDFR '=' '{' memory-attr '}'								{ $$ = $4; $$->name = stralloc($1.s, $1.len); EABORT($$->name == 0x0); };
 
 /* node attributes */
-devices-attr : %empty													{ $$ = NODE_ALLOC_DEVICES(); }
-			| devices-attr devices ';'									{ $$ = $1; NODE_VALIDATE_DEVICES($2); $2->parent = $$; list_add_tail($$->childs, $2); }
-			| devices-attr NA_COMPATIBLE '=' STRING ';'					{ $$ = $1; MEMBER_PRESENT($$, compatible, 0x0); $$->compatible = STRALLOC($4.s, $4.len); }
-			| devices-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; MEMBER_ADD($$, MT_BASE_ADDR, (void*)(unsigned long int)$4); }
-			| devices-attr NA_REG '=' '[' int-list ']' ';'				{ $$ = $1; MEMBER_ADD($$, MT_REG_LIST, $5); }
-			| devices-attr NA_INT '<' INT '>' '=' '[' int-list ']' ';'	{ $$ = $1; MEMBER_ADD($$, MT_INT_LIST, MEMBER_ALLOC_INTLIST($4, $8)); }
-			| devices-attr NA_STRING '=' STRING ';'						{ $$ = $1; MEMBER_ADD($$, MT_STRING, STRALLOC($4.s, $4.len)); }
-			;
+devices-attr : %empty												{ $$ = device_node_alloc(); EABORT($$ == 0x0); }
+			 | devices-attr device ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
+			 | devices-attr NA_COMPATIBLE '=' STRING ';'			{ $$ = $1; $$->compatible = stralloc($4.s, $4.len); EABORT($$->compatible == 0x0); }
+			 | devices-attr NA_BASEADDR '=' int ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_BASE_ADDR, (void*)(unsigned long int)$4)); }
+			 | devices-attr NA_REG '=' int-list ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_REG_LIST, $4)); }
+			 | devices-attr NA_INT '<' int '>' '=' int-list ';'		{ $$ = $1; EABORT(device_node_add_member($$, MT_INT_LIST, node_intlist_alloc($4, $7))); }
+			 | devices-attr NA_STRING '=' STRING ';'				{ $$ = $1; EABORT(device_node_add_member($$, MT_STRING, stralloc($4.s, $4.len))); }
+			 ;
 
-memory-attr : %empty													{ $$ = NODE_ALLOC_MEMORY(); }
-			| memory-attr memory ';'									{ $$ = $1; NODE_VALIDATE_MEMORY($2); $2->parent = $$; list_add_tail($$->childs, $2); }
-			| memory-attr NA_BASEADDR '=' INT ';'						{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
-			| memory-attr NA_SIZE '=' INT ';'							{ $$ = $1; $$->size = (size_t)$4; }
+memory-attr : %empty												{ $$ = memory_node_alloc(); EABORT($$ == 0x0); }
+			| memory-attr memory ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
+			| memory-attr NA_BASEADDR '=' int ';'					{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
+			| memory-attr NA_SIZE '=' int ';'						{ $$ = $1; $$->size = (size_t)$4; }
 			;
 
 /* basic types */
-int-list : int-list-val													{ $$ = INT_LIST_ALLOC(); INT_LIST_ADD($$, $1); }
-		 | int-list opt-com int-list-val								{ $$ = $1; INT_LIST_ADD($$, $3); }
+int-list : '[' opt-int ']'											{ $$ = $2; }
+		 | '[' opt-int ',' ']'										{ $$ = $2; }
 		 ;
 
-int-list-val : %empty													{ $$.empty = true; }
-			 | INT														{ $$.empty = false; $$.val = $1; }
-			 ;
-
-opt-com : %empty														{ }
-		| ','															{ }
+opt-int : %empty													{ $$ = intlist_alloc(); EABORT($$ == 0x0); devtreeunput(','); }
+		| opt-int ',' int											{ $$ = $1; EABORT(intlist_add($$, $3)); }
 		;
+
+int : INT															{ $$ = $1; }
+	| int '+' INT													{ $$ += $3; }
+	;
 
 
 %%
 
 
-static int devtreeerror(char const *file, device_node_t *devices_root, memory_node_t *memory_root, char const *s){
-	PARSER_ERROR("%s\n", s);
+/* global functions */
+int devtree_parser_error(char const *fmt, ...){
+	va_list lst;
 
-yyerrorlab:
+
+	fprintf(stderr, FG_VIOLETT "%s" RESET_ATTR ":" FG_GREEN "%d:%d" RESET_ATTR " token \"%s\" -- ",
+		dt_script,
+		devtreelloc.first_line,
+		devtreelloc.first_column,
+		devtreetext
+	);
+
+	va_start(lst, fmt);
+	vfprintf(stderr, fmt, lst);
+	va_end(lst);
+
+	fprintf(stderr, " %s\n", (errno ? strerror(errno) : ""));
+
+	return -1;
+}
+
+
+/* local functions */
+static int devtreeerror(char const *file, char const *s){
+	devtree_parser_error(s);
+
 	return 0;
 }
 
 static void cleanup(void){
 	devtreelex_destroy();
-	vector_destroy(&node_names);
 	fclose(fp);
+}
+
+static void *stralloc(char const *s, size_t len){
+	char *x;
+
+
+	x = malloc(len + 1);
+
+	if(x == 0x0)
+		goto err;
+
+	memcpy(x, s, len);
+	x[len] = 0;
+
+	return x;
+
+
+err:
+	devtree_parser_error("string allocation failed");
+
+	return 0x0;
+}
+
+static vector_t *intlist_alloc(void){
+	vector_t *v;
+
+
+	v = malloc(sizeof(vector_t));
+
+	if(v == 0x0)
+		goto err_0;
+
+	if(vector_init(v, sizeof(unsigned int), 16) != 0)
+		goto err_1;
+
+	return v;
+
+
+err_1:
+	free(v);
+
+err_0:
+	devtree_parser_error("intlist allocation failed");
+
+	return 0x0;
+}
+
+static int intlist_add(vector_t *lst, unsigned int val){
+	if(vector_add(lst, &val) != 0)
+		return devtree_parser_error("intlist extension failed");
+
+	return 0;
 }

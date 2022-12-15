@@ -50,12 +50,10 @@ typedef struct{
  * 	kernel 0	-	kernel basic services, e.g. kmalloc, umalloc
  * 	kernel 1	-	kernel infrastructure, e.g. rootfs
  * 	kernel 2	-	kernel higher services, e.g. devfs, scheduler
- * 	driver		-	driver
  */
 #define core_init(call)					init_call(call, core, 0)
 #define platform_init(stage, call)		init_call(call, platform, stage)
 #define kernel_init(stage, call)		init_call(call, kernel, stage)
-#define driver_init(call)				init_call(call, driver, 0)
 
 
 #endif // KERNEL_INIT_H

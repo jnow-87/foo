@@ -9,16 +9,17 @@
 
 #include <config/config.h>
 #include <sys/stdarg.h>
+#include <sys/devicetree.h>
 #include <sys/string.h>
 #include <sys/stream.h>
 #include <sys/limits.h>
 
 
 /* macros */
-#if CONFIG_REGISTER_WIDTH == 64 || defined(CONFIG_PRINTF_LONGLONG)
+#if DEVTREE_ARCH_REG_WIDTH == 64 || defined(CONFIG_PRINTF_LONGLONG)
 # define INTTYPE	long long int
 # define UINTTYPE	unsigned long long int
-#elif CONFIG_REGISTER_WIDTH == 32 || defined(CONFIG_PRINTF_LONG)
+#elif DEVTREE_ARCH_REG_WIDTH == 32 || defined(CONFIG_PRINTF_LONG)
 # define INTTYPE	long int
 # define UINTTYPE	unsigned long int
 #elif defined(CONFIG_PRINTF_INTMAX)

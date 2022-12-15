@@ -1,0 +1,20 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+addr-width = 64;
+reg-width = 64;
+
+core-mask = 0x1;
+
+// interrupts
+num-ints = 4;
+num-vints = 4;
+
+timer-cycle-time-us = 100000;
+timer-int = 0;

@@ -22,7 +22,6 @@ devtree_memory_t const mem0 = {
 	.name = "mem0",
 	.base = (void*)0x0,
 	.size = 0,
-	.parent = &memroot,
 	.childs = ((devtree_memory_t const *[]){ &mem0_child, 0x0 }),
 };
 
@@ -30,7 +29,6 @@ devtree_memory_t const mem0_child = {
 	.name = "mem0-child",
 	.base = (void*)0x0,
 	.size = 0,
-	.parent = &mem0,
 	.childs = ((devtree_memory_t const *[]){ 0x0 }),
 };
 
@@ -38,7 +36,6 @@ devtree_memory_t const mem1 = {
 	.name = "mem1",
 	.base = (void*)0x0,
 	.size = 0,
-	.parent = &memroot,
 	.childs = 0x0,
 };
 
@@ -46,7 +43,6 @@ devtree_memory_t const memroot = {
 	.name = "memory-root",
 	.base = (void*)0x0,
 	.size = 8405248,
-	.parent = 0x0,
 	.childs = ((devtree_memory_t const *[]){ &mem0, &mem1, 0x0 }),
 };
 
@@ -60,7 +56,6 @@ devtree_device_t const dev0 = {
 	.name = "dev0",
 	.compatible = "driver-dev0",
 	.payload = (void*)0x0,
-	.parent = &devroot,
 	.childs = ((devtree_device_t const *[]){ &dev0_child, 0x0 }),
 };
 
@@ -68,7 +63,6 @@ devtree_device_t const dev0_child = {
 	.name = "dev0-child",
 	.compatible = "driver-dev0-child",
 	.payload = (void*)0x0,
-	.parent = &dev0,
 	.childs = ((devtree_device_t const *[]){ 0x0 }),
 };
 
@@ -76,7 +70,6 @@ devtree_device_t const dev1 = {
 	.name = "dev1",
 	.compatible = "driver-dev1",
 	.payload = (void*)0x0,
-	.parent = &devroot,
 	.childs = 0x0,
 };
 
@@ -84,7 +77,6 @@ devtree_device_t const devroot = {
 	.name = "devory-root",
 	.compatible = "",
 	.payload = (void*)0x0,
-	.parent = 0x0,
 	.childs = ((devtree_device_t const *[]){ &dev0, &dev1, 0x0 }),
 };
 

@@ -25,7 +25,7 @@ gpio-mcp0 = {
 		0x00,			// out mask
 		0x00,			// int mask
 		0xff,			// invert mask (inverted)
-		0,				// interrupt number
+		0,				// interrupt
 	];
 
 	// port-a i2c devfs dev config (i2c_dev_cfg_t)
@@ -45,7 +45,7 @@ gpio-mcp0 = {
 		0xff,			// out mask
 		0x00,			// int mask
 		0xff,			// invert mask (inverted)
-		0,				// interrupt number
+		0,				// interrupt
 	];
 
 	// port-b i2c devfs dev config (i2c_dev_cfg_t)

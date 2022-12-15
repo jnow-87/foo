@@ -13,7 +13,7 @@ uart0 = {
 	/* uart hardware (dt_data_t) */
 	string = "/dev/stdin";	// path
 	int<8> = [
-		3,					// rx interrupt
+		3,					// rx interrupt (uart0)
 		0,					// tx interrupt
 	];
 

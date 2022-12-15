@@ -27,7 +27,7 @@ typedef struct{
 				  tx_int;
 
 	uart_cfg_t cfg;
-} __packed dt_data_t;
+} dt_data_t;
 
 typedef struct{
 	dt_data_t *dtd;

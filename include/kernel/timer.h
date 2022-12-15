@@ -30,20 +30,11 @@ typedef struct ktimer_t{
 } ktimer_t;
 
 
-
 /* prototypes */
-void ktimer_tick(void);
-
-void ktimer_register(ktimer_t *timer, uint32_t period_us, ktimer_hdlr_t hdlr, void *payload, bool periodic);
+void ktimer_register(ktimer_t *timer, uint32_t cycle_time_us, ktimer_hdlr_t hdlr, void *payload, bool periodic);
 void ktimer_release(ktimer_t *timer);
 
 void ktimer_time(time_t *t);
-
-
-/* disabled calls */
-#ifndef CONFIG_KERNEL_TIMER
-#define ktimer_tick()
-#endif
 
 
 #endif // KERNEL_TIMER_H

@@ -46,19 +46,6 @@ prepare_deps: avr_lds
 
 
 ####
-## AVR config header
-####
-
-avrconfig := $(build_tree)/scripts/arch/avr/config/avrconfig
-avrconfig_header := $(dir $(config_header))avrconfig.h
-
-prepare_deps: $(avrconfig_header)
-
-$(avrconfig_header): $(avrconfig)
-	$(call compile_file,$(avrconfig) $(avrconfig_header) $(if $(QBUILD),,-v))
-
-
-####
 ## flags
 ####
 

@@ -9,12 +9,14 @@
 
 #include <config/config.h>
 #include <arch/thread.h>
+#include <arch/avr/atmega.h>
 #include <arch/avr/register.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <sys/errno.h>
 #include <sys/register.h>
 #include <sys/compiler.h>
+#include <sys/devtree.h>
 
 
 /* global functions */
@@ -106,8 +108,13 @@ void avr_core_panic(thread_ctx_t const *tc){
 
 /* local functions */
 static int init(void){
+	avr_platform_cfg_t const *plt;
+
+
+	plt = (avr_platform_cfg_t*)devtree_arch_payload("avr,platform");
+
 	/* set system clock prescaler */
-	mreg_w_sync(CLKPR, CONFIG_SYSTEM_CLOCK_PRESCALER, CLKPR_CLKPCE);
+	mreg_w_sync(CLKPR, plt->system_clock_prescaler, CLKPR_CLKPCE);
 
 	/* set MCUCR[IVSEL], moving interrupt vectors to boot flash if required */
 #if DEVTREE_KERNEL_FLASH_BASE == 0x0

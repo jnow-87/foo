@@ -20,8 +20,6 @@
 
 #ifndef ASM
 # ifndef BUILD_HOST
-
-#  include <config/avrconfig.h>
 #  include <arch/arch.h>
 #  include <arch/avr/core.h>
 #  include <arch/avr/register.h>
@@ -34,21 +32,18 @@
 #  include <arch/avr/syscall.h>
 #  include <arch/avr/atomic.h>
 #  include <sys/types.h>
-
+#  include <sys/devtree.h>
 # endif // BUILD_HOST
 #endif // ASM
 
 
 /* macros */
-// clocks
-#define AVR_CPU_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
-#define AVR_IO_CLOCK_HZ		CONFIG_SYSTEM_CLOCK_HZ
-#define AVR_ADC_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
-#define AVR_ASYNC_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
-#define AVR_FLASH_CLOCK_HZ	CONFIG_SYSTEM_CLOCK_HZ
-
-// interrupt handling
-#define ARCH_NUM_INTS		(AVR_NUM_HW_INTS + 2)	// +2 for the pseude interrupts (syscall, instruction overflow)
+#define AVR_SYSTEM_CLOCK_HZ	(((avr_platform_cfg_t*)devtree_arch_payload("avr,platform"))->system_clock_hz)
+#define AVR_CPU_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
+#define AVR_IO_CLOCK_HZ		AVR_SYSTEM_CLOCK_HZ
+#define AVR_ADC_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
+#define AVR_ASYNC_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
+#define AVR_FLASH_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
 
 #if defined(CONFIG_AVR_ISA_AVR51) || defined(CONFIG_AVR_XMEGA)
 # define XCALL				call
@@ -59,6 +54,19 @@
 # define XJMP				rjmp
 # define INT_VEC_SIZE		2
 #endif
+
+
+/* types */
+#ifndef ASM
+# ifndef BUILD_HOST
+typedef struct{
+	uint32_t system_clock_hz;
+	uint8_t system_clock_prescaler;
+
+	uint8_t watchdog_prescaler;
+} avr_platform_cfg_t;
+# endif // BUILD_HOST
+#endif // ASM
 
 
 /* static variables */
@@ -100,11 +108,6 @@ static arch_ops_common_t const arch_ops_common = {
 
 	/* syscall */
 	.sc = avr_sc,
-};
-
-// architecture info
-static arch_info_t const arch_info = {
-	.kernel_timer_err_us = AVRCONFIG_KTIMER_ERROR_US,
 };
 # endif // BUILD_HOST
 #endif // ASM

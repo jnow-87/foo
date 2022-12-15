@@ -26,6 +26,7 @@
 #include <sys/list.h>
 #include <sys/mutex.h>
 #include <sys/string.h>
+#include <sys/devicetree.h>
 
 
 /* types */
@@ -63,13 +64,13 @@ static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
 static mutex_t sched_mtx = NOINT_MUTEX_INITIALISER();
 
 static process_t kernel_process = { 0 };
-static thread_t kernel_threads[CONFIG_NCORES] = {
+static thread_t kernel_threads[DEVTREE_ARCH_NCORES] = {
 	{ .tid = 0, .parent = &kernel_process, }
 };
 
 // NOTE having valid entries is required for functions that use
 // 		sched_running() early on, e.g. nested mutexes
-static thread_t *running[CONFIG_NCORES] = { kernel_threads + 0 };
+static thread_t *running[DEVTREE_ARCH_NCORES] = { kernel_threads + 0 };
 
 
 /* global functions */
@@ -181,9 +182,9 @@ void sched_thread_bury(thread_t *this_t){
 
 
 /* local functions */
-#if CONFIG_NCORES > 1
+#if DEVTREE_ARCH_NCORES > 1
 static int init_shallow(void){
-	for(size_t i=1; i<CONFIG_NCORES; i++){
+	for(size_t i=1; i<DEVTREE_ARCH_NCORES; i++){
 		memcpy(kernel_threads + i, kernel_threads + 0, sizeof(thread_t));
 		running[i] = kernel_threads + i;
 	}
@@ -192,7 +193,7 @@ static int init_shallow(void){
 }
 
 kernel_init(0, init_shallow);
-#endif // CONFIG_NCORES
+#endif // DEVTREE_ARCH_NCORES
 
 static int init_deep(void){
 	process_t *this_p;
@@ -205,7 +206,7 @@ static int init_deep(void){
 
 	/* init kernel threads */
 	// one thread per core
-	for(size_t i=0; i<CONFIG_NCORES; i++){
+	for(size_t i=0; i<DEVTREE_ARCH_NCORES; i++){
 		this_t = kernel_threads + i;
 
 		// having the entry, stack and context points for kernel
@@ -330,7 +331,7 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 }
 
 static int thread_core(thread_t *this_t){
-	for(size_t core=0; core<CONFIG_NCORES; core++){
+	for(size_t core=0; core<DEVTREE_ARCH_NCORES; core++){
 		if(running[core] == this_t)
 			return core;
 	}

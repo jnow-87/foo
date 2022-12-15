@@ -22,7 +22,7 @@ i2c0 = {
 	int<8> = [
 	   1,				// broadcast (enabled)
 	   1,				// address
-	   0,				// interrupt number
+	   0,				// interrupt
 	];
 
 	brdg0-right = {
@@ -32,8 +32,8 @@ i2c0 = {
 		int<8> = [
 			0,			// id
 			2,			// chunksize
-			37,			// rx interrupt
-			38,			// tx interrupt
+			37,			// rx interrupt (virtual)
+			38,			// tx interrupt (virtual)
 		];
 	};
 };

@@ -14,8 +14,8 @@ brdg0-right = {
 	int<8> = [
 		0,				// id
 		2,				// chunksize
-		37,				// rx interrupt
-		38,				// tx interrupt
+		37,				// rx interrupt (virtual)
+		38,				// tx interrupt (virtual)
 	];
 
 	tty-bridge0 = {

@@ -215,7 +215,7 @@ sysroot_create := scripts/sysroot/create.sh
 # memlayout
 .PHONY: memlayout
 memlayout: $(memlayout)
-	$(QUTIL)$(memlayout)
+	$(call cmd_run_script,$(memlayout))
 
 .PHONY: check_memlayout
 check_memlayout: $(memlayout)

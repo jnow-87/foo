@@ -21,7 +21,8 @@ typedef enum{
 typedef enum{
 	DT_DEVICES = 0x1,
 	DT_MEMORY = 0x2,
-	DT_ALL = 0x3
+	DT_ARCH = 0x4,
+	DT_ALL = 0x7
 } devtree_section_t;
 
 typedef struct{

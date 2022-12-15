@@ -75,7 +75,7 @@ typedef enum{
 typedef struct{
 	uint8_t slave;
 	i2c_t *i2c;		/**< set by the driver */
-} __packed dt_data_t;
+} dt_data_t;
 
 
 /* local/static prototypes */

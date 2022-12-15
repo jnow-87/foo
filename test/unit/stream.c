@@ -9,6 +9,7 @@
 
 /* brickos header */
 #include <config/config.h>
+#include <sys/devicetree.h>
 #include <sys/string.h>
 #include <sys/stream.h>
 #include <test/test.h>
@@ -181,15 +182,15 @@ TEST(vfprintf){
 	r += test(" 0x0fe",					"% 5.3p", (void*)0xfe);
 	r += test("0x0fe",					"%#5.3p", (void*)0xfe);
 
-#if CONFIG_REGISTER_WIDTH >= 32 \
+#if DEVTREE_ARCH_REG_WIDTH >= 32 \
  || defined(CONFIG_PRINTF_LONG) \
  || defined(CONFIG_PRINTF_SIZET)
 	r += test("+0xffffffffffffff02",	"%+5.3p", (void*)-0xfe);
-#elif CONFIG_REGISTER_WIDTH == 8
+#elif DEVTREE_ARCH_REG_WIDTH == 8
 	r += test("+0xffffff02",			"%+5.3p", (void*)-0xfe);
 #else
 	#warning "unhandled condition for pointer size"
-#endif // CONFIG_REGISTER_WIDTH
+#endif // DEVTREE_ARCH_REG_WIDTH
 
 	/* f, F, e, E, g, G, a, A */
 	r += test("%f",						"%f");

@@ -21,7 +21,7 @@
 /* types */
 typedef struct{
 	uint8_t scale;
-} __packed dt_data_t;
+} dt_data_t;
 
 typedef struct{
 	uint8_t *dirty,

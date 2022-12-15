@@ -1,0 +1,35 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#include <config/config.h>
+
+
+addr-width = 16;
+reg-width = 8;
+
+core-mask = 0x1;
+
+// interrupts
+//  35 hardwares
+//   1 syscall
+//   1 instruction overflow
+num-ints = 37;
+num-vints = 0;
+
+timer-cycle-time-us = 31250; 
+timer-int = 8;
+
+plt = {
+	compatible = "avr,platform";
+
+	// config (avr_platform_cfg_t)
+	int<32> = [ 11059200 ];	// system clock [Hz]
+	int<8> = [ 0 ];			// system clock prescale (1)
+	int<8> = [ 0x1 ];		// watchdog prescaler (4096 -> 31.250ms)
+};

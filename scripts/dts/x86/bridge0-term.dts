@@ -14,8 +14,8 @@ brdg0-right-uart = {
 	int<8> = [
 		0,				// id
 		2,				// chunksize
-		6,				// rx interrupt
-		7,				// tx interrupt
+		6,				// rx interrupt (virtual)
+		7,				// tx interrupt (virtual)
 	];
 
 	tty-bridge0 = {

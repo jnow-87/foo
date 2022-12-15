@@ -7,4 +7,4 @@
 
 
 
-hostobj-y := config/ linker/
+hostobj-y := linker/

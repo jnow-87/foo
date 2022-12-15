@@ -17,6 +17,7 @@ obj-y := \
 	mutex.o \
 	list1.o \
 	list2.o \
+	register.o \
 	vector.o \
 	devtree.o \
 	devicetree.o
@@ -41,6 +42,7 @@ hostobj-y := \
 	linebuf.o \
 	list1.o \
 	list2.o \
+	register.o \
 	vector.o \
 	devtree.o \
 	devicetree.o \
@@ -57,8 +59,10 @@ libbrick-y := \
 	ctype.o \
 	list1.o \
 	list2.o \
+	register.o \
 	vector.o \
-	devtree.o
+	devtree.o \
+	devicetree.o
 
 libbrick-$(CONFIG_SC_DYNMEM) += memblock.o
 libbrick-$(CONFIG_LIB_MUTEX) += mutex.o
@@ -82,6 +86,7 @@ hostlib-y += libhost.a
 libhost-y := \
 	list1.o \
 	list2.o \
+	register.o \
 	string.o \
 	vector.o \
 	vram.o
@@ -110,14 +115,15 @@ $(devtree_src): $(devtree_preproc) $(dtc)
 	$(call compile_file,$(dtc) --format=c --sections=all -o $@ $<)
 
 $(devtree_header): $(devtree_preproc) $(dtc)
-	$(call compile_file,$(dtc) --format=header --sections=memory -o $@ $<)
+	$(call compile_file,$(dtc) --format=header --sections=memory$(comma)arch -o $@ $<)
 
 $(devtree_make): $(devtree_preproc) $(dtc)
-	$(call compile_file,$(dtc) --format=make --sections=memory -o $@ $<)
+	$(call compile_file,$(dtc) --format=make --sections=memory$(comma)arch -o $@ $<)
 
 
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,      $(devtree_src),)
-$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o, $(devtree_src), host)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,          $(devtree_src),)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o,     $(devtree_src), host)
+$(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.libbrick.o, $(devtree_src),)
 
 
 # include devicetree.make if it already exists

@@ -9,7 +9,6 @@
 
 %option prefix="devtree"
 %option noyywrap
-%option nounput
 %option noinput
 
 %{
@@ -26,6 +25,13 @@
 		devtreelloc.first_column = devtree_col; \
 		devtreelloc.last_column = devtree_col + devtreeleng; \
 		devtree_col += devtreeleng; \
+	}
+
+	/* make yyunput available outside of the lexer */
+	static void yyunput(int c, char *buf_ptr);
+
+	void devtreeunput(char c){
+		yyunput(c, (yytext_ptr));
 	}
 %}
 
@@ -45,11 +51,19 @@
 	/* sections */
 "devices"						{ return SEC_DEVICES; }
 "memory"						{ return SEC_MEMORY; }
+"arch"							{ return SEC_ARCH; }
 
 	/* node attributes */
 "compatible"					{ return NA_COMPATIBLE; }
 "baseaddr"						{ return NA_BASEADDR; }
 "reg"							{ return NA_REG; }
+"addr-width"					{ return NA_ADDR_WIDTH; }
+"reg-width"						{ return NA_REG_WIDTH; }
+"core-mask"						{ return NA_CORE_MASK; }
+"num-ints"						{ return NA_INTERRUPTS; }
+"num-vints"						{ return NA_VIRTUAL_INTERRUPTS; }
+"timer-cycle-time-us"			{ return NA_TIMER_CYCLE_TIME_US; }
+"timer-int"						{ return NA_TIMER_INT; }
 "int"							{ return NA_INT; }
 "size"							{ return NA_SIZE; }
 "string"						{ return NA_STRING; }

@@ -34,7 +34,7 @@ int driver_load(void){
 
 	INFO("load drivers\n");
 
-	return probe_childs(__dt_devices_root.childs, 0x0);
+	return probe_childs(__dt_device_root.childs, 0x0);
 }
 
 

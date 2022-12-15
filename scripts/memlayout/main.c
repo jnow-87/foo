@@ -10,6 +10,7 @@
 #include <sys/compiler.h>
 #include <sys/devtree.h>
 #include <sys/escape.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include "config.h"
@@ -37,7 +38,7 @@
 
 
 /* local/static prototypes */
-static void print_layout(devtree_memory_t const *node);
+static void print_layout(devtree_memory_t const *node, bool top_level);
 
 static int check_availability(void);
 static int check_bounds(devtree_memory_t const *node);
@@ -50,7 +51,7 @@ int main(int argc, char **argv){
 
 
 	if(argc == 1){
-		print_layout(&__dt_memory_root);
+		print_layout(&__dt_memory_root, false);
 	}
 	else if(strcmp(argv[1], "-c") == 0 || strcmp(argv[1], "--check") == 0){
 		r |= check_availability();
@@ -72,7 +73,7 @@ int main(int argc, char **argv){
 /**
  * \brief	print the memory nodes defined in the device tree
  */
-static void print_layout(devtree_memory_t const *node){
+static void print_layout(devtree_memory_t const *node, bool top_level){
 	char name[node != 0x0 ? strlen(node->name) : 1];
 
 
@@ -87,7 +88,7 @@ static void print_layout(devtree_memory_t const *node){
 				name[i] = ' ';
 		}
 
-		if(node->parent == &__dt_memory_root && node->childs != 0x0){
+		if(top_level){
 			printf("\n" UNDERLINE BG_WHITE FG_BLACK "%s:" RESET_ATTR "\n" BG_WHITE FG_BLACK "         target         base          end        size               " RESET_ATTR "\n", name);
 
 			if(node->size != 0)
@@ -101,7 +102,7 @@ static void print_layout(devtree_memory_t const *node){
 		return;
 
 	for(size_t i=0; node->childs[i]!=0x0; i++)
-		print_layout(node->childs[i]);
+		print_layout(node->childs[i], (node == &__dt_memory_root));
 }
 
 /**
