@@ -391,7 +391,7 @@ static void payload(FILE *fp, device_node_t *node, char const *node_ident){
 		}
 	}
 
-	fprintf(fp, "} __attribute__((packed))\n");
+	fprintf(fp, "}\n");
 
 	// data
 	fprintf(fp, " const __dt_%s_payload = {\n", node_ident);

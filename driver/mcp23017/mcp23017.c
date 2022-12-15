@@ -58,7 +58,7 @@ typedef struct{
 
 	uint8_t slave;
 	i2c_t *hw;			/**< set by the driver */
-} __packed dev_data_t;
+} dev_data_t;
 
 typedef struct{
 	dev_data_t ports[NUM_PORTS];
