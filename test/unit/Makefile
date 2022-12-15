@@ -18,6 +18,7 @@ obj-y := \
 	queue.o \
 	stack.o \
 	memblock.o \
+	register.o \
 	vector.o \
 	devtree.o
 
@@ -39,6 +40,7 @@ hostobj-y := \
 	queue.o \
 	stack.o \
 	memblock.o \
+	register.o \
 	vector.o \
 	devtree.o \
 	stream.o \

@@ -35,6 +35,16 @@ menu "processor features"
 	endif
 endmenu
 
+# }}}
+
+#
+# common settings
+#
+# {{{
+config DEVICE_TREE
+	string "device tree script"
+	default "scripts/dts/$(CONFIG_PROCESSOR).dts"
+
 menu "hidden"
 	visible if 0
 
@@ -57,22 +67,4 @@ menu "hidden"
 		bool "enable floating point support"
 		default n
 endmenu
-# }}}
-
-#
-# generic configs
-#
-# {{{
-config NCORES
-	int "number of cores"
-	default 1
-
-config CORE_MASK
-	hex "core mask"
-	range 0x1 0x0fffffff
-	default 0x1
-
-config DEVICE_TREE
-	string "device tree script"
-	default "scripts/dts/$(CONFIG_PROCESSOR).dts"
 # }}}

@@ -30,13 +30,11 @@ CONFIG_SLEEPMODE_IDLE=y
 # Debugging
 #
 # CONFIG_IOVERFLOW_DET is not set
+CONFIG_DEVICE_TREE=scripts/dts/xplained-mega.dts
 CONFIG_ARCH=avr
 CONFIG_PROCESSOR=atmega1284p
 CONFIG_ARCH_HEADER=<arch/$(CONFIG_ARCH)/atmega.h>
 CONFIG_NOFLOAT=y
-CONFIG_NCORES=1
-CONFIG_CORE_MASK=0x1
-CONFIG_DEVICE_TREE=scripts/dts/xplained-mega.dts
 
 #
 # kernel

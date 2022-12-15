@@ -40,6 +40,8 @@ typedef struct devtree_memory_t{
 typedef struct{
 	uint8_t addr_width,
 			reg_width;
+	uint8_t core_mask;
+	uint8_t ncores;
 
 	uint8_t num_ints,
 			num_vints;

@@ -13,6 +13,8 @@
 addr-width = 16;
 reg-width = 8;
 
+core-mask = 0x1;
+
 // interrupts
 //  35 hardwares
 //   1 syscall

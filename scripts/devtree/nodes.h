@@ -101,6 +101,8 @@ typedef struct arch_node_t{
 
 	uint8_t addr_width,
 			reg_width;
+	uint8_t core_mask;
+	uint8_t ncores;
 
 	int8_t num_ints,
 		   num_vints;

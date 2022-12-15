@@ -7,7 +7,6 @@
 
 
 
-#include <config/config.h>
 #include <arch/core.h>
 #include <arch/interrupt.h>
 #include <sys/types.h>
@@ -15,6 +14,7 @@
 #include <sys/string.h>
 #include <sys/stack.h>
 #include <sys/mutex.h>
+#include <sys/devicetree.h>
 #include <kernel/ipi.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
@@ -36,7 +36,7 @@ typedef struct ipi_msg_t{
 
 
 /* static variables */
-static ipi_msg_t *messages[CONFIG_NCORES] = { 0x0 };
+static ipi_msg_t *messages[DEVTREE_ARCH_NCORES] = { 0x0 };
 static mutex_t msg_mtx = MUTEX_INITIALISER();
 
 
@@ -45,7 +45,7 @@ int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *buf, size_t n){
 	ipi_msg_t *msg;
 
 
-	if(core >= CONFIG_NCORES)
+	if(core >= DEVTREE_ARCH_NCORES)
 		return_errno(E_INVAL);
 
 	msg = kmalloc(sizeof(ipi_msg_t) + n);

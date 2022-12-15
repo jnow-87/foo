@@ -11,6 +11,9 @@
 #define REGISTER_H
 
 
+#include <sys/types.h>
+
+
 /* macros */
 #define mreg_bits(reg_addr, idx, mask) \
 	bits(mreg_r(reg_addr), idx, mask)
@@ -27,6 +30,11 @@
 #define lo8(val)	bits((unsigned int)(val), 0, 0xff)
 #define hi8(val)	bits((unsigned int)(val), 8, 0xff)
 #define hh8(val)	bits((unsigned int)(val), 16, 0xff)
+
+
+/* prototypes */
+uint8_t bits_set(unsigned int val);
+int8_t bits_highest(unsigned int val);
 
 
 #endif // REGISTER_H
