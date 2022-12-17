@@ -34,6 +34,7 @@ typedef struct ktimer_t{
 void ktimer_register(ktimer_t *timer, uint32_t cycle_time_us, ktimer_hdlr_t hdlr, void *payload, bool periodic);
 void ktimer_release(ktimer_t *timer);
 
+uint32_t ktimer_ms(void);
 void ktimer_time(time_t *t);
 
 
