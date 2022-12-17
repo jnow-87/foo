@@ -10,7 +10,7 @@
 #include <config/config.h>
 
 
-porta = {
+pa = {
 	compatible = "avr,gpio";
 
 	/* gpio hardware (dt_data_t) */
@@ -31,9 +31,13 @@ porta = {
 		0x0f,			// invert mask (inverted)
 		0,				// interrupt
 	];
+
+	porta = {
+		compatible = "gpio,dev";
+	};
 };
 
-led = {
+pb-led = {
 	compatible = "avr,gpio";
 
 	/* gpio hardware (dt_data_t) */
@@ -54,9 +58,13 @@ led = {
 		0x03,			// invert mask (inverted)
 		0,				// interrupt
 	];
+
+	led = {
+		compatible = "gpio,dev";
+	};
 };
 
-int0 = {
+pc-int = {
 	compatible = "avr,gpio";
 
 	/* gpio hardware (dt_data_t) */
@@ -77,4 +85,8 @@ int0 = {
 		0xc0,			// invert mask (inverted)
 		6,				// interrupt (pcint2)
 	];
+
+	int0 = {
+		compatible = "gpio,dev";
+	};
 };

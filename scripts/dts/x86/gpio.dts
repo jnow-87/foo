@@ -10,7 +10,7 @@
 #include <config/config.h>
 
 
-gpio0 = {
+port0 = {
 	compatible = "x86,gpio";
 
 	/* gpio config (gpio_cfg_t) */
@@ -23,4 +23,8 @@ gpio0 = {
 		0x00,	// invert mask (pass through)
 		0,		// interrupt
 	];
+
+	gpio0 = {
+		compatible = "gpio,dev";
+	};
 };

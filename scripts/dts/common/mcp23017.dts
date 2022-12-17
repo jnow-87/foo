@@ -10,7 +10,7 @@
 #include <config/config.h>
 
 
-gpio-mcp0 = {
+mcp0 = {
 	compatible = "mcp23017";
 
 	/* mcp23017 port config (dt_data_t) */
@@ -53,4 +53,10 @@ gpio-mcp0 = {
 
 	// port-b i2c address
 	baseaddr = 0x0;		// i2c device, cf. i2c_t, set by the driver
+
+	gpio-mcp0 = {
+		compatible = "gpio,multi-dev";
+
+		int<8> = [ 2 ];	// nports
+	};
 };

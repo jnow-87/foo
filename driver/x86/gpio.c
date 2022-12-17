@@ -29,8 +29,9 @@ static int write(gpio_int_t v, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dev_data_t *gpio;
+	gpio_t *itf;
 	gpio_ops_t ops;
+	dev_data_t *gpio;
 
 
 	gpio = kmalloc(sizeof(dev_data_t));
@@ -44,10 +45,12 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.write = write;
 	ops.read = read;
 
-	if(gpio_create(name, &ops, dt_data, gpio) == 0x0)
+	itf = gpio_create(&ops, dt_data, gpio);
+
+	if(itf == 0x0)
 		goto err_1;
 
-	return 0x0;
+	return itf;
 
 
 err_1:

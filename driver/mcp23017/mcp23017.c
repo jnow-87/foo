@@ -8,10 +8,10 @@
 
 
 #include <kernel/driver.h>
+#include <kernel/memory.h>
 #include <driver/gpio.h>
 #include <driver/i2c.h>
 #include <sys/compiler.h>
-#include <sys/string.h>
 #include <sys/gpio.h>
 
 
@@ -78,11 +78,14 @@ static gpio_int_t rx(dev_data_t *mcp, uint8_t addr);
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd = (dt_data_t*)dt_data;
 	i2c_t *dti = (i2c_t*)dt_itf;
-	gpio_t *ports[NUM_PORTS] = { 0x0 };
-	size_t name_len = strlen(name);
-	char port_name[name_len + 2];
+	gpio_t **ports;
 	gpio_ops_t ops;
 
+
+	ports = kcalloc(NUM_PORTS, sizeof(gpio_t*));
+
+	if(ports == 0x0)
+		goto err_0;
 
 	/* amend port configuration */
 	dtd->ports[0].num = PORT_A;
@@ -94,25 +97,22 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.read = read;
 	ops.write = write;
 
-	strcpy(port_name, name);
-	port_name[name_len + 1] = 0;
-
 	for(uint8_t i=0; i<NUM_PORTS; i++){
-		port_name[name_len] = 'a' + i;
-		ports[i] = gpio_create(port_name, &ops, &dtd->ports[i].cfg, dtd->ports + i);
+		ports[i] = gpio_create(&ops, &dtd->ports[i].cfg, dtd->ports + i);
 
 		if(ports[i] == 0x0 || configure(dtd->ports + i, &dtd->ports[i].cfg) != 0)
-			goto err;
+			goto err_1;
 	}
 
-	return 0x0;
+	return ports;
 
 
-err:
-	for(uint8_t i=0; i<NUM_PORTS; i++){
-		if(ports[i] != 0x0)
-			gpio_destroy(ports[i]);
+err_1:
+	for(uint8_t i=0; i<NUM_PORTS && ports[i]!=0x0; i++){
+		gpio_destroy(ports[i]);
 	}
+
+err_0:
 
 	return 0x0;
 }
