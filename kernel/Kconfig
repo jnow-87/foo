@@ -41,6 +41,10 @@ config KERNEL_LOG_INFO
 	bool "print kernel INFO messages"
 	depends on KERNEL_LOG
 
+config KERNEL_HEARTBEAT
+	bool "heartbeat"
+	select DRIVER_GPIO
+
 menu "hidden"
 	visible if 0
 

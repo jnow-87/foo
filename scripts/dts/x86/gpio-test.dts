@@ -10,7 +10,7 @@
 #include <config/config.h>
 
 
-gpio-normal = {
+port-test0 = {
 	compatible = "x86,gpio";
 
 	/* gpio config (gpio_cfg_t) */
@@ -23,9 +23,13 @@ gpio-normal = {
 		0xff,	// invert mask (pass through)
 		0,		// interrupt
 	];
+
+	gpio-normal = {
+		compatible = "gpio,dev";
+	};
 };
 
-gpio-strict = {
+port-test1 = {
 	compatible = "x86,gpio";
 
 	/* gpio config (gpio_cfg_t) */
@@ -38,4 +42,8 @@ gpio-strict = {
 		0x00,	// invert mask (pass through)
 		0,		// interrupt
 	];
+
+	gpio-strict = {
+		compatible = "gpio,dev";
+	};
 };

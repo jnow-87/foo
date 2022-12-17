@@ -42,6 +42,7 @@ static int write(gpio_int_t v, void *hw);
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd = (dt_data_t*)dt_data;
+	gpio_t *gpio;
 	gpio_regs_t *regs = dtd->regs;
 	gpio_cfg_t *cfg = &dtd->cfg;
 	gpio_ops_t ops;
@@ -51,7 +52,10 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.read = read;
 	ops.write = write;
 
-	(void)gpio_create(name, &ops, cfg, dtd);
+	gpio = gpio_create(&ops, cfg, dtd);
+
+	if(gpio == 0x0)
+		return 0x0;
 
 	/* configure */
 	// port
@@ -64,7 +68,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(cfg->int_num)
 		*dtd->pcicr |= (0x1 << (cfg->int_num - INT_PCINT0));
 
-	return 0x0;
+	return gpio;
 }
 
 driver_probe("avr,gpio", probe);

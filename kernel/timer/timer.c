@@ -59,6 +59,12 @@ void ktimer_release(ktimer_t *timer){
 	mutex_unlock(&timer_mtx);
 }
 
+uint32_t ktimer_ms(void){
+	to_time();
+
+	return time.s * 1000 + time.ms;
+}
+
 void ktimer_time(time_t *t){
 	to_time();
 	*t = time;

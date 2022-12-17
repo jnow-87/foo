@@ -10,7 +10,7 @@
 #include <config/config.h>
 
 
-porta = {
+pa = {
 	compatible = "avr,gpio";
 
 	/* gpio hardware (dt_data_t) */
@@ -31,9 +31,13 @@ porta = {
 		0x0f,			// invert mask (inverted)
 		0,				// interrupt
 	];
+
+	porta = {
+		compatible = "gpio,dev";
+	};
 };
 
-led = {
+pb-user-led = {
 	compatible = "avr,gpio";
 
 	/* gpio hardware (dt_data_t) */
@@ -47,16 +51,52 @@ led = {
 	/* gpio config gpio_cfg_t) */
 	int<CONFIG_GPIO_INT_WIDTH> = [
 		1,				// mode (normal)
-		0x03,			// pin mask
+		0x01,			// pin mask
 		0x00,			// in mask
-		0x03,			// out mask
+		0x01,			// out mask
 		0x00,			// int mask
-		0x03,			// invert mask (inverted)
+		0x01,			// invert mask (inverted)
 		0,				// interrupt
 	];
+
+	led = {
+		compatible = "gpio,dev";
+	};
 };
 
-int0 = {
+pb-kernel-led = {
+	compatible = "avr,gpio";
+
+	/* gpio hardware (dt_data_t) */
+	baseaddr = 0x23;	// portb
+
+	reg = [
+		0x68,			// PCICR
+		0x6c,			// PCMSK1
+	];
+
+	/* gpio config gpio_cfg_t) */
+	int<CONFIG_GPIO_INT_WIDTH> = [
+		1,				// mode (normal)
+		0x02,			// pin mask
+		0x02,			// in mask
+		0x02,			// out mask
+		0x00,			// int mask
+		0x02,			// invert mask (inverted)
+		0,				// interrupt
+	];
+
+	heartbeat = {
+		compatible = "kernel,heartbeat";
+
+		int<16> = [
+			200,	// active period [ms]
+			1000,	// inactive period [ms]
+		];
+	};
+};
+
+pc-int = {
 	compatible = "avr,gpio";
 
 	/* gpio hardware (dt_data_t) */
@@ -77,4 +117,8 @@ int0 = {
 		0xc0,			// invert mask (inverted)
 		6,				// interrupt (pcint2)
 	];
+
+	int0 = {
+		compatible = "gpio,dev";
+	};
 };

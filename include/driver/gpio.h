@@ -13,7 +13,6 @@
 
 #include <kernel/thread.h>
 #include <kernel/fs.h>
-#include <kernel/devfs.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
 #include <sys/signal.h>
@@ -66,14 +65,15 @@ typedef struct{
 
 	gpio_siglst_t *sigs;
 	mutex_t mtx;
-
-	devfs_dev_t *dev;
 } gpio_t;
 
 
 /* prototypes */
-gpio_t *gpio_create(char const *name, gpio_ops_t *ops, gpio_cfg_t *cfg, void *hw);
+gpio_t *gpio_create(gpio_ops_t *ops, gpio_cfg_t *cfg, void *hw);
 void gpio_destroy(gpio_t *gpio);
+
+gpio_int_t gpio_read(gpio_t *gpio);
+int gpio_write(gpio_t *gpio, gpio_int_t v);
 
 
 #endif // DRIVER_GPIO_H
