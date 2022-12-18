@@ -34,6 +34,33 @@ prepare_deps: $(config_header)
 menuconfig: check_build_tools configtools
 	$(call cmd_run_script,KCONFIG_CONFIG=$(config) $(mconfig) $(config_ftype))
 
+.PHONY: allconfigs
+allconfigs:
+	$(call cmd_run_script, \
+		configs=$$(ls -1 $(config_tree)); \
+		\
+		for cfg in $${configs}; do \
+			cp $(config_tree)/$${cfg} $(config); \
+			make menuconfig; \
+			cp $(config) $(config_tree)/$${cfg}; \
+		done \
+	)
+
+.PHONY: allbuilds
+allbuilds:
+	$(call cmd_run_script, \
+		configs=$$(ls -1 $(config_tree)); \
+		build_log=$$(echo $(default_build_tree)/allbuilds.log | tr -s '/'); \
+		\
+		rm -f $${build_log}; \
+		echo "build log: $${build_log}"; \
+		\
+		for cfg in $${configs}; do \
+			echo "building config $${cfg}"; \
+			cp $(config_tree)/$${cfg} $(config); \
+			make --no-print-directory >> $${build_log} 2>&1 || exit 1; \
+		done \
+	)
 endif
 
 # default config targets
