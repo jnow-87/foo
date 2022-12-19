@@ -53,7 +53,7 @@ allbuilds:
 		build_log=$$(echo $(default_build_tree)/allbuilds.log | tr -s '/'); \
 		\
 		rm -f $${build_log}; \
-		echo "build log: $${build_log}"; \
+		echo "build log:" $(call fg,violet,"$${build_log}"); \
 		\
 		for cfg in $${configs}; do \
 			echo "building config $${cfg}"; \

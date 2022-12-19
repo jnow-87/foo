@@ -11,7 +11,7 @@
 #
 #	$(call test_run,<test-name>,<script>)
 define test_run
-	$(call cmd_run_script,$(2) || { echo "error: test failed $(1)"; exit 1; })
+	$(call cmd_run_script,$(2) || { echo $(call fg,red,"error")": test failed" $(call fg,violet,$(1)); exit 1; })
 endef
 
 

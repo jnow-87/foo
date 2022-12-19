@@ -237,7 +237,7 @@ all: check_config check_memlayout $(lib) $(hostlib) $(bin) $(hostbin)
 	$(call cmd_run_script, \
 		@[ -e $(recent) ] && rm $(recent); \
 		ln -s $(build_tree) $(recent); \
-		[ ! $$? -eq 0 ] && echo -e '\033[31munable to create symbolic link "recent"\n\033[0m'; \
+		[ ! $$? -eq 0 ] && echo $(call fg,red,"error")": unable to create symbolic link" $(call fg,violet,"recent"); \
 		$(sysroot_create) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(kernel) $(libbrick) \
 	)
 
@@ -248,7 +248,7 @@ all: check_config check_memlayout $(lib) $(hostlib) $(bin) $(hostbin)
 ifneq ($(CONFIG_CODE_COVERAGE),y)
 .PHONY: coverage
 coverage:
-	$(call cmd_run_script, echo -e 'code coverage has been disabled through \033[33mCONFIG_CODE_COVERAGE\033[0m')
+	$(call cmd_run_script, echo "code coverage has been disabled through" $(call fg,yellow,"CONFIG_CODE_COVERAGE"))
 endif
 
 ####
@@ -296,7 +296,7 @@ pdfgraphics := $(patsubst doc/%.svg, $(tex_build_tree)/%.pdf, $(svggraphics))
 
 .PHONY: docu
 docu: $(manual)
-	$(call cmd_run_script, $(echo) "documentation: $<")
+	$(call cmd_run_script, $(echo) "documentation:" $(call fg,violet,$<))
 
 $(manual): $(doxygen_pdf)
 	$(call cmd_run_script, $(cp) $< $@)
@@ -304,7 +304,7 @@ $(manual): $(doxygen_pdf)
 $(doxygen_pdf): $(pdfgraphics) $(doxygen_tex) $(tex_src)
 	$(call cmd_run_script, $(cp) -ru doc/* $(tex_build_tree))
 	$(call cmd_run_script, $(cp) -ru $(doxygen_src_dirs) $(tex_build_tree))
-	$(call cmd_run_script, $(echo) "executing pdflatex (log: $(tex_build_tree)/pdflatex.log)...")
+	$(call cmd_run_script, $(echo) "executing pdflatex (log:" $(call fg,violet,"$(tex_build_tree)/pdflatex.log")")...")
 	$(call cmd_run_script, \
 		cd $(tex_build_tree) \
 		&& pdflatex -interaction=nonstopmode refman 1>pdflatex.log 2>&1 \
@@ -313,14 +313,14 @@ $(doxygen_pdf): $(pdfgraphics) $(doxygen_tex) $(tex_src)
 	)
 
 $(doxygen_tex): $(doxygen_config_tgt) $(doxygen_src_files)
-	$(call cmd_run_script, $(echo) "executing doxygen (log: $(doxygen_log))...")
+	$(call cmd_run_script, $(echo) "executing doxygen (log:" $(call fg,violet,"$(doxygen_log)")")...")
 	$(call cmd_run_script, doxygen $(doxygen_config_tgt) 1>$(doxygen_log) 2>&1)
 
 $(doxygen_config_tgt): $(doxygen_config_src)
 	$(call cmd_run_script, $(mkdir) $(dir $@))
 	$(call cmd_run_script, $(cp) -ru $< $@)
-	$(call cmd_run_script, sed -i -e 's:OUTPUT_DIRECTORY[ \t]*=.*:OUTPUT_DIRECTORY=$(build_tree)/doc/:' $@)
-	$(call cmd_run_script, sed -i -e 's:INPUT[ \t]*=.*:INPUT=$(doxygen_src_dirs):' $@)
+	$(call cmd_run_script, sed -i -e "s:OUTPUT_DIRECTORY[ \t]*=.*:OUTPUT_DIRECTORY=$(build_tree)/doc/:" $@)
+	$(call cmd_run_script, sed -i -e "s:INPUT[ \t]*=.*:INPUT=$(doxygen_src_dirs):" $@)
 
 $(tex_build_tree)/%.pdf: doc/%.svg
 	$(call cmd_run_script, $(mkdir) $(dir $@))

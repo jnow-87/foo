@@ -112,12 +112,12 @@ ifneq ($(findstring debugwire,$(CONFIG_AVR_PROG_DEBUG_ARGS)),)
 	$(call cmd_run_script, \
 		$(call yesno,use debug-wire for debugging?) && \
 		$(call term, \
-			echo -e '\033[35menabling debug-wire on the target...\033[0m'; \
+			echo $(call fg,violet,"enabling debug-wire on the target..."); \
 			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) -U hfuse:w:0x9f:m; \
 			$(CONFIG_AVR_DEBUGGER) -R -P $(CONFIG_AVR_MCU) $(CONFIG_AVR_PROG_DEBUG_ARGS) :1212; \
-			echo -e '\n\n\033[35mdisabling debug-wire on the target...\033[0m'; \
+			echo $(call fg,violet,"\n\ndisabling debug-wire on the target..."); \
 			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE); \
-			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) | grep -C 1000 'Waiting for connection' \
+			$(CONFIG_AVR_PROG) -p $(CONFIG_AVR_MCU) -P $(CONFIG_AVR_PROG_PORT) -c $(CONFIG_AVR_PROG_TYPE) | grep -C 1000 "Waiting for connection" \
 			, & \
 			, $(debug_ack_error) \
 		) \
