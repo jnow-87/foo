@@ -25,6 +25,7 @@ child_t *brickos_childs[BOS_NCHILDS] = { 0x0 };
 int brickos_init_childs(void){
 	char *argv[] = {
 		opts.kernel_image,
+		opts.rootfs,
 		opts.verbosity > 0 ? "-v" : "",
 		(opts.app_mode & AM_INTERACTIVE) ? "-i" : "",
 		0x0

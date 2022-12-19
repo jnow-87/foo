@@ -19,6 +19,7 @@ extern char **envp;
 
 /* global variables */
 x86_opts_t x86_opts = {
+	.rootfs = "",
 	.debug = 0,
 	.interactive = false,
 };
@@ -26,7 +27,9 @@ x86_opts_t x86_opts = {
 
 /* global functions */
 int x86_opts_parse(void){
-	for(int i=1; i<argc; i++){
+	x86_opts.rootfs = argv[1];
+
+	for(int i=2; i<argc; i++){
 		switch(argv[i][1]){
 		case 'v':	x86_opts.debug = 1; break;
 		case 'i':	x86_opts.interactive = true; break;

@@ -18,6 +18,7 @@
 /* macros */
 #define DEFAULT_KERNEL_IMAGE	CONFIG_TEST_INT_KERNEL_IMAGE
 #define DEFAULT_APP_BINARY		CONFIG_TEST_INT_APP_BINARY
+#define DEFAULT_ROOTFS			CONFIG_TEST_INT_FS_EXPORT_ROOT
 #define DEFAULT_INFO			false
 #define DEFAULT_VERBOSITY		0
 #define DEFAULT_APP_MODE		AM_NONINTERACTIVE
@@ -36,6 +37,8 @@ typedef enum{
 typedef struct{
 	char *kernel_image,
 		 *app_binary;
+
+	char *rootfs;
 
 	bool info;
 	unsigned int verbosity;

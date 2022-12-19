@@ -79,9 +79,15 @@ itestfw_bin := $(loc_build_tree)/integration/itestfw
 #	$(call itestfw_exec,<app>)
 define itestfw_exec
 	$(call test_run,$@, \
-		echo "removing brickos file system export $(CONFIG_TEST_INT_FS_EXPORT_ROOT)"; \
-		rm -rf $(CONFIG_TEST_INT_FS_EXPORT_ROOT); \
-		$(itestfw_bin) --application $(1) \
+		rootfs_base=$(CONFIG_TEST_INT_FS_EXPORT_ROOT); \
+		rootfs=$${rootfs_base}/$(subst itestfw-,,$@); \
+		\
+		mkdir -p $${rootfs_base}; \
+		\
+		echo "removing brickos file system export $${rootfs}"; \
+		rm -rf $${rootfs}; \
+		\
+		$(itestfw_bin) --application $(1) --rootfs $${rootfs} \
 	)
 endef
 
