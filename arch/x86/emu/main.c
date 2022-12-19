@@ -90,11 +90,11 @@ int main(int argc, char **argv){
 	r |= sigaddset(&sig_lst, SIGINT);
 	r |= sigaddset(&sig_lst, SIGPIPE);
 	r |= sigaddset(&sig_lst, SIGCHLD);
-	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_USR_SIG);
-	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
+	r |= sigaddset(&sig_lst, CONFIG_X86EMU_USR_SIG);
+	r |= sigaddset(&sig_lst, CONFIG_X86EMU_UART_SIG);
 
 	for(size_t i=0; i<X86_INT_PRIOS; i++)
-		r |= sigaddset(&sig_lst, CONFIG_TEST_INT_HW_SIG + i);
+		r |= sigaddset(&sig_lst, CONFIG_X86EMU_HW_SIG + i);
 
 	// ensure none of the threads gets any of the above signals
 	r |= pthread_sigmask(SIG_BLOCK, &sig_lst, 0x0);
@@ -178,14 +178,14 @@ static int signal_hdlr(int fd){
 			_exit(exit_status);
 			break;
 
-		case CONFIG_TEST_INT_HW_SIG:
+		case CONFIG_X86EMU_HW_SIG:
 			src = ((pid_t)info.ssi_pid == KERNEL->pid) ? KERNEL : APP;
 
 			DEBUG(2, "enqueue hardware event from %s\n", src->name);
 			hw_event_enqueue(src);
 			break;
 
-		case CONFIG_TEST_INT_USR_SIG: // fall through
+		case CONFIG_X86EMU_USR_SIG: // fall through
 		default:
 			EEXIT("invalid signal\n");
 		}
@@ -196,10 +196,10 @@ static void verify_signals(){
 	int rt_sigs[X86_INT_PRIOS + 1];
 
 
-	rt_sigs[X86_INT_PRIOS] = CONFIG_TEST_INT_USR_SIG;
+	rt_sigs[X86_INT_PRIOS] = CONFIG_X86EMU_USR_SIG;
 
 	for(size_t i=0; i<X86_INT_PRIOS; i++)
-		rt_sigs[i] = CONFIG_TEST_INT_HW_SIG + i;
+		rt_sigs[i] = CONFIG_X86EMU_HW_SIG + i;
 
 	for(size_t i=0; i<X86_INT_PRIOS + 1; i++){
 		if(rt_sigs[i] < SIGRTMIN || rt_sigs[i] > SIGRTMAX)

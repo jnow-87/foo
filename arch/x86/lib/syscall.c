@@ -169,7 +169,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 /* local functions */
 static int init(void){
-	lnx_sigaction(CONFIG_TEST_INT_HW_SIG, hw_event_hdlr, 0x0);
+	lnx_sigaction(CONFIG_X86EMU_HW_SIG, hw_event_hdlr, 0x0);
 
 	app_heap = (void*)mem_blob;
 	memblock_init(app_heap, DEVTREE_APP_HEAP_SIZE);
@@ -205,14 +205,14 @@ static int event_syscall_return(x86_hw_op_t *op){
 
 static int event_copy_from_user(x86_hw_op_t *op){
 	LNX_DEBUG("  [%u] addr = %p, size = %u\n", op->seq, op->copy.addr, op->copy.n);
-	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, op->copy.addr, op->copy.n);
+	lnx_write(CONFIG_X86EMU_HW_PIPE_WR, op->copy.addr, op->copy.n);
 
 	return 0;
 }
 
 static int event_copy_to_user(x86_hw_op_t *op){
 	LNX_DEBUG("  [%u] addr = %p, size = %u\n", op->seq, op->copy.addr, op->copy.n);
-	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, op->copy.addr, op->copy.n);
+	lnx_read_fix(CONFIG_X86EMU_HW_PIPE_RD, op->copy.addr, op->copy.n);
 
 	return 0;
 }

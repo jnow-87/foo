@@ -7,8 +7,6 @@
 
 
 
-subdir-$(CONFIG_X86) += integration/
-
 bin-$(if $(filter-out avr,$(CONFIG_ARCH)),y,) += \
 	itest.elf \
 	uttest.elf
@@ -72,30 +70,30 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.utest.host.o, $(loc_src_
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.itest.o,      $(loc_src_tree)/%.c)
 
 
-itestfw_bin := $(loc_build_tree)/integration/itestfw
+x86emu_bin := $(build_tree)/arch/x86/emu/x86emu
 
-# execute the itestfw
+# execute the x86emu
 #
-#	$(call itestfw_exec,<app>)
-define itestfw_exec
+#	$(call x86emu_exec,<app>)
+define x86emu_exec
 	$(call test_run,$@, \
-		rootfs_base=$(CONFIG_TEST_INT_FS_EXPORT_ROOT); \
-		rootfs=$${rootfs_base}/$(subst itestfw-,,$@); \
+		rootfs_base=$(CONFIG_X86EMU_FS_EXPORT_ROOT); \
+		rootfs=$${rootfs_base}/$(subst x86emu-,,$@); \
 		\
 		mkdir -p $${rootfs_base}; \
 		\
 		echo "removing brickos file system export $${rootfs}"; \
 		rm -rf $${rootfs}; \
 		\
-		$(itestfw_bin) --application $(1) --rootfs $${rootfs} \
+		$(x86emu_bin) --application $(1) --rootfs $${rootfs} \
 	)
 endef
 
-# create itestfw rule
+# create x86emu rule
 #
-#	$(call itestfw,<rule-name>,<app>)
-define itestfw
-	$(call gen_rule_basic,itestfw_exec,itestfw-$(1),$(itestfw_bin),$(2))
+#	$(call x86emu,<rule-name>,<app>)
+define x86emu
+	$(call gen_rule_basic,x86emu_exec,x86emu-$(1),$(x86emu_bin),$(2))
 endef
 
 
@@ -103,10 +101,10 @@ endef
 test-$(if $(CONFIG_X86),n,y) := $(loc_build_tree)/utest
 
 ifeq ($(CONFIG_X86),y)
-  $(call itestfw,unit,$(loc_build_tree)/uttest.elf)
-  $(call itestfw,user,$(loc_build_tree)/itest.elf)
+  $(call x86emu,unit,$(loc_build_tree)/uttest.elf)
+  $(call x86emu,user,$(loc_build_tree)/itest.elf)
 
-  test-y += itestfw-unit itestfw-user
+  test-y += x86emu-unit x86emu-user
 endif
 
 test: $(test-y)

@@ -56,10 +56,10 @@ int uart_init(void){
 
 	uart_tid = pthread_self();
 
-	(void)signal(CONFIG_TEST_INT_UART_SIG, sig_hdlr);
+	(void)signal(CONFIG_X86EMU_UART_SIG, sig_hdlr);
 
 	r |= sigemptyset(&sig_lst);
-	r |= sigaddset(&sig_lst, CONFIG_TEST_INT_UART_SIG);
+	r |= sigaddset(&sig_lst, CONFIG_X86EMU_UART_SIG);
 
 	r |= pthread_sigmask(SIG_UNBLOCK, &sig_lst, 0x0);
 
@@ -118,7 +118,7 @@ int uart_configure(char const *path, int int_num, uart_cfg_t *cfg){
 		return -1;
 
 	r |= configure(fd, cfg);
-	r |= pthread_kill(uart_tid, CONFIG_TEST_INT_UART_SIG);
+	r |= pthread_kill(uart_tid, CONFIG_X86EMU_UART_SIG);
 
 	return r;
 }

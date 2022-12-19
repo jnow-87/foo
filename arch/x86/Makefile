@@ -11,6 +11,8 @@
 obj-y := hardware.o atomic.o opts.o syscall.o kernel/ linux/
 obj-$(CONFIG_CODE_COVERAGE) += gcov/ gcov/libgcov.a
 
+subdir-y := emu/
+
 # libbrick
 obj-nobuiltin-y := libbrick.o
 

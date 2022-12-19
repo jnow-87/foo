@@ -119,13 +119,13 @@ static int help(char const *err, ...){
 		"\n"
 		"    %-25.25s    %s\n"
 		, PROGNAME
-		, CONFIG_TEST_INT_HW_PIPE_RD
-		, CONFIG_TEST_INT_HW_PIPE_WR
-		, CONFIG_TEST_INT_HW_SIG, CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - 1
-		, CONFIG_TEST_INT_USR_PIPE_RD
-		, CONFIG_TEST_INT_USR_PIPE_WR
-		, CONFIG_TEST_INT_USR_SIG
-		, CONFIG_TEST_INT_UART_SIG
+		, CONFIG_X86EMU_HW_PIPE_RD
+		, CONFIG_X86EMU_HW_PIPE_WR
+		, CONFIG_X86EMU_HW_SIG, CONFIG_X86EMU_HW_SIG + X86_INT_PRIOS - 1
+		, CONFIG_X86EMU_USR_PIPE_RD
+		, CONFIG_X86EMU_USR_PIPE_WR
+		, CONFIG_X86EMU_USR_SIG
+		, CONFIG_X86EMU_UART_SIG
 		, "-k, --kernel=<image>", "use <image> as kernel " DEFAULT(DEFAULT_KERNEL_IMAGE)
 		, "-a, --application=<image>", "use <image> as application binary " DEFAULT(DEFAULT_APP_BINARY)
 		, "-r, --rootfs=<path>", "export brickos file system to <path> " DEFAULT(DEFAULT_ROOTFS)

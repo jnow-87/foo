@@ -229,7 +229,7 @@ static void int_trigger(int_req_t *req){
 
 	DEBUG(0, "[%u] trigger %s interrupt requested by %s\n", req->id, X86_INT_NAME(req->num), X86_PRIV_NAME(req->src));
 
-	hw_op_write_sig(&op, KERNEL, CONFIG_TEST_INT_HW_SIG + priorities[req->num]);
+	hw_op_write_sig(&op, KERNEL, CONFIG_X86EMU_HW_SIG + priorities[req->num]);
 	hw_op_write_writeback(&op, KERNEL);
 
 	child_unlock(KERNEL);

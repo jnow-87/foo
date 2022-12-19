@@ -7,8 +7,8 @@
 
 
 
-#ifndef TEST_INT_CHILD_H
-#define TEST_INT_CHILD_H
+#ifndef X86EMU_CHILD_H
+#define X86EMU_CHILD_H
 
 
 #include <sys/types.h>
@@ -54,4 +54,4 @@ void child_write(child_t *child, size_t pipe, void *buf, ssize_t n);
 void child_fwd(child_t *tgt, child_t *src, size_t pipe, ssize_t n);
 
 
-#endif // TEST_INT_CHILD_H
+#endif // X86EMU_CHILD_H

@@ -7,22 +7,22 @@
 
 
 
-hostbin-y := itestfw
+hostbin-y := x86emu
 
 
-itestfw-y := main.o linux.o hardware/ brickos/ user/
+x86emu-y := main.o linux.o hardware/ brickos/ user/
 
 # ensure a rebuild if indirect dependencies are updated
-itestfw-y += $(build_tree)/sys/libhost.a
+x86emu-y += $(build_tree)/sys/libhost.a
 
 
-itestfw-hostcppflags += \
+x86emu-hostcppflags += \
 	-I$(src_tree)/include \
 	-I$(loc_src_tree)
 
-itestfw-hostcflags += -fno-builtin
+x86emu-hostcflags += -fno-builtin
 
-itestfw-hostldlibs += \
+x86emu-hostldlibs += \
 	-L$(build_tree)/sys/ -lhost	\
 	-lpthread \
 	-lreadline \

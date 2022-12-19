@@ -7,38 +7,37 @@
 
 
 
-\section{Integration Test Framework}
-	The integration test framework is intended to test kernel and user space in combination. Figure~\ref{fig:int_test_framework} summarises the main components of the framework.
+\section{x86emu}
+	The x86emu is intended to run \brickos on an x86 host. Figure~\ref{fig:x86emu_components} summarises the main components.
 
 	\begin{figure}[h]
 		\centering	
-		\includegraphics[scale=.75]{test/int_test_framework}
-		\caption{Integration test framework components.}
-		\label{fig:int_test_framework}
+		\includegraphics[scale=.75]{arch/x86emu_components}
+		\caption{x86emu components.}
+		\label{fig:x86emu_components}
 	\end{figure}
 
-	The framework uses one process each for the kernel, the user space application and the actual framework itself. The interface between those processes are \gls{ipc} pipelines and signals which emulate hardware events/operations, such as interrupts and hardware state controls.
+	The emulator uses one process each for the kernel, the user space application and the actual emulator itself. The interface between those processes are \gls{ipc} pipelines and signals which emulate hardware events/operations, such as interrupts and hardware state controls.
 
-	The integration test framework process implements threads with the following responsibilities:
+	The emulator process implements threads with the following responsibilities:
 	\begin{description}
 		\item[Signal Handler] Processing of hardware requests from the kernel and user space processes. Application state handling, especially shutdown and broken communication to the kernel and user space processes.
-
 		\item[Hardware Event Handler] Process hardware events.
 		\item[Interrupt Controller] Trigger hardware requests to the kernel.
 		\item[Timer] Periodically enqueue timer interrupts.
-		\item[User Input] In interactive mode the framework is controlled by user inputs, which are handled by this thread.
+		\item[User Input] In interactive mode the emulator is controlled by user inputs, which are handled by this thread.
 	\end{description}
 
 	The kernel and user space processes are single-threaded. Hence, the only mechanism to interact with them is through signal handlers. Signal handlers cannot be interrupted themselves, thus the protocol used for hardware operations and the mutex between the hardware event handler and the interrupt controller thread ensure that there is only a single ongoing hardware event.
 
 	\subsection{Hardware Event/Operation Protocol}
-		Figure~\ref{fig:int_test_protocol} depicts the protocol to trigger, process and complete a hardware operation.
+		Figure~\ref{fig:x86emu_protocol} depicts the protocol to trigger, process and complete a hardware operation.
 
 		\begin{figure}[h]
 			\centering	
-			\includegraphics[scale=.75]{test/int_test_protocol}
+			\includegraphics[scale=.75]{arch/x86emu_protocol}
 			\caption{Hardware event/operation protocol.}
-			\label{fig:int_test_protocol}
+			\label{fig:x86emu_protocol}
 		\end{figure}
 
 		An operation is initiated by the requester sending one of the \gls{ipc} signals to the target. For synchronisation and to acknowledge the request the target sends a sequence number. The requester blocks until the sequence number is available. Once synchronised the actual operation data are exchanged.

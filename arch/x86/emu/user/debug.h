@@ -7,8 +7,8 @@
 
 
 
-#ifndef TEST_INT_DEBUG_H
-#define TEST_INT_DEBUG_H
+#ifndef X86EMU_DEBUG_H
+#define X86EMU_DEBUG_H
 
 
 #include <stdarg.h>
@@ -44,4 +44,4 @@
 }
 
 
-#endif // TEST_INT_DEBUG_H
+#endif // X86EMU_DEBUG_H

@@ -81,8 +81,8 @@ static int init(void){
 	//		while the kernel is unable to send it, since the signal handler for the
 	//		higher priority interrupt cannot be called-
 	for(size_t i=1; i<=X86_INT_PRIOS; i++){
-		lnx_sigaction(CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - i, int_hdlr, &blocked);
-		lnx_sigaddset(&blocked, CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - i);
+		lnx_sigaction(CONFIG_X86EMU_HW_SIG + X86_INT_PRIOS - i, int_hdlr, &blocked);
+		lnx_sigaddset(&blocked, CONFIG_X86EMU_HW_SIG + X86_INT_PRIOS - i);
 	}
 
 	return 0;
