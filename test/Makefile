@@ -72,9 +72,35 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.utest.host.o, $(loc_src_
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.itest.o,      $(loc_src_tree)/%.c)
 
 
+itestfw_bin := $(loc_build_tree)/integration/itestfw
+
+# execute the itestfw
+#
+#	$(call itestfw_exec,<app>)
+define itestfw_exec
+	$(call test_run,$@, \
+		echo "removing brickos file system export $(CONFIG_TEST_INT_FS_EXPORT_ROOT)"; \
+		rm -rf $(CONFIG_TEST_INT_FS_EXPORT_ROOT); \
+		$(itestfw_bin) --application $(1) \
+	)
+endef
+
+# create itestfw rule
+#
+#	$(call itestfw,<rule-name>,<app>)
+define itestfw
+	$(call gen_rule_basic,itestfw_exec,itestfw-$(1),$(itestfw_bin),$(2))
+endef
+
+
 # test targets
-test-y := $(loc_build_tree)/utest
-test-$(CONFIG_X86) += $(loc_src_tree)/integration/itest-prepare.sh
-test-$(CONFIG_X86) += $(loc_build_tree)/integration/itestfw
+test-$(if $(CONFIG_X86),n,y) := $(loc_build_tree)/utest
+
+ifeq ($(CONFIG_X86),y)
+  $(call itestfw,unit,$(loc_build_tree)/uttest.elf)
+  $(call itestfw,user,$(loc_build_tree)/itest.elf)
+
+  test-y += itestfw-unit itestfw-user
+endif
 
 test: $(test-y)
