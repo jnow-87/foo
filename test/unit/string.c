@@ -261,8 +261,8 @@ TEST(strerror){
 
 
 	r += TEST_STR_EQ(strerror(0), "Success");
-	r += TEST_STR_EQ(strerror(E_UNKNOWN), "Unknown");
-	r += TEST_STR_EQ(strerror(0xfe), "Invalid errno");
+	r += TEST_STRN_EQ(strerror(E_UNKNOWN), "Unknown", 7);
+	r += TEST_STRN_EQ(strerror(0xfe), "Invalid errno", 13);
 
 	return -r;
 }
