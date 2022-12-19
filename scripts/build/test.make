@@ -7,12 +7,20 @@
 
 
 
+# execute a test
+#
+#	$(call test_run,<test-name>,<script>)
+define test_run
+	$(call cmd_run_script,$(2) || { echo $(call fg,red,"error")": test failed" $(call fg,violet,$(1)); exit 1; })
+endef
+
+
 .PHONY: test
 test: all
 	$(foreach test,$^, \
 		$(call cmd_run_script, \
-			[ ! -e $(test) ] || { \
-				$(test) || { echo "$(test) failed"; exit 1; }; \
-			} \
+			$(if $(wildcard $(test)), \
+				$(call test_run,$(test),$(test)) \
+			) \
 		) \
 	)

@@ -7,8 +7,8 @@
 
 
 
-#ifndef TEST_INT_TERM_H
-#define TEST_INT_TERM_H
+#ifndef X86EMU_TERM_H
+#define X86EMU_TERM_H
 
 
 /* prototypes */
@@ -16,4 +16,4 @@ int term_default(void);
 int term_noncanon(void);
 
 
-#endif // TEST_INT_TERM_H
+#endif // X86EMU_TERM_H

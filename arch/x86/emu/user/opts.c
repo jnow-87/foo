@@ -31,6 +31,7 @@ static int help(char const *err, ...);
 opts_t opts = {
 	.kernel_image = DEFAULT_KERNEL_IMAGE,
 	.app_binary = DEFAULT_APP_BINARY,
+	.rootfs = DEFAULT_ROOTFS,
 	.info = DEFAULT_INFO,
 	.verbosity = DEFAULT_VERBOSITY,
 	.stats_fd = DEFAULT_STATS_FD,
@@ -45,6 +46,7 @@ int opts_parse(int argc, char **argv){
 	struct option const long_opt[] = {
 		{ .name = "kernel",			.has_arg = required_argument,	.flag = 0,	.val = 'k' },
 		{ .name = "application",	.has_arg = required_argument,	.flag = 0,	.val = 'a' },
+		{ .name = "rootfs",			.has_arg = required_argument,	.flag = 0,	.val = 'r' },
 		{ .name = "verbose",		.has_arg = optional_argument,	.flag = 0,	.val = 'v' },
 		{ .name = "info",			.has_arg = no_argument,			.flag = 0,	.val = 'I' },
 		{ .name = "interactive",	.has_arg = no_argument,			.flag = 0,	.val = 'i' },
@@ -55,10 +57,11 @@ int opts_parse(int argc, char **argv){
 
 
 	/* parse arguments */
-	while((opt = getopt_long(argc, argv, ":k:a:v::is:h", long_opt, &long_optind)) != -1){
+	while((opt = getopt_long(argc, argv, ":k:a:r:v::is:h", long_opt, &long_optind)) != -1){
 		switch(opt){
 		case 'k':	opts.kernel_image = optarg; break;
 		case 'a':	opts.app_binary = optarg; break;
+		case 'r':	opts.rootfs = optarg; break;
 		case 'v':	opts.verbosity = (optarg ? atoi(optarg) : 1); break;
 		case 'I':	opts.info = true; break;
 		case 'i':	opts.app_mode = AM_INTERACTIVE; break;
@@ -108,6 +111,7 @@ static int help(char const *err, ...){
 		"Options:\n"
 		"    %-25.25s    %s\n"
 		"    %-25.25s    %s\n"
+		"    %-25.25s    %s\n"
 		"\n"
 		"    %-25.25s    %s\n"
 		"    %-25.25s    %s\n"
@@ -115,15 +119,16 @@ static int help(char const *err, ...){
 		"\n"
 		"    %-25.25s    %s\n"
 		, PROGNAME
-		, CONFIG_TEST_INT_HW_PIPE_RD
-		, CONFIG_TEST_INT_HW_PIPE_WR
-		, CONFIG_TEST_INT_HW_SIG, CONFIG_TEST_INT_HW_SIG + X86_INT_PRIOS - 1
-		, CONFIG_TEST_INT_USR_PIPE_RD
-		, CONFIG_TEST_INT_USR_PIPE_WR
-		, CONFIG_TEST_INT_USR_SIG
-		, CONFIG_TEST_INT_UART_SIG
+		, CONFIG_X86EMU_HW_PIPE_RD
+		, CONFIG_X86EMU_HW_PIPE_WR
+		, CONFIG_X86EMU_HW_SIG, CONFIG_X86EMU_HW_SIG + X86_INT_PRIOS - 1
+		, CONFIG_X86EMU_USR_PIPE_RD
+		, CONFIG_X86EMU_USR_PIPE_WR
+		, CONFIG_X86EMU_USR_SIG
+		, CONFIG_X86EMU_UART_SIG
 		, "-k, --kernel=<image>", "use <image> as kernel " DEFAULT(DEFAULT_KERNEL_IMAGE)
 		, "-a, --application=<image>", "use <image> as application binary " DEFAULT(DEFAULT_APP_BINARY)
+		, "-r, --rootfs=<path>", "export brickos file system to <path> " DEFAULT(DEFAULT_ROOTFS)
 		, "--info", "print runtime information during startup " DEFAULT(DEFAULT_INFO)
 		, "-i, --interactive", "test execution is under user control " DEFAULT(DEFAULT_APP_MODE)
 		, "-v, --verbose[=<level>]", "enable verbose output"

@@ -44,8 +44,8 @@ static int init(void){
 	if(!x86_opts.interactive)
 		return 0;
 
-	lnx_sigaction(CONFIG_TEST_INT_USR_SIG, user_hdlr, 0x0);
-	lnx_sigaction(CONFIG_TEST_INT_CONT_SIG, cont_hdlr, 0x0);
+	lnx_sigaction(CONFIG_X86EMU_USR_SIG, user_hdlr, 0x0);
+	lnx_sigaction(CONFIG_X86EMU_CONT_SIG, cont_hdlr, 0x0);
 
 	LNX_DEBUG("waiting for start signal\n");
 	lnx_pause();
@@ -126,7 +126,7 @@ static char *readline(void){
 
 
 	for(i=0; i<63; i++){
-		lnx_read(CONFIG_TEST_INT_USR_PIPE_RD, line + i, 1);
+		lnx_read(CONFIG_X86EMU_USR_PIPE_RD, line + i, 1);
 
 		if(line[i] == '\r')
 			i--;

@@ -163,7 +163,7 @@ static void cmd_signal(char const *line){
 static void cmd_app(char const *line){
 	child_lock(APP);
 
-	child_signal(APP, CONFIG_TEST_INT_USR_SIG);
+	child_signal(APP, CONFIG_X86EMU_USR_SIG);
 	child_write(APP, 1, (char*)line, strlen(line));
 	child_write(APP, 1, "\n", 1);
 

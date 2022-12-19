@@ -7,8 +7,8 @@
 
 
 
-#ifndef TEST_INT_BRICKOS_H
-#define TEST_INT_BRICKOS_H
+#ifndef X86EMU_BRICKOS_H
+#define X86EMU_BRICKOS_H
 
 
 #include <sys/types.h>
@@ -39,4 +39,4 @@ char const *brickos_child_name(pid_t pid);
 extern child_t *brickos_childs[BOS_NCHILDS];
 
 
-#endif // TEST_INT_BRICKOS_H
+#endif // X86EMU_BRICKOS_H

@@ -55,7 +55,7 @@ int main(int argc, char **argv){
 		return 1;
 
 	/* iterate through test cases */
-	printf("execute %s tests\n", STR(TESTS));
+	printf("executing %s tests\n", STR(TESTS));
 
 	test_for_each_type(test, TESTS){
 		printf(" %s... ", test->name);
@@ -73,7 +73,7 @@ int main(int argc, char **argv){
 
 	/* summary */
 	printf(
-		FG_VIOLETT "\nsummary" RESET_ATTR " (cf. %s)\n"
+		FG_VIOLETT "\nsummary" RESET_ATTR " (cf. " FG_VIOLETT "%s" RESET_ATTR ")\n"
 		FG_VIOLETT "    total:" RESET_ATTR " %u\n"
 		FG_GREEN "    passed:" RESET_ATTR " %u\n"
 		FG_RED "    failed:" RESET_ATTR " %u\n"

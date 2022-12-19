@@ -12,6 +12,7 @@
 ####
 
 include $(scripts_dir)/utils.make
+include $(scripts_dir)/escape.make
 
 
 ####

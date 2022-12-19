@@ -7,8 +7,6 @@
 
 
 
-subdir-$(CONFIG_X86) += integration/
-
 bin-$(if $(filter-out avr,$(CONFIG_ARCH)),y,) += \
 	itest.elf \
 	uttest.elf
@@ -72,9 +70,41 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.utest.host.o, $(loc_src_
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.itest.o,      $(loc_src_tree)/%.c)
 
 
+x86emu_bin := $(build_tree)/arch/x86/emu/x86emu
+
+# execute the x86emu
+#
+#	$(call x86emu_exec,<app>)
+define x86emu_exec
+	$(call test_run,$@, \
+		rootfs_base=$(CONFIG_X86EMU_FS_EXPORT_ROOT); \
+		rootfs=$${rootfs_base}/$(subst x86emu-,,$@); \
+		\
+		mkdir -p $${rootfs_base}; \
+		\
+		echo "removing brickos file system export $${rootfs}"; \
+		rm -rf $${rootfs}; \
+		\
+		$(x86emu_bin) --application $(1) --rootfs $${rootfs} \
+	)
+endef
+
+# create x86emu rule
+#
+#	$(call x86emu,<rule-name>,<app>)
+define x86emu
+	$(call gen_rule_basic,x86emu_exec,x86emu-$(1),$(x86emu_bin),$(2))
+endef
+
+
 # test targets
-test-y := $(loc_build_tree)/utest
-test-$(CONFIG_X86) += $(loc_src_tree)/integration/itest-prepare.sh
-test-$(CONFIG_X86) += $(loc_build_tree)/integration/itestfw
+test-$(if $(CONFIG_X86),n,y) := $(loc_build_tree)/utest
+
+ifeq ($(CONFIG_X86),y)
+  $(call x86emu,unit,$(loc_build_tree)/uttest.elf)
+  $(call x86emu,user,$(loc_build_tree)/itest.elf)
+
+  test-y += x86emu-unit x86emu-user
+endif
 
 test: $(test-y)

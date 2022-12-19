@@ -25,6 +25,7 @@ child_t *brickos_childs[BOS_NCHILDS] = { 0x0 };
 int brickos_init_childs(void){
 	char *argv[] = {
 		opts.kernel_image,
+		opts.rootfs,
 		opts.verbosity > 0 ? "-v" : "",
 		(opts.app_mode & AM_INTERACTIVE) ? "-i" : "",
 		0x0
@@ -42,13 +43,13 @@ int brickos_init_childs(void){
 	}
 
 	argv[0] = opts.kernel_image;
-	child_add_pipe(KERNEL, CONFIG_TEST_INT_HW_PIPE_RD, CONFIG_TEST_INT_HW_PIPE_WR);
-	child_add_pipe(KERNEL, CONFIG_TEST_INT_USR_PIPE_RD, CONFIG_TEST_INT_USR_PIPE_WR);
+	child_add_pipe(KERNEL, CONFIG_X86EMU_HW_PIPE_RD, CONFIG_X86EMU_HW_PIPE_WR);
+	child_add_pipe(KERNEL, CONFIG_X86EMU_USR_PIPE_RD, CONFIG_X86EMU_USR_PIPE_WR);
 	child_fork(KERNEL, argv);
 
 	argv[0] = opts.app_binary;
-	child_add_pipe(APP, CONFIG_TEST_INT_HW_PIPE_RD, CONFIG_TEST_INT_HW_PIPE_WR);
-	child_add_pipe(APP, CONFIG_TEST_INT_USR_PIPE_RD, CONFIG_TEST_INT_USR_PIPE_WR);
+	child_add_pipe(APP, CONFIG_X86EMU_HW_PIPE_RD, CONFIG_X86EMU_HW_PIPE_WR);
+	child_add_pipe(APP, CONFIG_X86EMU_USR_PIPE_RD, CONFIG_X86EMU_USR_PIPE_WR);
 	child_fork(APP, argv);
 
 	return 0;

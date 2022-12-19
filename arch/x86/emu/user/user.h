@@ -7,8 +7,8 @@
 
 
 
-#ifndef TEST_INT_USER_H
-#define TEST_INT_USER_H
+#ifndef X86EMU_USER_H
+#define X86EMU_USER_H
 
 
 /* prototypes */
@@ -17,4 +17,4 @@ void user_input_process(void);
 void user_input_cleanup(void);
 
 
-#endif // TEST_INT_USER_H
+#endif // X86EMU_USER_H

@@ -16,6 +16,7 @@
 
 /* types */
 typedef struct{
+	char const *rootfs;
 	unsigned int debug;
 	bool interactive;
 } x86_opts_t;

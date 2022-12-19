@@ -10,3 +10,7 @@
 config X86_GCOV_HEAP_SIZE
 	int "libgcov heap size"
 	default 512
+
+menu "x86emu"
+	source arch/x86/emu/Kconfig
+endmenu

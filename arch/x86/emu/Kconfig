@@ -1,0 +1,54 @@
+#
+# Copyright (C) 2020 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+config X86EMU_KERNEL_IMAGE
+	qstring "default kernel image"
+	default "recent/kernel/kimg.elf"
+
+config X86EMU_APP_BINARY
+	qstring "default application binary"
+	default "recent/init/init.elf"
+
+config X86EMU_FS_EXPORT_ROOT
+	qstring "directory to export the brickos file system to"
+	default "recent/test/integration/brickos-fs-export"
+
+config X86EMU_HW_PIPE_RD
+	int "data pipe input fileno"
+	default 17
+
+config X86EMU_HW_PIPE_WR
+	int "data pipe output fileno"
+	default 18
+
+config X86EMU_USR_PIPE_RD
+	int "control pipe input fileno"
+	default 19
+
+config X86EMU_USR_PIPE_WR
+	int "control pipe output fileno"
+	default 20
+
+config X86EMU_HW_SIG
+	int "signal for hardware operations"
+	range 34 64
+	default 35
+
+config X86EMU_USR_SIG
+	int "signal for user operations"
+	range 34 64
+	default 34
+
+config X86EMU_CONT_SIG
+	int "continue signal SIGCONT"
+	default 18
+
+config X86EMU_UART_SIG
+	int "uart signal"
+	default 10

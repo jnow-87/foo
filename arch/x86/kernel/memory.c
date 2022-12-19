@@ -37,7 +37,7 @@ int x86_copy_from_user(void *kernel, void const *user, size_t n, struct process_
 	LNX_DEBUG("copy_from(addr = %p, size = %u)\n", user, n);
 
 	x86_hw_op_write(&op);
-	lnx_read_fix(CONFIG_TEST_INT_HW_PIPE_RD, kernel, n);
+	lnx_read_fix(CONFIG_X86EMU_HW_PIPE_RD, kernel, n);
 	x86_hw_op_write_writeback(&op);
 
 	LNX_DEBUG("  status: %d\n", op.retval);
@@ -56,7 +56,7 @@ int x86_copy_to_user(void *user, void const *kernel, size_t n, struct process_t 
 	LNX_DEBUG("copy_to(addr = %p, size = %u)\n", user, n);
 
 	x86_hw_op_write(&op);
-	lnx_write(CONFIG_TEST_INT_HW_PIPE_WR, kernel, n);
+	lnx_write(CONFIG_X86EMU_HW_PIPE_WR, kernel, n);
 	x86_hw_op_write_writeback(&op);
 
 	LNX_DEBUG("  status: %d\n", op.retval);

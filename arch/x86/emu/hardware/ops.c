@@ -73,7 +73,7 @@ STATIC_ASSERT(sizeof_array(hw_ops) == HWO_NOPS + 1);
 
 /* global functions */
 void hw_op_write(x86_hw_op_t *op, child_t *tgt){
-	hw_op_write_sig(op, tgt, CONFIG_TEST_INT_HW_SIG);
+	hw_op_write_sig(op, tgt, CONFIG_X86EMU_HW_SIG);
 }
 
 void hw_op_write_sig(x86_hw_op_t *op, child_t *tgt, int sig){

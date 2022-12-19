@@ -27,6 +27,7 @@ coverage: test
 			mv *.gcov $${tgt_name}; \
 		done; \
 		\
+		[ "$${gcda_files}" != "" ] || { echo $(call fg,red,"error")": no coverage data found"; exit 1; }; \
 		gcovered $(gcovered_args) $(build_tree); \
 	)
 

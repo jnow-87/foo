@@ -9,6 +9,7 @@
 
 #include <config/config.h>
 #include <arch/x86/linux.h>
+#include <arch/x86/opts.h>
 #include <kernel/fs.h>
 #include <kernel/rootfs.h>
 #include <kernel/process.h>
@@ -17,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/list.h>
 #include <sys/stat.h>
+#include <sys/escape.h>
 
 
 /* local/static prototypes */
@@ -26,7 +28,7 @@ static int dump_file(fs_node_t *node);
 
 /* global functions */
 int x86_rootfs_dump(void){
-	INFO("export file system to %s\n", CONFIG_TEST_INT_FS_EXPORT_ROOT);
+	INFO("exporting file system to " FG_VIOLETT "%s" RESET_ATTR "\n", x86_opts.rootfs);
 
 	return dump_node(fs_root);
 }
@@ -41,7 +43,7 @@ static int dump_node(fs_node_t *node){
 
 	switch(node->type){
 	case FT_DIR:
-		name = (node == fs_root) ? CONFIG_TEST_INT_FS_EXPORT_ROOT : node->name;
+		name = (node == fs_root) ? x86_opts.rootfs : node->name;
 
 		lnx_mkdir(name, 511);
 		lnx_chdir(name);

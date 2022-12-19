@@ -7,8 +7,8 @@
 
 
 
-#ifndef TEST_INT_HARDWARE_H
-#define TEST_INT_HARDWARE_H
+#ifndef X86EMU_HARDWARE_H
+#define X86EMU_HARDWARE_H
 
 
 #include <arch/x86/hardware.h>
@@ -89,4 +89,4 @@ int display_configure(int shm_id, uint8_t scale, vram_cfg_t *cfg);
 extern hw_state_t hw_state;
 
 
-#endif // TEST_INT_HARDWARE_H
+#endif // X86EMU_HARDWARE_H

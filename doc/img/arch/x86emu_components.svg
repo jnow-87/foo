@@ -2,19 +2,19 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="744.09448819"
    height="1052.3622047"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-   sodipodi:docname="int_test_framework.svg">
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="x86emu_components.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs4">
     <marker
@@ -348,8 +348,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="346.54138"
-     inkscape:cy="914.77287"
+     inkscape:cx="346.60714"
+     inkscape:cy="143.39286"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -365,7 +365,8 @@
      inkscape:snap-bbox-edge-midpoints="false"
      inkscape:snap-bbox-midpoints="true"
      inkscape:snap-to-guides="true"
-     inkscape:snap-grids="true">
+     inkscape:snap-grids="true"
+     inkscape:pagecheckerboard="0">
     <inkscape:grid
        type="xygrid"
        id="grid2985" />
@@ -435,14 +436,14 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none"
-       x="427.59521"
+       x="375.59521"
        y="290.08191"
        id="text3070-9"><tspan
          sodipodi:role="line"
-         x="427.59521"
+         x="375.59521"
          y="290.08191"
          id="tspan3084-6"
-         style="font-weight:bold;font-size:10px;line-height:1.25">Integration Test Framework</tspan></text>
+         style="font-weight:bold;font-size:10px;line-height:1.25">x86emu</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
@@ -957,11 +958,11 @@
          x="219.73389"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
-           style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle"
            y="24.390503"
            x="219.73389"
            id="tspan3072-0"
-           sodipodi:role="line" /><tspan
+           sodipodi:role="line"
+           style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle" /><tspan
            id="tspan1095-9"
            style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle"
            y="30.120972"
@@ -979,11 +980,11 @@
          x="135.125"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
-           style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle"
            y="20.60828"
            x="135.125"
            id="tspan3060-1-3"
-           sodipodi:role="line" /><tspan
+           sodipodi:role="line"
+           style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle" /><tspan
            style="font-size:8px;line-height:1.25;text-align:center;text-anchor:middle"
            id="tspan3062-29-9"
            y="24.569218"
@@ -1021,11 +1022,11 @@
          x="523.73389"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
-           style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle"
            y="24.390503"
            x="523.73389"
            id="tspan3072-0-6"
-           sodipodi:role="line" /><tspan
+           sodipodi:role="line"
+           style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle" /><tspan
            id="tspan1095-9-6"
            style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle"
            y="30.120972"
@@ -1052,11 +1053,11 @@
          x="440.10547"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
-           style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle"
            y="21.383667"
            x="440.10547"
            id="tspan3060-1-3-1"
-           sodipodi:role="line" /><tspan
+           sodipodi:role="line"
+           style="font-size:10px;line-height:1.25;text-align:center;text-anchor:middle" /><tspan
            style="font-size:8px;line-height:1.25;text-align:center;text-anchor:middle"
            id="tspan3062-29-9-2"
            y="25.344604"
