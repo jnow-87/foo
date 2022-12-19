@@ -6,6 +6,7 @@
  */
 
 
+
 #ifndef _STRING_H		// include guard against host header
 #ifndef SYS_STRING_H
 #define SYS_STRING_H
