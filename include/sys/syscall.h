@@ -116,10 +116,6 @@ typedef struct{
 } sc_signal_t;
 
 typedef struct{
-	time_t time;
-} sc_time_t;
-
-typedef struct{
 	int fd;
 
 	sock_type_t type;
