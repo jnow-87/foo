@@ -93,7 +93,7 @@ platform_init(0, init);
 static void int_hdlr(int sig){
 	x86_hw_op_t op;
 	thread_ctx_t *ctx;
-	thread_t const *this_t;
+	thread_t *this_t;
 
 
 	/* preamble */

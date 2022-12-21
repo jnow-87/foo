@@ -173,7 +173,7 @@ static int sc_hdlr_signal_return(void *param){
 	thread_t *this_t;
 
 
-	this_t = (thread_t*)sched_running();
+	this_t = sched_running();
 
 	DEBUG("%s.%d\n", this_t->parent->name, this_t->tid);
 

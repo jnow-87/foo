@@ -103,7 +103,7 @@ thread_ctx_t *thread_ctx_pop(void){
 	usignal_t *sig;
 
 
-	this_t = (thread_t*)sched_running();
+	this_t = sched_running();
 	ctx = stack_pop(this_t->ctx_stack);
 	sig = list_first(this_t->signals);
 

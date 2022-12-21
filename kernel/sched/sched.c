@@ -124,14 +124,14 @@ void sched_trigger(void){
 	//		of scheduler interrupts might occur leading to a stack overflow
 }
 
-thread_t const *sched_running(void){
+thread_t *sched_running(void){
 	if(running[PIR] == 0x0)
 		kpanic("no running thread\n");
 
 	return running[PIR];
 }
 
-thread_t const *sched_running_nopanic(void){
+thread_t *sched_running_nopanic(void){
 	return running[PIR];
 }
 

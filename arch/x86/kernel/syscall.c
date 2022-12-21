@@ -31,7 +31,7 @@
 /* local/static prototypes */
 static void sc_hdlr(int_num_t num, void *payload);
 
-static void yield_user(thread_t const *this_t);
+static void yield_user(thread_t *this_t);
 static void yield_kernel(void);
 
 static int overlay_exit(void *param);
@@ -75,7 +75,7 @@ STATIC_ASSERT(sizeof_array(overlays) == NSYSCALLS);
 
 /* global functions */
 int x86_sc(sc_num_t num, void *param, size_t psize){
-	thread_t const *this_t;
+	thread_t *this_t;
 
 
 	if(num != SC_SCHEDYIELD)
@@ -103,7 +103,7 @@ platform_init(0, init);
 static void sc_hdlr(int_num_t num, void *payload){
 	x86_hw_op_t op;
 	sc_t sc;
-	thread_t const *this_t;
+	thread_t *this_t;
 
 
 	this_t = sched_running();
@@ -142,7 +142,7 @@ end:
 	x86_hw_op_write_writeback(&op);
 }
 
-static void yield_user(thread_t const *this_t){
+static void yield_user(thread_t *this_t){
 	x86_sched_trigger();
 
 	while(this_t->state != READY){
@@ -153,7 +153,7 @@ static void yield_user(thread_t const *this_t){
 }
 
 static void yield_kernel(void){
-	thread_t const *kernel;
+	thread_t *kernel;
 
 
 	kernel = sched_running();

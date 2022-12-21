@@ -17,8 +17,8 @@
 /* prototypes */
 void x86_sched_trigger(void);
 void x86_sched_yield(void);
-void x86_sched_wait(thread_t const *this_t);
-void x86_sched_force(thread_t const *this_t);
+void x86_sched_wait(thread_t *this_t);
+void x86_sched_force(thread_t *this_t);
 
 
 #endif // X86_SCHED_H

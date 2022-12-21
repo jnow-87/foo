@@ -299,7 +299,7 @@ static int int_set(gpio_t *gpio, gpio_int_cfg_t *cfg, fs_filed_t *fd){
 		return -errno;
 
 	sig->sig = cfg->sig;
-	sig->thread = (thread_t*)sched_running();
+	sig->thread = sched_running();
 	sig->fd = fd;
 	sig->mask = cfg->mask;
 

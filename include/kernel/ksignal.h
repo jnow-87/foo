@@ -24,7 +24,7 @@ typedef struct _ksignal_t{
 	struct _ksignal_t *prev,
 					  *next;
 
-	struct thread_t const *thread;
+	struct thread_t *thread;
 } _ksignal_t;
 
 typedef _ksignal_t *ksignal_t;

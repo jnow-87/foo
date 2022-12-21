@@ -40,7 +40,7 @@ void ksignal_wait(ksignal_t *sig, mutex_t *mtx){
 	e.thread = sched_running();
 
 	list_add_tail(*sig, &e);
-	sched_thread_pause((thread_t*)e.thread);
+	sched_thread_pause(e.thread);
 
 	mutex_unlock(mtx);
 	sched_yield();
@@ -74,7 +74,7 @@ void ksignal_send(ksignal_t *sig){
 	if(e == 0x0)
 		return;
 
-	sched_thread_wake((thread_t*)e->thread);
+	sched_thread_wake(e->thread);
 	list_rm(*sig, e);
 }
 

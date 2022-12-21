@@ -127,7 +127,7 @@ static int sc_hdlr_thread_create(void *param){
 
 static int sc_hdlr_thread_info(void *param){
 	sc_thread_t *p = (sc_thread_t*)param;
-	thread_t const *this_t;
+	thread_t *this_t;
 
 
 	this_t = sched_running();
@@ -141,11 +141,11 @@ static int sc_hdlr_thread_info(void *param){
 
 static int sc_hdlr_nice(void *param){
 	sc_thread_t *p = (sc_thread_t*)param;
-	thread_t const *this_t;
+	thread_t *this_t;
 
 
 	this_t = sched_running();
-	((thread_t*)this_t)->priority += p->priority;
+	this_t->priority += p->priority;
 	p->priority = this_t->priority;
 
 	return 0;
@@ -157,7 +157,7 @@ static int sc_hdlr_exit(void *param){
 			 *sibl;
 
 
-	this_t = (thread_t*)sched_running();
+	this_t = sched_running();
 
 	DEBUG("%s.%u exit with status %d\n", this_t->parent->name, this_t->tid, p->status);
 

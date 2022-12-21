@@ -83,12 +83,10 @@ static int sc_hdlr_malloc(void *param){
 static int sc_hdlr_free(void *param){
 	sc_malloc_t *p = (sc_malloc_t*)param;
 	process_t *this_p;
-	thread_t const *this_t;
 	page_t *page;
 
 
-	this_t = sched_running();
-	this_p = this_t->parent;
+	this_p = sched_running()->parent;
 
 	DEBUG("%p\n", p->p);
 
