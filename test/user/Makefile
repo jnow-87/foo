@@ -22,6 +22,7 @@ non-interactive-y := \
 	tty.o \
 	sleep.o \
 	time.o \
+	timer.o \
 	mmap.o
 
 non-interactive-$(CONFIG_DRIVER_GPIO) += gpio.o

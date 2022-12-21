@@ -83,9 +83,15 @@ err_0:
 
 void thread_destroy(struct thread_t *this_t){
 	process_t *this_p = this_t->parent;
+	thread_dtor_t *dtor;
 
 
 	list_rm_safe(this_p->threads, this_t, &this_p->mtx);
+
+	list_for_each(this_t->dtors, dtor){
+		dtor->hdlr(this_t, dtor->payload);
+		kfree(dtor);
+	}
 
 	page_free(this_p, this_t->stack);
 	usignal_destroy(this_t);
@@ -116,4 +122,38 @@ thread_ctx_t *thread_ctx_pop(void){
 		return usignal_entry(sig, this_t, ctx);
 
 	return ctx;
+}
+
+int thread_dtor_register(thread_t *this_t, thread_dtor_hdlr_t hdlr, void *payload){
+	thread_dtor_t *dtor;
+
+
+	dtor = kmalloc(sizeof(thread_dtor_t));
+
+	if(dtor == 0x0)
+		return -errno;
+
+	dtor->hdlr = hdlr;
+	dtor->payload = payload;
+
+	list_add_tail_safe(this_t->dtors, dtor, &this_t->mtx);
+
+	return 0;
+}
+
+void thread_dtor_release(thread_t *this_t, thread_dtor_hdlr_t hdlr, void *payload){
+	thread_dtor_t *dtor;
+
+
+	mutex_lock(&this_t->mtx);
+
+	list_for_each(this_t->dtors, dtor){
+		if(dtor->hdlr != hdlr || dtor->payload != payload)
+			continue;
+
+		list_rm(this_t->dtors, dtor);
+		kfree(dtor);
+	}
+
+	mutex_unlock(&this_t->mtx);
 }

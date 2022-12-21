@@ -68,6 +68,7 @@ static overlay_t overlays[] = {
 	{ .call = 0x0,			.loc = OLOC_NONE },
 	{ .call = 0x0,			.loc = OLOC_NONE },
 	{ .call = 0x0,			.loc = OLOC_NONE },
+	{ .call = 0x0,			.loc = OLOC_NONE },
 };
 
 STATIC_ASSERT(sizeof_array(overlays) == NSYSCALLS);
