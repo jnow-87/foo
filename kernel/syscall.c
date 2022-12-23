@@ -73,7 +73,7 @@ void sc_khdlr(sc_num_t num, void *param, size_t psize){
 	int r;
 	char kparam[psize];
 	sc_hdlr_t hdlr;
-	thread_t const *this_t;
+	thread_t *this_t;
 
 
 	this_t = sched_running();

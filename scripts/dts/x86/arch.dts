@@ -16,5 +16,5 @@ core-mask = 0x1;
 num-ints = 4;
 num-vints = 4;
 
-timer-cycle-time-us = 100000;
+timer-cycle-time-us = 50000;
 timer-int = 0;

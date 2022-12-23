@@ -49,6 +49,7 @@ typedef enum{
 	SC_SIGRETURN,
 	SC_SLEEP,
 	SC_TIME,
+	SC_TIMER,
 	SC_SOCKET,
 	SC_RECV,
 	SC_SEND,
@@ -116,8 +117,9 @@ typedef struct{
 } sc_signal_t;
 
 typedef struct{
-	time_t time;
-} sc_time_t;
+	signal_t sig;
+	uint32_t period_us;
+} sc_timer_t;
 
 typedef struct{
 	int fd;

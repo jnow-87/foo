@@ -24,7 +24,7 @@ void x86_sched_trigger(void){
 }
 
 void x86_sched_yield(void){
-	thread_t const *this_t;
+	thread_t *this_t;
 
 
 	this_t = sched_running();
@@ -34,13 +34,13 @@ void x86_sched_yield(void){
 	}
 }
 
-void x86_sched_wait(thread_t const *this_t){
+void x86_sched_wait(thread_t *this_t){
 	while(sched_running() != this_t){
 		lnx_pause();
 	}
 }
 
-void x86_sched_force(thread_t const *this_t){
+void x86_sched_force(thread_t *this_t){
 	if(this_t->state != READY)
 		return;
 

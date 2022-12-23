@@ -32,7 +32,7 @@
 })
 
 # define LOCK_ID ({ \
-	thread_t const *_this_t = sched_running(); \
+	thread_t *_this_t = sched_running(); \
 	lock_id_t _id = (lock_id_t){ \
 		.pid = _this_t->parent->pid, \
 		.tid = _this_t->tid, \

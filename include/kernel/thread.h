@@ -22,16 +22,27 @@
 
 /* incomplete types */
 struct process_t;
+struct thread_t;
 struct page_t;
 
 
 /* types */
+typedef void (*thread_dtor_hdlr_t)(struct thread_t *this_t, void *payload);
+
 typedef enum thread_ctx_type_t{
 	CTX_UNKNOWN = 0,
 	CTX_KERNEL,
 	CTX_USER,
 	CTX_SIGRETURN,
 } thread_ctx_type_t;
+
+typedef struct thread_dtor_t{
+	struct thread_dtor_t *prev,
+						 *next;
+
+	thread_dtor_hdlr_t hdlr;
+	void *payload;
+} thread_dtor_t;
 
 typedef struct thread_t{
 	struct thread_t *prev,
@@ -49,6 +60,7 @@ typedef struct thread_t{
 	thread_ctx_t *ctx_stack;
 
 	usignal_t *signals;
+	thread_dtor_t *dtors;
 
 	struct process_t *parent;
 
@@ -62,6 +74,9 @@ void thread_destroy(struct thread_t *this_t);
 
 void thread_ctx_push(thread_ctx_t *ctx);
 thread_ctx_t *thread_ctx_pop(void);
+
+int thread_dtor_register(thread_t *this_t, thread_dtor_hdlr_t hdlr, void *payload);
+void thread_dtor_release(thread_t *this_t, thread_dtor_hdlr_t hdlr, void *payload);
 
 
 #endif // KERNEL_THREAD_H

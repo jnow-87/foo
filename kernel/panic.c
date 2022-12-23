@@ -19,7 +19,7 @@
 /* global functions */
 void kpanic_ext(char const *file, char const *func, unsigned int line, char const *format, ...){
 	va_list lst;
-	thread_t const *this_t;
+	thread_t *this_t;
 
 
 	int_enable(INT_NONE);

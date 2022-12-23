@@ -14,11 +14,11 @@
 
 /* global functions */
 int sleep(size_t ms, size_t us){
-	sc_time_t p;
+	time_t p;
 
 
-	p.time.us = us;
-	p.time.ms = ms;
+	p.us = us;
+	p.ms = ms;
 
 	return sc(SC_SLEEP, &p);
 }
