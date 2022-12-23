@@ -38,12 +38,17 @@ config X86EMU_USR_PIPE_WR
 config X86EMU_HW_SIG
 	int "signal for hardware operations"
 	range 34 64
-	default 35
+	default 36
 
 config X86EMU_USR_SIG
 	int "signal for user operations"
 	range 34 64
 	default 34
+
+config X86EMU_USIGNAL_SIG
+	int "signal to implement the brickos usignal mechanism"
+	range 34 64
+	default 35
 
 config X86EMU_CONT_SIG
 	int "continue signal SIGCONT"

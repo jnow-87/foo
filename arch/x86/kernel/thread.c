@@ -17,4 +17,6 @@ void x86_thread_ctx_init(thread_ctx_t *ctx, struct thread_t *this_t, thread_entr
 	memset(ctx, 0, sizeof(thread_ctx_t));
 
 	ctx->type = CTX_UNKNOWN;
+	ctx->entry = entry;
+	ctx->arg = arg;
 }

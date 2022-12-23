@@ -36,11 +36,13 @@ typedef struct{
 /* local/static prototypes */
 // hardware event handling
 static void hw_event_hdlr(int sig);
+static void usignal_hdlr(int sig);
 
 static int event_syscall_return(x86_hw_op_t *op);
 static int event_copy_from_user(x86_hw_op_t *op);
 static int event_copy_to_user(x86_hw_op_t *op);
 static int event_setup(x86_hw_op_t *op);
+static int event_signal(x86_hw_op_t *op);
 static int event_inval(x86_hw_op_t *op);
 
 // syscall overlays
@@ -50,9 +52,10 @@ static int overlay_free(void *param);
 static int overlay_thread_create(void *param);
 
 static int overlay_sigregister(void *param);
-static int overlay_sigsend(void *param);
 
 static int overlay_mmap(void *param);
+
+static void usignal_issue(char const *from);
 
 
 /* static variables */
@@ -69,6 +72,7 @@ static ops_t ops[] = {
 	{ .name = "uart_config",	.hdlr = event_inval },
 	{ .name = "display_config",	.hdlr = event_inval },
 	{ .name = "setup",			.hdlr = event_setup },
+	{ .name = "signal",			.hdlr = event_signal },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
@@ -96,7 +100,7 @@ static overlay_t overlays[] = {
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = overlay_sigregister,		.loc = OLOC_POST },
-	{ .call = overlay_sigsend,			.loc = OLOC_POST },
+	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
@@ -116,16 +120,14 @@ static void *kheap_base = 0x0;
 
 // signal overlay data
 static thread_entry_t sig_hdlr = 0x0;
-static bool ignore_exit = false;
+static bool usignal_pending = false;
+static void *usignal_arg = 0x0;
 
 
 /* global functions */
 int x86_sc(sc_num_t num, void *param, size_t psize){
 	sc_t sc;
 
-
-	if(ignore_exit && num == SC_EXIT)
-		return 0;
 
 	if(x86_sc_overlay_call(num, param, OLOC_PRE, overlays) != 0)
 		return -errno;
@@ -157,6 +159,10 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 		lnx_nanosleep(500000);
 	}
 
+	/* check pending signals */
+	if(usignal_pending)
+		usignal_issue("syscall");
+
 	/* post processing */
 	LNX_DEBUG("syscall errno: %d\n", sc.errno);
 
@@ -169,8 +175,24 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 
 /* local functions */
 static int init(void){
-	lnx_sigaction(CONFIG_X86EMU_HW_SIG, hw_event_hdlr, 0x0);
+	lnx_sigset_t blocked;
 
+
+	/* register signals */
+	lnx_sigaction(CONFIG_X86EMU_USIGNAL_SIG, usignal_hdlr, 0x0);
+
+	// Ensure a hardware operation cannot be interrupted by the signal
+	// used to implement the brickos usignal mechanism. This is needed
+	// since the usignal signal is triggered from within a hardware
+	// operation, cf. event_signal(), which again might use syscalls,
+	// i.e. triggering hardware operations, which would then block the
+	// process since the second hardware operation cannot be started
+	// while the first one has not been finished.
+	memset(&blocked, 0x0, sizeof(lnx_sigset_t));
+	lnx_sigaddset(&blocked, CONFIG_X86EMU_USIGNAL_SIG);
+	lnx_sigaction(CONFIG_X86EMU_HW_SIG, hw_event_hdlr, &blocked);
+
+	/* setup memory */
 	app_heap = (void*)mem_blob;
 	memblock_init(app_heap, DEVTREE_APP_HEAP_SIZE);
 
@@ -194,6 +216,21 @@ static void hw_event_hdlr(int sig){
 	LNX_DEBUG("  [%u] status: %s\n", op.seq, (op.retval == 0 ? "ok" : "error"));
 
 	x86_hw_op_read_writeback(&op);
+}
+
+static void usignal_hdlr(int sig){
+	void *arg = usignal_arg;
+
+
+	usignal_pending = false;
+	usignal_arg = 0x0;
+
+	if(arg == 0x0)
+		LNX_EEXIT("no usignal arguments set\n");
+
+	LNX_DEBUG("handle usignal %ld\n", (long int)arg);
+	sig_hdlr(arg);
+	LNX_DEBUG("usignal handler completed\n");
 }
 
 static int event_syscall_return(x86_hw_op_t *op){
@@ -223,6 +260,22 @@ static int event_setup(x86_hw_op_t *op){
 
 	if(kheap_base == (void*)-1)
 		LNX_EEXIT("unable to allocated kernel heap shared memory on id %d\n", kheap_shmid);
+
+	return 0;
+}
+
+static int event_signal(x86_hw_op_t *op){
+	// it has been ensured that CONFIG_X86EMU_USIGNAL_SIG cannot
+	// interrupt the handler for the current hardware operation
+
+	usignal_arg = op->signal.arg;
+
+	if(syscall_return_pending){
+		LNX_DEBUG("defer usignal %ld to syscall handler\n", (long int)usignal_arg);
+		usignal_pending = true;
+	}
+	else
+		usignal_issue("event-handler");
 
 	return 0;
 }
@@ -289,24 +342,6 @@ static int overlay_sigregister(void *param){
 	return 0;
 }
 
-static int overlay_sigsend(void *param){
-	sc_signal_t *p = (sc_signal_t*)param;
-
-
-	if(sig_hdlr == 0x0)
-		LNX_EEXIT("signal handler not set\n");
-
-	ignore_exit = true;
-	x86_hw_op_active_tid = p->tid;
-
-	(void)sig_hdlr((void*)p->sig);
-
-	x86_hw_op_active_tid = 0;
-	ignore_exit = false;
-
-	return 0;
-}
-
 static int overlay_mmap(void *param){
 	sc_fs_t *p = (sc_fs_t*)param;
 
@@ -316,4 +351,9 @@ static int overlay_mmap(void *param){
 	p->payload += (ptrdiff_t)kheap_base;
 
 	return 0;
+}
+
+static void usignal_issue(char const *from){
+	LNX_DEBUG("issue usignal %ld from %s\n", (long int)usignal_arg, from);
+	lnx_kill(lnx_getpid(), CONFIG_X86EMU_USIGNAL_SIG);
 }

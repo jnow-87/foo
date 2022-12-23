@@ -22,7 +22,7 @@ static void hdlr(signal_t sig);
 
 
 /* static variables */
-static unsigned int sig_recv;
+static unsigned int volatile sig_recv;
 
 
 /* local functions */

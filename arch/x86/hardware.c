@@ -101,3 +101,17 @@ void x86_hw_int_trigger(int_num_t num, void *payload){
 	x86_hw_op_write(&op);
 	x86_hw_op_write_writeback(&op);
 }
+
+void x86_hw_usignal_send(void *arg){
+	x86_hw_op_t op;
+
+
+	if(arg == 0x0)
+		LNX_EEXIT("no signal arguments set\n");
+
+	op.num = HWO_SIGNAL;
+	op.signal.arg = arg;
+
+	x86_hw_op_write(&op);
+	x86_hw_op_write_writeback(&op);
+}

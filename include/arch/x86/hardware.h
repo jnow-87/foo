@@ -61,6 +61,7 @@ typedef enum{
 	HWO_UART_CFG,
 	HWO_DISPLAY_CFG,
 	HWO_SETUP,
+	HWO_SIGNAL,
 	HWO_NOPS
 } x86_hw_op_num_t;
 
@@ -109,6 +110,10 @@ typedef struct{
 		struct{
 			int shm_id;
 		} setup;
+
+		struct{
+			void *arg;	// parameter  according to thread_entry_t
+		} signal;
 	};
 } x86_hw_op_t;
 
@@ -121,6 +126,7 @@ void x86_hw_op_read(x86_hw_op_t *op);
 void x86_hw_op_read_writeback(x86_hw_op_t *op);
 
 void x86_hw_int_trigger(int_num_t num, void *payload);
+void x86_hw_usignal_send(void *arg);
 
 
 /* external variables */

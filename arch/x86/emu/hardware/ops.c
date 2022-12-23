@@ -45,9 +45,11 @@ static int event_copy_to_user(x86_hw_op_t *op);
 static int event_uart_config(x86_hw_op_t *op);
 static int event_display_config(x86_hw_op_t *op);
 static int event_setup(x86_hw_op_t *op);
+static int event_signal(x86_hw_op_t *op);
 static int event_inval(x86_hw_op_t *op);
 
 static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op);
+static int forward_op(child_t *to, x86_hw_op_t *op);
 
 
 /* static variables */
@@ -65,6 +67,7 @@ static ops_cfg_t hw_ops[] = {
 	{ .name = "uart_config",	.hdlr = event_uart_config },
 	{ .name = "display_config",	.hdlr = event_display_config },
 	{ .name = "setup",			.hdlr = event_setup },
+	{ .name = "signal",			.hdlr = event_signal },
 	{ .name = "invalid",		.hdlr = event_inval },
 };
 
@@ -255,23 +258,10 @@ static int event_int_set(x86_hw_op_t *op){
 }
 
 static int event_syscall_return(x86_hw_op_t *op){
-	x86_hw_op_t app_op = *op;
-
-
-	if(app_op.src != PRIV_KERNEL)
+	if(op->src != PRIV_KERNEL)
 		EEXIT("syscall return only supposed to be triggered by kernel\n");
 
-	child_lock(APP);
-
-	hw_op_write(&app_op, APP);
-	hw_op_write_writeback(&app_op, APP);
-
-	child_unlock(APP);
-
-	if(app_op.retval != 0)
-		EEXIT("syscall return failed with %d\n", app_op.retval);
-
-	return 0;
+	return forward_op(APP, op);
 }
 
 static int event_copy_from_user(x86_hw_op_t *op){
@@ -291,20 +281,11 @@ static int event_display_config(x86_hw_op_t *op){
 }
 
 static int event_setup(x86_hw_op_t *op){
-	x86_hw_op_t app_op = *op;
+	return forward_op(APP, op);
+}
 
-
-	child_lock(APP);
-
-	hw_op_write(&app_op, APP);
-	hw_op_write_writeback(&app_op, APP);
-
-	child_unlock(APP);
-
-	if(app_op.retval != 0)
-		EEXIT("setup failed with %d\n", app_op.retval);
-
-	return 0;
+static int event_signal(x86_hw_op_t *op){
+	return forward_op(APP, op);
 }
 
 static int event_inval(x86_hw_op_t *op){
@@ -328,4 +309,21 @@ static int copy_op(child_t *tgt, child_t *src, x86_hw_op_t *op){
 	child_unlock(APP);
 
 	return app_op.retval;
+}
+
+static int forward_op(child_t *to, x86_hw_op_t *op){
+	x86_hw_op_t to_op = *op;
+
+
+	child_lock(to);
+
+	hw_op_write(&to_op, to);
+	hw_op_write_writeback(&to_op, to);
+
+	child_unlock(to);
+
+	if(to_op.retval != 0)
+		EEXIT("%s failed with %d\n", hw_ops[op->num].name, to_op.retval);
+
+	return 0;
 }

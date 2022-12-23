@@ -144,6 +144,10 @@ static void int_hdlr(int sig){
 	// pop thread context
 	ctx = thread_ctx_pop();
 
+	// issue usignal
+	if(ctx->entry != 0x0 && ctx->entry == this_t->parent->sig_hdlr)
+		x86_hw_usignal_send(ctx->arg);
+
 	// CTX_UNKNOWN is used by the x86 implementation to mark
 	// the initial init process ctx, since it resides on the
 	// process stack it must not be freed
