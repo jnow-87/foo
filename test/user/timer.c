@@ -41,7 +41,7 @@ TEST(timer){
 
 	sig_recv = 0;
 
-	r += TEST_PTR_EQ(signal(SIG, sig_hdlr), sig_hdlr);
+	r += TEST_INT_EQ(signal(SIG, sig_hdlr), 0);
 	r += TEST_INT_EQ(timer_register(SIG, TIMER_PERIOD_MS * 1000), 0);
 
 	// wait for timer trigger all signals

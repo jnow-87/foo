@@ -21,7 +21,7 @@ typedef void (*signal_hdlr_t)(signal_t sig);
 
 
 /* prototypes */
-signal_hdlr_t signal(signal_t sig, signal_hdlr_t hdlr);
+int signal(signal_t sig, signal_hdlr_t hdlr);
 int signal_send(signal_t sig, pid_t pid, tid_t tid);
 
 

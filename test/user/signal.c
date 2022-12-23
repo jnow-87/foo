@@ -39,8 +39,7 @@ TEST(sigself){
 
 	r += TEST_INT_EQ(process_info(&pinfo), 0);
 	r += TEST_INT_EQ(thread_info(&tinfo), 0);
-	r += TEST_PTR_EQ(signal(SIGNAL, 0x0), 0x0);
-	r += TEST_PTR_EQ(signal(SIGNAL, hdlr), hdlr);
+	r += TEST_INT_EQ(signal(SIGNAL, hdlr), 0);
 
 	for(size_t i=0; i<NSIG; i++)
 		r += TEST_INT_EQ(signal_send(SIGNAL, pinfo.pid, tinfo.tid), 0);

@@ -55,7 +55,7 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	}
 
 	// register signal handler
-	if(signal(SIGNAL, hdlr) != hdlr){
+	if(signal(SIGNAL, hdlr) != 0){
 		printf(FG_RED "error " RESET_ATTR "registering signal handler \"%s\"\n", strerror(errno));
 		return -1;
 	}

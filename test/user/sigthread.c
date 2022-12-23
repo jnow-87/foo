@@ -52,10 +52,8 @@ TEST(sigthread){
 
 	r += TEST_INT_EQ(process_info(&pinfo), 0);
 
-	for(i=0; i<NSIG; i++){
-		r += TEST_PTR_EQ(signal(SIGNAL + i, 0x0), 0x0);
-		r += TEST_PTR_EQ(signal(SIGNAL + i, hdlr), hdlr);
-	}
+	for(i=0; i<NSIG; i++)
+		r += TEST_INT_EQ(signal(SIGNAL + i, hdlr), 0);
 
 	ASSERT_INT_NEQ(tid = thread_create(thread, "foo"), 0);
 

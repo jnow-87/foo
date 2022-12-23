@@ -29,18 +29,13 @@ signal_hdlr_t hdlrs[SIG_MAX] = { 0x0 };
 
 
 /* global functions */
-signal_hdlr_t signal(signal_t sig, signal_hdlr_t hdlr){
+int signal(signal_t sig, signal_hdlr_t hdlr){
 	if(sig >= SIG_MAX || sig == SIG_KILL)
-		goto_errno(err, E_INVAL);
+		return_errno(E_INVAL);
 
-	if(hdlrs[sig] == 0x0 || hdlr == 0x0)
-		hdlrs[sig] = hdlr;
+	hdlrs[sig] = hdlr;
 
-	return hdlrs[sig];
-
-
-err:
-	return 0x0;
+	return 0;
 }
 
 int signal_send(signal_t sig, pid_t pid, tid_t tid){
@@ -89,7 +84,8 @@ static int signal_hdlr(void *arg){
 		(void)sc(SC_SIGRETURN, &dummy);
 
 		// SC_SIGRETURN should never return
-		// just in case, fall through to exit
+		// just in case, fall through to the
+		// calling function _start()
 	}
 
 	return_errno(E_INVAL);
