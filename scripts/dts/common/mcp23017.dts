@@ -21,15 +21,15 @@ mcp0 = {
 	int<CONFIG_GPIO_INT_WIDTH> = [
 		1,				// mode (normal)
 		0xff,			// pin mask
-		0xff,			// in mask
-		0x00,			// out mask
+		0x00,			// in mask
+		0xff,			// out mask
 		0x00,			// int mask
 		0xff,			// invert mask (inverted)
 		0,				// interrupt
 	];
 
 	// port-a i2c devfs dev config (i2c_dev_cfg_t)
-	int<8> = [ 39 ];	// slave address
+	int<8> = [ 33 ];	// slave address
 
 	// port-a i2c address
 	baseaddr = 0x0;		// i2c device, cf. i2c_t, set by the driver
@@ -41,15 +41,15 @@ mcp0 = {
 	int<CONFIG_GPIO_INT_WIDTH> = [
 		1,				// mode (normal)
 		0xff,			// pin mask
-		0x00,			// in mask
-		0xff,			// out mask
+		0xff,			// in mask
+		0x00,			// out mask
 		0x00,			// int mask
 		0xff,			// invert mask (inverted)
 		0,				// interrupt
 	];
 
 	// port-b i2c devfs dev config (i2c_dev_cfg_t)
-	int<8> = [ 39 ];	// slave address
+	int<8> = [ 33 ];	// slave address
 
 	// port-b i2c address
 	baseaddr = 0x0;		// i2c device, cf. i2c_t, set by the driver

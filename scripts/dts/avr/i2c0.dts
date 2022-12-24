@@ -26,7 +26,7 @@ i2c0 = {
 	int<8> = [
 	   1,				// broadcast (enabled)
 	   1,				// address
-#ifdef CONFIG_DRIVER_SSD1306
+#if defined(CONFIG_DRIVER_SSD1306) || defined(CONFIG_DRIVER_MCP23017)
 	   0,				// interrupt
 #else
 	   26,				// interrupt (twi)
