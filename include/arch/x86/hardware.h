@@ -119,14 +119,20 @@ typedef struct{
 
 
 /* prototypes */
+void x86_hw_int_trigger(int_num_t num, void *payload);
+void x86_hw_int_return(int_num_t num, x86_priv_t to, unsigned int tid);
+void x86_hw_int_set(bool en);
+void x86_hw_syscall_return(void);
+void x86_hw_uart_cfg(char const *path, int rx_int, uart_cfg_t *cfg);
+void x86_hw_display_cfg(vram_cfg_t *cfg, uint8_t scale, int shm_id);
+void x86_hw_setup_complete(int shm_id);
+void x86_hw_usignal_send(void *arg);
+
 void x86_hw_op_write(x86_hw_op_t *op);
 void x86_hw_op_write_writeback(x86_hw_op_t *op);
 
 void x86_hw_op_read(x86_hw_op_t *op);
 void x86_hw_op_read_writeback(x86_hw_op_t *op);
-
-void x86_hw_int_trigger(int_num_t num, void *payload);
-void x86_hw_usignal_send(void *arg);
 
 
 /* external variables */

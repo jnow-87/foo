@@ -109,7 +109,7 @@ static char esc(char **s){
 	case 'v':	return '\v';
 	case 'f':	return '\f';
 	case '\\':	return '\\';
-	case 'h':	return esc_num(s, 2, 16);
+	case 'x':	return esc_num(s, 2, 16);
 	case '0':	return esc_num(s, 3, 8);
 	default:	(*s)--; return '\\';
 	}
