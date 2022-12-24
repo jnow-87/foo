@@ -89,19 +89,10 @@ err_0:
 driver_probe("x86,uart", probe);
 
 static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
-	dev_data_t *uart = (dev_data_t*)hw;
-	x86_hw_op_t op;
+	dt_data_t *dtd = ((dev_data_t*)hw)->dtd;
 
 
-	op.num = HWO_UART_CFG;
-
-	op.uart.int_num = uart->dtd->rx_int;
-	memcpy(&op.uart.cfg, hw_cfg, sizeof(uart_cfg_t));
-	strncpy(op.uart.path, uart->dtd->path, 64);
-	op.uart.path[63] = 0;
-
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
+	x86_hw_uart_cfg(dtd->path, dtd->rx_int, hw_cfg);
 
 	return 0;
 }

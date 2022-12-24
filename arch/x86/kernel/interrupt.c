@@ -36,7 +36,6 @@ int_type_t x86_int_enabled(void){
 }
 
 int_type_t x86_int_enable(int_type_t mask){
-	x86_hw_op_t op;
 	int_type_t s;
 
 
@@ -44,12 +43,7 @@ int_type_t x86_int_enable(int_type_t mask){
 
 	if(int_mask != mask){
 		int_mask = mask;
-
-		op.num = HWO_INT_SET;
-		op.int_ctrl.en = (mask != INT_NONE);
-
-		x86_hw_op_write(&op);
-		x86_hw_op_write_writeback(&op);
+		x86_hw_int_set(mask != INT_NONE);
 	}
 
 	return s;
@@ -162,13 +156,7 @@ static void int_hdlr(int sig){
 		this_t->tid
 	);
 
-	op.num = HWO_INT_RETURN;
-	op.int_return.num = op.int_ctrl.num;
-	op.int_return.to = (this_t->parent->pid == 0) ? PRIV_KERNEL : PRIV_USER;
-	op.int_return.tid = this_t->tid;
-
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
+	x86_hw_int_return(op.int_ctrl.num, (this_t->parent->pid == 0) ? PRIV_KERNEL : PRIV_USER, this_t->tid);
 
 	if(op.int_return.num == INT_SYSCALL && this_t->parent->pid != 0)
 		prevent_sched_transition = false;

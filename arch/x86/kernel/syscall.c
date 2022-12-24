@@ -137,10 +137,7 @@ end:
 
 	(void)copy_to_user(op.int_ctrl.payload, &sc, sizeof(sc), this_t->parent);
 
-	op.num = HWO_SYSCALL_RETURN;
-
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
+	x86_hw_syscall_return();
 }
 
 static void yield_user(thread_t *this_t){

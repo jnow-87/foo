@@ -73,7 +73,6 @@ driver_probe("x11", probe);
 static int configure(vram_cfg_t *cfg, void *hw){
 	dev_data_t *dsp = (dev_data_t*)hw;
 	uint16_t npages;
-	x86_hw_op_t op;
 
 
 	npages = vram_npages(cfg);
@@ -96,13 +95,7 @@ static int configure(vram_cfg_t *cfg, void *hw){
 	dsp->dirty = dsp->shm + npages * cfg->width;
 
 	/* configure hardware */
-	op.num = HWO_DISPLAY_CFG;
-	op.display.cfg = *cfg;
-	op.display.shm_id = dsp->shm_id;
-	op.display.scale = dsp->dsp_cfg->scale;
-
-	x86_hw_op_write(&op);
-	x86_hw_op_write_writeback(&op);
+	x86_hw_display_cfg(cfg, dsp->dsp_cfg->scale, dsp->shm_id);
 
 	return 0;
 
