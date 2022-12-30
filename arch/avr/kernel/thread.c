@@ -25,7 +25,12 @@ void avr_thread_ctx_init(thread_ctx_t *ctx, struct thread_t *this_t, thread_entr
 	memset(ctx, 0, sizeof(thread_ctx_t));
 
 	ctx->mcusr = mreg_r(MCUSR);
-	ctx->ret_addr = (void*)((lo8(AVR_ENTRY) << 8) | hi8(AVR_ENTRY));
+
+	// NOTE Due to the two layer interrupt vectors the entry point has
+	// 		to be written to the return address for the level-1 interrupt
+	// 		vector. Otherwise, the level-1 return address would need to
+	// 		be set to an arbitrary level-0 interrupt vector.
+	ctx->int_vec_addr = (void*)((lo8(AVR_ENTRY) << 8) | hi8(AVR_ENTRY));
 
 	// set _start() arg0: entry point
 	ctx->gpr[24] = lo8(entry);

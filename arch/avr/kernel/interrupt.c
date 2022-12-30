@@ -21,7 +21,7 @@
 
 
 /* external prototypes */
-extern void int_vectors(void);
+extern void int_vectors_lvl1(void);
 
 
 /* external variables */
@@ -65,9 +65,9 @@ struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *ctx){
 
 	/* call handler */
 	// compute interrupt number
-	// 	INT_VEC_SIZE / 2 is used since the flash is word-addressed
+	// 	INT_VEC lengths are divided by 2 since the flash is word-addressed
 	num = (lo8(ctx->int_vec_addr) << 8 | hi8(ctx->int_vec_addr));
-	num = ((num - (unsigned int)int_vectors) / (INT_VEC_SIZE / 2)) - 1;
+	num = (num - (unsigned int)int_vectors_lvl1 - XCALL_LEN / 2) / (INT_VEC1_LEN / 2);
 
 	int_khdlr(num);
 

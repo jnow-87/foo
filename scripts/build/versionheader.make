@@ -15,4 +15,4 @@ versionheader_header := $(build_tree)/version.h
 versionheader:
 	$(call cmd_run_script,$(versionheader_create) $(versionheader_header))
 
-all: versionheader
+prepare_deps: versionheader

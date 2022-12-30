@@ -33,6 +33,9 @@ __start:
 	call	avr_init_bss
 	call	avr_init_data
 
+	/* ABI requirements */
+	clr		r1	// r1 as zero register
+
 	/* kernel */
 #ifdef CONFIG_AVR_ISA_AVR4
 	ldi		r30, lo8(kernel)
