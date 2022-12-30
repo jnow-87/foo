@@ -13,16 +13,22 @@
 
 
 /* macros */
-.macro	vector num
+.macro	int_lvl0 num
 	.if (\num < DEVTREE_ARCH_NUM_INTS)
 		.if(\num == 0)					// reset
-			.global __vector_\num
 			XJMP	__isr_reset
-
 		.else
-			.global	__vector_\num
-			XCALL	__isr_int
+			XJMP	__int_lvl1_\num
 		.endif
+	.endif
+.endm
+
+.macro int_lvl1 num
+	.if (\num < DEVTREE_ARCH_NUM_INTS)
+		__int_lvl1_\num:
+			XCALL	__isr_int
+			ret
+			nop
 	.endif
 .endm
 
@@ -35,51 +41,92 @@
 
 /* data */
 .section .bss
+
 zero: .byte 1
 
 
 /* interrupt vectors */
 .section .reset
 
-.global int_vectors
-int_vectors:
-vector 0
-vector 1
-vector 2
-vector 3
-vector 4
-vector 5
-vector 6
-vector 7
-vector 8
-vector 9
-vector 10
-vector 11
-vector 12
-vector 13
-vector 14
-vector 15
-vector 16
-vector 17
-vector 18
-vector 19
-vector 20
-vector 21
-vector 22
-vector 23
-vector 24
-vector 25
-vector 26
-vector 27
-vector 28
-vector 29
-vector 30
-vector 31
-vector 32
-vector 33
-vector 34
-vector 35
-vector 36
+.global int_vectors_lvl0
+int_vectors_lvl0:
+int_lvl0 0
+int_lvl0 1
+int_lvl0 2
+int_lvl0 3
+int_lvl0 4
+int_lvl0 5
+int_lvl0 6
+int_lvl0 7
+int_lvl0 8
+int_lvl0 9
+int_lvl0 10
+int_lvl0 11
+int_lvl0 12
+int_lvl0 13
+int_lvl0 14
+int_lvl0 15
+int_lvl0 16
+int_lvl0 17
+int_lvl0 18
+int_lvl0 19
+int_lvl0 20
+int_lvl0 21
+int_lvl0 22
+int_lvl0 23
+int_lvl0 24
+int_lvl0 25
+int_lvl0 26
+int_lvl0 27
+int_lvl0 28
+int_lvl0 29
+int_lvl0 30
+int_lvl0 31
+int_lvl0 32
+int_lvl0 33
+int_lvl0 34
+int_lvl0 35
+int_lvl0 36
+
+.global int_vectors_lvl1
+int_vectors_lvl1:
+int_lvl1 0
+int_lvl1 1
+int_lvl1 2
+int_lvl1 3
+int_lvl1 4
+int_lvl1 5
+int_lvl1 6
+int_lvl1 7
+int_lvl1 8
+int_lvl1 9
+int_lvl1 10
+int_lvl1 11
+int_lvl1 12
+int_lvl1 13
+int_lvl1 14
+int_lvl1 15
+int_lvl1 16
+int_lvl1 17
+int_lvl1 18
+int_lvl1 19
+int_lvl1 20
+int_lvl1 21
+int_lvl1 22
+int_lvl1 23
+int_lvl1 24
+int_lvl1 25
+int_lvl1 26
+int_lvl1 27
+int_lvl1 28
+int_lvl1 29
+int_lvl1 30
+int_lvl1 31
+int_lvl1 32
+int_lvl1 33
+int_lvl1 34
+int_lvl1 35
+int_lvl1 36
 
 
 /* isrs */
@@ -249,10 +296,5 @@ __isr_int:
 	pop		r29
 	pop		r30
 	pop		r31
-
-	/* pop int_vectors return address */
-	pop		r1
-	pop		r1
-	lds		r1, zero
 
 	reti

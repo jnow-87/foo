@@ -48,11 +48,15 @@
 #if defined(CONFIG_AVR_ISA_AVR51) || defined(CONFIG_AVR_XMEGA)
 # define XCALL				call
 # define XJMP				jmp
-# define INT_VEC_SIZE		4
+# define XCALL_LEN			4
+# define INT_VEC0_LEN		4
+# define INT_VEC1_LEN		8
 #else
 # define XCALL				rcall
 # define XJMP				rjmp
-# define INT_VEC_SIZE		2
+# define XCALL_LEN			2
+# define INT_VEC0_LEN		2
+# define INT_VEC1_LEN		4
 #endif
 
 

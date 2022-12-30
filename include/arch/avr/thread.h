@@ -39,7 +39,7 @@ typedef struct thread_ctx_t{
 	uint8_t gpior[3];			/**< GPIO registers */
 	uint8_t gpr[32];			/**< general purpose registers */
 
-	void *int_vec_addr,			/**< int_vectors[cur + 1] */
+	void *int_vec_addr,			/**< level-1 interrupt vector return address */
 		 *ret_addr;				/**< thread return address on interrupt */
 } thread_ctx_t;
 
