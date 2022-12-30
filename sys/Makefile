@@ -145,7 +145,7 @@ define compile_devicetree
 	)
 endef
 
-$(devtree_preproc): $(CONFIG_DEVICE_TREE)
+$(devtree_preproc): $(CONFIG_DEVICE_TREE) $(config_header)
 	$(call preproc_file)
 
 $(devtree_src): $(devtree_preproc) $(dtc)
