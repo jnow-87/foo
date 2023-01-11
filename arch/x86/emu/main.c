@@ -226,6 +226,9 @@ static void exit_hdlr(int status, void *arg){
 
 static void cleanup(void){
 	for(size_t i=0; i<sizeof_array(threads); i++){
+		if((threads[i].when & opts.app_mode) == 0)
+			continue;
+
 		DEBUG(1, "terminating %s thread\n", threads[i].name);
 
 		/**
@@ -240,19 +243,13 @@ static void cleanup(void){
 		 * 	will block forever and would likewise block pthread_join()
 		 */
 		pthread_cancel(threads[i].tid);
+
+		if(threads[i].cleanup != 0x0)
+			threads[i].cleanup();
 	}
 
 	DEBUG(1, "terminating child processes\n");
 	brickos_destroy_childs();
-
-	for(size_t i=0; i<sizeof_array(threads); i++){
-		if((threads[i].when & opts.app_mode) == 0 || threads[i].cleanup == 0x0)
-			continue;
-
-		DEBUG(1, "cleanup %s thread\n", threads[i].name);
-
-		threads[i].cleanup();
-	}
 
 	term_default();
 
