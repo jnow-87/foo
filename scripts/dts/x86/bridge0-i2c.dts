@@ -34,6 +34,10 @@ brdg0-right-i2c = {
 # include "../common/i2c0-raw.dts"
 #endif // CONFIG_I2C_RAW
 
+#ifdef CONFIG_DRIVER_BME280
+# include "../common/bme280.dts"
+#endif // CONFIG_DRIVER_BME280
+
 #ifdef CONFIG_DRIVER_MCP23017
 # include "../common/mcp23017.dts"
 #endif // CONFIG_DRIVER_MCP23017

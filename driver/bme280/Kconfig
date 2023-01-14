@@ -1,0 +1,13 @@
+#
+# Copyright (C) 2023 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+config DRIVER_BME280
+	bool "bme280 i2c environment sensor"
+	select KERNEL_DEVFS
+	select DRIVER_I2C
