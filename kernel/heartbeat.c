@@ -16,16 +16,16 @@
 
 /* types */
 typedef struct{
-	uint16_t active_ms,
-			 inactive_ms;
+	uint16_t wave;
+	uint16_t period_ms;
 } dt_data_t;
 
 typedef struct{
 	gpio_t *gpio;
+	dt_data_t *dtd;
 
 	uint32_t time_ms;
-	uint16_t periods[2];
-	uint8_t state;
+	uint8_t idx;
 } dev_data_t;
 
 
@@ -41,10 +41,9 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 
 	heartbeat.gpio = dti;
+	heartbeat.dtd = dtd;
 	heartbeat.time_ms = ktimer_ms();
-	heartbeat.periods[0] = dtd->active_ms;
-	heartbeat.periods[1] = dtd->inactive_ms;
-	heartbeat.state = 0;
+	heartbeat.idx = 0;
 
 	if(ktask_create(task, &heartbeat, sizeof(dev_data_t), 0x0, true) != 0)
 		return 0x0;
@@ -56,21 +55,25 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 driver_probe("kernel,heartbeat", probe);
 
-#include <kernel/kprintf.h>
-
 static void task(void *payload){
 	dev_data_t *heartbeat = (dev_data_t*)payload;
 	gpio_t *gpio = heartbeat->gpio;
+	gpio_int_t v;
 	uint32_t time_ms;
 
 
 	time_ms = ktimer_ms();
 
-	if(time_ms < heartbeat->time_ms + heartbeat->periods[heartbeat->state])
+	if(time_ms < heartbeat->time_ms + heartbeat->dtd->period_ms)
 		return;
 
-	gpio_write(gpio, gpio_read(gpio) ^ gpio->cfg->out_mask);
+	v = gpio_read(gpio) | gpio->cfg->out_mask;
+
+	if((heartbeat->dtd->wave & (0x1 << heartbeat->idx)) == 0)
+		v ^= gpio->cfg->out_mask;
+
+	gpio_write(gpio, v);
 
 	heartbeat->time_ms = time_ms;
-	heartbeat->state = (heartbeat->state + 1) & 0x1;
+	heartbeat->idx = (heartbeat->idx + 1) & 0xf;
 }
