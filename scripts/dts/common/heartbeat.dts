@@ -1,0 +1,18 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+heartbeat = {
+	compatible = "kernel,heartbeat";
+
+	/* heartbeat config (dt_data_t) */
+	int<16> = [
+		0x0505,	// wave
+		200,	// period [ms]
+	];
+};

@@ -64,6 +64,7 @@ pb-user-led = {
 	};
 };
 
+#ifdef CONFIG_KERNEL_HEARTBEAT
 pb-kernel-led = {
 	compatible = "avr,gpio";
 
@@ -86,15 +87,9 @@ pb-kernel-led = {
 		0,				// interrupt
 	];
 
-	heartbeat = {
-		compatible = "kernel,heartbeat";
-
-		int<16> = [
-			200,	// active period [ms]
-			1000,	// inactive period [ms]
-		];
-	};
+# include "../common/heartbeat.dts"
 };
+#endif // CONFIG_KERNEL_HEARTBEAT
 
 pc-int = {
 	compatible = "avr,gpio";
