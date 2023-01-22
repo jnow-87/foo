@@ -55,6 +55,9 @@ menu "commands"
 		bool "gfx demo"
 		select LIB_GFX
 
+	config INIT_SENSORCAT
+		bool "sensorcat"
+
 	config INIT_TEST
 		bool "test"
 		select LIB_GETOPT

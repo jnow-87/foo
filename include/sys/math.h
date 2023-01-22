@@ -37,6 +37,12 @@
 #define MIN(x, y)	CMP(x, y, <)
 #define MAX(x, y)	CMP(x, y, >)
 
+#define SQUARE(x)({ \
+	typeof(x) _x = x; \
+	\
+	\
+	_x * _x; \
+})
 
 // requires base to be power of 2
 #define ALIGNP2(x, base)({ \

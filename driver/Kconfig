@@ -8,6 +8,7 @@
 
 
 source driver/loop/Kconfig
+source driver/bme280/Kconfig
 source driver/esp8266/Kconfig
 source driver/mcp23017/Kconfig
 source driver/ssd1306/Kconfig

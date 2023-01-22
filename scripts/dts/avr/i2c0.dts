@@ -26,7 +26,9 @@ i2c0 = {
 	int<8> = [
 	   1,				// broadcast (enabled)
 	   1,				// address
-#if defined(CONFIG_DRIVER_SSD1306) || defined(CONFIG_DRIVER_MCP23017)
+#if defined(CONFIG_DRIVER_SSD1306) \
+ || defined(CONFIG_DRIVER_MCP23017) \
+ || defined(CONFIG_DRIVER_BME280)
 	   0,				// interrupt
 #else
 	   26,				// interrupt (twi)
@@ -36,6 +38,10 @@ i2c0 = {
 #ifdef CONFIG_I2C_RAW
 # include "../common/i2c0-raw.dts"
 #endif // CONFIG_I2C_RAW
+
+#ifdef CONFIG_DRIVER_BME280
+# include "../common/bme280.dts"
+#endif // CONFIG_DRIVER_BME280
 
 #ifdef CONFIG_DRIVER_MCP23017
 # include "../common/mcp23017.dts"

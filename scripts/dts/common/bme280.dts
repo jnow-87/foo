@@ -1,0 +1,26 @@
+/**
+ * Copyright (C) 2023 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+bme280 = {
+	compatible = "bme280";
+
+	/* bme280 hardware (dt_data_t) */
+	int<8> = [ 118 ];	// slave address
+
+	/* bme280 config (bme280_cfg_t) */
+	int <8> = [
+		1,		// mode (forced)
+		0x7,	// features (all)
+		0,		// standby time (500)
+		0,		// filter (off)
+		1,		// temperature oversampling (1)
+		1,		// pressure oversampling (1)
+		1,		// humidity oversampling (1)
+	];
+};
