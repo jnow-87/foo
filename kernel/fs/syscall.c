@@ -362,7 +362,7 @@ static int sc_hdlr_mmap(void *param){
 	mutex_lock(&node->mtx);
 
 	if(p->payload == 0x0)	p->payload = node->ops->mmap(fd, p->payload_len);
-	else					umunmap(p->payload);
+	else					kmunmap(p->payload);
 
 	mutex_unlock(&node->mtx);
 

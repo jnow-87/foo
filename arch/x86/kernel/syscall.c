@@ -195,7 +195,7 @@ static int overlay_mmap(void *param){
 
 
 	this_p = sched_running()->parent;
-	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
+	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "heap");
 
 	if(copy_from_user(&kparam, param, sizeof(kparam), this_p) != 0)
 		return -errno;

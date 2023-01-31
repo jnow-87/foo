@@ -76,6 +76,24 @@ void kfree(void *addr){
 	mutex_unlock(&kmem_mtx);
 }
 
+void *kmmap(void *addr){
+#ifdef CONFIG_KERNEL_VIRT_MEM
+	// TODO
+	set_errno(E_NOIMP);
+
+	return 0x0;
+#else
+	return addr;
+#endif // CONFIG_KERNEL_VIRT_MEM
+}
+
+void kmunmap(void *addr){
+#ifdef CONFIG_KERNEL_VIRT_MEM
+	// TODO
+	set_errno(E_NOIMP);
+#endif // CONFIG_KERNEL_VIRT_MEM
+}
+
 bool iskheap(void *addr){
 	return addr >= kmem_dt_node->base && addr < kmem_dt_node->base + kmem_dt_node->size;
 }
@@ -124,7 +142,7 @@ void *addr_phys_to_virt(void *pa){
 /* local functions */
 static int init(void){
 	// NOTE the memory node is ensured to exist by the build system
-	kmem_dt_node = devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
+	kmem_dt_node = devtree_find_memory_by_name(&__dt_memory_root, "heap");
 
 	kernel_heap = kmem_dt_node->base;
 	memblock_init(kernel_heap, kmem_dt_node->size);

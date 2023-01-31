@@ -67,7 +67,7 @@ static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n){
 	if(n != vram->npages * vram->cfg.width + vram_ndirty(vram->npages))
 		goto_errno(err, E_INVAL);
 
-	return ummap(vram->ram);
+	return kmmap(vram->ram);
 
 
 err:

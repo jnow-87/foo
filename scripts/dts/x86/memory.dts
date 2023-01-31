@@ -21,21 +21,16 @@ ram = {
 		size = 4096;
 	};
 
-	app-heap = {
-		baseaddr = 0x01901000;
-		size = 1048576;
-	};
-
 	app-data = {
 		baseaddr = 0x1a01000;
 		size = 20971520;
 	};
 };
 
-// Kernel heap needs to be allocated dynamically to allow
-// using it as shared memory. However, a kernel-heap node
-// is needed since the kernel assumes its presence.
-kernel-heap = {
+// The heap needs to be allocated dynamically to allow
+// using it as shared memory. However, a heap node is
+// needed since the kernel assumes its presence.
+heap = {
 	baseaddr = 0x0;
 	size = 1048576;
 };

@@ -20,8 +20,6 @@
 
 /* static variables */
 static uint8_t kernel_stack[DEVTREE_KERNEL_STACK_SIZE] __used __section(".memory_kernel_stack");
-static uint8_t app_heap[DEVTREE_APP_HEAP_SIZE] __used __section(".memory_app_heap");
-
 static int kheap_shmid = -1;
 
 
@@ -68,7 +66,7 @@ void x86_memory_cleanup(void){
 	devtree_memory_t *kheap;
 
 
-	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
+	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "heap");
 	lnx_shmrm(kheap_shmid, kheap->base);
 }
 
@@ -82,7 +80,7 @@ static int init(void){
 	// NOTE kernel heap needs to be allocated as shared memory to
 	//	    allow access by the application which is needed to implement
 	//	    the mmap syscall overlays
-	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "kernel-heap");
+	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "heap");
 
 	kheap_shmid = lnx_shmget(kheap->size);
 
