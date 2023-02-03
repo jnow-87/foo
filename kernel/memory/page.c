@@ -48,7 +48,7 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* allocate physical block */
-	page->phys_addr = umalloc(size);
+	page->phys_addr = kmalloc(size);
 
 	if(page->phys_addr == 0x0)
 		goto_errno(err_1, E_NOMEM);
@@ -71,7 +71,7 @@ page_t *page_alloc(struct process_t *this_p, page_size_t psize){
 
 #ifdef CONFIG_KERNEL_VIRT_MEM
 err_2:
-	ufree(page->phys_addr);
+	kfree(page->phys_addr);
 #endif // CONFIG_KERNEL_VIRT_MEM
 
 err_1:
@@ -95,7 +95,7 @@ void page_free(struct process_t *this_p, page_t *page){
 	mutex_unlock(&this_p->mtx);
 
 	/* free physica block */
-	ufree(page->phys_addr);
+	kfree(page->phys_addr);
 
 	/* free page structure */
 	kfree(page);

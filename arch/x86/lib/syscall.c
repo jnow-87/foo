@@ -113,7 +113,7 @@ static overlay_t overlays[] = {
 STATIC_ASSERT(sizeof_array(overlays) == NSYSCALLS);
 
 // memory/heap overlay data
-static uint8_t mem_blob[DEVTREE_APP_HEAP_SIZE];
+static uint8_t mem_blob[DEVTREE_HEAP_SIZE];
 static memblock_t *app_heap = 0x0;
 
 static int kheap_shmid = -1;
@@ -195,7 +195,7 @@ static int init(void){
 
 	/* setup memory */
 	app_heap = (void*)mem_blob;
-	memblock_init(app_heap, DEVTREE_APP_HEAP_SIZE);
+	memblock_init(app_heap, DEVTREE_HEAP_SIZE);
 
 	return -errno;
 }
