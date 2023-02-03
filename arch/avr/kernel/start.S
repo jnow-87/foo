@@ -24,8 +24,8 @@
 .global __start
 __start:
 	/* init stack pointer */
-	ldi		r16, lo8(DEVTREE_KERNEL_STACK_BASE + DEVTREE_KERNEL_STACK_SIZE - 1)
-	ldi		r17, hi8(DEVTREE_KERNEL_STACK_BASE + DEVTREE_KERNEL_STACK_SIZE - 1)
+	ldi		r16, lo8(DEVTREE_HEAP_BASE + DEVTREE_HEAP_SIZE - 1)
+	ldi		r17, hi8(DEVTREE_HEAP_BASE + DEVTREE_HEAP_SIZE - 1)
 	sts		SPL, r16
 	sts		SPH, r17
 

@@ -19,7 +19,6 @@
 
 
 /* static variables */
-static uint8_t kernel_stack[DEVTREE_KERNEL_STACK_SIZE] __used __section(".memory_kernel_stack");
 static int kheap_shmid = -1;
 
 

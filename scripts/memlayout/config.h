@@ -16,7 +16,6 @@
 
 /* static variables */
 static char const *required_nodes[] = {
-	"kernel-stack",
 	"heap",
 
 #ifdef CONFIG_AVR

@@ -145,7 +145,7 @@ static int init(void){
 	kmem_dt_node = devtree_find_memory_by_name(&__dt_memory_root, "heap");
 
 	kernel_heap = kmem_dt_node->base;
-	memblock_init(kernel_heap, kmem_dt_node->size);
+	memblock_init(kernel_heap, kmem_dt_node->size - CONFIG_STACK_SIZE);
 
 	return -errno;
 }

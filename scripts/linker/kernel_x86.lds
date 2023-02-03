@@ -57,10 +57,6 @@ SECTIONS {
 		*(COMMON)
 	} > text
 
-	.kernel_stack : {
-		*(.memory_kernel_stack)
-	} > kernel_stack
-
 	/* discard sections */
 	/DISCARD/ : {
 		*(.init4)	/* libgcc .data initialisation not needed */

@@ -7,7 +7,7 @@
 
 
 
-obj-y := kmem.o
+obj-y := memory.o
 
 
 cppflags-y := -DTEST_TYPE=\"kernel\"

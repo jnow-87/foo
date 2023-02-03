@@ -25,7 +25,6 @@
 thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entry, void *thread_arg){
 	thread_t *this_t;
 	thread_ctx_t *ctx;
-	devtree_memory_t const *stack;
 
 
 	this_t = kcalloc(1, sizeof(thread_t));
@@ -50,15 +49,13 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	/* prepare stack */
 	// NOTE the memory stack is ensured to exist by the build system
-	stack = devtree_find_memory_by_name(&__dt_memory_root, "kernel-stack");
-
-	this_t->stack = page_alloc(this_p, stack->size);
+	this_t->stack = page_alloc(this_p, CONFIG_STACK_SIZE);
 
 	if(this_t->stack == 0x0)
 		goto_errno(err_1, E_NOMEM);
 
 	/* init thread context */
-	ctx = (thread_ctx_t*)(this_t->stack->phys_addr + stack->size - sizeof(thread_ctx_t));
+	ctx = (thread_ctx_t*)(this_t->stack->phys_addr + CONFIG_STACK_SIZE - sizeof(thread_ctx_t));
 	thread_ctx_init(ctx, this_t, entry, thread_arg);
 
 	stack_push(this_t->ctx_stack, ctx);

@@ -43,11 +43,6 @@ ram = {
 
 	heap = {
 		baseaddr = 0x00802a00;
-		size = 5120;
-	};
-
-	kernel-stack = {
-		baseaddr = 0x00803e00;
-		size = 768;
+		size = 5888;
 	};
 };

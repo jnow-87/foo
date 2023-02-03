@@ -58,6 +58,7 @@ CONFIG_KERNEL_TIMER=y
 #
 # memory configuration
 #
+CONFIG_STACK_SIZE=768
 CONFIG_KMALLOC_ALIGN=0
 
 #

@@ -16,11 +16,6 @@ ram = {
 		size = 20971520;
 	};
 
-	kernel-stack = {
-		baseaddr = 0x01900000;
-		size = 4096;
-	};
-
 	app-data = {
 		baseaddr = 0x1a01000;
 		size = 20971520;
