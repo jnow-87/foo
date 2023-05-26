@@ -40,6 +40,10 @@ endef
 # XXX naming: compile_<target type>_<dependencies type>
 # XXX $(call compile_*,<host>)
 
+
+define nop
+endef
+
 define compile_c_y
 	$(call compile_base,yacc,$(yaccflags) -v --report-file=$(basename $@).log --defines=$(basename $@).h $< -o $@)
 endef
@@ -50,12 +54,12 @@ endef
 
 define compile_c_gperf
 	$(call compile_base,gperf,$(gperfflags) $< --output-file=$@)
-	$(gperf_c_header) $< $@ $(basename $@).h
+	$(call cmd_run_script,$(gperf_c_header) $< $@ $(basename $@).h)
 endef
 
 define compile_cxx_gperf
 	$(call compile_base,gperf,$(gperfflags) $< --output-file=$@)
-	$(gperf_cxx_header) $@ $(basename $@).h
+	$(call cmd_run_script,$(gperf_cxx_header) $@ $(basename $@).h)
 endef
 
 # define 'ASM' for preprocessed assembly files

@@ -47,7 +47,11 @@ endef
 # use a key that identifies the local project, allowing to nest
 # projects that use this set of makefiles
 prestage_key := $(shell basename $$PWD)
-skip_prestage_targets := help% menuconfig defconfig% clean% %clean githooks check_coding_style check_build_tools check_user_tools
+skip_prestage_targets := help% \
+	clean% %clean \
+	install% uninstall% \
+	menuconfig defconfig% \
+	githooks check_coding_style check_build_tools check_user_tools
 
 ifneq ($(EXEC_PRESTAGE),$(prestage_key))
   # ensure MAKECMDGOALS is not empty, otherwise the following checks would not work
