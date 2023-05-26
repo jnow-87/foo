@@ -25,7 +25,7 @@
 
 
 /* prototypes */
-int file_map(const char *filename, int *fd, void **map, unsigned int *size);
+int file_map(char const *filename, int *fd, void **map, unsigned int *size);
 void file_unmap(int fd, void *map, unsigned int size);
 
 int strrcmp(char *s, unsigned int slen, char *sub, unsigned int sublen);

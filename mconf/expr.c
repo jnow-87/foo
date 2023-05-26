@@ -52,6 +52,7 @@ struct expr *expr_alloc_and(struct expr *e1, struct expr *e2)
 {
 	if (!e1)
 		return e2;
+
 	return e2 ? expr_alloc_two(E_AND, e1, e2) : e1;
 }
 
@@ -59,6 +60,7 @@ struct expr *expr_alloc_or(struct expr *e1, struct expr *e2)
 {
 	if (!e1)
 		return e2;
+
 	return e2 ? expr_alloc_two(E_OR, e1, e2) : e1;
 }
 
@@ -941,7 +943,7 @@ struct expr *expr_trans_compare(struct expr *e, enum expr_type type, struct symb
 tristate expr_calc_value(struct expr *e)
 {
 	tristate val1, val2;
-	const char *str1, *str2;
+	char const *str1, *str2;
 
 	if (!e)
 		return yes;
@@ -981,9 +983,6 @@ tristate expr_calc_value(struct expr *e)
 
 int expr_compare_type(enum expr_type t1, enum expr_type t2)
 {
-#if 0
-	return 1;
-#else
 	if (t1 == t2)
 		return 0;
 	switch (t1) {
@@ -1008,7 +1007,6 @@ int expr_compare_type(enum expr_type t1, enum expr_type t2)
 	}
 	printf("[%dgt%d?]", t1, t2);
 	return 0;
-#endif
 }
 
 static inline struct expr *
@@ -1053,7 +1051,7 @@ struct expr *expr_simplify_unmet_dep(struct expr *e1, struct expr *e2)
 	return expr_get_leftmost_symbol(ret);
 }
 
-void expr_print(struct expr *e, void (*fn)(void *, struct symbol *, const char *), void *data, int prevtoken)
+void expr_print(struct expr *e, void (*fn)(void *, struct symbol *, char const *), void *data, int prevtoken)
 {
 	if (!e) {
 		fn(data, NULL, "y");
@@ -1125,7 +1123,7 @@ void expr_print(struct expr *e, void (*fn)(void *, struct symbol *, const char *
 		fn(data, NULL, ")");
 }
 
-static void expr_print_file_helper(void *data, struct symbol *sym, const char *str)
+static void expr_print_file_helper(void *data, struct symbol *sym, char const *str)
 {
 	xfwrite(str, strlen(str), 1, data);
 }
@@ -1135,17 +1133,17 @@ void expr_fprint(struct expr *e, FILE *out)
 	expr_print(e, expr_print_file_helper, out, E_NONE);
 }
 
-static void expr_print_gstr_helper(void *data, struct symbol *sym, const char *str)
+static void expr_print_gstr_helper(void *data, struct symbol *sym, char const *str)
 {
 	struct gstr *gs = (struct gstr*)data;
-	const char *sym_str = NULL;
+	char const *sym_str = NULL;
 
 	if (sym)
 		sym_str = sym_get_string_value(sym);
 
 	if (gs->max_width) {
 		unsigned extra_length = strlen(str);
-		const char *last_cr = strrchr(gs->s, '\n');
+		char const *last_cr = strrchr(gs->s, '\n');
 		unsigned last_line_length;
 
 		if (sym_str)

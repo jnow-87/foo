@@ -11,24 +11,6 @@
 ## helper
 ####
 
-# generate a dependency file for the current target
-# 	dependency file is not generated while executing prestage stage0
-# 	fixdep is only applied if configtools are configured to be used
-# 	and built already
-#
-#	$(call gen_dep_file,<compiler>,<compile-flags>)
-define gen_dep_file
-	$(if $(call is_prestage,stage0), \
-		, \
-		$($(1)) $(filter-out %.cmd,$(2)) -MM -MF $@.d -MP -MT $@ $<
-		$(if $(configtools_unavailable), \
-			,
-			$(mv) $@.d $@.d.tmp
-			$(fixdep) $@.d.tmp $(config_header) $(dir $(config_header))fixdep/ 1> $@.d
-		) \
-	)
-endef
-
 # compile function wrapping some use output and the command file generation
 #
 #	$(call compile_base,<compiler>,<args>)
@@ -47,7 +29,7 @@ endef
 #	$(call compile_with_deps,<compiler>,<compile-flags>,<mode-flags>)
 define compile_with_deps
 	$(call compile_base,$(1),$(2) $(3) $< -o $@)
-	$(call gen_dep_file,$(1),$(2))
+	$(call gen_deps,$(1),$(2))
 endef
 
 
@@ -57,6 +39,10 @@ endef
 
 # XXX naming: compile_<target type>_<dependencies type>
 # XXX $(call compile_*,<host>)
+
+
+define nop
+endef
 
 define compile_c_y
 	$(call compile_base,yacc,$(yaccflags) -v --report-file=$(basename $@).log --defines=$(basename $@).h $< -o $@)
@@ -68,12 +54,12 @@ endef
 
 define compile_c_gperf
 	$(call compile_base,gperf,$(gperfflags) $< --output-file=$@)
-	$(gperf_c_header) $< $@ $(basename $@).h
+	$(call cmd_run_script,$(gperf_c_header) $< $@ $(basename $@).h)
 endef
 
 define compile_cxx_gperf
 	$(call compile_base,gperf,$(gperfflags) $< --output-file=$@)
-	$(gperf_cxx_header) $@ $(basename $@).h
+	$(call cmd_run_script,$(gperf_cxx_header) $@ $(basename $@).h)
 endef
 
 # define 'ASM' for preprocessed assembly files
@@ -108,19 +94,21 @@ define compile_o_cxx
 endef
 
 ifeq ($(project_type),c)
-define compile_o_o
-	$(eval flags := -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
-	$(call compile_base,$(1)cc,$(flags) $(filter %.o,$^) -o $@)
-endef
-
+  o_o_cflags := cflags
+  o_o_compiler := cc
 else
-
-define compile_o_o
-	$(eval flags := -nostdlib -r -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
-	$(call compile_base,$(1)cxx,$(flags) $(filter %.o,$^) -o $@)
-endef
-
+  o_o_cflags := cxxflags
+  o_o_compiler := cxx
 endif
+
+# NOTE
+# 	to combine object files the compiler is used in favor of the linker since it is
+# 	not easily possible to invoke the linker with the correct flags when link time
+# 	optimisation (-flto) shall be used
+define compile_o_o
+	$(eval flags := -nostdlib -r $(filter-out %coverage -fprofile-arcs,$($(1)$(o_o_cflags))) -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
+	$(call compile_base,$(1)$(o_o_compiler),$(flags) $(filter %.o,$^) -o $@)
+endef
 
 define compile_lib_o
 	$(call compile_base,$(1)ar,crs $@ $(filter %.o,$^))

@@ -23,7 +23,7 @@
 #include "util.h"
 
 
-int file_map(const char *filename, int *_fd, void **_map, unsigned int *_size){
+int file_map(char const *filename, int *_fd, void **_map, unsigned int *_size){
 	int fd;
 	void *map;
 	struct stat st;
@@ -81,6 +81,7 @@ int strrcmp(char *s, unsigned int slen, char *sub, unsigned int sublen){
 void traps(void){
 	static char test[] __attribute__((aligned(sizeof(int)))) = "CONF";
 	int *p =(int *)test;
+
 
 	if(*p != INT_CONF){
 		fprintf(stderr, "fixdep: sizeof(int) != 4 or wrong endianness? %#x\n",

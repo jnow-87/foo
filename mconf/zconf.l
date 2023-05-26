@@ -49,7 +49,7 @@ static void new_string(void)
 	*text = 0;
 }
 
-static void append_string(const char *str, int size)
+static void append_string(char const *str, int size)
 {
 	int new_size = text_size + size + 1;
 	if (new_size > text_asize) {
@@ -63,7 +63,7 @@ static void append_string(const char *str, int size)
 	text[text_size] = 0;
 }
 
-static void alloc_string(const char *str, int size)
+static void alloc_string(char const *str, int size)
 {
 	text = xmalloc(size + 1);
 	memcpy(text, str, size);
@@ -267,7 +267,7 @@ static void zconf_endhelp(void)
  * when compiling the kernel.
  * Return NULL if file is not found.
  */
-FILE *zconf_fopen(const char *name)
+FILE *zconf_fopen(char const *name)
 {
 	char *env, fullname[PATH_MAX+1];
 	FILE *f;
@@ -283,7 +283,7 @@ FILE *zconf_fopen(const char *name)
 	return f;
 }
 
-void zconf_initscan(const char *name)
+void zconf_initscan(char const *name)
 {
 	yyin = zconf_fopen(name);
 	if (!yyin) {
@@ -298,7 +298,7 @@ void zconf_initscan(const char *name)
 	current_file->lineno = 1;
 }
 
-void zconf_nextfile(const char *name)
+void zconf_nextfile(char const *name)
 {
 	struct file *iter;
 	struct file *file = file_lookup(name);
@@ -361,7 +361,7 @@ int zconf_lineno(void)
 	return current_pos.lineno;
 }
 
-const char *zconf_curname(void)
+char const *zconf_curname(void)
 {
 	return current_pos.file ? current_pos.file->name : "<none>";
 }

@@ -22,7 +22,8 @@ config := ./config
 config_tree := $(scripts_dir)/config
 
 # init code coverage system
-coverage_script := gcovered
+use_coverage_sys := y
+gcovered_rc := .gcoveredrc
 
 # external dependencies
 tool_deps :=
@@ -47,7 +48,7 @@ asflags := $(ASFLAGS) $(CONFIG_ASFLAGS)
 archflags := $(ARCHFLAGS) $(CONFIG_ARCHFLAGS)
 
 hostcflags := $(HOSTCFLAGS) $(CONFIG_HOSTCFLAGS)
-hostcxxflags := $(HOSTCXXFLAGS) $(CONFIG_HOSTCCCFLAGS)
+hostcxxflags := $(HOSTCXXFLAGS) $(CONFIG_HOSTCXXFLAGS)
 hostcppflags := $(HOSTCPPFLAGS) $(CONFIG_HOSTCPPFLAGS)
 hostldflags := $(HOSTLDFLAGS) $(CONFIG_HOSTLDFLAGS)
 hostldlibs := $(HOSTLDLIBS) $(CONFIG_HOSTLDLIBS)

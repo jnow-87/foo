@@ -73,7 +73,7 @@ lookup_line=$(grep -ne "${lookup_name}" ${cfile} | cut -d ':' -f 1 | tail -n1)
 lookup_ret_type=$(sed -ne "$(expr ${lookup_line} - 1)p" ${cfile})
 
 printf "/* prototypes */\n" >> ${header}
-printf "%s %s(register const char *str, register size_t len);\n" "${lookup_ret_type}" "${lookup_name}" >> ${header}
+printf "%s %s(register char const *str, register size_t len);\n" "${lookup_ret_type}" "${lookup_name}" >> ${header}
 printf "\n\n" >> ${header}
 
 # print footer

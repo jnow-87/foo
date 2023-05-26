@@ -11,11 +11,6 @@
 
 #include "expr.h"
 
-static inline const char *gettext(const char *txt) { return txt; }
-static inline void textdomain(const char *domainname) {}
-static inline void bindtextdomain(const char *name, const char *dir) {}
-static inline char *bind_textdomain_codeset(const char *dn, char *c) { return c; }
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,19 +21,10 @@ extern "C" {
 
 #define SRCTREE "srctree"
 
-#ifndef PACKAGE
-#define PACKAGE "linux"
-#endif
-
-#define LOCALEDIR "/usr/share/locale"
-
-#define _(text) gettext(text)
-#define N_(text) (text)
-
 #ifndef CONFIG_
-#define CONFIG_ "CONFIG_"
+# define CONFIG_ "CONFIG_"
 #endif
-static inline const char *CONFIG_prefix(void)
+static inline char const *CONFIG_prefix(void)
 {
 	return getenv( "CONFIG_" ) ?: CONFIG_;
 }
@@ -73,22 +59,22 @@ extern int zconfdebug;
 int zconfparse(void);
 void zconfdump(FILE *out);
 void zconf_starthelp(void);
-FILE *zconf_fopen(const char *name);
-void zconf_initscan(const char *name);
-void zconf_nextfile(const char *name);
+FILE *zconf_fopen(char const *name);
+void zconf_initscan(char const *name);
+void zconf_nextfile(char const *name);
 int zconf_lineno(void);
-const char *zconf_curname(void);
+char const *zconf_curname(void);
 
 /* confdata.c */
-const char *conf_get_configname(void);
+char const *conf_get_configname(void);
 char *conf_get_default_confname(void);
 void sym_set_change_count(int count);
 void sym_add_change_count(int count);
 void conf_set_all_new_symbols(enum conf_def_mode mode);
 
 struct conf_printer {
-	void (*print_symbol)(FILE *, struct symbol *, const char *, void *);
-	void (*print_comment)(FILE *, const char *, void *);
+	void (*print_symbol)(FILE *, struct symbol *, char const *, void *);
+	void (*print_comment)(FILE *, char const *, void *);
 };
 
 /* confdata.c and expr.c */
@@ -102,7 +88,7 @@ static inline void xfwrite(const void *str, size_t len, size_t count, FILE *out)
 
 /* menu.c */
 void _menu_init(void);
-void menu_warn(struct menu *menu, const char *fmt, ...);
+void menu_warn(struct menu *menu, char const *fmt, ...);
 struct menu *menu_add_menu(void);
 void menu_end_menu(void);
 void menu_add_entry(struct symbol *sym);
@@ -118,7 +104,7 @@ void menu_finalize(struct menu *parent);
 void menu_set_type(int type);
 
 /* util.c */
-struct file *file_lookup(const char *name);
+struct file *file_lookup(char const *name);
 void *xmalloc(size_t size);
 void *xcalloc(size_t nmemb, size_t size);
 
@@ -132,11 +118,11 @@ struct gstr {
 	int max_width;
 };
 struct gstr str_new(void);
-struct gstr str_assign(const char *s);
+struct gstr str_assign(char const *s);
 void str_free(struct gstr *gs);
-void str_append(struct gstr *gs, const char *s);
-void str_printf(struct gstr *gs, const char *fmt, ...);
-const char *str_get(struct gstr *gs);
+void str_append(struct gstr *gs, char const *s);
+void str_printf(struct gstr *gs, char const *fmt, ...);
+char const *str_get(struct gstr *gs);
 
 /* symbol.c */
 extern struct expr *sym_env_list;
@@ -146,7 +132,7 @@ void sym_clear_all_valid(void);
 void sym_set_all_changed(void);
 void sym_set_changed(struct symbol *sym);
 struct symbol *sym_choice_default(struct symbol *sym);
-const char *sym_get_string_default(struct symbol *sym);
+char const *sym_get_string_default(struct symbol *sym);
 struct symbol *sym_check_deps(struct symbol *sym);
 struct property *prop_alloc(enum prop_type type, struct symbol *sym);
 struct symbol *prop_get_symbol(struct property *prop);

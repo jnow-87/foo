@@ -307,11 +307,11 @@ $(call gen_rule_basic,    compile_o_cxx,        $(loc_build_tree)/%.o,          
 # yacc
 ifeq ($(project_type),cxx)
 $(call gen_rule_basic,    compile_c_y,          $(loc_build_tree)/%.tab.cc,        $(loc_src_tree)/%.y,                    )
-$(call gen_rule_basic,    ,                     $(loc_build_tree)/%.tab.h,         $(loc_build_tree)/%.tab.cc,             )
+$(call gen_rule_basic,    nop,                  $(loc_build_tree)/%.tab.h,         $(loc_build_tree)/%.tab.cc,             )
 endif
 
 $(call gen_rule_basic,    compile_c_y,          $(loc_build_tree)/%.tab.c,         $(loc_src_tree)/%.y,                    )
-$(call gen_rule_basic,    ,                     $(loc_build_tree)/%.tab.h,         $(loc_build_tree)/%.tab.c,              )
+$(call gen_rule_basic,    nop,                  $(loc_build_tree)/%.tab.h,         $(loc_build_tree)/%.tab.c,              )
 
 $(call gen_rule_basic,    compile_o_cxx,        $(loc_build_tree)/%.tab.host.o,    $(loc_build_tree)/%.tab.cc,     host    )
 $(call gen_rule_basic,    compile_o_c,          $(loc_build_tree)/%.tab.host.o,    $(loc_build_tree)/%.tab.c,      host    )
@@ -325,11 +325,11 @@ $(call gen_rule_basic,    compile_o_c,          $(loc_build_tree)/%.o,          
 # lex
 ifeq ($(project_type),cxx)
 $(call gen_rule_basic,    compile_c_l,          $(loc_build_tree)/%.lex.cc,        $(loc_src_tree)/%.l,                    )
-$(call gen_rule_basic,    ,                     $(loc_build_tree)/%.lex.h,         $(loc_build_tree)/%.lex.cc,             )
+$(call gen_rule_basic,    nop,                  $(loc_build_tree)/%.lex.h,         $(loc_build_tree)/%.lex.cc,             )
 endif
 
 $(call gen_rule_basic,    compile_c_l,          $(loc_build_tree)/%.lex.c,         $(loc_src_tree)/%.l,                    )
-$(call gen_rule_basic,    ,                     $(loc_build_tree)/%.lex.h,         $(loc_build_tree)/%.lex.c,              )
+$(call gen_rule_basic,    nop,                  $(loc_build_tree)/%.lex.h,         $(loc_build_tree)/%.lex.c,              )
 
 $(call gen_rule_basic,    compile_o_cxx,        $(loc_build_tree)/%.lex.host.o,    $(loc_build_tree)/%.lex.cc,     host    )
 $(call gen_rule_basic,    compile_o_c,          $(loc_build_tree)/%.lex.host.o,    $(loc_build_tree)/%.lex.c,      host    )
@@ -343,11 +343,11 @@ $(call gen_rule_basic,    compile_o_c,          $(loc_build_tree)/%.o,          
 # gperf
 ifeq ($(project_type),cxx)
 $(call gen_rule_basic,    compile_cxx_gperf,    $(loc_build_tree)/%.hash.cc,       $(loc_src_tree)/%.gperf,                )
-$(call gen_rule_basic,    ,                     $(loc_build_tree)/%.hash.h,        $(loc_build_tree)/%.hash.cc,            )
+$(call gen_rule_basic,    nop,                  $(loc_build_tree)/%.hash.h,        $(loc_build_tree)/%.hash.cc,            )
 endif
 
 $(call gen_rule_basic,    compile_c_gperf,      $(loc_build_tree)/%.hash.c,        $(loc_src_tree)/%.gperf,                )
-$(call gen_rule_basic,    ,                     $(loc_build_tree)/%.hash.h,        $(loc_build_tree)/%.hash.c,             )
+$(call gen_rule_basic,    nop,                  $(loc_build_tree)/%.hash.h,        $(loc_build_tree)/%.hash.c,             )
 
 $(call gen_rule_basic,    compile_o_cxx,        $(loc_build_tree)/%.hash.host.o,   $(loc_build_tree)/%.hash.cc,    host    )
 $(call gen_rule_basic,    compile_o_c,          $(loc_build_tree)/%.hash.host.o,   $(loc_build_tree)/%.hash.c,     host    )

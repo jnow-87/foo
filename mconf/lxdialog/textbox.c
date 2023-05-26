@@ -56,7 +56,7 @@ static void refresh_text_box(WINDOW *dialog, WINDOW *box, int boxh, int boxw,
  * keys is a null-terminated array
  * update_text() may not add or remove any '\n' or '\0' in tbuf
  */
-int dialog_textbox(const char *title, char *tbuf, int initial_height,
+int dialog_textbox(char const *title, char *tbuf, int initial_height,
 		   int initial_width, int *keys, int *_vscroll, int *_hscroll,
 		   update_text_fn update_text, void *data)
 {
@@ -132,7 +132,7 @@ do_resize:
 
 	print_title(dialog, title, width);
 
-	print_button(dialog, gettext(" Exit "), height - 2, width / 2 - 4, TRUE);
+	print_button(dialog, " Exit ", height - 2, width / 2 - 4, TRUE);
 	wnoutrefresh(dialog);
 	getyx(dialog, cur_y, cur_x);	/* Save cursor position */
 
@@ -261,7 +261,7 @@ do_resize:
 	delwin(box);
 	delwin(dialog);
 	if (_vscroll) {
-		const char *s;
+		char const *s;
 
 		s = buf;
 		*_vscroll = 0;
