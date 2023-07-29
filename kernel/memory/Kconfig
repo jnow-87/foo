@@ -9,6 +9,7 @@
 
 config STACK_SIZE
 	int "thread stack size"
+	default 1024
 
 config KMALLOC_ALIGN
 	int "alignment to be used for kernel level memory allocators (has to be a power of 2)"
