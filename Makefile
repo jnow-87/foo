@@ -236,7 +236,7 @@ endif
 all: check_config check_memlayout $(lib) $(hostlib) $(bin) $(hostbin)
 	$(call cmd_run_script, \
 		@[ -e $(recent) ] && rm $(recent); \
-		ln -s $(build_tree) $(recent); \
+		ln -sf $(build_tree) $(recent); \
 		[ ! $$? -eq 0 ] && echo $(call fg,red,"error")": unable to create symbolic link" $(call fg,violet,"recent"); \
 		$(sysroot_create) $(sysroot) $(patsubst <%>,%,$(CONFIG_ARCH_HEADER)) $(kernel) $(libbrick) \
 	)
