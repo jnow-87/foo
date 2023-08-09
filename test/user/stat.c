@@ -26,7 +26,7 @@ TEST(stat){
 	/* prepare test file */
 	unlink("dummy");
 
-	r += TEST_PTR_NEQ(fp = fopen("dummy", "w"), 0x0);
+	ASSERT_PTR_NEQ(fp = fopen("dummy", "w"), 0x0);
 	r += TEST_INT_EQ(fwrite("foo", 3, fp), 3);
 	r += TEST_INT_EQ(fclose(fp), 0);
 
