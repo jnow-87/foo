@@ -34,7 +34,7 @@ static int exec(int argc, char **argv){
 	dir = open(path, O_RDONLY);
 
 	if(dir < 0)
-		return -ERROR("opening %s", argv[1]);
+		return -ERROR("opening %s", path);
 
 	while(1){
 		if(read(dir, &entry, sizeof(dir_ent_t)) <= 0){
