@@ -44,9 +44,18 @@ echo "generate ${lib_tgt}"
 
 lib_name=$(basename ${lib_tgt})
 
-lto_path=$(${compiler} -v 2>&1 | grep "COLLECT_LTO_WRAPPER" | cut -d "=" -f 2)
-lib_path=$(dirname ${lto_path})
-lib=$(find ${lib_path} -name ${lib_name})
+compiler_dirs=$(${compiler} -print-search-dirs 2>&1 \
+	| grep "programs\|libraries" \
+	| cut -d "=" -f 2 \
+	| sed -e 's/:/ /g'
+)
+
+lib=""
+
+for dir in ${compiler_dirs}
+do
+	[ "${lib}" == "" -a -d ${dir} ] && lib=$(find ${dir} -name ${lib_name})
+done
 
 [ "${lib}" != "" ] || { echo "unable to locate ${lib_name}"; exit 1; }
 
