@@ -9,15 +9,20 @@
 
 ram = {
 	baseaddr = 0x00400000;
-	size = 44044288;
+	size = 62914560;
 
 	text = {
 		baseaddr = 0x00400000;
 		size = 20971520;
 	};
 
+	kernel-data = {
+		baseaddr = 0x1800000;
+		size = 20971520;
+	};
+
 	app-data = {
-		baseaddr = 0x1a01000;
+		baseaddr = 0x2c00000;
 		size = 20971520;
 	};
 };

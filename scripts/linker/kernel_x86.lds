@@ -37,12 +37,12 @@ SECTIONS {
 
 		. = ALIGN(16);
 		INCLUDE kernel_test.lds
-	} > text
+	} > kernel_data
 
 	.rodata : {
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
 		*(.rodata1)
-	} > text
+	} > kernel_data
 
 	/* bss */
 	.bss : {
@@ -55,7 +55,7 @@ SECTIONS {
 		*(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
 		*(.scommon)
 		*(COMMON)
-	} > text
+	} > kernel_data
 
 	/* discard sections */
 	/DISCARD/ : {
