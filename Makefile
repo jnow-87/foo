@@ -79,7 +79,7 @@ cflags := \
 	$(warnflags) \
 	-nostdinc \
 	-fno-builtin \
-	-fshort-enums \
+	-fshort-enums
 
 cxxflags := \
 	$(CXXFLAGS) \
@@ -88,7 +88,7 @@ cxxflags := \
 	$(warnflags) \
 	-nostdinc \
 	-fno-builtin \
-	-fshort-enums \
+	-fshort-enums
 
 cppflags := \
 	$(CPPFLAGS) \
@@ -131,7 +131,7 @@ hostcflags := \
 	$(hostcflags) \
 	$(warnflags) \
 	-O2 \
-	-flto
+	-flto=auto
 
 hostcxxflags := \
 	$(HOSTCXXFLAGS) \
@@ -139,7 +139,7 @@ hostcxxflags := \
 	$(hostcxxflags) \
 	$(warnflags) \
 	-O2 \
-	-flto
+	-flto=auto
 
 hostcppflags := \
 	$(HOSTCPPFLAGS) \

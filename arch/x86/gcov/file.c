@@ -33,6 +33,8 @@ FILE *gcov_fopen(char const *path, char const *mode);
 FILE *gc_fo(char const *path, char const *mode) __alias(gcov_fopen);
 int gcov_fclose(FILE *stream);
 int gc_fcl(FILE *stream) __alias(gcov_fclose);
+int gcov_feof(FILE *stream);
+int gc_e(FILE *stream) __alias(gcov_feof);
 
 size_t gcov_fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 size_t gc_fr(void *ptr, size_t size, size_t nmemb, FILE *stream) __alias(gcov_fread);
@@ -103,6 +105,10 @@ int gcov_fclose(FILE *stream){
 	gcov_fp_inuse = false;
 
 	return gcov_close(stream->fileno);
+}
+
+int gcov_feof(FILE *stream){
+	return 0;
 }
 
 size_t gcov_fread(void *ptr, size_t size, size_t nmemb, FILE *stream){
