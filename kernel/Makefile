@@ -9,7 +9,7 @@
 
 bin-y := kimg.elf
 
-kimg-y := init.o kernel.o driver.o panic.o interrupt.o task.o sched/ fs/ memory/ binloader/ arch/ driver/ sys/ scripts/linker/kernel_$(CONFIG_ARCH).lds
+kimg-y := init.o kernel.o driver.o panic.o interrupt.o task.o sched/ fs/ memory/ binloader/ arch/ driver/ sys/
 
 kimg-$(CONFIG_KERNEL_SYSCALL) += syscall.o
 kimg-$(CONFIG_KERNEL_TIMER) += timer/
@@ -24,6 +24,11 @@ kimg-$(CONFIG_KERNEL_KTASK_QUEUE) += taskqueue.o
 kimg-$(CONFIG_KERNEL_HEARTBEAT) += heartbeat.o
 kimg-$(CONFIG_SC_SIGNAL) += usignal.o
 
+linker_script := $(build_tree)/scripts/linker/kernel.i.lds
+
+# ensure a rebuild if non-object-file dependencies are updated
+kimg-y += $(linker_script)
+
 
 ####
 # flags
@@ -34,7 +39,7 @@ kimg-cppflags-y += -DBUILD_KERNEL
 kimg-ldlibs-y := \
 	$(ldlibs-kernel) \
 	-Lscripts/linker \
-	-Tkernel_$(CONFIG_ARCH).lds \
+	-T$(linker_script) \
 	-lgcc
 
 ## debug messages

@@ -9,13 +9,14 @@
 
 bin-y := init.elf
 
-
 init-y := main.o shell/
 
-# ensure a rebuild if indirect dependencies are updated
+linker_script := $(build_tree)/scripts/linker/app_plugin.i.lds
+
+# ensure a rebuild if non-object-file dependencies are updated
 init-y += \
-	scripts/linker/app_$(CONFIG_ARCH).lds \
-	$(loc_src_tree)/lists.lds \
+	$(loc_src_tree)/plugin.lds \
+	$(linker_script) \
 	$(build_tree)/lib/libbrick.a
 
 
@@ -29,7 +30,7 @@ init-cppflags-y := \
 
 init-ldlibs-y += \
 	$(ldlibs-app) \
-	-T$(loc_src_tree)/lists.lds \
-	-Tapp_$(CONFIG_ARCH).lds \
+	-L$(loc_src_tree) \
+	-T$(linker_script) \
 	-lbrick \
 	-lgcc

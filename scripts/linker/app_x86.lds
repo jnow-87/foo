@@ -31,6 +31,11 @@ SECTIONS {
 
 		. = ALIGN(16);
 		INCLUDE libsys_init.lds
+
+#ifdef BUILD_USER_PLUGIN
+		. = ALIGN(16);
+		INCLUDE plugin.lds
+#endif
 	} > app_data
 
 	.rodata : {

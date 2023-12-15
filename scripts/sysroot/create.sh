@@ -50,10 +50,12 @@ copy "recent/config/"					"${sysroot_inc}"
 copy "include/sys/"						"${sysroot_inc}"
 copy "include/lib/"						"${sysroot_inc}"
 copy "include/arch/"					"${sysroot_inc}"
-copy "scripts/linker/"					"${sysroot_linker}"
 
-lds=$(find recent/arch -name \*.lds)
-[ "${lds}" != "" ] && copy "${lds}" "${sysroot_linker}/linker/"
+lds="$(find recent/arch -name \*.lds | grep -v 'kernel')"
+lds+=" $(find recent/scripts/linker -name \*.lds | grep -v 'kernel')"
+lds+=" $(find scripts/linker -name \*.lds | grep -v '\(kernel_\|app_\)')"
+
+copy "${lds}" "${sysroot_linker}/linker/"
 
 # replace BUILD_ARCH_HEADER macro by actual architecture header
 diff "include/arch/arch.h" "${sysroot_inc}/arch/arch.h" > /dev/null
