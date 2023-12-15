@@ -62,6 +62,9 @@ int cmd_exec(int argc, char **argv){
 
 
 	/* get command */
+	if(cmd_lst == 0x0)
+		return ERROR("no builtin commands");
+
 	cmd = list_find_str(cmd_lst, name, argv[0]);
 
 	if(cmd == 0x0)
