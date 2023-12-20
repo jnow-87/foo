@@ -20,7 +20,7 @@ uart0 = {
 	// cfg (uart_cfg_t)
 	int<32> = [ 115200 ];	// baudrate
 	int<8> = [
-		1,					// stop bits (1)
+		0,					// stop bits (1)
 		0,					// parity (UART_PARITY_NONE)
 		3,					// csize (UART_CS_8)
 	];
