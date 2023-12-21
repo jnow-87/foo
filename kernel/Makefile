@@ -24,10 +24,12 @@ kimg-$(CONFIG_KERNEL_KTASK_QUEUE) += taskqueue.o
 kimg-$(CONFIG_KERNEL_HEARTBEAT) += heartbeat.o
 kimg-$(CONFIG_SC_SIGNAL) += usignal.o
 
-linker_script := $(build_tree)/scripts/linker/kernel.i.lds
+linker_scripts := \
+	$(build_tree)/scripts/linker/memory.lds \
+	$(build_tree)/scripts/linker/kernel.i.lds
 
 # ensure a rebuild if non-object-file dependencies are updated
-kimg-y += $(linker_script)
+kimg-y += $(linker_scripts)
 
 
 ####
@@ -39,7 +41,7 @@ kimg-cppflags-y += -DBUILD_KERNEL
 kimg-ldlibs-y := \
 	$(ldlibs-kernel) \
 	-Lscripts/linker \
-	-T$(linker_script) \
+	$(addprefix -T,$(linker_scripts)) \
 	-lgcc
 
 ## debug messages

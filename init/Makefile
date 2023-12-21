@@ -11,12 +11,14 @@ bin-y := init.elf
 
 init-y := main.o shell/
 
-linker_script := $(build_tree)/scripts/linker/app_plugin.i.lds
+linker_scripts := \
+	$(build_tree)/scripts/linker/memory.lds \
+	$(build_tree)/scripts/linker/app_plugin.i.lds
 
 # ensure a rebuild if non-object-file dependencies are updated
 init-y += \
 	$(loc_src_tree)/plugin.lds \
-	$(linker_script) \
+	$(linker_scripts) \
 	$(build_tree)/lib/libbrick.a
 
 
@@ -31,6 +33,6 @@ init-cppflags-y := \
 init-ldlibs-y += \
 	$(ldlibs-app) \
 	-L$(loc_src_tree) \
-	-T$(linker_script) \
+	$(addprefix -T,$(linker_scripts)) \
 	-lbrick \
 	-lgcc

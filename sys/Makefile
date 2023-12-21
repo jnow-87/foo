@@ -106,7 +106,7 @@ devtree_make := $(loc_build_tree)/devicetree.make
 devtree_header := $(loc_build_tree)/devicetree.h
 devtree_src := $(loc_build_tree)/devicetree.c
 
-prepare_deps: $(devtree_header) $(devtree_make)
+prepare_deps: $(devtree_header) $(devtree_make) $(devtree_src)
 
 # include devicetree.make if it already exists
 #
@@ -161,25 +161,3 @@ $(devtree_header): $(devtree_preproc) $(dtc)
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,          $(devtree_src),)
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o,     $(devtree_src), host)
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.libbrick.o, $(devtree_src),)
-
-
-####
-## device tree memory linker script
-####
-
-lds_memory := $(build_tree)/scripts/linker/gen_lds_memory
-lds_memory_script := $(loc_build_tree)/memory.lds
-
-$(lds_memory_script): $(lds_memory)
-	$(call compile_file,$(lds_memory) $(lds_memory_script))
-
-prepare_deps: $(lds_memory_script)
-
-
-## kernel flags
-ldlibs-kernel += \
-	-T$(lds_memory_script)
-
-## init application flags
-ldlibs-app += \
-	-T$(lds_memory_script)
