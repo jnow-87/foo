@@ -11,55 +11,56 @@
 property little-endian
 
 /* general purpose register */
-range 0x1 31{	// range cannot start at 0x0, since gdb doesn't
+range 0x800000 32{	// range cannot start at 0x0, since gdb doesn't
 				// allow to read memory from address 0x0
 
 	/* General Purpose Working Registers */
 	section "General Purpose Working Registes"{
 		// unable to read R0, since it is located at address 0x0
 		// which cannot be read by gdb
-		register "R1"		""		0	1{}
-		register "R2"		""		1	1{}
-		register "R3"		""		2	1{}
-		register "R4"		""		3	1{}
-		register "R5"		""		4	1{}
-		register "R6"		""		5	1{}
-		register "R7"		""		6	1{}
-		register "R8"		""		7	1{}
-		register "R9"		""		8	1{}
-		register "R10"		""		9	1{}
-		register "R11"		""		10	1{}
-		register "R12"		""		11	1{}
-		register "R13"		""		12	1{}
-		register "R14"		""		13	1{}
-		register "R15"		""		14	1{}
-		register "R16"		""		15	1{}
-		register "R17"		""		16	1{}
-		register "R18"		""		17	1{}
-		register "R19"		""		18	1{}
-		register "R20"		""		19	1{}
-		register "R21"		""		20	1{}
-		register "R22"		""		21	1{}
-		register "R23"		""		22	1{}
-		register "R24"		""		23	1{}
-		register "R25"		""		24	1{}
-		register "R26"		""		25	1{}
-		register "R27"		""		26	1{}
-		register "R28"		""		27	1{}
-		register "R29"		""		28	1{}
-		register "R30"		""		29	1{}
-		register "R31"		""		30	1{}
+		register "R0"		""		0	1{}
+		register "R1"		""		1	1{}
+		register "R2"		""		2	1{}
+		register "R3"		""		3	1{}
+		register "R4"		""		4	1{}
+		register "R5"		""		5	1{}
+		register "R6"		""		6	1{}
+		register "R7"		""		7	1{}
+		register "R8"		""		8	1{}
+		register "R9"		""		9	1{}
+		register "R10"		""		10	1{}
+		register "R11"		""		11	1{}
+		register "R12"		""		12	1{}
+		register "R13"		""		13	1{}
+		register "R14"		""		14	1{}
+		register "R15"		""		15	1{}
+		register "R16"		""		16	1{}
+		register "R17"		""		17	1{}
+		register "R18"		""		18	1{}
+		register "R19"		""		19	1{}
+		register "R20"		""		20	1{}
+		register "R21"		""		21	1{}
+		register "R22"		""		22	1{}
+		register "R23"		""		23	1{}
+		register "R24"		""		24	1{}
+		register "R25"		""		25	1{}
+		register "R26"		""		26	1{}
+		register "R27"		""		27	1{}
+		register "R28"		""		28	1{}
+		register "R29"		""		29	1{}
+		register "R30"		""		30	1{}
+		register "R31"		""		31	1{}
 
 		emptyline
 
-		register "X"		""		25	2{}
-		register "Y"		""		27	2{}
-		register "Z"		""		29	2{}
+		register "X"		""		26	2{}
+		register "Y"		""		28	2{}
+		register "Z"		""		30	2{}
 	}
 }
 
 /* peripheral registers */
-range 0x20 175{
+range 0x800020 175{
 	/* MCU Control */
 	section "MCU General Control and Status"{
 		heading "MCU Control and Status"
