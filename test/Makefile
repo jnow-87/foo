@@ -7,9 +7,9 @@
 
 
 
-bin-$(if $(filter-out avr,$(CONFIG_ARCH)),y,) += \
-	itest.elf \
-	uttest.elf
+ifeq ($(CONFIG_ARCH),x86)
+  bin-y += itest.elf uttest.elf
+endif
 
 hostbin-y := utest
 

@@ -20,7 +20,6 @@
 
 /* local/static prototypes */
 static void export_memory_node(devtree_memory_t const *node, FILE *file);
-static int overlap(char const *name0, size_t base0, size_t size0, char const *name1, size_t base1, size_t size1);
 
 
 /* global functions */
@@ -77,32 +76,4 @@ static void export_memory_node(devtree_memory_t const *node, FILE *file){
 		fprintf(file, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", strcident(child->name), (unsigned long int)child->base, child->size);
 		export_memory_node(child, file);
 	}
-}
-
-/**
- * \brief	check if two sections have some overlap
- * 			sections are defined by their base address and size
- *
- * \param	name0		name of first section
- * \param	base0		base address of the first section
- * \param	size0		size of the first section
- * \param	name0		name of second section
- * \param	base0		base address of the second section
- * \param	size0		size of the second section
- *
- * \return	0	no overlap detected
- * 			1	overlap detected
- */
-static int overlap(char const *name0, size_t base0, size_t size0, char const *name1, size_t base1, size_t size1){
-	if(base1 >= base0 + size0 || base0 >= base1 + size1)
-		return 0;
-
-	printf("\terror: %s and %s regions overlap, check config\n\n", name0, name1);
-
-	printf(BG_WHITE FG_BLACK "         section         base          end        size               " RESET_ATTR "\n");
-	printf(BOLD "%20.20s" RESET_ATTR ": 0x%8.8lx - 0x%8.8lx %8lu\n", name0, base0, base0 + size0 - 1, size0);
-	printf(BOLD "%20.20s" RESET_ATTR ": 0x%8.8lx - 0x%8.8lx %8lu\n", name1, base1, base1 + size1 - 1, size1);
-	printf("\n");
-
-	return -1;
 }

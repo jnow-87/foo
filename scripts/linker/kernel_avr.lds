@@ -7,9 +7,8 @@
 
 
 
-/** MEMORY sections are defined in a separate script depending on the
- *  configured target MCU, cf. scripts/linker/mem_*
- */
+/* MEMORY sections are defined in a script generated based on the device tree */
+
 SECTIONS {
 	/* code */
 	.text : {

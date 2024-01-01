@@ -17,8 +17,8 @@
 
 
 /* macros */
-#define thread_ctx_init(ctx, thread, entry, arg) \
-	(arch_kernel_call(thread_ctx_init, 0x0)(ctx, thread, entry, arg))
+#define thread_ctx_init(ctx, this_t, entry, arg) \
+	(arch_kernel_call(thread_ctx_init, 0x0)(ctx, this_t, entry, arg))
 
 
 #endif // ARCH_THREAD_H

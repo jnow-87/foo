@@ -76,7 +76,7 @@ static int init(void){
 	return int_register(DEVTREE_ARCH_TIMER_INT, timer_hdlr, 0x0);
 }
 
-platform_init(0, init);
+kernel_init(0, init);
 
 static void timer_hdlr(int_num_t num, void *payload){
 	ktimer_t *t;
