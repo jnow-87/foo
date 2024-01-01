@@ -13,26 +13,26 @@
 . = ALIGN(DEVTREE_ARCH_ADDR_WIDTH / 8);
 
 /* init calls */
-__core_init0_base = .;
-*(.core_init_stage0)
+__platform_init0_base_cores_all = .;
+*(.platform_init_stage0_cores_all)
 
-__platform_init0_base = .;
-*(.platform_init_stage0)
+__platform_init0_base_cores_first = .;
+*(.platform_init_stage0_cores_first)
 
-__platform_init1_base = .;
-*(.platform_init_stage1)
+__platform_init1_base_cores_all = .;
+*(.platform_init_stage1_cores_all)
+
+__platform_init1_base_cores_first = .;
+*(.platform_init_stage1_cores_first)
 
 __kernel_init0_base = .;
-*(.kernel_init_stage0)
+*(.kernel_init_stage0*)
 
 __kernel_init1_base = .;
-*(.kernel_init_stage1)
+*(.kernel_init_stage1*)
 
 __kernel_init2_base = .;
-*(.kernel_init_stage2)
-
-__driver_init0_base = .;
-*(.driver_init_stage0)
+*(.kernel_init_stage2*)
 
 __init_end = .;
 

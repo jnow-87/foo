@@ -35,4 +35,4 @@ static int init(void){
 	return 0;
 }
 
-platform_init(0, init);
+platform_init(1, first, init);

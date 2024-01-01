@@ -17,47 +17,41 @@
 
 
 /* local/static prototypes */
-static void exec_init_call(init_call_t *base, init_call_t *end);
+static void exec_init_call(init_call_t *base, init_call_t *end, bool singular);
+static void bootprompt(void);
 
 
 /* external variables */
-extern init_call_t __core_init0_base[],
-				   __platform_init0_base[],
-				   __platform_init1_base[],
+extern init_call_t __platform_init0_base_cores_all[],
+				   __platform_init0_base_cores_first[],
+				   __platform_init1_base_cores_all[],
+				   __platform_init1_base_cores_first[],
 				   __kernel_init0_base[],
-				   __kernel_init1_base[],
-				   __kernel_init2_base[],
-				   __driver_init0_base[],
 				   __init_end[];
 
 
 /* global functions */
 int kinit(void){
-	/* core (stage: 0) */
-	exec_init_call(__core_init0_base, __platform_init0_base);
+	// platform (stage: 0, 1)
+	exec_init_call(__platform_init0_base_cores_all, __platform_init0_base_cores_first, false);
+	exec_init_call(__platform_init0_base_cores_first, __platform_init1_base_cores_all, true);
+	exec_init_call(__platform_init1_base_cores_all, __platform_init1_base_cores_first, false);
+	exec_init_call(__platform_init1_base_cores_first, __kernel_init0_base, true);
 
-	if(PIR == 0){
-		/* platform (stage: 0, 1) */
-		exec_init_call(__platform_init0_base, __kernel_init0_base);
+	bootprompt();
 
-		kprintf(KMSG_DEBUG | KMSG_INFO | KMSG_STAT,
-			"\n"
-			"\t\t" FG_BLUE "::: brickos :::" RESET_ATTR "\n"
-			VERSION "\n"
-		);
-
-		/* kernel (stage: 0, 1, 2)
-		 * driver (stage: 0)
-		 */
-		exec_init_call(__kernel_init0_base, __init_end);
-	}
+	// kernel (stage: 0, 1, 2)
+	exec_init_call(__kernel_init0_base, __init_end, true);
 
 	return -errno;
 }
 
 
 /* local functions */
-static void exec_init_call(init_call_t *base, init_call_t *end){
+static void exec_init_call(init_call_t *base, init_call_t *end, bool singular){
+	if(singular && PIR != 0)
+		return;
+
 	for(init_call_t *p=base; p<end; p++){
 		if(errno != 0)
 			return;
@@ -67,4 +61,16 @@ static void exec_init_call(init_call_t *base, init_call_t *end){
 		if(p->call() != 0)
 			FATAL("%s() failed \"%s\"\n", p->name, strerror(errno));
 	}
+}
+
+static void bootprompt(void){
+	if(PIR == 0){
+		kprintf(KMSG_ANY,
+			"\n"
+			"\t\t" FG_BLUE "::: brickos :::" RESET_ATTR "\n"
+			VERSION "\n"
+		);
+	}
+	else
+		kprintf(KMSG_ANY, "starting core %u\n", PIR);
 }

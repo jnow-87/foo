@@ -42,7 +42,7 @@ static int init(void){
 	return 0;
 }
 
-core_init(init);
+platform_init(0, first, init);
 
 static void cont_hdlr(int sig){
 	LNX_DEBUG("recv continue signal\n");

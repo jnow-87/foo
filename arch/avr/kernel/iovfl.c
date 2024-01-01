@@ -24,7 +24,7 @@ static int init(void){
 	return int_register(INT_IOVFL, iovfl_hdlr, 0x0);
 }
 
-platform_init(0, init);
+platform_init(1, first, init);
 
 static void iovfl_hdlr(int_num_t num, void *payload){
 	kpanic("instruction memory overflow\n");

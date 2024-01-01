@@ -82,7 +82,7 @@ static int init(void){
 	return 0;
 }
 
-platform_init(0, init);
+platform_init(1, first, init);
 
 static void int_hdlr(int sig){
 	x86_hw_op_t op;
