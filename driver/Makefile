@@ -19,5 +19,5 @@ obj-$(CONFIG_DRIVER_MCP23017) += mcp23017/
 obj-$(CONFIG_DRIVER_SSD1306) += ssd1306/
 obj-$(CONFIG_DRIVER_X11) += x11/
 
-obj-$(CONFIG_AVR) += avr/
-obj-$(CONFIG_X86) += x86/
+obj-$(call exists,$(loc_src_tree)/$(CONFIG_ARCH)) += $(CONFIG_ARCH)/
+obj-$(call exists,$(loc_src_tree)/$(CONFIG_PROCESSOR)) += $(CONFIG_PROCESSOR)/
