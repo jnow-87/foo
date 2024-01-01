@@ -33,14 +33,14 @@ void kernel(void){
 	if(kinit() != 0)
 		kpanic("kernel init error \"%s\"\n", strerror(errno));
 
-	if(driver_load() != 0)
+	if(PIR == 0 && driver_load() != 0)
 		kpanic("driver init error \"%s\"\n", strerror(errno));
 
-	/* kernel statistics */
-	kstat();
-
-	/* kernel test */
-	ktest();
+	/* kernel statistics and health check*/
+	if(PIR == 0){
+		kstat();
+		ktest();
+	}
 
 	/* enable interrupts */
 	int_enable(INT_ALL);
