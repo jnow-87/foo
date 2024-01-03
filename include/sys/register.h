@@ -15,8 +15,7 @@
 
 
 /* macros */
-#define mreg_bits(reg_addr, idx, mask) \
-	bits(mreg_r(reg_addr), idx, mask)
+#define MREG(addr)	(*((register_t volatile*)(addr)))
 
 #define bits(val, idx, mask)({ \
 	typeof(val) _val = val; \

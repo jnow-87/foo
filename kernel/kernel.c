@@ -56,17 +56,27 @@ void kernel(void){
 		ktest();
 	}
 
-	/* enable interrupts */
-	// TODO without the barrier core0 panics and the output
-	// doesn't match what is supposed to happen, e.g. core1
-	// seems to do driver initialisation
-//	INFO("smp barrier\n");
-//	atomic_inc(&ncores, 1);
-//
-//	while(ncores != DEVTREE_ARCH_NCORES);
-//
-//	INFO("smp barrier passed\n");
+#ifdef CONFIG_ARM
+	INFO(
+		"core %u info\n"
+		" CONTROL: %#8.8x\n"
+		" PRIMASK: %#8.8x\n"
+		" MSP: %#8.8x\n"
+		" PSP: %#8.8x\n"
+		" VTOR: %#8.8x\n"
+		" int en: %d\n"
+		, PIR
+		, mrs(control)
+		, mrs(primask)
+		, mrs(msp)
+		, mrs(psp)
+		, VTOR
+		, av6m_int_enabled()
+	);
+#endif // CONFIG_ARM
 
+
+	/* enable interrupts */
 	int_enable(true);
 
 	/* kernel thread */

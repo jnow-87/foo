@@ -31,7 +31,7 @@
 
 
 /* macros */
-#define AVR_SYSTEM_CLOCK_HZ	(((avr_platform_cfg_t*)devtree_arch_payload("avr,platform"))->system_clock_hz)
+#define AVR_SYSTEM_CLOCK_HZ	(((avr_platform_cfg_t const*)devtree_arch_payload("avr,platform"))->system_clock_hz)
 #define AVR_CPU_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
 #define AVR_IO_CLOCK_HZ		AVR_SYSTEM_CLOCK_HZ
 #define AVR_ADC_CLOCK_HZ	AVR_SYSTEM_CLOCK_HZ
