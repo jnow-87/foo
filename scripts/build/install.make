@@ -21,7 +21,7 @@ define install
 	$(sym_link) -rf $1 $(tgt)
 endef
 
-# uninstall the given file to $(PREFIX)
+# uninstall the given file
 #
 #	$(call uninstall,<file>)
 define uninstall
