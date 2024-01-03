@@ -60,6 +60,9 @@ typedef struct{
 
 	/* threading */
 	void (*thread_ctx_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg);
+
+	/* syscall */
+	sc_t * (*sc_arg)(struct thread_t *this_t);
 } arch_ops_kernel_t;
 # endif // BUILD_KERNEL
 

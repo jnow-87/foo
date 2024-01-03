@@ -101,6 +101,9 @@ static arch_ops_kernel_t const arch_ops_kernel = {
 
 	/* threading */
 	.thread_ctx_init = avr_thread_ctx_init,
+
+	/* syscall */
+	.sc_arg = avr_sc_arg,
 };
 #  endif // BUILD_KERNEL
 

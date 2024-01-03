@@ -15,9 +15,13 @@
 #include <sys/syscall.h>
 
 
+/* incomplete types */
+struct thread_t;
+
+
 /* prototypes */
 int avr_sc(sc_num_t num, void *param, size_t psize);
-void avr_sc_hdlr(void);
+sc_t *avr_sc_arg(struct thread_t *this_t);
 
 
 #endif // AVR_SYSCALL_H

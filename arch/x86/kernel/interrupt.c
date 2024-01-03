@@ -11,6 +11,7 @@
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
 #include <arch/x86/sched.h>
+#include <arch/x86/syscall.h>
 #include <kernel/init.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
@@ -127,6 +128,9 @@ static void int_hdlr(int sig){
 
 	/* handle interrupt */
 	int_khdlr(op.int_ctrl.num);
+
+	if(op.int_ctrl.num == INT_SYSCALL)
+		x86_sc_epilogue(this_t);
 
 	if(prevent_sched_transition && this_t->parent != sched_running()->parent)
 		x86_sched_force(this_t);

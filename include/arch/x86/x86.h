@@ -48,6 +48,9 @@ static arch_ops_kernel_t const arch_ops_kernel = {
 
 	/* threading */
 	.thread_ctx_init = x86_thread_ctx_init,
+
+	/* syscall */
+	.sc_arg = x86_sc_arg,
 };
 # endif // BUILD_KERNEL
 

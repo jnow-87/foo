@@ -11,6 +11,8 @@
 #define X86_THREAD_H
 
 
+#include <arch/x86/hardware.h>
+#include <sys/syscall.h>
 #include <sys/thread.h>
 
 
@@ -27,6 +29,9 @@ typedef struct thread_ctx_t{
 	int type;	/**< cf. thread_ctx_type_t */
 	thread_entry_t entry;
 	void *arg;
+
+	sc_t sc_arg;
+	x86_hw_op_t sc_op;
 } thread_ctx_t;
 
 
