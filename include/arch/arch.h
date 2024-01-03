@@ -15,6 +15,7 @@
 # ifdef BUILD_KERNEL
 #  include <kernel/interrupt.h>
 #  include <kernel/memory.h>
+#  include <kernel/ipi.h>
 # endif // BUILD_KERNEL
 
 # include <sys/syscall.h>
@@ -56,7 +57,8 @@ typedef struct{
 	int_type_t (*int_enable)(int_type_t mask);
 	int_type_t (*int_enabled)(void);
 
-	void (*int_ipi)(unsigned int core, bool bcast);
+	int (*ipi_int)(unsigned int core, bool bcast, ipi_msg_t *msg);
+	ipi_msg_t * (*ipi_arg)(void);
 
 	/* threading */
 	void (*thread_ctx_init)(struct thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg);

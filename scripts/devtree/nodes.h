@@ -108,7 +108,8 @@ typedef struct arch_node_t{
 		   num_vints;
 
 	uint8_t timer_int,
-			syscall_int;
+			syscall_int,
+			ipi_int;
 
 	size_t timer_cycle_time_us;
 } arch_node_t;

@@ -16,10 +16,11 @@
 
 
 /* macros */
-#define int_enable(mask)		(arch_kernel_call(int_enable, INT_NONE)(mask))
-#define int_enabled()			(arch_kernel_call(int_enabled, INT_NONE)())
+#define int_enable(mask)			(arch_kernel_call(int_enable, INT_NONE)(mask))
+#define int_enabled()				(arch_kernel_call(int_enabled, INT_NONE)())
 
-#define int_ipi(core, bcast)	(arch_kernel_call(int_ipi, -E_NOIMP)(core, bcast))
+#define ipi_int(core, bcast, msg)	(arch_kernel_call(ipi_int, -E_NOIMP)(core, bcast, msg))
+#define ipi_arg()					(arch_kernel_call(ipi_arg, 0x0)())
 
 
 #endif // ARCH_INTERRUPT_H
