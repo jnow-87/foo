@@ -1,0 +1,1685 @@
+/**
+ * Copyright (C) 2023 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+/* properties */
+property little-endian
+
+/* private peripheral bus (ppb) */
+range 0xe000ed00 40{
+	section "M0+ Core"{
+		register "CPUID"	"CPUID"							0x00	4{
+			bits "IMPLEMENTER"	24	8
+			bits "VARIANT"		20	4
+			bits "ARCHITECTURE"	16	4
+			bits "PARTNO"		4	12
+			bits "REVISION"		0	4
+		}
+
+		register "ICSR"		"Interrupt Control and State"	0x04	4{
+			bits "NMIPENDSET"	31	1
+			bits "PENDSVSET"	28	1
+			bits "PENDSVCLR"	27	1
+			bits "PENDSTSET"	26	1
+			bits "PENDSTCLR"	25	1
+			bits "ISRPREEMPT"	23	1
+			bits "ISRPENDING"	22	1
+			bits "VECTPENDING"	12	9
+			bits "VECTACTIVE"	0	9
+		}
+
+		register "VTOR"		"Vector Table Offset Regiter"	0x08	4{
+			bits "TBLOFF"		8	24
+		}
+
+		register "AIRCR"	"Application Interrupt and Reset Control"	0x0c	4{
+			bits "VECTKEY"		16	16
+			bits "ENDIANESS"	15	1
+			bits "SYSRESETREQ"	2	1
+			bits "VECTCLRACT"	1	1
+		}
+
+		register "SCR"		"System Control"				0x10	4{
+			bits "SEVONPEND"	4	1
+			bits "SLEEPDEEP"	2	1
+			bits "SLEEPONEXIT"	1	1
+		}
+
+		register "CCR"		"Configuration and Control"		0x14	4{
+			bits "STKALIGN"		9	1
+			bits "UNALIGNTRP"	3	1
+		}
+
+		register "SHPR2"	"System Handler Priority 2"		0x1c	4{
+			bits "PRI11"	30	2
+		}
+
+		register "SHPR3"	"System Handler Priority 3"		0x20	4{
+			bits "PRI15"	30	2
+			bits "PRI14"	22	2
+		}
+
+		register "SHCSR"	"System Handler Control and State"		0x24	4{
+			bits "SVCALLPENDED"	15	1
+		}
+	}
+}
+
+range 0xe000e000 32{
+	section "SysTick"{
+		register "CSR"		"Control and Status"	0x10	4{
+			bits "COUNTFLAG"	16	1
+			bits "CLKSOURCE"	2	1
+			bits "TICKINT"		1	1
+			bits "ENABLE"		0	1
+		}
+		
+		register "RVR"		"Reload Value"			0x14	4{}
+		register "CVR"		"Current Value"			0x18	4{}
+		register "CALIB"	"Calibration Value"		0x1c	4{
+			bits "NOREF"	31	1
+			bits "SKEW"		30	1
+			bits "TENMS"	0	24
+		}
+	}
+}
+
+range 0xe000e100 800{
+	section "Nested Interrupt Controller"{
+		register "ISER"	"Interrupt Set-Enable"		0x000	4{}
+		register "ICER"	"Interrupt Clear-Enable"	0x080	4{}
+		register "ISPR"	"Interrupt Set-Pending"		0x100	4{}
+		register "ICPR"	"Interrupt Clear-Pending"	0x180	4{}
+
+		register "IPR0"	"Interrupt Priority 0"		0x300	4{
+			bits "IP3"	30	2
+			bits "IP2"	22	2
+			bits "IP1"	14	2
+			bits "IP0"	6	2
+		}
+
+		register "IPR1"	"Interrupt Priority 1"		0x304	4{
+			bits "IP7"	30	2
+			bits "IP6"	22	2
+			bits "IP5"	14	2
+			bits "IP4"	6	2
+		}
+
+		register "IPR2"	"Interrupt Priority 2"		0x308	4{
+			bits "IP11"	30	2
+			bits "IP10"	22	2
+			bits "IP9"	14	2
+			bits "IP8"	6	2
+		}
+
+		register "IPR3"	"Interrupt Priority 3"		0x30c	4{
+			bits "IP15"	30	2
+			bits "IP14"	22	2
+			bits "IP13"	14	2
+			bits "IP12"	6	2
+		}
+
+		register "IPR4"	"Interrupt Priority 4"		0x310	4{
+			bits "IP19"	30	2
+			bits "IP18"	22	2
+			bits "IP17"	14	2
+			bits "IP16"	6	2
+		}
+
+		register "IPR5"	"Interrupt Priority 5"		0x314	4{
+			bits "IP23"	30	2
+			bits "IP22"	22	2
+			bits "IP21"	14	2
+			bits "IP20"	6	2
+		}
+
+		register "IPR6"	"Interrupt Priority 6"		0x318	4{
+			bits "IP27"	30	2
+			bits "IP26"	22	2
+			bits "IP25"	14	2
+			bits "IP24"	6	2
+		}
+
+		register "IPR7"	"Interrupt Priority 7"		0x31c	4{
+			bits "IP31"	30	2
+			bits "IP30"	22	2
+			bits "IP29"	14	2
+			bits "IP28"	6	2
+		}
+	}
+}
+
+range 0xe000ed90 20{
+	section "Memory Protection Unit"{
+		register "TYPE"	"Type"						0x00	4{
+			bits "IREGION"	16	8
+			bits "DREGION"	8	8
+			bits "SEPARATE"	0	1
+		}
+
+		register "CTRL"	"Control"					0x04	4{
+			bits "PRIVDEFENA"	2	1
+			bits "HFNMIENA"		1	1
+			bits "ENABLE"		0	1
+		}
+
+		register "RNR"	"Region Number"				0x08	4{
+			bits "REGION"	0	4
+		}
+
+		register "RBAR"	"Region Base Address"		0x0c	4{
+			bits "ADDR"		8	24
+			bits "VALID"	4	1
+			bits "REGION"	0	4
+		}
+
+		register "RASR"	"Region Attribute and Size"	0x10	4{
+			bits "ATTRS"	16	16
+			bits "SRD"		8	8
+			bits "SIZE"		1	5
+			bits "ENABLE"	0	1
+		}
+	}
+}
+
+/* syscfg */
+range 0x40004000 28{
+	section "Syscfg"{
+		register "PROC_CONFIG"				"Processor Configuration"			0x08	4{
+			bits "PROC1_DAP_INST_ID"	28	4
+			bits "PROC0_DAP_INST_ID"	24	4
+			bits "PROC1_HALTED"			1	1
+			bits "PROC0_HALTED"			0	0
+		}
+
+		register "PROC0_NMI_MASK"			"Core 0 NMI Mask"					0x00	4{}
+		register "PROC1_NMI_MASK"			"Core 1 NMI Mask"					0x04	4{}
+
+		register "PROC_IN_SYNC_BYPASS"		"GPIO Input Synchronisation"		0x0c	4{}
+		register "PROC_IN_SYNC_BYPASS_HI"	"GPIO Input Synchronisation (hi)"	0x10	4{}
+
+		register "MEMPOWERDOWN"				"Memory Power Down Control"			0x18	4{
+			bits "ROM"			7	1
+			bits "USB"			6	1
+			bits "SRAM5"		5	1
+			bits "SRAM4"		4	1
+			bits "SRAM3"		3	1
+			bits "SRAM2"		2	1
+			bits "SRAM1"		1	1
+			bits "SRAM0"		0	1
+		}
+
+		register "DBGFORCE"					"SWD Control"						0x14	4{
+			bits "PROC1_ATTACH"	7	1
+			bits "PROC1_SWCLK"	6	1
+			bits "PROC1_SWDI"	5	1
+			bits "PROC1_SWDO"	4	1
+			bits "PROC0_ATTACH"	3	1
+			bits "PROC0_SWCLK"	2	1
+			bits "PROC0_SWDI"	1	1
+			bits "PROC0_SWDO"	0	1
+
+		}
+	}
+}
+
+/* reset controller */
+range 0x4000c000 12{
+	section "Reset Controller"{
+		register "RESET"		"Reset Control"		0x0	4{
+			bits "USBCTRL"		24	1
+			bits "UART1"		23	1
+			bits "UART0"		22	1
+			bits "TIMER"		21	1
+			bits "TBMAN"		20	1
+			bits "SYSINFO"		19	1
+			bits "SYSCFG"		18	1
+			bits "SPI1"			17	1
+			bits "SPI0"			16	1
+			bits "RTC"			15	1
+			bits "PWM"			14	1
+			bits "PLL_USB"		13	1
+			bits "PLL_SYS"		12	1
+			bits "PIO1"			11	1
+			bits "PIO0"			10	1
+			bits "PADS_QSPI"	9	1
+			bits "PADS_BANK0"	8	1
+			bits "JTAG"			7	1
+			bits "IO_QSPI"		6	1
+			bits "IO_BANK0"		5	1
+			bits "I2C1"			4	1
+			bits "I2C0"			3	1
+			bits "DMA"			2	1
+			bits "BUSCTRL"		1	1
+			bits "ADC"			0	1
+		}
+
+		register "WDSEL"		"Watchdog Select"	0x4	4{
+			bits "USBCTRL"		24	1
+			bits "UART1"		23	1
+			bits "UART0"		22	1
+			bits "TIMER"		21	1
+			bits "TBMAN"		20	1
+			bits "SYSINFO"		19	1
+			bits "SYSCFG"		18	1
+			bits "SPI1"			17	1
+			bits "SPI0"			16	1
+			bits "RTC"			15	1
+			bits "PWM"			14	1
+			bits "PLL_USB"		13	1
+			bits "PLL_SYS"		12	1
+			bits "PIO1"			11	1
+			bits "PIO0"			10	1
+			bits "PADS_QSPI"	9	1
+			bits "PADS_BANK0"	8	1
+			bits "JTAG"			7	1
+			bits "IO_QSPI"		6	1
+			bits "IO_BANK0"		5	1
+			bits "I2C1"			4	1
+			bits "I2C0"			3	1
+			bits "DMA"			2	1
+			bits "BUSCTRL"		1	1
+			bits "ADC"			0	1
+		}
+
+		register "RESET_DONE"	"Reset Done"		0x8	4{
+			bits "USBCTRL"		24	1
+			bits "UART1"		23	1
+			bits "UART0"		22	1
+			bits "TIMER"		21	1
+			bits "TBMAN"		20	1
+			bits "SYSINFO"		19	1
+			bits "SYSCFG"		18	1
+			bits "SPI1"			17	1
+			bits "SPI0"			16	1
+			bits "RTC"			15	1
+			bits "PWM"			14	1
+			bits "PLL_USB"		13	1
+			bits "PLL_SYS"		12	1
+			bits "PIO1"			11	1
+			bits "PIO0"			10	1
+			bits "PADS_QSPI"	9	1
+			bits "PADS_BANK0"	8	1
+			bits "JTAG"			7	1
+			bits "IO_QSPI"		6	1
+			bits "IO_BANK0"		5	1
+			bits "I2C1"			4	1
+			bits "I2C0"			3	1
+			bits "DMA"			2	1
+			bits "BUSCTRL"		1	1
+			bits "ADC"			0	1
+		}
+	}
+}
+
+/* clocks */
+range 0x40008000 200{
+	section "General Clock Control and Status Registers"{
+		heading "Clock Enables"
+		register "WAKE_EN0"		"Wake Mode Enables 0"		0xa0	4{
+			bits "SYS_SRAM3"			31	1
+			bits "SYS_SRAM2"			30	1
+			bits "SYS_SRAM1"			29	1
+			bits "SYS_SRAM0"			28	1
+			bits "SYS_SPI1"				27	1
+			bits "PERI_SPI1"			26	1
+			bits "SYS_SPI0"				25	1
+			bits "PERI_SPI0"			24	1
+			bits "SYS_SIO"				23	1
+			bits "SYS_RTC"				22	1
+			bits "SYS_RTC_RTC"			21	1
+			bits "SYS_ROSC"				20	1
+			bits "SYS_ROM"				19	1
+			bits "SYS_RESET"			18	1
+			bits "SYS_PWM"				17	1
+			bits "SYS_PSM"				16	1
+			bits "SYS_PLL_USB"			15	1
+			bits "SYS_PLL_SYS"			14	1
+			bits "SYS_PIO1"				13	1
+			bits "SYS_PIO0"				12	1
+			bits "SYS_PADS"				11	1
+			bits "SYS_VREG_N_RESET"		10	1
+			bits "SYS_JTAG"				9	1
+			bits "SYS_IO"				8	1
+			bits "SYS_I2C1"				7	1
+			bits "SYS_I2C0"				6	1
+			bits "SYS_DMA"				5	1
+			bits "SYS_BUSFABRIC"		4	1
+			bits "SYS_BUSCTRL"			3	1
+			bits "SYS_ADC"				2	1
+			bits "SYS_ADC_ADC"			1	1
+			bits "SYS_CLOCKS"			0	1
+		}
+
+		register "WAKE_EN1"		"Wake Mode Enables 1"		0xa4	4{
+			bits "SYS_XOSC"				14	1
+			bits "SYS_XIP"				13	1
+			bits "SYS_WATCHDOG"			12	1
+			bits "USB_USBCTRL"			11	1
+			bits "SYS_USBCTRL"			10	1
+			bits "SYS_UART1"			9	1
+			bits "PERI_UART1"			8	1
+			bits "SYS_UART0"			7	1
+			bits "PERI_UART0"			6	1
+			bits "SYS_TIMER"			5	1
+			bits "SYS_TBMAN"			4	1
+			bits "SYS_SYSINFO"			3	1
+			bits "SYS_SYSCFG"			2	1
+			bits "SYS_SRAM5"			1	1
+			bits "SYS_SRAM4"			0	1
+		}
+
+		register "SLEEP_EN0"	"Sleep Mode Enables 0"		0xa8	4{
+			bits "SYS_SRAM3"			31	1
+			bits "SYS_SRAM2"			30	1
+			bits "SYS_SRAM1"			29	1
+			bits "SYS_SRAM0"			28	1
+			bits "SYS_SPI1"				27	1
+			bits "PERI_SPI1"			26	1
+			bits "SYS_SPI0"				25	1
+			bits "PERI_SPI0"			24	1
+			bits "SYS_SIO"				23	1
+			bits "SYS_RTC"				22	1
+			bits "SYS_RTC_RTC"			21	1
+			bits "SYS_ROSC"				20	1
+			bits "SYS_ROM"				19	1
+			bits "SYS_RESET"			18	1
+			bits "SYS_PWM"				17	1
+			bits "SYS_PSM"				16	1
+			bits "SYS_PLL_USB"			15	1
+			bits "SYS_PLL_SYS"			14	1
+			bits "SYS_PIO1"				13	1
+			bits "SYS_PIO0"				12	1
+			bits "SYS_PADS"				11	1
+			bits "SYS_VREG_N_RESET"		10	1
+			bits "SYS_JTAG"				9	1
+			bits "SYS_IO"				8	1
+			bits "SYS_I2C1"				7	1
+			bits "SYS_I2C0"				6	1
+			bits "SYS_DMA"				5	1
+			bits "SYS_BUSFABRIC"		4	1
+			bits "SYS_BUSCTRL"			3	1
+			bits "SYS_ADC"				2	1
+			bits "SYS_ADC_ADC"			1	1
+			bits "SYS_CLOCKS"			0	1
+		}
+
+		register "SLEEP_EN1"	"Sleep Mode Enables 1"		0xac	4{
+			bits "SYS_XOSC"				14	1
+			bits "SYS_XIP"				13	1
+			bits "SYS_WATCHDOG"			12	1
+			bits "USB_USBCTRL"			11	1
+			bits "SYS_USBCTRL"			10	1
+			bits "SYS_UART1"			9	1
+			bits "PERI_UART1"			8	1
+			bits "SYS_UART0"			7	1
+			bits "PERI_UART0"			6	1
+			bits "SYS_TIMER"			5	1
+			bits "SYS_TBMAN"			4	1
+			bits "SYS_SYSINFO"			3	1
+			bits "SYS_SYSCFG"			2	1
+			bits "SYS_SRAM5"			1	1
+			bits "SYS_SRAM4"			0	1
+		}
+
+		register "ENABLED0"		"Clock Enable State 0"		0xb0	4{
+			bits "SYS_SRAM3"			31	1
+			bits "SYS_SRAM2"			30	1
+			bits "SYS_SRAM1"			29	1
+			bits "SYS_SRAM0"			28	1
+			bits "SYS_SPI1"				27	1
+			bits "PERI_SPI1"			26	1
+			bits "SYS_SPI0"				25	1
+			bits "PERI_SPI0"			24	1
+			bits "SYS_SIO"				23	1
+			bits "SYS_RTC"				22	1
+			bits "SYS_RTC_RTC"			21	1
+			bits "SYS_ROSC"				20	1
+			bits "SYS_ROM"				19	1
+			bits "SYS_RESET"			18	1
+			bits "SYS_PWM"				17	1
+			bits "SYS_PSM"				16	1
+			bits "SYS_PLL_USB"			15	1
+			bits "SYS_PLL_SYS"			14	1
+			bits "SYS_PIO1"				13	1
+			bits "SYS_PIO0"				12	1
+			bits "SYS_PADS"				11	1
+			bits "SYS_VREG_N_RESET"		10	1
+			bits "SYS_JTAG"				9	1
+			bits "SYS_IO"				8	1
+			bits "SYS_I2C1"				7	1
+			bits "SYS_I2C0"				6	1
+			bits "SYS_DMA"				5	1
+			bits "SYS_BUSFABRIC"		4	1
+			bits "SYS_BUSCTRL"			3	1
+			bits "SYS_ADC"				2	1
+			bits "SYS_ADC_ADC"			1	1
+			bits "SYS_CLOCKS"			0	1
+		}
+
+		register "ENABLED1"		"Clock Enable State 1"		0xb4	4{
+			bits "SYS_XOSC"				14	1
+			bits "SYS_XIP"				13	1
+			bits "SYS_WATCHDOG"			12	1
+			bits "USB_USBCTRL"			11	1
+			bits "SYS_USBCTRL"			10	1
+			bits "SYS_UART1"			9	1
+			bits "PERI_UART1"			8	1
+			bits "SYS_UART0"			7	1
+			bits "PERI_UART0"			6	1
+			bits "SYS_TIMER"			5	1
+			bits "SYS_TBMAN"			4	1
+			bits "SYS_SYSINFO"			3	1
+			bits "SYS_SYSCFG"			2	1
+			bits "SYS_SRAM5"			1	1
+			bits "SYS_SRAM4"			0	1
+		}
+
+		heading "Clock Interrupts"
+		register "INTR"			"Raw Interrupts"			0xb8	4{
+			bits "CLK_SYS_RESUS"	0	1
+		}
+
+		register "INTE"			"Interrupt Enable"			0xbc	4{
+			bits "CLK_SYS_RESUS"	0	1
+		}
+
+		register "INTF"			"Interrupt Force"			0xc0	4{
+			bits "CLK_SYS_RESUS"	0	1
+		}
+
+		register "INTS"			"Interrupt Status"			0xc4	4{
+			bits "CLK_SYS_RESUS"	0	1
+		}
+
+		heading "Frequence Counter"
+		register "FC0_RESULT"			"FC0 Result"					0x9c	4{
+			bits "KHZ"	5	25
+			bits "FRAC"	0	5
+		}
+
+		register "FC0_STATUS"			"FC0 Status"					0x98	4{
+			bits "DIES"		28	1
+			bits "FAST"		24	1
+			bits "SLOW"		20	1
+			bits "FAIL"		16	1
+			bits "WAITING"	12	1
+			bits "RUNNING"	8	1
+			bits "DONE"		4	1
+			bits "PASS"		0	1
+		}
+		register "FC0_SRC"				"FC0 Clock Source"				0x94	4{}
+		register "FC0_INTERVAL"			"FC0 Test Interval"				0x90	4{}
+		register "FC0_DELAY"			"FC0 Start Delay"				0x8c	4{}
+		register "FC0_REF_KHZ"			"FC0 Refernce Frequence"		0x80	4{}
+		register "FC0_MIN_KHZ"			"FC0 Minimum Pass Frequence"	0x84	4{}
+		register "FC0_MAX_KHZ"			"FC0 Maximum Pass Frequence"	0x88	4{}
+
+		emptyline
+		heading "System Resus Clock"
+		register "CLK_SYS_RESUS_CTRL"	"System Resus Control"		0x78	4{
+			bits "CLEAR"	16	1
+			bits "FRCE"		12	1
+			bits "ENABLE"	8	1
+			bits "TIMEOUT"	0	8
+		}
+
+		register "CLK_SYS_RESUS_STATUS"	"System Resus Status"		0x7c	4{
+			bits "RESUSSED"	0	1
+		}
+	}
+
+	section "Clock Generators"{
+		heading "Reference Clock"
+		register "CLK_REF_CTRL"			"Reference Clock Control"	0x30	4{
+			bits "AUXSRC"	5	2
+			bits "SRC"		0	2
+		}
+
+		register "CLK_REF_DIV"			"Reference Clock Divisor"	0x34	4{
+			bits "INT"		8	2
+		}
+
+		register "CLK_REF_SELCTED"		"Reference Clock Selected"	0x38	4{}
+
+		emptyline
+		heading "System Clock"
+		register "CLK_SYS_CTRL"			"System Clock Control"		0x3c	4{
+			bits "AUXSRC"	5	3
+			bits "SRC"		0	1
+		}
+
+		register "CLK_SYS_DIV"			"System Clock Divisor"		0x40	4{
+			bits "INT"		8	24
+			bits "FRAC"		0	8
+		}
+
+		register "CLK_SYS_SELCTED"		"System Clock Selected"		0x44	4{}
+
+		emptyline
+		heading "Peripheral Clock"
+		register "CLK_PERI_CTRL"		"Peripheral Clock Control"	0x48	4{
+			bits "ENABLE"	11	1
+			bits "KILL"		10	1
+			bits "AUXSRC"	5	3
+		}
+
+		register "CLK_PERI_SELCTED"		"Peripheral Clock Selected"	0x50	4{}
+
+		emptyline
+		heading "USB Clock"
+		register "CLK_USB_CTRL"			"USB Clock Control"			0x54	4{
+			bits "NUDGE"	20	1
+			bits "PHASE"	16	2
+			bits "ENABLE"	11	1
+			bits "KILL"		10	1
+			bits "AUXSRC"	5	3
+		}
+
+		register "CLK_USB_DIV"			"USB Clock Divisor"			0x58	4{
+			bits "INT"		8	2
+		}
+
+		register "CLK_USB_SELCTED"		"USB Clock Selected"		0x5c	4{}
+
+		emptyline
+		heading "ADC Clock"
+		register "CLK_ADC_CTRL"			"ADC Clock Control"			0x60	4{
+			bits "NUDGE"	20	1
+			bits "PHASE"	16	2
+			bits "ENABLE"	11	1
+			bits "KILL"		10	1
+			bits "AUXSRC"	5	3
+		}
+
+		register "CLK_ADC_DIV"			"ADC Clock Divisor"			0x64	4{
+			bits "INT"		8	2
+		}
+
+		register "CLK_ADC_SELCTED"		"ADC Clock Selected"		0x68	4{}
+
+		emptyline
+		heading "RTC Clock"
+		register "CLK_RTC_CTRL"			"RTC Clock Control"			0x6c	4{
+			bits "NUDGE"	20	1
+			bits "PHASE"	16	2
+			bits "ENABLE"	11	1
+			bits "KILL"		10	1
+			bits "AUXSRC"	5	3
+		}
+
+		register "CLK_RTC_DIV"			"RTC Clock Divisor"			0x70	4{
+			bits "INT"		8	24
+			bits "FRAC"		0	8
+		}
+
+		register "CLK_RTC_SELCTED"		"RTC Clock Selected"		0x74	4{}
+
+		emptyline
+		heading "GPIO Clock Output"
+		register "CLK_GPOUT0_CTRL"		"GPOUT0 Control"	0x00	4{
+			bits "NUDGE"	20	1
+			bits "PHASE"	16	2
+			bits "DC50"		12	1
+			bits "ENABLE"	11	1
+			bits "KILL"		10	1
+			bits "AUXSRC"	5	4
+		}
+
+		register "CLK_GPOUT0_DIV"		"GPOUT0 Divisor"	0x04	4{
+			bits "INT"		8	24
+			bits "FRAC"		0	8
+		}
+
+		register "CLK_GPOUT0_SELCTED"	"GPOUT0 Selected"	0x08	4{}
+
+		emptyline
+		register "CLK_GPOUT1_CTRL"		"GPOUT1 Control"	0x0c	4{
+			bits "NUDGE"	20	1
+			bits "PHASE"	16	2
+			bits "DC50"		12	1
+			bits "ENABLE"	11	1
+			bits "KILL"		10	1
+			bits "AUXSRC"	5	4
+		}
+
+		register "CLK_GPOUT1_DIV"		"GPOUT1 Divisor"	0x10	4{
+			bits "INT"		8	24
+			bits "FRAC"		0	8
+		}
+
+		register "CLK_GPOUT1_SELCTED"	"GPOUT1 Selected"	0x14	4{}
+
+		emptyline
+		register "CLK_GPOUT2_CTRL"		"GPOUT2 Control"	0x18	4{
+			bits "NUDGE"	20	1
+			bits "PHASE"	16	2
+			bits "DC50"		12	1
+			bits "ENABLE"	11	1
+			bits "KILL"		10	1
+			bits "AUXSRC"	5	4
+		}
+
+		register "CLK_GPOUT2_DIV"		"GPOUT2 Divisor"	0x1c	4{
+			bits "INT"		8	24
+			bits "FRAC"		0	8
+		}
+
+		register "CLK_GPOUT2_SELCTED"	"GPOUT2 Selected"	0x20	4{}
+
+		emptyline
+		register "CLK_GPOUT3_CTRL"		"GPOUT3 Control"	0x24	4{
+			bits "NUDGE"	20	1
+			bits "PHASE"	16	2
+			bits "DC60"		12	1
+			bits "ENABLE"	11	1
+			bits "KILL"		10	1
+			bits "AUXSRC"	5	4
+		}
+
+		register "CLK_GPOUT3_DIV"		"GPOUT3 Divisor"	0x28	4{
+			bits "INT"		8	24
+			bits "FRAC"		0	8
+		}
+
+		register "CLK_GPOUT3_SELCTED"	"GPOUT3 Selected"	0x2c	4{}
+	}
+}
+
+range 0x40060000 36{
+	section "Ring Oscillator"{
+		register "CTRL"			"ROSC Control Register"					0x00	4{
+			bits "ENABLE"	12	12
+			bits "RANGE"	0	12
+		}
+
+		register "STATUS"		"ROSC Status Register"					0x18	4{
+			bits "STABLE"	31	1
+			bits "BADWRITE"	24	1
+			bits "DIV_RUN"	16	1
+			bits "ENABLED"	12	1
+		}
+
+		register "DIV"			"ROSC Output Divider Register"			0x10	4{}
+
+		register "FREQA"		"ROSC Frequence Control A Register"		0x04	4{
+			bits "PASSWD"	16	16
+			bits "DS3"		12	3
+			bits "DS2"		8	3
+			bits "DS1"		4	3
+			bits "DS0"		0	3
+		}
+
+		register "FREQB"		"ROSC Frequence Control B Register"		0x08	4{
+			bits "PASSWD"	16	16
+			bits "DS7"		12	3
+			bits "DS6"		8	3
+			bits "DS5"		4	3
+			bits "DS4"		0	3
+		}
+
+		register "PHASE"		"ROSC Phase Shifted Output Register"	0x14	4{
+			bits "PASSWD"	4	8
+			bits "ENABLE"	3	1
+			bits "FLIP"		2	1
+			bits "SHIFT"	0	2
+		}
+
+		register "RANDOMBIT"	"ROSC Random-bit Register"				0x1c	4{}
+		register "DORMANT"		"ROSC Dormant Register"					0x0c	4{}
+		register "COUNT"		"ROSC Counter Register"					0x20	4{}
+	}
+}
+
+range 0x40024000 32{
+	section "Crystal Oscillator"{
+		register "CTRL"		"XOSC Control Register"	0x00	4{
+			bits "ENABLE"	12	12
+			bits "RANGE"	0	12
+		}
+
+		register "STATUS"	"XOSC Status Register"	0x04	4{
+			bits "STABLE"	31	1
+			bits "BADWRITE"	24	1
+			bits "ENABLED"	12	1
+			bits "RANGE"	0	2
+		}
+
+		register "STARTUP"	"XOSC Startup Register"	0x0c	4{
+			bits "X4"		20	1
+			bits "DELAY"	0	14
+		}
+
+		register "DORMANT"	"XOSC Dormant Register"	0x08	4{}
+		register "COUNT"	"XOSC Counter Register"	0x1c	4{}
+	}
+}
+
+range 0x40028000 16{
+	section "System PLL"{
+		register "CS"		"Control and Status Register"	0x0	4{
+			bits "LOCK"		31	1
+			bits "BYPASS"	8	1
+			bits "REFDIV"	0	6
+		}
+
+		register "PWR"		"Power Control Register"		0x4	4{
+			bits "VCOPD"		5	1
+			bits "POSTDIVPD"	3	1
+			bits "DSMPD"		2	1
+			bits "PD"			0	1
+		}
+
+		register "FBDIV"	"Feedback Divisor Register"		0x8	4{
+		}
+
+		register "PRIM"		"Post Divider Register"			0xc	4{
+			bits "POSTDIV1"	16	3
+			bits "POSTDIV2"	12	3
+		}
+	}
+}
+
+range 0x4002c000 16{
+	section "USB PLL"{
+		register "CS"		"Control and Status Register"	0x0	4{
+			bits "LOCK"		31	1
+			bits "BYPASS"	8	1
+			bits "REFDIV"	0	6
+		}
+
+		register "PWR"		"Power Control Register"		0x4	4{
+			bits "VCOPD"		5	1
+			bits "POSTDIVPD"	3	1
+			bits "DSMPD"		2	1
+			bits "PD"			0	1
+		}
+
+		register "FBDIV"	"Feedback Divisor Register"		0x8	4{
+		}
+
+		register "PRIM"		"Post Divider Register"			0xc	4{
+			bits "POSTDIV1"	16	3
+			bits "POSTDIV2"	12	3
+		}
+	}
+}
+
+/* singe-cycle io (sio) */
+range 0xd0000000 96{
+	section "Single-Cycle IO Registers (SIO)"{
+		register "CPUID"		"Processor Core Identifier"	0x000	4{}
+
+		emptyline
+		heading "Inter-core FIFOs"
+		register "FIFO_ST"		"FIFO Status Register"		0x050	4{
+			bits "ROE"	3	1
+			bits "WOF"	2	1
+			bits "RDY"	1	1
+			bits "VLD"	0	1
+		}
+
+		register "FIFO_WR"		"FIFO Write Register"		0x054	4{}
+		register "FIFO_RD"		"FIFO Read Register"		0x058	4{}
+
+		emptyline
+		heading "Spinlocks"
+		register "SPINLOCK_ST"	"Spinlock State Register"	0x05c	4{}
+
+		emptyline
+		heading "GPIO Registers"
+		register "GPIO_OUT"		"GPIO Output Value"			0x010	4{}
+		register "GPIO_OUT_SET"	"GPIO Output Value Set"		0x014	4{}
+		register "GPIO_OUT_CLR"	"GPIO Output Value Clear"	0x018	4{}
+		register "GPIO_OUT_XOR"	"GPIO Output Value xor"		0x01c	4{}
+
+		emptyline
+		register "GPIO_OE"		"GPIO Output Enable"		0x020	4{}
+		register "GPIO_OE_SET"	"GPIO Output Enable Set"	0x024	4{}
+		register "GPIO_OE_CLR"	"GPIO Output Enable Clear"	0x028	4{}
+		register "GPIO_OE_XOR"	"GPIO Output Enable xor"	0x02c	4{}
+	}
+}
+
+/* advanced peripheral bus (apb) */
+range 0x40014000 400{
+	section "GPIO Bank 0 Control and Status Registers"{
+		heading "Control Registers"
+		register "GPIO0_CTRL"		"GPIO0 Control Register"	0x004	4{}
+		register "GPIO1_CTRL"		"GPIO1 Control Register"	0x00c	4{}
+		register "GPIO2_CTRL"		"GPIO2 Control Register"	0x014	4{}
+		register "GPIO3_CTRL"		"GPIO3 Control Register"	0x01c	4{}
+		register "GPIO4_CTRL"		"GPIO4 Control Register"	0x024	4{}
+		register "GPIO5_CTRL"		"GPIO5 Control Register"	0x02c	4{}
+		register "GPIO6_CTRL"		"GPIO6 Control Register"	0x034	4{}
+		register "GPIO7_CTRL"		"GPIO7 Control Register"	0x03c	4{}
+		register "GPIO8_CTRL"		"GPIO8 Control Register"	0x044	4{}
+		register "GPIO9_CTRL"		"GPIO9 Control Register"	0x04c	4{}
+		register "GPIO10_CTRL"		"GPIO10 Control Register"	0x054	4{}
+		register "GPIO11_CTRL"		"GPIO11 Control Register"	0x05c	4{}
+		register "GPIO12_CTRL"		"GPIO12 Control Register"	0x064	4{}
+		register "GPIO13_CTRL"		"GPIO13 Control Register"	0x06c	4{}
+		register "GPIO14_CTRL"		"GPIO14 Control Register"	0x074	4{}
+		register "GPIO15_CTRL"		"GPIO15 Control Register"	0x07c	4{}
+		register "GPIO16_CTRL"		"GPIO16 Control Register"	0x084	4{}
+		register "GPIO17_CTRL"		"GPIO17 Control Register"	0x08c	4{}
+		register "GPIO18_CTRL"		"GPIO18 Control Register"	0x094	4{}
+		register "GPIO19_CTRL"		"GPIO19 Control Register"	0x09c	4{}
+		register "GPIO20_CTRL"		"GPIO20 Control Register"	0x0a4	4{}
+		register "GPIO21_CTRL"		"GPIO21 Control Register"	0x0ac	4{}
+		register "GPIO22_CTRL"		"GPIO22 Control Register"	0x0b4	4{}
+		register "GPIO23_CTRL"		"GPIO23 Control Register"	0x0bc	4{}
+		register "GPIO24_CTRL"		"GPIO24 Control Register"	0x0c4	4{}
+		register "GPIO25_CTRL"		"GPIO25 Control Register"	0x0cc	4{}
+		register "GPIO26_CTRL"		"GPIO26 Control Register"	0x0d4	4{}
+		register "GPIO27_CTRL"		"GPIO27 Control Register"	0x0dc	4{}
+		register "GPIO28_CTRL"		"GPIO28 Control Register"	0x0e4	4{}
+		register "GPIO29_CTRL"		"GPIO29 Control Register"	0x0ec	4{}
+
+		emptyline
+		heading "Status Registers"
+		register "GPIO0_STATUS"		"GPIO0 Status Register"		0x000	4{}
+		register "GPIO1_STATUS"		"GPIO1 Status Register"		0x008	4{}
+		register "GPIO2_STATUS"		"GPIO2 Status Register"		0x010	4{}
+		register "GPIO3_STATUS"		"GPIO3 Status Register"		0x018	4{}
+		register "GPIO4_STATUS"		"GPIO4 Status Register"		0x020	4{}
+		register "GPIO5_STATUS"		"GPIO5 Status Register"		0x028	4{}
+		register "GPIO6_STATUS"		"GPIO6 Status Register"		0x030	4{}
+		register "GPIO7_STATUS"		"GPIO7 Status Register"		0x038	4{}
+		register "GPIO8_STATUS"		"GPIO8 Status Register"		0x040	4{}
+		register "GPIO9_STATUS"		"GPIO9 Status Register"		0x048	4{}
+		register "GPIO10_STATUS"	"GPIO10 Status Register"	0x050	4{}
+		register "GPIO11_STATUS"	"GPIO11 Status Register"	0x058	4{}
+		register "GPIO12_STATUS"	"GPIO12 Status Register"	0x060	4{}
+		register "GPIO13_STATUS"	"GPIO13 Status Register"	0x068	4{}
+		register "GPIO14_STATUS"	"GPIO14 Status Register"	0x070	4{}
+		register "GPIO15_STATUS"	"GPIO15 Status Register"	0x078	4{}
+		register "GPIO16_STATUS"	"GPIO16 Status Register"	0x080	4{}
+		register "GPIO17_STATUS"	"GPIO17 Status Register"	0x088	4{}
+		register "GPIO18_STATUS"	"GPIO18 Status Register"	0x090	4{}
+		register "GPIO19_STATUS"	"GPIO19 Status Register"	0x098	4{}
+		register "GPIO20_STATUS"	"GPIO20 Status Register"	0x0a0	4{}
+		register "GPIO21_STATUS"	"GPIO21 Status Register"	0x0a8	4{}
+		register "GPIO22_STATUS"	"GPIO22 Status Register"	0x0b0	4{}
+		register "GPIO23_STATUS"	"GPIO23 Status Register"	0x0b8	4{}
+		register "GPIO24_STATUS"	"GPIO24 Status Register"	0x0c0	4{}
+		register "GPIO25_STATUS"	"GPIO25 Status Register"	0x0c8	4{}
+		register "GPIO26_STATUS"	"GPIO26 Status Register"	0x0d0	4{}
+		register "GPIO27_STATUS"	"GPIO27 Status Register"	0x0d8	4{}
+		register "GPIO28_STATUS"	"GPIO28 Status Register"	0x0e0	4{}
+		register "GPIO29_STATUS"	"GPIO29 Status Register"	0x0e8	4{}
+	}
+}
+
+range 0x4001c000 132{
+	section "GPIO Bank 0 Pad Control Register"{
+		register "VOLTAGE_SELECT"	"Voltage Select"	0x0		4{
+			bits "VOLTAGE"	0	1
+		}
+
+		register "GPIO0"		"GPIO0 Pad Control"		0x04	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO1"		"GPIO1 Pad Control"		0x08	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO2"		"GPIO2 Pad Control"		0x0c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO3"		"GPIO3 Pad Control"		0x10	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO4"		"GPIO4 Pad Control"		0x14	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO5"		"GPIO5 Pad Control"		0x18	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO6"		"GPIO6 Pad Control"		0x1c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO7"		"GPIO7 Pad Control"		0x20	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO8"		"GPIO8 Pad Control"		0x24	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO9"		"GPIO9 Pad Control"		0x28	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO10"		"GPIO10 Pad Control"	0x2c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO11"		"GPIO11 Pad Control"	0x30	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO12"		"GPIO12 Pad Control"	0x34	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO13"		"GPIO13 Pad Control"	0x38	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO14"		"GPIO14 Pad Control"	0x3c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO15"		"GPIO15 Pad Control"	0x40	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO16"		"GPIO16 Pad Control"	0x44	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO17"		"GPIO17 Pad Control"	0x48	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO18"		"GPIO18 Pad Control"	0x4c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO19"		"GPIO19 Pad Control"	0x50	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO20"		"GPIO20 Pad Control"	0x54	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO21"		"GPIO21 Pad Control"	0x58	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO22"		"GPIO22 Pad Control"	0x5c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO23"		"GPIO23 Pad Control"	0x60	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO24"		"GPIO24 Pad Control"	0x64	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO25"		"GPIO25 Pad Control"	0x68	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO26"		"GPIO26 Pad Control"	0x6c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO27"		"GPIO27 Pad Control"	0x70	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO28"		"GPIO28 Pad Control"	0x74	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO29"		"GPIO29 Pad Control"	0x78	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "SWCLK"		"SWCLK Pad Control"		0x7c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "SWD"			"SWD Pad Control"		0x80	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}	}
+}
+
+range 0x40014000 400{
+	section "GPIO Bank 0 Interrupt Control and Status Registers"{
+		heading "Raw Interrupt Registers"
+		register "INTR0"		"Raw Interrupt Register 0"				0x0f0	4{}
+		register "INTR1"		"Raw Interrupt Register 1"				0x0f4	4{}
+		register "INTR2"		"Raw Interrupt Register 2"				0x0f8	4{}
+		register "INTR3"		"Raw Interrupt Register 3"				0x0fc	4{}
+
+		emptyline
+		heading "Core 0 Interrupt Registers"
+		register "PROC0_INTE0"	"Core0 Interrupt Enable Register 0"		0x100	4{}
+		register "PROC0_INTE1"	"Core0 Interrupt Enable Register 1"		0x104	4{}
+		register "PROC0_INTE2"	"Core0 Interrupt Enable Register 2"		0x108	4{}
+		register "PROC0_INTE3"	"Core0 Interrupt Enable Register 3"		0x10c	4{}
+
+		emptyline
+		register "PROC0_INTF0"	"Core0 Interrupt Force Register 0"		0x110	4{}
+		register "PROC0_INTF1"	"Core0 Interrupt Force Register 1"		0x114	4{}
+		register "PROC0_INTF2"	"Core0 Interrupt Force Register 2"		0x118	4{}
+		register "PROC0_INTF3"	"Core0 Interrupt Force Register 3"		0x11c	4{}
+
+		emptyline
+		register "PROC0_INTS0"	"Core0 Interrupt Status Register 0"		0x120	4{}
+		register "PROC0_INTS1"	"Core0 Interrupt Status Register 1"		0x124	4{}
+		register "PROC0_INTS2"	"Core0 Interrupt Status Register 2"		0x128	4{}
+		register "PROC0_INTS3"	"Core0 Interrupt Status Register 3"		0x12c	4{}
+
+		emptyline
+		heading "Core 1 Interrupt Registers"
+		register "PROC1_INTE0"	"Core0 Interrupt Enable Register 0"		0x130	4{}
+		register "PROC1_INTE1"	"Core0 Interrupt Enable Register 1"		0x134	4{}
+		register "PROC1_INTE2"	"Core0 Interrupt Enable Register 2"		0x138	4{}
+		register "PROC1_INTE3"	"Core0 Interrupt Enable Register 3"		0x13c	4{}
+
+		emptyline
+		register "PROC1_INTF0"	"Core0 Interrupt Force Register 0"		0x140	4{}
+		register "PROC1_INTF1"	"Core0 Interrupt Force Register 1"		0x144	4{}
+		register "PROC1_INTF2"	"Core0 Interrupt Force Register 2"		0x148	4{}
+		register "PROC1_INTF3"	"Core0 Interrupt Force Register 3"		0x14c	4{}
+
+		emptyline
+		register "PROC1_INTS0"	"Core0 Interrupt Status Register 0"		0x150	4{}
+		register "PROC1_INTS1"	"Core0 Interrupt Status Register 1"		0x154	4{}
+		register "PROC1_INTS2"	"Core0 Interrupt Status Register 2"		0x158	4{}
+		register "PROC1_INTS3"	"Core0 Interrupt Status Register 3"		0x15c	4{}
+
+		emptyline
+		heading "Dormant Interrupt Registers"
+		register "DORMANT_WAKE_INTE0"	"Enable Register 0"		0x160	4{}
+		register "DORMANT_WAKE_INTE1"	"Enable Register 1"		0x164	4{}
+		register "DORMANT_WAKE_INTE2"	"Enable Register 2"		0x168	4{}
+		register "DORMANT_WAKE_INTE3"	"Enable Register 3"		0x16c	4{}
+
+		emptyline
+		register "DORMANT_WAKE_INTF0"	"Force Register 0"		0x170	4{}
+		register "DORMANT_WAKE_INTF1"	"Force Register 1"		0x174	4{}
+		register "DORMANT_WAKE_INTF2"	"Force Register 2"		0x178	4{}
+		register "DORMANT_WAKE_INTF3"	"Force Register 3"		0x17c	4{}
+
+		emptyline
+		register "DORMANT_WAKE_INTS0"	"Status Register 0"		0x180	4{}
+		register "DORMANT_WAKE_INTS1"	"Status Register 1"		0x154	4{}
+		register "DORMANT_WAKE_INTS2"	"Status Register 2"		0x188	4{}
+		register "DORMANT_WAKE_INTS3"	"Status Register 3"		0x18c	4{}
+	}
+}
+
+range 0x40018000 88{
+	section "GPIO QSPI Control and Status Registers"{
+		heading "Control Registers"
+		register "GPIO_QSPI_SCLK_CTRL"			"QSPI SCLK Control Register"	0x04	4{}
+		register "GPIO_QSPI_SS_CTRL"			"QSPI SS Control Register"		0x0c	4{}
+		register "GPIO_QSPI_SD0_CTRL"			"QSPI SD0 Control Register"		0x14	4{}
+		register "GPIO_QSPI_SD1_CTRL"			"QSPI SD1 Control Register"		0x1c	4{}
+		register "GPIO_QSPI_SD2_CTRL"			"QSPI SD2 Control Register"		0x24	4{}
+		register "GPIO_QSPI_SD3_CTRL"			"QSPI SD3 Control Register"		0x2c	4{}
+
+		emptyline
+		heading "Status Registers"
+		register "GPIO0_QSPI_SCLK_STATUS"		"QSPI SCLK Status Register"		0x00	4{}
+		register "GPIO1_QSPI_SS_STATUS"			"QSPI SS Status Register"		0x08	4{}
+		register "GPIO2_QSPI_SD0_STATUS"		"QSPI SD0 Status Register"		0x10	4{}
+		register "GPIO3_QSPI_SD1_STATUS"		"QSPI SD1 Status Register"		0x18	4{}
+		register "GPIO4_QSPI_SD2_STATUS"		"QSPI SD2 Status Register"		0x20	4{}
+		register "GPIO5_QSPI_SD3_STATUS"		"QSPI SD3 Status Register"		0x28	4{}
+	}
+}
+
+range 0x40020000 28{
+	section "GPIO QSPI Pad Control Register"{
+		register "VOLTAGE_SELECT"	"Voltage Select"			0x00	4{
+			bits "VOLTAGE"	0	1
+		}
+
+		register "GPIO_QSPI_SCLK"	"QSPI-SCLK Pad Control"		0x04	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO_QSPI_SD0"	"QSPI-SD0 Pad Control"		0x08	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO_QSPI_SD1"	"QSPI-SD1 Pad Control"		0x0c	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO_QSPI_SD2"	"QSPI-SD2 Pad Control"		0x10	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO_QSPI_SD3"	"QSPI-SD3 Pad Control"		0x14	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+
+		register "GPIO_QSPI_SS"		"QSPI-SS Pad Control"		0x18	4{
+			bits "OD"		7	1
+			bits "IE"		6	1
+			bits "DRIVE"	4	2
+			bits "PUE"		3	1
+			bits "PDE"		2	1
+			bits "SCHMITT"	1	1
+			bits "SLEWFAST"	0	1
+		}
+	}
+}
+
+range 0x40018000 88{
+	section "GPIO QSPI Interrupt Control and Status Registers"{
+		register "INTR"					"Raw Interrupt Register"				0x30	4{}
+		register "PROC0_INTE"			"Core0 Interrupt Enable Register"		0x34	4{}
+		register "PROC0_INTF"			"Core0 Interrupt Force Register"		0x38	4{}
+		register "PROC0_INTS"			"Core0 Interrupt Status Register"		0x3c	4{}
+		register "PROC1_INTE"			"Core1 Interrupt Enable Register"		0x40	4{}
+		register "PROC1_INTF"			"Core1 Interrupt Force Register"		0x44	4{}
+		register "PROC1_INTS"			"Core1 Interrupt Status Register"		0x48	4{}
+		register "DORMANT_WAKE_INTE0"	"Dormant Wake Enable Register"			0x4c	4{}
+		register "DORMANT_WAKE_INTF0"	"Dormant Wake Force Register"			0x50	4{}
+		register "DORMANT_WAKE_INTS0"	"Dormant Wake Status Register"			0x54	4{}
+	}
+}
+
+range 0x40034000 76{
+	section "Universal Asynchronous Receiver/Transmitter 0 (UART0)"{
+		register "UARTDR"		"Data Register"								0x00	4{
+			bits "OE"	11	1
+			bits "BE"	10	1
+			bits "PE"	9	1
+			bits "FE"	8	1
+			bits "DATA"	0	8
+		}
+
+		register "UARTRSR"		"Receiver Status Register"					0x04	4{
+			bits "OE"	3	1
+			bits "BE"	2	1
+			bits "PE"	1	1
+			bits "FE"	0	1
+		}
+
+		register "UARTFR"		"Flag Register"								0x18	4{
+			bits "RI"	8	1
+			bits "TXFE"	7	1
+			bits "RXFF"	6	1
+			bits "TXFF"	5	1
+			bits "RXFE"	4	1
+			bits "BUSY"	3	1
+			bits "DCD"	2	1
+			bits "DSR"	1	1
+			bits "CTS"	0	1
+		}
+
+		register "UARTILPR"		"IrDA Low-Power Counter Register"			0x20	4{
+			bits "ILPDVSR"	0	8
+		}
+
+		register "UARTIBRD"		"Integer Baud Rate Register"				0x24	4{
+			bits "BAUD_DIVINT"	0	16
+		}
+
+		register "UARTFBRD"		"Fractional Baud Rate Register"				0x28	4{
+			bits "BAUD_DIVFRAC"	0	6
+		}
+
+		register "UARTLCR_H"	"Line Control Register"						0x2c	4{
+			bits "SPS"	7	1
+			bits "WLEN"	5	2
+			bits "FEN"	4	1
+			bits "STP2"	3	1
+			bits "EPS"	2	1
+			bits "PEN"	1	1
+			bits "BRK"	0	1
+		}
+
+		register "UARTCR"		"Control Register"							0x30	4{
+			bits "CTSEN"	15	1
+			bits "RTSEN"	14	1
+			bits "OUT2"		13	1
+			bits "OUT1"		12	1
+			bits "RTS"		11	1
+			bits "DTR"		10	1
+			bits "RXE"		9	1
+			bits "TXE"		8	1
+			bits "LBE"		7	1
+			bits "SIRLP"	2	1
+			bits "SIREN"	1	1
+			bits "UARTEN"	0	1
+		}
+
+		register "UARTIFLS"		"Interrupt FIFO Level Select Register"		0x34	4{
+			bits "RXIFLSEL"	3	3
+			bits "TXIFLSEL"	0	3
+		}
+
+		register "UARTIMSC"		"Interrupt Mask Set/Clear Register"			0x38	4{
+			bits "OEIM"		10	1
+			bits "BEIM"		9	1
+			bits "PEIM"		8	1
+			bits "FEIM"		7	1
+			bits "RTIM"		6	1
+			bits "TXIM"		5	1
+			bits "RXIM"		4	1
+			bits "DSRMIM"	3	1
+			bits "DCDMIM"	2	1
+			bits "CTSMIM"	1	1
+			bits "RIMIM"	0	1
+		}
+
+		register "UARTRIS"		"Raw Interrupt Status Register"				0x3c	4{
+			bits "OERIS"	10	1
+			bits "BERIS"	9	1
+			bits "PERIS"	8	1
+			bits "FERIS"	7	1
+			bits "RTRIS"	6	1
+			bits "TXRIS"	5	1
+			bits "RXRIS"	4	1
+			bits "DSRRMIS"	3	1
+			bits "DCDRMIS"	2	1
+			bits "CTSRMIS"	1	1
+			bits "RIRMIS"	0	1
+		}
+
+		register "UARTMIS"		"Masked Interrupt Status Register"			0x40	4{
+			bits "OEMIS"	10	1
+			bits "BEMIS"	9	1
+			bits "PEMIS"	8	1
+			bits "FEMIS"	7	1
+			bits "RTMIS"	6	1
+			bits "TXMIS"	5	1
+			bits "RXMIS"	4	1
+			bits "DSRMMIS"	3	1
+			bits "DCDMMIS"	2	1
+			bits "CTCMMIS"	1	1
+			bits "RIMMIS"	0	1
+		}
+
+		register "UARTICR"		"Interrupt Clear Register"					0x44	4{
+			bits "OEIC"		10	1
+			bits "BEIC"		9	1
+			bits "PEIC"		8	1
+			bits "FEIC"		7	1
+			bits "RTIC"		6	1
+			bits "TXIC"		5	1
+			bits "RXIC"		4	1
+			bits "DSRMIC"	3	1
+			bits "DCDMIC"	2	1
+			bits "CTCMIC"	1	1
+			bits "RIMIC"	0	1
+		}
+
+		register "UARTDMACR"	"DMA Control Register"						0x48	4{
+			bits "DMAONERR"	2	1
+			bits "TXDMAE"	1	1
+			bits "RXDMAE"	0	1
+		}
+	}
+}
+
+range 0x40038000 76{
+	section "Universal Asynchronous Receiver/Transmitter 1 (UART1)"{
+		register "UARTDR"		"Data Register"								0x00	4{
+			bits "OE"	11	1
+			bits "BE"	10	1
+			bits "PE"	9	1
+			bits "FE"	8	1
+			bits "DATA"	0	8
+		}
+
+		register "UARTRSR"		"Receiver Status Register"					0x04	4{
+			bits "OE"	3	1
+			bits "BE"	2	1
+			bits "PE"	1	1
+			bits "FE"	0	1
+		}
+
+		register "UARTFR"		"Flag Register"								0x18	4{
+			bits "RI"	8	1
+			bits "TXFE"	7	1
+			bits "RXFF"	6	1
+			bits "TXFF"	5	1
+			bits "RXFE"	4	1
+			bits "BUSY"	3	1
+			bits "DCD"	2	1
+			bits "DSR"	1	1
+			bits "CTS"	0	1
+		}
+
+		register "UARTILPR"		"IrDA Low-Power Counter Register"			0x20	4{
+			bits "ILPDVSR"	0	8
+		}
+
+		register "UARTIBRD"		"Integer Baud Rate Register"				0x24	4{
+			bits "BAUD_DIVINT"	0	16
+		}
+
+		register "UARTFBRD"		"Fractional Baud Rate Register"				0x28	4{
+			bits "BAUD_DIVFRAC"	0	6
+		}
+
+		register "UARTLCR_H"	"Line Control Register"						0x2c	4{
+			bits "SPS"	7	1
+			bits "WLEN"	5	2
+			bits "FEN"	4	1
+			bits "STP2"	3	1
+			bits "EPS"	2	1
+			bits "PEN"	1	1
+			bits "BRK"	0	1
+		}
+
+		register "UARTCR"		"Control Register"							0x30	4{
+			bits "CTSEN"	15	1
+			bits "RTSEN"	14	1
+			bits "OUT2"		13	1
+			bits "OUT1"		12	1
+			bits "RTS"		11	1
+			bits "DTR"		10	1
+			bits "RXE"		9	1
+			bits "TXE"		8	1
+			bits "LBE"		7	1
+			bits "SIRLP"	2	1
+			bits "SIREN"	1	1
+			bits "UARTEN"	0	1
+		}
+
+		register "UARTIFLS"		"Interrupt FIFO Level Select Register"		0x34	4{
+			bits "RXIFLSEL"	3	3
+			bits "TXIFLSEL"	0	3
+		}
+
+		register "UARTIMSC"		"Interrupt Mask Set/Clear Register"			0x38	4{
+			bits "OEIM"		10	1
+			bits "BEIM"		9	1
+			bits "PEIM"		8	1
+			bits "FEIM"		7	1
+			bits "RTIM"		6	1
+			bits "TXIM"		5	1
+			bits "RXIM"		4	1
+			bits "DSRMIM"	3	1
+			bits "DCDMIM"	2	1
+			bits "CTSMIM"	1	1
+			bits "RIMIM"	0	1
+		}
+
+		register "UARTRIS"		"Raw Interrupt Status Register"				0x3c	4{
+			bits "OERIS"	10	1
+			bits "BERIS"	9	1
+			bits "PERIS"	8	1
+			bits "FERIS"	7	1
+			bits "RTRIS"	6	1
+			bits "TXRIS"	5	1
+			bits "RXRIS"	4	1
+			bits "DSRRMIS"	3	1
+			bits "DCDRMIS"	2	1
+			bits "CTSRMIS"	1	1
+			bits "RIRMIS"	0	1
+		}
+
+		register "UARTMIS"		"Masked Interrupt Status Register"			0x40	4{
+			bits "OEMIS"	10	1
+			bits "BEMIS"	9	1
+			bits "PEMIS"	8	1
+			bits "FEMIS"	7	1
+			bits "RTMIS"	6	1
+			bits "TXMIS"	5	1
+			bits "RXMIS"	4	1
+			bits "DSRMMIS"	3	1
+			bits "DCDMMIS"	2	1
+			bits "CTCMMIS"	1	1
+			bits "RIMMIS"	0	1
+		}
+
+		register "UARTICR"		"Interrupt Clear Register"					0x44	4{
+			bits "OEIC"		10	1
+			bits "BEIC"		9	1
+			bits "PEIC"		8	1
+			bits "FEIC"		7	1
+			bits "RTIC"		6	1
+			bits "TXIC"		5	1
+			bits "RXIC"		4	1
+			bits "DSRMIC"	3	1
+			bits "DCDMIC"	2	1
+			bits "CTCMIC"	1	1
+			bits "RIMIC"	0	1
+		}
+
+		register "UARTDMACR"	"DMA Control Register"						0x48	4{
+			bits "DMAONERR"	2	1
+			bits "TXDMAE"	1	1
+			bits "RXDMAE"	0	1
+		}
+	}
+}

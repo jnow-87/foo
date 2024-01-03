@@ -1,0 +1,173 @@
+/**
+ * Copyright (C) 2023 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+arch = {
+	addr-width = 32;
+	reg-width = 32;
+
+	ncores = 2;
+
+	// interrupts
+	num-ints = 42;
+	num-vints = 2;	// uart
+
+	timer-int = 15;
+	syscall-int = 11;
+	ipi-int = 31;
+
+	timer-cycle-time-us = 125000;
+
+	plt = {
+		compatible = "rp2040,platform";
+
+		// config (rp2040_platform_cfg_t)
+		int<32> = [
+			12000,		// crystal clock [kHz]
+			0,			// system clock [kHz] (set by the platform)
+			0,			// peripherall clock [kHz] (set by the platform)
+		];
+
+		// system pll
+		int<8> = [
+			1,			// reference clock divider
+			6,			// post divider 1
+			2,			// post divider 2
+		];
+		int<16> = [
+			133,		// feedback divider
+		];
+
+		// usb pll
+		int<8> = [
+			1,			// reference clock divider
+			6,			// post divider 1
+			4,			// post divider 2
+		];
+		int<16> = [
+			96,			// feedback divider
+		];
+
+		// gpio function selection
+		int<8> = [
+			2,		// gpio0 (uart0 tx)
+			2,		// gpio1 (uart0 rx)
+			31,		// gpio2 (reset)
+			31,		// gpio3 (reset)
+			31,		// gpio4 (reset)
+			31,		// gpio5 (reset)
+			31,		// gpio6 (reset)
+			31,		// gpio7 (reset)
+			31,		// gpio8 (reset)
+			31,		// gpio9 (reset)
+			31,		// gpio10 (reset)
+			31,		// gpio11 (reset)
+			31,		// gpio12 (reset)
+			31,		// gpio13 (reset)
+			31,		// gpio14 (reset)
+			5,		// gpio15 (sio)
+			31,		// gpio16 (reset)
+			31,		// gpio17 (reset)
+			31,		// gpio18 (reset)
+			31,		// gpio19 (reset)
+			31,		// gpio20 (reset)
+			31,		// gpio21 (reset)
+			31,		// gpio22 (reset)
+			31,		// gpio23 (reset)
+			31,		// gpio24 (reset)
+			5,		// gpio25 (sio)
+			31,		// gpio26 (reset)
+			31,		// gpio27 (reset)
+			31,		// gpio28 (reset)
+			31,		// gpio29 (reset)
+		];
+
+		int<8> = [ 1 ];		// gpio voltage select (3.3v)
+	};
+};
+
+memory = {
+	flash = {
+		baseaddr = 0x10000000;
+		size = 2097152;
+
+		kernel-flash = {
+			baseaddr = 0x10000000;
+			size = 1048576;
+		};
+
+		app-flash = {
+			baseaddr = 0x10100000;
+			size = 1048576;
+		};
+	};
+
+	ram = {
+		baseaddr = 0x20000000;
+		size = 270336;
+
+		kernel-data = {
+			baseaddr = 0x20000000;
+			size = 32768;
+		};
+
+		app-data = {
+			baseaddr = 0x20008000;
+			size = 32768;
+		};
+
+		heap = {
+			baseaddr = 0x20010000;
+			size = 204800;
+		};
+	};
+};
+
+devices = {
+	uart0 = {
+		compatible = "rp2040,uart";
+
+		/* uart hardware (dt_data_t) */
+		baseaddr = 0x40034000;	// uart0 register base
+
+		int<8> = [
+			36,					// hardware interrupt
+			42,					// virtual rx interrupt
+			43,					// virtual tx interrupt
+		];
+
+		// cfg (uart_cfg_t)
+		int<32> = [ 115200 ];	// baudrate
+		int<8> = [
+			0,					// stop bits (1)
+			0,					// parity (UART_PARITY_NONE)
+			3,					// csize (UART_CS_8)
+		];
+
+		tty0 = {
+			compatible = "terminal";
+
+			/* terminal config (term_cfg_t) */
+			int<8> = [
+				0x0,			// iflags (none)
+				0x2,			// oflags (TOFL_NLCR)
+				0x0,			// lflags (none)
+				0,				// tabs
+			];
+
+			int<16> = [
+				0,				// lines (set by the driver)
+				0,				// columns (set by the driver)
+			];
+
+			klog = {
+				compatible = "kernel,log";
+			};
+		};
+	};
+};

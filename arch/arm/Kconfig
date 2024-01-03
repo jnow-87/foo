@@ -1,0 +1,68 @@
+#
+# Copyright (C) 2023 Jan Nowotsch
+# Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+#
+# Released under the terms of the GNU GPL v2.0
+#
+
+
+
+#
+# chip
+#
+# {{{
+choice
+	prompt "chip"
+		
+	config ARM_CHIP_RP2040
+		bool "rp2040"
+		select ARM_FAMILY_V6M
+		select ARM_CORE_CORTEXM0PLUS
+endchoice
+
+menu "hidden"
+	visible if 0
+
+	config ARM_CHIP
+		string "chip"
+		default "rp2040"	if ARM_CHIP_RP2040
+endmenu
+# }}}
+
+#
+# family, core, isa
+#
+# {{{
+menu "hidden"
+	visible if 0
+
+	config ARM_FAMILY_V6M
+		bool "arm v6-m"
+
+	config ARM_FAMILY
+		string "family"
+		default "v6m"	if ARM_FAMILY_V6M
+		default "unknown family"
+
+	config ARM_CORE_CORTEXM0PLUS
+		bool "arm cortex m0+"
+		select ARM_ISA_THUMB
+
+	config ARM_CORE
+		string "core"
+		default "cortex-m0plus"	if ARM_CORE_CORTEXM0PLUS
+		default "unknown core"
+
+	config ARM_ISA_THUMB
+		bool "thumb"
+
+	config ARM_ISA_ARM
+		string "arm"
+
+	config ARM_ISA
+		string "isa"
+		default "thumb"	if ARM_ISA_THUMB
+		default "arm"	if ARM_ISA_ARM
+		default "unknown isa"
+endmenu
+# }}}

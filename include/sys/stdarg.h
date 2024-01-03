@@ -16,7 +16,7 @@
 
 /* macros */
 #ifndef BUILD_HOST
-# ifdef CONFIG_AVR
+# if defined(CONFIG_AVR) || defined(CONFIG_ARM)
 #  define va_start(ap, last)	__builtin_va_start(ap[0], last)
 #  define va_end(ap)			__builtin_va_end(ap[0])
 #  define va_arg(ap, type)		__builtin_va_arg(ap[0], type)
@@ -33,7 +33,7 @@
 
 /* types */
 #ifndef BUILD_HOST
-# ifdef CONFIG_AVR
+# if defined(CONFIG_AVR) || defined(CONFIG_ARM)
 // NOTE __builtin_va_list seems to be defined as void pointer. To allow
 // 		va_lists being passed between functions with all functions being
 // 		affected by updates to the list va_list is defined as an array
