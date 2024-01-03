@@ -119,6 +119,7 @@
 %token NA_VIRTUAL_INTERRUPTS
 %token NA_TIMER_CYCLE_TIME_US
 %token NA_TIMER_INT
+%token NA_SYSCALL_INT
 %token NA_INT
 %token NA_SIZE
 %token NA_STRING
@@ -165,8 +166,9 @@ arch-lst : %empty													{ }
 		 | arch-lst NA_CORE_MASK '=' int ';'						{ arch_root()->core_mask = $4; }
 		 | arch-lst NA_INTERRUPTS '=' int ';'						{ arch_root()->num_ints = $4; }
 		 | arch-lst NA_VIRTUAL_INTERRUPTS '=' int ';'				{ arch_root()->num_vints = $4; }
-		 | arch-lst NA_TIMER_CYCLE_TIME_US '=' int ';'				{ arch_root()->timer_cycle_time_us = $4; }
 		 | arch-lst NA_TIMER_INT '=' int ';'						{ arch_root()->timer_int = $4; }
+		 | arch-lst NA_SYSCALL_INT '=' int ';'						{ arch_root()->syscall_int = $4; }
+		 | arch-lst NA_TIMER_CYCLE_TIME_US '=' int ';'				{ arch_root()->timer_cycle_time_us = $4; }
 		 ;
 
 /* nodes */

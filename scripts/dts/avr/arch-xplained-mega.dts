@@ -22,8 +22,10 @@ core-mask = 0x1;
 num-ints = 37;
 num-vints = 0;
 
-timer-cycle-time-us = 31250; 
 timer-int = 8;
+syscall-int = 35;
+
+timer-cycle-time-us = 31250; 
 
 plt = {
 	compatible = "avr,platform";

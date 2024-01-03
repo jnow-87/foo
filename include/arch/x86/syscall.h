@@ -15,6 +15,10 @@
 #include <sys/syscall.h>
 
 
+/* incomplete types */
+struct thread_t;
+
+
 /* types */
 typedef enum{
 	OLOC_NONE = 0x0,
@@ -30,6 +34,8 @@ typedef struct{
 
 /* prototypes */
 int x86_sc(sc_num_t num, void *param, size_t psize);
+sc_t *x86_sc_arg(struct thread_t *this_t);
+void x86_sc_epilogue(struct thread_t *this_t);
 int x86_sc_overlay_call(sc_num_t num, void *param, overlay_location_t loc, overlay_t *overlays);
 
 

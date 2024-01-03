@@ -7,30 +7,17 @@
 
 
 
-#include <kernel/interrupt.h>
-#include <kernel/init.h>
-#include <kernel/syscall.h>
-#include <sys/errno.h>
+#include <kernel/thread.h>
 #include <sys/syscall.h>
+#include <sys/stack.h>
 
 
-/* local/static prototypes */
-static void sc_hdlr(int_num_t num, void *payload);
+/* global functions */
+sc_t *avr_sc_arg(thread_t *this_t){
+	thread_ctx_t *ctx;
 
 
-/* local functions */
-static int init(void){
-	return int_register(INT_SYSCALL, sc_hdlr, 0x0);
-}
+	ctx = stack_top(this_t->ctx_stack);
 
-platform_init(0, init);
-
-static void sc_hdlr(int_num_t num, void *payload){
-	sc_t *sc;
-
-
-	sc = (sc_t*)(mreg_r(GPIOR0) | (mreg_r(GPIOR1) << 8));
-
-	sc_khdlr(sc->num, sc->param, sc->size);
-	sc->errno = errno;
+	return (sc_t*)(ctx->gpior[0] | (ctx->gpior[1] << 8));
 }

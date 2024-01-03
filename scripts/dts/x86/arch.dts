@@ -16,5 +16,7 @@ core-mask = 0x1;
 num-ints = 4;
 num-vints = 4;
 
-timer-cycle-time-us = 50000;
 timer-int = 0;
+syscall-int = 1;
+
+timer-cycle-time-us = 50000;

@@ -17,6 +17,7 @@
 
 /* macros */
 #define sc(num, param)	(arch_common_call(sc, -E_NOIMP)(num, param, sizeof(*param)))
+#define sc_arg(this_t)	(arch_kernel_call(sc_arg, 0x0)(this_t))
 
 
 #endif // ARCH_SYSCALL_H

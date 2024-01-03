@@ -30,8 +30,10 @@ num-vints = 0
 #endif // CONFIG_BRIDGE_UART_DEV
 ;
 
-timer-cycle-time-us = 31250; 
 timer-int = 8;
+syscall-int = 35;
+
+timer-cycle-time-us = 31250; 
 
 plt = {
 	compatible = "avr,platform";
