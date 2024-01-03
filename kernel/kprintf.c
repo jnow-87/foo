@@ -70,18 +70,24 @@ void kvprintf(kmsg_t lvl, char const *format, va_list lst){
 	if((kopt.dbg_lvl & lvl) == 0)
 		return;
 
+	mutex_lock(&log.mtx);
 	vfprintf(&fp, format, lst);
+	mutex_unlock(&log.mtx);
 }
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	mutex_lock(&log.mtx);
+
 	if(((klog_itf_t*)dt_itf)->puts != 0x0){
 		log.dev = dt_itf;
 		flush();
 	}
 	else
 		set_errno(E_INVAL);
+
+	mutex_unlock(&log.mtx);
 
 	return 0x0;
 }
@@ -104,8 +110,6 @@ static char putc(char c, FILE *stream){
 }
 
 static void flush(void){
-	mutex_lock(&log.mtx);
-
 	log.dev->puts(log.buf, log.idx, log.dev->hw);
 
 	if(log.overflow)
@@ -113,6 +117,4 @@ static void flush(void){
 
 	log.overflow = false;
 	log.idx = 0;
-
-	mutex_unlock(&log.mtx);
 }
