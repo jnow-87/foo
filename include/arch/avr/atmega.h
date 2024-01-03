@@ -97,7 +97,8 @@ static arch_ops_kernel_t const arch_ops_kernel = {
 	.int_enable = avr_int_enable,
 	.int_enabled = avr_int_enabled,
 
-	.int_ipi = 0x0,
+	.ipi_int = 0x0,
+	.ipi_arg = 0x0,
 
 	/* threading */
 	.thread_ctx_init = avr_thread_ctx_init,
