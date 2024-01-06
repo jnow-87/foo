@@ -67,7 +67,7 @@ static void bootprompt(void){
 	if(PIR == 0){
 		kprintf(KMSG_ANY,
 			"\n"
-			"\t\t" FG_BLUE "::: brickos :::" RESET_ATTR "\n"
+			"\t\t" FG("::: brickos :::", KOBALT) "\n"
 			VERSION "\n"
 		);
 	}

@@ -32,13 +32,13 @@ typedef enum{
 
 // general print macros
 #if (defined(CONFIG_KERNEL_LOG_FATAL) && !defined(BUILD_KERNEL_LOG_FATAL_DISABLE))
-# define FATAL(fmt, ...)	cprintf(KMSG_FATAL, FG_RED "[FTL]" RESET_ATTR " %25.25s:%-5u %-20.20s    " FG_RED fmt RESET_ATTR, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+# define FATAL(fmt, ...)	cprintf(KMSG_FATAL, FG("[FTL]", RED) " %25.25s:%-5u %-20.20s    " FG(fmt, RED), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 # define FATAL(fmt, ...)	{}
 #endif // CONFIG_KERNEL_LOG_FATAL
 
 #if (defined(CONFIG_KERNEL_LOG_WARN) && !defined(BUILD_KERNEL_LOG_WARN_DISABLE))
-# define WARN(fmt, ...)		cprintf(KMSG_WARN, FG_YELLOW "[WRN]" RESET_ATTR " %25.25s:%-5u %-20.20s    " FG_YELLOW fmt RESET_ATTR, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+# define WARN(fmt, ...)		cprintf(KMSG_WARN, FG("[WRN]", YELLOW) " %25.25s:%-5u %-20.20s    " FG(fmt, YELLOW), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 # define WARN(fmt, ...)		{}
 #endif // CONFIG_KERNEL_LOG_WARN

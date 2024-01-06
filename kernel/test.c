@@ -35,7 +35,7 @@ void ktest(){
 		);
 	}
 
-	kprintf(KMSG_ANY, " tests " FG_RED "failed" RESET_ATTR ": %u\n", failed);
+	kprintf(KMSG_ANY, " tests " FG("failed", RED) ": %u\n", failed);
 }
 
 void test_log(char const *fmt, ...){

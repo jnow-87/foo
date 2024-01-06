@@ -132,10 +132,10 @@ static int run(test_t *tests, size_t num, bool summary, char const *log_name){
 
 	if(summary){
 		printf(
-			FG_VIOLETT "\nsummary" RESET_ATTR "\n"
-			FG_VIOLETT "    total:" RESET_ATTR " %u\n"
-			FG_GREEN "    passed:" RESET_ATTR " %u\n"
-			FG_RED "    failed:" RESET_ATTR " %u\n"
+			FG("\nsummary", PURPLE) "\n"
+			FG("    total", PURPLE) ": %u\n"
+			FG("    passed", GREEN) ": %u\n"
+			FG("    failed", RED) ": %u\n"
 			,
 			results[0] + results[1],
 			results[0],
