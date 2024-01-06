@@ -82,7 +82,7 @@ endef
 define compile_devicetree
 	$(if $(call is_prestage,stage1), \
 		$(QBUILD)$(dtc) --format=$(1) --sections=$(2) -o $@.tmp $< && \
-		diff $@ $@.tmp 1>/dev/null 2>&1 || { echo "updating $@"; cp $@.tmp $@; } \
+		{ diff $@ $@.tmp 1>/dev/null 2>&1 || { echo "updating $@"; cp $@.tmp $@; } } \
 		, \
 	)
 endef
