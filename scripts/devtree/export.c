@@ -26,7 +26,7 @@
 #define SRC_SECTION_HEADER(fp, s)	section_header(fp, "/*", "*/", s)
 
 #define WARN(node, fmt, ...) \
-	fprintf(stderr, FG_YELLOW "warning" RESET_ATTR ":%s: " fmt, node->name, ##__VA_ARGS__)
+	fprintf(stderr, FG("warning", YELLOW) ":%s: " fmt, node->name, ##__VA_ARGS__)
 
 
 /* types */

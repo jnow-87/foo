@@ -21,7 +21,7 @@
 /* macros */
 #define DEBUG(lvl, fmt, ...) ((opts.verbosity < lvl + 2) ? (void)0 : \
 	fprintf(stderr, \
-		FG_YELLOW "[" PROGNAME "] " FG_VIOLETT " %25.25s:%-5u " FG_YELLOW "%-20.20s " RESET_ATTR fmt "\r", \
+		FG("[" PROGNAME "] ", YELLOW) FG(" %25.25s:%-5u ", PURPLE) FG("%-20.20s ", YELLOW) fmt "\r", \
 		__FILE__, \
 		__LINE__, \
 		__FUNCTION__, \
@@ -31,7 +31,7 @@
 
 #define ERROR(fmt, ...) \
 	fprintf(stderr, \
-		FG_YELLOW "[" PROGNAME "] " FG_RED "error" FG_VIOLETT " %20.20s:%-5u " FG_YELLOW "%-20.20s "RESET_ATTR fmt "\r", \
+		FG("[" PROGNAME "] ", YELLOW) FG("error", RED) FG(" %20.20s:%-5u ", PURPLE) FG("%-20.20s ", YELLOW) fmt "\r", \
 		__FILE__, \
 		__LINE__, \
 		__FUNCTION__, \

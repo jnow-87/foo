@@ -50,13 +50,13 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	dev_fd = open(GPIO_DEV, O_RDWR);
 
 	if(dev_fd < 0){
-		printf(FG_RED "error " RESET_ATTR "opening device \"%s\" \"%s\"\n", GPIO_DEV, strerror(errno));
+		printf(FG("error ", RED) "opening device \"%s\" \"%s\"\n", GPIO_DEV, strerror(errno));
 		return -1;
 	}
 
 	// register signal handler
 	if(signal(SIGNAL, hdlr) != 0){
-		printf(FG_RED "error " RESET_ATTR "registering signal handler \"%s\"\n", strerror(errno));
+		printf(FG("error ", RED) "registering signal handler \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -65,7 +65,7 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	cfg.sig = SIGNAL;
 
 	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg) != 0){
-		printf(FG_RED "error " RESET_ATTR "registering signal to device \"%s\"\n", strerror(errno));
+		printf(FG("error ", RED) "registering signal to device \"%s\"\n", strerror(errno));
 		return -1;
 	}
 

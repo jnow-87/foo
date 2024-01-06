@@ -28,7 +28,7 @@
 # define DEBUG_COLOR	FG_BLUE
 
 # define LNX_SYSCALL_ERROR_EXIT(fmt, ...) \
-	kpanic("error in linux syscall " FG_VIOLETT "%25.25s:%-5u " DEBUG_COLOR "%-20.20s " RESET_ATTR fmt "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__);
+	kpanic("error in linux syscall " FG("%25.25s:%-5u ", PURPLE) ATTR("%-20.20s ", DEBUG_COLOR) fmt "\n", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__);
 #else
 # define DEBUG_STR		"[init]  "
 # define DEBUG_COLOR	FG_KOBALT
@@ -40,7 +40,7 @@
 #define lnx_printf(fmt, ...) lnx_dprintf(1, fmt, ##__VA_ARGS__)
 
 #define LNX_ERROR(fmt, ...) \
-	lnx_dprintf(2, FG_RED DEBUG_STR " error" FG_VIOLETT " %19.19s:%-5u " DEBUG_COLOR "%-20.20s " RESET_ATTR fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__);
+	lnx_dprintf(2, FG(DEBUG_STR " error", RED) FG(" %19.19s:%-5u ", PURPLE) ATTR("%-20.20s ", DEBUG_COLOR) fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__);
 
 #define LNX_EEXIT(fmt, ...){ \
 	LNX_ERROR(fmt, ##__VA_ARGS__); \
@@ -50,7 +50,7 @@
 
 #define LNX_DEBUG(fmt, ...){ \
 	if(x86_opts.debug) \
-		lnx_dprintf(2, DEBUG_COLOR DEBUG_STR FG_VIOLETT " %25.25s:%-5u " DEBUG_COLOR "%-20.20s " RESET_ATTR fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
+		lnx_dprintf(2, ATTR(DEBUG_STR, DEBUG_COLOR) FG(" %25.25s:%-5u ", PURPLE) ATTR("%-20.20s ", DEBUG_COLOR) fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
 }
 
 

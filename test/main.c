@@ -73,10 +73,10 @@ int main(int argc, char **argv){
 
 	/* summary */
 	printf(
-		FG_VIOLETT "\nsummary" RESET_ATTR " (cf. " FG_VIOLETT "%s" RESET_ATTR ")\n"
-		FG_VIOLETT "    total:" RESET_ATTR " %u\n"
-		FG_GREEN "    passed:" RESET_ATTR " %u\n"
-		FG_RED "    failed:" RESET_ATTR " %u\n"
+		FG("\nsummary", PURPLE) " (cf. " FG("%s", PURPLE) ")\n"
+		FG("    total", PURPLE) ": %u\n"
+		FG("    passed", GREEN) ": %u\n"
+		FG("    failed", RED) ": %u\n"
 		,
 		log_file,
 		results[0] + results[1],

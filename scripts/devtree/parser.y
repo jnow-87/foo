@@ -215,7 +215,7 @@ int devtree_parser_error(char const *fmt, ...){
 	va_list lst;
 
 
-	fprintf(stderr, FG_VIOLETT "%s" RESET_ATTR ":" FG_GREEN "%d:%d" RESET_ATTR " token \"%s\" -- ",
+	fprintf(stderr, FG("%s", PURPLE) ":" FG("%d:%d", GREEN) " token \"%s\" -- ",
 		dt_script,
 		devtreelloc.first_line,
 		devtreelloc.first_column,

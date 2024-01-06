@@ -23,7 +23,7 @@
 
 
 /* macros */
-#define OVERFLOW_MSG	RESET_ATTR FG_KOBALT "\n[kernel log overflow]\n\n" RESET_ATTR
+#define OVERFLOW_MSG	RESET_ATTR FG("\n[kernel log overflow]", KOBALT) "\n\n"
 
 
 /* types */

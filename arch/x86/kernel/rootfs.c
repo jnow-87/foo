@@ -28,7 +28,7 @@ static int dump_file(fs_node_t *node);
 
 /* global functions */
 int x86_rootfs_dump(void){
-	INFO("exporting file system to " FG_VIOLETT "%s" RESET_ATTR "\n", x86_opts.rootfs);
+	INFO("exporting file system to " FG("%s", PURPLE) "\n", x86_opts.rootfs);
 
 	return dump_node(fs_root);
 }
