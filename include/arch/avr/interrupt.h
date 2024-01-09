@@ -12,11 +12,12 @@
 
 
 #include <kernel/interrupt.h>
+#include <sys/types.h>
 
 
 /* prototypes */
-int_type_t avr_int_enable(int_type_t mask);
-int_type_t avr_int_enabled(void);
+bool avr_int_enable(bool en);
+bool avr_int_enabled(void);
 
 
 #endif // AVR_INTERRUPT_H

@@ -27,6 +27,7 @@
 #include <sys/mutex.h>
 #include <sys/string.h>
 #include <sys/devicetree.h>
+#include <sys/types.h>
 
 
 /* types */
@@ -78,7 +79,7 @@ void sched_yield(void){
 	char dummy;
 
 
-	if(int_enabled() == INT_NONE)
+	if(!int_enabled())
 		kpanic("interrupts are disabled, syscall not allowed\n");
 
 	// actual thread switches are only performed in interrupt
@@ -90,7 +91,7 @@ void sched_trigger(void){
 	thread_t *this_t;
 
 
-	int_enable(INT_NONE);
+	int_enable(false);
 	mutex_lock(&sched_mtx);
 
 	// NOTE The running thread might have already transitioned to a

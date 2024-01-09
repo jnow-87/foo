@@ -14,6 +14,7 @@
 #include <kernel/sched.h>
 #include <sys/stdarg.h>
 #include <sys/stack.h>
+#include <sys/types.h>
 
 
 /* global functions */
@@ -22,7 +23,7 @@ void kpanic_ext(char const *file, char const *func, unsigned int line, char cons
 	thread_t *this_t;
 
 
-	int_enable(INT_NONE);
+	int_enable(false);
 
 	/* print woops */
 	va_start(lst, format);

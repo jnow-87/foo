@@ -54,8 +54,8 @@ typedef struct{
 	int (*copy_to_user)(void *user, void const *kernel, size_t n, struct process_t const *this_p);
 
 	/* interrupts */
-	int_type_t (*int_enable)(int_type_t mask);
-	int_type_t (*int_enabled)(void);
+	bool (*int_enable)(bool en);
+	bool (*int_enabled)(void);
 
 	int (*ipi_int)(unsigned int core, bool bcast, ipi_msg_t *msg);
 	ipi_msg_t * (*ipi_arg)(void);

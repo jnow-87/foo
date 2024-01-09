@@ -11,16 +11,17 @@
 #include <arch/x86/linux.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
+#include <sys/types.h>
 
 
 /* global functions */
 void x86_sched_trigger(void){
-	int_type_t imask;
+	bool ie;
 
 
-	imask = int_enabled();
+	ie = int_enabled();
 	sched_trigger();
-	int_enable(imask);	// disabled by sched_trigger()
+	int_enable(ie);	// disabled by sched_trigger()
 }
 
 void x86_sched_yield(void){
