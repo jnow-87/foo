@@ -14,18 +14,9 @@
 #include <sys/types.h>
 
 
-/* macros */
-#define INT_ALL ((int_type_t)(INT_GLOBAL))
-
-
 /* types */
 typedef uint8_t int_num_t;
 typedef void (*int_hdlr_t)(int_num_t num, void *payload);
-
-typedef enum int_type_t{
-	INT_NONE = 0x0,
-	INT_GLOBAL = 0x1,
-} int_type_t;
 
 
 /* prototypes */

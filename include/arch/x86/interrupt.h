@@ -13,11 +13,12 @@
 
 #include <arch/x86/hardware.h>
 #include <kernel/interrupt.h>
+#include <sys/types.h>
 
 
 /* prototypes */
-int_type_t x86_int_enabled(void);
-int_type_t x86_int_enable(int_type_t mask);
+bool x86_int_enable(bool en);
+bool x86_int_enabled(void);
 
 x86_hw_op_t *x86_int_op(void);
 

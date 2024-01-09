@@ -13,11 +13,12 @@
 
 #include <arch/arch.h>
 #include <sys/errno.h>
+#include <sys/types.h>
 
 
 /* macros */
-#define int_enable(mask)			(arch_kernel_call(int_enable, INT_NONE)(mask))
-#define int_enabled()				(arch_kernel_call(int_enabled, INT_NONE)())
+#define int_enable(mask)			(arch_kernel_call(int_enable, false)(mask))
+#define int_enabled()				(arch_kernel_call(int_enabled, false)())
 
 #define ipi_int(core, bcast, msg)	(arch_kernel_call(ipi_int, -E_NOIMP)(core, bcast, msg))
 #define ipi_arg()					(arch_kernel_call(ipi_arg, 0x0)())

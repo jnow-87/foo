@@ -111,9 +111,9 @@ static int syscall(sc_num_t num, void *param, size_t psize, thread_t *this_t){
 		return -errno;
 
 	/* execute callback */
-	int_enable(INT_ALL);
+	int_enable(true);
 	r = hdlr(kparam);
-	int_enable(INT_NONE);
+	int_enable(false);
 
 	if(r != 0){
 		if(errno == 0)
