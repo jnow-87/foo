@@ -11,9 +11,11 @@
 #define AVR_ATOMIC_H
 
 
+#include <arch/arch.h>
+
+
 /* prototypes */
-int avr_cas(int volatile *v, int old, int new);
-void avr_atomic_inc(int volatile *v, int inc);
+int avr_atomic(atomic_t op, void *param);
 
 
 #endif // AVR_ATOMIC_H

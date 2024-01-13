@@ -8,7 +8,7 @@
 
 
 // TODO check implementation
-#include <arch/atomic.h>
+#include <sys/atomic.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
 #include <sys/compiler.h>
