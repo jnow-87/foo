@@ -7,6 +7,8 @@
 
 
 
+/* MEMORY sections are defined in a script generated based on the device tree */
+
 ENTRY(_start)
 
 SECTIONS {

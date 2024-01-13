@@ -24,8 +24,6 @@ struct thread_t;
 /* types */
 // NOTE when changing thread_ctx_t also check if modifications
 // 		to the interrupt service routine are required
-// NOTE size assumptions on certain fields, e.g. type, are checked
-// 		in the interrupt handler
 typedef struct thread_ctx_t{
 	struct thread_ctx_t *next;
 

@@ -184,10 +184,6 @@ static size_t putsn(char const *s, size_t n, void *hw){
 	}
 
 	return i;
-
-
-err:
-	return 0;
 }
 
 static size_t gets(char *s, size_t n, void *hw){

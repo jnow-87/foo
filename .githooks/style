@@ -75,7 +75,7 @@ function check_style_guide(){
 	# issue grep
 	eval ${content} "|" \
 		 "sed " ${style_ignore[*]} "|" \
-		 "GREP_COLOR='2;30;41' grep -nHE --color --label="${file} \
+		 "GREP_COLORS='mt=2;30;41' grep -nHE --color --label="${file} \
 		 ${style_violations[*]} \
 		 ${log}
 

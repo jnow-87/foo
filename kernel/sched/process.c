@@ -16,6 +16,7 @@
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/string.h>
+#include <sys/stream.h>
 #include <sys/mutex.h>
 
 
@@ -82,10 +83,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 		goto_errno(err_2, E_NOMEM);
 
 	argp = this_p->args->phys_addr;
-
-	strcpy(argp, name);
-	strcpy(argp + strlen(name), " ");
-	strcpy(argp + strlen(name) + 1, args);
+	sprintf(argp, "%s %s", name, args);
 
 	/* init file system handles */
 	this_p->fds = 0x0;

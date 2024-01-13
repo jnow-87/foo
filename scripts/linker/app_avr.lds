@@ -7,18 +7,13 @@
 
 
 
-/** MEMORY sections are defined in a separate script depending on the
- *  configured target MCU, cf. scripts/linker/mem_*
- */
+/* MEMORY sections are defined in a script generated based on the device tree */
+
 ENTRY(avr_start)
 
 SECTIONS {
 	/* code */
 	.text : {
-		/* ensure .avr_start has a fixed starting address which can be
-		 * used to configure the kernel through CONFIG_INIT_BINARY
-		 */
-		. = 0x0;
 		*(.avr_start)
 		*( .progmem.gcc*)
 		*(.text .stub .text.* .gnu.linkonce.t.*)

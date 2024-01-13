@@ -17,7 +17,7 @@
 #include <sys/syscall.h>
 
 
-/* macors */
+/* macros */
 #ifndef CONFIG_KERNEL_SYSCALL
 # define sc_khdlr(num, param, psize)	0
 #endif // CONFIG_KERNEL_SYSCALL

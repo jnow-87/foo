@@ -24,6 +24,7 @@
 void avr_thread_ctx_init(thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg){
 	memset(ctx, 0, sizeof(thread_ctx_t));
 
+	ctx->type = CTX_UNKNOWN;
 	ctx->mcusr = mreg_r(MCUSR);
 
 	// NOTE Due to the two layer interrupt vectors the entry point has
