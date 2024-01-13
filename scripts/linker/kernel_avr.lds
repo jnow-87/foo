@@ -64,9 +64,7 @@ SECTIONS {
 	INCLUDE avr_plugin_kernel.lds
 
 	/* discard sections */
-	/DISCARD/ : {
-		*(.init4)	/* libgcc .data initialisation not needed */
-	}
+	INCLUDE discard.lds
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */
