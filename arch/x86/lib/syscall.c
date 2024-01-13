@@ -10,10 +10,11 @@
 #include <config/config.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
-#include <arch/atomic.h>
+#include <arch/x86/syscall.h>
 #include <lib/init.h>
 #include <lib/stdlib.h>
 #include <lib/sched.h>
+#include <sys/atomic.h>
 #include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/errno.h>

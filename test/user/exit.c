@@ -7,10 +7,10 @@
 
 
 
-#include <arch/atomic.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/atomic.h>
 #include <test/test.h>
 
 
@@ -43,8 +43,8 @@ static int thread(void *arg){
 	thread_info_t info;
 
 
-	atomic_inc(&ecode, TEST_INT_EQ(thread_info(&info), 0));
-	atomic_inc(&ecode, TEST_PTR_EQ(arg, 0x0));
+	atomic_add(&ecode, TEST_INT_EQ(thread_info(&info), 0));
+	atomic_add(&ecode, TEST_PTR_EQ(arg, 0x0));
 
 	if(info.tid == 1){
 		sleep(2000, 0);

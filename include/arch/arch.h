@@ -68,10 +68,16 @@ typedef struct{
 } arch_ops_kernel_t;
 # endif // BUILD_KERNEL
 
+typedef int (*atomic_t)(void *param);
+
 typedef struct{
 	/* atomics */
+	// required if below, higher level atomics are not implemented
+	int (*atomic)(atomic_t op, void *param);
+
+	// optional calls, if not implemented, atomic() is required
 	int (*cas)(int volatile *v, int old, int new);
-	void (*atomic_inc)(int volatile *v, int inc);
+	void (*atomic_add)(int volatile *v, int inc);
 
 	/* syscall */
 	int (*sc)(sc_num_t num, void *param, size_t psize);

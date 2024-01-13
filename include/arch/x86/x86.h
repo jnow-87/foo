@@ -58,8 +58,9 @@ static arch_ops_kernel_t const arch_ops_kernel = {
 // common ops
 static arch_ops_common_t const arch_ops_common = {
 	/* atomics */
+	.atomic = 0x0,
 	.cas = x86_cas,
-	.atomic_inc = x86_atomic_add,
+	.atomic_add = x86_atomic_add,
 
 	/* syscall */
 	.sc = x86_sc,

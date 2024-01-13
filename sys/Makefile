@@ -9,6 +9,7 @@
 
 # kernel
 obj-y := \
+	atomic.o \
 	errno.o \
 	escape.o \
 	string.o \
@@ -53,6 +54,7 @@ hostobj-y := \
 obj-nobuiltin-y := libbrick.o
 
 libbrick-y := \
+	atomic.o \
 	errno.o \
 	escape.o \
 	string.o \

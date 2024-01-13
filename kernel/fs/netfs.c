@@ -8,7 +8,6 @@
 
 
 #include <arch/memory.h>
-#include <arch/atomic.h>
 #include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/fs.h>
@@ -18,6 +17,7 @@
 #include <kernel/sched.h>
 #include <kernel/kprintf.h>
 #include <kernel/ksignal.h>
+#include <sys/atomic.h>
 #include <sys/mutex.h>
 #include <sys/syscall.h>
 #include <sys/ioctl.h>
@@ -479,7 +479,7 @@ static fs_filed_t *create_filed(process_t *this_p){
 
 
 	/* create netfs node */
-	atomic_inc(&sock_id, 1);
+	atomic_add(&sock_id, 1);
 
 	if(sock_id == 0)
 		goto_errno(err_0, E_LIMIT);
@@ -504,7 +504,7 @@ err_1:
 	fs_node_destroy(node);
 
 err_0:
-	atomic_inc(&sock_id, -1);
+	atomic_add(&sock_id, -1);
 
 	return 0x0;
 }
