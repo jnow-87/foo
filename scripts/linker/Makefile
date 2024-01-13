@@ -28,3 +28,11 @@ $(loc_build_tree)/%.i.lds: $(loc_src_tree)/%_$(CONFIG_ARCH).lds
 $(loc_build_tree)/%_plugin.i.lds: cppflags := -DBUILD_USER_PLUGIN
 $(loc_build_tree)/%_plugin.i.lds: $(loc_src_tree)/%_$(CONFIG_ARCH).lds
 	$(call preproc_file)
+
+
+####
+## memory linker script
+####
+
+$(loc_build_tree)/memory.lds: $(loc_build_tree)/gen_lds_memory
+	$(call compile_file,$< $@)
