@@ -60,9 +60,7 @@ SECTIONS {
 	} > kernel_data
 
 	/* discard sections */
-	/DISCARD/ : {
-		*(.init4)	/* libgcc .data initialisation not needed */
-	}
+	INCLUDE discard.lds
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */
