@@ -35,6 +35,9 @@ SECTIONS {
 		INCLUDE std_init.lds
 		INCLUDE libsys_init.lds
 		INCLUDE fonts.lds
+#ifdef BUILD_USER_PLUGIN
+		INCLUDE plugin.lds
+#endif
 	} > app_data AT>app_flash
 
 	__data_start = ADDR(.data);

@@ -27,7 +27,7 @@ TEST(close){
 
 	/* init file */
 	(void)unlink("dummy");
-	r += TEST_PTR_NEQ(fp = fopen("dummy", "w"), 0x0);
+	ASSERT_PTR_NEQ(fp = fopen("dummy", "w"), 0x0);
 
 	r += TEST_INT_EQ(fcntl(fp->fileno, F_MODE_GET, &f_mode, sizeof(f_mode)), 0);
 	f_mode |= O_NONBLOCK;
@@ -43,7 +43,7 @@ TEST(close){
 	r += TEST_INT_EQ(fclose(fp), 0);
 
 	/* read back */
-	r += TEST_PTR_NEQ(fp = fopen("dummy", "r"), 0x0);
+	ASSERT_PTR_NEQ(fp = fopen("dummy", "r"), 0x0);
 	r += TEST_INT_EQ(read(fp->fileno, buf, 20), 10);
 	r += TEST_STRN_EQ(buf, "1457891234", 10);
 

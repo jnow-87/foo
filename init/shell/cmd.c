@@ -32,8 +32,8 @@ static int redirect_revert(FILE *fp, int fd_revert);
 
 
 /* external variables */
-extern cmd_t __cmds_start[],
-			 __cmds_end[];
+extern cmd_t __start_cmds[],
+			 __stop_cmds[];
 
 
 /* static variables */
@@ -46,7 +46,7 @@ void cmd_init(void){
 
 
 	/* init command list */
-	for(cmd=__cmds_start; cmd!=__cmds_end; cmd++){
+	for(cmd=__start_cmds; cmd!=__stop_cmds; cmd++){
 		if(cmd->exec == 0x0){
 			ERROR("missing exec callback for %s, ignoring command", cmd->name);
 			continue;
@@ -62,6 +62,9 @@ int cmd_exec(int argc, char **argv){
 
 
 	/* get command */
+	if(cmd_lst == 0x0)
+		return ERROR("no builtin commands");
+
 	cmd = list_find_str(cmd_lst, name, argv[0]);
 
 	if(cmd == 0x0)
