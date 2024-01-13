@@ -16,7 +16,7 @@ comma := ,
 #
 # 	$(call exists,<file>)
 define exists
-$(if $(wildcard $(1)),1,)
+$(if $(wildcard $(1)),y,)
 endef
 
 # convert string to upper case

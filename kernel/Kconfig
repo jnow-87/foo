@@ -197,6 +197,7 @@ endmenu
 menu "init binary settings"
 	config INIT_BINARY
 		hex "address of the init binary"
+		default 0xdeadbeef
 
 	choice
 		prompt "init binary type"
