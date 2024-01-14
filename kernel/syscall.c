@@ -7,8 +7,7 @@
 
 
 
-#include <arch/interrupt.h>
-#include <arch/syscall.h>
+#include <arch/arch.h>
 #include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>

@@ -8,10 +8,7 @@
 
 
 #include <config/config.h>
-#include <arch/interrupt.h>
-#include <arch/syscall.h>
-#include <arch/core.h>
-#include <arch/memory.h>
+#include <arch/arch.h>
 #include <kernel/opt.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>

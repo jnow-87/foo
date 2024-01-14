@@ -8,7 +8,7 @@
 
 
 #include <config/config.h>
-#include <arch/interrupt.h>
+#include <arch/arch.h>
 #include <kernel/memory.h>
 #include <kernel/interrupt.h>
 #include <kernel/inttask.h>

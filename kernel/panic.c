@@ -7,8 +7,7 @@
 
 
 
-#include <arch/interrupt.h>
-#include <arch/core.h>
+#include <arch/arch.h>
 #include <kernel/kprintf.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>

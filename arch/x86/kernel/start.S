@@ -7,6 +7,13 @@
 
 
 
+/* external functions */
+.extern x86_std_init
+.extern x86_std_fini
+.extern x86_opts_parse
+.extern kernel
+
+
 .data
 
 /* global variables */

@@ -9,7 +9,6 @@
 
 #include <config/config.h>
 #include <arch/arch.h>
-#include <arch/interrupt.h>
 #include <kernel/init.h>
 #include <kernel/panic.h>
 #include <sys/memblock.h>

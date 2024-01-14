@@ -9,7 +9,6 @@
 
 #include <arch/arch.h>
 #include <arch/avr/register.h>
-#include <arch/avr/thread.h>
 #include <kernel/interrupt.h>
 #include <kernel/sched.h>
 #include <kernel/thread.h>

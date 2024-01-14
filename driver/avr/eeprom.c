@@ -7,7 +7,7 @@
 
 
 
-#include <arch/interrupt.h>
+#include <arch/arch.h>
 #include <arch/avr/register.h>
 #include <kernel/interrupt.h>
 #include <kernel/driver.h>

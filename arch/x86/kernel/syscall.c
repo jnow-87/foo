@@ -7,16 +7,9 @@
 
 
 
+#include <arch/arch.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
-#include <arch/x86/init.h>
-#include <arch/x86/syscall.h>
-#include <arch/x86/thread.h>
-#include <arch/x86/sched.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/rootfs.h>
-#include <arch/interrupt.h>
-#include <arch/memory.h>
 #include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/syscall.h>
@@ -40,7 +33,7 @@ static int overlay_mmap(void *param);
 
 /* static variables */
 // syscall overlays
-static overlay_t overlays[] = {
+static x86_sc_overlay_t overlays[] = {
 	{ .call = 0x0,			.loc = OLOC_NONE },
 	{ .call = 0x0,			.loc = OLOC_NONE },
 	{ .call = 0x0,			.loc = OLOC_NONE },

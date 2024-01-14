@@ -12,7 +12,7 @@
 
 
 #include <config/config.h>
-#include <arch/core.h>
+#include <arch/arch.h>
 #include <sys/escape.h>
 #include <sys/stdarg.h>
 

@@ -8,9 +8,9 @@
 
 
 #include <config/config.h>
+#include <arch/arch.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/opts.h>
-#include <arch/x86/thread.h>
 #include <kernel/init.h>
 
 

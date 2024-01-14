@@ -7,7 +7,7 @@
 
 
 
-#include <arch/syscall.h>
+#include <arch/arch.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/signal.h>
