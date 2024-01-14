@@ -14,7 +14,7 @@
 #include <sys/compiler.h>
 
 #ifdef BUILD_KERNEL
-# include <arch/interrupt.h>
+# include <arch/arch.h>
 # include <kernel/sched.h>
 # include <sys/types.h>
 #else

@@ -12,7 +12,7 @@
 
 
 #include <config/config.h>
-#include <sys/const.h>
+#include <arch/types.h>
 
 #ifdef CONFIG_ATMEGA1284P
 # include <arch/avr/atmega1284.h>
@@ -20,19 +20,12 @@
 
 #ifndef ASM
 # ifndef BUILD_HOST
-#  include <arch/arch.h>
-#  include <arch/avr/core.h>
-#  include <arch/avr/register.h>
-
-#  ifdef BUILD_KERNEL
-#   include <arch/avr/interrupt.h>
-#  endif // BUILD_KERNEL
-
-#  include <arch/avr/thread.h>
-#  include <arch/avr/syscall.h>
-#  include <arch/avr/atomic.h>
-#  include <sys/types.h>
+#  include <sys/compiler.h>
+#  include <sys/devicetree.h>
 #  include <sys/devtree.h>
+#  include <sys/syscall.h>
+#  include <sys/thread.h>
+#  include <sys/types.h>
 # endif // BUILD_HOST
 #endif // ASM
 
@@ -60,6 +53,14 @@
 #endif
 
 
+/* incomplete types */
+#ifndef ASM
+# ifndef BUILD_HOST
+struct thread_t;
+# endif // BUILD_HOST
+#endif // ASM
+
+
 /* types */
 #ifndef ASM
 # ifndef BUILD_HOST
@@ -69,6 +70,56 @@ typedef struct{
 
 	uint8_t watchdog_prescaler;
 } avr_platform_cfg_t;
+
+// NOTE when changing thread_ctx_t also check if modifications
+// 		to the interrupt service routine are required
+typedef struct thread_ctx_t{
+	struct thread_ctx_t *next,
+						*this;
+
+	uint8_t type;				/**< cf. thread_ctx_type_t */
+
+	uint8_t sreg,				/**< status register */
+			mcusr,				/**< control register */
+			rampz;				/**< extended Z-pointer */
+
+	uint8_t gpior[3];			/**< GPIO registers */
+	uint8_t gpr[32];			/**< general purpose registers */
+
+	void *int_vec_addr,			/**< level-1 interrupt vector return address */
+		 *ret_addr;				/**< thread return address on interrupt */
+} thread_ctx_t;
+
+STATIC_ASSERT(sizeof(((thread_ctx_t*)(0))->next) == (DEVTREE_ARCH_ADDR_WIDTH == 16 ? 2 : 1));
+STATIC_ASSERT(sizeof(((thread_ctx_t*)(0))->type) == 1);
+# endif // BUILD_HOST
+#endif // ASM
+
+
+/* prototypes */
+#ifndef ASM
+# ifndef BUILD_HOST
+#  ifdef BUILD_KERNEL
+// core
+void avr_core_sleep(void);
+void avr_core_panic(thread_ctx_t const *tc);
+
+// interrupt
+bool avr_int_enable(bool en);
+bool avr_int_enabled(void);
+
+void avr_iovfl_hdlr(struct thread_ctx_t *tc);
+
+// thread
+void avr_thread_ctx_init(thread_ctx_t *ctx, struct thread_t *this_t, thread_entry_t entry, void *arg);
+
+// syscall
+sc_t *avr_sc_arg(struct thread_t *this_t);
+#  endif // BUILD_KERNEL
+
+int avr_atomic(atomic_t op, void *param);
+
+int avr_sc(sc_num_t num, void *param, size_t psize);
 # endif // BUILD_HOST
 #endif // ASM
 

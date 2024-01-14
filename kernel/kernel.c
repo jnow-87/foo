@@ -7,7 +7,7 @@
 
 
 
-#include <arch/interrupt.h>
+#include <arch/arch.h>
 #include <kernel/opt.h>
 #include <kernel/panic.h>
 #include <kernel/sched.h>

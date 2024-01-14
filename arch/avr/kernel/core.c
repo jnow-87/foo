@@ -8,7 +8,7 @@
 
 
 #include <config/config.h>
-#include <arch/thread.h>
+#include <arch/arch.h>
 #include <arch/avr/atmega.h>
 #include <arch/avr/register.h>
 #include <kernel/init.h>

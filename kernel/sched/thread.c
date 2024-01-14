@@ -8,7 +8,7 @@
 
 
 #include <config/config.h>
-#include <arch/thread.h>
+#include <arch/arch.h>
 #include <kernel/sched.h>
 #include <kernel/thread.h>
 #include <kernel/memory.h>

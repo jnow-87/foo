@@ -8,10 +8,9 @@
 
 
 #include <config/config.h>
+#include <arch/arch.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
-#include <arch/x86/sched.h>
-#include <arch/x86/syscall.h>
 #include <kernel/init.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>

@@ -8,7 +8,7 @@
 
 
 #include <config/config.h>
-#include <arch/syscall.h>
+#include <arch/arch.h>
 #include <sys/syscall.h>
 #include <sys/signal.h>
 #include <sys/thread.h>

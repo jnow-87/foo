@@ -11,7 +11,7 @@
 #define KERNEL_USIGNAL_H
 
 
-#include <arch/thread.h>
+#include <arch/arch.h>
 #include <kernel/thread.h>
 #include <sys/signal.h>
 

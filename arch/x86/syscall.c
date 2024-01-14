@@ -7,11 +7,11 @@
 
 
 
-#include <arch/x86/syscall.h>
+#include <arch/arch.h>
 
 
 /* global functions */
-int x86_sc_overlay_call(sc_num_t num, void *param, overlay_location_t loc, overlay_t *overlays){
+int x86_sc_overlay_call(sc_num_t num, void *param, x86_sc_overlay_loc_t loc, x86_sc_overlay_t *overlays){
 	if(overlays[num].call == 0x0 || (overlays[num].loc & loc) == 0)
 		return 0;
 

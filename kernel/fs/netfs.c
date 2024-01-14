@@ -7,7 +7,7 @@
 
 
 
-#include <arch/memory.h>
+#include <arch/arch.h>
 #include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/fs.h>

@@ -7,7 +7,7 @@
 
 
 
-#include <arch/x86/thread.h>
+#include <arch/arch.h>
 #include <kernel/thread.h>
 #include <sys/string.h>
 

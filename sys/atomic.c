@@ -8,7 +8,6 @@
 
 
 #include <arch/arch.h>
-#include <arch/atomic.h>
 
 
 /* types */

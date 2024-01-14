@@ -11,7 +11,7 @@
 #define KERNEL_THREAD_H
 
 
-#include <arch/thread.h>
+#include <arch/arch.h>
 #include <kernel/process.h>
 #include <kernel/usignal.h>
 #include <sys/mutex.h>

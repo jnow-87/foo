@@ -7,7 +7,7 @@
 
 
 
-#include <arch/syscall.h>
+#include <arch/arch.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
 

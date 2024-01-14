@@ -8,9 +8,9 @@
 
 
 #include <config/config.h>
+#include <arch/arch.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
-#include <arch/x86/syscall.h>
 #include <lib/init.h>
 #include <lib/stdlib.h>
 #include <lib/sched.h>
@@ -80,7 +80,7 @@ static ops_t ops[] = {
 STATIC_ASSERT(sizeof_array(ops) == HWO_NOPS + 1);
 
 // syscall overlays
-static overlay_t overlays[] = {
+static x86_sc_overlay_t overlays[] = {
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },

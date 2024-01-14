@@ -7,7 +7,7 @@
 
 
 
-#include <arch/syscall.h>
+#include <arch/arch.h>
 #include <sys/syscall.h>
 #include <lib/unistd.h>
 #include <lib/stdio.h>

@@ -7,7 +7,7 @@
 
 
 
-#include <arch/interrupt.h>
+#include <arch/arch.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/string.h>

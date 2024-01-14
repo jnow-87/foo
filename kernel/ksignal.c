@@ -7,7 +7,7 @@
 
 
 
-#include <arch/interrupt.h>
+#include <arch/arch.h>
 #include <kernel/ksignal.h>
 #include <kernel/timer.h>
 #include <kernel/sched.h>
