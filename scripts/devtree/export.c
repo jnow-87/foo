@@ -178,6 +178,10 @@ static void arch_makevars(FILE *fp, base_node_t *node, char const *node_ident){
 	fprintf(fp, "DEVTREE_ARCH_REG_WIDTH := %u\n", arch->reg_width);
 	fprintf(fp, "DEVTREE_ARCH_CORE_MASK := %#x\n", arch->core_mask);
 	fprintf(fp, "DEVTREE_ARCH_NCORES := %u\n", arch->ncores);
+
+	if(arch->ncores > 1)
+		fprintf(fp, "DEVTREE_ARCH_MULTI_CORE := y\n");
+
 	fprintf(fp, "DEVTREE_ARCH_NUM_INTS := %u\n", arch->num_ints);
 	fprintf(fp, "DEVTREE_ARCH_NUM_VINTS := %u\n", arch->num_vints);
 	fprintf(fp, "DEVTREE_ARCH_TIMER_INT := %u\n", arch->timer_int);
@@ -211,6 +215,10 @@ static void arch_macros(FILE *fp, base_node_t *node, char const *node_ident){
 	fprintf(fp, "#define DEVTREE_ARCH_REG_WIDTH %u\n", arch->reg_width);
 	fprintf(fp, "#define DEVTREE_ARCH_CORE_MASK %#x\n", arch->core_mask);
 	fprintf(fp, "#define DEVTREE_ARCH_NCORES %u\n", arch->ncores);
+
+	if(arch->ncores > 1)
+		fprintf(fp, "#define DEVTREE_ARCH_MULTI_CORE\n");
+
 	fprintf(fp, "#define DEVTREE_ARCH_NUM_INTS %u\n", arch->num_ints);
 	fprintf(fp, "#define DEVTREE_ARCH_NUM_VINTS %u\n", arch->num_vints);
 	fprintf(fp, "#define DEVTREE_ARCH_TIMER_INT %u\n", arch->timer_int);

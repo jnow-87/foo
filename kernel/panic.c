@@ -7,11 +7,11 @@
 
 
 
-#include <config/config.h>
 #include <arch/arch.h>
 #include <kernel/kprintf.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
+#include <sys/devicetree.h>
 #include <sys/stdarg.h>
 #include <sys/stack.h>
 #include <sys/types.h>
@@ -31,9 +31,9 @@ void kpanic_ext(char const *file, char const *func, unsigned int line, char cons
 	kprintf(KMSG_ANY, FG("\n\nwoops!!", RED) "\t");
 	kvprintf(KMSG_ANY, format, lst);
 
-#ifdef CONFIG_KERNEL_SMP
+#ifdef DEVTREE_ARCH_MULTI_CORE
 	kprintf(KMSG_ANY, "%10.10s: %u\n", "core", PIR);
-#endif // CONFIG_KERNEL_SMP
+#endif // DEVTREE_ARCH_MULTI_CORE
 
 	kprintf(KMSG_ANY, "%10.10s: %s:%u %s()\n", "location", file, line, func);
 

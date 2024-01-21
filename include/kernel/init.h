@@ -13,6 +13,7 @@
 
 #include <config/config.h>
 #include <sys/compiler.h>
+#include <sys/devicetree.h>
 #include <sys/errno.h>
 
 

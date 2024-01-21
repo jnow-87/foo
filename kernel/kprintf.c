@@ -14,6 +14,7 @@
 #include <kernel/driver.h>
 #include <kernel/opt.h>
 #include <driver/klog.h>
+#include <sys/devicetree.h>
 #include <sys/types.h>
 #include <sys/stream.h>
 #include <sys/stdarg.h>
@@ -66,9 +67,9 @@ void kprintf(kmsg_t lvl, char const *format, ...){
 
 void kvprintf(kmsg_t lvl, char const *format, va_list lst){
 	FILE fp = FILE_INITIALISER(0x0, 0x0, 0, putc);
-#ifdef CONFIG_KERNEL_SMP
+#ifdef DEVTREE_ARCH_MULTI_CORE
 	char pir[8];
-#endif // CONFIG_KERNEL_SMP
+#endif // DEVTREE_ARCH_MULTI_CORE
 
 
 	if((kopt.dbg_lvl & lvl) == 0)
@@ -76,12 +77,12 @@ void kvprintf(kmsg_t lvl, char const *format, va_list lst){
 
 	mutex_lock(&log.mtx);
 
-#ifdef CONFIG_KERNEL_SMP
+#ifdef DEVTREE_ARCH_MULTI_CORE
 	if(lvl & KMSG_MULTICORE){
 		snprintf(pir, 8, "[%u] ", PIR);
 		vfprintf(&fp, pir, lst);
 	}
-#endif // CONFIG_KERNEL_SMP
+#endif // DEVTREE_ARCH_MULTI_CORE
 
 	vfprintf(&fp, format, lst);
 
