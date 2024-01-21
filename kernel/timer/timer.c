@@ -28,7 +28,7 @@ static void to_time(void);
 
 /* static variables */
 #ifdef CONFIG_SCHED_PREEMPTIVE
-static size_t sched_ticks = 0;
+static size_t sched_ticks[DEVTREE_ARCH_NCORES] = { 0 };
 #endif // CONFIG_SCHED_PREEMPTIVE
 
 static ktimer_t *timer_lst = 0x0;
@@ -84,21 +84,27 @@ static void timer_hdlr(int_num_t num, void *payload){
 
 	/* trigger scheduler */
 #ifdef CONFIG_SCHED_PREEMPTIVE
-	sched_ticks++;
+	sched_ticks[PIR]++;
 
-	if(sched_ticks >= CONFIG_SCHED_KTIMER_MUL){
-		sched_ticks = 0;
+	if(sched_ticks[PIR] >= CONFIG_SCHED_KTIMER_MUL){
+		sched_ticks[PIR] = 0;
 		sched_trigger();
 	}
 #endif // CONFIG_SCHED_PREEMPTIVE
 
-	/* increment time */
+	/* update kernel time */
+	// only the first core must handle the kernel timer
+#ifdef DEVTREE_ARCH_MULTI_CORE
+	if(PIR != 0)
+		return;
+#endif // DEVTREE_ARCH_MULTI_CORE
+
 	time_us += DEVTREE_ARCH_TIMER_CYCLE_TIME_US;
 
 	if(time_us + DEVTREE_ARCH_TIMER_CYCLE_TIME_US + 1001000 < time_us)
 		to_time();
 
-	/* update timer */
+	/* update timers */
 	mutex_lock(&timer_mtx);
 
 	list_for_each(timer_lst, t){
