@@ -8,6 +8,7 @@
 
 
 #include <config/config.h>
+#include <arch/arch.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <kernel/driver.h>
@@ -65,13 +66,25 @@ void kprintf(kmsg_t lvl, char const *format, ...){
 
 void kvprintf(kmsg_t lvl, char const *format, va_list lst){
 	FILE fp = FILE_INITIALISER(0x0, 0x0, 0, putc);
+#ifdef CONFIG_KERNEL_SMP
+	char pir[8];
+#endif // CONFIG_KERNEL_SMP
 
 
 	if((kopt.dbg_lvl & lvl) == 0)
 		return;
 
 	mutex_lock(&log.mtx);
+
+#ifdef CONFIG_KERNEL_SMP
+	if(lvl & KMSG_MULTICORE){
+		snprintf(pir, 8, "[%u] ", PIR);
+		vfprintf(&fp, pir, lst);
+	}
+#endif // CONFIG_KERNEL_SMP
+
 	vfprintf(&fp, format, lst);
+
 	mutex_unlock(&log.mtx);
 }
 
