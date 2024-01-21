@@ -46,7 +46,7 @@ int memcmp(void const *s0, void const *s1, size_t n) __used;
 void *memscan(void *addr, char c, size_t n);
 void *memnscan(void *s0, void *s1, size_t nmemb, size_t size);
 
-char const *strerror(errno_t errno);
+char const *strerror(errno_t errnum);
 
 char *itoa(int v, unsigned int base, char *s, size_t n);
 int atoi(char const *s);

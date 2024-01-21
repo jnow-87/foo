@@ -104,11 +104,11 @@ err:
 
 static errno_t error(void *brdg){
 	bridge_t *peer = ((bridge_t*)brdg)->peer;
-	errno_t ecode;
+	errno_t e;
 
 
-	ecode = peer->errno;
-	peer->errno = 0;
+	e = peer->errnum;
+	peer->errnum = 0;
 
-	return ecode;
+	return e;
 }

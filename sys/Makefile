@@ -10,7 +10,6 @@
 # kernel
 obj-y := \
 	atomic.o \
-	errno.o \
 	escape.o \
 	string.o \
 	ctype.o \

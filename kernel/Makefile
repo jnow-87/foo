@@ -9,7 +9,21 @@
 
 bin-y := kimg.elf
 
-kimg-y := init.o kernel.o driver.o panic.o interrupt.o task.o sched/ fs/ memory/ binloader/ arch/ driver/ sys/
+kimg-y := \
+	init.o \
+	errno.o \
+	kernel.o \
+	driver.o \
+	panic.o \
+	interrupt.o \
+	task.o \
+	sched/ \
+	fs/ \
+	memory/ \
+	binloader/ \
+	arch/ \
+	driver/ \
+	sys/
 
 kimg-$(CONFIG_KERNEL_SYSCALL) += syscall.o
 kimg-$(CONFIG_KERNEL_TIMER) += timer/

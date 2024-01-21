@@ -135,13 +135,13 @@ end:
 }
 
 static int ack_check(i2c_t *i2c){
-	errno_t ecode;
+	errno_t errnum;
 
 
 	STATIC_ASSERT(sizeof(errno_t) == 1);
-	i2cbrdg_read(i2c->hw, &ecode, 1);
+	i2cbrdg_read(i2c->hw, &errnum, 1);
 
-	DEBUG("ack: %s\n", strerror(ecode));
+	DEBUG("ack: %s\n", strerror(errnum));
 
-	return_errno(ecode ? ecode : errno);
+	return_errno(errnum ? errnum : errno);
 }

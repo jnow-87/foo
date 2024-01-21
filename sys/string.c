@@ -192,7 +192,7 @@ char const *strerror(errno_t errnum){
 
 #ifdef CONFIG_EXTENDED_ERRNO
 # ifndef BUILD_HOST
-	if(errnum != 0){
+	if(errnum != 0 && errno_file != 0x0){
 		offset = MAX(0, (ssize_t)(strlen(errno_file) - sizeof(err_info) - 36));
 		snprintf(err_info, sizeof(err_info), "%s (%s:%u)", err_str[errnum], errno_file + offset, errno_line);
 

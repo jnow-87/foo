@@ -7,9 +7,16 @@
 
 
 lib-y := libbrick.a
-obj-y := init.o unistd/ stdlib/ stdio/ 
+obj-y := \
+	init.o \
+	unistd/ \
+	stdlib/ \
+	stdio/ 
 
-libbrick-y := $(build_tree)/sys/libbrick.o $(build_tree)/arch/libbrick.o $(loc_build_tree)/obj.o
+libbrick-y := \
+	$(build_tree)/sys/libbrick.o \
+	$(build_tree)/arch/libbrick.o \
+	$(loc_build_tree)/obj.o
 
 obj-$(CONFIG_SC_TIME) += time.o timer.o
 obj-$(CONFIG_SC_SCHED) += sched.o
