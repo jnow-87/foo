@@ -7,7 +7,6 @@
 
 
 
-#include <config/config.h>
 #include <sys/types.h>
 #include <sys/register.h>
 #include <sys/vector.h>
@@ -150,6 +149,8 @@ arch_node_t *arch_root(void){
 }
 
 int arch_validate(void){
+	root_arch.ncores = bits_set(root_arch.core_mask);
+
 	ARCH_ASSERT_MISSING(addr_width, 0);
 	ARCH_ASSERT_MISSING(reg_width, 0);
 	ARCH_ASSERT_MISSING(core_mask, 0x0);
@@ -157,15 +158,13 @@ int arch_validate(void){
 	ARCH_ASSERT_MISSING(num_vints, -1);
 	ARCH_ASSERT_MISSING(timer_int, -1);
 	ARCH_ASSERT_MISSING(syscall_int, -1);
-#ifdef CONFIG_KERNEL_SMP
-	ARCH_ASSERT_MISSING(ipi_int, -1);
-#endif // CONFIG_KERNEL_SMP
 	ARCH_ASSERT_MISSING(timer_cycle_time_us, 0);
+
+	if(root_arch.ncores > 1)
+		ARCH_ASSERT_MISSING(ipi_int, -1);
 
 	ARCH_ASSERT_POW2(addr_width);
 	ARCH_ASSERT_POW2(reg_width);
-
-	root_arch.ncores = bits_highest(root_arch.core_mask) + 1;
 
 	return 0;
 }
