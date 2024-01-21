@@ -127,8 +127,8 @@ void x86_sc_epilogue(thread_t *this_t){
 	if(copy_from_user(&sc, op->int_ctrl.payload, sizeof(sc), this_t->parent) != 0)
 		LNX_EEXIT("copy syscall args from user-space failed\n");
 
-	if(sc.errno == 0)
-		sc.errno = -x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays);
+	if(sc.errnum == 0)
+		sc.errnum = -x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays);
 
 	if(copy_to_user(op->int_ctrl.payload, &sc, sizeof(sc_t), this_t->parent) != 0)
 		LNX_EEXIT("copy syscall args to user-space failed\n");

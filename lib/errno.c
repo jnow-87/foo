@@ -12,9 +12,9 @@
 
 
 /* global variables */
-errno_t errno = 0;
+errno_t _errno = 0;
 
 #ifdef CONFIG_EXTENDED_ERRNO
-char const *errno_file = "";
-unsigned int errno_line = 0;
+char const *_errno_file = 0x0;
+unsigned int _errno_line = 0;
 #endif // CONFIG_EXTENDED_ERRNO

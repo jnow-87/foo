@@ -256,11 +256,11 @@ static void nclose(int *fds, size_t n){
 }
 
 static bool fd_valid(int fd){
-	int ecode = errno;
+	int errnum = errno;
 
 
 	if(fcntl(fd, F_GETFD) != 0){
-		errno = ecode;
+		errno = errnum;
 
 		return false;
 	}

@@ -33,7 +33,7 @@ static void int_hdlr(int_num_t num, void *payload);
 static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
 static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
 
-static int complete(i2c_t *i2c, errno_t ecode, bool stop);
+static int complete(i2c_t *i2c, errno_t errnum, bool stop);
 
 static int buffer_load(i2c_dgram_t *dgram);
 
@@ -364,11 +364,11 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	return 1;
 }
 
-static int complete(i2c_t *i2c, errno_t ecode, bool stop){
-	DEBUG("complete: %s, %sstop\n", strerror(ecode), (stop ? "" : "no "));
+static int complete(i2c_t *i2c, errno_t errnum, bool stop){
+	DEBUG("complete: %s, %sstop\n", strerror(errnum), (stop ? "" : "no "));
 	i2c->ops.slave_mode(false, stop, i2c->hw);
 
-	return -ecode;
+	return -errnum;
 }
 
 static int buffer_load(i2c_dgram_t *dgram){

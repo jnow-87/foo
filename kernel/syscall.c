@@ -86,7 +86,7 @@ static void sc_hdlr(int_num_t num, void *payload){
 	if(copy_from_user(&sc, sc_user, sizeof(sc), this_t->parent) != 0)
 		return;
 
-	sc.errno = -syscall(sc.num, sc.param, sc.size, this_t);
+	sc.errnum = -syscall(sc.num, sc.param, sc.size, this_t);
 
 	(void)copy_to_user(sc_user, &sc, sizeof(sc), this_t->parent);
 }

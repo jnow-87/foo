@@ -85,7 +85,7 @@ typedef struct bridge_dgram_t{
 
 	uint8_t attempts;
 	bridge_dgram_state_t estate;
-	bridge_dgram_error_t ecode;
+	bridge_dgram_error_t errnum;
 } bridge_dgram_t;
 
 typedef struct{
@@ -133,7 +133,7 @@ typedef struct bridge_t{
 	bridge_dgram_t *rx_dgrams,
 				   *tx_dgrams;
 
-	errno_t errno;
+	errno_t errnum;
 } bridge_t;
 
 

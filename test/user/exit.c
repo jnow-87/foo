@@ -23,7 +23,7 @@ static int thread(void *arg);
 
 
 /* static variables */
-static int volatile ecode;
+static int volatile errnum;
 
 
 /* local functions */
@@ -31,7 +31,7 @@ static int volatile ecode;
  *	\brief	test process and thread termination
  */
 TEST_LONG(exit, "exit"){
-	ecode = 0;
+	errnum = 0;
 
 	for(size_t i=0; i<NTHREAD; i++)
 		ASSERT_INT_NEQ(thread_create(thread, 0x0), 0);
@@ -43,14 +43,14 @@ static int thread(void *arg){
 	thread_info_t info;
 
 
-	atomic_add(&ecode, TEST_INT_EQ(thread_info(&info), 0));
-	atomic_add(&ecode, TEST_PTR_EQ(arg, 0x0));
+	atomic_add(&errnum, TEST_INT_EQ(thread_info(&info), 0));
+	atomic_add(&errnum, TEST_PTR_EQ(arg, 0x0));
 
 	if(info.tid == 1){
 		sleep(2000, 0);
 
 		printf("exit, this should terminate the entire process\n");
-		exit(ecode);
+		exit(errnum);
 	}
 
 	while(1){

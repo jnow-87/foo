@@ -50,7 +50,7 @@ static int rx_payload_len(dev_data_t *i2c, i2cbrdg_hdr_t *hdr);
 static int rx_payload(dev_data_t *i2c, i2cbrdg_hdr_t *hdr);
 static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr);
 
-static int ack(dev_data_t *i2c, errno_t ecode);
+static int ack(dev_data_t *i2c, errno_t errnum);
 static void reset(dev_data_t *i2c);
 
 
@@ -212,13 +212,13 @@ static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 		(void)i2cbrdg_write(i2c->brdg, i2c->buf, hdr->len);
 }
 
-static int ack(dev_data_t *i2c, errno_t ecode){
-	DEBUG("ack: %d\n", ecode);
+static int ack(dev_data_t *i2c, errno_t errnum){
+	DEBUG("ack: %d\n", errnum);
 
 	STATIC_ASSERT(sizeof(errno_t) == 1);
-	(void)i2cbrdg_write(i2c->brdg, &ecode, 1);
+	(void)i2cbrdg_write(i2c->brdg, &errnum, 1);
 
-	return ecode;
+	return errnum;
 }
 
 static void reset(dev_data_t *i2c){

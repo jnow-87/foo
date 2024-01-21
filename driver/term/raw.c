@@ -114,8 +114,8 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	/* read */
 	n = term_gets(term, buf, n);
 
-	if(term->errno)
-		goto_errno(err, term->errno);
+	if(term->errnum)
+		goto_errno(err, term->errnum);
 
 	/* handle terminal flags */
 	if(term_flags_apply(term, buf, n, 1, TFT_I,  term->cfg->iflags) == 0x0)
@@ -128,7 +128,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 
 err:
-	term->errno = 0;
+	term->errnum = 0;
 
 	return 0;
 }
@@ -138,13 +138,13 @@ static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 
 	if(flputs(buf, n, term) == 0 && n != 0)
-		goto_errno(err, term->errno);
+		goto_errno(err, term->errnum);
 
 	return n;
 
 
 err:
-	term->errno = 0;
+	term->errnum = 0;
 
 	return 0;
 }

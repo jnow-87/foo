@@ -41,13 +41,13 @@ static bridge_dgram_state_t tx_payload(bridge_t *brdg, bridge_dgram_t *dgram);
 static bridge_dgram_state_t hdrcmp(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, uint8_t ref, bridge_dgram_state_t next);
 
 static bridge_dgram_state_t ack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_state_t next);
-static bridge_dgram_state_t nack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_error_t ecode);
+static bridge_dgram_state_t nack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_error_t errnum);
 static int ackcmp(bridge_dgram_t *dgram, uint8_t byte, uint8_t ref);
 
 static uint8_t checksum(void const *buf, size_t n);
 static uint8_t chunksize(bridge_dgram_t *dgram, bridge_t *brdg);
 
-static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t ecode);
+static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t errnum);
 
 #ifdef CONFIG_BRIDGE_DEBUG_PROTOCOL
 static char const *dgram_state(bridge_dgram_t *dgram);
@@ -116,7 +116,7 @@ void dgram_init(bridge_dgram_t *dgram, bridge_dgram_type_t type, void *buf, uint
 int dgram_init_retry(bridge_dgram_t *dgram){
 	dgram->state = BDS_CTRL_BYTE;
 	dgram->estate = BDS_ERROR;
-	dgram->ecode = BDE_NONE;
+	dgram->errnum = BDE_NONE;
 	dgram->attempts++;
 
 	return (dgram->attempts >= CONFIG_BRIDGE_RETRY_LIMIT) ? -1 : 0;
@@ -243,7 +243,7 @@ bridge_dgram_state_t dgram_write(bridge_dgram_t *dgram, bridge_t *brdg){
 }
 
 errno_t dgram_errno(bridge_dgram_t *dgram){
-	return (dgram->ecode == BDE_NOMEM) ? E_NOMEM : E_IO;
+	return (dgram->errnum == BDE_NOMEM) ? E_NOMEM : E_IO;
 }
 
 
@@ -324,8 +324,8 @@ static bridge_dgram_state_t ack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t b
 	return tx(brdg, dgram, ~byte, next);
 }
 
-static bridge_dgram_state_t nack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_error_t ecode){
-	seterr(dgram, ecode);
+static bridge_dgram_state_t nack(bridge_t *brdg, bridge_dgram_t *dgram, uint8_t byte, bridge_dgram_error_t errnum){
+	seterr(dgram, errnum);
 	PROTO_DEBUG(dgram, "nack byte %#hhx\n", byte);
 
 	return ack(brdg, dgram, ~byte, BDS_ERROR);
@@ -357,9 +357,9 @@ static uint8_t chunksize(bridge_dgram_t *dgram, bridge_t *brdg){
 	return MIN(brdg->cfg->chunksize, dgram->len - dgram->offset);
 }
 
-static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t ecode){
+static bridge_dgram_state_t seterr(bridge_dgram_t *dgram, bridge_dgram_error_t errnum){
 	dgram->estate = dgram->state;
-	dgram->ecode = ecode;
+	dgram->errnum = errnum;
 
 	PROTO_DEBUG(dgram, "%s\n", dgram_error(dgram));
 
@@ -400,6 +400,6 @@ static char const *dgram_error(bridge_dgram_t *dgram){
 		"read failed",
 		"write failed",
 		"out of memory",
-	}[dgram->ecode];
+	}[dgram->errnum];
 }
 #endif // CONFIG_BRIDGE_DEBUG_PROTOCOL

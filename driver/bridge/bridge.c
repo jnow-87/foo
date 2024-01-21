@@ -270,7 +270,7 @@ static int int_tx(bridge_t *brdg, bridge_dgram_t *dgram){
 		if(dgram_init_retry(dgram) == 0)
 			return 0;
 
-		brdg->errno = dgram_errno(dgram);
+		brdg->errnum = dgram_errno(dgram);
 	}
 
 	/* transfer complete */

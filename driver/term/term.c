@@ -84,7 +84,7 @@ term_t *term_create(term_itf_t *itf, term_cfg_t *cfg, fs_node_t *node){
 	term->cfg = cfg;
 	term->node = node;
 	term->itf = itf;
-	term->errno = 0;
+	term->errnum = 0;
 
 	esc_init(&term->esc);
 	ringbuf_init(&term->rx_buf, buf, CONFIG_TERM_RXBUF_SIZE);
@@ -112,7 +112,7 @@ size_t term_gets(term_t *term, char *s, size_t n){
 	r = term->itf->rx_int ? ringbuf_read(&term->rx_buf, s, n) : term->itf->gets(s, n, term->itf->hw);
 
 	if(r == 0)
-		term->errno = errno;
+		term->errnum = errno;
 
 	return r;
 }
@@ -130,9 +130,9 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 	;
 
 	if(r == 0)
-		term->errno = errno;
+		term->errnum = errno;
 
-	return term->errno ? 0 : r;
+	return term->errnum ? 0 : r;
 }
 
 void term_rx_hdlr(int_num_t num, void *payload){
@@ -146,10 +146,10 @@ void term_rx_hdlr(int_num_t num, void *payload){
 	n = term->itf->gets(buf, 16, term->itf->hw);
 
 	if(n == 0)
-		term->errno = errno;
+		term->errnum = errno;
 
 	if(ringbuf_write(&term->rx_buf, buf, n) != n)
-		term->errno = E_LIMIT;
+		term->errnum = E_LIMIT;
 
 	ksignal_send(&term->node->datain_sig);
 
@@ -189,7 +189,7 @@ static size_t puts_int(term_t *term, char const *s, size_t n){
 	dgram.len = n;
 	dgram.term = term;
 
-	term->errno = itask_issue(&term->tx_queue, &dgram, term->itf->tx_int);
+	term->errnum = itask_issue(&term->tx_queue, &dgram, term->itf->tx_int);
 
 	return n - dgram.len;
 }
@@ -247,13 +247,13 @@ static errno_t error(term_t *term){
 
 static int tx_complete(void *payload){
 	tx_dgram_t *dgram = (tx_dgram_t*)payload;
-	errno_t ecode;
+	errno_t e;
 
 
-	ecode = error(dgram->term);
+	e = error(dgram->term);
 
-	if(ecode != 0)
-		return ecode;
+	if(e != 0)
+		return e;
 
 	return (dgram->len == 0) ? 0 : -1;
 }

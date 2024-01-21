@@ -35,7 +35,7 @@ int itask_issue(itask_queue_t *queue, void *payload, int_num_t num){
 
 
 	task.payload = payload;
-	task.errno = 0;
+	task.errnum = 0;
 	ksignal_init(&task.sig);
 
 	mutex_lock(&queue->mtx);
@@ -49,10 +49,10 @@ int itask_issue(itask_queue_t *queue, void *payload, int_num_t num){
 	ksignal_wait(&task.sig, &queue->mtx);
 	mutex_unlock(&queue->mtx);
 
-	return_errno(task.errno);
+	return_errno(task.errnum);
 }
 
-void itask_complete(itask_queue_t *queue, errno_t ecode){
+void itask_complete(itask_queue_t *queue, errno_t errnum){
 	itask_t *task;
 
 
@@ -61,7 +61,7 @@ void itask_complete(itask_queue_t *queue, errno_t ecode){
 	task = queue_dequeue(queue->head, queue->tail);
 
 	if(task != 0x0){
-		task->errno = ecode;
+		task->errnum = errnum;
 		ksignal_send(&task->sig);
 	}
 
@@ -69,7 +69,7 @@ void itask_complete(itask_queue_t *queue, errno_t ecode){
 }
 
 void *itask_query_payload(itask_queue_t *queue, int (*complete)(void *payload)){
-	int ecode;
+	int e;
 	itask_t *task;
 
 
@@ -81,11 +81,11 @@ void *itask_query_payload(itask_queue_t *queue, int (*complete)(void *payload)){
 		if(task == 0x0)
 			return 0x0;
 
-		ecode = (complete == 0x0) ? -1 : complete(task->payload);
+		e = (complete == 0x0) ? -1 : complete(task->payload);
 
-		if(ecode < 0)
+		if(e < 0)
 			return task->payload;
 
-		itask_complete(queue, ecode);
+		itask_complete(queue, e);
 	}
 }
