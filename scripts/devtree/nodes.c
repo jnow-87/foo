@@ -19,7 +19,7 @@
 
 /* macros */
 #define ARCH_ASSERT_MISSING(member, default){ \
-	if(root_arch.member == default) \
+	if(root_arch.member == (typeof(root_arch.member))default) \
 		return devtree_parser_error("missing arch attribute '" #member "'"); \
 }
 
