@@ -13,7 +13,7 @@
 addr-width = 16;
 reg-width = 8;
 
-core-mask = 0x1;
+ncores = 1;
 
 // interrupts
 //  35 hardwares

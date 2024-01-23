@@ -10,7 +10,7 @@
 addr-width = 64;
 reg-width = 64;
 
-core-mask = 0x1;
+ncores = 1;
 
 // interrupts
 num-ints = 4;
