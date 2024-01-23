@@ -149,11 +149,11 @@ arch_node_t *arch_root(void){
 }
 
 int arch_validate(void){
-	root_arch.ncores = bits_set(root_arch.core_mask);
+	root_arch.core_mask = (0x1 << root_arch.ncores) - 1;
 
 	ARCH_ASSERT_MISSING(addr_width, 0);
 	ARCH_ASSERT_MISSING(reg_width, 0);
-	ARCH_ASSERT_MISSING(core_mask, 0x0);
+	ARCH_ASSERT_MISSING(ncores, 0);
 	ARCH_ASSERT_MISSING(num_ints, -1);
 	ARCH_ASSERT_MISSING(num_vints, -1);
 	ARCH_ASSERT_MISSING(timer_int, -1);
