@@ -70,8 +70,12 @@ static size_t read_chardev(int fd, char *line, size_t n){
 		if(r == 0)
 			continue;
 
-		if(r < 0)
-			goto err;
+		if(r < 0){
+			printf("readline error: %s\n", strerror(errno));
+			reset_errno();
+
+			return 0;
+		}
 
 		switch(esc_parse(&esc, c)){
 		case ESC_PARTIAL:			// fall through
@@ -98,10 +102,6 @@ static size_t read_chardev(int fd, char *line, size_t n){
 		default:					line_char_add(&lstate, c); break;
 		}
 	}
-
-
-err:
-	reset_errno();
 
 	return 0;
 }
