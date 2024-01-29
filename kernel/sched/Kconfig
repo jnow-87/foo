@@ -26,7 +26,3 @@ config SCHED_KTIMER_MUL
 config SCHED_PRIO_DEFAULT
 	int "default process priority"
 	default 0
-
-config SCHED_AFFINITY_DEFAULT
-	hex "default process affinity"
-	default 0x1
