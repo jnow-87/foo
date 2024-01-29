@@ -40,12 +40,9 @@ typedef struct process_t{
 					 *next;
 
 	pid_t pid;
-
-	unsigned int affinity;
-	int priority;
-
 	char *name;
 	struct page_t *args;
+	int priority;
 
 	process_mem_t memory;
 
