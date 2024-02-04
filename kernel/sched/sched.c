@@ -85,7 +85,8 @@ void sched_yield(void){
 }
 
 void sched_trigger(void){
-	thread_t *this_t;
+	thread_t *this_t = 0x0;
+	sched_queue_t *el;
 
 
 	int_enable(false);
@@ -97,7 +98,12 @@ void sched_trigger(void){
 	if(running[PIR]->state == RUNNING)
 		thread_transition_unsafe(running[PIR], READY);
 
-	this_t = list_first(sched_queues[READY])->thread;
+	list_for_each(sched_queues[READY], el){
+		if(el->thread->affinity & (0x1 << PIR)){
+			this_t = el->thread;
+			break;
+		}
+	}
 
 	if(this_t == 0x0)
 		kpanic("no ready thread\n");
