@@ -83,7 +83,7 @@ static int sc_hdlr_process_create(void *param){
 	if(new == 0x0)
 		return -errno;
 
-	sched_thread_wake(list_first(new->threads));
+	sched_thread_transition(list_first(new->threads), READY);
 
 	p->pid = new->pid;
 
@@ -118,7 +118,7 @@ static int sc_hdlr_thread_create(void *param){
 	if(new == 0x0)
 		return -errno;
 
-	sched_thread_wake(new);
+	sched_thread_transition(new, READY);
 
 	p->tid = new->tid;
 
@@ -175,7 +175,7 @@ static int sc_hdlr_exit(void *param){
 
 	/* exit current thread */
 	// ensure thread is no longer the running one
-	sched_thread_bury(this_t);
+	sched_thread_transition(this_t, DEAD);
 	sched_trigger();
 
 	return 0;
