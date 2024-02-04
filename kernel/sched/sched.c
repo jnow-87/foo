@@ -63,14 +63,11 @@ static void cleanup(void *payload);
 static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
 static mutex_t sched_mtx = NOINT_MUTEX_INITIALISER();
 
-static process_t kernel_process = { 0 };
-static thread_t kernel_threads[DEVTREE_ARCH_NCORES] = {
-	{ .tid = 0, .parent = &kernel_process, }
-};
-
 // NOTE having valid entries is required for functions that use
-// 		sched_running() early on, e.g. nested mutexes
-static thread_t *running[DEVTREE_ARCH_NCORES] = { kernel_threads + 0 };
+//      sched_running() early on, e.g. nested mutexes
+static process_t kernel_process = { .name = "kernel" };
+static thread_t kernel_threads[DEVTREE_ARCH_NCORES] = { { .tid = 0, .parent = &kernel_process } };
+static thread_t *running[DEVTREE_ARCH_NCORES] = { kernel_threads };
 
 
 /* global functions */
@@ -152,29 +149,14 @@ void sched_thread_transition(thread_t *this_t, thread_state_t state){
 
 
 /* local functions */
-#if DEVTREE_ARCH_NCORES > 1
-static int init_shallow(void){
-	for(size_t i=1; i<DEVTREE_ARCH_NCORES; i++){
-		memcpy(kernel_threads + i, kernel_threads + 0, sizeof(thread_t));
-		running[i] = kernel_threads + i;
-	}
-
-	return 0;
-}
-
-kernel_init(0, init_shallow);
-#endif // DEVTREE_ARCH_NCORES
-
-static int init_deep(void){
+static int init(void){
 	process_t *this_p;
 	thread_t *this_t;
 
 
 	/* init kernel process */
 	this_p = &kernel_process;
-	this_p->name = (char*)("kernel");
 
-	/* init kernel threads */
 	// one thread per core
 	for(size_t i=0; i<DEVTREE_ARCH_NCORES; i++){
 		this_t = kernel_threads + i;
@@ -186,8 +168,6 @@ static int init_deep(void){
 		// 	  the kernel has a separate memory management
 		// 	- kernel thread context is set automatically once the
 		// 	  thread is interrupted for the first time
-		memset(this_t, 0x0, sizeof(thread_t));
-
 		this_t->tid = i;
 		this_t->state = CREATED;
 		this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
@@ -195,18 +175,15 @@ static int init_deep(void){
 		this_t->parent = this_p;
 
 		list_add_tail(this_p->threads, this_t);
-	}
 
-	// add kernel threads to running queue
-	list_for_each(this_p->threads, this_t){
+		// add kernel threads to running queue
 		thread_transition(this_t, READY);
 		thread_transition(this_t, RUNNING);
 
-		running[PIR] = this_t;
+		running[i] = this_t;
 	}
 
 	/* create init process */
-	// create init processs
 	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, fs_root);
 
 	if(this_p == 0x0)
@@ -229,7 +206,7 @@ err:
 	return -errno;
 }
 
-kernel_init(2, init_deep);
+kernel_init(2, init);
 
 /**
  * \brief	move thread between scheduler queues according to the following
