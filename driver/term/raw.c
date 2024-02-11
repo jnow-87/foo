@@ -26,6 +26,7 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n);
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n);
 
+static size_t klog_puts(char const *s, size_t n, void *hw);
 static size_t flputs(char const *s, size_t n, void *hw);
 
 
@@ -81,7 +82,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(klog == 0x0)
 		goto err_4;
 
-	klog->puts = flputs;
+	klog->puts = klog_puts;
 	klog->hw = term;
 
 	return klog;
@@ -202,4 +203,16 @@ static size_t flputs(char const *_s, size_t n, void *hw){
 
 	/* perform write */
 	return (term_puts(term, _s, n - n_put) + n_put == n) ? n : 0;
+}
+
+static size_t klog_puts(char const *s, size_t n, void *hw){
+	term_t *term = (term_t*)hw;
+	size_t r;
+
+
+	mutex_lock(&term->node->mtx);
+	r = flputs(s, n, hw);
+	mutex_unlock(&term->node->mtx);
+
+	return r;
 }
