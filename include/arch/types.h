@@ -37,8 +37,9 @@ typedef struct{
 	/* core */
 	int (*core_id)(void);
 	void (*core_sleep)(void);
-
 	void (*core_panic)(struct thread_ctx_t const *tc);
+
+	void (*cores_boot)(void);
 
 	/* virtual memory management */
 	int (*page_entry_write)(struct page_t const *page);

@@ -134,6 +134,7 @@ static arch_ops_kernel_t const arch_ops_kernel = {
 	.core_id = 0x0,
 	.core_sleep = avr_core_sleep,
 	.core_panic = avr_core_panic,
+	.cores_boot = 0x0,
 
 	/* virtual memory management */
 	.page_entry_write = 0x0,

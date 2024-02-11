@@ -27,11 +27,6 @@ static int probe(devtree_device_t const *node, void *itf);
 
 /* global functions */
 int driver_load(void){
-	if(errno){
-		FATAL("pre-driver-load error %s\n", strerror(errno));
-		return -errno;
-	}
-
 	INFO("load drivers\n");
 
 	return probe_childs(__dt_device_root.childs, 0x0);

@@ -12,6 +12,7 @@
 
 
 #include BUILD_ARCH_HEADER
+#include <sys/devicetree.h>
 
 #ifndef ASM
 # ifndef BUILD_HOST
@@ -37,6 +38,12 @@
 # define core_panic(ctx)					(arch_kernel_call(core_panic, -E_NOIMP)(ctx))
 
 # define PIR								core_id()
+
+# ifdef DEVTREE_ARCH_MULTI_CORE
+#  define cores_boot()						(arch_kernel_call(cores_boot, 0)())
+# else
+#  define cores_boot()						{}
+# endif // DEVTREE_ARCH_MULTI_CORE
 
 # define page_entry_write(p)				(arch_kernel_call(page_entry_write, 0)(p))
 # define page_entry_inval_idx(idx, sync)	(arch_kernel_call(page_entry_inval_idx, 0)(idx, sync))
