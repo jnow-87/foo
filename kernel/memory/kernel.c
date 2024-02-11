@@ -13,6 +13,7 @@
 #include <kernel/panic.h>
 #include <sys/memblock.h>
 #include <sys/devtree.h>
+#include <sys/devicetree.h>
 #include <sys/types.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
@@ -144,7 +145,7 @@ static int init(void){
 	kmem_dt_node = devtree_find_memory_by_name(&__dt_memory_root, "heap");
 
 	kernel_heap = kmem_dt_node->base;
-	memblock_init(kernel_heap, kmem_dt_node->size - CONFIG_STACK_SIZE);
+	memblock_init(kernel_heap, kmem_dt_node->size - CONFIG_STACK_SIZE * DEVTREE_ARCH_NCORES);
 
 	return -errno;
 }
