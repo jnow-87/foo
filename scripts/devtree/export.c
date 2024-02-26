@@ -7,6 +7,7 @@
 
 
 
+#include <config/config.h>
 #include <stdio.h>
 #include <sys/limits.h>
 #include <sys/string.h>
@@ -158,6 +159,9 @@ static void device_makevars(FILE *fp, base_node_t *node, char const *node_ident)
 }
 
 static void memory_makevars(FILE *fp, base_node_t *node, char const *node_ident){
+	// NOTE Do not export memory nodes for x86 to avoid confusion, since its heap is allocated
+	// 		dynamically, cf. the note in memory_macros().
+#ifndef CONFIG_X86
 	memory_node_t *mem = (memory_node_t*)node;
 
 
@@ -165,6 +169,7 @@ static void memory_makevars(FILE *fp, base_node_t *node, char const *node_ident)
 
 	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", node_ident, mem->base);
 	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", node_ident, mem->size);
+#endif // CONFIG_X86
 }
 
 static void arch_makevars(FILE *fp, base_node_t *node, char const *node_ident){
@@ -200,7 +205,18 @@ static void memory_macros(FILE *fp, base_node_t *node, char const *node_ident){
 
 	node_ident = strupr(node_ident);
 
-	fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", node_ident, mem->base);
+#ifdef CONFIG_X86
+	// NOTE On x86 the kernel heap is allocated dynamically and the devtree script only contains
+	// 		an artificial base address. However, since DEVTREE_HEAP_BASE is assumed to be valid
+	// 		by macros such as KERNEL_STACK(), instead of using the constant from the devtree, the
+	// 		macro redirects to the actual devicetree node.
+	if(strcmp(node_ident, "HEAP") == 0){
+		fprintf(fp, "#define DEVTREE_HEAP_BASE (devtree_find_memory_by_name(&__dt_memory_root, \"heap\")->base)\n");
+	}
+	else
+#endif // CONFIG_X86
+		fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", node_ident, mem->base);
+
 	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", node_ident, mem->size);
 }
 
