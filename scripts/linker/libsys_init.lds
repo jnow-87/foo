@@ -7,6 +7,11 @@
 
 
 
+#include <sys/devicetree.h>
+
+
+. = ALIGN(DEVTREE_ARCH_ADDR_WIDTH / 8);
+
 __lib_init0_base = .;
 *(.lib_init_stage0)
 __lib_init0_end = .;

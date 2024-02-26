@@ -105,7 +105,8 @@ ldlibs := \
 	-nostdlib \
 	-static \
 	-L$(build_tree)/lib/ \
-	-Lscripts/linker
+	-Lscripts/linker \
+	-L$(build_tree)/scripts/linker
 
 ldflags := \
 	$(LDFLAGS) \
