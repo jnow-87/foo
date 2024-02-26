@@ -12,19 +12,27 @@
 
 
 #include <config/config.h>
-#include <sys/types.h>
+#include <sys/devicetree.h>
+
+#ifndef ASM
+# include <sys/types.h>
+#endif // ASM
 
 
 /* macros */
+#define KERNEL_STACK(core)		(DEVTREE_HEAP_BASE + DEVTREE_HEAP_SIZE - (core * CONFIG_STACK_SIZE))
 #define PAGESIZE_BYTES(psize)	((0x1 << (2 * (psize))) * 4096)
 
 
 /* incomplete types */
+#ifndef ASM
 struct process_t;
+#endif // ASM
 
 
 /* types */
-#ifdef CONFIG_KERNEL_VIRT_MEM
+#ifndef ASM
+# ifdef CONFIG_KERNEL_VIRT_MEM
 typedef enum{
 	PAGE_R = 0x1,
 	PAGE_W = 0x2,
@@ -58,11 +66,11 @@ typedef enum{
 	PAGESIZE_1G,
 	PAGESIZE_MAX = PAGESIZE_1G
 } page_size_t;
-#endif // CONFIG_KERNEL_VIRT_MEM
+# endif // CONFIG_KERNEL_VIRT_MEM
 
-#ifdef CONFIG_KERNEL_NO_VIRT_MEM
+# ifdef CONFIG_KERNEL_NO_VIRT_MEM
 typedef size_t page_size_t;
-#endif // CONFIG_KERNEL_NO_VIRT_MEM
+# endif // CONFIG_KERNEL_NO_VIRT_MEM
 
 typedef struct page_t{
 	/* list handling */
@@ -72,27 +80,29 @@ typedef struct page_t{
 	/* mapping */
 	void *phys_addr;							// physical address
 
-#ifdef CONFIG_KERNEL_VIRT_MEM
+# ifdef CONFIG_KERNEL_VIRT_MEM
 	void *virt_addr;							// virtual address
 
 	page_size_t psize;							// page size
-#endif // CONFIG_KERNEL_VIRT_MEM
+# endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* flags */
-#ifdef CONFIG_KERNEL_VIRT_MEM
+# ifdef CONFIG_KERNEL_VIRT_MEM
 	page_flags_t flags;							// other flags
 	page_priv_t priv;							// privilege level
 	page_perm_t perm;							// permissions
-#endif // CONFIG_KERNEL_VIRT_MEM
+# endif // CONFIG_KERNEL_VIRT_MEM
 
 	/* index */
-#ifdef CONFIG_KERNEL_VIRT_MEM
+# ifdef CONFIG_KERNEL_VIRT_MEM
 	unsigned int idx;							// index in page table/TLB
-#endif // CONFIG_KERNEL_VIRT_MEM
+# endif // CONFIG_KERNEL_VIRT_MEM
 } page_t;
+#endif //ASM
 
 
 /* prototypes */
+#ifndef ASM
 void *kmalloc(size_t n);
 void *kpalloc(size_t n);
 void *kcalloc(size_t n, size_t size);
@@ -109,10 +119,11 @@ void page_free(struct process_t *this_p, page_t *page);
 int copy_from_user(void *kernel, void const *user, size_t n, struct process_t *this_p);
 int copy_to_user(void *user, void const *kernel, size_t n, struct process_t *this_p);
 
-#ifdef CONFIG_KERNEL_VIRT_MEM
+# ifdef CONFIG_KERNEL_VIRT_MEM
 void *addr_virt_to_phys(void *va);
 void *addr_phys_to_virt(void *pa);
-#endif // CONFIG_KERNEL_VIRT_MEM
+# endif // CONFIG_KERNEL_VIRT_MEM
+#endif // ASM
 
 
 #endif // KERNEL_MEM_H

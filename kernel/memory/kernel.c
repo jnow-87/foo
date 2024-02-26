@@ -10,6 +10,7 @@
 #include <config/config.h>
 #include <arch/arch.h>
 #include <kernel/init.h>
+#include <kernel/memory.h>
 #include <kernel/panic.h>
 #include <sys/memblock.h>
 #include <sys/devtree.h>
@@ -21,8 +22,6 @@
 
 
 /* static variables */
-static devtree_memory_t const *kmem_dt_node;
-
 static memblock_t *kernel_heap = 0x0;
 static mutex_t kmem_mtx = NOINT_MUTEX_INITIALISER();
 
@@ -95,7 +94,7 @@ void kmunmap(void *addr){
 }
 
 bool iskheap(void *addr){
-	return addr >= kmem_dt_node->base && addr < kmem_dt_node->base + kmem_dt_node->size;
+	return (addr >= (void*)DEVTREE_HEAP_BASE) && addr < (void*)KERNEL_STACK(DEVTREE_ARCH_NCORES);
 }
 
 int copy_from_user(void *kernel, void const *user, size_t n, struct process_t *this_p){
@@ -141,11 +140,8 @@ void *addr_phys_to_virt(void *pa){
 
 /* local functions */
 static int init(void){
-	// NOTE the memory node is ensured to exist by the build system
-	kmem_dt_node = devtree_find_memory_by_name(&__dt_memory_root, "heap");
-
-	kernel_heap = kmem_dt_node->base;
-	memblock_init(kernel_heap, kmem_dt_node->size - CONFIG_STACK_SIZE * DEVTREE_ARCH_NCORES);
+	kernel_heap = (void*)DEVTREE_HEAP_BASE;
+	memblock_init(kernel_heap, KERNEL_STACK(DEVTREE_ARCH_NCORES) - DEVTREE_HEAP_BASE);
 
 	return -errno;
 }
