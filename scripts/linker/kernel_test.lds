@@ -7,6 +7,11 @@
 
 
 
+#include <sys/devicetree.h>
+
+
+. = ALIGN(DEVTREE_ARCH_ADDR_WIDTH / 8);
+
 __start_tests_kernel = .;
 *(tests_kernel)
 

@@ -28,17 +28,11 @@ SECTIONS {
 	.data : {
 		*(.data .data.* .gnu.linkonce.d.*)
 
-		. = ALIGN(16);
-		INCLUDE std_init.lds
-
-		. = ALIGN(16);
-		INCLUDE kernel_init.lds
-
-		. = ALIGN(16);
-		INCLUDE kernel_stat.lds
-
-		. = ALIGN(16);
-		INCLUDE kernel_test.lds
+		INCLUDE std_init.i.lds
+		INCLUDE kernel_init.i.lds
+		INCLUDE kernel_stat.i.lds
+		INCLUDE kernel_test.i.lds
+		INCLUDE fonts.i.lds
 	} > kernel_data
 
 	.rodata : {
@@ -60,7 +54,7 @@ SECTIONS {
 	} > kernel_data
 
 	/* discard sections */
-	INCLUDE discard.lds
+	INCLUDE discard.i.lds
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */

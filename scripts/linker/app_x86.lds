@@ -7,6 +7,9 @@
 
 
 
+#include <sys/devicetree.h>
+
+
 /* MEMORY sections are defined in a script generated based on the device tree */
 
 ENTRY(x86_start)
@@ -28,14 +31,12 @@ SECTIONS {
 	.data : {
 		*(.data .data.* .gnu.linkonce.d.*)
 
-		. = ALIGN(16);
-		INCLUDE std_init.lds
-
-		. = ALIGN(16);
-		INCLUDE libsys_init.lds
+		INCLUDE std_init.i.lds
+		INCLUDE libsys_init.i.lds
+		INCLUDE fonts.i.lds
 
 #ifdef BUILD_USER_PLUGIN
-		. = ALIGN(16);
+		. = ALIGN(DEVTREE_ARCH_ADDR_WIDTH / 8);
 		INCLUDE plugin.lds
 #endif
 	} > app_data
@@ -59,7 +60,7 @@ SECTIONS {
 	} > app_data
 
 	/* discard sections */
-	INCLUDE discard.lds
+	INCLUDE discard.i.lds
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */

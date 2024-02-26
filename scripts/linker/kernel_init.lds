@@ -7,6 +7,11 @@
 
 
 
+#include <sys/devicetree.h>
+
+
+. = ALIGN(DEVTREE_ARCH_ADDR_WIDTH / 8);
+
 /* init calls */
 __platform_init0_base_cores_all = .;
 *(.platform_init_stage0_cores_all)

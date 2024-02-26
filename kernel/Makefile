@@ -53,7 +53,6 @@ kimg-cppflags-y += -DBUILD_KERNEL
 
 kimg-ldlibs-y := \
 	$(ldlibs-kernel) \
-	-Lscripts/linker \
 	$(addprefix -T,$(linker_scripts)) \
 	-lgcc
 
