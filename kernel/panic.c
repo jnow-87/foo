@@ -25,6 +25,7 @@ void kpanic_ext(char const *file, char const *func, unsigned int line, char cons
 
 	int_enable(false);
 
+	/* print woops */
 	va_start(lst, format);
 
 	kprintf(KMSG_ANY, FG("\n\nwoops!!", RED) "\t");
@@ -51,5 +52,11 @@ void kpanic_ext(char const *file, char const *func, unsigned int line, char cons
 
 	va_end(lst);
 
+	/* arch panic */
 	core_panic(this_t ? stack_top(this_t->ctx_stack) : 0x0);
+
+	/* halt core */
+	while(1){
+		core_sleep();
+	}
 }
