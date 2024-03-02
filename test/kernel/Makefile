@@ -9,5 +9,7 @@
 
 obj-y := memory.o
 
+obj-$(DEVTREE_ARCH_MULTI_CORE) += ipi.o
+
 
 cppflags-y := -DTEST_TYPE=\"kernel\"

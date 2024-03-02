@@ -18,12 +18,6 @@
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
 
-/**
- * TODO
- * 	the functions in this file need to be tested as soon
- * 	as multi-core targets are implemented
- */
-
 
 /* local/static prototypes */
 static void ipi_hdlr(int_num_t num, void *payload);
