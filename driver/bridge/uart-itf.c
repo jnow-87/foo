@@ -57,7 +57,7 @@ static int writeb(uint8_t b, void *hw){
 	term_itf_t *term = (term_itf_t*)hw;
 
 
-	if(term->puts((char*)&b, 1, term->hw) != 1)
+	if(term->puts((char*)&b, 1, true, term->hw) != 1)
 		return_errno(E_IO);
 
 	return 0;

@@ -20,7 +20,7 @@
 
 /* local/static prototypes */
 static char putc(char c, void *brdg);
-static size_t puts(char const *s, size_t n, void *brdg);
+static size_t puts(char const *s, size_t n, bool blocking, void *brdg);
 static size_t gets(char *s, size_t n, void *brdg);
 static errno_t error(void *brdg);
 
@@ -69,7 +69,7 @@ static char putc(char c, void *brdg){
 	return (bridge_write(brdg, &c, 1) == 1) ? c : ~c;
 }
 
-static size_t puts(char const *s, size_t n, void *brdg){
+static size_t puts(char const *s, size_t n, bool blocking, void *brdg){
 	size_t i;
 	int16_t x;
 
