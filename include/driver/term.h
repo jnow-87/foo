@@ -75,7 +75,6 @@ typedef struct{
 	/* callbacks */
 	int (*configure)(term_cfg_t *term_cfg, void *hw_cfg, void *hw);
 
-	char (*putc)(char c, void *hw);
 	size_t (*puts)(char const *s, size_t n, bool blocking, void *hw);
 	size_t (*gets)(char *s, size_t n, void *hw);
 

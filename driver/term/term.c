@@ -226,7 +226,7 @@ static size_t puts_poll(term_t *term, char const *s, size_t n, bool blocking){
 
 static char putc(term_t *term, char c){
 	if(!CANON(term) || (!esc_active(&term->esc) && isprint(c))){
-		if(term->itf->putc(c, term->itf->hw) != c || term_cursor_move(term, 0, 1, false) != 0)
+		if(term->itf->puts(&c, 1, true, term->itf->hw) != 1 || term_cursor_move(term, 0, 1, false) != 0)
 			return ~c;
 
 		return c;

@@ -31,7 +31,6 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw);
-static char putc(char c, void *hw);
 static size_t puts(char const *s, size_t n, bool blocking, void *hw);
 static size_t gets(char *s, size_t n, void *hw);
 static int cursor(uint16_t line, uint16_t column, bool toggle, void *hw);
@@ -60,7 +59,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_1;
 
 	term->itf.configure = configure;
-	term->itf.putc = putc;
 	term->itf.puts = puts;
 	term->itf.gets = gets;
 	term->itf.cursor = cursor;
@@ -97,22 +95,12 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 	return vram_configure(term->vram, cfg);
 }
 
-static char putc(char c, void *hw){
-	dev_data_t *term = (dev_data_t*)hw;
-
-
-	if(vram_write_block(term->vram, term->line, term->column, font_char(c, term->font), term->font->width, 1) != 0)
-		return ~c;
-
-	return c;
-}
-
 static size_t puts(char const *s, size_t n, bool blocking, void *hw){
 	dev_data_t *term = (dev_data_t*)hw;
 
 
 	for(size_t i=0; i<n; i++){
-		if(putc(s[i], hw) != s[i])
+		if(vram_write_block(term->vram, term->line, term->column, font_char(s[i], term->font), term->font->width, 1) != 0)
 			return n;
 
 		term->column += term->font->width;
