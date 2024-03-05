@@ -17,7 +17,7 @@
 
 /* local/static prototypes */
 static char putc(char c, void *hw);
-static size_t puts(char const *s, size_t n, void *hw);
+static size_t puts(char const *s, size_t n, bool blocking, void *hw);
 static size_t gets(char *s, size_t n, void *hw);
 
 
@@ -63,7 +63,7 @@ static char putc(char c, void *hw){
 	return c;
 }
 
-static size_t puts(char const *s, size_t n, void *hw){
+static size_t puts(char const *s, size_t n, bool blocking, void *hw){
 	return ringbuf_write(hw, (void*)s, n);
 }
 

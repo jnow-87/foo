@@ -33,10 +33,10 @@ typedef struct{
 
 /* local/static prototypes */
 static size_t puts_int(term_t *term, char const *s, size_t n);
-static size_t puts_poll(term_t *term, char const *s, size_t n);
+static size_t puts_poll(term_t *term, char const *s, size_t n, bool blocking);
 
 static char putc(term_t *term, char c);
-static size_t puts(term_t *term, char const *s, size_t n);
+static size_t puts(term_t *term, char const *s, size_t n, bool blocking);
 static errno_t error(term_t *term);
 
 static int tx_complete(void *payload);
@@ -126,7 +126,7 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 
 	r = (int_enabled() != INT_NONE && term->itf->tx_int)
 	  ? puts_int(term, s, n)
-	  : puts_poll(term, s, n)
+	  : puts_poll(term, s, n, true)
 	;
 
 	if(r == 0)
@@ -168,12 +168,12 @@ void term_tx_hdlr(int_num_t num, void *payload){
 		return;
 
 	mutex_lock(&term->node->mtx);
-	n = puts_poll(term, dgram->s, 1);
+	n = puts_poll(term, dgram->s, dgram->len, false);
 	mutex_unlock(&term->node->mtx);
 
-	if(n == 1){
-		dgram->s++;
-		dgram->len--;
+	if(n > 0){
+		dgram->s += n;
+		dgram->len -= n;
 	}
 	else
 		itask_complete(&term->tx_queue, errno ? errno : E_IO);
@@ -194,20 +194,20 @@ static size_t puts_int(term_t *term, char const *s, size_t n){
 	return n - dgram.len;
 }
 
-static size_t puts_poll(term_t *term, char const *s, size_t n){
+static size_t puts_poll(term_t *term, char const *s, size_t n, bool blocking){
 	size_t i,
 		   j;
 
 
 	if(!CANON(term))
-		return term->itf->puts(s, n, term->itf->hw);
+		return term->itf->puts(s, n, blocking, term->itf->hw);
 
 	if(term_cursor_show(term, false) != 0)
 		return 0;
 
 	for(i=0, j=0; i<n; i++){
 		if(!isprint(s[i]) || esc_active(&term->esc) || term->cursor.column + (i - j) >= term->cfg->columns){
-			j += puts(term, s + j, i - j);
+			j += puts(term, s + j, i - j, blocking);
 
 			if(j != i || putc(term, s[i]) != s[i])
 				break;
@@ -217,7 +217,7 @@ static size_t puts_poll(term_t *term, char const *s, size_t n){
 	}
 
 	if(errno == 0 && error(term) == 0)
-		j += puts(term, s + j, i - j);
+		j += puts(term, s + j, i - j, blocking);
 
 	(void)term_cursor_show(term, CURSOR(term));
 
@@ -235,8 +235,8 @@ static char putc(term_t *term, char c){
 	return (term_esc_handle(term, c) == 0) ? c : ~c;
 }
 
-static size_t puts(term_t *term, char const *s, size_t n){
-	n = term->itf->puts(s, n, term->itf->hw);
+static size_t puts(term_t *term, char const *s, size_t n, bool blocking){
+	n = term->itf->puts(s, n, blocking, term->itf->hw);
 
 	return (term_cursor_move(term, 0, n, false) == 0) ? n : 0;
 }

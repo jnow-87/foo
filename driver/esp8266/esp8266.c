@@ -622,6 +622,7 @@ static void rx_act_ip_info(esp_t *esp){
 
 // tx interrupt handling
 static void tx_hdlr(int_num_t num, void *payload){
+	size_t n;
 	esp_t *esp = (esp_t*)payload;
 	tx_dgram_t *dgram;
 
@@ -633,11 +634,11 @@ static void tx_hdlr(int_num_t num, void *payload){
 
 	/* output character */
 	mutex_lock(&esp->mtx);
-	while(esp->term->putc(*dgram->s, esp->term->hw) != *dgram->s);
+	n = esp->term->puts(dgram->s, dgram->len, false, esp->term->hw);
 	mutex_unlock(&esp->mtx);
 
-	dgram->s++;
-	dgram->len--;
+	dgram->s += n;
+	dgram->len -= n;
 }
 
 static int tx_complete(void *payload){

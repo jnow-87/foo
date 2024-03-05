@@ -32,7 +32,7 @@ typedef struct{
 /* local/static prototypes */
 static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw);
 static char putc(char c, void *hw);
-static size_t putsn(char const *s, size_t n, void *hw);
+static size_t puts(char const *s, size_t n, bool blocking, void *hw);
 static size_t gets(char *s, size_t n, void *hw);
 static int cursor(uint16_t line, uint16_t column, bool toggle, void *hw);
 static int scroll(int16_t lines, void *hw);
@@ -61,7 +61,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 	term->itf.configure = configure;
 	term->itf.putc = putc;
-	term->itf.puts = putsn;
+	term->itf.puts = puts;
 	term->itf.gets = gets;
 	term->itf.cursor = cursor;
 	term->itf.scroll = scroll;
@@ -107,7 +107,7 @@ static char putc(char c, void *hw){
 	return c;
 }
 
-static size_t putsn(char const *s, size_t n, void *hw){
+static size_t puts(char const *s, size_t n, bool blocking, void *hw){
 	dev_data_t *term = (dev_data_t*)hw;
 
 
