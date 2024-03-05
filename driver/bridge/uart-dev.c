@@ -19,7 +19,6 @@
 
 
 /* local/static prototypes */
-static char putc(char c, void *brdg);
 static size_t puts(char const *s, size_t n, bool blocking, void *brdg);
 static size_t gets(char *s, size_t n, void *brdg);
 static errno_t error(void *brdg);
@@ -42,7 +41,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(itf == 0x0)
 		goto err_1;
 
-	itf->putc = putc;
 	itf->puts = puts;
 	itf->gets = gets;
 	itf->error = error;
@@ -64,10 +62,6 @@ err_0:
 }
 
 driver_probe("bridge,uart-dev", probe);
-
-static char putc(char c, void *brdg){
-	return (bridge_write(brdg, &c, 1) == 1) ? c : ~c;
-}
 
 static size_t puts(char const *s, size_t n, bool blocking, void *brdg){
 	size_t i;

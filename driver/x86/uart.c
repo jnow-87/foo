@@ -37,7 +37,6 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw);
-static char putc(char c, void *hw);
 static size_t puts(char const *s, size_t , bool blockingn, void *hw);
 static size_t gets(char *s, size_t n, void *hw);
 
@@ -63,7 +62,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_1;
 
 	itf->configure = configure;
-	itf->putc = putc;
 	itf->puts = puts;
 	itf->gets = gets;
 
@@ -95,10 +93,6 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 	x86_hw_uart_cfg(dtd->path, dtd->rx_int, hw_cfg);
 
 	return 0;
-}
-
-static char putc(char c, void *hw){
-	return (putsn(&c, 1, hw) != 1) ? ~c : c;
 }
 
 static size_t puts(char const *s, size_t n, bool blocking, void *hw){
