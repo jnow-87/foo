@@ -37,12 +37,6 @@
 
 		In general the architecture layer may decide on interrupt nesting. However, in most cases it should be sufficient to let the kernel decide.
 
-		Further, the architecture interrupt implementation is responsible to:
-		\begin{enumerate}
-			\item preserve the kernel \hyperref[errno_8h_ad65a8842cc674e3ddf69355898c0ecbf]{errno} variable
-			\item reset \hyperref[errno_8h_ad65a8842cc674e3ddf69355898c0ecbf]{errno} before passing control to kernel handlers
-		\end{enumerate}
-
 	\subsection{System Calls}
 		The system call implementation is required to:
 		\begin{enumerate}
