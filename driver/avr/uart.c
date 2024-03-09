@@ -181,14 +181,21 @@ static size_t puts(char const *s, size_t n, bool blocking, void *hw){
 static size_t gets(char *s, size_t n, void *hw){
 	uart_regs_t *regs = ((dt_data_t*)hw)->regs;
 	size_t i = 0;
+	uint8_t status;
 
 
 	/* read data */
-	while(i < n && (regs->ucsra & (0x1 << UCSRA_RXC))){
-		if(regs->ucsra & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE)))
-			goto_errno(err, E_IO);
+	while(i < n){
+		status = regs->ucsra;
+
+		if(!(status & (0x1 << UCSRA_RXC)))
+			break;
 
 		s[i] = regs->udr;
+
+		if(status & ((0x1 << UCSRA_FE) | (0x1 << UCSRA_DOR) | (0x1 << UCSRA_UPE)))
+			goto_errno(err, E_IO);
+
 		i++;
 	}
 
