@@ -70,7 +70,7 @@ ldlibs-kernel += \
 	-L$(loc_build_tree) \
 	-Wl,--section-start=.text=$(DEVTREE_KERNEL_FLASH_BASE) \
 	-Wl,--section-start=.data=$(DEVTREE_KERNEL_DATA_BASE) \
-	-Wl,-Map=$(build_tree)/kernel.map,--cref
+	-Wl,-Map=$(build_tree)/kernel/kernel.map,--cref
 
 ## init application flags
 ldlibs-app += \
