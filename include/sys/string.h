@@ -12,6 +12,7 @@
 #define SYS_STRING_H
 
 
+#include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 
@@ -39,9 +40,9 @@ char const *strpchr(char const *s, int (*cmp)(int));
 
 bool isoneof(char c, char const *s);
 
-void *memcpy(void *dest, void const *src, size_t n);
-void *memset(void *p, char c, size_t n);
-int memcmp(void const *s0, void const *s1, size_t n);
+void *memcpy(void *dest, void const *src, size_t n) __used;
+void *memset(void *p, char c, size_t n) __used;
+int memcmp(void const *s0, void const *s1, size_t n) __used;
 void *memscan(void *addr, char c, size_t n);
 void *memnscan(void *s0, void *s1, size_t nmemb, size_t size);
 
