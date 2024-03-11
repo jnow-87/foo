@@ -48,7 +48,11 @@ typedef unsigned short int		uint16_t;
 typedef signed long int			int32_t;
 typedef unsigned long int		uint32_t;
 
+typedef signed long long int	int64_t;
+typedef unsigned long long int	uint64_t;
+
 typedef uint8_t					register_t;
+
 typedef unsigned int			size_t;
 typedef int						ssize_t;
 
@@ -67,16 +71,19 @@ typedef unsigned short int		uint16_t;
 typedef signed int				int32_t;
 typedef unsigned int			uint32_t;
 
+typedef signed long long int	int64_t;
+typedef unsigned long long int	uint64_t;
+
 typedef uint32_t				register_t;
 
-typedef unsigned int long		size_t;
+typedef unsigned long int		size_t;
 typedef long int				ssize_t;
 
 typedef long long int			intmax_t;
 typedef unsigned long long int	uintmax_t;
 
-typedef long long int			ptrdiff_t;
-#  define PTRDIFF_T				unsigned long long int
+typedef long int				ptrdiff_t;
+#  define PTRDIFF_T				unsigned long int
 # elif DEVTREE_ARCH_REG_WIDTH == 64
 typedef signed char				int8_t;
 typedef unsigned char			uint8_t;
@@ -92,7 +99,7 @@ typedef unsigned long int		uint64_t;
 
 typedef uint64_t				register_t;
 
-typedef unsigned int long		size_t;
+typedef unsigned long int		size_t;
 typedef long int				ssize_t;
 
 typedef long long int			intmax_t;
