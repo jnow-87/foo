@@ -10,6 +10,7 @@
 /* brickos header */
 #include <config/config.h>
 #include <sys/devicetree.h>
+#include <sys/limits.h>
 #include <sys/string.h>
 #include <sys/stream.h>
 #include <test/test.h>
@@ -138,7 +139,12 @@ TEST(vfprintf){
 	r += test("012  ",					"%-5.3u", 12);
 	r += test("  012",					"%+5.3u", 12);
 	r += test("  012",					"% 5.3u", 12);
+
+#if UINT_MAX == 65535U
+	r += test("65524",					"%+5.3u", -12);
+#else
 	r += test("4294967284",				"%+5.3u", -12);
+#endif // UINT_MAX
 
 	/* x, X */
 	r += test("c",						"%x", 12);
@@ -148,7 +154,12 @@ TEST(vfprintf){
 	r += test("  00c",					"%+5.3x", 12);
 	r += test("  00c",					"% 5.3x", 12);
 	r += test("0x00c",					"%#5.3x", 12);
+
+#if UINT_MAX == 65535U
+	r += test(" fff4",					"%+5.3x", -12);
+#else
 	r += test("fffffff4",				"%+5.3x", -12);
+#endif // UINT_MAX
 
 	r += test("D",						"%X", 13);
 	r += test("  00D",					"%5.3X", 13);
@@ -157,7 +168,12 @@ TEST(vfprintf){
 	r += test("  00D",					"%+5.3X", 13);
 	r += test("  00D",					"% 5.3X", 13);
 	r += test("0X00D",					"%#5.3X", 13);
+
+#if UINT_MAX == 65535U
+	r += test(" FFF3",					"%+5.3X", -13);
+#else
 	r += test("FFFFFFF3",				"%+5.3X", -13);
+#endif // UINT_MAX
 
 	/* o */
 	r += test("16",						"%o", 14);
@@ -169,7 +185,12 @@ TEST(vfprintf){
 	r += test("  016",					"%+5.3o", 14);
 	r += test("  016",					"% 5.3o", 14);
 	r += test("  016",					"%#5.3o", 14);
+
+#if UINT_MAX == 65535U
+	r += test("177762",					"%+5.3o", -14);
+#else
 	r += test("37777777762",			"%+5.3o", -14);
+#endif // UINT_MAX
 
 	/* p */
 	r += test("0xfe",					"%p", (void*)0xfe);
@@ -182,15 +203,21 @@ TEST(vfprintf){
 	r += test(" 0x0fe",					"% 5.3p", (void*)0xfe);
 	r += test("0x0fe",					"%#5.3p", (void*)0xfe);
 
-#if DEVTREE_ARCH_REG_WIDTH >= 32 \
- || defined(CONFIG_PRINTF_LONG) \
- || defined(CONFIG_PRINTF_SIZET)
-	r += test("+0xffffffffffffff02",	"%+5.3p", (void*)-0xfe);
-#elif DEVTREE_ARCH_REG_WIDTH == 8
+#if defined(CONFIG_PRINTF_LONG) || defined(CONFIG_PRINTF_SIZET)
+# ifndef BUILD_HOST
+#  if DEVTREE_ARCH_ADDR_WIDTH == 16
+	r += test("+0xff02",				"%+5.3p", (void*)-0xfe);
+#  elif DEVTREE_ARCH_ADDR_WIDTH == 32
 	r += test("+0xffffff02",			"%+5.3p", (void*)-0xfe);
-#else
-	#warning "unhandled condition for pointer size"
-#endif // DEVTREE_ARCH_REG_WIDTH
+#  elif DEVTREE_ARCH_ADDR_WIDTH == 64
+	r += test("+0xffffffffffffff02",	"%+5.3p", (void*)-0xfe);
+#  else
+	STATIC_ASSERT(!"untested size");
+#  endif // DEVTREE_ARCH_ADDR_WIDTH
+# else // BUILD_HOST
+	r += test("+0xffffffffffffff02",	"%+5.3p", (void*)-0xfe);
+# endif // BUILD_HOST
+#endif // CONFIG_PRINTF_LONG || CONFIG_PRINTF_SIZET
 
 	/* f, F, e, E, g, G, a, A */
 	r += test("%f",						"%f");
@@ -216,8 +243,15 @@ TEST(vfprintf){
 #ifdef CONFIG_PRINTF_LONG
 	r += test("-10",					"%ld", (long int)-10);
 	r += test("10",						"%ld", (long int)10);
-	r += test("18446744073709551606",	"%lu", (unsigned long int)-10);
 	r += test("10",						"%lu", (unsigned long int)10);
+
+# if ULONG_MAX == 4294967295U
+	r += test("4294967286",				"%lu", (unsigned long int)-10);
+# elif ULONG_MAX == 18446744073709551615U
+	r += test("18446744073709551606",	"%lu", (unsigned long int)-10);
+# else
+	STATIC_ASSERT(!"untested size");
+# endif // ULONG_MAX
 #else
 	r += test("%ld",					"%ld", (long int)-10);
 	r += test("%ld",					"%ld", (long int)10);
@@ -262,8 +296,17 @@ TEST(vfprintf){
 #ifdef CONFIG_PRINTF_SIZET
 	r += test("-10",					"%zd", (size_t)-10);
 	r += test("10",						"%zd", (size_t)10);
-	r += test("18446744073709551606",	"%zu", (size_t)-10);
 	r += test("10",						"%zu", (size_t)10);
+
+# if SIZE_MAX == 65535U
+	r += test("65526",					"%zu", (size_t)-10);
+# elif SIZE_MAX == 4294967295U
+	r += test("4294967286",				"%zu", (size_t)-10);
+# elif SIZE_MAX == 18446744073709551615U
+	r += test("18446744073709551606",	"%zu", (size_t)-10);
+# else
+	STATIC_ASSERT(!"untested size");
+# endif // SIZE_MAX
 #else
 	r += test("%zd",					"%zd", (size_t)-10);
 	r += test("%zd",					"%zd", (size_t)10);
@@ -274,8 +317,14 @@ TEST(vfprintf){
 #ifdef CONFIG_PRINTF_PTRDIFF
 	r += test("-10",					"%td", (ptrdiff_t)-10);
 	r += test("10",						"%td", (ptrdiff_t)10);
-	r += test("18446744073709551606",	"%tu", (ptrdiff_t)-10);
 	r += test("10",						"%tu", (ptrdiff_t)10);
+# if PTRDIFF_MAX == 2147483647
+	r += test("4294967286",				"%tu", (ptrdiff_t)-10);
+# elif PTRDIFF_MAX == 9223372036854775807
+	r += test("18446744073709551606",	"%tu", (ptrdiff_t)-10);
+# else
+	STATIC_ASSERT(!"untested size");
+# endif // PTRDIFF_MAX
 #else
 	r += test("%td",					"%td", (ptrdiff_t)-10);
 	r += test("%td",					"%td", (ptrdiff_t)10);
