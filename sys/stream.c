@@ -441,11 +441,11 @@ static int get_arg(va_list lst, len_t len, bool check_sign, fflag_t *flags, valu
 
 	case LEN_SIZET:
 #ifdef CONFIG_PRINTF_SIZET
-		v->i = va_arg(lst, size_t);
+		v->i = va_arg(lst, ssize_t);
 		max = SIZE_MAX;
 		break;
 #else
-		(void)va_arg(lst, size_t);
+		(void)va_arg(lst, ssize_t);
 		return -1;
 #endif // CONFIG_PRINTF_SIZET
 
