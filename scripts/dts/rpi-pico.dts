@@ -33,7 +33,7 @@ arch = {
 			0,			// peripherall clock [kHz] (set by the platform)
 		];
 
-		// system pll
+		// system pll (133 MHz)
 		int<8> = [
 			1,			// reference clock divider
 			6,			// post divider 1
@@ -43,7 +43,7 @@ arch = {
 			133,		// feedback divider
 		];
 
-		// usb pll
+		// usb pll (48 MHz)
 		int<8> = [
 			1,			// reference clock divider
 			6,			// post divider 1

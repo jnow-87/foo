@@ -22,27 +22,11 @@
 // clocks
 #define RP2040_PLATFORM_CONFIG		((rp2040_platform_cfg_t const*)devtree_arch_payload("rp2040,platform"))
 #define RP2040_SYSTEM_CLOCK_HZ		(RP2040_PLATFORM_CONFIG->system_clock_khz * 1000)
+#define RP2040_REF_CLOCK_HZ			(RP2040_PLATFORM_CONFIG->crystal_clock_khz * 1000)
 #define RP2040_PERI_CLOCK_HZ		(RP2040_PLATFORM_CONFIG->peri_clock_khz * 1000)
 
 
 /* types */
-typedef enum{
-	RP2040_CS_NONE = 0x0,
-	RP2040_CS_PLL_SYS_CLKSRC,
-	RP2040_CS_PLL_USB_CLKSRC,
-	RP2040_CS_ROSC_CLKSRC,
-	RP2040_CS_ROSC_CLKSRC_PH,
-	RP2040_CS_XOSC_CLKSRC,
-	RP2040_CS_CLKSRC_GPIN0,
-	RP2040_CS_CLKSRC_GPIN1,
-	RP2040_CS_CLK_REF,
-	RP2040_CS_CLK_SYS,
-	RP2040_CS_CLK_PERI,
-	RP2040_CS_CLK_USB,
-	RP2040_CS_CLK_ADC,
-	RP2040_CS_CLK_RTC,
-} rp2040_clk_src_t;
-
 typedef enum{
 	RP2040_GPIO_FUNC_XIP = 0,
 	RP2040_GPIO_FUNC_SPI,
@@ -118,7 +102,6 @@ int rp2040_atomic(atomic_t op, void *param);
 
 void rp2040_iomux_init(void);
 void rp2040_clocks_init(void);
-uint32_t rp2040_clocks_measure(rp2040_clk_src_t src);
 
 
 /* static variables */

@@ -1,4 +1,6 @@
 #include <arch/arch.h>
+#include <kernel/stat.h>
+#include <kernel/kprintf.h>
 #include <sys/types.h>
 #include <sys/register.h>
 #include <sys/math.h>
@@ -6,16 +8,16 @@
 
 
 /* macros */
-#define CLOCK_BASE			0x40008000
+#define CLOCKS_BASE			0x40008000
 #define XOSC_BASE			0x40024000
 #define PLL_USB_BASE		0x4002c000
 #define PLL_SYS_BASE		0x40028000
 #define ROSC_BASE			0x40060000
 
-#define FC0_SRC				MREG(CLOCK_BASE + 0x94)
-#define FC0_STATUS			MREG(CLOCK_BASE + 0x98)
-#define FC0_RESULT			MREG(CLOCK_BASE + 0x9c)
-#define FC0_REF_KHZ			MREG(CLOCK_BASE + 0x80)
+#define FC0_SRC				MREG(CLOCKS_BASE + 0x94)
+#define FC0_STATUS			MREG(CLOCKS_BASE + 0x98)
+#define FC0_RESULT			MREG(CLOCKS_BASE + 0x9c)
+#define FC0_REF_KHZ			MREG(CLOCKS_BASE + 0x80)
 
 #define FC0_STATUS_RUNNING	8
 #define FC0_STATUS_DONE		4
@@ -63,11 +65,7 @@
 #define ROSCSTATUS_STABLE	31
 #define ROSCSTATUS_EN		12
 
-#define CLK_BASE(id)		(CLOCK_BASE + id * 0xc)
-
-#define CLKCTRL(id)			MREG(CLK_BASE(id) + 0x0)
-#define CLKDIV(id)			MREG(CLK_BASE(id) + 0x4)
-#define CLKSELECTED(id)		MREG(CLK_BASE(id) + 0x8)
+#define CLK_REGS(id)		(CLOCKS_BASE + id * 12)
 
 #define CLKCTRL_EN			11
 #define CLKCTRL_AUX			5
@@ -77,6 +75,23 @@
 
 
 /* types */
+typedef enum{
+	CLKSRC_NONE = 0x0,
+	CLKSRC_PLL_SYS_CLKSRC,
+	CLKSRC_PLL_USB_CLKSRC,
+	CLKSRC_ROSC_CLKSRC,
+	CLKSRC_ROSC_CLKSRC_PH,
+	CLKSRC_XOSC_CLKSRC,
+	CLKSRC_CLKSRC_GPIN0,
+	CLKSRC_CLKSRC_GPIN1,
+	CLKSRC_CLK_REF,
+	CLKSRC_CLK_SYS,
+	CLKSRC_CLK_PERI,
+	CLKSRC_CLK_USB,
+	CLKSRC_CLK_ADC,
+	CLKSRC_CLK_RTC,
+} clk_src_t;
+
 typedef enum{
 	CLK_GPOUT0 = 0,
 	CLK_GPOUT1,
@@ -88,7 +103,7 @@ typedef enum{
 	CLK_USB,
 	CLK_ADC,
 	CLK_RTC,
-} clock_id_t;
+} clk_id_t;
 
 typedef enum{
 	PLL_PWR_NONE = 0x0,
@@ -97,15 +112,11 @@ typedef enum{
 	PLL_PWR_POSTDIV = (0x1 << PLLPWR_POSTDIVPD),
 } pll_power_t;
 
-typedef enum{
-	PERI_SRC_SYS = 0,
-	PERI_SRC_PLL_SYS,
-	PERI_SRC_PLL_USB,
-	PERI_SRC_ROSC,
-	PERI_SRC_XOSC,
-	PERI_SRC_GPIN0,
-	PERI_SRC_GPIN1,
-} peri_src_t;
+typedef struct{
+	uint32_t volatile ctrl,
+					  div,
+					  selected;
+} clk_regs_t;
 
 
 /* local/static prototypes */
@@ -117,22 +128,40 @@ static void xosc_delay(uint32_t f_ref, uint32_t f_delay, uint8_t cycles);
 static void rosc_init(bool en);
 
 // clocks
-static void clock_set_src(clock_id_t id, uint8_t src, uint8_t aux_src, uint8_t div);
-static void clock_set_toaux(clock_id_t id, uint8_t aux_src, uint8_t div);
-static void clock_set_aux(clock_id_t id, uint8_t aux_src, uint8_t div, uint32_t f_khz);
+static void clk_set_glitchless_src(clk_id_t id, uint8_t src, uint8_t div);
+static void clk_set_glitchless_aux(clk_id_t id, uint8_t aux_src, uint8_t div);
+static void clk_set_glitchy_aux(clk_id_t id, uint8_t aux_src, uint8_t div, uint32_t f_khz);
+
+static uint32_t clk_measure(clk_src_t src);
 
 
 /* global functions */
 void rp2040_clocks_init(void){
+	uint32_t usb_khz;
+
+
 	rp2040_platform_cfg_t *cfg = (rp2040_platform_cfg_t*)RP2040_PLATFORM_CONFIG;
 
 
+	/* NOTE target clock setup
+	 * 	ring oscillator (rosc): disabled
+	 * 	crystal oscillator (xosc): enabled
+	 * 	system pll: configured based on devtree
+	 * 	usb pll: configured based on devtree
+	 *
+	 * 	system clock: system pll
+	 * 	reference clock: xosc
+	 * 	peripheral clock: xosc
+	 * 	usb clock: usb pll
+	 * 	adc clock: usb pll
+	 * 	rtc clock: xosc
+	 */
+
 	/* reset */
-	// reset clocks in case the chip was not reset properly,
-	// e.g. a debugger left it in an unknown state
+	// reset clocks in case the chip was not reset properly, e.g. a debugger left it in an unknown state
 	rosc_init(true);
-	clock_set_src(CLK_REF, 0, 0, 1);
-	clock_set_src(CLK_SYS, 0, 0, 1);
+	clk_set_glitchless_src(CLK_REF, 0, 1);
+	clk_set_glitchless_src(CLK_SYS, 0, 1);
 
 	/* init clock sources */
 	xosc_init(2, cfg->crystal_clock_khz);
@@ -141,33 +170,55 @@ void rp2040_clocks_init(void){
 	pll_init(PLL_SYS_BASE, &cfg->pll_sys);
 	pll_init(PLL_USB_BASE, &cfg->pll_usb);
 
-	/* init clocks */
-	clock_set_toaux(CLK_SYS, 0, 1);
-	clock_set_src(CLK_REF, 2, 0, 1);
-	clock_set_src(CLK_USB, 0, 0, 1);
+	usb_khz = clk_measure(CLKSRC_PLL_USB_CLKSRC);
 
-	clock_set_aux(CLK_PERI, 4, 0, cfg->crystal_clock_khz);
+	/* init clocks */
+	clk_set_glitchless_aux(CLK_SYS, 0, 1);
+	clk_set_glitchless_src(CLK_REF, 2, 1);
+
+	clk_set_glitchy_aux(CLK_PERI, 4, 1, cfg->crystal_clock_khz);
+	clk_set_glitchy_aux(CLK_USB, 0, 1, usb_khz);
+	clk_set_glitchy_aux(CLK_ADC, 0, 1, usb_khz);
+	clk_set_glitchy_aux(CLK_RTC, 3, 1, cfg->crystal_clock_khz);
 
 	/* disable unused clock sources and clocks */
 	rosc_init(false);
 
 	/* set platform info */
-	cfg->system_clock_khz = rp2040_clocks_measure(RP2040_CS_CLK_SYS);
-	cfg->peri_clock_khz = rp2040_clocks_measure(RP2040_CS_CLK_PERI);
-}
-
-uint32_t rp2040_clocks_measure(rp2040_clk_src_t src){
-	FC0_REF_KHZ = RP2040_PLATFORM_CONFIG->crystal_clock_khz;
-
-	while(FC0_STATUS & (0x1 << FC0_STATUS_RUNNING));
-	FC0_SRC = src;
-	while((FC0_STATUS & (0x1 << FC0_STATUS_DONE)) == 0);
-
-	return FC0_RESULT >> FC0_RESULT_KHZ;
+	cfg->system_clock_khz = clk_measure(CLKSRC_CLK_SYS);
+	cfg->peri_clock_khz = clk_measure(CLKSRC_CLK_PERI);
 }
 
 
 /* local functions */
+static void stat(void){
+	INFO(
+		"clocks\n"
+		" ring-osc: %u kHz\n"
+		" crystal-osc: %u kHz\n"
+		" sys-pll: %u kHz\n"
+		" usb-pll: %u kHz\n"
+		" sys-clk: %u kHz\n"
+		" ref-clk: %u kHz\n"
+		" peri-clk: %u kHz\n"
+		" usb-clk: %u kHz\n"
+		" adc-clk: %u kHz\n"
+		" rtc-clk: %u kHz\n"
+		, clk_measure(CLKSRC_ROSC_CLKSRC)
+		, clk_measure(CLKSRC_XOSC_CLKSRC)
+		, clk_measure(CLKSRC_PLL_SYS_CLKSRC)
+		, clk_measure(CLKSRC_PLL_USB_CLKSRC)
+		, clk_measure(CLKSRC_CLK_SYS)
+		, clk_measure(CLKSRC_CLK_REF)
+		, clk_measure(CLKSRC_CLK_PERI)
+		, clk_measure(CLKSRC_CLK_USB)
+		, clk_measure(CLKSRC_CLK_ADC)
+		, clk_measure(CLKSRC_CLK_RTC)
+	);
+}
+
+kernel_stat(stat);
+
 static void pll_powerup(uint32_t pll_base, pll_power_t en){
 	PLLPWR(pll_base) = (~en & (PLL_PWR_MAIN | PLL_PWR_VCO | PLL_PWR_POSTDIV)) | (0x1 << PLLPWR_DSMPD);
 }
@@ -206,27 +257,51 @@ static void rosc_init(bool en){
 	while(en && (ROSCSTATUS & (0x1 << ROSCSTATUS_STABLE)) == 0);
 }
 
-static void clock_set_src(clock_id_t id, uint8_t src, uint8_t aux_src, uint8_t div){
-	CLKCTRL(id) = (aux_src << CLKCTRL_AUX) | (src << CLKCTRL_SRC);
-	CLKDIV(id) = div << CLKDIV_INT;
+static void clk_set_glitchless_src(clk_id_t id, uint8_t src, uint8_t div){
+	clk_regs_t *regs = (clk_regs_t*)CLK_REGS(id);
 
-	while((CLKSELECTED(id) & (0x1 << src)) == 0);
+
+	regs->ctrl = (regs->ctrl & (0xf << CLKCTRL_AUX)) | (src << CLKCTRL_SRC);
+	regs->div = div << CLKDIV_INT;
+
+	while((regs->selected & (0x1 << src)) == 0);
 }
 
-static void clock_set_toaux(clock_id_t id, uint8_t aux_src, uint8_t div){
-	// first switch the clock's aux src, keeping the src at a non-aux src (0x0),
-	// then set the divider and switch the src to the aux src (0x1)
-	CLKCTRL(id) = (aux_src << CLKCTRL_AUX) | (0x0 << CLKCTRL_SRC);
-	clock_set_src(id, 1, aux_src, div);
+static void clk_set_glitchless_aux(clk_id_t id, uint8_t aux_src, uint8_t div){
+	clk_regs_t *regs = (clk_regs_t*)CLK_REGS(id);
+
+
+	clk_set_glitchless_src(id, 0, div); // switch src to non-aux
+	regs->ctrl |= (aux_src << CLKCTRL_AUX); // set aux
+	clk_set_glitchless_src(id, 1, div); // switch src to aux
 }
 
-static void clock_set_aux(clock_id_t id, uint8_t aux_src, uint8_t div, uint32_t f_khz){
-	CLKCTRL(id) = (aux_src << CLKCTRL_AUX);
+static void clk_set_glitchy_aux(clk_id_t id, uint8_t aux_src, uint8_t div, uint32_t f_khz){
+	clk_regs_t *regs = (clk_regs_t*)CLK_REGS(id);
 
-	if(div != 0)
-		CLKDIV(id) = (div << CLKDIV_INT);
 
-	CLKCTRL(id) = (aux_src << CLKCTRL_AUX) | (0x1 << CLKCTRL_EN);
+	// disable clock
+	regs->ctrl = 0;
+	regs->div = 0;
 
-	xosc_delay(RP2040_PLATFORM_CONFIG->crystal_clock_khz, f_khz, 2);
+	xosc_delay(RP2040_REF_CLOCK_HZ / 1000, f_khz, 2);
+
+	// change aux src
+	regs->ctrl = (aux_src << CLKCTRL_AUX);
+
+	// enable clock
+	regs->div = (div << CLKDIV_INT);
+	regs->ctrl |= (0x1 << CLKCTRL_EN);
+
+	xosc_delay(RP2040_REF_CLOCK_HZ / 1000, f_khz, 2);
+}
+
+static uint32_t clk_measure(clk_src_t src){
+	FC0_REF_KHZ = RP2040_REF_CLOCK_HZ / 1000;
+
+	while(FC0_STATUS & (0x1 << FC0_STATUS_RUNNING));
+	FC0_SRC = src;
+	while((FC0_STATUS & (0x1 << FC0_STATUS_DONE)) == 0);
+
+	return FC0_RESULT >> FC0_RESULT_KHZ;
 }
