@@ -13,6 +13,7 @@
 #include <sys/limits.h>
 #include <sys/string.h>
 #include <sys/stream.h>
+#include <stdlib.h>
 #include <test/test.h>
 
 /* host header */
@@ -35,6 +36,10 @@ static size_t fprintf(FILE *f, char const *format, ...);
 static char putc(char c, struct FILE *stream);
 
 
+/* static variables */
+static char *vfprintf_buf = 0x0;
+
+
 /* local functions */
 TEST(snprintf){
 	int r = 0;
@@ -52,6 +57,8 @@ TEST(vfprintf){
 	char tmp[3];
 	long long int len;
 
+
+	ASSERT_PTR_NEQ(vfprintf_buf = malloc(BUF_SIZE), 0x0);
 
 	/* blank */
 	r += TEST_VFPRINTF("foo",					"foo");
@@ -335,6 +342,8 @@ TEST(vfprintf){
 	r += TEST_VFPRINTF("%tu",					"%tu", (ptrdiff_t)10);
 #endif // CONFIG_PRINTF_PTRDIFF
 
+	free(vfprintf_buf);
+
 	return -r;
 };
 
@@ -342,6 +351,8 @@ TEST(vfprintf_inval){
 	int r = 0;
 	FILE fp = FILE_INITIALISER(0x0, 0x0, 0, 0x0);
 
+
+	ASSERT_PTR_NEQ(vfprintf_buf = malloc(BUF_SIZE), 0x0);
 
 	r += TEST_VFPRINTF("12", "%#u", 12);
 
@@ -354,20 +365,21 @@ TEST(vfprintf_inval){
 
 	r += TEST_INT_EQ(fprintf(&fp, "%5s", "1"), 0);
 
+	free(vfprintf_buf);
+
 	return -r;
 }
 
 static int vfprintf_test(size_t line, char const *ref, char const *s, ...){
 	int r = 0;
-	char buf[BUF_SIZE];
-	FILE f = FILE_INITIALISER(0x0, buf, BUF_SIZE, 0x0);
+	FILE f = FILE_INITIALISER(0x0, vfprintf_buf, BUF_SIZE, 0x0);
 	size_t len;
 	char ref_ext[strlen(ref) + strlen(DUMMY_STR) + 1];
 	va_list lst;
 
 
 	sprintf(ref_ext, "%s%s", ref, DUMMY_STR);
-	memset(buf, 'a', BUF_SIZE);
+	memset(vfprintf_buf, 'a', BUF_SIZE);
 
 	va_start(lst, s);
 	len = vfprintf(&f, s, lst);
