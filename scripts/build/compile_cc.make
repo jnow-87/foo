@@ -102,7 +102,7 @@ else
 endif
 
 define compile_o_o
-	$(eval flags := -nostdlib -r $(filter-out %coverage -fprofile-arcs,$($(1)$(o_o_cflags))) -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
+	$(eval flags := -nostdlib -r $(filter-out %coverage -fprofile-arcs,$($(1)$(o_o_cflags))) $($(1)ldflags))
 	$(call compile_base,$(1)$(o_o_compiler),$(flags) $(filter %.o,$^) -o $@)
 endef
 
