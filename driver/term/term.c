@@ -8,7 +8,7 @@
 
 
 #include <config/config.h>
-#include <arch/interrupt.h>
+#include <arch/arch.h>
 #include <kernel/memory.h>
 #include <kernel/interrupt.h>
 #include <kernel/inttask.h>
@@ -124,7 +124,7 @@ size_t term_puts(term_t *term, char const *s, size_t n){
 	if(n == 0)
 		return 0;
 
-	r = (int_enabled() != INT_NONE && term->itf->tx_int)
+	r = (int_enabled() && term->itf->tx_int)
 	  ? puts_int(term, s, n)
 	  : puts_poll(term, s, n, true)
 	;

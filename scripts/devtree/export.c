@@ -26,7 +26,7 @@
 #define SRC_SECTION_HEADER(fp, s)	section_header(fp, "/*", "*/", s)
 
 #define WARN(node, fmt, ...) \
-	fprintf(stderr, FG_YELLOW "warning" RESET_ATTR ":%s: " fmt, node->name, ##__VA_ARGS__)
+	fprintf(stderr, FG("warning", YELLOW) ":%s: " fmt, node->name, ##__VA_ARGS__)
 
 
 /* types */
@@ -180,8 +180,10 @@ static void arch_makevars(FILE *fp, base_node_t *node, char const *node_ident){
 	fprintf(fp, "DEVTREE_ARCH_NCORES := %u\n", arch->ncores);
 	fprintf(fp, "DEVTREE_ARCH_NUM_INTS := %u\n", arch->num_ints);
 	fprintf(fp, "DEVTREE_ARCH_NUM_VINTS := %u\n", arch->num_vints);
-	fprintf(fp, "DEVTREE_ARCH_TIMER_CYCLE_TIME_US := %u\n", arch->timer_cycle_time_us);
 	fprintf(fp, "DEVTREE_ARCH_TIMER_INT := %u\n", arch->timer_int);
+	fprintf(fp, "DEVTREE_ARCH_SYSCALL_INT := %u\n", arch->syscall_int);
+	fprintf(fp, "DEVTREE_ARCH_IPI_INT := %u\n", arch->ipi_int);
+	fprintf(fp, "DEVTREE_ARCH_TIMER_CYCLE_TIME_US := %u\n", arch->timer_cycle_time_us);
 }
 
 static void device_macros(FILE *fp, base_node_t *node, char const *node_ident){
@@ -211,8 +213,10 @@ static void arch_macros(FILE *fp, base_node_t *node, char const *node_ident){
 	fprintf(fp, "#define DEVTREE_ARCH_NCORES %u\n", arch->ncores);
 	fprintf(fp, "#define DEVTREE_ARCH_NUM_INTS %u\n", arch->num_ints);
 	fprintf(fp, "#define DEVTREE_ARCH_NUM_VINTS %u\n", arch->num_vints);
-	fprintf(fp, "#define DEVTREE_ARCH_TIMER_CYCLE_TIME_US %u\n", arch->timer_cycle_time_us);
 	fprintf(fp, "#define DEVTREE_ARCH_TIMER_INT %u\n", arch->timer_int);
+	fprintf(fp, "#define DEVTREE_ARCH_SYSCALL_INT %u\n", arch->syscall_int);
+	fprintf(fp, "#define DEVTREE_ARCH_IPI_INT %u\n", arch->ipi_int);
+	fprintf(fp, "#define DEVTREE_ARCH_TIMER_CYCLE_TIME_US %u\n", arch->timer_cycle_time_us);
 }
 
 static void base_declaration(FILE *fp, base_node_t *node, char const *node_ident){
@@ -279,8 +283,10 @@ static void arch_definition(FILE *fp, base_node_t *node, char const *node_ident)
 		fprintf(fp, "\t.ncores = %u,\n", arch->ncores);
 		fprintf(fp, "\t.num_ints = %u,\n", arch->num_ints);
 		fprintf(fp, "\t.num_vints = %u,\n", arch->num_vints);
-		fprintf(fp, "\t.timer_cycle_time_us = %u,\n", arch->timer_cycle_time_us);
 		fprintf(fp, "\t.timer_int = %u,\n", arch->timer_int);
+		fprintf(fp, "\t.syscall_int = %u,\n", arch->syscall_int);
+		fprintf(fp, "\t.ipi_int = %u,\n", arch->ipi_int);
+		fprintf(fp, "\t.timer_cycle_time_us = %u,\n", arch->timer_cycle_time_us);
 	}
 	else if(node->type == NT_DEVICE)
 		device_definition(fp, node, node_ident);

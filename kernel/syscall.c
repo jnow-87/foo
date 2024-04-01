@@ -7,16 +7,24 @@
 
 
 
-#include <arch/interrupt.h>
+#include <arch/arch.h>
+#include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
 #include <kernel/syscall.h>
+#include <kernel/interrupt.h>
 #include <kernel/sched.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
 #include <sys/string.h>
+#include <sys/devicetree.h>
+
+
+/* local/static prototypes */
+static void sc_hdlr(int_num_t num, void *payload);
+static int syscall(sc_num_t num, void *param, size_t psize, thread_t *this_t);
 
 
 /* static variables */
@@ -58,45 +66,53 @@ int sc_release(sc_num_t num){
 	return 0;
 }
 
-/**
- * \brief	kernel system call handler
- * 			Identifying an executing the requested system call. During
- * 			system call execution interrupts are enabled.
- *
- * \param	num		system call number
- * \param	param	user space pointer to system call arguments
- * \param	psize	size of param
- *
- * \pre		errno is reset to 0
- */
-void sc_khdlr(sc_num_t num, void *param, size_t psize){
-	int r;
-	char kparam[psize];
-	sc_hdlr_t hdlr;
+
+/* local functions */
+static int init(void){
+	return int_register(DEVTREE_ARCH_SYSCALL_INT, sc_hdlr, 0x0);
+}
+
+kernel_init(0, init);
+
+static void sc_hdlr(int_num_t num, void *payload){
 	thread_t *this_t;
+	sc_t sc;
+	sc_t *sc_user;
 
 
 	this_t = sched_running();
+	sc_user = sc_arg(this_t);
+
+	if(copy_from_user(&sc, sc_user, sizeof(sc), this_t->parent) != 0)
+		return;
+
+	sc.errno = -syscall(sc.num, sc.param, sc.size, this_t);
+
+	(void)copy_to_user(sc_user, &sc, sizeof(sc), this_t->parent);
+}
+
+static int syscall(sc_num_t num, void *param, size_t psize, thread_t *this_t){
+	int r;
+	char kparam[psize];
+	sc_hdlr_t hdlr;
+
 
 	mutex_lock(&sc_mtx);
 	hdlr = sc_map[num];
 	mutex_unlock(&sc_mtx);
 
 	/* check syscall */
-	if(num >= NSYSCALLS || hdlr == 0x0){
-		set_errno(E_INVAL);
-
-		return;
-	}
+	if(num >= NSYSCALLS || hdlr == 0x0)
+		return_errno(E_INVAL);
 
 	/* copy arguments to kernel space */
 	if(copy_from_user(kparam, param, psize, this_t->parent) != 0)
-		return;
+		return -errno;
 
 	/* execute callback */
-	int_enable(INT_ALL);
+	int_enable(true);
 	r = hdlr(kparam);
-	int_enable(INT_NONE);
+	int_enable(false);
 
 	if(r != 0){
 		if(errno == 0)
@@ -109,4 +125,6 @@ void sc_khdlr(sc_num_t num, void *param, size_t psize){
 
 	/* copy result to user space */
 	(void)copy_to_user(param, kparam, psize, this_t->parent);
+
+	return -errno;
 }

@@ -9,7 +9,6 @@
 
 #include <arch/arch.h>
 #include <arch/avr/register.h>
-#include <arch/avr/thread.h>
 #include <kernel/interrupt.h>
 #include <kernel/sched.h>
 #include <kernel/thread.h>
@@ -34,23 +33,20 @@ static thread_ctx_type_t ctx_type(thread_ctx_t *ctx);
 
 
 /* global functions */
-int_type_t avr_int_enable(int_type_t mask){
-	int_type_t s;
+bool avr_int_enable(bool en){
+	bool s;
 
 
-	s = (mreg_r(SREG) & (0x1 << SREG_I)) ? INT_GLOBAL : INT_NONE;
+	s = avr_int_enabled();
 
-	if(mask)	asm volatile("sei");
-	else		asm volatile("cli");
+	if(en)	asm volatile("sei");
+	else	asm volatile("cli");
 
 	return s;
 }
 
-int_type_t avr_int_enabled(void){
-	if(mreg_r(SREG) & (0x1 << SREG_I))
-		return INT_GLOBAL;
-
-	return INT_NONE;
+bool avr_int_enabled(void){
+	return (mreg_r(SREG) & (0x1 << SREG_I));
 }
 
 struct thread_ctx_t *avr_int_hdlr(struct thread_ctx_t *ctx){

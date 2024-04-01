@@ -7,13 +7,13 @@
 
 
 
-#include <arch/interrupt.h>
-#include <arch/core.h>
+#include <arch/arch.h>
 #include <kernel/kprintf.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <sys/stdarg.h>
 #include <sys/stack.h>
+#include <sys/types.h>
 
 
 /* global functions */
@@ -22,12 +22,12 @@ void kpanic_ext(char const *file, char const *func, unsigned int line, char cons
 	thread_t *this_t;
 
 
-	int_enable(INT_NONE);
+	int_enable(false);
 
 	/* print woops */
 	va_start(lst, format);
 
-	kprintf(KMSG_ANY, FG_RED "\n\nwoops!!" RESET_ATTR "\t");
+	kprintf(KMSG_ANY, FG("\n\nwoops!!", RED) "\t");
 	kvprintf(KMSG_ANY, format, lst);
 	kprintf(KMSG_ANY, "%10.10s: %s:%u %s()\n", "location", file, line, func);
 

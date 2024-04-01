@@ -9,7 +9,6 @@
 
 #include <config/config.h>
 #include <arch/arch.h>
-#include <arch/interrupt.h>
 #include <kernel/interrupt.h>
 #include <kernel/panic.h>
 #include <kernel/sched.h>

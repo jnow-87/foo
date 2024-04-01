@@ -7,7 +7,7 @@
 
 
 
-#include <arch/core.h>
+#include <arch/arch.h>
 #include <kernel/fs.h>
 #include <kernel/memory.h>
 #include <kernel/sched.h>

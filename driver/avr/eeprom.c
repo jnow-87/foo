@@ -7,7 +7,7 @@
 
 
 
-#include <arch/interrupt.h>
+#include <arch/arch.h>
 #include <arch/avr/register.h>
 #include <kernel/interrupt.h>
 #include <kernel/driver.h>
@@ -218,14 +218,14 @@ static size_t write_int(dev_data_t *eeprom, fs_filed_t *fd, uint8_t *buf, size_t
 
 static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
 	eeprom_regs_t *regs = dtd->regs;
-	int_type_t imask;
+	bool ie;
 
 
 	DEBUG("write %#4.4x: %c (%#hhx)\n", dtd->base + offset, b, b);
 
 	while(regs->eecr & (0x1 << EECR_EEPE));
 
-	imask = int_enable(INT_NONE);	// the write sequence must not be interrupted
+	ie = int_enable(false);	// the write sequence must not be interrupted
 
 	regs->eear = (uint16_t)dtd->base + offset;
 	regs->eedr = b;
@@ -242,24 +242,24 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
 		  [write_mask] "r" (0x1 << EECR_EEPE | ((dtd->int_num ? 0x1 : 0x0) << EECR_EERIE))
 	);
 
-	int_enable(imask);
+	int_enable(ie);
 }
 
 static char read_byte(size_t offset, dt_data_t *dtd){
 	eeprom_regs_t *regs = dtd->regs;
 	char c;
-	int_type_t imask;
+	bool ie;
 
 
 	while(regs->eecr & (0x1 << EECR_EEPE));
 
-	imask = int_enable(INT_NONE);
+	ie = int_enable(false);
 
 	regs->eear = (uint16_t)(dtd->base + offset);
 	regs->eecr |= (0x1 << EECR_EERE);
 	c = regs->eedr;
 
-	int_enable(imask);
+	int_enable(ie);
 
 	DEBUG("read %#4.4x: %c (%#hhx)\n", dtd->base + offset, c, c);
 

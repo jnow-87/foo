@@ -7,37 +7,20 @@
 
 
 
-#include <arch/core.h>
-#include <arch/interrupt.h>
+#include <arch/arch.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/string.h>
-#include <sys/stack.h>
-#include <sys/mutex.h>
 #include <sys/devicetree.h>
+#include <kernel/init.h>
+#include <kernel/interrupt.h>
 #include <kernel/ipi.h>
 #include <kernel/memory.h>
 #include <kernel/kprintf.h>
 
-/**
- * TODO
- * 	the functions in this file need to be tested as soon
- * 	as multi-core targets are implemented
- */
 
-
-/* types */
-typedef struct ipi_msg_t{
-	struct ipi_msg_t *next;
-
-	ipi_hdlr_t hdlr;
-	uint8_t buf[];
-} ipi_msg_t;
-
-
-/* static variables */
-static ipi_msg_t *messages[DEVTREE_ARCH_NCORES] = { 0x0 };
-static mutex_t msg_mtx = MUTEX_INITIALISER();
+/* local/static prototypes */
+static void ipi_hdlr(int_num_t num, void *payload);
 
 
 /* global functions */
@@ -56,20 +39,33 @@ int ipi_send(unsigned int core, ipi_hdlr_t hdlr, void *buf, size_t n){
 	msg->hdlr = hdlr;
 	memcpy(msg->buf, buf, n);
 
-	mutex_lock(&msg_mtx);
-	stack_push(messages[core], msg);
-	mutex_unlock(&msg_mtx);
-
-	int_ipi(core, false);
-
-	return 0;
+	return ipi_int(core, false, msg);
 }
 
-void ipi_khdlr(void){
+
+/* local functions */
+static int init(void){
+	int r = 0;
+
+
+	for(size_t i=0; i<DEVTREE_ARCH_NCORES; i++)
+		r |= int_register(DEVTREE_ARCH_IPI_INT + i, ipi_hdlr, 0x0);
+
+	return r;
+}
+
+kernel_init(0, init);
+
+static void ipi_hdlr(int_num_t num, void *payload){
 	ipi_msg_t *msg;
 
 
-	msg = stack_pop(messages[PIR]);
-	msg->hdlr(msg->buf);
-	kfree(msg);
+	msg = ipi_arg();
+
+	if(msg != 0x0){
+		msg->hdlr(msg->buf);
+		kfree(msg);
+	}
+	else
+		WARN("spurious ipi interrupt\n");
 }

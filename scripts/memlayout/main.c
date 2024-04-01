@@ -17,7 +17,7 @@
 
 
 /* macros */
-#define ERROR(msg, ...) fprintf(stderr, FG_RED "error" RESET_ATTR ": " msg, __VA_ARGS__)
+#define ERROR(msg, ...) fprintf(stderr, FG("error", RED) ": " msg, __VA_ARGS__)
 
 #define CONTAINS(n0, n1)({ \
 	typeof(n0) _n0 = n0; \
@@ -89,13 +89,13 @@ static void print_layout(devtree_memory_t const *node, bool top_level){
 		}
 
 		if(top_level){
-			printf("\n" UNDERLINE BG_WHITE FG_BLACK "%s:" RESET_ATTR "\n" BG_WHITE FG_BLACK "         target         base          end        size               " RESET_ATTR "\n", name);
+			printf("\n" ATTR(BG(FG("%s:", BLACK), WHITE), UNDERLINE) "\n" BG(FG("         target         base          end        size               ", BLACK), WHITE) "\n", name);
 
 			if(node->size != 0)
-				printf(BOLD "%20.20s" RESET_ATTR ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n\n", "total", node->base, node->base + node->size - 1, node->size / 1024.0, node->size);
+				printf(ATTR("%20.20s", BOLD) ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n\n", "total", node->base, node->base + node->size - 1, node->size / 1024.0, node->size);
 		}
 		else
-			printf(BOLD "%20.20s" RESET_ATTR ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", name, node->base, node->base + node->size - 1, node->size / 1024.0, node->size);
+			printf(ATTR("%20.20s", BOLD) ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", name, node->base, node->base + node->size - 1, node->size / 1024.0, node->size);
 	}
 
 	if(node->childs == 0x0)

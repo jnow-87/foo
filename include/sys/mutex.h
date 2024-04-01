@@ -31,7 +31,7 @@
 	.attr = _attr, \
 	.nest_cnt = 0, \
 	.lock = LOCK_CLEAR, \
-	.imask = 0, \
+	.int_en = false, \
 }
 
 # define NOINT_MUTEX_INITIALISER() _MUTEX_INITIALISER(MTX_NOINT)
@@ -88,7 +88,7 @@ typedef struct{
 									// it is undefined for non-nested and unlocked mutexes
 
 #ifdef BUILD_KERNEL
-	int_type_t imask;
+	bool int_en;
 #endif // BUILD_KERNEL
 } mutex_t;
 

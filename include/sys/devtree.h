@@ -46,8 +46,11 @@ typedef struct{
 	uint8_t num_ints,
 			num_vints;
 
+	uint8_t timer_int,
+			syscall_int,
+			ipi_int;
+
 	size_t timer_cycle_time_us;
-	uint8_t timer_int;
 
 	struct devtree_device_t const * const *childs;
 } devtree_arch_t;

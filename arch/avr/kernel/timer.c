@@ -7,7 +7,8 @@
 
 
 
-#include <arch/avr/atmega.h>
+#include <arch/arch.h>
+#include <arch/avr/register.h>
 #include <kernel/init.h>
 #include <sys/devtree.h>
 
@@ -35,4 +36,4 @@ static int init(void){
 	return 0;
 }
 
-platform_init(0, init);
+platform_init(1, first, init);

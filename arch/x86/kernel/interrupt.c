@@ -8,9 +8,9 @@
 
 
 #include <config/config.h>
+#include <arch/arch.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
-#include <arch/x86/sched.h>
 #include <kernel/init.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
@@ -25,28 +25,26 @@ static void int_hdlr(int sig);
 
 
 /* static variables */
-static int_type_t int_mask = INT_NONE;
+static bool int_en = false;
 static x86_hw_op_t *int_op = 0x0;
 static bool prevent_sched_transition = false;
 
 
 /* global functions */
-int_type_t x86_int_enabled(void){
-	return int_mask;
-}
-
-int_type_t x86_int_enable(int_type_t mask){
-	int_type_t s;
+bool x86_int_enable(bool en){
+	bool s = int_en;
 
 
-	s = int_mask;
-
-	if(int_mask != mask){
-		int_mask = mask;
-		x86_hw_int_set(mask != INT_NONE);
+	if(int_en != en){
+		int_en = en;
+		x86_hw_int_set(en);
 	}
 
 	return s;
+}
+
+bool x86_int_enabled(void){
+	return int_en;
 }
 
 x86_hw_op_t *x86_int_op(void){
@@ -82,7 +80,7 @@ static int init(void){
 	return 0;
 }
 
-platform_init(0, init);
+platform_init(1, first, init);
 
 static void int_hdlr(int sig){
 	x86_hw_op_t op;
@@ -91,7 +89,7 @@ static void int_hdlr(int sig){
 
 
 	/* preamble */
-	int_mask = INT_NONE;
+	int_en = false;
 
 	// acknowledge request
 	x86_hw_op_read(&op);
@@ -128,6 +126,9 @@ static void int_hdlr(int sig){
 	/* handle interrupt */
 	int_khdlr(op.int_ctrl.num);
 
+	if(op.int_ctrl.num == INT_SYSCALL)
+		x86_sc_epilogue(this_t);
+
 	if(prevent_sched_transition && this_t->parent != sched_running()->parent)
 		x86_sched_force(this_t);
 
@@ -161,5 +162,5 @@ static void int_hdlr(int sig){
 	if(op.int_return.num == INT_SYSCALL && this_t->parent->pid != 0)
 		prevent_sched_transition = false;
 
-	int_mask = INT_GLOBAL;
+	int_en = true;
 }

@@ -7,10 +7,10 @@
 
 
 
-#include <arch/atomic.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/atomic.h>
 #include <test/test.h>
 
 
@@ -78,8 +78,8 @@ static int thread(void *arg){
 
 	*tid = info.tid;
 
-	atomic_inc(&errors, r);
-	atomic_inc(&finished, 1);
+	atomic_add(&errors, r);
+	atomic_add(&finished, 1);
 
 	return -r;
 }

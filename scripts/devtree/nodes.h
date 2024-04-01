@@ -107,8 +107,11 @@ typedef struct arch_node_t{
 	int8_t num_ints,
 		   num_vints;
 
+	uint8_t timer_int,
+			syscall_int,
+			ipi_int;
+
 	size_t timer_cycle_time_us;
-	int8_t timer_int;
 } arch_node_t;
 
 BASE_NODE_COMPATIBLE(arch_node_t)

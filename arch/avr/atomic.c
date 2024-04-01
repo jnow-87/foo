@@ -13,40 +13,20 @@
 
 
 /* global functions */
-int avr_cas(int volatile *v, int old, int new){
+int avr_atomic(atomic_t op, void *param){
 	bool int_en;
-	int t;
+	int r;
 
 
 	/* disable interrupts */
 	int_en = mreg_r(SREG) & (0x1 << SREG_I);
 	asm volatile("cli");
 
-	/* compare and swap */
-	t = *v;
+	r = op(param);
 
-	if(t == old)
-		*v = new;
-
-	/* enable interrupts */
+	/* re-enable interrupts */
 	if(int_en)
 		asm volatile("sei");
 
-	return t != old;
-}
-
-void avr_atomic_inc(int volatile *v, int inc){
-	bool int_en;
-
-
-	/* disable interrupts */
-	int_en = mreg_r(SREG) & (0x1 << SREG_I);
-	asm volatile("cli");
-
-	/* increment */
-	*v += inc;
-
-	/* enable interrupts */
-	if(int_en)
-		asm volatile("sei");
+	return r;
 }

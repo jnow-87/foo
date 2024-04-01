@@ -39,7 +39,7 @@ TEST_LONG(tty, "test tty non/blocking io"){
 
 	/* get stdin file mode */
 	if(fcntl(0, F_MODE_GET, &f_mode, sizeof(f_mode_t)) != 0){
-		printf(FG_RED "error " RESET_ATTR "can't read stdin file mode \"%s\"\n", strerror(errno));
+		printf(FG("error ", RED) "can't read stdin file mode \"%s\"\n", strerror(errno));
 		return -1;
 	}
 
@@ -59,7 +59,7 @@ TEST_LONG(tty, "test tty non/blocking io"){
 
 		// error handling
 		if(errno){
-			printf(FG_RED "error " RESET_ATTR "read \"%s\" -", strerror(errno));
+			printf(FG("error ", RED) "read \"%s\" -", strerror(errno));
 			reset_errno();
 
 			continue;
@@ -80,7 +80,7 @@ TEST_LONG(tty, "test tty non/blocking io"){
 			printf("toggle blocking mode (set mode: %#x)\n", f_mode);
 
 			if(fcntl(0, F_MODE_SET, &f_mode, sizeof(f_mode_t)) != 0)
-				printf(FG_RED "error " RESET_ATTR "fcntl failed \"%s\"\n", strerror(errno));
+				printf(FG("error ", RED) "fcntl failed \"%s\"\n", strerror(errno));
 		}
 		else if(buf[0] == 'q')
 			break;

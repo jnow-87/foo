@@ -91,7 +91,7 @@ static int help(char const *err, ...){
 	if(err != 0x0 && *err != 0){
 		va_start(lst, err);
 
-		printf("%serror%s: ", FG_RED, RESET_ATTR);
+		printf(FG("error", RED) ": ");
 		vprintf(err, lst);
 		printf("\n\n");
 

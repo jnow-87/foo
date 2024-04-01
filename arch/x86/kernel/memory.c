@@ -97,4 +97,4 @@ static int init(void){
 	return 0;
 }
 
-core_init(init);
+platform_init(0, first, init);

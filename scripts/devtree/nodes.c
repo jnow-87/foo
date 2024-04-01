@@ -7,6 +7,7 @@
 
 
 
+#include <config/config.h>
 #include <sys/types.h>
 #include <sys/register.h>
 #include <sys/vector.h>
@@ -64,8 +65,10 @@ int nodes_init(void){
 	root_arch.ncores = 0;
 	root_arch.num_ints = -1;
 	root_arch.num_vints = -1;
-	root_arch.timer_cycle_time_us = 0;
 	root_arch.timer_int = -1;
+	root_arch.syscall_int = -1;
+	root_arch.ipi_int = -1;
+	root_arch.timer_cycle_time_us = 0;
 
 	return vector_init(&node_names, sizeof(char*), 16);
 }
@@ -152,8 +155,12 @@ int arch_validate(void){
 	ARCH_ASSERT_MISSING(core_mask, 0x0);
 	ARCH_ASSERT_MISSING(num_ints, -1);
 	ARCH_ASSERT_MISSING(num_vints, -1);
-	ARCH_ASSERT_MISSING(timer_cycle_time_us, 0);
 	ARCH_ASSERT_MISSING(timer_int, -1);
+	ARCH_ASSERT_MISSING(syscall_int, -1);
+#ifdef CONFIG_KERNEL_SMP
+	ARCH_ASSERT_MISSING(ipi_int, -1);
+#endif // CONFIG_KERNEL_SMP
+	ARCH_ASSERT_MISSING(timer_cycle_time_us, 0);
 
 	ARCH_ASSERT_POW2(addr_width);
 	ARCH_ASSERT_POW2(reg_width);

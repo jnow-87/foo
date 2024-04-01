@@ -7,15 +7,9 @@
 
 
 
+#include <arch/arch.h>
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
-#include <arch/x86/init.h>
-#include <arch/x86/syscall.h>
-#include <arch/x86/sched.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/rootfs.h>
-#include <arch/interrupt.h>
-#include <arch/memory.h>
 #include <kernel/init.h>
 #include <kernel/memory.h>
 #include <kernel/syscall.h>
@@ -25,12 +19,11 @@
 #include <sys/compiler.h>
 #include <sys/devtree.h>
 #include <sys/types.h>
+#include <sys/stack.h>
 #include <sys/syscall.h>
 
 
 /* local/static prototypes */
-static void sc_hdlr(int_num_t num, void *payload);
-
 static void yield_user(thread_t *this_t);
 static void yield_kernel(void);
 
@@ -40,7 +33,7 @@ static int overlay_mmap(void *param);
 
 /* static variables */
 // syscall overlays
-static overlay_t overlays[] = {
+static x86_sc_overlay_t overlays[] = {
 	{ .call = 0x0,			.loc = OLOC_NONE },
 	{ .call = 0x0,			.loc = OLOC_NONE },
 	{ .call = 0x0,			.loc = OLOC_NONE },
@@ -93,53 +86,58 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 	return 0;
 }
 
-
-/* local functions */
-static int init(void){
-	return int_register(INT_SYSCALL, sc_hdlr, 0x0);
-}
-
-platform_init(0, init);
-
-static void sc_hdlr(int_num_t num, void *payload){
-	x86_hw_op_t op;
+sc_t *x86_sc_arg(thread_t *this_t){
+	x86_hw_op_t *op;
+	thread_ctx_t *ctx;
 	sc_t sc;
-	thread_t *this_t;
 
 
-	this_t = sched_running();
-	op = *x86_int_op();
+	ctx = stack_top(this_t->ctx_stack);
+	ctx->sc_op = *x86_int_op();
+	op = &ctx->sc_op;
 
-	if(op.int_ctrl.num != INT_SYSCALL)
+	if(op->int_ctrl.num != INT_SYSCALL)
 		LNX_EEXIT("hardware-op not a syscall\n");
 
 	LNX_DEBUG("syscall(thread = %s.%u, data = %p)\n",
 		this_t->parent->name, this_t->tid,
-		op.int_ctrl.payload
+		op->int_ctrl.payload
 	);
 
-	if(copy_from_user(&sc, op.int_ctrl.payload, sizeof(sc), this_t->parent) != 0)
-		goto end;
+	if(copy_from_user(&sc, op->int_ctrl.payload, sizeof(sc), this_t->parent) != 0)
+		LNX_EEXIT("copy syscall args from user-space failed\n");
 
 	LNX_DEBUG("syscall(num = %u, param = %p, psize = %u)\n", sc.num, sc.param, sc.size);
 
-	/* call kernel syscall handler */
-	if(x86_sc_overlay_call(sc.num, sc.param, OLOC_PRE, overlays) == 0)
-		sc_khdlr(sc.num, sc.param, sc.size);
+	if(x86_sc_overlay_call(sc.num, sc.param, OLOC_PRE, overlays) != 0)
+		LNX_EEXIT("syscall overlay failed\n");
 
-	if(errno == 0)
-		set_errno(x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays));
+	return op->int_ctrl.payload;
+}
 
-	/* set errno */
-end:
-	LNX_DEBUG("errno: %d\n", errno);
-	sc.errno = errno;
+void x86_sc_epilogue(thread_t *this_t){
+	x86_hw_op_t *op;
+	thread_ctx_t *ctx;
+	sc_t sc;
 
-	(void)copy_to_user(op.int_ctrl.payload, &sc, sizeof(sc), this_t->parent);
+
+	ctx = stack_top(this_t->ctx_stack);
+	op = &ctx->sc_op;
+
+	if(copy_from_user(&sc, op->int_ctrl.payload, sizeof(sc), this_t->parent) != 0)
+		LNX_EEXIT("copy syscall args from user-space failed\n");
+
+	if(sc.errno == 0)
+		sc.errno = -x86_sc_overlay_call(sc.num, sc.param, OLOC_POST, overlays);
+
+	if(copy_to_user(op->int_ctrl.payload, &sc, sizeof(sc_t), this_t->parent) != 0)
+		LNX_EEXIT("copy syscall args to user-space failed\n");
 
 	x86_hw_syscall_return();
 }
 
+
+/* local functions */
 static void yield_user(thread_t *this_t){
 	x86_sched_trigger();
 
