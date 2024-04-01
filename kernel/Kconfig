@@ -11,10 +11,6 @@
 # kernel basics
 #
 # {{{
-config KERNEL_SMP
-	bool "build an smp system"
-	default n
-
 config KERNEL_LOG
 	bool "kernel log"
 
@@ -147,7 +143,6 @@ menu "system calls"
 	config SC_SIGNAL
 		bool "user-space signal support"
 		select KERNEL_SYSCALL
-		select KERNEL_IPI if KERNEL_SMP
 		default n
 		help
 			User space signaling mechanism.
@@ -183,9 +178,6 @@ menu "system calls"
 
 		config KERNEL_SYSCALL
 			bool "kernel syscall"
-
-		config KERNEL_IPI
-			bool "inter-processor interrupts"
 	endmenu
 endmenu
 # }}}

@@ -143,7 +143,7 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 	sc.num = num;
 	sc.param = param;
 	sc.size = psize;
-	sc.errno = E_UNKNOWN;
+	sc.errnum = E_UNKNOWN;
 
 	LNX_DEBUG("syscall(num = %d, param = %p, psize = %u, data = %p)\n",
 		num,
@@ -166,10 +166,10 @@ int x86_sc(sc_num_t num, void *param, size_t psize){
 		usignal_issue("syscall");
 
 	/* post processing */
-	LNX_DEBUG("syscall errno: %d\n", sc.errno);
+	LNX_DEBUG("syscall errno: %d\n", sc.errnum);
 
-	if(sc.errno)
-		return_errno(sc.errno);
+	if(sc.errnum)
+		return_errno(sc.errnum);
 
 	return x86_sc_overlay_call(num, param, OLOC_POST, overlays);
 }

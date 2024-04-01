@@ -644,13 +644,13 @@ static void tx_hdlr(int_num_t num, void *payload){
 static int tx_complete(void *payload){
 	tx_dgram_t *dgram = (tx_dgram_t*)payload;
 	term_itf_t *term = dgram->term;
-	errno_t ecode;
+	errno_t e;
 
 
-	ecode = term->error ? term->error(term->hw) : 0;
+	e = term->error ? term->error(term->hw) : 0;
 
-	if(ecode != 0)
-		return ecode;
+	if(e != 0)
+		return e;
 
 	return (dgram->len == 0) ? 0 : -1;
 }

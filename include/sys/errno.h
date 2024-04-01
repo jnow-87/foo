@@ -12,9 +12,25 @@
 
 
 #include <config/config.h>
+#include <sys/errnums.h>
+
+#ifdef BUILD_KERNEL
+# include <arch/arch.h>
+# include <sys/devicetree.h>
+#endif // BUILD_KERNEL
 
 
 /* macros */
+#ifdef BUILD_KERNEL
+# define errno		(_errno[PIR])
+# define errno_file	(_errno_file[PIR])
+# define errno_line	(_errno_line[PIR])
+#else
+# define errno		_errno
+# define errno_file	_errno_file
+# define errno_line	_errno_line
+#endif // BUILD_KERNEL
+
 #ifdef CONFIG_EXTENDED_ERRNO
 # define set_errno(e_code){ \
 	errno = e_code; \
@@ -32,31 +48,22 @@
 #define goto_errno(label, e_code)	{ set_errno(e_code); goto label; }
 
 
-/* types */
-typedef enum{
-	E_INVAL = 1,	/**< invalid argument, e.g. out of range or entry not found */
-	E_NOMEM,		/**< out of memory */
-	E_LIMIT,		/**< implementation limit reached */
-	E_IO,			/**< I/O error */
-	E_NOIMP,		/**< function not implemented */
-	E_INUSE,		/**< resource in use */
-	E_UNAVAIL,		/**< resource is not available */
-	E_AGAIN,		/**< no data available, try again */
-	E_END,			/**< end of resource reached */
-	E_NOSUP,		/**< operation not supported */
-	E_CONN,			/**< connection already established */
-	E_NOCONN,		/**< no connection */
-	E_UNKNOWN,		/**< unknown error */
-} errno_t;
-
-
 /* external variables */
-extern errno_t errno;
+#ifdef BUILD_KERNEL
+extern errno_t _errno[DEVTREE_ARCH_NCORES];
 
-#ifdef CONFIG_EXTENDED_ERRNO
-extern char const *errno_file;
-extern unsigned int errno_line;
-#endif // CONFIG_EXTENDED_ERRNO
+# ifdef CONFIG_EXTENDED_ERRNO
+extern char const *_errno_file[DEVTREE_ARCH_NCORES];
+extern unsigned int _errno_line[DEVTREE_ARCH_NCORES];
+# endif // CONFIG_EXTENDED_ERRNO
+#else
+extern errno_t _errno;
+
+# ifdef CONFIG_EXTENDED_ERRNO
+extern char const *_errno_file;
+extern unsigned int _errno_line;
+# endif // CONFIG_EXTENDED_ERRNO
+#endif // BUILD_KERNEL
 
 
 #endif // SYS_ERRNO_H

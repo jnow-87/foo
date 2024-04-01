@@ -8,11 +8,13 @@
 
 
 #include <config/config.h>
+#include <arch/arch.h>
 #include <kernel/init.h>
 #include <kernel/kprintf.h>
 #include <kernel/driver.h>
 #include <kernel/opt.h>
 #include <driver/klog.h>
+#include <sys/devicetree.h>
 #include <sys/types.h>
 #include <sys/stream.h>
 #include <sys/stdarg.h>
@@ -65,13 +67,25 @@ void kprintf(kmsg_t lvl, char const *format, ...){
 
 void kvprintf(kmsg_t lvl, char const *format, va_list lst){
 	FILE fp = FILE_INITIALISER(0x0, 0x0, 0, putc);
+#ifdef DEVTREE_ARCH_MULTI_CORE
+	char pir[8];
+#endif // DEVTREE_ARCH_MULTI_CORE
 
 
 	if((kopt.dbg_lvl & lvl) == 0)
 		return;
 
 	mutex_lock(&log.mtx);
+
+#ifdef DEVTREE_ARCH_MULTI_CORE
+	if(lvl & KMSG_MULTICORE){
+		snprintf(pir, 8, "[%u] ", PIR);
+		vfprintf(&fp, pir, lst);
+	}
+#endif // DEVTREE_ARCH_MULTI_CORE
+
 	vfprintf(&fp, format, lst);
+
 	mutex_unlock(&log.mtx);
 }
 

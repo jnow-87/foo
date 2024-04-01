@@ -23,7 +23,8 @@ typedef enum{
 	KMSG_WARN = 0x2,
 	KMSG_DEBUG = 0x4,
 	KMSG_INFO = 0x8,
-	KMSG_STAT = 0x10
+	KMSG_STAT = 0x10,
+	KMSG_MULTICORE = 0x20,
 } kmsg_t;
 
 
@@ -32,44 +33,35 @@ typedef enum{
 
 // general print macros
 #if (defined(CONFIG_KERNEL_LOG_FATAL) && !defined(BUILD_KERNEL_LOG_FATAL_DISABLE))
-# define FATAL(fmt, ...)	cprintf(KMSG_FATAL, FG("[FTL]", RED) " %25.25s:%-5u %-20.20s    " FG(fmt, RED), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+# define FATAL(fmt, ...)	kprintf(KMSG_FATAL | KMSG_MULTICORE, FG("[FTL]", RED) " %25.25s:%-5u %-20.20s    " FG(fmt, RED), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 # define FATAL(fmt, ...)	{}
 #endif // CONFIG_KERNEL_LOG_FATAL
 
 #if (defined(CONFIG_KERNEL_LOG_WARN) && !defined(BUILD_KERNEL_LOG_WARN_DISABLE))
-# define WARN(fmt, ...)		cprintf(KMSG_WARN, FG("[WRN]", YELLOW) " %25.25s:%-5u %-20.20s    " FG(fmt, YELLOW), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+# define WARN(fmt, ...)		kprintf(KMSG_WARN | KMSG_MULTICORE, FG("[WRN]", YELLOW) " %25.25s:%-5u %-20.20s    " FG(fmt, YELLOW), __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 # define WARN(fmt, ...)		{}
 #endif // CONFIG_KERNEL_LOG_WARN
 
 #if (defined(CONFIG_KERNEL_LOG_INFO) && !defined(BUILD_KERNEL_LOG_INFO_DISABLE))
-# define INFO(fmt, ...)		cprintf(KMSG_INFO, fmt, ##__VA_ARGS__)
+# define INFO(fmt, ...)		kprintf(KMSG_INFO | KMSG_MULTICORE, fmt, ##__VA_ARGS__)
 #else
 # define INFO(fmt, ...)		{}
 #endif // CONFIG_KERNEL_LOG_INFO
 
 #if (defined(CONFIG_KERNEL_STAT) && !defined(BUILD_KERNEL_STAT_DISABLE))
-# define STAT(fmt, ...)		kprintf(KMSG_STAT, fmt, ##__VA_ARGS__)
+# define STAT(fmt, ...)		kprintf(KMSG_STAT | KMSG_MULTICORE, fmt, ##__VA_ARGS__)
 #else
 # define STAT(fmt, ...)		{}
 #endif // CONFIG_KERNEL_STAT
 
 // debug print macros
 #if (defined(BUILD_KERNEL_LOG_DEBUG) && !defined(BUILD_KERNEL_LOG_DEBUG_DISABLE))
-# define DEBUG(fmt, ...)	cprintf(KMSG_DEBUG, "[DBG] %25.25s:%-5u %-20.20s    "fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+# define DEBUG(fmt, ...)	kprintf(KMSG_DEBUG | KMSG_MULTICORE, "[DBG] %25.25s:%-5u %-20.20s    "fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #else
 # define DEBUG(fmt, ...)	{}
 #endif
-
-// kprintf
-#if CONFIG_KERNEL_LOG
-# ifdef CONFIG_KERNEL_SMP
-#  define cprintf(lvl, fmt, ...)	kprintf(lvl, "[%u] " fmt, PIR, ##__VA_ARGS__)
-# else
-#  define cprintf(lvl, fmt, ...) 	kprintf(lvl, fmt, ##__VA_ARGS__)
-# endif // CONFIG_KERNEL_SMP
-#endif // CONFIG_KERNEL_LOG
 
 
 /* prototypes */

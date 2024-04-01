@@ -102,7 +102,7 @@ typedef struct term_t{
 	ringbuf_t rx_buf;
 	itask_queue_t tx_queue;
 
-	errno_t errno;
+	errno_t errnum;
 
 	term_cursor_t cursor;
 	esc_state_t esc;

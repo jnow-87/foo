@@ -7,7 +7,6 @@
 
 
 
-// TODO check implementation
 #include <sys/atomic.h>
 #include <sys/mutex.h>
 #include <sys/errno.h>
@@ -72,9 +71,14 @@ void mutex_init(mutex_t *m, mutex_attr_t attr){
  */
 void mutex_lock(mutex_t *m){
 #ifdef BUILD_KERNEL
-	if(m->attr & MTX_NOINT)
-		m->int_en = int_enable(false);
+	bool int_en = false;
 #endif // BUILD_KERNEL
+
+
+#ifdef BUILD_KERNEL
+	if(m->attr & MTX_NOINT)
+		int_en = int_enable(false);
+#endif // BUILD_LIBBRICK
 
 	while(1){
 		if(mutex_trylock(m) == 0)
@@ -84,6 +88,11 @@ void mutex_lock(mutex_t *m){
 		// 		check if this is save
 		// 		if used in ISRs
 	}
+
+#ifdef BUILD_KERNEL
+	if(m->attr & MTX_NOINT)
+		m->int_en = int_en;
+#endif // BUILD_KERNEL
 }
 
 /**
@@ -129,11 +138,16 @@ int mutex_trylock(mutex_t *m){
  * \param	m	mutex to unlock
  */
 void mutex_unlock(mutex_t *m){
+#ifdef BUILD_KERNEL
+	bool int_en = m->int_en;
+#endif // BUILD_KERNEL
+
+
 	if(m->nest_cnt == 0)	m->lock = LOCK_CLEAR;
 	else					m->nest_cnt--;
 
 #ifdef BUILD_KERNEL
 	if(m->attr & MTX_NOINT)
-		int_enable(m->int_en);
+		int_enable(int_en);
 #endif // BUILD_KERNEL
 }

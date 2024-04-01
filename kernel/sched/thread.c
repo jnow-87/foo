@@ -108,12 +108,12 @@ thread_ctx_t *thread_ctx_pop(void){
 
 	this_t = sched_running();
 	ctx = stack_pop(this_t->ctx_stack);
-	sig = list_first(this_t->signals);
+	sig = list_first_safe(this_t->signals, &this_t->mtx);
 
 	if(ctx->type == CTX_SIGRETURN)
 		ctx = usignal_return(sig, this_t, ctx);
 
-	sig = list_first(this_t->signals);
+	sig = list_first_safe(this_t->signals, &this_t->mtx);
 
 	if(sig && sig->pending && ctx->type == CTX_USER && this_t->parent->sig_hdlr)
 		return usignal_entry(sig, this_t, ctx);

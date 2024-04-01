@@ -23,7 +23,7 @@ typedef struct itask_t{
 	struct itask_t *next;
 
 	void *payload;
-	errno_t errno;
+	errno_t errnum;
 
 	ksignal_t sig;
 } itask_t;
@@ -41,7 +41,7 @@ void itask_queue_init(itask_queue_t *queue);
 void itask_queue_destroy(itask_queue_t *queue);
 
 int itask_issue(itask_queue_t *queue, void *payload, int_num_t num);
-void itask_complete(itask_queue_t *queue, errno_t ecode);
+void itask_complete(itask_queue_t *queue, errno_t errnum);
 void *itask_query_payload(itask_queue_t *queue, int (*complete)(void *payload));
 
 

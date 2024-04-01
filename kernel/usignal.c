@@ -62,6 +62,8 @@ void usignal_destroy(struct thread_t *this_t){
 	usignal_t *sig;
 
 
+	mutex_lock(&this_t->mtx);
+
 	list_for_each(this_t->ctx_stack, ctx){
 		if(ctx->type == CTX_SIGRETURN)
 			kfree(ctx);
@@ -69,6 +71,8 @@ void usignal_destroy(struct thread_t *this_t){
 
 	list_for_each(this_t->signals, sig)
 		kfree(sig);
+
+	mutex_unlock(&this_t->mtx);
 }
 
 thread_ctx_t *usignal_entry(usignal_t *sig, thread_t *this_t, thread_ctx_t *ctx){
@@ -95,9 +99,13 @@ thread_ctx_t *usignal_return(usignal_t *sig, struct thread_t *this_t, thread_ctx
 	thread_ctx_t *ret;
 
 
+	mutex_lock(&this_t->mtx);
+
 	list_rm(this_t->signals, sig);
 	kfree(sig);
 	sig = list_first(this_t->signals);
+
+	mutex_unlock(&this_t->mtx);
 
 	ret = ctx;
 	ctx = ctx->this;

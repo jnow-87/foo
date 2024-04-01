@@ -43,7 +43,7 @@ int avr_sc(sc_num_t num, void *param, size_t psize){
 	sc.num = num;
 	sc.param = param;
 	sc.size = psize;
-	sc.errno = E_UNKNOWN;
+	sc.errnum = E_UNKNOWN;
 
 	// copy address to GPIO registers 0/1
 	mreg_w(GPIOR0, lo8(&sc));
@@ -52,8 +52,8 @@ int avr_sc(sc_num_t num, void *param, size_t psize){
 	/* trigger syscall */
 	SYSCALL(INT_VEC_SC);
 
-	if(sc.errno)
-		return_errno(sc.errno);
+	if(sc.errnum)
+		return_errno(sc.errnum);
 
 	return 0;
 }

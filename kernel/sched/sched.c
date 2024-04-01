@@ -50,9 +50,9 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue);
 static void _thread_transition(thread_t *this_t, void *queue);
 static int thread_core(thread_t *this_t);
 
-#ifdef CONFIG_KERNEL_SMP
+#ifdef DEVTREE_ARCH_MULTI_CORE
 static void thread_modify(void *payload);
-#endif // CONFIG_KERNEL_SMP
+#endif // DEVTREE_ARCH_MULTI_CORE
 
 static void cleanup(void *payload);
 
@@ -134,16 +134,16 @@ thread_t *sched_running_nopanic(void){
 }
 
 void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *payload, size_t size){
-#ifdef CONFIG_KERNEL_SMP
+#ifdef DEVTREE_ARCH_MULTI_CORE
 	int core;
 	sched_ipi_t *ipi;
 	char blob[sizeof(sched_ipi_t) + size];
-#endif // CONFIG_KERNEL_SMP
+#endif // DEVTREE_ARCH_MULTI_CORE
 
 
 	mutex_lock(&sched_mtx);
 
-#ifdef CONFIG_KERNEL_SMP
+#ifdef DEVTREE_ARCH_MULTI_CORE
 	/* identify core for current thread */
 	core = thread_core(this_t);
 
@@ -160,7 +160,7 @@ void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *payload, 
 			kpanic("trigger ipi failed \"%s\"\n", strerror(errno));
 	}
 	else
-#endif // CONFIG_KERNEL_SMP
+#endif // DEVTREE_ARCH_MULTI_CORE
 		op(this_t, payload);
 
 	mutex_unlock(&sched_mtx);
@@ -338,14 +338,14 @@ static int thread_core(thread_t *this_t){
 }
 
 
-#ifdef CONFIG_KERNEL_SMP
+#ifdef DEVTREE_ARCH_MULTI_CORE
 static void thread_modify(void *payload){
 	sched_ipi_t *p = (sched_ipi_t*)payload;
 
 
 	sched_thread_modify(p->this_t, p->op, p->payload, p->size);
 }
-#endif // CONFIG_KERNEL_SMP
+#endif // DEVTREE_ARCH_MULTI_CORE
 
 /**
  * \brief	recurring task used to cleanup terminated threads

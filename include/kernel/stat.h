@@ -24,8 +24,16 @@ typedef void (*stat_call_t)(void);
 # define kernel_stat(call) \
 	static stat_call_t stat_call_##call __linker_array(".kernel_stat") = call
 #else
+# define kstat()
+
 # define kernel_stat(call) \
 	static void call(void) __unused __discard
+#endif // CONFIG_KERNEL_STAT
+
+
+/* prototypes */
+#ifdef CONFIG_KERNEL_STAT
+void kstat(void);
 #endif // CONFIG_KERNEL_STAT
 
 
