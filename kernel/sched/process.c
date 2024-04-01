@@ -56,7 +56,6 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 
 	/* set process attributes */
 	this_p->priority = CONFIG_SCHED_PRIO_DEFAULT;
-	this_p->affinity = CONFIG_SCHED_AFFINITY_DEFAULT;
 	this_p->sig_hdlr = 0x0;
 
 	this_p->name = kmalloc(strlen(name) + 1);

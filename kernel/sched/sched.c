@@ -28,6 +28,8 @@
 
 
 /* types */
+typedef void (*modifier_t)(thread_t *this_t, void *payload);
+
 typedef struct sched_queue_t{
 	struct sched_queue_t *prev,
 						 *next;
@@ -37,21 +39,21 @@ typedef struct sched_queue_t{
 
 typedef struct{
 	thread_t *this_t;
-	thread_modifier_t op;
+	modifier_t op;
 
 	size_t size;
 	uint8_t payload[];
-} sched_ipi_t;
+} ipi_data_t;
 
 
 /* local/static prototypes */
-static void thread_transition(thread_t *this_t, thread_state_t queue);
-static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue);
-static void _thread_transition(thread_t *this_t, void *queue);
+static void thread_transition(thread_t *this_t, thread_state_t state);
 static int thread_core(thread_t *this_t);
+static void thread_modify(thread_t *this_t, modifier_t op, void *payload, size_t size);
+static void modify_state(thread_t *this_t, void *state);
 
 #ifdef DEVTREE_ARCH_MULTI_CORE
-static void thread_modify(void *payload);
+static void ipi_hdlr(void *payload);
 #endif // DEVTREE_ARCH_MULTI_CORE
 
 static void cleanup(void *payload);
@@ -61,14 +63,11 @@ static void cleanup(void *payload);
 static sched_queue_t *sched_queues[NTHREADSTATES] = { 0x0 };
 static mutex_t sched_mtx = NOINT_MUTEX_INITIALISER();
 
-static process_t kernel_process = { 0 };
-static thread_t kernel_threads[DEVTREE_ARCH_NCORES] = {
-	{ .tid = 0, .parent = &kernel_process, }
-};
-
 // NOTE having valid entries is required for functions that use
-// 		sched_running() early on, e.g. nested mutexes
-static thread_t *running[DEVTREE_ARCH_NCORES] = { kernel_threads + 0 };
+//      sched_running() early on, e.g. nested mutexes
+static process_t kernel_process = { .name = "kernel" };
+static thread_t kernel_threads[DEVTREE_ARCH_NCORES] = { { .tid = 0, .parent = &kernel_process } };
+static thread_t *running[DEVTREE_ARCH_NCORES] = { kernel_threads };
 
 
 /* global functions */
@@ -85,7 +84,8 @@ void sched_yield(void){
 }
 
 void sched_trigger(void){
-	thread_t *this_t;
+	thread_t *this_t = 0x0;
+	sched_queue_t *el;
 
 
 	int_enable(false);
@@ -95,14 +95,19 @@ void sched_trigger(void){
 	// 		different state, e.g. through the kernel signal mechanism
 	// 		or a kill
 	if(running[PIR]->state == RUNNING)
-		thread_transition_unsafe(running[PIR], READY);
+		thread_transition(running[PIR], READY);
 
-	this_t = list_first(sched_queues[READY])->thread;
+	list_for_each(sched_queues[READY], el){
+		if(el->thread->affinity & (0x1 << PIR)){
+			this_t = el->thread;
+			break;
+		}
+	}
 
 	if(this_t == 0x0)
 		kpanic("no ready thread\n");
 
-	thread_transition_unsafe(this_t, RUNNING);
+	thread_transition(this_t, RUNNING);
 
 	running[PIR] = this_t;
 
@@ -133,76 +138,25 @@ thread_t *sched_running_nopanic(void){
 	return running[PIR];
 }
 
-void sched_thread_modify(thread_t *this_t, thread_modifier_t op, void *payload, size_t size){
-#ifdef DEVTREE_ARCH_MULTI_CORE
-	int core;
-	sched_ipi_t *ipi;
-	char blob[sizeof(sched_ipi_t) + size];
-#endif // DEVTREE_ARCH_MULTI_CORE
+void sched_thread_transition(thread_t *this_t, thread_state_t state){
+	// indirectly trigger a kernel panic, only the scheduler
+	// is permitted to transition a thread to the RUNNING state
+	if(state == RUNNING)
+		state = CREATED;
 
-
-	mutex_lock(&sched_mtx);
-
-#ifdef DEVTREE_ARCH_MULTI_CORE
-	/* identify core for current thread */
-	core = thread_core(this_t);
-
-	/* trigger modification */
-	if(this_t->state == RUNNING && core != PIR){
-		ipi = (sched_ipi_t*)blob;
-
-		ipi->this_t = this_t;
-		ipi->op = op;
-		ipi->size = size;
-		memcpy(ipi->payload, payload, size);
-
-		if(ipi_send(core, thread_modify, ipi, sizeof(sched_ipi_t) + size) != 0)
-			kpanic("trigger ipi failed \"%s\"\n", strerror(errno));
-	}
-	else
-#endif // DEVTREE_ARCH_MULTI_CORE
-		op(this_t, payload);
-
-	mutex_unlock(&sched_mtx);
-}
-
-void sched_thread_pause(thread_t *this_t){
-	thread_transition(this_t, WAITING);
-}
-
-void sched_thread_wake(thread_t *this_t){
-	thread_transition(this_t, READY);
-}
-
-void sched_thread_bury(thread_t *this_t){
-	thread_transition(this_t, DEAD);
+	thread_modify(this_t, modify_state, &state, sizeof(thread_state_t));
 }
 
 
 /* local functions */
-#if DEVTREE_ARCH_NCORES > 1
-static int init_shallow(void){
-	for(size_t i=1; i<DEVTREE_ARCH_NCORES; i++){
-		memcpy(kernel_threads + i, kernel_threads + 0, sizeof(thread_t));
-		running[i] = kernel_threads + i;
-	}
-
-	return 0;
-}
-
-kernel_init(0, init_shallow);
-#endif // DEVTREE_ARCH_NCORES
-
-static int init_deep(void){
+static int init(void){
 	process_t *this_p;
 	thread_t *this_t;
 
 
 	/* init kernel process */
 	this_p = &kernel_process;
-	this_p->name = (char*)("kernel");
 
-	/* init kernel threads */
 	// one thread per core
 	for(size_t i=0; i<DEVTREE_ARCH_NCORES; i++){
 		this_t = kernel_threads + i;
@@ -214,8 +168,6 @@ static int init_deep(void){
 		// 	  the kernel has a separate memory management
 		// 	- kernel thread context is set automatically once the
 		// 	  thread is interrupted for the first time
-		memset(this_t, 0x0, sizeof(thread_t));
-
 		this_t->tid = i;
 		this_t->state = CREATED;
 		this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
@@ -223,18 +175,15 @@ static int init_deep(void){
 		this_t->parent = this_p;
 
 		list_add_tail(this_p->threads, this_t);
-	}
 
-	// add kernel threads to running queue
-	list_for_each(this_p->threads, this_t){
+		// add kernel threads to running queue
 		thread_transition(this_t, READY);
 		thread_transition(this_t, RUNNING);
 
-		running[PIR] = this_t;
+		running[i] = this_t;
 	}
 
 	/* create init process */
-	// create init processs
 	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, fs_root);
 
 	if(this_p == 0x0)
@@ -257,15 +206,7 @@ err:
 	return -errno;
 }
 
-kernel_init(2, init_deep);
-
-static void thread_transition(thread_t *this_t, thread_state_t queue){
-	sched_thread_modify(this_t, _thread_transition, &queue, sizeof(thread_state_t));
-}
-
-static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
-	_thread_transition(this_t, &queue);
-}
+kernel_init(2, init);
 
 /**
  * \brief	move thread between scheduler queues according to the following
@@ -275,7 +216,7 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
  * 				 the underyling usignal mechanism ensures that signals are only
  * 				 processes once the thread has left the kernel (entering the
  * 				 WAITING state is only possible within the kernel). Hence, it
- * 				 must never be the case that _thread_transition() is called to
+ * 				 must never be the case that thread_transition() is called to
  * 				 move a thread from WAITING to DEAD.
  *
  *            WAITING
@@ -283,7 +224,7 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
  *             |   | sig wait
  *    sig_wake |   |
  *             |   |           exit
- *             |  RUNNING ------------|
+ *             |  RUNNING ------------\
  *             |  |A                  |
  *             |  || sched            |
  *             |  ||                  |
@@ -293,21 +234,20 @@ static void thread_transition_unsafe(thread_t *this_t, thread_state_t queue){
  *
  * \pre	calls to thread_transition are protected through sched_lock
  */
-static void _thread_transition(thread_t *this_t, void *_queue){
-	thread_state_t queue = *((thread_state_t*)_queue),
-				   s = this_t->state;
+static void thread_transition(thread_t *this_t, thread_state_t state){
+	thread_state_t s = this_t->state;
 	sched_queue_t *e;
 
 
 	/* check for invalid state transition */
-	if((queue == CREATED)
+	if((state == CREATED)
 	|| (s == DEAD)
-	|| (queue == RUNNING && s != READY)
-	|| (queue == WAITING && s != RUNNING)
-	|| (queue == DEAD && s == CREATED)
-	|| (queue == DEAD && s == WAITING)
+	|| (state == RUNNING && s != READY)
+	|| (state == WAITING && s != RUNNING)
+	|| (state == DEAD && s == CREATED)
+	|| (state == DEAD && s == WAITING)
 	){
-		kpanic("invalid scheduler transition %u -> %u\n", s, queue);
+		kpanic("invalid scheduler transition %u -> %u\n", s, state);
 	}
 
 	/* perform transition */
@@ -324,8 +264,8 @@ static void _thread_transition(thread_t *this_t, void *_queue){
 		list_rm(sched_queues[this_t->state], e);
 	}
 
-	list_add_tail(sched_queues[queue], e);
-	this_t->state = queue;
+	list_add_tail(sched_queues[state], e);
+	this_t->state = state;
 }
 
 static int thread_core(thread_t *this_t){
@@ -337,13 +277,49 @@ static int thread_core(thread_t *this_t){
 	return -1;
 }
 
+static void thread_modify(thread_t *this_t, modifier_t op, void *payload, size_t size){
+#ifdef DEVTREE_ARCH_MULTI_CORE
+	int core;
+	ipi_data_t *ipi;
+	char blob[sizeof(ipi_data_t) + size];
+#endif // DEVTREE_ARCH_MULTI_CORE
+
+
+	mutex_lock(&sched_mtx);
 
 #ifdef DEVTREE_ARCH_MULTI_CORE
-static void thread_modify(void *payload){
-	sched_ipi_t *p = (sched_ipi_t*)payload;
+	/* identify core for current thread */
+	core = thread_core(this_t);
+
+	/* trigger modification */
+	if(this_t->state == RUNNING && core != PIR){
+		ipi = (ipi_data_t*)blob;
+
+		ipi->this_t = this_t;
+		ipi->op = op;
+		ipi->size = size;
+		memcpy(ipi->payload, payload, size);
+
+		if(ipi_send(core, ipi_hdlr, ipi, sizeof(ipi_data_t) + size) != 0)
+			kpanic("trigger ipi failed \"%s\"\n", strerror(errno));
+	}
+	else
+#endif // DEVTREE_ARCH_MULTI_CORE
+		op(this_t, payload);
+
+	mutex_unlock(&sched_mtx);
+}
+
+static void modify_state(thread_t *this_t, void *state){
+	thread_transition(this_t, *((thread_state_t*)state));
+}
+
+#ifdef DEVTREE_ARCH_MULTI_CORE
+static void ipi_hdlr(void *payload){
+	ipi_data_t *p = (ipi_data_t*)payload;
 
 
-	sched_thread_modify(p->this_t, p->op, p->payload, p->size);
+	thread_modify(p->this_t, p->op, p->payload, p->size);
 }
 #endif // DEVTREE_ARCH_MULTI_CORE
 
