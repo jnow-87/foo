@@ -7,6 +7,9 @@
 
 
 
+#include <sys/devicetree.h>
+
+
 /* MEMORY sections are defined in a script generated based on the device tree */
 
 ENTRY(avr_start)
@@ -27,10 +30,12 @@ SECTIONS {
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
 		*(.rodata1)
 
-		INCLUDE std_init.lds
-		INCLUDE libsys_init.lds
-		INCLUDE fonts.lds
+		INCLUDE std_init.i.lds
+		INCLUDE libsys_init.i.lds
+		INCLUDE fonts.i.lds
+
 #ifdef BUILD_USER_PLUGIN
+		. = ALIGN(DEVTREE_ARCH_ADDR_WIDTH / 8);
 		INCLUDE plugin.lds
 #endif
 	} > app_data AT>app_flash
@@ -60,9 +65,7 @@ SECTIONS {
 	INCLUDE avr_plugin_app.lds
 
 	/* discard sections */
-	/DISCARD/ : {
-		*(.init4)	/* libgcc .data initialisation not needed */
-	}
+	INCLUDE discard.i.lds
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */

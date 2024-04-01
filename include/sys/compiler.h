@@ -39,6 +39,7 @@
 #define __mode(m)					__attribute__((mode(m)))
 
 #define __linker_array(sec)			__section(sec) __align(1) __used
+#define __discard					__section(".discard")
 
 // offsetof
 #define offsetof(type, member)		((size_t)(&(((type*)(0))->member)))

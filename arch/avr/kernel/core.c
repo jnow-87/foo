@@ -93,16 +93,6 @@ void avr_core_panic(thread_ctx_t const *tc){
 	else
 		kprintf(KMSG_ANY, "unknown thread context\n");
 #endif // CONFIG_KERNEL_LOG
-
-	/* halt core */
-	// set sleep mode to power down
-	mreg_w(SMCR, (0x1 << SMCR_SE) | (0x2 << SMCR_SM));
-
-	// signal debugger
-	asm volatile("break");
-
-	// send core to sleep
-	asm volatile("sleep");
 }
 
 

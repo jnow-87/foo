@@ -33,10 +33,10 @@ SECTIONS {
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
 		*(.rodata1)
 
-		INCLUDE kernel_init.lds
-		INCLUDE kernel_stat.lds
-		INCLUDE kernel_test.lds
-		INCLUDE fonts.lds
+		INCLUDE kernel_init.i.lds
+		INCLUDE kernel_stat.i.lds
+		INCLUDE kernel_test.i.lds
+		INCLUDE fonts.i.lds
 	} > kernel_data AT>kernel_flash
 
 	__data_start = ADDR(.data);
@@ -64,9 +64,7 @@ SECTIONS {
 	INCLUDE avr_plugin_kernel.lds
 
 	/* discard sections */
-	/DISCARD/ : {
-		*(.init4)	/* libgcc .data initialisation not needed */
-	}
+	INCLUDE discard.i.lds
 
 	/* debugging (DWARF) */
 	/* DWARF 1 */

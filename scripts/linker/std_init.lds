@@ -7,6 +7,11 @@
 
 
 
+#include <sys/devicetree.h>
+
+
+. = ALIGN(DEVTREE_ARCH_ADDR_WIDTH / 8);
+
 __std_preinit_array_base = .;
 *(.preinit_array)
 __std_preinit_array_end = .;

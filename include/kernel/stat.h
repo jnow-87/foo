@@ -11,6 +11,7 @@
 #define KERNEL_STAT_H
 
 
+#include <config/config.h>
 #include <sys/compiler.h>
 
 
@@ -19,8 +20,13 @@ typedef void (*stat_call_t)(void);
 
 
 /* macros */
-#define kernel_stat(call) \
-	static stat_call_t stat_call_##call __linker_array(".kernel_stat") = call;
+#ifdef CONFIG_KERNEL_STAT
+# define kernel_stat(call) \
+	static stat_call_t stat_call_##call __linker_array(".kernel_stat") = call
+#else
+# define kernel_stat(call) \
+	static void call(void) __unused __discard
+#endif // CONFIG_KERNEL_STAT
 
 
 #endif // KERNEL_STAT_H
