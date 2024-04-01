@@ -221,12 +221,17 @@ check_memlayout: $(memlayout)
 ifeq ($(CONFIG_BUILD_DEBUG),y)
   cflags += -g
   cxxflags += -g
-  asflags += -g
   ldlibs += -g
   hostcflags += -g -Og
   hostcxxflags += -g -Og
   hostasflags += -g
   hostldlibs += -g
+
+  ifneq ($(CONFIG_ARCH),avr)
+  	# on avr, if assembly is compiled through gcc instead of as and -g is
+	# used, binutils report an error during a later incremental link
+    asflags += -g
+  endif
 endif
 
 all: check_config check_memlayout $(lib) $(hostlib) $(bin) $(hostbin)

@@ -28,8 +28,8 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/%.libbrick.o,    $(loc_src
 ## flags
 ####
 
-ldflags += -z noexecstack
-ldlibs += -Wl,-z noexecstack
+ldflags += -Wl,-znoexecstack
+ldlibs += -Wl,-znoexecstack
 
 ifeq ($(CONFIG_CODE_COVERAGE),y)
   ldlibs-kernel += -L$(loc_build_tree)/gcov

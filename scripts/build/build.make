@@ -279,12 +279,12 @@ $(call pdebug1,generate pattern rules)
 # pattern rules
 
 # C/C++/Asm -> .i
-$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.host.S.i,      $(loc_src_tree)/%.S,            host    )
+$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.host.i.S,      $(loc_src_tree)/%.S,            host    )
 $(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.S,            host    )
 $(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.c,            host    )
 $(call gen_rule_basic,    compile_i_cxx,        $(loc_build_tree)/%.host.i,        $(loc_src_tree)/%.cc,           host    )
 
-$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.S.i,           $(loc_src_tree)/%.S,                    )
+$(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.i.S,           $(loc_src_tree)/%.S,                    )
 $(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.i,             $(loc_src_tree)/%.S,                    )
 $(call gen_rule_basic,    compile_i_c,          $(loc_build_tree)/%.i,             $(loc_src_tree)/%.c,                    )
 $(call gen_rule_basic,    compile_i_cxx,        $(loc_build_tree)/%.i,             $(loc_src_tree)/%.cc,                   )
@@ -296,11 +296,11 @@ $(call gen_rule_basic,    compile_s_c,          $(loc_build_tree)/%.host.S,     
 $(call gen_rule_basic,    compile_s_cxx,        $(loc_build_tree)/%.host.S,        $(loc_src_tree)/%.cc,           host    )
 
 # C/C++ -> .o
-$(call gen_rule_basic,    compile_o_s,          $(loc_build_tree)/%.host.o,        $(loc_build_tree)/%.host.S.i,   host    )
+$(call gen_rule_basic,    compile_o_s,          $(loc_build_tree)/%.host.o,        $(loc_build_tree)/%.host.i.S,   host    )
 $(call gen_rule_basic,    compile_o_c,          $(loc_build_tree)/%.host.o,        $(loc_src_tree)/%.c,            host    )
 $(call gen_rule_basic,    compile_o_cxx,        $(loc_build_tree)/%.host.o,        $(loc_src_tree)/%.cc,           host    )
 
-$(call gen_rule_basic,    compile_o_s,          $(loc_build_tree)/%.o,             $(loc_build_tree)/%.S.i,                )
+$(call gen_rule_basic,    compile_o_s,          $(loc_build_tree)/%.o,             $(loc_build_tree)/%.i.S,                )
 $(call gen_rule_basic,    compile_o_c,          $(loc_build_tree)/%.o,             $(loc_src_tree)/%.c,                    )
 $(call gen_rule_basic,    compile_o_cxx,        $(loc_build_tree)/%.o,             $(loc_src_tree)/%.cc,                   )
 

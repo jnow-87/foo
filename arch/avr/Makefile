@@ -59,10 +59,10 @@ ifeq ($(shell test $$(printf "%u" $(DEVTREE_KERNEL_FLASH_BASE)) -gt $$(printf "%
 endif
 
 archflags += -mmcu=$(CONFIG_AVR_MCU)
-ldflags += -m$(CONFIG_AVR_ISA)
+ldflags += -Wl,-m$(CONFIG_AVR_ISA)
 
 ifeq ($(CONFIG_BUILD_RELEASE),y)
-  ldflags += --discard-all
+  ldflags += -Wl,--discard-all
 endif
 
 ## kernel flags

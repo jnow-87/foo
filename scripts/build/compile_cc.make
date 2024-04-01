@@ -63,7 +63,7 @@ define compile_cxx_gperf
 endef
 
 # define 'ASM' for preprocessed assembly files
-%.S.i: cppflags += -DASM
+%.i.S: cppflags += -DASM
 
 define compile_i_c
 	$(call compile_with_deps,$(1)cc,$($(1)cppflags) $($(1)archflags),-E)
@@ -82,7 +82,7 @@ define compile_s_cxx
 endef
 
 define compile_o_s
-	$(call compile_base,$(1)as,$($(1)asflags) $($(1)archflags) $< -o $@)
+	$(call compile_base,$(1)cc,$($(1)asflags) $($(1)archflags) -c $< -o $@)
 endef
 
 define compile_o_c
@@ -101,12 +101,8 @@ else
   o_o_compiler := cxx
 endif
 
-# NOTE
-# 	to combine object files the compiler is used in favor of the linker since it is
-# 	not easily possible to invoke the linker with the correct flags when link time
-# 	optimisation (-flto) shall be used
 define compile_o_o
-	$(eval flags := -nostdlib -r $(filter-out %coverage -fprofile-arcs,$($(1)$(o_o_cflags))) -Wl,-r$(if $(strip $($(1)ldflags)),$(comma))$(subst $(space),$(comma),$(strip $($(1)ldflags))))
+	$(eval flags := -nostdlib -r $(filter-out %coverage -fprofile-arcs,$($(1)$(o_o_cflags))) $($(1)ldflags))
 	$(call compile_base,$(1)$(o_o_compiler),$(flags) $(filter %.o,$^) -o $@)
 endef
 
