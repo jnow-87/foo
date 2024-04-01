@@ -16,8 +16,7 @@
 
 
 /* local/static prototypes */
-static char putc(char c, void *hw);
-static size_t puts(char const *s, size_t n, void *hw);
+static size_t puts(char const *s, size_t n, bool blocking, void *hw);
 static size_t gets(char *s, size_t n, void *hw);
 
 
@@ -36,7 +35,6 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 	ringbuf_init(loop, (char*)loop + sizeof(ringbuf_t), dtd->size);
 
-	itf->putc = putc;
 	itf->puts = puts;
 	itf->gets = gets;
 
@@ -56,14 +54,7 @@ err:
 
 driver_probe("loop,term", probe);
 
-static char putc(char c, void *hw){
-	if(ringbuf_write(hw, &c, 1) != 1)
-		return ~c;
-
-	return c;
-}
-
-static size_t puts(char const *s, size_t n, void *hw){
+static size_t puts(char const *s, size_t n, bool blocking, void *hw){
 	return ringbuf_write(hw, (void*)s, n);
 }
 
