@@ -71,7 +71,7 @@ int shell_term(char const *prompt){
 
 int shell_script(FILE *stream, char const *name, shell_flags_t flags){
 	size_t lnum = 1;
-	char line[CONFIG_LINE_MAX];
+	char line[LINE_MAX];
 	int argc;
 	size_t n;
 

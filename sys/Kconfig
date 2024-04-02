@@ -66,6 +66,10 @@ config NAME_MAX
 	default 16
 	range 4 4096
 
+config LINE_MAX
+	int "maximum line length"
+	default 32
+
 menu "hidden"
 	visible if 0
 

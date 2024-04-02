@@ -66,8 +66,3 @@ menu "commands"
 		bool "include unit tests"
 		depends on INIT_TEST
 endmenu
-
-config LINE_MAX
-	int "max. length of input lines"
-	default 32	if AVR
-	default 256
