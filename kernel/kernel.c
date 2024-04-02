@@ -148,7 +148,7 @@ static void exec_init_call(init_call_t *base, init_call_t *end, bool singular){
 		DEBUG("%s()...\n", p->name);
 
 		if(p->call() != 0)
-			FATAL("%s() failed \"%s\"\n", p->name, strerror(errno));
+			FATAL("init call at %p failed \"%s\"\n", p->call, strerror(errno));
 	}
 }
 

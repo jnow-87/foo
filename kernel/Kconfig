@@ -19,12 +19,6 @@ config KERNEL_LOG_SIZE
 	depends on KERNEL_LOG
 	default 10
 
-config KERNEL_LOG_INIT
-	bool "print kernel init messages"
-	depends on KERNEL_LOG
-	select KERNEL_LOG_INFO
-	select KERNEL_LOG_WARN
-
 config KERNEL_LOG_FATAL
 	bool "print kernel FATAL messages"
 	depends on KERNEL_LOG
@@ -268,4 +262,8 @@ config KERNEL_TEST
 config KERNEL_STAT
 	bool "execute 'kernel_stat()' on boot"
 	select KERNEL_LOG
+
+config KERNEL_INIT_DEBUG
+	bool "debug kernel initialisation"
+	select KERNEL_LOG_DEBUG
 # }}}
