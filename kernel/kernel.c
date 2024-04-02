@@ -57,16 +57,6 @@ void kernel(void){
 	}
 
 	/* enable interrupts */
-	// TODO without the barrier core0 panics and the output
-	// doesn't match what is supposed to happen, e.g. core1
-	// seems to do driver initialisation
-//	INFO("smp barrier\n");
-//	atomic_inc(&ncores, 1);
-//
-//	while(ncores != DEVTREE_ARCH_NCORES);
-//
-//	INFO("smp barrier passed\n");
-
 	int_enable(true);
 
 	/* kernel thread */
