@@ -39,6 +39,7 @@ endfunction
 
 function! s:verify_arch(image, arch)
 	let l:machine_id = {
+		\ "arm": ["ARM"],
 		\ "avr": ["AVR"],
 		\ "x86": ["x86", "X86" ],
 	\ }

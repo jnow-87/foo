@@ -1,0 +1,31 @@
+/**
+ * Copyright (C) 2023 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#include <config/config.h>
+
+
+arch = {
+#include "rp2040/arch.dts"
+};
+
+memory = {
+#include "rp2040/memory.dts"
+};
+
+devices = {
+#include "rp2040/tty0.dts"
+
+#ifdef CONFIG_LOOP_BLOCK
+# include "common/loop0.dts"
+#endif // CONFIG_LOOP_BLOCK
+
+#ifdef CONFIG_LOOP_TERM
+# include "common/tty-loop0.dts"
+#endif // CONFIG_LOOP_TERM
+};
