@@ -50,24 +50,6 @@ devtree_src := $(devtree_path)/devicetree.c
 
 prepare_deps: $(devtree_header) $(devtree_make) $(devtree_src)
 
-# include devicetree.make if it already exists
-#
-#	$(call include_devicetree)
-#
-#
-# NOTE use this function over the regular make "include" directive to prevent make
-# 	   from trying to create devicetree.make since it requires the config-header
-# 	   which, if created as prerequisite for devtree would force the devtree build-
-# 	   flags upon all of its dependencies, causing the brickos types.h to be
-# 	   included instead of the host types.h, which causes a circular dependency on
-# 	   the config-header since brickos' types.h requires it
-define include_devicetree
-	$(if $(wildcard $(devtree_make)), \
-		$(eval include $(devtree_make)) \
-		, \
-	)
-endef
-
 # compile the desired devicetree <output-format>
 #
 #	$(call compile_devicetree,<output-format>,<sections>
@@ -101,3 +83,10 @@ $(devtree_header): $(devtree_preproc) $(dtc)
 
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,          $(devtree_src),)
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o,     $(devtree_src), host)
+
+
+####
+## device tree inclusion
+####
+
+-include $(devtree_make)

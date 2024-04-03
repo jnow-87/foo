@@ -49,8 +49,6 @@ prepare_deps: avr_lds
 ## flags
 ####
 
-$(call include_devicetree)
-
 ## general flags
 # disable jump tables if kernel is mapped to addresses larger than 64k
 # this is required due to avr-gcc implementation of jump tables
