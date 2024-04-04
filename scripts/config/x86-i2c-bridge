@@ -6,6 +6,7 @@
 #
 # processor
 #
+# CONFIG_ARM is not set
 # CONFIG_AVR is not set
 CONFIG_X86=y
 
