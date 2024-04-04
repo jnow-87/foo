@@ -77,6 +77,7 @@ endef
 define preproc_file
 	$(call skip_prestage,stage0,
 		$(echo) [PREPROC] $@ $(if $(WHATCHANGED),\($?\))
+		$(mkdir) $(dir $@)
 		$(cc) $(cppflags) -xc -E -P $< -o $@
 	)
 	$(call gen_deps,cc,$(cppflags) -xc)

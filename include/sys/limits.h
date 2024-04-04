@@ -81,6 +81,7 @@ STATIC_ASSERT(!"invalid address width in configuration");
 
 # define NAME_MAX		CONFIG_NAME_MAX
 # define FILENAME_MAX	CONFIG_NAME_MAX
+# define LINE_MAX		CONFIG_LINE_MAX
 #else // BUILD_HOST
 # include <limits.h>
 #endif // BUILD_HOST

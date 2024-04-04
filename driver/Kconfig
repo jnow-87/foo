@@ -32,6 +32,11 @@ menu "platform drivers (avr)"
 	source driver/avr/Kconfig
 endmenu
 
+menu "platform drivers (rp2040)"
+	depends on ARM_CHIP_RP2040
+	source driver/rp2040/Kconfig
+endmenu
+
 menu "platform drivers (x86)"
 	depends on X86
 	source driver/x86/Kconfig
@@ -43,5 +48,6 @@ menu "hidden"
 	config DRIVER_UART
 		bool "uart driver"
 		select AVR_UART if AVR
+		select RP2040_UART if ARM_CHIP_RP2040
 		select X86_UART if X86
 endmenu

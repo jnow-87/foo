@@ -14,6 +14,11 @@
 choice
 	prompt "processor type"
 
+	config ARM
+		bool "arm"
+		select NOFLOAT
+		select KERNEL_NO_VIRT_MEM
+
 	config AVR
 		bool "avr"
 		select NOFLOAT
@@ -26,6 +31,10 @@ choice
 endchoice
 
 menu "processor features"
+	if ARM
+		source "arch/arm/Kconfig"
+	endif
+
 	if AVR
 		source "arch/avr/Kconfig"
 	endif
@@ -50,18 +59,21 @@ menu "hidden"
 
 	config ARCH
 		string "architecture"
+		default "arm"	if ARM
 		default "avr"	if AVR
 		default "x86"	if X86
 	
 	config PROCESSOR
 		string "processor"
-		default AVR_MCU	if AVR
-		default "x86"	if X86
+		default ARM_CHIP	if ARM
+		default AVR_MCU		if AVR
+		default "x86"		if X86
 
 	config ARCH_HEADER
 		string "arch header"
-		default "<arch/$(CONFIG_ARCH)/atmega.h>"	if AVR
-		default "<arch/$(CONFIG_ARCH)/x86.h>"		if X86
+		default "<arch/$(CONFIG_ARCH)/$(CONFIG_ARM_CHIP).h>"	if ARM
+		default "<arch/$(CONFIG_ARCH)/atmega.h>"				if AVR
+		default "<arch/$(CONFIG_ARCH)/x86.h>"					if X86
 
 	config NOFLOAT
 		bool "enable floating point support"

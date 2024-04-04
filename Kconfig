@@ -174,7 +174,6 @@ menu "build system"
 	# toolchain prefixes
 	config TOOLCHAIN_PREFIX
 		string "target toolchain prefix"
-		default "avr-" if AVR
 		default ""
 
 	menu "hidden"

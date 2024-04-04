@@ -15,6 +15,19 @@
 	},
 }
 
+# arch/arm/
+{
+	"If": {
+		"PathMatch": "arch/arm/.*"
+	},
+
+	"CompileFlags": {
+		"Add": [
+			"-DBUILD_ARCH_HEADER=<arch/arm/rp2040.h>",
+		],
+	},
+}
+
 # arch/avr/
 {
 	"If": {

@@ -21,14 +21,14 @@
 typedef struct{
 	int (*call)(void);
 
-#ifdef CONFIG_KERNEL_LOG_INIT
+#ifdef CONFIG_KERNEL_INIT_DEBUG
 	char const *name;
-#endif // CONFIG_KERNEL_LOG_INIT
+#endif // CONFIG_KERNEL_INIT_DEBUG
 } init_call_t;
 
 
 /* macros */
-#ifdef CONFIG_KERNEL_LOG_INIT
+#ifdef CONFIG_KERNEL_INIT_DEBUG
 # define init_call(_call, level, stage, cores) \
 	static init_call_t init_call_##_call \
 		__linker_array("."#level"_init_stage"#stage"_"#cores) = { \
@@ -42,7 +42,7 @@ typedef struct{
 		__linker_array("."#level"_init_stage"#stage"_"#cores) = { \
 			.call = _call, \
 		}
-#endif // CONFIG_KERNEL_LOG_INIT
+#endif // CONFIG_KERNEL_INIT_DEBUG
 
 #define discard_call(call) \
 	static int call(void) __unused __section(".kernel_discard")

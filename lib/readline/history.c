@@ -9,6 +9,7 @@
 
 #include <config/config.h>
 #include <sys/types.h>
+#include <sys/limits.h>
 #include <sys/list.h>
 #include <sys/string.h>
 #include <sys/escape.h>
@@ -23,7 +24,7 @@ typedef struct history_t{
 	struct history_t *prev,
 					 *next;
 
-	char line[CONFIG_LINE_MAX];
+	char line[LINE_MAX];
 } history_t;
 
 

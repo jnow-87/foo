@@ -7,13 +7,13 @@
 
 
 
-let s:kimg = argv[0]
+let s:image = argv[0]
 
 let vimgdb_gdb_cmd = 'gdb'
 let vimgdb_gdb_cmd .= ' -ex \"handle SIG34 noprint\"'
 let vimgdb_gdb_cmd .= ' -ex \"handle SIG35 noprint\"'
 let vimgdb_gdb_cmd .= ' -ex \"handle SIG36 noprint\"'
-let vimgdb_gdb_cmd .= ' ' . s:kimg
+let vimgdb_gdb_cmd .= ' ' . s:image
 
 if argc < 2
 	finish

@@ -57,16 +57,6 @@ void kernel(void){
 	}
 
 	/* enable interrupts */
-	// TODO without the barrier core0 panics and the output
-	// doesn't match what is supposed to happen, e.g. core1
-	// seems to do driver initialisation
-//	INFO("smp barrier\n");
-//	atomic_inc(&ncores, 1);
-//
-//	while(ncores != DEVTREE_ARCH_NCORES);
-//
-//	INFO("smp barrier passed\n");
-
 	int_enable(true);
 
 	/* kernel thread */
@@ -148,7 +138,7 @@ static void exec_init_call(init_call_t *base, init_call_t *end, bool singular){
 		DEBUG("%s()...\n", p->name);
 
 		if(p->call() != 0)
-			FATAL("%s() failed \"%s\"\n", p->name, strerror(errno));
+			FATAL("init call at %p failed \"%s\"\n", p->call, strerror(errno));
 	}
 }
 
