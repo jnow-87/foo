@@ -25,6 +25,7 @@ uart0 = {
 		3,					// csize (UART_CS_8)
 	];
 
+#ifdef CONFIG_DRIVER_TERM
 	tty0 = {
 		compatible = "terminal";
 
@@ -41,8 +42,11 @@ uart0 = {
 			0,				// columns (set by the driver)
 		];
 
+# ifdef CONFIG_KERNEL_LOG
 		klog = {
 			compatible = "kernel,log";
 		};
+# endif // CONFIG_KERNEL_LOG
+#endif // CONFIG_DRIVER_TERM
 	};
 };
