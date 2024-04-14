@@ -8,3 +8,4 @@
 
 
 obj-$(CONFIG_RP2040_UART) += uart.o
+obj-$(CONFIG_RP2040_GPIO) += gpio.o

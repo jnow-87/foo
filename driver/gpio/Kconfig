@@ -12,6 +12,7 @@ menuconfig DRIVER_GPIO
 	select KERNEL_DEVFS
 	select SC_SIGNAL
 	select AVR_GPIO if AVR
+	select RP2040_GPIO if ARM_CHIP_RP2040
 	select X86_GPIO if X86
 
 if DRIVER_GPIO

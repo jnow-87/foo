@@ -6,6 +6,11 @@
 #
 
 
+# gpio
+config RP2040_GPIO
+	bool "gpio driver"
+	select GPIO_INT_WIDTH_32
+
 # uart
 config RP2040_UART
 	bool "uart driver"
