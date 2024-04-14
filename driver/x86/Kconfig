@@ -11,6 +11,7 @@
 #
 config X86_GPIO
 	bool "gpio driver"
+	select GPIO_INT_WIDTH_32
 
 #
 # i2c
