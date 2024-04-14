@@ -66,12 +66,12 @@ typedef struct{
 
 
 /* local/static prototypes */
-static gpio_int_t read(void *hw);
-static int write(gpio_int_t v, void *hw);
+static intgpio_t read(void *hw);
+static int write(intgpio_t v, void *hw);
 
 static int configure(dev_data_t *mcp, gpio_cfg_t *cfg);
 
-static gpio_int_t rx(dev_data_t *mcp, uint8_t addr);
+static intgpio_t rx(dev_data_t *mcp, uint8_t addr);
 
 
 /* local functions */
@@ -119,11 +119,11 @@ err_0:
 
 driver_probe("mcp23017", probe);
 
-static gpio_int_t read(void *hw){
+static intgpio_t read(void *hw){
 	return rx(hw, GPIO);
 }
 
-static int write(gpio_int_t v, void *hw){
+static int write(intgpio_t v, void *hw){
 	dev_data_t *mcp;
 
 
@@ -165,8 +165,8 @@ static int configure(dev_data_t *mcp, gpio_cfg_t *cfg){
 	return -r;
 }
 
-static gpio_int_t rx(dev_data_t *mcp, uint8_t addr){
-	gpio_int_t v;
+static intgpio_t rx(dev_data_t *mcp, uint8_t addr){
+	intgpio_t v;
 
 
 	MCP_WRITE(mcp, MCP_DATA(addr + mcp->num));

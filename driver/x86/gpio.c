@@ -18,13 +18,13 @@
 /* types */
 typedef struct{
 	char const *name;
-	gpio_int_t value;
+	intgpio_t value;
 } dev_data_t;
 
 
 /* local/static prototypes */
-static gpio_int_t read(void *hw);
-static int write(gpio_int_t v, void *hw);
+static intgpio_t read(void *hw);
+static int write(intgpio_t v, void *hw);
 
 
 /* local functions */
@@ -62,7 +62,7 @@ err_0:
 
 driver_probe("x86,gpio", probe);
 
-static gpio_int_t read(void *hw){
+static intgpio_t read(void *hw){
 	dev_data_t *gpio = (dev_data_t*)hw;
 
 
@@ -71,7 +71,7 @@ static gpio_int_t read(void *hw){
 	return gpio->value;
 }
 
-static int write(gpio_int_t v, void *hw){
+static int write(intgpio_t v, void *hw){
 	dev_data_t *gpio = (dev_data_t*)hw;
 
 

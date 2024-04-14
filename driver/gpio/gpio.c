@@ -93,12 +93,12 @@ void gpio_destroy(gpio_t *gpio){
 	kfree(gpio);
 }
 
-gpio_int_t gpio_read(gpio_t *gpio){
+intgpio_t gpio_read(gpio_t *gpio){
 	return ((gpio->ops.read(gpio->hw) ^ gpio->cfg->invert_mask) & gpio->cfg->in_mask);
 }
 
-int gpio_write(gpio_t *gpio, gpio_int_t v){
-	gpio_int_t c;
+int gpio_write(gpio_t *gpio, intgpio_t v){
+	intgpio_t c;
 
 
 	if(gpio->cfg->mode == GM_STRICT && (v & ~gpio->cfg->out_mask))
@@ -208,10 +208,10 @@ static int close(devfs_dev_t *dev, fs_filed_t *fd){
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	gpio_t *gpio = (gpio_t*)dev->payload;
-	gpio_int_t *v = (gpio_int_t*)buf;
+	intgpio_t *v = (intgpio_t*)buf;
 
 
-	if(n != sizeof(gpio_int_t))
+	if(n != sizeof(intgpio_t))
 		goto_errno(err, E_LIMIT);
 
 	*v = gpio_read(gpio);;
@@ -227,10 +227,10 @@ err:
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	gpio_t *gpio = (gpio_t*)dev->payload;
-	gpio_int_t v = *((gpio_int_t*)buf);
+	intgpio_t v = *((intgpio_t*)buf);
 
 
-	if(n != sizeof(gpio_int_t))
+	if(n != sizeof(intgpio_t))
 		goto_errno(err, E_LIMIT);
 
 	DEBUG("%s write %#x\n", dev->node->name, v);
@@ -256,7 +256,7 @@ static void int_hdlr(int_num_t num, void *payload){
 	devfs_dev_t *dev = (devfs_dev_t*)payload;
 	gpio_t *gpio = (gpio_t*)dev->payload;
 	gpio_siglst_t *sig;
-	gpio_int_t v;
+	intgpio_t v;
 
 
 	v = gpio->ops.read(gpio->hw);

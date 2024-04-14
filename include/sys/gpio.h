@@ -17,10 +17,10 @@
 
 
 /* types */
-typedef UINT(CONFIG_GPIO_INT_WIDTH) gpio_int_t;
+typedef UINT(CONFIG_GPIO_INT_WIDTH) intgpio_t;
 
 typedef struct{
-	gpio_int_t mask;
+	intgpio_t mask;
 	signal_t sig;
 } gpio_int_cfg_t;
 

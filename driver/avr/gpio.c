@@ -35,8 +35,8 @@ typedef struct{
 
 
 /* local/static prototypes */
-static gpio_int_t read(void *hw);
-static int write(gpio_int_t v, void *hw);
+static intgpio_t read(void *hw);
+static int write(intgpio_t v, void *hw);
 
 
 /* local functions */
@@ -73,11 +73,11 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 driver_probe("avr,gpio", probe);
 
-static gpio_int_t read(void *hw){
+static intgpio_t read(void *hw){
 	return ((dt_data_t*)hw)->regs->pin;
 }
 
-static int write(gpio_int_t v, void *hw){
+static int write(intgpio_t v, void *hw){
 	((dt_data_t*)hw)->regs->port = v;
 
 	return 0;

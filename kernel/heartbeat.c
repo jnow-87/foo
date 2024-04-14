@@ -58,7 +58,7 @@ driver_probe("kernel,heartbeat", probe);
 static void task(void *payload){
 	dev_data_t *heartbeat = (dev_data_t*)payload;
 	gpio_t *gpio = heartbeat->gpio;
-	gpio_int_t v;
+	intgpio_t v;
 	uint32_t time_ms;
 
 
