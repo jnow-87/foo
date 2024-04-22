@@ -16,8 +16,6 @@
 
 
 /* macros */
-#define	NUM_PORTS	2
-
 // registers
 #define IODIR	0x00
 #define IPOL	0x02
@@ -41,8 +39,8 @@
 #define IOCON_INTPOL	1
 
 // I/O wrapper
-#define MCP_READ(mcp, buf, n)	i2c_read((mcp)->hw, (mcp)->slave, buf, n)
-#define MCP_WRITE(mcp, buf)		i2c_write((mcp)->hw, (mcp)->slave, buf, sizeof_array(buf))
+#define MCP_READ(gpio, buf, n)	i2c_read((gpio)->dti, (gpio)->dtd->slave_addr, buf, n)
+#define MCP_WRITE(gpio, buf)	i2c_write((gpio)->dti, (gpio)->dtd->slave_addr, buf, sizeof_array(buf))
 #define MCP_DATA(...)			((uint8_t []){ __VA_ARGS__ })
 
 
@@ -50,95 +48,62 @@
 typedef enum{
 	PORT_A = 0,
 	PORT_B,
-} port_num_t;
+} port_t;
 
 typedef struct{
-	uint8_t num;		/**< set by the driver, cf. port_num_t */
-	gpio_cfg_t cfg;
-
-	uint8_t slave;
-	i2c_t *hw;			/**< set by the driver */
-} dev_data_t;
-
-typedef struct{
-	dev_data_t ports[NUM_PORTS];
+	uint8_t port;		/**< cf. port_t */
+	uint8_t slave_addr;
 } dt_data_t;
+
+typedef struct{
+	i2c_t *dti;
+	dt_data_t *dtd;
+	gpio_itf_t itf;
+} dev_data_t;
 
 
 /* local/static prototypes */
+static int configure(gpio_cfg_t *cfg, void *hw);
 static intgpio_t read(void *hw);
 static int write(intgpio_t v, void *hw);
 
-static int configure(dev_data_t *mcp, gpio_cfg_t *cfg);
-
-static intgpio_t rx(dev_data_t *mcp, uint8_t addr);
+static intgpio_t reg_read(uint8_t reg, dev_data_t *gpio);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd = (dt_data_t*)dt_data;
-	i2c_t *dti = (i2c_t*)dt_itf;
-	gpio_t **ports;
-	gpio_ops_t ops;
+	dev_data_t *gpio;
+	gpio_itf_t *itf;
 
 
-	ports = kcalloc(NUM_PORTS, sizeof(gpio_t*));
+	gpio = kmalloc(sizeof(dev_data_t));
 
-	if(ports == 0x0)
-		goto err_0;
+	if(gpio == 0x0)
+		return 0x0;
 
-	/* amend port configuration */
-	dtd->ports[0].num = PORT_A;
-	dtd->ports[0].hw = dti;
-	dtd->ports[1].num = PORT_B;
-	dtd->ports[1].hw = dti;
+	gpio->dti = dt_itf;
+	gpio->dtd = dt_data;
 
-	/* create and configure gpio devices */
-	ops.read = read;
-	ops.write = write;
+	itf = &gpio->itf;
+	itf->configure = configure;
+	itf->read = read;
+	itf->write = write;
+	itf->hw = gpio;
 
-	for(uint8_t i=0; i<NUM_PORTS; i++){
-		ports[i] = gpio_create(&ops, &dtd->ports[i].cfg, dtd->ports + i);
-
-		if(ports[i] == 0x0 || configure(dtd->ports + i, &dtd->ports[i].cfg) != 0)
-			goto err_1;
-	}
-
-	return ports;
-
-
-err_1:
-	for(uint8_t i=0; i<NUM_PORTS && ports[i]!=0x0; i++){
-		gpio_destroy(ports[i]);
-	}
-
-err_0:
-
-	return 0x0;
+	return itf;
 }
 
 driver_probe("mcp23017", probe);
 
-static intgpio_t read(void *hw){
-	return rx(hw, GPIO);
-}
-
-static int write(intgpio_t v, void *hw){
-	dev_data_t *mcp;
-
-
-	mcp = (dev_data_t*)hw;
-
-	return MCP_WRITE(mcp, MCP_DATA(GPIO + mcp->num, v));
-}
-
-static int configure(dev_data_t *mcp, gpio_cfg_t *cfg){
+static int configure(gpio_cfg_t *cfg, void *hw){
 	int r = 0;
+	dev_data_t *gpio = (dev_data_t*)hw;
+	dt_data_t *dtd = gpio->dtd;
 
 
 	// device config
-	r |= MCP_WRITE(mcp,
-		MCP_DATA(IOCON + mcp->num,
+	r |= MCP_WRITE(gpio,
+		MCP_DATA(IOCON + dtd->port,
 			  (0x0 << IOCON_BANK)
 			| (0x0 << IOCON_MIRROR)
 			| (0x1 << IOCON_SEQOP)
@@ -150,27 +115,40 @@ static int configure(dev_data_t *mcp, gpio_cfg_t *cfg){
 	);
 
 	// port config
-	r |= MCP_WRITE(mcp, MCP_DATA(IODIR + mcp->num, cfg->in_mask));
-	r |= MCP_WRITE(mcp, MCP_DATA(IPOL + mcp->num, 0x0));
-	r |= MCP_WRITE(mcp, MCP_DATA(GPPU + mcp->num, cfg->in_mask));
+	r |= MCP_WRITE(gpio, MCP_DATA(IODIR + dtd->port, cfg->in_mask));
+	r |= MCP_WRITE(gpio, MCP_DATA(IPOL + dtd->port, 0x0));
+	r |= MCP_WRITE(gpio, MCP_DATA(GPPU + dtd->port, cfg->in_mask));
+
+	r |= MCP_WRITE(gpio, MCP_DATA(GPIO + dtd->port, cfg->out_mask & cfg->invert_mask));
 
 	// interrupt config
-	r |= MCP_WRITE(mcp, MCP_DATA(INTCON + mcp->num, 0x0));
-	r |= MCP_WRITE(mcp, MCP_DATA(DEFVAL + mcp->num, 0x0));
-	r |= MCP_WRITE(mcp, MCP_DATA(GPINTEN + mcp->num, cfg->int_mask));
+	r |= MCP_WRITE(gpio, MCP_DATA(INTCON + dtd->port, 0x0));
+	r |= MCP_WRITE(gpio, MCP_DATA(DEFVAL + dtd->port, 0x0));
+	r |= MCP_WRITE(gpio, MCP_DATA(GPINTEN + dtd->port, cfg->int_mask));
 
 	// clear interrupts
-	rx(mcp, INTCAP);
+	reg_read(INTCAP, gpio);
 
 	return -r;
 }
 
-static intgpio_t rx(dev_data_t *mcp, uint8_t addr){
+static intgpio_t read(void *hw){
+	return reg_read(GPIO, hw);
+}
+
+static int write(intgpio_t v, void *hw){
+	dev_data_t *gpio = (dev_data_t*)hw;
+
+
+	return MCP_WRITE(gpio, MCP_DATA(GPIO + gpio->dtd->port, v));
+}
+
+static intgpio_t reg_read(uint8_t reg, dev_data_t *gpio){
 	intgpio_t v;
 
 
-	MCP_WRITE(mcp, MCP_DATA(addr + mcp->num));
-	MCP_READ(mcp, &v, 1);
+	MCP_WRITE(gpio, MCP_DATA(reg + gpio->dtd->port));
+	MCP_READ(gpio, &v, 1);
 
 	return v;
 }

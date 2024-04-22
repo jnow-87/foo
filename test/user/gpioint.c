@@ -61,8 +61,9 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	}
 
 	// register signal to device interrupt
+	cfg.op = GPIO_INT_REGISTER;
 	cfg.mask = 0xff;
-	cfg.sig = SIGNAL;
+	cfg.signum = SIGNAL;
 
 	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg) != 0){
 		printf(FG("error ", RED) "registering signal to device \"%s\"\n", strerror(errno));
@@ -87,6 +88,11 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	}
 
 	/* cleanup */
+	cfg.op = GPIO_INT_REGISTER;
+
+	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg) != 0)
+		printf(FG("error ", RED) "releasing signal \"%s\"\n", strerror(errno));
+
 	// close device
 	close(dev_fd);
 

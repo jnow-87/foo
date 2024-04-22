@@ -43,15 +43,18 @@ typedef struct{
 } gpio_cfg_t;
 
 typedef struct{
+	int (*configure)(gpio_cfg_t *cfg, void *hw);
 	intgpio_t (*read)(void *hw);
 	int (*write)(intgpio_t v, void *hw);
-} gpio_ops_t;
+
+	void *hw;
+} gpio_itf_t;
 
 typedef struct gpio_siglst_t{
 	struct gpio_siglst_t *prev,
 						 *next;
 
-	signal_t sig;
+	signal_t signum;
 	thread_t *thread;
 	fs_filed_t *fd;
 
@@ -59,21 +62,27 @@ typedef struct gpio_siglst_t{
 } gpio_siglst_t;
 
 typedef struct{
-	gpio_ops_t ops;
+	gpio_itf_t *itf;
 	gpio_cfg_t *cfg;
-	void *hw;
 
 	gpio_siglst_t *sigs;
 	mutex_t mtx;
+
+	intgpio_t int_state;
 } gpio_t;
 
 
 /* prototypes */
-gpio_t *gpio_create(gpio_ops_t *ops, gpio_cfg_t *cfg, void *hw);
+gpio_t *gpio_create(gpio_itf_t *itf, gpio_cfg_t *cfg);
 void gpio_destroy(gpio_t *gpio);
 
+int gpio_configure(gpio_t *gpio);
 intgpio_t gpio_read(gpio_t *gpio);
 int gpio_write(gpio_t *gpio, intgpio_t v);
+
+int gpio_int_register(gpio_t *gpio, fs_filed_t *fd, gpio_int_cfg_t *cfg);
+int gpio_int_release(gpio_t *gpio, fs_filed_t *fd);
+void gpio_int_probe(gpio_t *gpio, fs_filed_t *fd, gpio_int_cfg_t *cfg);
 
 
 #endif // DRIVER_GPIO_H

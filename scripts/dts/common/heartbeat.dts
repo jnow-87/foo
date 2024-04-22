@@ -7,10 +7,29 @@
 
 
 
+#ifndef HEARTBEAT_PIN_MASK
+# error "heartbeat pin-mask not defined"
+#endif
+
 heartbeat = {
 	compatible = "kernel,heartbeat";
 
 	/* heartbeat config (dt_data_t) */
+	// gpio config (gpio_cfg_t)
+	int<CONFIG_GPIO_INT_WIDTH> = [
+		1,					// mode (normal)
+		HEARTBEAT_PIN_MASK,	// pin mask
+		0x0,				// in mask
+		HEARTBEAT_PIN_MASK,	// out mask
+		0x0,				// int mask
+#if HEARTBEAT_INVERT != 0
+		HEARTBEAT_PIN_MASK,	// invert mask
+#else
+		0x0,				// invert mask (not inverted)
+#endif // HEARTBEAT_INVERT
+		0,					// interrupt
+	];
+
 	int<16> = [
 		0x0505,	// wave
 		200,	// period [ms]

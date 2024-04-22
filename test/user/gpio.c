@@ -117,8 +117,9 @@ static int test_ioctl(int fd, intgpio_t mask, signal_t sig, errno_t expect){
 	gpio_int_cfg_t cfg;
 
 
+	cfg.op = GPIO_INT_REGISTER;
 	cfg.mask = mask;
-	cfg.sig = sig;
+	cfg.signum = sig;
 
 	r += TEST_INT_EQ(ioctl(fd, IOCTL_CFGWR, &cfg), expect ? -1 : 0);
 	r += TEST_INT_EQ(errno, expect);

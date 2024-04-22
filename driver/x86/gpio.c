@@ -8,10 +8,9 @@
 
 
 #include <kernel/driver.h>
-#include <kernel/interrupt.h>
 #include <kernel/memory.h>
-#include <kernel/kprintf.h>
 #include <driver/gpio.h>
+#include <sys/gpio.h>
 
 
 
@@ -19,64 +18,49 @@
 typedef struct{
 	char const *name;
 	intgpio_t value;
+
+	gpio_itf_t itf;
 } dev_data_t;
 
 
 /* local/static prototypes */
+static int configure(gpio_cfg_t *cfg, void *hw);
 static intgpio_t read(void *hw);
 static int write(intgpio_t v, void *hw);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	gpio_t *itf;
-	gpio_ops_t ops;
 	dev_data_t *gpio;
 
 
 	gpio = kmalloc(sizeof(dev_data_t));
 
 	if(gpio == 0x0)
-		goto err_0;
+		return 0x0;
 
 	gpio->name = name;
 	gpio->value = 0x0;
+	gpio->itf.configure = configure;
+	gpio->itf.read = read;
+	gpio->itf.write = write;
+	gpio->itf.hw = gpio;
 
-	ops.write = write;
-	ops.read = read;
-
-	itf = gpio_create(&ops, dt_data, gpio);
-
-	if(itf == 0x0)
-		goto err_1;
-
-	return itf;
-
-
-err_1:
-	kfree(gpio);
-
-err_0:
-	return 0x0;
+	return &gpio->itf;
 }
 
 driver_probe("x86,gpio", probe);
 
+static int configure(gpio_cfg_t *cfg, void *hw){
+	return 0;
+}
+
 static intgpio_t read(void *hw){
-	dev_data_t *gpio = (dev_data_t*)hw;
-
-
-	DEBUG("%s: read %#x\n", gpio->name, gpio->value);
-
-	return gpio->value;
+	return ((dev_data_t*)hw)->value;
 }
 
 static int write(intgpio_t v, void *hw){
-	dev_data_t *gpio = (dev_data_t*)hw;
-
-
-	gpio->value = v;
-	DEBUG("%s: write %#x\n", gpio->name, gpio->value);
+	((dev_data_t*)hw)->value = v;
 
 	return 0;
 }

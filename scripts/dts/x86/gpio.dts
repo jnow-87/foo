@@ -13,18 +13,18 @@
 port0 = {
 	compatible = "x86,gpio";
 
-	/* gpio config (gpio_cfg_t) */
-	int<CONFIG_GPIO_INT_WIDTH> = [
-		1,		// mode (normal)
-		0xff,	// pin mask
-		0xff,	// in mask
-		0xff,	// out mask
-		0x00,	// int mask
-		0x00,	// invert mask (pass through)
-		0,		// interrupt
-	];
-
 	gpio0 = {
-		compatible = "gpio,dev";
+		compatible = "gpio,port";
+
+		/* gpio config (gpio_cfg_t) */
+		int<CONFIG_GPIO_INT_WIDTH> = [
+			1,		// mode (normal)
+			0xff,	// pin mask
+			0xff,	// in mask
+			0xff,	// out mask
+			0x00,	// int mask
+			0x00,	// invert mask (pass through)
+			0,		// interrupt
+		];
 	};
 };
