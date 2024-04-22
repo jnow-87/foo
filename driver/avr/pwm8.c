@@ -226,13 +226,13 @@ static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd){
 static int config_get(pwm_cfg_t *cfg, pwm_regs_t *regs){
 	cfg->mode = PWM_PHASECORRECT;
 
-	if((bits(regs->tccra, TCCRA_WGM0, 0x3)) == 0x3)
+	if((bits_get(regs->tccra, TCCRA_WGM0, 0x3)) == 0x3)
 		cfg->mode = PWM_FAST;
 
 	cfg->base_clock_khz = AVR_IO_CLOCK_HZ / 1000;
 	cfg->max = 0xff;
 
-	switch(bits(regs->tccrb, TCCRB_CS, 0x7)){
+	switch(bits_get(regs->tccrb, TCCRB_CS, 0x7)){
 	case 0:	cfg->prescaler = PWM_PRES_0;	break;
 	case 1:	cfg->prescaler = PWM_PRES_1;	break;
 	case 2:	cfg->prescaler = PWM_PRES_8;	break;
