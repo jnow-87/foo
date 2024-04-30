@@ -8,6 +8,7 @@
 
 
 #include <config/config.h>
+#include <gpio.dts>
 
 
 mcp-porta = {
@@ -22,16 +23,13 @@ mcp-porta = {
 	gpio-mcp0a = {
 		compatible = "gpio,port";
 
-		/* gpio config (gpio_cfg_t) */
-		int<CONFIG_GPIO_INT_WIDTH> = [
-			1,		// mode (normal)
-			0xff,	// pin mask
-			0x00,	// in mask
-			0xff,	// out mask
-			0x00,	// int mask
-			0xff,	// invert mask (inverted)
-			0,		// interrupt
-		];
+		gpio_cfg_t(
+			0x00,	// in_mask
+			0xff,	// out_mask
+			0x00,	// int_mask
+			0xff,	// invert_mask
+			0		// interrupt
+		);
 	};
 };
 
@@ -47,15 +45,12 @@ mcp-portb = {
 	gpio-mcp0b = {
 		compatible = "gpio,port";
 
-		/* gpio config (gpio_cfg_t) */
-		int<CONFIG_GPIO_INT_WIDTH> = [
-			1,		// mode (normal)
-			0xff,	// pin mask
+		gpio_cfg_t(
 			0xff,	// in mask
 			0x00,	// out mask
 			0x00,	// int mask
-			0xff,	// invert mask (inverted)
-			0,		// interrupt
-		];
+			0xff,	// invert mask
+			0		// interrupt
+		);
 	};
 };

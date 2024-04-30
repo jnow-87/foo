@@ -18,8 +18,7 @@
 
 
 /* macros */
-#define DEV_NORMAL	"/dev/gpio-normal"
-#define DEV_STRICT	"/dev/gpio-strict"
+#define DEV_NAME	"/dev/gpio"
 
 #define IN_MASK		0x3f		// has to match the device tree configuration
 #define OUT_MASK	0xfc		// has to match the device tree configuration
@@ -40,51 +39,41 @@ static int test_ioctl(int fd, intgpio_t mask, signal_t sig, errno_t expect);
  */
 TEST_LONG(gpio, "test gpio interface"){
 	int r = 0;
-	int fd_normal,
-		fd_strict;
+	int fd;
 	intgpio_t v;
 
 
 	reset_errno();
 
 	/* prepare */
-	ASSERT_INT_NEQ(fd_normal = open(DEV_NORMAL, O_RDWR), -1);
-	ASSERT_INT_NEQ(fd_strict = open(DEV_STRICT, O_RDWR), -1);
+	ASSERT_INT_NEQ(fd = open(DEV_NAME, O_RDWR), -1);
 
 	/* normal cases */
-	r += test_write(fd_normal, 0xae, EXPECT(0xae));
-	r += test_write(fd_normal, 0x0, EXPECT(0x0));
-	r += test_ioctl(fd_normal, 0xff, SIG_USR0, 0);
+	r += test_write(fd, 0xae, EXPECT(0xae));
+	r += test_write(fd, 0x0, EXPECT(0x0));
+	r += test_ioctl(fd, 0xff, SIG_USR0, 0);
 
 	/* error cases */
 	// read more than sizeof(intgpio_t)
-	r += TEST_INT_EQ(read(fd_normal, &v, sizeof(v) * 2), -1);
+	r += TEST_INT_EQ(read(fd, &v, sizeof(v) * 2), -1);
 	r += TEST_INT_EQ(errno, E_LIMIT);
 	reset_errno();
 
 	// write more than sizeof(intgpio_t)
-	r += TEST_INT_EQ(write(fd_normal, &v, sizeof(v) * 2), -1);
+	r += TEST_INT_EQ(write(fd, &v, sizeof(v) * 2), -1);
 	r += TEST_INT_EQ(errno, E_LIMIT);
 	reset_errno();
 
-	// write bits other than in the devices out_mask
-	// shall be ok in normal mode but give an error in strict mode
-	r += test_write(fd_normal, 0xff, EXPECT(0xff));
-
-	v = 0xff;
-	r += TEST_INT_EQ(write(fd_strict, &v, sizeof(v)), -1);
-	r += TEST_INT_EQ(errno, E_INVAL);
-	reset_errno();
+	// write bits other than in the devices out_mask shall still be ok
+	r += test_write(fd, 0xff, EXPECT(0xff));
 
 	// ioctl invalid signal
-	r += test_ioctl(fd_normal, 0xff, SIG_USR0 - 1, E_INVAL);
-	r += test_ioctl(fd_normal, 0xff, SIG_MAX, E_INVAL);
-	r += test_ioctl(fd_strict, 0xff, SIG_USR0, E_INVAL);
+	r += test_ioctl(fd, 0xff, SIG_USR0 - 1, E_INVAL);
+	r += test_ioctl(fd, 0xff, SIG_MAX, E_INVAL);
 
 	/* cleanup */
 	// close device
-	r += TEST_INT_EQ(close(fd_normal), 0);
-	r += TEST_INT_EQ(close(fd_strict), 0);
+	r += TEST_INT_EQ(close(fd), 0);
 
 	return -r;
 }

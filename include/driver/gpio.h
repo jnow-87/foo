@@ -20,21 +20,13 @@
 
 
 /* types */
-typedef enum{
-	GM_NORMAL = 1,
-	GM_STRICT,
-} gpio_mode_t;
-
 typedef struct{
 	/**
 	 * NOTE fixed-size types are used to allow
 	 * 		using this type with the device tree
 	 */
 
-	uint8_t mode;				/**< cf. gpio_mode_t */
-
-	intgpio_t pin_mask,
-			  in_mask,
+	intgpio_t in_mask,
 			  out_mask,
 			  int_mask,
 			  invert_mask;		/**< 0 = pass through, 1 = invert */

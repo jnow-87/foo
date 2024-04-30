@@ -37,22 +37,6 @@ gpio_t *gpio_create(gpio_itf_t *itf, gpio_cfg_t *cfg){
 	gpio_t *gpio;
 
 
-	/* sanitise configuration */
-	if(cfg->mode == GM_STRICT){
-		if((cfg->out_mask & ~cfg->pin_mask)
-		|| (cfg->in_mask & ~cfg->pin_mask)
-		|| (cfg->int_mask & ~cfg->pin_mask)
-		|| (cfg->invert_mask & ~cfg->pin_mask)
-		)
-			goto_errno(err, E_INVAL);
-	}
-
-	cfg->in_mask &= cfg->pin_mask;
-	cfg->out_mask &= cfg->pin_mask;
-	cfg->int_mask &= cfg->pin_mask;
-	cfg->invert_mask &= cfg->pin_mask;
-
-	/* allocated gpio struct */
 	gpio = kmalloc(sizeof(gpio_t));
 
 	if(gpio == 0x0)
@@ -117,9 +101,6 @@ int gpio_int_register(gpio_t *gpio, fs_filed_t *fd, gpio_int_cfg_t *cfg){
 	gpio_siglst_t *sig,
 				  *queued;
 
-
-	if(cfg->mode == GM_STRICT && (pin_mask & ~cfg->int_mask))
-		return_errno(E_INVAL);
 
 	if(cfg->signum < SIG_USR0 || cfg->signum > SIG_USR3)
 		return_errno(E_INVAL);

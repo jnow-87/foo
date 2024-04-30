@@ -69,6 +69,7 @@ define compile_devicetree
 	)
 endef
 
+$(devtree_preproc): cppflags += -Iscripts/dts/include
 $(devtree_preproc): $(CONFIG_DEVICE_TREE) $(config_header)
 	$(call preproc_file)
 
