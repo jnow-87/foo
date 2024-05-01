@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/vector.h>
 #include <stdio.h>
+#include <asserts.h>
 
 
 /* macros */
@@ -59,6 +60,7 @@ typedef struct base_node_t{
 
 	node_type_t type;
 	char const *name;
+	assert_t *asserts;
 } base_node_t;
 
 typedef struct device_node_t{
@@ -68,8 +70,10 @@ typedef struct device_node_t{
 						 *childs;
 
 	node_type_t type;
-	char const *name,
-			   *compatible;
+	char const *name;
+	assert_t *asserts;
+
+	char const *compatible;
 
 	vector_t payload;			/**< vector of member_t elements */
 } device_node_t;
@@ -84,6 +88,8 @@ typedef struct memory_node_t{
 
 	node_type_t type;
 	char const *name;
+	assert_t *asserts;
+
 	void *base;
 	size_t size;
 } memory_node_t;
@@ -98,6 +104,7 @@ typedef struct arch_node_t{
 
 	node_type_t type;
 	char const *name;
+	assert_t *asserts;
 
 	uint8_t addr_width,
 			reg_width;

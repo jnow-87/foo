@@ -14,8 +14,9 @@
 #include <sys/vector.h>
 #include <sys/list.h>
 #include <sys/escape.h>
-#include <options.h>
+#include <asserts.h>
 #include <nodes.h>
+#include <options.h>
 
 
 /* macros */
@@ -48,6 +49,7 @@ static void base_definition(FILE *fp, base_node_t *node, char const *node_ident)
 static void device_definition(FILE *fp, base_node_t *node, char const *node_ident);
 static void memory_definition(FILE *fp, base_node_t *node, char const *node_ident);
 static void arch_definition(FILE *fp, base_node_t *node, char const *node_ident);
+static void base_asserts(FILE *fp, base_node_t *node, char const *node_ident);
 
 static void file_header(FILE *fp, char const *start_comment, char const *end_comment);
 static void section_header(FILE *fp, char const *start_comment, char const *end_comment, char const *s);
@@ -250,6 +252,7 @@ static void base_declaration(FILE *fp, base_node_t *node, char const *node_ident
 static void base_definition(FILE *fp, base_node_t *node, char const *node_ident){
 	src_node_header(fp, node_ident);
 
+	base_asserts(fp, node, node_ident);
 	childs(fp, node, node_ident);
 
 	if(node->type == NT_DEVICE)
@@ -314,6 +317,18 @@ static void arch_definition(FILE *fp, base_node_t *node, char const *node_ident)
 	}
 	else if(node->type == NT_DEVICE)
 		device_definition(fp, node, node_ident);
+}
+
+static void base_asserts(FILE *fp, base_node_t *node, char const *node_ident){
+	assert_t *a;
+
+
+	list_for_each(node->asserts, a){
+		fprintf(fp, "_Static_assert(%s, \"%s: %s\");\n", a->expr, node_ident, a->msg);
+	}
+
+	if(node->asserts)
+		fprintf(fp, "\n");
 }
 
 static void file_header(FILE *fp, char const *start_comment, char const *end_comment){

@@ -13,11 +13,13 @@
 /* header */
 %{
 	#include <sys/escape.h>
+	#include <sys/list.h>
 	#include <stdio.h>
 	#include <stdarg.h>
 	#include <limits.h>
 	#include <string.h>
 	#include <lexer.lex.h>
+	#include <asserts.h>
 	#include <nodes.h>
 
 
@@ -57,6 +59,7 @@
 
 %code requires{
 	#include <sys/vector.h>
+	#include <asserts.h>
 	#include <nodes.h>
 
 
@@ -94,6 +97,7 @@
 	device_node_t *device;
 	memory_node_t *memory;
 	arch_node_t *arch;
+	assert_t *assert;
 	vector_t *int_lst;
 }
 
@@ -125,11 +129,15 @@
 %token NA_SIZE
 %token NA_STRING
 
+// asserts
+%token ASSERT
+
 /* non-terminals */
 %type <device> device
 %type <device> devices-attr
 %type <memory> memory
 %type <memory> memory-attr
+%type <assert> assert
 %type <i> int
 %type <int_lst> int-list
 %type <int_lst> opt-int
@@ -155,13 +163,18 @@ section : SEC_DEVICES '=' '{' devices-lst '}'						{ }
 
 /* node lists */
 devices-lst : %empty												{ }
-			| devices-lst device ';'								{ EABORT(NODE_ADD_CHILD(device_root(), $2)); };
+			| devices-lst device ';'								{ EABORT(NODE_ADD_CHILD(device_root(), $2)); }
+			| devices-lst assert ';'								{ list_add_tail(device_root()->asserts, $2); }
+			;
 
 memory-lst : %empty													{ }
-		   | memory-lst memory ';'									{ EABORT(NODE_ADD_CHILD(memory_root(), $2)); };
+		   | memory-lst memory ';'									{ EABORT(NODE_ADD_CHILD(memory_root(), $2)); }
+		   | memory-lst assert ';'									{ list_add_tail(memory_root()->asserts, $2); }
+		   ;
 
 arch-lst : %empty													{ }
 		 | arch-lst device ';'										{ EABORT(NODE_ADD_CHILD(arch_root(), $2)); }
+		 | arch-lst assert ';'										{ list_add_tail(arch_root()->asserts, $2); }
 		 | arch-lst NA_ADDR_WIDTH '=' int ';'						{ arch_root()->addr_width = $4; }
 		 | arch-lst NA_REG_WIDTH '=' int ';'						{ arch_root()->reg_width = $4; }
 		 | arch-lst NA_NCORES '=' int ';'							{ arch_root()->ncores = $4; }
@@ -179,6 +192,7 @@ memory : IDFR '=' '{' memory-attr '}'								{ $$ = $4; $$->name = stralloc($1.s
 
 /* node attributes */
 devices-attr : %empty												{ $$ = device_node_alloc(); EABORT($$ == 0x0); }
+			 | devices-attr assert ';'								{ $$ = $1; list_add_tail($$->asserts, $2); }
 			 | devices-attr device ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
 			 | devices-attr NA_COMPATIBLE '=' STRING ';'			{ $$ = $1; $$->compatible = stralloc($4.s, $4.len); EABORT($$->compatible == 0x0); }
 			 | devices-attr NA_BASEADDR '=' int ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_BASE_ADDR, (void*)(unsigned long int)$4)); }
@@ -188,10 +202,14 @@ devices-attr : %empty												{ $$ = device_node_alloc(); EABORT($$ == 0x0); 
 			 ;
 
 memory-attr : %empty												{ $$ = memory_node_alloc(); EABORT($$ == 0x0); }
+			| memory-attr assert ';'								{ $$ = $1; list_add_tail($$->asserts, $2); }
 			| memory-attr memory ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
 			| memory-attr NA_BASEADDR '=' int ';'					{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
 			| memory-attr NA_SIZE '=' int ';'						{ $$ = $1; $$->size = (size_t)$4; }
 			;
+
+/* asserts */
+assert : ASSERT '(' STRING ',' STRING ')'							{ $$ = assert_alloc(stralloc($3.s, $3.len), stralloc($5.s, $5.len)); EABORT($$ == 0x0); };
 
 /* basic types */
 int-list : '[' opt-int ']'											{ $$ = $2; }
