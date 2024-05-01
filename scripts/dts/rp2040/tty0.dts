@@ -53,6 +53,6 @@ uart0 = {
 			compatible = "kernel,log";
 		};
 # endif // CONFIG_KERNEL_LOG
-#endif // CONFIG_DRIVER_TERM
 	};
+#endif // CONFIG_DRIVER_TERM
 };
