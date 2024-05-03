@@ -8,110 +8,251 @@
 
 
 #include <unistd.h>
+#include <sys/devtree.h>
 #include <sys/errno.h>
-#include <sys/types.h>
 #include <sys/fcntl.h>
+#include <sys/gpio.h>
 #include <sys/ioctl.h>
 #include <sys/signal.h>
-#include <sys/gpio.h>
+#include <sys/stream.h>
+#include <sys/types.h>
 #include <test/test.h>
 
 
 /* macros */
-#define DEV_NAME	"/dev/gpio"
+#define DEV_PORT	"gpio-port"
+#define DEV_PIN		"gpio-pin"
 
-#define IN_MASK		0x3f		// has to match the device tree configuration
-#define OUT_MASK	0xfc		// has to match the device tree configuration
-#define INVERT_MASK	0xff		// has to match the device tree configuration
 
-#define EXPECT(v)	(((((v) ^ INVERT_MASK) & OUT_MASK) ^ INVERT_MASK) & IN_MASK)
+/* types */
+typedef struct{
+	intgpio_t in_mask,
+			  out_mask,
+			  int_mask,
+			  invert_mask;
+
+	uint8_t int_num;
+} gpio_cfg_t;
 
 
 /* local/static prototypes */
-static int test_read(int fd, intgpio_t expect);
-static int test_write(int fd, intgpio_t v, intgpio_t expect);
-static int test_ioctl(int fd, intgpio_t mask, signal_t sig, errno_t expect);
+static int setup(char const *dev_name, int *fd, gpio_cfg_t **cfg);
+
+static int test_read(int fd, intgpio_t expect, size_t size, gpio_cfg_t *cfg);
+static int test_write(int fd, intgpio_t v, intgpio_t expect, size_t size, gpio_cfg_t *cfg);
+static int test_ioctl(int fd, ioctl_cmd_t cmd, void *cfg, size_t size, errno_t errnum);
 
 
 /* local functions */
-/**
- *	\brief	test to verify the gpio functions
- */
-TEST_LONG(gpio, "test gpio interface"){
+TEST(gpio_port_rw){
 	int r = 0;
 	int fd;
 	intgpio_t v;
+	gpio_cfg_t *dt_cfg;
 
 
-	reset_errno();
-
-	/* prepare */
-	ASSERT_INT_NEQ(fd = open(DEV_NAME, O_RDWR), -1);
+	ASSERT_INT_NEQ(setup(DEV_PORT, &fd, &dt_cfg), -1);
 
 	/* normal cases */
-	r += test_write(fd, 0xae, EXPECT(0xae));
-	r += test_write(fd, 0x0, EXPECT(0x0));
-	r += test_ioctl(fd, 0xff, SIG_USR0, 0);
+	// write according to out_mask
+	r |= TEST_INT_EQ(0x0f00 & ~(dt_cfg->out_mask), 0x0);
+	r |= test_write(fd, 0x0f00, 0x0f00, sizeof(intgpio_t), dt_cfg);
+
+	// write outside of out_mask
+	r |= TEST_INT_NEQ(0xff0f00 & ~(dt_cfg->out_mask), 0x0);
+	r |= test_write(fd, 0xff0f00, 0x0f00, sizeof(intgpio_t), dt_cfg);
 
 	/* error cases */
 	// read more than sizeof(intgpio_t)
-	r += TEST_INT_EQ(read(fd, &v, sizeof(v) * 2), -1);
-	r += TEST_INT_EQ(errno, E_LIMIT);
+	r |= TEST_INT_EQ(read(fd, &v, sizeof(v) * 2), -1);
+	r |= TEST_INT_EQ(errno, E_LIMIT);
 	reset_errno();
 
 	// write more than sizeof(intgpio_t)
-	r += TEST_INT_EQ(write(fd, &v, sizeof(v) * 2), -1);
-	r += TEST_INT_EQ(errno, E_LIMIT);
+	r |= TEST_INT_EQ(write(fd, &v, sizeof(v) * 2), -1);
+	r |= TEST_INT_EQ(errno, E_LIMIT);
 	reset_errno();
 
-	// write bits other than in the devices out_mask shall still be ok
-	r += test_write(fd, 0xff, EXPECT(0xff));
+	/* cleanup */
+	r |= TEST_INT_EQ(close(fd), 0);
 
-	// ioctl invalid signal
-	r += test_ioctl(fd, 0xff, SIG_USR0 - 1, E_INVAL);
-	r += test_ioctl(fd, 0xff, SIG_MAX, E_INVAL);
+	return -r;
+}
+
+TEST(gpio_port_ioctl){
+	int r = 0;
+	int fd;
+	gpio_cfg_t *dt_cfg;
+	gpio_port_cfg_t pcfg;
+
+
+	ASSERT_INT_NEQ(setup(DEV_PORT, &fd, &dt_cfg), -1);
+
+	/* normal cases */
+	// read port config
+	r |= test_ioctl(fd, IOCTL_CFGRD, &pcfg, sizeof(pcfg), 0);
+	r |= TEST_INT_EQ(pcfg.in_mask, dt_cfg->in_mask);
+	r |= TEST_INT_EQ(pcfg.out_mask, dt_cfg->out_mask);
+	r |= TEST_INT_EQ(pcfg.int_mask, dt_cfg->int_mask);
+	r |= TEST_INT_EQ(pcfg.interrupt.mask, 0);
+	r |= TEST_INT_EQ(pcfg.interrupt.signum, 0);
+
+	// write interrupt config
+	r |= TEST_INT_NEQ(0xff0f & ~dt_cfg->int_mask, 0x0);
+	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_int_cfg_t){ .op = GPIO_INT_REGISTER, .mask = 0xff0f, .signum = SIG_USR0 }, sizeof(gpio_int_cfg_t), 0);
+
+	// read port config again
+	r |= test_ioctl(fd, IOCTL_CFGRD, &pcfg, sizeof(pcfg), 0);
+	r |= TEST_INT_EQ(pcfg.in_mask, dt_cfg->in_mask);
+	r |= TEST_INT_EQ(pcfg.out_mask, dt_cfg->out_mask);
+	r |= TEST_INT_EQ(pcfg.int_mask, dt_cfg->int_mask);
+	r |= TEST_INT_EQ(pcfg.interrupt.mask, dt_cfg->int_mask);
+	r |= TEST_INT_EQ(pcfg.interrupt.signum, SIG_USR0);
+
+	// overwrite interrupt config
+	r |= TEST_INT_NEQ(0xff0e & ~dt_cfg->int_mask, 0x0);
+	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_int_cfg_t){ .op = GPIO_INT_REGISTER, .mask = 0xff0e, .signum = SIG_USR1 }, sizeof(gpio_int_cfg_t), 0);
+
+	// read port config again
+	r |= test_ioctl(fd, IOCTL_CFGRD, &pcfg, sizeof(pcfg), 0);
+	r |= TEST_INT_EQ(pcfg.interrupt.mask, 0xff0e & dt_cfg->int_mask);
+	r |= TEST_INT_EQ(pcfg.interrupt.signum, SIG_USR1);
+
+	/* error cases */
+	// invalid sizes
+	r |= test_ioctl(fd, IOCTL_CFGRD, &pcfg, sizeof(pcfg) - 1, E_INVAL);
+	r |= test_ioctl(fd, IOCTL_CFGWR, &pcfg, sizeof(pcfg) - 1, E_INVAL);
+
+	// invalid signal
+	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_int_cfg_t){ .op = GPIO_INT_REGISTER, .mask = 0xff0f, .signum = SIG_USR0 - 1 }, sizeof(gpio_int_cfg_t), E_INVAL);
+	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_int_cfg_t){ .op = GPIO_INT_REGISTER, .mask = 0xff0f, .signum = SIG_MAX }, sizeof(gpio_int_cfg_t), E_INVAL);
 
 	/* cleanup */
-	// close device
-	r += TEST_INT_EQ(close(fd), 0);
+	r |= TEST_INT_EQ(close(fd), 0);
 
 	return -r;
 }
 
-static int test_read(int fd, intgpio_t expect){
+TEST(gpio_pin_rw){
 	int r = 0;
-	intgpio_t v;
+	gpio_cfg_t cfg = {		// fake config to avoid test_read() masking the lowest bit
+		.in_mask = 0xffff,	// which would make it impossible to compare the boolean
+		.out_mask = 0xffff,	// values returned by pin devices
+	};
+	int fd;
+	gpio_cfg_t *dt_cfg;
 
 
-	v = ~expect;
+	ASSERT_INT_NEQ(setup(DEV_PIN, &fd, &dt_cfg), -1);
 
-	r += TEST_INT_EQ(read(fd, &v, sizeof(v)), sizeof(v));
-	r += TEST_INT_EQ(v, expect);
+	/* normal cases */
+	r |= test_write(fd, 0x00, 0x0, 1, &cfg);
+	r |= test_write(fd, 0x01, 0x1, 1, &cfg);
+	r |= test_write(fd, 0xf0, 0x1, 1, &cfg);
+
+	/* cleanup */
+	r |= TEST_INT_EQ(close(fd), 0);
 
 	return -r;
 }
 
-static int test_write(int fd, intgpio_t v, intgpio_t expect){
+TEST(gpio_pin_ioctl){
 	int r = 0;
+	int fd;
+	gpio_cfg_t *dt_cfg;
+	gpio_port_cfg_t pcfg;
 
 
-	r += TEST_INT_EQ(write(fd, &v, sizeof(v)), sizeof(v));
-	r += test_read(fd, expect);
+	ASSERT_INT_NEQ(setup(DEV_PIN, &fd, &dt_cfg), -1);
 
-	return r;
+	/* normal cases */
+	// read port config
+	r |= test_ioctl(fd, IOCTL_CFGRD, &pcfg, sizeof(pcfg), 0);
+	r |= TEST_INT_EQ(pcfg.in_mask, 0x1);
+	r |= TEST_INT_EQ(pcfg.out_mask, 0x1);
+	r |= TEST_INT_EQ(pcfg.int_mask, 0x1);
+	r |= TEST_INT_EQ(pcfg.interrupt.mask, 0);
+	r |= TEST_INT_EQ(pcfg.interrupt.signum, 0);
+
+	// write interrupt config
+	r |= TEST_INT_NEQ(0xff0f & ~dt_cfg->int_mask, 0x0);
+	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_int_cfg_t){ .op = GPIO_INT_REGISTER, .mask = 0xff0f, .signum = SIG_USR0 }, sizeof(gpio_int_cfg_t), 0);
+
+	// read port config again
+	r |= test_ioctl(fd, IOCTL_CFGRD, &pcfg, sizeof(pcfg), 0);
+	r |= TEST_INT_EQ(pcfg.in_mask, 0x1);
+	r |= TEST_INT_EQ(pcfg.out_mask, 0x1);
+	r |= TEST_INT_EQ(pcfg.int_mask, 0x1);
+	r |= TEST_INT_EQ(pcfg.interrupt.mask, 0x1);
+	r |= TEST_INT_EQ(pcfg.interrupt.signum, SIG_USR0);
+
+	/* error cases */
+	// invalid sizes
+	r |= test_ioctl(fd, IOCTL_CFGRD, &pcfg, sizeof(pcfg) - 1, E_INVAL);
+	r |= test_ioctl(fd, IOCTL_CFGWR, &pcfg, sizeof(pcfg) - 1, E_INVAL);
+
+	// invalid signal
+	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_int_cfg_t){ .op = GPIO_INT_REGISTER, .mask = 0xff0f, .signum = SIG_USR0 - 1 }, sizeof(gpio_int_cfg_t), E_INVAL);
+	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_int_cfg_t){ .op = GPIO_INT_REGISTER, .mask = 0xff0f, .signum = SIG_MAX }, sizeof(gpio_int_cfg_t), E_INVAL);
+
+	/* cleanup */
+	r |= TEST_INT_EQ(close(fd), 0);
+
+	return -r;
 }
 
-static int test_ioctl(int fd, intgpio_t mask, signal_t sig, errno_t expect){
+static int setup(char const *dev_name, int *fd, gpio_cfg_t **cfg){
+	char name[strlen(dev_name) + 6];
+	devtree_device_t const *dt_node;
+
+
+	reset_errno();
+
+	sprintf(name, "/dev/%s", dev_name);
+	*fd = open(name, O_RDWR);
+
+	if(*fd == -1)
+		return -1;
+
+	dt_node = devtree_find_device_by_name(&__dt_device_root, dev_name);
+
+	if(dt_node == 0x0)
+		return -1;
+
+	*cfg = (gpio_cfg_t*)dt_node->payload;
+
+	return 0;
+}
+
+static int test_read(int fd, intgpio_t expect, size_t size, gpio_cfg_t *cfg){
 	int r = 0;
-	gpio_int_cfg_t cfg;
+	intgpio_t v = 0;
 
 
-	cfg.op = GPIO_INT_REGISTER;
-	cfg.mask = mask;
-	cfg.signum = sig;
+	expect = ((expect & cfg->out_mask) ^ cfg->invert_mask) & cfg->in_mask;
 
-	r += TEST_INT_EQ(ioctl(fd, IOCTL_CFGWR, &cfg), expect ? -1 : 0);
-	r += TEST_INT_EQ(errno, expect);
+	r |= TEST_INT_EQ(read(fd, &v, sizeof(v)), size);
+	r |= TEST_INT_EQ(v, expect);
+
+	return -r;
+}
+
+static int test_write(int fd, intgpio_t v, intgpio_t expect, size_t size, gpio_cfg_t *cfg){
+	int r = 0;
+
+
+	r |= TEST_INT_EQ(write(fd, &v, sizeof(v)), size);
+	r |= test_read(fd, expect, size, cfg);
+
+	return -r;
+}
+
+static int test_ioctl(int fd, ioctl_cmd_t cmd, void *cfg, size_t size, errno_t errnum){
+	int r = 0;
+
+
+	r |= TEST_INT_EQ(ionctl(fd, cmd, cfg, size), errnum ? -1 : 0);
+	r |= TEST_INT_EQ(errno, errnum);
 	reset_errno();
 
 	return -r;

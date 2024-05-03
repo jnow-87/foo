@@ -62,7 +62,7 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 
 	// register signal to device interrupt
 	cfg.op = GPIO_INT_REGISTER;
-	cfg.mask = 0xff;
+	cfg.mask = (intgpio_t)-1;
 	cfg.signum = SIGNAL;
 
 	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg) != 0){
@@ -104,9 +104,9 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 }
 
 static void hdlr(signal_t sig){
-	char c;
+	intgpio_t v;
 
 
-	read(dev_fd, &c, 1);
-	printf("caught signal %d, pin state %d\n", sig, (int)c);
+	read(dev_fd, &v, sizeof(intgpio_t));
+	printf("caught signal %d, pin state %#x\n", sig, v);
 }
