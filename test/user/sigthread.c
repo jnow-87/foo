@@ -50,33 +50,33 @@ TEST(sigthread){
 
 	memset(sig_order, 0, sizeof(signal_t) * NSIG);
 
-	r += TEST_INT_EQ(process_info(&pinfo), 0);
+	r |= TEST_INT_EQ(process_info(&pinfo), 0);
 
 	for(i=0; i<NSIG; i++)
-		r += TEST_INT_EQ(signal(SIGNAL + i, hdlr), 0);
+		r |= TEST_INT_EQ(signal(SIGNAL + i, hdlr), 0);
 
 	ASSERT_INT_NEQ(tid = thread_create(thread, "foo"), 0);
 
 	for(i=0; i<NSIG; i++){
-		r += TEST_INT_EQ(signal_send(SIGNAL + i, pinfo.pid, tid), 0);
-		r += TEST_INT_EQ(sleep(300, 0), 0);
+		r |= TEST_INT_EQ(signal_send(SIGNAL + i, pinfo.pid, tid), 0);
+		r |= TEST_INT_EQ(sleep(300, 0), 0);
 	}
 
 	for(i=0; i<NSIG; i++)
-		r += TEST_INT_EQ(signal_send(SIGNAL + i, pinfo.pid, tid), 0);
+		r |= TEST_INT_EQ(signal_send(SIGNAL + i, pinfo.pid, tid), 0);
 
 	i = 0;
 
 	while(!finished && i++ < RETRIES){
-		r += TEST_INT_EQ(sleep(500, 0), 0);
+		r |= TEST_INT_EQ(sleep(500, 0), 0);
 	}
 
-	r += TEST_INT_NEQ(i, RETRIES);
-	r += TEST_INT_EQ(sig_recv, NSIG * 2);
-	r += TEST_INT_EQ(errors, 0);
+	r |= TEST_INT_NEQ(i, RETRIES);
+	r |= TEST_INT_EQ(sig_recv, NSIG * 2);
+	r |= TEST_INT_EQ(errors, 0);
 
 	for(i=0; i<NSIG; i++)
-		r += TEST_INT_EQ(sig_order[i], (SIGNAL + i) * 2);
+		r |= TEST_INT_EQ(sig_order[i], (SIGNAL + i) * 2);
 
 	return -r;
 }

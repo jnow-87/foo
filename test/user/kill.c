@@ -35,7 +35,7 @@ TEST(thread_kill){
 	thread_cnt = 0;
 
 	/* prepare */
-	r += TEST_INT_EQ(process_info(&pinfo), 0);
+	r |= TEST_INT_EQ(process_info(&pinfo), 0);
 	ASSERT_INT_NEQ(tid = thread_create(thread, 0x0), 0);
 
 	while(thread_cnt == 0);
@@ -43,13 +43,13 @@ TEST(thread_kill){
 	/* send signal */
 	mutex_lock(&mtx);
 
-	r += TEST_INT_EQ(signal_send(SIG_KILL, pinfo.pid, tid), 0);
+	r |= TEST_INT_EQ(signal_send(SIG_KILL, pinfo.pid, tid), 0);
 	thread_cnt = 0;
 
 	mutex_unlock(&mtx);
 
-	r += TEST_INT_EQ(sleep(1000, 0), 0);
-	r += TEST_INT_EQ(thread_cnt, 0);
+	r |= TEST_INT_EQ(sleep(1000, 0), 0);
+	r |= TEST_INT_EQ(thread_cnt, 0);
 
 	return -r;
 }

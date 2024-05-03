@@ -36,15 +36,15 @@ TEST(tty_iflags){
 
 	// TIFL_CRNL
 	ASSERT_INT_EQ(configure(fd, TIFL_CRNL, 0, 0), 0);
-	r += test(fd, "\r", "\n");
-	r += test(fd, "a\rb\rc", "a\nb\nc");
+	r |= test(fd, "\r", "\n");
+	r |= test(fd, "a\rb\rc", "a\nb\nc");
 
 	// TIFL_NLCR
 	ASSERT_INT_EQ(configure(fd, TIFL_NLCR, 0, 0), 0);
-	r += test(fd, "\n", "\r");
-	r += test(fd, "a\nb\nc", "a\rb\rc");
+	r |= test(fd, "\n", "\r");
+	r |= test(fd, "a\nb\nc", "a\rb\rc");
 
-	r += TEST_INT_EQ(close(fd), 0);
+	r |= TEST_INT_EQ(close(fd), 0);
 
 	return -r;
 }
@@ -61,15 +61,15 @@ TEST(tty_oflags){
 
 	// TOFL_CRNL
 	ASSERT_INT_EQ(configure(fd, 0, TOFL_CRNL, 0), 0);
-	r += test(fd, "\r", "\n");
-	r += test(fd, "a\rb\rc", "a\nb\nc");
+	r |= test(fd, "\r", "\n");
+	r |= test(fd, "a\rb\rc", "a\nb\nc");
 
 	// TOFL_NLCR
 	ASSERT_INT_EQ(configure(fd, 0, TOFL_NLCR, 0), 0);
-	r += test(fd, "\n", "\r\n");
-	r += test(fd, "a\nb\nc", "a\r\nb\r\nc");
+	r |= test(fd, "\n", "\r\n");
+	r |= test(fd, "a\nb\nc", "a\r\nb\r\nc");
 
-	r += TEST_INT_EQ(close(fd), 0);
+	r |= TEST_INT_EQ(close(fd), 0);
 
 	return -r;
 }
@@ -87,12 +87,12 @@ TEST(tty_lflags){
 
 	// TLFL_ECHO
 	ASSERT_INT_EQ(configure(fd, 0, 0, TLFL_ECHO), 0);
-	r += test(fd, "foo", "foo");
-	r += TEST_INT_EQ(configure(fd, 0, 0, 0), 0);
-	r += TEST_INT_EQ(read(fd, buf, 4), 3);
-	r += TEST_STRN_EQ(buf, "foo", 3);
+	r |= test(fd, "foo", "foo");
+	r |= TEST_INT_EQ(configure(fd, 0, 0, 0), 0);
+	r |= TEST_INT_EQ(read(fd, buf, 4), 3);
+	r |= TEST_STRN_EQ(buf, "foo", 3);
 
-	r += TEST_INT_EQ(close(fd), 0);
+	r |= TEST_INT_EQ(close(fd), 0);
 
 	return -r;
 }
@@ -104,9 +104,9 @@ static int test(int fd, char const *in, char const *out){
 	char buf[olen];
 
 
-	r += TEST_INT_EQ(write(fd, (void*)in, ilen), ilen);
-	r += TEST_INT_EQ(read(fd, buf, olen), olen);
-	r += TEST_STRN_EQ(buf, out, olen);
+	r |= TEST_INT_EQ(write(fd, (void*)in, ilen), ilen);
+	r |= TEST_INT_EQ(read(fd, buf, olen), olen);
+	r |= TEST_STRN_EQ(buf, out, olen);
 
 	return -r;
 }

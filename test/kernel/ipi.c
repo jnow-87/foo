@@ -35,7 +35,7 @@ TEST(ipi_send){
 
 	/* send messages to core 1 */
 	for(int8_t i=0; i<N; i++)
-		r += TEST_INT_EQ(ipi_send(1, ipi_hdlr, &i, sizeof(int8_t)), 0);
+		r |= TEST_INT_EQ(ipi_send(1, ipi_hdlr, &i, sizeof(int8_t)), 0);
 
 	/* wait to receive core 1 answers */
 	istate = int_enable(true);
@@ -46,13 +46,13 @@ TEST(ipi_send){
 	int_enable(istate);
 
 	/* check results */
-	r += TEST_INT_EQ(recv_cnt[0], N);
-	r += TEST_INT_EQ(recv_cnt[1], N);
-	r += TEST_INT_EQ(send_status, 0);
+	r |= TEST_INT_EQ(recv_cnt[0], N);
+	r |= TEST_INT_EQ(recv_cnt[1], N);
+	r |= TEST_INT_EQ(send_status, 0);
 
 	for(int8_t i=0; i<N; i++){
-		r += TEST_INT_EQ(recv_data[0][i], -i);
-		r += TEST_INT_EQ(recv_data[1][i], i);
+		r |= TEST_INT_EQ(recv_data[0][i], -i);
+		r |= TEST_INT_EQ(recv_data[1][i], i);
 	}
 
 	return -r;

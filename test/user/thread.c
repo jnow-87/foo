@@ -58,11 +58,11 @@ TEST(thread_create){
 	}
 
 	/* check tids */
-	r += TEST_INT_NEQ(i, RETRIES);
-	r += TEST_INT_EQ(errors, 0);
+	r |= TEST_INT_NEQ(i, RETRIES);
+	r |= TEST_INT_EQ(errors, 0);
 
 	for(i=0; i<NTHREAD; i++){
-		r += TEST_INT_EQ(tids_info[i], tids_ref[i]);
+		r |= TEST_INT_EQ(tids_info[i], tids_ref[i]);
 	}
 
 	return -r;
@@ -74,7 +74,7 @@ static int thread(void *arg){
 	thread_info_t info;
 
 
-	r += TEST_INT_EQ(thread_info(&info), 0);
+	r |= TEST_INT_EQ(thread_info(&info), 0);
 
 	*tid = info.tid;
 

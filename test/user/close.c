@@ -29,26 +29,26 @@ TEST(close){
 	(void)unlink("dummy");
 	ASSERT_PTR_NEQ(fp = fopen("dummy", "w"), 0x0);
 
-	r += TEST_INT_EQ(fcntl(fp->fileno, F_MODE_GET, &f_mode, sizeof(f_mode)), 0);
+	r |= TEST_INT_EQ(fcntl(fp->fileno, F_MODE_GET, &f_mode, sizeof(f_mode)), 0);
 	f_mode |= O_NONBLOCK;
-	r += TEST_INT_EQ(fcntl(fp->fileno, F_MODE_SET, &f_mode, sizeof(f_mode)), 0);
+	r |= TEST_INT_EQ(fcntl(fp->fileno, F_MODE_SET, &f_mode, sizeof(f_mode)), 0);
 
 	/* issue some writes */
-	r += TEST_INT_EQ(write(fp->fileno, "123", 1), 1);
-	r += TEST_INT_EQ(write(fp->fileno, "456", 2), 2);
-	r += TEST_INT_EQ(write(fp->fileno, "789", 3), 3);
-	r += TEST_INT_EQ(write(fp->fileno, "1234", 4), 4);
+	r |= TEST_INT_EQ(write(fp->fileno, "123", 1), 1);
+	r |= TEST_INT_EQ(write(fp->fileno, "456", 2), 2);
+	r |= TEST_INT_EQ(write(fp->fileno, "789", 3), 3);
+	r |= TEST_INT_EQ(write(fp->fileno, "1234", 4), 4);
 
 	/* close */
-	r += TEST_INT_EQ(fclose(fp), 0);
+	r |= TEST_INT_EQ(fclose(fp), 0);
 
 	/* read back */
 	ASSERT_PTR_NEQ(fp = fopen("dummy", "r"), 0x0);
-	r += TEST_INT_EQ(read(fp->fileno, buf, 20), 10);
-	r += TEST_STRN_EQ(buf, "1457891234", 10);
+	r |= TEST_INT_EQ(read(fp->fileno, buf, 20), 10);
+	r |= TEST_STRN_EQ(buf, "1457891234", 10);
 
-	r += TEST_INT_EQ(fclose(fp), 0);
-	r += TEST_INT_EQ(unlink("dummy"), 0);
+	r |= TEST_INT_EQ(fclose(fp), 0);
+	r |= TEST_INT_EQ(unlink("dummy"), 0);
 
 	return -r;
 }

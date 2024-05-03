@@ -27,20 +27,20 @@ TEST(stat){
 	unlink("dummy");
 
 	ASSERT_PTR_NEQ(fp = fopen("dummy", "w"), 0x0);
-	r += TEST_INT_EQ(fwrite("foo", 3, fp), 3);
-	r += TEST_INT_EQ(fclose(fp), 0);
+	r |= TEST_INT_EQ(fwrite("foo", 3, fp), 3);
+	r |= TEST_INT_EQ(fclose(fp), 0);
 
 	/* check stat of test file */
-	r += TEST_INT_EQ(stat("dummy", &s), 0);
-	r += TEST_INT_EQ(s.type, FT_REG);
-	r += TEST_INT_EQ(s.size, 3);
+	r |= TEST_INT_EQ(stat("dummy", &s), 0);
+	r |= TEST_INT_EQ(s.type, FT_REG);
+	r |= TEST_INT_EQ(s.size, 3);
 
 	/* check stat of /dev/tty0 */
-	r += TEST_INT_EQ(stat("/dev/tty0", &s), 0);
-	r += TEST_INT_EQ(s.type, FT_CHR);
+	r |= TEST_INT_EQ(stat("/dev/tty0", &s), 0);
+	r |= TEST_INT_EQ(s.type, FT_CHR);
 
 	/* cleanup */
-	r += TEST_INT_EQ(unlink("dummy"), 0);
+	r |= TEST_INT_EQ(unlink("dummy"), 0);
 
 	return -r;
 }

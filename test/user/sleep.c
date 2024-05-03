@@ -27,11 +27,11 @@ TEST(sleep){
 			 t1;
 
 
-	r += TEST_INT_NEQ(t0 = time_ms(), 0);
-	r += TEST_INT_EQ(sleep(PERIOD_MS, 0), 0);
-	r += TEST_INT_NEQ(t1 = time_ms(), 0);
+	r |= TEST_INT_NEQ(t0 = time_ms(), 0);
+	r |= TEST_INT_EQ(sleep(PERIOD_MS, 0), 0);
+	r |= TEST_INT_NEQ(t1 = time_ms(), 0);
 
-	r += TEST_INT_EQ((t1 >= t0 + PERIOD_MS), true);
+	r |= TEST_INT_EQ((t1 >= t0 + PERIOD_MS), true);
 
 	return -r;
 }

@@ -17,12 +17,12 @@ TEST(iskheap){
 	void *p;
 
 
-	r += TEST_INT_EQ(iskheap(0x0), false);
-	r += TEST_INT_EQ(iskheap(&r), false);
+	r |= TEST_INT_EQ(iskheap(0x0), false);
+	r |= TEST_INT_EQ(iskheap(&r), false);
 
 	p = kmalloc(2);
-	r += TEST_PTR_NEQ(p, 0x0);
-	r += TEST_INT_EQ(iskheap(p), true);
+	r |= TEST_PTR_NEQ(p, 0x0);
+	r |= TEST_INT_EQ(iskheap(p), true);
 	kfree(p);
 
 	return -r;

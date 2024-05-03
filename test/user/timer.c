@@ -41,8 +41,8 @@ TEST(timer){
 
 	sig_recv = 0;
 
-	r += TEST_INT_EQ(signal(SIG, sig_hdlr), 0);
-	r += TEST_INT_EQ(timer_register(SIG, TIMER_PERIOD_MS * 1000), 0);
+	r |= TEST_INT_EQ(signal(SIG, sig_hdlr), 0);
+	r |= TEST_INT_EQ(timer_register(SIG, TIMER_PERIOD_MS * 1000), 0);
 
 	// wait for timer trigger all signals
 	sleep(TIMER_PERIOD_MS * NSIG * 2, 0);
@@ -64,7 +64,7 @@ TEST(timer){
 	}
 
 	TEST_LOG("sig_recv: %u\n", sig_recv);
-	r += TEST_INT_EQ(sig_recv >= NSIG, true);
+	r |= TEST_INT_EQ(sig_recv >= NSIG, true);
 
 	return -r;
 }
