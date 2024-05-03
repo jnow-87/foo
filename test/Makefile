@@ -105,7 +105,7 @@ endef
 
 
 # test targets
-test-$(if $(CONFIG_X86),n,y) := $(loc_build_tree)/utest
+test-y := $(loc_build_tree)/utest
 
 ifeq ($(CONFIG_X86),y)
   $(call x86emu,unit,$(loc_build_tree)/uttest.elf)
