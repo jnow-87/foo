@@ -94,8 +94,7 @@ static void kinit(void){
 		return;
 
 	/* driver init */
-	if(driver_load() != 0)
-		kpanic("driver init error: %s\n", strerror(errno));
+	driver_load();
 
 	/* multi-core boot */
 	cores_boot();
