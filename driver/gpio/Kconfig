@@ -24,6 +24,10 @@ if DRIVER_GPIO
 		bool "port device support"
 		default y
 
+	config GPIO_INTFWD
+		bool "interrupt forwarding support"
+		default n
+
 	config GPIO_DEBUG
 		bool "enable debug messages"
 		select KERNEL_LOG_DEBUG

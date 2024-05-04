@@ -47,6 +47,23 @@ porta = {
 			0			// interrupt
 		);
 	};
+
+#if defined(CONFIG_DRIVER_MCP23017) && defined(CONFIG_GPIO_INTFWD)
+	mcp-int = {
+		compatible = "gpio,intfwd";
+
+		/* intfwd config (dt_data_t) */
+		gpio_cfg_t(
+			0x01,			// in mask
+			0x00,			// out mask
+			0x01,			// int mask
+			0x00,			// invert mask
+			4				// interrupt (pcint0)
+		);
+
+		int<8> = [ 37 ];	// interrupt to trigger
+	};
+#endif // CONFIG_DRIVER_MCP23017 && CONFIG_GPIO_INTFWD
 };
 
 portb = {

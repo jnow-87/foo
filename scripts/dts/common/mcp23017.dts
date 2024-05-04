@@ -48,9 +48,9 @@ mcp-portb = {
 		gpio_cfg_t(
 			0xff,	// in mask
 			0x00,	// out mask
-			0x00,	// int mask
+			0xff,	// int mask
 			0xff,	// invert mask
-			0		// interrupt
+			37		// interrupt
 		);
 	};
 };

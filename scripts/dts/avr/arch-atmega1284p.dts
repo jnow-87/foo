@@ -28,6 +28,10 @@ num-vints = 0
 #ifdef CONFIG_BRIDGE_UART_DEV
 	+ 2
 #endif // CONFIG_BRIDGE_UART_DEV
+
+#ifdef CONFIG_GPIO_INTFWD
+	+ 1
+#endif // CONFIG_GPIO_INTFWD
 ;
 
 timer-int = 8;
