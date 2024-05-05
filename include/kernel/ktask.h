@@ -13,6 +13,7 @@
 
 #include <config/config.h>
 #include <kernel/ktaskqueue.h>
+#include <sys/compiler.h>
 #include <sys/types.h>
 
 
@@ -35,7 +36,7 @@ typedef struct ktask_t{
 	ktask_flag_t flags;
 
 	ktask_hdlr_t hdlr;
-	uint8_t payload[];
+	uint8_t payload[] __align(CONFIG_KMALLOC_ALIGN);
 } ktask_t;
 
 

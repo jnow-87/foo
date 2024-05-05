@@ -11,6 +11,8 @@
 #define KERNEL_IPI_H
 
 
+#include <config/config.h>
+#include <sys/compiler.h>
 #include <sys/types.h>
 
 
@@ -19,7 +21,7 @@ typedef void (*ipi_hdlr_t)(void *payload);
 
 typedef struct ipi_msg_t{
 	ipi_hdlr_t hdlr;
-	uint8_t buf[];
+	uint8_t buf[] __align(CONFIG_KMALLOC_ALIGN);
 } ipi_msg_t;
 
 

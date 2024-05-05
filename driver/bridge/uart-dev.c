@@ -26,39 +26,26 @@ static errno_t error(void *brdg);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	bridge_cfg_t *dtd = (bridge_cfg_t*)dt_data;
-	bridge_t *brdg;
+	bridge_t *dti = (bridge_t*)dt_itf;
 	term_itf_t *itf;
 
-
-	brdg = bridge_create(0x0, dtd, 0x0);
-
-	if(brdg == 0x0)
-		goto err_0;
 
 	itf = kcalloc(1, sizeof(term_itf_t));
 
 	if(itf == 0x0)
-		goto err_1;
+		return 0x0;
 
 	itf->puts = puts;
 	itf->gets = gets;
 	itf->error = error;
 
-	itf->hw = brdg;
+	itf->hw = dti;
 	itf->cfg = 0x0;
 	itf->cfg_size = 0;
-	itf->rx_int = dtd->rx_int;
-	itf->tx_int = dtd->tx_int;
+	itf->rx_int = dti->cfg->rx_int;
+	itf->tx_int = dti->cfg->tx_int;
 
 	return itf;
-
-
-err_1:
-	bridge_destroy(brdg);
-
-err_0:
-	return 0x0;
 }
 
 driver_probe("bridge,uart-dev", probe);

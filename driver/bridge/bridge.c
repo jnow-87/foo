@@ -7,9 +7,10 @@
 
 
 
+#include <kernel/driver.h>
 #include <kernel/interrupt.h>
-#include <kernel/memory.h>
 #include <kernel/kprintf.h>
+#include <kernel/memory.h>
 #include <driver/bridge.h>
 #include <sys/types.h>
 #include <sys/math.h>
@@ -127,6 +128,12 @@ int16_t bridge_write(bridge_t *brdg, void *buf, uint8_t n){
 
 
 /* local functions */
+static void *probe(char const *name, void *dt_data, void *dt_itf){
+	return bridge_create(0x0, dt_data, 0x0);
+}
+
+driver_probe("bridge,itf", probe);
+
 static int16_t rw(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t type){
 	bridge_t *peer = brdg->peer;
 

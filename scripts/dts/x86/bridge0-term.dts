@@ -8,7 +8,7 @@
 
 
 brdg0-right-uart = {
-	compatible = "bridge,uart-dev";
+	compatible = "bridge,itf";
 
 	/* bridge config (bridge_cfg_t) */
 	int<8> = [
@@ -18,20 +18,24 @@ brdg0-right-uart = {
 		7,				// tx interrupt (virtual)
 	];
 
-	tty-bridge0 = {
-		compatible = "terminal";
+	brdg0-itf-uart = {
+		compatible = "bridge,uart-dev";
 
-		/* terminal config (term_cfg_t) */
-		int<8> = [
-			0x0,		// iflags (none)
-			0x0,		// oflags (none)
-			0x0,		// lflags (none)
-			0,			// tabs
-		];
+		tty-bridge0 = {
+			compatible = "terminal";
 
-		int<16> = [
-			0,			// lines (set by the driver)
-			0,			// columns (set by the driver)
-		];
+			/* terminal config (term_cfg_t) */
+			int<8> = [
+				0x0,		// iflags (none)
+				0x0,		// oflags (none)
+				0x0,		// lflags (none)
+				0,			// tabs
+			];
+
+			int<16> = [
+				0,			// lines (set by the driver)
+				0,			// columns (set by the driver)
+			];
+		};
 	};
 };
