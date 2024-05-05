@@ -17,19 +17,21 @@
 #include <kernel/fs.h>
 #include <kernel/kprintf.h>
 #include <driver/gpio.h>
-#include <sys/types.h>
-#include <sys/signal.h>
-#include <sys/mutex.h>
 #include <sys/errno.h>
-#include <sys/list.h>
-#include <sys/ioctl.h>
 #include <sys/gpio.h>
-#include <sys/string.h>
+#include <sys/ioctl.h>
+#include <sys/list.h>
+#include <sys/mutex.h>
+#include <sys/signal.h>
 #include <sys/stream.h>
+#include <sys/string.h>
+#include <sys/types.h>
+#include <sys/vector.h>
 
 
 /* local/static prototypes */
 static void int_hdlr(int_num_t num, void *payload);
+static void bcast_int_hdlr(int_num_t num, void *payload);
 
 
 /* global functions */
@@ -60,18 +62,65 @@ void gpio_destroy(gpio_t *gpio){
 	kfree(gpio);
 }
 
+gpio_itf_t *gpio_itf_create(gpio_ops_t *ops, int_num_t int_num, void *dt_data, void *payload, size_t size){
+	gpio_itf_t *itf;
+
+
+	itf = kcalloc(1, sizeof(gpio_itf_t) + size);
+
+	if(itf == 0x0)
+		goto err_0;
+
+	itf->ops = *ops;
+	itf->base_int = int_num;
+	itf->dt_data = dt_data;
+
+	memcpy(itf->payload, payload, size);
+
+	if(int_num != 0){
+		if(vector_init(&itf->bcast_ints, sizeof(int_num_t), 4) != 0)
+			goto err_1;
+
+		if(int_register(int_num, bcast_int_hdlr, itf) != 0)
+			goto err_1;
+	}
+
+	return itf;
+
+
+err_1:
+	gpio_itf_destroy(itf);
+
+err_0:
+	return 0x0;
+}
+
+void gpio_itf_destroy(gpio_itf_t *itf){
+	if(itf->base_int){
+		int_release(itf->base_int);
+		vector_destroy(&itf->bcast_ints);
+	}
+
+	kfree(itf);
+}
+
 int gpio_configure(gpio_t *gpio){
 	gpio_itf_t *itf = gpio->itf;
 	gpio_cfg_t *cfg = gpio->cfg;
 
 
-	if(itf->configure(cfg, itf->hw) != 0)
+	if(itf->ops.configure(cfg, itf->dt_data, itf->payload) != 0)
 		return -errno;
 
-	gpio->int_state = gpio_read(gpio);
+	if(cfg->int_num != 0){
+		gpio->int_state = gpio_read(gpio);
 
-	if(cfg->int_num && int_register(cfg->int_num, int_hdlr, gpio) != 0)
-		return -errno;
+		if(int_register(cfg->int_num, int_hdlr, gpio) != 0)
+			return -errno;
+
+		if(vector_add(&itf->bcast_ints, &cfg->int_num) != 0)
+			return -errno;
+	}
 
 	return 0;
 }
@@ -79,11 +128,13 @@ int gpio_configure(gpio_t *gpio){
 intgpio_t gpio_read(gpio_t *gpio){
 	gpio_itf_t *itf = gpio->itf;
 	gpio_cfg_t *cfg = gpio->cfg;
+	intgpio_t v;
 
 
-	DEBUG("read raw=%#x, masked=%#x\n", itf->read(itf->hw), (itf->read(itf->hw) ^ cfg->invert_mask) & cfg->in_mask);
+	v = itf->ops.read(itf->dt_data, itf->payload);
+	DEBUG("read raw=%#x, masked=%#x\n", v, (v ^ cfg->invert_mask) & cfg->in_mask);
 
-	return ((itf->read(itf->hw) ^ cfg->invert_mask) & cfg->in_mask);
+	return (v ^ cfg->invert_mask) & cfg->in_mask;
 }
 
 int gpio_write(gpio_t *gpio, intgpio_t v){
@@ -91,10 +142,10 @@ int gpio_write(gpio_t *gpio, intgpio_t v){
 	gpio_cfg_t *cfg = gpio->cfg;
 
 
-	v = (itf->read(itf->hw) & ~cfg->out_mask) | ((v ^ cfg->invert_mask) & cfg->out_mask);
+	v = (itf->ops.read(itf->dt_data, itf->payload) & ~cfg->out_mask) | ((v ^ cfg->invert_mask) & cfg->out_mask);
 	DEBUG("write %#x\n", v);
 
-	return itf->write(v, itf->hw);
+	return itf->ops.write(v, itf->dt_data, itf->payload);
 }
 
 int gpio_int_register(gpio_t *gpio, fs_filed_t *fd, gpio_int_cfg_t *cfg){
@@ -181,7 +232,7 @@ static void int_hdlr(int_num_t num, void *payload){
 			  changed;
 
 
-	v = ((itf->read(itf->hw) ^ cfg->invert_mask) & cfg->int_mask);
+	v = ((itf->ops.read(itf->dt_data, itf->payload) ^ cfg->invert_mask) & cfg->int_mask);
 	changed = v ^ gpio->int_state;
 	gpio->int_state = v;
 
@@ -195,4 +246,16 @@ static void int_hdlr(int_num_t num, void *payload){
 	}
 
 	mutex_unlock(&gpio->mtx);
+}
+
+static void bcast_int_hdlr(int_num_t num, void *payload){
+	gpio_itf_t *itf = (gpio_itf_t*)payload;
+	int_num_t *bcast;
+
+
+	(void)itf->ops.read(itf->dt_data, itf->payload); // clear interrupt
+
+	vector_for_each(&itf->bcast_ints, bcast){
+		int_foretell(*bcast);
+	}
 }

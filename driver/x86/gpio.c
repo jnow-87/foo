@@ -18,49 +18,43 @@
 typedef struct{
 	char const *name;
 	intgpio_t value;
-
-	gpio_itf_t itf;
 } dev_data_t;
 
 
 /* local/static prototypes */
-static int configure(gpio_cfg_t *cfg, void *hw);
-static intgpio_t read(void *hw);
-static int write(intgpio_t v, void *hw);
+static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload);
+static intgpio_t read(void *dt_data, void *payload);
+static int write(intgpio_t v, void *dt_data, void *payload);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dev_data_t *gpio;
+	gpio_ops_t ops;
+	dev_data_t gpio;
 
 
-	gpio = kmalloc(sizeof(dev_data_t));
+	ops.configure = configure;
+	ops.read = read;
+	ops.write = write;
 
-	if(gpio == 0x0)
-		return 0x0;
+	gpio.name = name;
+	gpio.value = 0x0;
 
-	gpio->name = name;
-	gpio->value = 0x0;
-	gpio->itf.configure = configure;
-	gpio->itf.read = read;
-	gpio->itf.write = write;
-	gpio->itf.hw = gpio;
-
-	return &gpio->itf;
+	return gpio_itf_create(&ops, 0, dt_data, &gpio, sizeof(dev_data_t));
 }
 
 driver_probe("x86,gpio", probe);
 
-static int configure(gpio_cfg_t *cfg, void *hw){
+static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
 	return 0;
 }
 
-static intgpio_t read(void *hw){
-	return ((dev_data_t*)hw)->value;
+static intgpio_t read(void *dt_data, void *payload){
+	return ((dev_data_t*)payload)->value;
 }
 
-static int write(intgpio_t v, void *hw){
-	((dev_data_t*)hw)->value = v;
+static int write(intgpio_t v, void *dt_data, void *payload){
+	((dev_data_t*)payload)->value = v;
 
 	return 0;
 }

@@ -11,12 +11,15 @@
 #define DRIVER_GPIO_H
 
 
+#include <config/config.h>
 #include <kernel/thread.h>
 #include <kernel/fs.h>
-#include <sys/types.h>
+#include <sys/compiler.h>
+#include <sys/gpio.h>
 #include <sys/mutex.h>
 #include <sys/signal.h>
-#include <sys/gpio.h>
+#include <sys/types.h>
+#include <sys/vector.h>
 
 
 /* types */
@@ -35,11 +38,18 @@ typedef struct{
 } gpio_cfg_t;
 
 typedef struct{
-	int (*configure)(gpio_cfg_t *cfg, void *hw);
-	intgpio_t (*read)(void *hw);
-	int (*write)(intgpio_t v, void *hw);
+	int (*configure)(gpio_cfg_t *cfg, void *dt_data, void *payload);
+	intgpio_t (*read)(void *dt_data, void *payload);
+	int (*write)(intgpio_t v, void *dt_data, void *payload);
+} gpio_ops_t;
 
-	void *hw;
+typedef struct{
+	gpio_ops_t ops;
+	int_num_t base_int;
+	vector_t bcast_ints;
+
+	void *dt_data;
+	uint8_t payload[] __align(CONFIG_KMALLOC_ALIGN);
 } gpio_itf_t;
 
 typedef struct gpio_siglst_t{
@@ -67,6 +77,9 @@ typedef struct{
 /* prototypes */
 gpio_t *gpio_create(gpio_itf_t *itf, gpio_cfg_t *cfg);
 void gpio_destroy(gpio_t *gpio);
+
+gpio_itf_t *gpio_itf_create(gpio_ops_t *ops, int_num_t int_num, void *dt_data, void *payload, size_t size);
+void gpio_itf_destroy(gpio_itf_t *itf);
 
 int gpio_configure(gpio_t *gpio);
 intgpio_t gpio_read(gpio_t *gpio);

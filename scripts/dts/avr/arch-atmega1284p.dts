@@ -29,9 +29,13 @@ num-vints = 0
 	+ 2
 #endif // CONFIG_BRIDGE_UART_DEV
 
-#ifdef CONFIG_GPIO_INTFWD
-	+ 1
-#endif // CONFIG_GPIO_INTFWD
+#if defined(CONFIG_DRIVER_MCP23017) && defined(CONFIG_GPIO_INTFWD)
+	+ 3
+#endif // CONFIG_DRIVER_MCP23017 && CONFIG_GPIO_INTFWD
+
+#ifdef CONFIG_DRIVER_GPIO
+	+ 2
+#endif // CONFIG_DRIVER_GPIO
 ;
 
 timer-int = 8;

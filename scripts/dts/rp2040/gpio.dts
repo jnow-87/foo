@@ -26,6 +26,8 @@ gpios = {
 		0x02008000,		// drive_12ma,
 	];
 
+	int<8> = [ 29 ];	// interrupt (io_irq_bank0)
+
 	gpio = {
 		compatible = "gpio,port";
 
@@ -34,7 +36,7 @@ gpios = {
 			0x000000c0,	// out mask
 			0x00000030,	// int mask
 			0x000000c0,	// invert mask
-			29			// interrupt (io_irq_bank0)
+			44			// interrupt (virtual)
 		);
 	};
 

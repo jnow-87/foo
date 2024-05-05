@@ -11,6 +11,7 @@
 #include <kernel/interrupt.h>
 #include <driver/gpio.h>
 #include <sys/errno.h>
+#include <sys/vector.h>
 
 
 /* types */
@@ -35,7 +36,10 @@ void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(dtd->int_num == 0)
 		goto_errno(end, E_INVAL);
 
-	if(dti->configure(&dtd->port, dti->hw) != 0)
+	if(dti->ops.configure(&dtd->port, dti->dt_data, dti->payload) != 0)
+		goto end;
+
+	if(vector_add(&dti->bcast_ints, &dtd->port.int_num) != 0)
 		goto end;
 
 	dtd->gpio = dti;
@@ -52,6 +56,6 @@ static void int_hdlr(int_num_t num, void *payload){
 	gpio_itf_t *itf = dtd->gpio;
 
 
-	if((itf->read(itf->hw) ^ dtd->port.invert_mask) & dtd->port.int_mask)
+	if((itf->ops.read(itf->dt_data, itf->payload) ^ dtd->port.invert_mask) & dtd->port.int_mask)
 		int_foretell(dtd->int_num);
 }

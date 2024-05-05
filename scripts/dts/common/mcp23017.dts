@@ -16,8 +16,9 @@ mcp-porta = {
 
 	/* mcp23017 port config (dt_data_t) */
 	int<8> = [
-		0,	// port (a)
-		33,	// slave address
+		0,			// port (a)
+		33,			// slave address
+		0,			// interrupt
 	];
 
 	gpio-mcp0a = {
@@ -38,8 +39,9 @@ mcp-portb = {
 
 	/* mcp23017 port config (dt_data_t) */
 	int<8> = [
-		1,	// port (b)
-		33,	// slave address
+		1,			// port (b)
+		33,			// slave address
+		39,			// interrupt (virtual)
 	];
 
 	gpio-mcp0b = {
@@ -50,7 +52,7 @@ mcp-portb = {
 			0x00,	// out mask
 			0xff,	// int mask
 			0xff,	// invert mask
-			37		// interrupt
+			41		// interrupt (virtual)
 		);
 	};
 };

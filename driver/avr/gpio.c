@@ -32,37 +32,39 @@ typedef struct{
 					 *pcmsk;
 
 	uint8_t pullup_mask;
+	uint8_t int_num;	/**< cf. int_num_t */
 } dt_data_t;
 
 
 /* local/static prototypes */
-static int configure(gpio_cfg_t *cfg, void *hw);
-static intgpio_t read(void *hw);
-static int write(intgpio_t v, void *hw);
+static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload);
+static intgpio_t read(void *dt_data, void *payload);
+static int write(intgpio_t v, void *dt_data, void *payload);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	gpio_itf_t *itf;
+	gpio_ops_t ops;
 
 
-	itf = kmalloc(sizeof(gpio_itf_t));
+	ops.configure = configure;
+	ops.read = read;
+	ops.write = write;
 
-	if(itf == 0x0)
-		return 0x0;
+	itf = gpio_itf_create(&ops, dtd->int_num, dtd, 0x0, 0);
 
-	itf->configure = configure;
-	itf->read = read;
-	itf->write = write;
-	itf->hw = dt_data;
+	if(itf != 0x0 && dtd->int_num)
+		*dtd->pcicr = bits_set(*dtd->pcicr, 0x1 << (dtd->int_num - INT_PCINT0));
 
 	return itf;
 }
 
 driver_probe("avr,gpio", probe);
 
-static int configure(gpio_cfg_t *cfg, void *hw){
-	dt_data_t *dtd = (dt_data_t*)hw;
+static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	gpio_regs_t *regs = dtd->regs;
 
 
@@ -73,18 +75,15 @@ static int configure(gpio_cfg_t *cfg, void *hw){
 	// configure interrupts
 	*dtd->pcmsk = bits_set(*dtd->pcmsk, cfg->int_mask);
 
-	if(cfg->int_num)
-		*dtd->pcicr = bits_set(*dtd->pcicr, 0x1 << (cfg->int_num - INT_PCINT0));
-
 	return 0;
 }
 
-static intgpio_t read(void *hw){
-	return ((dt_data_t*)hw)->regs->pin;
+static intgpio_t read(void *dt_data, void *payload){
+	return ((dt_data_t*)dt_data)->regs->pin;
 }
 
-static int write(intgpio_t v, void *hw){
-	((dt_data_t*)hw)->regs->port = v;
+static int write(intgpio_t v, void *dt_data, void *payload){
+	((dt_data_t*)dt_data)->regs->port = v;
 
 	return 0;
 }
