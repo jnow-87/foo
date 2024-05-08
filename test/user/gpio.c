@@ -7,6 +7,7 @@
 
 
 
+#include <signal.h>
 #include <unistd.h>
 #include <sys/devtree.h>
 #include <sys/errno.h>
@@ -20,8 +21,14 @@
 
 
 /* macros */
+#define INT_MAGIC	0xfade
+
 #define DEV_PORT	"gpio-port"
 #define DEV_PIN		"gpio-pin"
+#define DEV_INT		"gpio-int"
+
+#define SIGNAL		SIG_USR1
+#define SIGNAL_MAX	3
 
 
 /* types */
@@ -41,6 +48,12 @@ static int setup(char const *dev_name, int *fd, gpio_cfg_t **cfg);
 static int test_read(int fd, intgpio_t expect, size_t size, gpio_cfg_t *cfg);
 static int test_write(int fd, intgpio_t v, intgpio_t expect, size_t size, gpio_cfg_t *cfg);
 static int test_ioctl(int fd, ioctl_cmd_t cmd, void *cfg, size_t size, errno_t errnum);
+
+static void sig_hdlr(signal_t sig);
+
+
+/* static variables */
+static int caught_sigs = 0;
 
 
 /* local functions */
@@ -201,6 +214,41 @@ TEST(gpio_pin_ioctl){
 	return -r;
 }
 
+TEST(gpio_interrupt){
+	int r = 0;
+	int fd;
+	gpio_cfg_t *dt_cfg;
+
+
+	/* init */
+	caught_sigs = 0;
+	ASSERT_INT_NEQ(setup(DEV_INT, &fd, &dt_cfg), -1);
+
+	// register signal
+	ASSERT_INT_EQ(signal(SIGNAL, sig_hdlr), 0);
+	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_int_cfg_t){ .op = GPIO_INT_REGISTER, .mask = dt_cfg->int_mask, .signum = SIGNAL }, sizeof(gpio_int_cfg_t), 0);
+
+	// enable test interrupt
+	r |= TEST_INT_EQ(write(fd, &((intgpio_t){ INT_MAGIC }), sizeof(intgpio_t)), sizeof(intgpio_t));
+
+	/* wait for signals */
+	for(size_t i=0; i<100 && caught_sigs<SIGNAL_MAX; i++){
+		r |= TEST_INT_EQ(sleep(10, 0), 0);
+	}
+
+	r |= TEST_INT_EQ(caught_sigs, SIGNAL_MAX);
+
+	/* cleanup */
+	// disable test interrupt
+	r |= TEST_INT_EQ(write(fd, &((intgpio_t){ INT_MAGIC }), sizeof(intgpio_t)), sizeof(intgpio_t));
+
+	r |= TEST_INT_EQ(signal(SIGNAL, 0x0), 0);
+	r |= TEST_INT_EQ(close(fd), 0);
+
+
+	return -r;
+}
+
 static int setup(char const *dev_name, int *fd, gpio_cfg_t **cfg){
 	char name[strlen(dev_name) + 6];
 	devtree_device_t const *dt_node;
@@ -256,4 +304,9 @@ static int test_ioctl(int fd, ioctl_cmd_t cmd, void *cfg, size_t size, errno_t e
 	reset_errno();
 
 	return -r;
+}
+
+static void sig_hdlr(signal_t sig){
+	if(caught_sigs < SIGNAL_MAX)
+		caught_sigs++;
 }

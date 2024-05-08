@@ -14,6 +14,10 @@
 port0 = {
 	compatible = "x86,gpio";
 
+	/* gpio hardware (dt_data_t) */
+	int<8> = [ 0 ];		// interrupt 
+	int<16> = [ 0 ];	// interrupt timer period [ms]
+
 	gpio0 = {
 		compatible = "gpio,port";
 
