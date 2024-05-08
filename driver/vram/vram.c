@@ -48,7 +48,7 @@ vram_t *vram_create(vram_itf_t *itf, vram_cfg_t *cfg){
 	vram->itf = *itf;
 	vram->cfg = *cfg;
 
-	ktimer_register(&vram->timer, (uint32_t)cfg->refresh_ms * 1000, refresh_hdlr, vram, true);
+	ktimer_start(&vram->timer, (uint32_t)cfg->refresh_ms * 1000, refresh_hdlr, vram, true);
 
 	return vram;
 

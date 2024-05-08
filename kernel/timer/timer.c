@@ -39,7 +39,7 @@ static time_t time = { 0 };
 
 
 /* global functions */
-void ktimer_register(ktimer_t *timer, uint32_t cycle_time_us, ktimer_hdlr_t hdlr, void *payload, bool periodic){
+void ktimer_start(ktimer_t *timer, uint32_t cycle_time_us, ktimer_hdlr_t hdlr, void *payload, bool periodic){
 	timer->hdlr = hdlr;
 	timer->payload = payload;
 	timer->ticks = to_ticks(cycle_time_us);
@@ -50,9 +50,11 @@ void ktimer_register(ktimer_t *timer, uint32_t cycle_time_us, ktimer_hdlr_t hdlr
 	mutex_unlock(&timer_mtx);
 }
 
-void ktimer_release(ktimer_t *timer){
+void ktimer_abort(ktimer_t *timer){
 	mutex_lock(&timer_mtx);
 
+	// do not remove expired timers, they have already
+	// been removed by timer_hdlr()
 	if(timer->ticks != 0)
 		list_rm(timer_lst, timer);
 

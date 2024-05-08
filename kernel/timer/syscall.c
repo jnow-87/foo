@@ -133,7 +133,7 @@ static int timer_create(signal_t sig, uint32_t period_us){
 	timer->thread = this_t;
 	timer->sig = sig;
 
-	ktimer_register(&timer->timer, period_us, timer_hdlr, timer, true);
+	ktimer_start(&timer->timer, period_us, timer_hdlr, timer, true);
 
 	if(thread_dtor_register(this_t, timer_thread_dtor, timer) != 0)
 		goto err_1;
@@ -152,6 +152,6 @@ err_0:
 
 static void timer_destroy(timer_t *timer){
 	thread_dtor_release(timer->thread, timer_thread_dtor, timer);
-	ktimer_release(&timer->timer);
+	ktimer_abort(&timer->timer);
 	kfree(timer);
 }
