@@ -78,6 +78,9 @@ TEST(sigthread){
 	for(i=0; i<NSIG; i++)
 		r |= TEST_INT_EQ(sig_order[i], (SIGNAL + i) * 2);
 
+	for(i=0; i<NSIG; i++)
+		r |= TEST_INT_EQ(signal(SIGNAL + i, 0x0), 0);
+
 	return -r;
 }
 

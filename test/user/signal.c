@@ -45,6 +45,7 @@ TEST(sigself){
 		r |= TEST_INT_EQ(signal_send(SIGNAL, pinfo.pid, tinfo.tid), 0);
 
 	r |= TEST_INT_EQ(sig_recv, NSIG);
+	r |= TEST_INT_EQ(signal(SIGNAL, 0x0), 0);
 
 	return -r;
 }

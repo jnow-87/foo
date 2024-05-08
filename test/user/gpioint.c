@@ -93,6 +93,8 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg) != 0)
 		printf(FG("error ", RED) "releasing signal \"%s\"\n", strerror(errno));
 
+	signal(SIGNAL, 0x0);
+
 	// close device
 	close(dev_fd);
 
