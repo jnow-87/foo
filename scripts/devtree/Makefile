@@ -11,7 +11,15 @@ obj-y := devicetree.o
 hostobj-y := devicetree.o
 hostbin-y := dtc
 
-dtc-y := main.o options.o export.o nodes.o asserts.o lexer.lex.o parser.tab.o
+dtc-y := \
+	main.o \
+	options.o \
+	export.o \
+	nodes.o \
+	attr.o \
+	asserts.o \
+	lexer.lex.o \
+	parser.tab.o
 
 # ensure a rebuild if indirect dependencies are updated
 dtc-y += $(build_tree)/sys/libhost.a

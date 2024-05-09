@@ -13,7 +13,7 @@
 
 
 /* global functions */
-assert_t *assert_alloc(char const *expr, char const *msg){
+assert_t *assert_create(char const *expr, char const *msg){
 	assert_t *assert;
 
 

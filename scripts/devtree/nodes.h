@@ -11,21 +11,10 @@
 #define DEVTREE_NODE_H
 
 
-#include <sys/compiler.h>
 #include <sys/types.h>
 #include <sys/vector.h>
-#include <stdio.h>
 #include <asserts.h>
-
-
-/* macros */
-#define BASE_NODE_COMPATIBLE(node_type) \
-	STATIC_ASSERT(offsetof(node_type, prev) == offsetof(base_node_t, prev)); \
-	STATIC_ASSERT(offsetof(node_type, next) == offsetof(base_node_t, next)); \
-	STATIC_ASSERT(offsetof(node_type, parent) == offsetof(base_node_t, parent)); \
-	STATIC_ASSERT(offsetof(node_type, childs) == offsetof(base_node_t, childs)); \
-	STATIC_ASSERT(offsetof(node_type, type) == offsetof(base_node_t, type)); \
-	STATIC_ASSERT(offsetof(node_type, name) == offsetof(base_node_t, name));
+#include <attr.h>
 
 
 /* types */
@@ -35,110 +24,39 @@ typedef enum{
 	NT_ARCH,
 } node_type_t;
 
-typedef enum{
-	MT_BASE_ADDR = 1,
-	MT_REG_LIST,
-	MT_INT_LIST,
-	MT_STRING,
-} member_type_t;
-
-typedef struct{
-	size_t size;
-	vector_t *lst;
-} member_int_t;
-
-typedef struct{
-	member_type_t type;
-	void *payload;
-} member_t;
-
-typedef struct base_node_t{
-	struct base_node_t *prev,
-					   *next,
-					   *parent,
-					   *childs;
+typedef struct node_t{
+	struct node_t *prev,
+				  *next,
+				  *parent,
+				  *childs;
 
 	node_type_t type;
 	char const *name;
 	assert_t *asserts;
-} base_node_t;
+	vector_t attrs;
+} node_t;
 
-typedef struct device_node_t{
-	struct device_node_t *prev,
-						 *next,
-						 *parent,
-						 *childs;
-
-	node_type_t type;
-	char const *name;
-	assert_t *asserts;
-
-	char const *compatible;
-
-	vector_t payload;			/**< vector of member_t elements */
-} device_node_t;
-
-BASE_NODE_COMPATIBLE(device_node_t)
-
-typedef struct memory_node_t{
-	struct memory_node_t *prev,
-						 *next,
-						 *parent,
-						 *childs;
-
-	node_type_t type;
-	char const *name;
-	assert_t *asserts;
-
-	void *base;
-	size_t size;
-} memory_node_t;
-
-BASE_NODE_COMPATIBLE(memory_node_t)
-
-typedef struct arch_node_t{
-	struct arch_node_t *prev,
-					   *next,
-					   *parent;
-	device_node_t *childs;
-
-	node_type_t type;
-	char const *name;
-	assert_t *asserts;
-
-	uint8_t addr_width,
-			reg_width;
-	uint8_t core_mask;
-	uint8_t ncores;
-
-	int8_t num_ints,
-		   num_vints;
-
-	uint8_t timer_int,
-			syscall_int,
-			ipi_int;
-
-	size_t timer_cycle_time_us;
-} arch_node_t;
-
-BASE_NODE_COMPATIBLE(arch_node_t)
 
 /* prototypes */
 int nodes_init(void);
+void *node_create(node_type_t type);
 
-device_node_t *device_root(void);
-device_node_t *device_node_alloc(void);
-int device_node_add_member(device_node_t *node, member_type_t type, void *payload);
+int node_child_add(node_t *parent, node_t *child);
+void node_assert_add(node_t *node, assert_t *a);
 
-memory_node_t *memory_root(void);
-memory_node_t *memory_node_alloc(void);
-void memory_node_complement(memory_node_t *node);
+int node_attr_add(node_t *node, attr_type_t type, attr_value_t value);
+int node_attr_set(node_t *node, attr_type_t type, size_t idx, attr_value_t value);
+attr_value_t *node_attr_get(node_t *node, attr_type_t type, size_t idx);
 
-arch_node_t *arch_root(void);
+node_t *device_root(void);
+node_t *memory_root(void);
+node_t *arch_root(void);
+
+int device_validate(node_t *node);
+int memory_validate(node_t *node);
 int arch_validate(void);
 
-int node_add_child(base_node_t *parent, base_node_t *child);
-void *node_intlist_alloc(size_t size, void *payload);
+void memory_node_complement(node_t *node);
 
 
 #endif // DEVTREE_NODE_H

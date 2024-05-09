@@ -55,7 +55,7 @@
 
 	/* node attributes */
 "compatible"					{ return NA_COMPATIBLE; }
-"baseaddr"						{ return NA_BASEADDR; }
+"baseaddr"						{ return NA_BASE_ADDR; }
 "reg"							{ return NA_REG; }
 "addr-width"					{ return NA_ADDR_WIDTH; }
 "reg-width"						{ return NA_REG_WIDTH; }

@@ -22,7 +22,7 @@ typedef struct assert_t{
 
 
 /* prototypes */
-assert_t *assert_alloc(char const *expr, char const *msg);
+assert_t *assert_create(char const *expr, char const *msg);
 
 
 #endif // DEVTREE_ASSERT_H

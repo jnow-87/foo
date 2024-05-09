@@ -8,24 +8,22 @@
 
 
 %define api.prefix {devtree}
+%define parse.error verbose
+%define parse.lac full
 %locations
 
 /* header */
 %{
 	#include <sys/escape.h>
-	#include <sys/list.h>
-	#include <stdio.h>
 	#include <stdarg.h>
-	#include <limits.h>
+	#include <stdio.h>
 	#include <string.h>
-	#include <lexer.lex.h>
 	#include <asserts.h>
+	#include <lexer.lex.h>
 	#include <nodes.h>
 
 
 	/* macros */
-	// extended error messages
-	#define YYERROR_VERBOSE
 	#define YYDEBUG	1
 
 	// parser error message
@@ -35,7 +33,38 @@
 	}
 
 	// helper
-	#define NODE_ADD_CHILD(parent, child)	node_add_child((base_node_t*)parent, (base_node_t*)child)
+	#define STRALLOC(s, len)({ \
+		void *_s = stralloc(s, len); \
+		EABORT(_s == 0x0); \
+		_s; \
+	})
+
+	#define _CREATE(func, ...)({ \
+		void *_obj = func(__VA_ARGS__); \
+		EABORT(_obj == 0x0); \
+		_obj; \
+	})
+
+	#define CREATE(type, ...) \
+		_CREATE(type ## _create, ##__VA_ARGS__)
+
+	#define _VALIDATE(func, ...) \
+		EABORT(func(__VA_ARGS__) != 0)
+
+	#define VALIDATE(type, ...) \
+		_VALIDATE(type ## _validate, ##__VA_ARGS__)
+
+	#define CHILD_ADD(node, child) \
+		EABORT(node_child_add(node, child) != 0)
+
+	#define ATTR_ADD(node, attr, v) \
+		EABORT(node_attr_add(node, attr, v) != 0)
+
+	#define ILIST_ADD(lst, v) \
+		EABORT(ilist_add(lst, v) != 0);
+
+	#define ASSERT_ADD(node, a) \
+		node_assert_add(node, a)
 
 
 	/* local/static variables */
@@ -49,12 +78,8 @@
 
 	/* local/static prototypes */
 	static int devtreeerror(char const *file, char const *s);
-
 	static void cleanup(void);
-
 	static void *stralloc(char const *s, size_t len);
-	static vector_t *intlist_alloc(void);
-	static int intlist_add(vector_t *lst, unsigned int val);
 %}
 
 %code requires{
@@ -87,18 +112,18 @@
 
 /* parser union type */
 %union{
-	unsigned int i;
+	unsigned long int i;
+	attr_value_t *aptr;
+	attr_type_t attr;
 
 	struct{
 		char *s;
-		unsigned int len;
+		size_t len;
 	} str;
 
-	device_node_t *device;
-	memory_node_t *memory;
-	arch_node_t *arch;
+	node_t *node;
 	assert_t *assert;
-	vector_t *int_lst;
+	vector_t *vec;
 }
 
 /* terminals */
@@ -114,7 +139,7 @@
 
 // node attributes
 %token NA_COMPATIBLE
-%token NA_BASEADDR
+%token NA_BASE_ADDR
 %token NA_REG
 %token NA_ADDR_WIDTH
 %token NA_REG_WIDTH
@@ -133,96 +158,121 @@
 %token ASSERT
 
 /* non-terminals */
-%type <device> device
-%type <device> devices-attr
-%type <memory> memory
-%type <memory> memory-attr
+%type <node> device
+%type <node> dev-body
+%type <node> memory
+%type <node> mem-body
 %type <assert> assert
+%type <attr> dev-attr-int
+%type <attr> dev-attr-str
+%type <attr> dev-attr-int-lst
+%type <attr> dev-attr-reg-lst
+%type <attr> arch-attr-int
+%type <attr> mem-attr-int
+%type <vec> ilist
+%type <vec> opt-int
 %type <i> int
-%type <int_lst> int-list
-%type <int_lst> opt-int
 
 
 %%
 
 
 /* start */
-start : error														{ cleanup(); YYABORT; }
-	  | section-lst													{ EABORT(arch_validate()); memory_node_complement(memory_root()); cleanup(); }
+start : error													{ cleanup(); YYABORT; }
+	  | section-lst												{ VALIDATE(arch); memory_node_complement(memory_root()); cleanup(); }
 	  ;
 
 /* sections */
-section-lst : %empty												{ }
-			| section-lst section ';'								{ }
+section-lst : %empty											{ }
+			| section-lst section ';'							{ }
 			;
 
-section : SEC_DEVICES '=' '{' devices-lst '}'						{ }
-		| SEC_MEMORY '=' '{' memory-lst '}'							{ }
-		| SEC_ARCH '=' '{' arch-lst '}'								{ }
+section : SEC_DEVICES '=' '{' devices-lst '}'					{ }
+		| SEC_MEMORY '=' '{' memory-lst '}'						{ }
+		| SEC_ARCH '=' '{' arch-body '}'						{ }
 		;
 
 /* node lists */
-devices-lst : %empty												{ }
-			| devices-lst device ';'								{ EABORT(NODE_ADD_CHILD(device_root(), $2)); }
-			| devices-lst assert ';'								{ list_add_tail(device_root()->asserts, $2); }
+devices-lst : %empty											{ }
+			| devices-lst device ';'							{ CHILD_ADD(device_root(), $2); }
+			| devices-lst assert ';'							{ ASSERT_ADD(device_root(), $2); }
 			;
 
-memory-lst : %empty													{ }
-		   | memory-lst memory ';'									{ EABORT(NODE_ADD_CHILD(memory_root(), $2)); }
-		   | memory-lst assert ';'									{ list_add_tail(memory_root()->asserts, $2); }
+memory-lst : %empty												{ }
+		   | memory-lst memory ';'								{ CHILD_ADD(memory_root(), $2); }
+		   | memory-lst assert ';'								{ ASSERT_ADD(memory_root(), $2); }
 		   ;
 
-arch-lst : %empty													{ }
-		 | arch-lst device ';'										{ EABORT(NODE_ADD_CHILD(arch_root(), $2)); }
-		 | arch-lst assert ';'										{ list_add_tail(arch_root()->asserts, $2); }
-		 | arch-lst NA_ADDR_WIDTH '=' int ';'						{ arch_root()->addr_width = $4; }
-		 | arch-lst NA_REG_WIDTH '=' int ';'						{ arch_root()->reg_width = $4; }
-		 | arch-lst NA_NCORES '=' int ';'							{ arch_root()->ncores = $4; }
-		 | arch-lst NA_INTERRUPTS '=' int ';'						{ arch_root()->num_ints = $4; }
-		 | arch-lst NA_VIRTUAL_INTERRUPTS '=' int ';'				{ arch_root()->num_vints = $4; }
-		 | arch-lst NA_TIMER_INT '=' int ';'						{ arch_root()->timer_int = $4; }
-		 | arch-lst NA_SYSCALL_INT '=' int ';'						{ arch_root()->syscall_int = $4; }
-		 | arch-lst NA_IPI_INT'=' int ';'							{ arch_root()->ipi_int = $4; }
-		 | arch-lst NA_TIMER_CYCLE_TIME_US '=' int ';'				{ arch_root()->timer_cycle_time_us = $4; }
+/* nodes */
+device : IDFR '=' '{' dev-body '}'								{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); VALIDATE(device, $$); };
+memory : IDFR '=' '{' mem-body '}'								{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); VALIDATE(memory, $$); };
+
+/* node bodies */
+dev-body : %empty												{ $$ = CREATE(node, NT_DEVICE); }
+		 | dev-body assert ';'									{ $$ = $1; ASSERT_ADD($$, $2); }
+		 | dev-body device ';'									{ $$ = $1; CHILD_ADD($$, $2); }
+		 | dev-body dev-attr-int '=' int ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(i, $4)); }
+		 | dev-body dev-attr-str '=' STRING ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(p, STRALLOC($4.s, $4.len))); }
+		 | dev-body dev-attr-reg-lst '=' ilist ';'				{ $$ = $1; ATTR_ADD($$, MT_REG_LIST, ATTR_VALUE(lst, CREATE(attr_ilist, 0, $4))); }
+		 | dev-body dev-attr-int-lst '<' int '>' '=' ilist ';'	{ $$ = $1; ATTR_ADD($$, MT_INT_LIST, ATTR_VALUE(lst, CREATE(attr_ilist, $4, $7))); }
 		 ;
 
-/* nodes */
-device : IDFR '=' '{' devices-attr '}'								{ $$ = $4; $$->name = stralloc($1.s, $1.len); EABORT($$->name == 0x0); };
-memory : IDFR '=' '{' memory-attr '}'								{ $$ = $4; $$->name = stralloc($1.s, $1.len); EABORT($$->name == 0x0); };
+mem-body : %empty												{ $$ = CREATE(node, NT_MEMORY); }
+		 | mem-body assert ';'									{ $$ = $1; ASSERT_ADD($$, $2); }
+		 | mem-body memory ';'									{ $$ = $1; CHILD_ADD($$, $2); }
+		 | mem-body mem-attr-int '=' int ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(i, $4)); }
+		 ;
 
-/* node attributes */
-devices-attr : %empty												{ $$ = device_node_alloc(); EABORT($$ == 0x0); }
-			 | devices-attr assert ';'								{ $$ = $1; list_add_tail($$->asserts, $2); }
-			 | devices-attr device ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
-			 | devices-attr NA_COMPATIBLE '=' STRING ';'			{ $$ = $1; $$->compatible = stralloc($4.s, $4.len); EABORT($$->compatible == 0x0); }
-			 | devices-attr NA_BASEADDR '=' int ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_BASE_ADDR, (void*)(unsigned long int)$4)); }
-			 | devices-attr NA_REG '=' int-list ';'					{ $$ = $1; EABORT(device_node_add_member($$, MT_REG_LIST, $4)); }
-			 | devices-attr NA_INT '<' int '>' '=' int-list ';'		{ $$ = $1; EABORT(device_node_add_member($$, MT_INT_LIST, node_intlist_alloc($4, $7))); }
-			 | devices-attr NA_STRING '=' STRING ';'				{ $$ = $1; EABORT(device_node_add_member($$, MT_STRING, stralloc($4.s, $4.len))); }
-			 ;
-
-memory-attr : %empty												{ $$ = memory_node_alloc(); EABORT($$ == 0x0); }
-			| memory-attr assert ';'								{ $$ = $1; list_add_tail($$->asserts, $2); }
-			| memory-attr memory ';'								{ $$ = $1; EABORT(NODE_ADD_CHILD($$, $2)); }
-			| memory-attr NA_BASEADDR '=' int ';'					{ $$ = $1; $$->base = (void*)(unsigned long int)$4; }
-			| memory-attr NA_SIZE '=' int ';'						{ $$ = $1; $$->size = (size_t)$4; }
-			;
+arch-body : %empty												{ }
+		  | arch-body assert ';'								{ ASSERT_ADD(arch_root(), $2); }
+		  | arch-body device ';'								{ CHILD_ADD(arch_root(), $2); }
+		  | arch-body arch-attr-int '=' int ';'					{ ATTR_ADD(arch_root(), $2, ATTR_VALUE(i, $4)); }
+		  ;
 
 /* asserts */
-assert : ASSERT '(' STRING ',' STRING ')'							{ $$ = assert_alloc(stralloc($3.s, $3.len), stralloc($5.s, $5.len)); EABORT($$ == 0x0); };
+assert : ASSERT '(' STRING ',' STRING ')'						{ $$ = CREATE(assert, STRALLOC($3.s, $3.len), STRALLOC($5.s, $5.len)); };
 
 /* basic types */
-int-list : '[' opt-int ']'											{ $$ = $2; }
-		 | '[' opt-int ',' ']'										{ $$ = $2; }
-		 ;
+ilist : '[' opt-int ']'											{ $$ = $2; }
+	  | '[' opt-int ',' ']'										{ $$ = $2; }
+	  ;
 
-opt-int : %empty													{ $$ = intlist_alloc(); EABORT($$ == 0x0); devtreeunput(','); }
-		| opt-int ',' int											{ $$ = $1; EABORT(intlist_add($$, $3)); }
+opt-int : %empty												{ $$ = CREATE(ilist); devtreeunput(','); }
+		| opt-int ',' int										{ $$ = $1; ILIST_ADD($$, $3); }
 		;
 
-int : INT															{ $$ = $1; }
-	| int '+' INT													{ $$ += $3; }
+int : INT														{ $$ = $1; }
+	| int '+' INT												{ $$ += $3; }
 	;
+
+/* node attributes */
+dev-attr-int : NA_BASE_ADDR										{ $$ = MT_BASE_ADDR; }
+			 ;
+
+dev-attr-str : NA_COMPATIBLE									{ $$ = MT_COMPATIBLE; }
+			 | NA_STRING										{ $$ = MT_STRING; }
+			 ;
+
+dev-attr-int-lst : NA_INT										{ $$ = MT_INT_LIST; }
+				 ;
+
+dev-attr-reg-lst : NA_REG										{ $$ = MT_REG_LIST; }
+				 ;
+
+mem-attr-int : NA_BASE_ADDR										{ $$ = MT_BASE_ADDR; }
+			 | NA_SIZE											{ $$ = MT_SIZE; }
+			 ;
+
+arch-attr-int : NA_ADDR_WIDTH									{ $$ = MT_ADDR_WIDTH; }
+			  | NA_REG_WIDTH									{ $$ = MT_REG_WIDTH; }
+			  | NA_NCORES										{ $$ = MT_NCORES; }
+			  | NA_INTERRUPTS									{ $$ = MT_NUM_INTS; }
+			  | NA_VIRTUAL_INTERRUPTS							{ $$ = MT_NUM_VINTS; }
+			  | NA_TIMER_INT									{ $$ = MT_TIMER_INT; }
+			  | NA_SYSCALL_INT									{ $$ = MT_SYSCALL_INT; }
+			  | NA_IPI_INT										{ $$ = MT_IPI_INT; }
+			  | NA_TIMER_CYCLE_TIME_US							{ $$ = MT_TIMER_CYCLE_TIME_US; }
+			  ;
 
 
 %%
@@ -281,35 +331,4 @@ err:
 	devtree_parser_error("string allocation failed");
 
 	return 0x0;
-}
-
-static vector_t *intlist_alloc(void){
-	vector_t *v;
-
-
-	v = malloc(sizeof(vector_t));
-
-	if(v == 0x0)
-		goto err_0;
-
-	if(vector_init(v, sizeof(unsigned int), 16) != 0)
-		goto err_1;
-
-	return v;
-
-
-err_1:
-	free(v);
-
-err_0:
-	devtree_parser_error("intlist allocation failed");
-
-	return 0x0;
-}
-
-static int intlist_add(vector_t *lst, unsigned int val){
-	if(vector_add(lst, &val) != 0)
-		return devtree_parser_error("intlist extension failed");
-
-	return 0;
 }
