@@ -66,6 +66,24 @@
 	#define ASSERT_ADD(node, a) \
 		node_assert_add(node, a)
 
+	#define NODE_REF(idfr, type)({ \
+		node_t *_node = node_ref(idfr.s, idfr.len, type); \
+		EABORT(_node == 0x0); \
+		_node; \
+	})
+
+	#define ATTR_REF(node, attr, idx)({ \
+		attr_value_t *_v = node_attr_ref(node, attr, idx); \
+		EABORT(_v == 0x0); \
+		_v; \
+	})
+
+	#define ILIST_REF(node, attr, idx)({ \
+		unsigned long int *_v = node_attr_ilist_ref(node, attr, idx); \
+		EABORT(_v == 0x0); \
+		_v; \
+	})
+
 
 	/* local/static variables */
 	static FILE *fp = 0;
@@ -113,7 +131,7 @@
 /* parser union type */
 %union{
 	unsigned long int i;
-	attr_value_t *aptr;
+	char *sptr;
 	attr_type_t attr;
 
 	struct{
@@ -172,6 +190,7 @@
 %type <vec> ilist
 %type <vec> opt-int
 %type <i> int
+%type <sptr> string
 
 
 %%
@@ -212,7 +231,7 @@ dev-body : %empty												{ $$ = CREATE(node, NT_DEVICE); }
 		 | dev-body assert ';'									{ $$ = $1; ASSERT_ADD($$, $2); }
 		 | dev-body device ';'									{ $$ = $1; CHILD_ADD($$, $2); }
 		 | dev-body dev-attr-int '=' int ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(i, $4)); }
-		 | dev-body dev-attr-str '=' STRING ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(p, STRALLOC($4.s, $4.len))); }
+		 | dev-body dev-attr-str '=' string ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(p, $4)); }
 		 | dev-body dev-attr-reg-lst '=' ilist ';'				{ $$ = $1; ATTR_ADD($$, MT_REG_LIST, ATTR_VALUE(lst, CREATE(attr_ilist, 0, $4))); }
 		 | dev-body dev-attr-int-lst '<' int '>' '=' ilist ';'	{ $$ = $1; ATTR_ADD($$, MT_INT_LIST, ATTR_VALUE(lst, CREATE(attr_ilist, $4, $7))); }
 		 ;
@@ -230,7 +249,7 @@ arch-body : %empty												{ }
 		  ;
 
 /* asserts */
-assert : ASSERT '(' STRING ',' STRING ')'						{ $$ = CREATE(assert, STRALLOC($3.s, $3.len), STRALLOC($5.s, $5.len)); };
+assert : ASSERT '(' string ',' string ')'						{ $$ = CREATE(assert, $3, $5); };
 
 /* basic types */
 ilist : '[' opt-int ']'											{ $$ = $2; }
@@ -242,8 +261,17 @@ opt-int : %empty												{ $$ = CREATE(ilist); devtreeunput(','); }
 		;
 
 int : INT														{ $$ = $1; }
+	| IDFR '.' dev-attr-int '[' int ']'							{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5)->i; }
+	| IDFR '.' dev-attr-int-lst '[' int ']'						{ $$ = *ILIST_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
+	| IDFR '.' mem-attr-int										{ $$ = ATTR_REF(NODE_REF($1, NT_MEMORY), $3, 0)->i; }
+	| SEC_ARCH '.' arch-attr-int								{ $$ = ATTR_REF(arch_root(), $3, 0)->i; }
 	| int '+' INT												{ $$ += $3; }
 	;
+
+string : STRING													{ $$ = STRALLOC($1.s, $1.len); }
+	   | IDFR '.' dev-attr-str									{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, 0)->p; }
+	   | IDFR '.' dev-attr-str '[' int ']'						{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5)->p; }
+	   ;
 
 /* node attributes */
 dev-attr-int : NA_BASE_ADDR										{ $$ = MT_BASE_ADDR; }

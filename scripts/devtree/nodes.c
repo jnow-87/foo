@@ -31,20 +31,28 @@
 }
 
 
+/* types */
+typedef struct{
+	char const *name;
+	node_t *node;
+} index_t;
+
+
 /* local/static prototypes */
-static int add_name(char const *name);
+static int index_add(node_t *node);
+static node_t *index_query(char const *name, size_t len);
 
 
 /* static variables */
 static node_t root_device,
 				   root_memory,
 				   root_arch;
-static vector_t node_names;
+static vector_t node_index;
 
 
 /* global functions */
 int nodes_init(void){
-	if(vector_init(&node_names, sizeof(char*), 16) != 0)
+	if(vector_init(&node_index, sizeof(index_t), 16) != 0)
 		return -1;
 
 	memset(&root_device, 0, sizeof(node_t));
@@ -100,7 +108,7 @@ err_0:
 }
 
 int node_child_add(node_t *parent, node_t *child){
-	if(add_name(child->name))
+	if(index_add(child))
 		return -1;
 
 	child->parent = parent;
@@ -149,6 +157,62 @@ attr_value_t *node_attr_get(node_t *node, attr_type_t type, size_t idx){
 		if(a->type == type && i++ == idx)
 			return &a->value;
 	}
+
+	return 0x0;
+}
+
+node_t *node_ref(char const *name, size_t len, node_type_t type){
+	node_t *node;
+
+
+	node = index_query(name, len);
+
+	if(node != 0x0 && node->type == type)
+		return node;
+
+	if(node == 0x0)	devtree_parser_error("undefined reference \"%.*s\"", len, name);
+	else			devtree_parser_error("invalid node type");
+
+	return node;
+}
+
+attr_value_t *node_attr_ref(node_t *node, attr_type_t type, size_t idx){
+	attr_value_t *v;
+
+
+	v = node_attr_get(node, type, idx);
+
+	if(v != 0x0)
+		return v;
+
+	devtree_parser_error("%s: undefined attribute \"%s\" or index (%zu) out of range", node->name, attr_name(type), idx);
+
+	return 0x0;
+}
+
+unsigned long int *node_attr_ilist_ref(node_t *node, attr_type_t type, size_t idx){
+	size_t i = 0;
+	attr_t *a;
+	unsigned long int *item;
+
+
+	if(type != MT_INT_LIST && type != MT_REG_LIST){
+		devtree_parser_error("%s: internal parser error: non-list type used on list", node->name);
+
+		return 0x0;
+	}
+
+	vector_for_each(&node->attrs, a){
+		if(a->type != type)
+			continue;
+
+		vector_for_each(a->value.lst->items, item){
+			if(i++ == idx)
+				return item;
+		}
+	}
+
+	devtree_parser_error("%s: undefined attribute \"%s\" or index (%zu) out of range", node->name, attr_name(type), idx);
 
 	return 0x0;
 }
@@ -249,14 +313,26 @@ void memory_node_complement(node_t *node){
 
 
 /* local functions */
-static int add_name(char const *name){
-	char const **xname;
+static int index_add(node_t *node){
+	index_t *i;
 
 
-	vector_for_each(&node_names, xname){
-		if(strcmp(*xname, name) == 0)
-			return devtree_parser_error("node \"%s\" already defined", name);
+	vector_for_each(&node_index, i){
+		if(strcmp(i->name, node->name) == 0)
+			return devtree_parser_error("node \"%s\" already defined", node->name);
 	}
 
-	return vector_add(&node_names, &name);
+	return vector_add(&node_index, &(index_t){ .name = node->name, .node = node });
+}
+
+static node_t *index_query(char const *name, size_t len){
+	index_t *i;
+
+
+	vector_for_each(&node_index, i){
+		if(strncmp(i->name, name, len) == 0 && strlen(i->name) == len)
+			return i->node;
+	}
+
+	return 0x0;
 }

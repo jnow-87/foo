@@ -48,6 +48,10 @@ int node_attr_add(node_t *node, attr_type_t type, attr_value_t value);
 int node_attr_set(node_t *node, attr_type_t type, size_t idx, attr_value_t value);
 attr_value_t *node_attr_get(node_t *node, attr_type_t type, size_t idx);
 
+node_t *node_ref(char const *name, size_t len, node_type_t type);
+attr_value_t *node_attr_ref(node_t *node, attr_type_t type, size_t idx);
+unsigned long int *node_attr_ilist_ref(node_t *node, attr_type_t type, size_t idx);
+
 node_t *device_root(void);
 node_t *memory_root(void);
 node_t *arch_root(void);
