@@ -12,6 +12,7 @@ ifeq ($(CONFIG_ARCH),x86)
 endif
 
 hostbin-y := utest
+subdir-y := devtree/
 
 linker_scripts := \
 	$(build_tree)/scripts/linker/memory.lds \
