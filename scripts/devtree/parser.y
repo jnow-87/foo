@@ -132,6 +132,8 @@
 %union{
 	unsigned long int i;
 	char *sptr;
+	unsigned long int *iptr;
+	attr_value_t *aptr;
 	attr_type_t attr;
 
 	struct{
@@ -191,6 +193,11 @@
 %type <vec> opt-int
 %type <i> int
 %type <sptr> string
+%type <iptr> i-ref
+%type <aptr> iattr-ref
+%type <aptr> sattr-ref
+%type <iptr> ilist-ref
+%type <i> attr-inc
 
 
 %%
@@ -215,11 +222,13 @@ section : SEC_DEVICES '=' '{' devices-lst '}'					{ }
 devices-lst : %empty											{ }
 			| devices-lst device ';'							{ CHILD_ADD(device_root(), $2); }
 			| devices-lst assert ';'							{ ASSERT_ADD(device_root(), $2); }
+			| devices-lst attr-update ';'						{ }
 			;
 
 memory-lst : %empty												{ }
 		   | memory-lst memory ';'								{ CHILD_ADD(memory_root(), $2); }
 		   | memory-lst assert ';'								{ ASSERT_ADD(memory_root(), $2); }
+		   | memory-lst attr-update ';'							{ }
 		   ;
 
 /* nodes */
@@ -229,6 +238,7 @@ memory : IDFR '=' '{' mem-body '}'								{ $$ = $4; $$->name = STRALLOC($1.s, $
 /* node bodies */
 dev-body : %empty												{ $$ = CREATE(node, NT_DEVICE); }
 		 | dev-body assert ';'									{ $$ = $1; ASSERT_ADD($$, $2); }
+		 | dev-body attr-update ';'								{ $$ = $1; }
 		 | dev-body device ';'									{ $$ = $1; CHILD_ADD($$, $2); }
 		 | dev-body dev-attr-int '=' int ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(i, $4)); }
 		 | dev-body dev-attr-str '=' string ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(p, $4)); }
@@ -238,6 +248,7 @@ dev-body : %empty												{ $$ = CREATE(node, NT_DEVICE); }
 
 mem-body : %empty												{ $$ = CREATE(node, NT_MEMORY); }
 		 | mem-body assert ';'									{ $$ = $1; ASSERT_ADD($$, $2); }
+		 | mem-body attr-update ';'								{ $$ = $1; }
 		 | mem-body memory ';'									{ $$ = $1; CHILD_ADD($$, $2); }
 		 | mem-body mem-attr-int '=' int ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(i, $4)); }
 		 ;
@@ -251,6 +262,34 @@ arch-body : %empty												{ }
 /* asserts */
 assert : ASSERT '(' string ',' string ')'						{ $$ = CREATE(assert, $3, $5); };
 
+/* references */
+i-ref : iattr-ref												{ $$ = &$1->i; }
+	  | ilist-ref												{ $$ = $1; }
+	  ;
+
+iattr-ref : IDFR '.' dev-attr-int '[' int ']'					{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
+		  | IDFR '.' mem-attr-int								{ $$ = ATTR_REF(NODE_REF($1, NT_MEMORY), $3, 0); }
+		  | SEC_ARCH '.' arch-attr-int							{ $$ = ATTR_REF(arch_root(), $3, 0); }
+		  ;
+
+sattr-ref : IDFR '.' dev-attr-str '[' int ']'					{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
+		  | IDFR '.' dev-attr-str								{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, 0); }
+		  ;
+
+ilist-ref : IDFR '.' dev-attr-int-lst '[' int ']'				{ $$ = ILIST_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
+		  ;
+
+/* attribute updates */
+attr-update : i-ref '=' int										{ *$1 = $3; }
+			| i-ref '+' '=' int									{ *$1 += $4; }
+			| sattr-ref '=' string								{ $1->p = $3; }
+			| attr-inc											{ }
+			;
+
+attr-inc : i-ref '+' '+'										{ $$ = (*$1)++; }
+		 | '+' '+' i-ref										{ $$ = ++(*$3); }
+		 ;
+
 /* basic types */
 ilist : '[' opt-int ']'											{ $$ = $2; }
 	  | '[' opt-int ',' ']'										{ $$ = $2; }
@@ -261,16 +300,14 @@ opt-int : %empty												{ $$ = CREATE(ilist); devtreeunput(','); }
 		;
 
 int : INT														{ $$ = $1; }
-	| IDFR '.' dev-attr-int '[' int ']'							{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5)->i; }
-	| IDFR '.' dev-attr-int-lst '[' int ']'						{ $$ = *ILIST_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
-	| IDFR '.' mem-attr-int										{ $$ = ATTR_REF(NODE_REF($1, NT_MEMORY), $3, 0)->i; }
-	| SEC_ARCH '.' arch-attr-int								{ $$ = ATTR_REF(arch_root(), $3, 0)->i; }
-	| int '+' INT												{ $$ += $3; }
+	| i-ref														{ $$ = *$1; }
+	| int '+' INT												{ $$ = $1 + $3; }
+	| int '+' i-ref												{ $$ = $1 + *$3; }
+	| '(' attr-inc ')'											{ $$ = $2; }
 	;
 
 string : STRING													{ $$ = STRALLOC($1.s, $1.len); }
-	   | IDFR '.' dev-attr-str									{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, 0)->p; }
-	   | IDFR '.' dev-attr-str '[' int ']'						{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5)->p; }
+	   | sattr-ref												{ $$ = $1->p; }
 	   ;
 
 /* node attributes */
