@@ -14,7 +14,6 @@ ncores = 1;
 
 // interrupts
 num-ints = 4;
-num-vints = 6;
 
 timer-int = 0;
 syscall-int = 1;

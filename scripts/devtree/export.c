@@ -189,7 +189,6 @@ static void arch_makevars(FILE *fp, node_t *node, char const *node_ident){
 		fprintf(fp, "DEVTREE_ARCH_MULTI_CORE := y\n");
 
 	fprintf(fp, "DEVTREE_ARCH_NUM_INTS := %u\n", node_attr_get(node, MT_NUM_INTS, 0)->i);
-	fprintf(fp, "DEVTREE_ARCH_NUM_VINTS := %u\n", node_attr_get(node, MT_NUM_VINTS, 0)->i);
 	fprintf(fp, "DEVTREE_ARCH_TIMER_INT := %u\n", node_attr_get(node, MT_TIMER_INT, 0)->i);
 	fprintf(fp, "DEVTREE_ARCH_SYSCALL_INT := %u\n", node_attr_get(node, MT_SYSCALL_INT, 0)->i);
 
@@ -239,7 +238,6 @@ static void arch_macros(FILE *fp, node_t *node, char const *node_ident){
 		fprintf(fp, "#define DEVTREE_ARCH_MULTI_CORE\n");
 
 	fprintf(fp, "#define DEVTREE_ARCH_NUM_INTS %u\n", node_attr_get(node, MT_NUM_INTS, 0)->i);
-	fprintf(fp, "#define DEVTREE_ARCH_NUM_VINTS %u\n", node_attr_get(node, MT_NUM_VINTS, 0)->i);
 	fprintf(fp, "#define DEVTREE_ARCH_TIMER_INT %u\n", node_attr_get(node, MT_TIMER_INT, 0)->i);
 	fprintf(fp, "#define DEVTREE_ARCH_SYSCALL_INT %u\n", node_attr_get(node, MT_SYSCALL_INT, 0)->i);
 
@@ -317,7 +315,6 @@ static void arch_definition(FILE *fp, node_t *node, char const *node_ident){
 		fprintf(fp, "\t.core_mask = %#x,\n", node_attr_get(node, MT_CORE_MASK, 0)->i);
 		fprintf(fp, "\t.ncores = %u,\n", node_attr_get(node, MT_NCORES, 0)->i);
 		fprintf(fp, "\t.num_ints = %u,\n", node_attr_get(node, MT_NUM_INTS, 0)->i);
-		fprintf(fp, "\t.num_vints = %u,\n", node_attr_get(node, MT_NUM_VINTS, 0)->i);
 		fprintf(fp, "\t.timer_int = %u,\n", node_attr_get(node, MT_TIMER_INT, 0)->i);
 		fprintf(fp, "\t.syscall_int = %u,\n", node_attr_get(node, MT_SYSCALL_INT, 0)->i);
 

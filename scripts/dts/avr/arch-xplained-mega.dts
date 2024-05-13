@@ -20,7 +20,6 @@ ncores = 1;
 //   1 syscall
 //   1 instruction overflow
 num-ints = 37;
-num-vints = 0;
 
 timer-int = 8;
 syscall-int = 35;

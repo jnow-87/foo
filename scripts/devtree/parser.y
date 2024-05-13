@@ -165,7 +165,6 @@
 %token NA_REG_WIDTH
 %token NA_NCORES
 %token NA_INTERRUPTS
-%token NA_VIRTUAL_INTERRUPTS
 %token NA_TIMER_CYCLE_TIME_US
 %token NA_TIMER_INT
 %token NA_SYSCALL_INT
@@ -332,7 +331,6 @@ arch-attr-int : NA_ADDR_WIDTH									{ $$ = MT_ADDR_WIDTH; }
 			  | NA_REG_WIDTH									{ $$ = MT_REG_WIDTH; }
 			  | NA_NCORES										{ $$ = MT_NCORES; }
 			  | NA_INTERRUPTS									{ $$ = MT_NUM_INTS; }
-			  | NA_VIRTUAL_INTERRUPTS							{ $$ = MT_NUM_VINTS; }
 			  | NA_TIMER_INT									{ $$ = MT_TIMER_INT; }
 			  | NA_SYSCALL_INT									{ $$ = MT_SYSCALL_INT; }
 			  | NA_IPI_INT										{ $$ = MT_IPI_INT; }

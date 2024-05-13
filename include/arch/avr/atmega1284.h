@@ -143,5 +143,7 @@
 #define INT_SYSCALL			35
 #define INT_IOVFL			36
 
+#define INT_NUM_HWINTS		37
+
 
 #endif // ARCH_ATMEGA1284_H

@@ -12,7 +12,6 @@ arch = {
 	reg-width = 32;
 	ncores = 2;
 	num-ints = 0;
-	num-vints = 0;
 	timer-int = 15;
 	syscall-int = 11;
 	ipi-int = 31;

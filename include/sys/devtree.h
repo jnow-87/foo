@@ -43,9 +43,7 @@ typedef struct{
 	uint8_t core_mask;
 	uint8_t ncores;
 
-	uint8_t num_ints,
-			num_vints;
-
+	uint8_t num_ints;
 	uint8_t timer_int,
 			syscall_int,
 			ipi_int;

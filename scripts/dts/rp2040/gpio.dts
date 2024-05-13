@@ -16,27 +16,27 @@ gpios = {
 
 	/* gpio hardware (dt_data_t) */
 	int<32> = [
-		0x00000000,		// pullup_mask,
-		0x00000030,		// pulldown_mask,
-		0x00000030,		// schmitt_en,
-		0x00000000,		// slewfast,
-		0x00000030,		// drive_2ma,
-		0x00000000,		// drive_4ma,
-		0x00000000,		// drive_8ma,
-		0x02008000,		// drive_12ma,
+		0x00000000,				// pullup_mask,
+		0x00000030,				// pulldown_mask,
+		0x00000030,				// schmitt_en,
+		0x00000000,				// slewfast,
+		0x00000030,				// drive_2ma,
+		0x00000000,				// drive_4ma,
+		0x00000000,				// drive_8ma,
+		0x02008000,				// drive_12ma,
 	];
 
-	int<8> = [ 29 ];	// interrupt (io_irq_bank0)
+	int<8> = [ 29 ];			// interrupt (io_irq_bank0)
 
 	gpio = {
 		compatible = "gpio,port";
 
 		gpio_cfg_t(
-			0x00000030,	// in mask
-			0x000000c0,	// out mask
-			0x00000030,	// int mask
-			0x000000c0,	// invert mask
-			44			// interrupt (virtual)
+			0x00000030,			// in mask
+			0x000000c0,			// out mask
+			0x00000030,			// int mask
+			0x000000c0,			// invert mask
+			(arch.num-ints++)	// interrupt
 		);
 	};
 
@@ -44,11 +44,11 @@ gpios = {
 		compatible = "gpio,pin";
 
 		gpio_cfg_t(
-			0x00000000,	// in mask
-			0x00008000,	// out mask
-			0x00000000,	// int mask
-			0x00000000,	// invert mask
-			0			// interrupt
+			0x00000000,			// in mask
+			0x00008000,			// out mask
+			0x00000000,			// int mask
+			0x00000000,			// invert mask
+			0					// interrupt
 		);
 	};
 

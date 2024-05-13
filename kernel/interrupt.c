@@ -17,24 +17,20 @@
 #include <sys/devicetree.h>
 
 
-/* macros */
-#define NUM_INTS	(DEVTREE_ARCH_NUM_INTS + DEVTREE_ARCH_NUM_VINTS)
-
-
 /* local/static prototypes */
 static void call_hdlr(int_num_t num);
 static void foretell(int_num_t num, uint8_t set);
 
 
 /* static variables */
-static int_hdlr_t int_hdlr[NUM_INTS] = { 0x0 };
-static void *int_payload[NUM_INTS] = { 0x0 };
-static uint8_t foretold[NUM_INTS / 8 + 1] = { 0 };
+static int_hdlr_t int_hdlr[DEVTREE_ARCH_NUM_INTS] = { 0x0 };
+static void *int_payload[DEVTREE_ARCH_NUM_INTS] = { 0x0 };
+static uint8_t foretold[DEVTREE_ARCH_NUM_INTS / 8 + 1] = { 0 };
 
 
 /* global functions */
 int int_register(int_num_t num, int_hdlr_t hdlr, void *payload){
-	if(num >= NUM_INTS)
+	if(num >= DEVTREE_ARCH_NUM_INTS)
 		return_errno(E_INVAL);
 
 	if(int_hdlr[num] != 0x0)
@@ -47,7 +43,7 @@ int int_register(int_num_t num, int_hdlr_t hdlr, void *payload){
 }
 
 void int_release(int_num_t num){
-	if(num >= NUM_INTS)
+	if(num >= DEVTREE_ARCH_NUM_INTS)
 		return;
 
 	int_hdlr[num] = 0x0;
@@ -90,7 +86,7 @@ void int_khdlr(int_num_t num){
 
 /* local functions */
 static void call_hdlr(int_num_t num){
-	if(num >= NUM_INTS || int_hdlr[num] == 0x0)
+	if(num >= DEVTREE_ARCH_NUM_INTS || int_hdlr[num] == 0x0)
 		kpanic("unhandled or invalid interrupt %u\n", num);
 
 	int_hdlr[num](num, int_payload[num]);

@@ -39,20 +39,24 @@ mcp-portb = {
 
 	/* mcp23017 port config (dt_data_t) */
 	int<8> = [
-		1,			// port (b)
-		33,			// slave address
-		39,			// interrupt (virtual)
+		1,						// port (b)
+		33,						// slave address
+#ifdef CONFIG_GPIO_INTFWD
+		mcp-int.int[5],		// interrupt
+#else
+		0,
+#endif // CONFIG_GPIO_INTFWD
 	];
 
 	gpio-mcp0b = {
 		compatible = "gpio,port";
 
 		gpio_cfg_t(
-			0xff,	// in mask
-			0x00,	// out mask
-			0xff,	// int mask
-			0xff,	// invert mask
-			41		// interrupt (virtual)
+			0xff,				// in mask
+			0x00,				// out mask
+			0xff,				// int mask
+			0xff,				// invert mask
+			(arch.num-ints++)	// interrupt
 		);
 	};
 };

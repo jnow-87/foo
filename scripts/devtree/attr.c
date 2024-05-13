@@ -30,7 +30,6 @@ char const *attr_name(attr_type_t type){
 		"reg-width",
 		"ncores",
 		"num-ints",
-		"num-vints",
 		"timer-int",
 		"syscall-int",
 		"ipi-int",

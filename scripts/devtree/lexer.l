@@ -61,7 +61,6 @@
 "reg-width"						{ return NA_REG_WIDTH; }
 "ncores"						{ return NA_NCORES; }
 "num-ints"						{ return NA_INTERRUPTS; }
-"num-vints"						{ return NA_VIRTUAL_INTERRUPTS; }
 "timer-cycle-time-us"			{ return NA_TIMER_CYCLE_TIME_US; }
 "timer-int"						{ return NA_TIMER_INT; }
 "syscall-int"					{ return NA_SYSCALL_INT; }
