@@ -31,9 +31,10 @@ typedef enum{
 	PMS_INT = 0,
 	PMS_CHAR,
 	PMS_STR,
+	PMS_MAX
 } patmat_spec_type_t;
 
-typedef struct patmat_spec_t{
+typedef struct{
 	patmat_spec_type_t specifier;
 	size_t len;
 	size_t chars_matched;
