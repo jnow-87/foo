@@ -37,11 +37,13 @@ static bool spec_completed(patmat_spec_t *spec, char const *pattern);
 
 
 /* static variables */
-static spec_cfg_t specs[] = {
+static spec_cfg_t matcher[] = {
 	{ .specifier = 'd',	.size = sizeof(int),	.match = match_int },		// PMS_INT
 	{ .specifier = 'c',	.size = sizeof(char),	.match = match_char },		// PMS_CHAR
 	{ .specifier = 's',	.size = 0,				.match = match_string },	// PMS_STR
 };
+
+STATIC_ASSERT(sizeof_array(matcher) == PMS_MAX);
 
 
 /* global functions */
@@ -133,17 +135,13 @@ ssize_t patmat_match_char(patmat_t *pm, char c){
 			matchable++;
 	}
 
-	if(matchable == 0)
-		return PM_NOMATCH;
-
-	return PM_MATCHABLE;
+	return (matchable == 0) ? PM_NOMATCH : PM_MATCHABLE;
 }
 
 /**
  * \brief
  *
  * \return	PM_NOMATCH		no match possible
- * 			PM_MATCHABLE	match still possible
  * 			else			the index of the pattern that matched
  */
 ssize_t patmat_match_string(patmat_t *pm, char const *s){
@@ -235,14 +233,14 @@ static void pattern_reset(patmat_pattern_t *pat){
 
 		spec->chars_matched = 0;
 
-		if(specs[spec->specifier].size != 0)
-			memset(spec->payload, 0, specs[spec->specifier].size);
+		if(matcher[spec->specifier].size != 0)
+			memset(spec->payload, 0, matcher[spec->specifier].size);
 	}
 }
 
 static patmat_state_t pattern_match(patmat_pattern_t *pat, char c){
 	char c_pat = pat->text[pat->pat_idx];
-	patmat_spec_t *spec = pat->specs[pat->spec_idx];
+	patmat_spec_t *spec;
 
 
 	/* literal match */
@@ -256,6 +254,8 @@ static patmat_state_t pattern_match(patmat_pattern_t *pat, char c){
 		return PM_NOMATCH;
 
 	/* check if end of current specifier is reached */
+	spec = pat->specs[pat->spec_idx];
+
 	if(pat->text[pat->pat_idx + spec->len + 1] == c){
 		if(!spec_completed(spec, pat->text))
 			return PM_NOMATCH;
@@ -267,8 +267,9 @@ static patmat_state_t pattern_match(patmat_pattern_t *pat, char c){
 	}
 
 	/* match specifier */
-	if(!specs[spec->specifier].match(c, spec)){
+	if(!matcher[spec->specifier].match(c, spec)){
 		pat->state = PM_NOMATCH;
+
 		return PM_NOMATCH;
 	}
 
@@ -321,9 +322,9 @@ static patmat_spec_t *spec_alloc(char const *spec){
 	size = strtol(spec, &end, 10);
 
 	/* get specifier */
-	for(i=0; i<sizeof_array(specs); i++){
-		if(specs[i].specifier == *end){
-			cfg = specs + i;
+	for(i=0; i<sizeof_array(matcher); i++){
+		if(matcher[i].specifier == *end){
+			cfg = matcher + i;
 			break;
 		}
 	}
@@ -335,7 +336,7 @@ static patmat_spec_t *spec_alloc(char const *spec){
 	if(size == 0)
 		size = cfg->size;
 
-	if(size == 0x0)
+	if(size == 0)
 		return 0x0;
 
 	/* allocate specifier */
