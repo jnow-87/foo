@@ -242,7 +242,7 @@ static void pattern_reset(patmat_pattern_t *pat){
 
 static patmat_state_t pattern_match(patmat_pattern_t *pat, char c){
 	char c_pat = pat->text[pat->pat_idx];
-	patmat_spec_t *spec = pat->specs[pat->spec_idx];
+	patmat_spec_t *spec;
 
 
 	/* literal match */
@@ -256,6 +256,8 @@ static patmat_state_t pattern_match(patmat_pattern_t *pat, char c){
 		return PM_NOMATCH;
 
 	/* check if end of current specifier is reached */
+	spec = pat->specs[pat->spec_idx];
+
 	if(pat->text[pat->pat_idx + spec->len + 1] == c){
 		if(!spec_completed(spec, pat->text))
 			return PM_NOMATCH;
