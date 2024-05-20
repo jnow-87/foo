@@ -15,22 +15,27 @@
 
 /* macros */
 // exception priorities
-// NOTE systick gets the highest priority to increase the kernel timer accuracy
-// 		by preventing longer running syscalls from delaying timer ticks.
-#define SYSTICK_PRIO	0
+// NOTE systick gets the second highest priority to increase the kernel timer accuracy by preventing longer running
+// 		syscalls from delaying timer ticks.
+#define SYSTICK_PRIO	1
 
-// NOTE pendsv has to have higher priority than svcall, since pendsv is used to
-// 		trigger syscalls from within the kernel. If the pendsv priority would
-// 		not be higher than the svcall priority pendsv exceptions would be
-// 		handled after svcall, which would, for instance, render the kernel
-// 		signal implementation invalid, since it relies on a context switch
-// 		within a syscall.
-#define PENDSV_PRIO		1
+// NOTE pendsv gets a higher priority than systick to prevent scheduler transitions while a pendsv exception is pending.
+// 		Since pendsv, unlike svcall, is asynchronous to program execution, it is possible for another exception to occur
+// 		between setting pendsv pending and actually taking its exception. If that other exception would be a systick and
+// 		systick would have a higher priority then pendsv, the systick would be taken first, potentially causing a
+// 		scheduler transition. In that case the pendsv exception would still be pending, hence, instead of returning to
+// 		the newly scheduled thread, the pendsv exception would be taken but with the thread that requested the pendsv no
+// 		longer being active, hence using an invalid context and a thus invalid syscall parameter pointer.
+//
+// 		pendsv also has to have higher priority than svcall, since pendsv is used to trigger syscalls from within the
+// 		kernel. If the pendsv priority would not be higher than the svcall priority pendsv exceptions would be handled
+// 		after svcall, which would, for instance, render the kernel signal implementation invalid, since it relies on a
+// 		context switch within a syscall.
+#define PENDSV_PRIO		0
 #define SVCALL_PRIO		2
 
-// NOTE Priorities of external interrupts need to be lower than for core
-// 		exceptions, especially svcall, to allow svc being issued from within an
-// 		interrupt without causing a hardfault.
+// NOTE Priorities of external interrupts need to be lower than for core exceptions, especially svcall, to allow svc
+// being issued from within an interrupt without causing a hardfault.
 #define EXTERN_PRIO		3
 
 
