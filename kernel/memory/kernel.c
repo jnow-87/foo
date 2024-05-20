@@ -107,10 +107,6 @@ int copy_from_user(void *kernel, void const *user, size_t n, struct process_t *t
 	memcpy(kernel, user, n);
 
 	return 0;
-
-
-err:
-	return 0x0;
 }
 
 int copy_to_user(void *user, void const *kernel, size_t n, struct process_t *this_p){

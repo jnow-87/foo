@@ -107,10 +107,6 @@ static size_t puts(char const *s, size_t n, bool blocking, void *hw){
 		int_foretell(uart->dtd->tx_int);
 
 	return n;
-
-
-err:
-	return 0;
 }
 
 static size_t gets(char *s, size_t n, void *hw){

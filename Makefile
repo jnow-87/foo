@@ -64,7 +64,6 @@ warnflags := \
 	-Wextra \
 	-Wshadow \
 	-Wno-unused-parameter \
-	-Wno-unused-label \
 	-Wno-unknown-pragmas
 
 # target flags
