@@ -40,18 +40,35 @@
 
 /* types */
 typedef enum{
-	RP2040_GPIO_FUNC_XIP = 0,
-	RP2040_GPIO_FUNC_SPI,
-	RP2040_GPIO_FUNC_UART,
-	RP2040_GPIO_FUNC_I2C,
-	RP2040_GPIO_FUNC_PWM,
-	RP2040_GPIO_FUNC_SIO,
-	RP2040_GPIO_FUNC_PIO0,
-	RP2040_GPIO_FUNC_PIO1,
-	RP2040_GPIO_FUNC_CLK,
-	RP2040_GPIO_FUNC_USB,
-	RP2040_GPIO_FUNC_RESET = 31,
-} rp2040_gpio_func_t;
+	RP2040_PAD_FUNC_XIP = 0,
+	RP2040_PAD_FUNC_SPI,
+	RP2040_PAD_FUNC_UART,
+	RP2040_PAD_FUNC_I2C,
+	RP2040_PAD_FUNC_PWM,
+	RP2040_PAD_FUNC_SIO,
+	RP2040_PAD_FUNC_PIO0,
+	RP2040_PAD_FUNC_PIO1,
+	RP2040_PAD_FUNC_CLK,
+	RP2040_PAD_FUNC_USB,
+	RP2040_PAD_FUNC_RESET = 31,
+} rp2040_pad_func_t;
+
+typedef enum{
+	RP2040_PAD_FLAG_INPUT_EN = 0x1,
+	RP2040_PAD_FLAG_OUTPUT_EN = 0x2,
+	RP2040_PAD_FLAG_PULLUP_EN = 0x4,
+	RP2040_PAD_FLAG_PULLDOWN_EN = 0x8,
+	RP2040_PAD_FLAG_SCHMITT_EN = 0x10,
+	RP2040_PAD_FLAG_SLEWFAST = 0x20,
+	RP2040_PAD_FLAG_INT_EN = 0x40,
+} rp2040_pad_flags_t;
+
+typedef enum{
+	RP2040_PAD_DRV_2MA = 0,
+	RP2040_PAD_DRV_4MA,
+	RP2040_PAD_DRV_8MA,
+	RP2040_PAD_DRV_12MA,
+} rp2040_pad_drive_t;
 
 typedef enum{
 	RP2040_RST_ADC = 0,
@@ -82,21 +99,26 @@ typedef enum{
 } rp2040_resets_id_t;
 
 typedef struct{
-	uint8_t ref_div;		/**< reference clock divider, range = [1, 63] */
-	uint8_t post_div[2];	/**< post dividers 1 and 2, range = [1, 7] */
-	uint16_t feeback_div;	/**< feedback divider, range = [16, 320] */
+	uint8_t ref_div;			/**< reference clock divider, range = [1, 63] */
+	uint8_t post_div[2];		/**< post dividers 1 and 2, range = [1, 7] */
+	uint16_t feeback_div;		/**< feedback divider, range = [16, 320] */
 } rp2040_pll_cfg_t;
 
 typedef struct{
-	uint32_t crystal_clock_khz,		/**< external crystal frequency */
-			 system_clock_khz,		/**< system clock, set by the platform implementation */
-			 peri_clock_khz;		/**< peripherall clock, set by the platform implementation */
+	rp2040_pad_flags_t flags;
+	rp2040_pad_drive_t drive;
+} rp2040_pad_cfg_t;
+
+typedef struct{
+	uint32_t crystal_clock_khz,	/**< external crystal frequency */
+			 system_clock_khz,	/**< system clock, set by the platform implementation */
+			 peri_clock_khz;	/**< peripherall clock, set by the platform implementation */
 
 	rp2040_pll_cfg_t pll_sys,
 					 pll_usb;
 
-	uint8_t gpio_funcsel[30];		/**< cf. rp2040_gpio_func_t */
-	uint8_t gpio_v33;				/**< 3.3V for gpio pins*/
+	uint8_t gpio_funcsel[30];	/**< cf. rp2040_pad_func_t */
+	uint8_t gpio_v33;			/**< 3.3V for gpio pins*/
 } rp2040_platform_cfg_t;
 
 
@@ -112,7 +134,8 @@ void rp2040_resets_halt(uint32_t mask);
 
 int rp2040_atomic(atomic_t op, void *param);
 
-void rp2040_iomux_init(void);
+void rp2040_pads_init(void);
+int rp2040_pad_init(uint8_t pad, rp2040_pad_cfg_t *cfg);
 void rp2040_clocks_init(void);
 
 
