@@ -18,26 +18,11 @@
 
 
 /* macros */
-// registers
-#define GPIO(x)			MREG(PADS_BANK0_BASE + 0x4 + x * 4)
+#define INTR(x)		MREG(IO_BANK0_BASE + 0x0f0 + x * 4)
 
-#define GPIO_IN			MREG(SIO_BASE + 0x4)
-#define GPIO_OUT		MREG(SIO_BASE + 0x10)
-#define GPIO_OE			MREG(SIO_BASE + 0x20)
-#define INTR(x)			MREG(IO_BANK0_BASE + 0x0f0 + x * 4)
-#define INTE(core, x)	MREG(IO_BANK0_BASE + 0x100 + core * 0x30 + x * 4)
-
-// register bits
-#define GPIO_OD			7
-#define GPIO_IE			6
-#define GPIO_DRIVE		4
-#define GPIO_PUE		3
-#define GPIO_PDE		2
-#define GPIO_SCHMITT	1
-#define GPIO_SLEWFAST	0
-
-#define INTE_EDGE_LOW	2
-#define INTE_EDGE_HIGH	3
+#define GPIO_IN		MREG(SIO_BASE + 0x4)
+#define GPIO_OUT	MREG(SIO_BASE + 0x10)
+#define GPIO_OE		MREG(SIO_BASE + 0x20)
 
 
 /* types */
@@ -83,46 +68,43 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 driver_probe("rp2040,gpio", probe);
 
 static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
-	uint8_t drive[] = { 0, 1, 2, 0, 3 };
+	uint8_t drive[] = {
+		RP2040_PAD_DRV_2MA,
+		RP2040_PAD_DRV_4MA,
+		RP2040_PAD_DRV_8MA,
+		RP2040_PAD_DRV_2MA,
+		RP2040_PAD_DRV_12MA
+	};
 	dt_data_t *dtd = (dt_data_t*)dt_data;
-	uint32_t pin;
+	uint32_t mask;
 	uint8_t drive_idx;
-	uint8_t int_reg;
-	uint32_t int_mask;
+	rp2040_pad_cfg_t pad;
 
 
 	for(uint8_t i=0; i<32; i++){
-		pin = 0x1 << i;
+		mask = 0x1 << i;
 
-		if(((cfg->in_mask | cfg->out_mask)  & pin) == 0)
+		if(((cfg->in_mask | cfg->out_mask) & mask) == 0)
 			continue;
 
 		/* configure pad */
-		drive_idx = (((bool)(dtd->drive_4ma & pin)))
-				  | (((bool)(dtd->drive_8ma & pin)) << 0x1)
-				  | (((bool)(dtd->drive_12ma & pin)) << 0x2)
+		drive_idx = (((bool)(dtd->drive_4ma & mask)))
+				  | (((bool)(dtd->drive_8ma & mask)) << 0x1)
+				  | (((bool)(dtd->drive_12ma & mask)) << 0x2)
 				  ;
 
-		GPIO(i) = ((!((bool)(cfg->out_mask & pin))) << GPIO_OD)
-				| (((bool)(cfg->in_mask & pin)) << GPIO_IE)
-				| (((bool)(dtd->pullup_mask & pin)) << GPIO_PUE)
-				| (((bool)(dtd->pulldown_mask & pin)) << GPIO_PDE)
-				| (((bool)(dtd->schmitt_en & pin)) << GPIO_SCHMITT)
-				| (((bool)(dtd->slewfast & pin)) << GPIO_SLEWFAST)
-				| (drive[drive_idx] << GPIO_DRIVE)
-				;
+		pad.drive = drive[drive_idx];
+		pad.flags = ((cfg->in_mask & mask) ? RP2040_PAD_FLAG_INPUT_EN : 0x0)
+				  | ((cfg->out_mask & mask) ? RP2040_PAD_FLAG_OUTPUT_EN : 0x0)
+				  | ((cfg->int_mask & mask) ? RP2040_PAD_FLAG_INT_EN : 0x0)
+				  | ((dtd->pullup_mask & mask) ? RP2040_PAD_FLAG_PULLUP_EN : 0x0)
+				  | ((dtd->pulldown_mask & mask) ? RP2040_PAD_FLAG_PULLDOWN_EN : 0x0)
+				  | ((dtd->schmitt_en & mask) ? RP2040_PAD_FLAG_SCHMITT_EN : 0x0)
+				  | ((dtd->slewfast & mask) ? RP2040_PAD_FLAG_SLEWFAST : 0x0)
+				  ;
 
-		/* configure interrupt */
-		int_reg = i / 8;
-
-		// level interrupts are not supported since they would overload
-		// the system if the trigger level is active
-		int_mask = (bool)(cfg->int_mask & pin);
-		int_mask = (int_mask << INTE_EDGE_HIGH) | (int_mask << INTE_EDGE_LOW);
-		int_mask <<= (i - int_reg * 8) * 4;
-
-		INTR(int_reg) |= int_mask; // clear stale events
-		INTE(0, int_reg) |= int_mask;
+		if(rp2040_pad_init(i, &pad) != 0)
+			return -errno;
 	}
 
 	GPIO_OE = (GPIO_OE | cfg->out_mask) & ~cfg->in_mask;
