@@ -25,7 +25,10 @@ non-interactive-y := \
 	timer.o \
 	mmap.o
 
-non-interactive-$(CONFIG_DRIVER_GPIO) += gpio.o
+ifeq ($(CONFIG_X86)$(CONFIG_DRIVER_GPIO),yy)
+  non-interactive-y += gpio.o
+endif
+
 non-interactive-$(if $(CONFIG_X86),n,y) += sigthread.o kill.o
 non-interactive-$(CONFIG_VRAM_TERM) += vramtty.o
 

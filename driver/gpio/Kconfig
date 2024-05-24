@@ -12,11 +12,29 @@ menuconfig DRIVER_GPIO
 	select KERNEL_DEVFS
 	select SC_SIGNAL
 	select AVR_GPIO if AVR
+	select RP2040_GPIO if ARM_CHIP_RP2040
 	select X86_GPIO if X86
 
 if DRIVER_GPIO
-	choice
-		prompt "gpio register width"
+	config GPIO_PIN
+		bool "pin device support"
+		default n
+
+	config GPIO_PORT
+		bool "port device support"
+		default y
+
+	config GPIO_INTFWD
+		bool "interrupt forwarding support"
+		default n
+
+	config GPIO_DEBUG
+		bool "enable debug messages"
+		select KERNEL_LOG_DEBUG
+		default n
+
+	menu "hidden"
+		visible if 0
 
 		config GPIO_INT_WIDTH_8
 			bool "8 bit"
@@ -29,15 +47,6 @@ if DRIVER_GPIO
 
 		config GPIO_INT_WIDTH_64
 			bool "64 bit"
-	endchoice
-
-	config GPIO_DEBUG
-		bool "enable debug messages"
-		select KERNEL_LOG_DEBUG
-		default n
-
-	menu "hidden"
-		visible if 0
 
 		config GPIO_INT_WIDTH
 			int "gpio register width"
@@ -45,6 +54,5 @@ if DRIVER_GPIO
 			default 16	if GPIO_INT_WIDTH_16
 			default 32	if GPIO_INT_WIDTH_32
 			default 64	if GPIO_INT_WIDTH_64
-			default 8
 	endmenu
 endif # DRIVER_GPIO

@@ -45,10 +45,10 @@ char *inet_ntoa(inet_addr_t addr){
 
 char *inet_ntoa_r(inet_addr_t addr, char *s, size_t n){
 	snprintf(s, n, "%hhu.%hhu.%hhu.%hhu",
-		(uint8_t)bits(addr, 24, 0xff),
-		(uint8_t)bits(addr, 16, 0xff),
-		(uint8_t)bits(addr, 8, 0xff),
-		(uint8_t)bits(addr, 0, 0xff)
+		(uint8_t)bits_get(addr, 24, 0xff),
+		(uint8_t)bits_get(addr, 16, 0xff),
+		(uint8_t)bits_get(addr, 8, 0xff),
+		(uint8_t)bits_get(addr, 0, 0xff)
 	);
 
 	return s;

@@ -1,0 +1,136 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#include <config/config.h>
+#include <gpio.dts>
+
+
+porta = {
+	compatible = "avr,gpio";
+
+	/* gpio hardware (dt_data_t) */
+	baseaddr = 0x20;	// porta
+
+	reg = [
+		0x68,			// PCICR
+		0x6b,			// PCMSK0
+	];
+
+	int<8> = [
+		0xf0,			// pull-up mask
+		4,				// interrupt (pcint0)
+	];
+
+
+	switches = {
+		compatible = "gpio,port";
+
+		gpio_cfg_t(
+			0xf0,		// in mask
+			0x00,		// out mask
+			0xf0,		// int mask
+			0xf0,		// invert mask
+			37			// interrupt (virtual)
+		);
+	};
+
+	adc = {
+		compatible = "gpio,port";
+
+		gpio_cfg_t(
+			0x0f,		// in mask
+			0x00,		// out mask
+			0x00,		// int mask
+			0x00,		// invert mask
+			0			// interrupt
+		);
+	};
+
+#if defined(CONFIG_DRIVER_MCP23017) && defined(CONFIG_GPIO_INTFWD)
+	mcp-int = {
+		compatible = "gpio,intfwd";
+
+		/* intfwd config (dt_data_t) */
+		gpio_cfg_t(
+			0x01,			// in mask
+			0x00,			// out mask
+			0x01,			// int mask
+			0x00,			// invert mask
+			38				// interrupt (virtual)
+		);
+
+		int<8> = [ 39 ];	// interrupt to trigger (virtual)
+		baseaddr = 0x0;		// gpio interface (set by driver)
+	};
+#endif // CONFIG_DRIVER_MCP23017 && CONFIG_GPIO_INTFWD
+};
+
+portb = {
+	compatible = "avr,gpio";
+
+	/* gpio hardware (dt_data_t) */
+	baseaddr = 0x23;	// portb
+
+	reg = [
+		0x68,			// PCICR
+		0x6c,			// PCMSK1
+	];
+
+	int<8> = [
+		0x01,			// pull-up mask
+		0,				// interrupt
+	];
+
+	uled = {
+		compatible = "gpio,pin";
+
+		gpio_cfg_t(
+			0x00,		// in mask
+			0x01,		// out mask
+			0x00,		// int mask
+			0x01,		// invert mask
+			0			// interrupt
+		);
+	};
+
+#ifdef CONFIG_KERNEL_HEARTBEAT
+# define HEARTBEAT_PIN_MASK	0x2
+# define HEARTBEAT_INVERT	1
+# include "../common/heartbeat.dts"
+#endif // CONFIG_KERNEL_HEARTBEAT
+};
+
+portc = {
+	compatible = "avr,gpio";
+
+	/* gpio hardware (dt_data_t) */
+	baseaddr = 0x26;	// portc
+
+	reg = [
+		0x68,			// PCICR
+		0x6d,			// PCMSK2
+	];
+
+	int<8> = [
+		0xc0,			// pull-up mask
+		6,				// interrupt (pcint2)
+	];
+
+	int0 = {
+		compatible = "gpio,port";
+
+		gpio_cfg_t(
+			0xc0,		// in mask
+			0xc0,		// out mask
+			0xc0,		// int mask
+			0xc0,		// invert mask
+			40			// interrupt (virtual)
+		);
+	};
+};

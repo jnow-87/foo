@@ -8,42 +8,49 @@
 
 
 #include <config/config.h>
+#include <gpio.dts>
 
 
-port-test0 = {
+port-test = {
 	compatible = "x86,gpio";
 
-	/* gpio config (gpio_cfg_t) */
-	int<CONFIG_GPIO_INT_WIDTH> = [
-		1,		// mode (normal)
-		0xff,	// pin mask
-		0x3f,	// in mask
-		0xfc,	// out mask
-		0x00,	// int mask
-		0xff,	// invert mask (pass through)
-		0,		// interrupt
-	];
+	/* gpio hardware (dt_data_t) */
+	int<8> = [ 8 ];		// interrupt (virtual)
+	int<16> = [ 10 ];	// interrupt timer period [ms]
 
-	gpio-normal = {
-		compatible = "gpio,dev";
+	gpio-port = {
+		compatible = "gpio,port";
+
+		gpio_cfg_t(
+			0xff0f,		// in mask
+			0xff00,		// out mask
+			0x000f,		// int mask
+			0x0005,		// invert mask
+			0			// interrupt
+		);
 	};
-};
 
-port-test1 = {
-	compatible = "x86,gpio";
+	gpio-pin = {
+		compatible = "gpio,pin";
 
-	/* gpio config (gpio_cfg_t) */
-	int<CONFIG_GPIO_INT_WIDTH> = [
-		2,		// mode (strict)
-		0xff,	// pin mask
-		0x3f,	// in mask
-		0xfc,	// out mask
-		0x00,	// int mask
-		0x00,	// invert mask (pass through)
-		0,		// interrupt
-	];
+		gpio_cfg_t(
+			0xff,		// in mask
+			0xff,		// out mask
+			0x0f,		// int mask
+			0x00,		// invert mask
+			0			// interrupt
+		);
+	};
 
-	gpio-strict = {
-		compatible = "gpio,dev";
+	gpio-int = {
+		compatible = "gpio,port";
+
+		gpio_cfg_t(
+			0xffffffff,	// in mask
+			0xffffffff,	// out mask
+			0xffffffff,	// int mask
+			0x00000000,	// invert mask
+			9			// interrupt
+		);
 	};
 };

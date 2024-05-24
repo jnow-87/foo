@@ -34,7 +34,7 @@ devices = {
 #endif // CONFIG_AVR_PWM16
 
 #ifdef CONFIG_DRIVER_GPIO
-# include "avr/gpio-ports.dts"
+# include "avr/gpio.dts"
 #endif // CONFIG_DRIVER_GPIO
 
 #ifdef CONFIG_AVR_SPI

@@ -1,0 +1,25 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#include <assert.dts>
+
+
+/* macros */
+#define gpio_cfg_t(in_mask, out_mask, int_mask, invert_mask, int_num) \
+	ASSERT((int_mask & ~(in_mask | out_mask)) == 0, "int_mask has to match in_mask and out_mask"); \
+	ASSERT((invert_mask & ~(in_mask | out_mask)) == 0, "invert_mask has to match in_mask and out_mask"); \
+	\
+	/* gpio config (gpio_cfg_t) */ \
+	int<CONFIG_GPIO_INT_WIDTH> = [ \
+		in_mask, \
+		out_mask, \
+		int_mask, \
+		invert_mask, \
+		int_num, \
+	]

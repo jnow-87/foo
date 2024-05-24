@@ -24,7 +24,7 @@
 }
 
 #define ARCH_ASSERT_POW2(member){ \
-	if(bits_set(root_arch.member) != 1) \
+	if(bits_count(root_arch.member) != 1) \
 		return devtree_parser_error("arch attribute '" #member "' not a power of 2"); \
 }
 

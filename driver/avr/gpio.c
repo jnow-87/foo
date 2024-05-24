@@ -9,9 +9,11 @@
 
 #include <arch/arch.h>
 #include <kernel/driver.h>
+#include <kernel/memory.h>
 #include <driver/gpio.h>
-#include <sys/types.h>
 #include <sys/gpio.h>
+#include <sys/register.h>
+#include <sys/types.h>
 
 
 /* types */
@@ -29,56 +31,59 @@ typedef struct{
 	uint8_t volatile *pcicr,
 					 *pcmsk;
 
-	// configuration
-	gpio_cfg_t cfg;
+	uint8_t pullup_mask;
+	uint8_t int_num;	/**< cf. int_num_t */
 } dt_data_t;
 
 
 /* local/static prototypes */
-static gpio_int_t read(void *hw);
-static int write(gpio_int_t v, void *hw);
+static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload);
+static intgpio_t read(void *dt_data, void *payload);
+static int write(intgpio_t v, void *dt_data, void *payload);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd = (dt_data_t*)dt_data;
-	gpio_t *gpio;
-	gpio_regs_t *regs = dtd->regs;
-	gpio_cfg_t *cfg = &dtd->cfg;
+	gpio_itf_t *itf;
 	gpio_ops_t ops;
 
 
-	/* create device */
+	ops.configure = configure;
 	ops.read = read;
 	ops.write = write;
 
-	gpio = gpio_create(&ops, cfg, dtd);
+	itf = gpio_itf_create(&ops, dtd->int_num, dtd, 0x0, 0);
 
-	if(gpio == 0x0)
-		return 0x0;
+	if(itf != 0x0 && dtd->int_num)
+		*dtd->pcicr = bits_set(*dtd->pcicr, 0x1 << (dtd->int_num - INT_PCINT0));
 
-	/* configure */
-	// port
-	regs->port |= cfg->in_mask | cfg->out_mask | cfg->int_mask;
-	regs->ddr |= cfg->out_mask | cfg->int_mask;
-
-	// interrupts
-	*dtd->pcmsk |= cfg->int_mask;
-
-	if(cfg->int_num)
-		*dtd->pcicr |= (0x1 << (cfg->int_num - INT_PCINT0));
-
-	return gpio;
+	return itf;
 }
 
 driver_probe("avr,gpio", probe);
 
-static gpio_int_t read(void *hw){
-	return ((dt_data_t*)hw)->regs->pin;
+static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
+	dt_data_t *dtd = (dt_data_t*)dt_data;
+	gpio_regs_t *regs = dtd->regs;
+
+
+	// configure port
+	regs->ddr = bits_set(regs->ddr, cfg->out_mask);
+	regs->port = bits_set(regs->port, dtd->pullup_mask);
+
+	// configure interrupts
+	*dtd->pcmsk = bits_set(*dtd->pcmsk, cfg->int_mask);
+
+	return 0;
 }
 
-static int write(gpio_int_t v, void *hw){
-	((dt_data_t*)hw)->regs->port = v;
+static intgpio_t read(void *dt_data, void *payload){
+	return ((dt_data_t*)dt_data)->regs->pin;
+}
+
+static int write(intgpio_t v, void *dt_data, void *payload){
+	((dt_data_t*)dt_data)->regs->port = v;
 
 	return 0;
 }

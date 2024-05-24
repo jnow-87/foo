@@ -11,7 +11,7 @@
 
 
 /* global functions */
-uint8_t bits_set(unsigned int val){
+uint8_t bits_count(unsigned int val){
 	uint8_t n = 0;
 
 

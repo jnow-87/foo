@@ -21,6 +21,10 @@ num-vints = 0
 #ifdef CONFIG_RP2040_UART
 	+ 2
 #endif // CONFIG_RP2040_UART
+
+#ifdef CONFIG_DRIVER_GPIO
+	+ 1
+#endif // CONFIG_DRIVER_GPIO
 ;
 
 timer-int = 15;
@@ -65,10 +69,10 @@ plt = {
 		2,		// gpio1 (uart0 rx)
 		31,		// gpio2 (reset)
 		31,		// gpio3 (reset)
-		31,		// gpio4 (reset)
-		31,		// gpio5 (reset)
-		31,		// gpio6 (reset)
-		31,		// gpio7 (reset)
+		5,		// gpio4 (sio)
+		5,		// gpio5 (sio)
+		5,		// gpio6 (sio)
+		5,		// gpio7 (sio)
 		31,		// gpio8 (reset)
 		31,		// gpio9 (reset)
 		31,		// gpio10 (reset)

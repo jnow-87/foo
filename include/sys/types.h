@@ -31,7 +31,7 @@
 
 
 /* types */
-typedef char							bool;
+typedef _Bool							bool;
 typedef void							*addr_t;
 
 #ifndef BUILD_HOST

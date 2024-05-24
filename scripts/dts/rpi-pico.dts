@@ -28,4 +28,8 @@ devices = {
 #ifdef CONFIG_LOOP_TERM
 # include "common/tty-loop0.dts"
 #endif // CONFIG_LOOP_TERM
+
+#ifdef CONFIG_DRIVER_GPIO
+# include "rp2040/gpio.dts"
+#endif // CONFIG_DRIVER_GPIO
 };
