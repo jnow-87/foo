@@ -54,9 +54,8 @@ void const *devtree_arch_payload(char const *comp){
 	if(node == 0x0 || node->payload == 0x0){
 #ifdef BUILD_KERNEL
 		kpanic("devtree arch node \"%s\" not defined\n", comp);
-#else
-		goto_errno(err, E_INVAL);
 #endif // BUILD_KERNEL
+		goto_errno(err, E_INVAL);
 	}
 
 	return (node == 0x0) ? 0x0 : node->payload;

@@ -87,31 +87,31 @@ TEST(devtree){
 
 
 	/* devtree_find_memory_by_name() */
-	r += TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "memory-root"), &memroot);
-	r += TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "mem0"), &mem0);
-	r += TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "mem1"), &mem1);
-	r += TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "mem0-child"), &mem0_child);
+	r |= TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "memory-root"), &memroot);
+	r |= TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "mem0"), &mem0);
+	r |= TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "mem1"), &mem1);
+	r |= TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "mem0-child"), &mem0_child);
 
-	r += TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "invalid"), 0x0);
-	r += TEST_PTR_EQ(devtree_find_memory_by_name(&mem1, "zero-child"), 0x0);
+	r |= TEST_PTR_EQ(devtree_find_memory_by_name(&memroot, "invalid"), 0x0);
+	r |= TEST_PTR_EQ(devtree_find_memory_by_name(&mem1, "zero-child"), 0x0);
 
 	/* devtree_find_device_by_name() */
-	r += TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "devory-root"), &devroot);
-	r += TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "dev0"), &dev0);
-	r += TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "dev1"), &dev1);
-	r += TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "dev0-child"), &dev0_child);
+	r |= TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "devory-root"), &devroot);
+	r |= TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "dev0"), &dev0);
+	r |= TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "dev1"), &dev1);
+	r |= TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "dev0-child"), &dev0_child);
 
-	r += TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "invalid"), 0x0);
-	r += TEST_PTR_EQ(devtree_find_device_by_name(&dev1, "zero-child"), 0x0);
+	r |= TEST_PTR_EQ(devtree_find_device_by_name(&devroot, "invalid"), 0x0);
+	r |= TEST_PTR_EQ(devtree_find_device_by_name(&dev1, "zero-child"), 0x0);
 
 	/* devtree_find_device_by_comp() */
-	r += TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, ""), &devroot);
-	r += TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, "driver-dev0"), &dev0);
-	r += TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, "driver-dev1"), &dev1);
-	r += TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, "driver-dev0-child"), &dev0_child);
+	r |= TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, ""), &devroot);
+	r |= TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, "driver-dev0"), &dev0);
+	r |= TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, "driver-dev1"), &dev1);
+	r |= TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, "driver-dev0-child"), &dev0_child);
 
-	r += TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, "invalid"), 0x0);
-	r += TEST_PTR_EQ(devtree_find_device_by_comp(&dev1, "zero-child"), 0x0);
+	r |= TEST_PTR_EQ(devtree_find_device_by_comp(&devroot, "invalid"), 0x0);
+	r |= TEST_PTR_EQ(devtree_find_device_by_comp(&dev1, "zero-child"), 0x0);
 
 	return -r;
 }

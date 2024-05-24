@@ -36,22 +36,22 @@ TEST(mmap){
 	ASSERT_INT_EQ(ioctl(fd_rd, IOCTL_CFGRD, &cfg), 0);
 
 	/* try mapping a too large block */
-	r += TEST_PTR_EQ(mmap(fd_wr, cfg.size + 1), 0x0);
-	r += TEST_INT_EQ(errno, E_LIMIT);
+	r |= TEST_PTR_EQ(mmap(fd_wr, cfg.size + 1), 0x0);
+	r |= TEST_INT_EQ(errno, E_LIMIT);
 	reset_errno();
 
 	/* write + read through mmaped block */
 	ASSERT_PTR_NEQ(mem = mmap(fd_wr, cfg.size), 0x0);
-	r += TEST_INT_EQ(write(fd_wr, "foobar", 6), 6);
-	r += TEST_STRN_EQ(mem, "foobar", 6);
+	r |= TEST_INT_EQ(write(fd_wr, "foobar", 6), 6);
+	r |= TEST_STRN_EQ(mem, "foobar", 6);
 
 	/* write through mmapped block + read */
 	strcpy(mem, "barfoo");
-	r += TEST_INT_EQ(read(fd_rd, buf, 6), 6);
-	r += TEST_STRN_EQ(buf, "barfoo", 6);
+	r |= TEST_INT_EQ(read(fd_rd, buf, 6), 6);
+	r |= TEST_STRN_EQ(buf, "barfoo", 6);
 
-	r += TEST_INT_EQ(close(fd_rd), 0);
-	r += TEST_INT_EQ(close(fd_wr), 0);
+	r |= TEST_INT_EQ(close(fd_rd), 0);
+	r |= TEST_INT_EQ(close(fd_wr), 0);
 
 	return -r;
 }

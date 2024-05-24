@@ -31,7 +31,7 @@ typedef struct{
 
 
 /* prototypes */
-int driver_load(void);
+void driver_load(void);
 
 
 #endif // KERNEL_DRIVER_H

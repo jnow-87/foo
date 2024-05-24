@@ -19,11 +19,12 @@
 #include <kernel/panic.h>
 #include <kernel/ktask.h>
 #include <kernel/ipi.h>
+#include <sys/compiler.h>
+#include <sys/devicetree.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/mutex.h>
 #include <sys/string.h>
-#include <sys/devicetree.h>
 #include <sys/types.h>
 
 
@@ -42,7 +43,7 @@ typedef struct{
 	modifier_t op;
 
 	size_t size;
-	uint8_t payload[];
+	uint8_t payload[] __align(CONFIG_KMALLOC_ALIGN);
 } ipi_data_t;
 
 

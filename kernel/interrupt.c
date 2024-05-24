@@ -68,7 +68,7 @@ void int_khdlr(int_num_t num){
 
 	/* handle foretold interrupts */
 	for(uint8_t i=0; i<sizeof(foretold); i++){
-		for(uint8_t j=0; j<8 && foretold[i]; j++){
+		for(int8_t j=0; j<8 && foretold[i]; j++){
 			if(!(foretold[i] & (0x1 << j)))
 				continue;
 
@@ -80,7 +80,7 @@ void int_khdlr(int_num_t num){
 			// re-iterate the foretold interrupts, handling the case of an
 			// interrupt being foretold in a foretold interrupt handler
 			i = 0;
-			j = 0;
+			j = -1;
 		}
 	}
 

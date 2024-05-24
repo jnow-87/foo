@@ -38,7 +38,7 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	this_t->tid = tid;
 
-	mutex_init(&this_t->mtx, 0);
+	mutex_init(&this_t->mtx, MTX_NOINT);
 
 	/* set thread attributes */
 	this_t->state = CREATED;

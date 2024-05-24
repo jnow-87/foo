@@ -19,12 +19,12 @@ TEST(alignp2){
 	int r = 0;
 
 
-	r += test_align(1, 1);
-	r += test_align(1, 2);
-	r += test_align(2, 2);
-	r += test_align(3, 2);
-	r += test_align(1, 4);
-	r += test_align(20, 16);
+	r |= test_align(1, 1);
+	r |= test_align(1, 2);
+	r |= test_align(2, 2);
+	r |= test_align(3, 2);
+	r |= test_align(1, 4);
+	r |= test_align(20, 16);
 
 	return -r;
 }

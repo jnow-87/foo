@@ -54,7 +54,7 @@ TEST(list1_init){
 
 	list1_init(head, tail);
 
-	r += TEST_PTR_EQ(head->next, 0x0);
+	r |= TEST_PTR_EQ(head->next, 0x0);
 
 	return -r;
 }
@@ -70,9 +70,9 @@ TEST(list1_add_head){
 	list1_add_head(head, tail, &el0);
 	list1_add_head(head, tail, &el1);
 
-	r += TEST_PTR_EQ(head, &el1);
-	r += TEST_PTR_EQ(el1.next, &el0);
-	r += TEST_PTR_EQ(el0.next, 0x0);
+	r |= TEST_PTR_EQ(head, &el1);
+	r |= TEST_PTR_EQ(el1.next, &el0);
+	r |= TEST_PTR_EQ(el0.next, 0x0);
 
 	return -r;
 }
@@ -88,9 +88,9 @@ TEST(list1_add_tail){
 	list1_add_tail(head, tail, &el0);
 	list1_add_tail(head, tail, &el1);
 
-	r += TEST_PTR_EQ(head, &el0);
-	r += TEST_PTR_EQ(el0.next, &el1);
-	r += TEST_PTR_EQ(el1.next, 0x0);
+	r |= TEST_PTR_EQ(head, &el0);
+	r |= TEST_PTR_EQ(el0.next, &el1);
+	r |= TEST_PTR_EQ(el1.next, 0x0);
 
 	return -r;
 }
@@ -110,20 +110,20 @@ TEST(list1_rm){
 	// remove middle element
 	list1_rm_head(head, tail);
 
-	r += TEST_PTR_EQ(head, &el1);
-	r += TEST_PTR_EQ(el1.next, &el2);
-	r += TEST_PTR_EQ(el2.next, 0x0);
+	r |= TEST_PTR_EQ(head, &el1);
+	r |= TEST_PTR_EQ(el1.next, &el2);
+	r |= TEST_PTR_EQ(el2.next, 0x0);
 
 	// remove tail element
 	list1_rm_head(head, tail);
 
-	r += TEST_PTR_EQ(head, &el2);
-	r += TEST_PTR_EQ(el2.next, 0x0);
+	r |= TEST_PTR_EQ(head, &el2);
+	r |= TEST_PTR_EQ(el2.next, 0x0);
 
 	// remove head element
 	list1_rm_head(head, tail);
 
-	r += TEST_PTR_EQ(head, 0x0);
+	r |= TEST_PTR_EQ(head, 0x0);
 
 	return -r;
 }

@@ -59,7 +59,7 @@ TEST(stack_init){
 
 	stack_init(top);
 
-	r += TEST_PTR_EQ(top->next, 0);
+	r |= TEST_PTR_EQ(top->next, 0);
 
 	return -r;
 }
@@ -71,19 +71,19 @@ TEST(stack_top){
 
 	INIT_EL();
 
-	r += TEST_PTR_EQ(stack_top(top), 0x0);
+	r |= TEST_PTR_EQ(stack_top(top), 0x0);
 
 	stack_push(top, &el0);
-	r += TEST_PTR_EQ(stack_top(top), &el0);
+	r |= TEST_PTR_EQ(stack_top(top), &el0);
 
 	stack_push(top, &el1);
-	r += TEST_PTR_EQ(stack_top(top), &el1);
+	r |= TEST_PTR_EQ(stack_top(top), &el1);
 
 	(void)pop(&top);
-	r += TEST_PTR_EQ(stack_top(top), &el0);
+	r |= TEST_PTR_EQ(stack_top(top), &el0);
 
 	(void)pop(&top);
-	r += TEST_PTR_EQ(stack_top(top), 0x0);
+	r |= TEST_PTR_EQ(stack_top(top), 0x0);
 
 	return -r;
 }
@@ -98,15 +98,15 @@ TEST(stack_push){
 	// push to empty stack
 	stack_push(top, &el0);
 
-	r += TEST_PTR_EQ(top, &el0);
-	r += TEST_PTR_EQ(el0.next, 0);
+	r |= TEST_PTR_EQ(top, &el0);
+	r |= TEST_PTR_EQ(el0.next, 0);
 
 	// push to non-empty stack
 	stack_push(top, &el1);
 
-	r += TEST_PTR_EQ(top, &el1);
-	r += TEST_PTR_EQ(el1.next, &el0);
-	r += TEST_PTR_EQ(el0.next, 0);
+	r |= TEST_PTR_EQ(top, &el1);
+	r |= TEST_PTR_EQ(el1.next, &el0);
+	r |= TEST_PTR_EQ(el0.next, 0);
 
 	return -r;
 }
@@ -126,20 +126,20 @@ TEST(stack_pop){
 	// pop from non-empty stack
 	el = pop(&top);
 
-	r += TEST_PTR_EQ(top, &el0);
-	r += TEST_PTR_EQ(el, &el1);
+	r |= TEST_PTR_EQ(top, &el0);
+	r |= TEST_PTR_EQ(el, &el1);
 
 	// pop last element
 	el = pop(&top);
 
-	r += TEST_PTR_EQ(top, 0);
-	r += TEST_PTR_EQ(el, &el0);
+	r |= TEST_PTR_EQ(top, 0);
+	r |= TEST_PTR_EQ(el, &el0);
 
 	// pop from empty stack
 	el = pop(&top);
 
-	r += TEST_PTR_EQ(top, 0);
-	r += TEST_PTR_EQ(el, 0);
+	r |= TEST_PTR_EQ(top, 0);
+	r |= TEST_PTR_EQ(el, 0);
 
 	return -r;
 }

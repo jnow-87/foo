@@ -32,8 +32,8 @@ uart1 = {
 		int<8> = [
 			0,					// id
 			2,					// chunksize
-			0,					// automatically set by the driver
-			0,					// automatically set by the driver
+			0,					// rx interrupt (set by the driver)
+			0,					// tx interrupt (set by the driver)
 		];
 	};
 };

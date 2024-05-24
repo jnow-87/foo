@@ -30,37 +30,22 @@ static int ack_check(i2c_t *i2c);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	bridge_cfg_t *dtd = (bridge_cfg_t*)dt_data;
-	bridge_t *brdg;
-	i2c_t *itf;
+	bridge_t *dti = (bridge_t*)dt_itf;
 	i2c_ops_t ops;
 
 
-	if(dtd->rx_int != 0 || dtd->tx_int != 0)
-		goto_errno(err_0, E_INVAL);
-
-	brdg = bridge_create(0x0, dtd, 0x0);
-
-	if(brdg == 0x0)
-		goto err_0;
+	if(dti->cfg->rx_int != 0 || dti->cfg->tx_int != 0)
+		goto_errno(err, E_INVAL);
 
 	memset(&ops, 0x0, sizeof(i2c_ops_t));
 
 	ops.read = read;
 	ops.write = write;
 
-	itf = i2c_create(&ops, (i2c_cfg_t*)dtd->hwcfg, brdg);
-
-	if(itf == 0x0)
-		goto err_1;
-
-	return itf;
+	return i2c_create(&ops, dt_data, dti);
 
 
-err_1:
-	bridge_destroy(brdg);
-
-err_0:
+err:
 	return 0x0;
 }
 

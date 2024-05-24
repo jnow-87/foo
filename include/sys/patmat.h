@@ -11,6 +11,8 @@
 #define PATMAT_H
 
 
+#include <config/config.h>
+#include <sys/compiler.h>
 #include <sys/types.h>
 
 
@@ -39,7 +41,7 @@ typedef struct{
 	size_t len;
 	size_t chars_matched;
 
-	uint8_t payload[];
+	uint8_t payload[] __align(CONFIG_KMALLOC_ALIGN);
 } patmat_spec_t;
 
 typedef struct{

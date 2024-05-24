@@ -198,7 +198,6 @@ static int sc_hdlr_recv(void *param){
 			(void)copy_to_user(p->addr, addr, p->addr_len, this_p);
 	}
 
-end:
 	fs_fd_release(fd);
 
 	return -errno;
@@ -235,7 +234,6 @@ static int sc_hdlr_send(void *param){
 
 	DEBUG("sent %d bytes, \"%s\"\n", p->buf_len, strerror(errno));
 
-end:
 	fs_fd_release(fd);
 
 	return -errno;

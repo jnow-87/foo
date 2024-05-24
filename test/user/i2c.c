@@ -63,24 +63,24 @@ static int tests(test_type_t type){
 	ASSERT_INT_NEQ(fd = open(I2C_DEV, O_RDWR), -1);
 
 	/* read/write of different length */
-	r += test_rw(type | MASTER_RD, fd, 1, 1, 1, 1);
-	r += test_rw(type | MASTER_WR, fd, 1, 1, 1, 1);
-	r += test_rw(type | MASTER_RD, fd, 4, 4, 4, 4);
-	r += test_rw(type | MASTER_WR, fd, 4, 4, 4, 4);
-	r += test_rw(type | MASTER_RD, fd, 5, 5, 5, 5);
-	r += test_rw(type | MASTER_WR, fd, 5, 5, 5, 5);
+	r |= test_rw(type | MASTER_RD, fd, 1, 1, 1, 1);
+	r |= test_rw(type | MASTER_WR, fd, 1, 1, 1, 1);
+	r |= test_rw(type | MASTER_RD, fd, 4, 4, 4, 4);
+	r |= test_rw(type | MASTER_WR, fd, 4, 4, 4, 4);
+	r |= test_rw(type | MASTER_RD, fd, 5, 5, 5, 5);
+	r |= test_rw(type | MASTER_WR, fd, 5, 5, 5, 5);
 
 	/* read/write with deviating tx and rx length */
-	r += test_rw(type | MASTER_RD, fd, 5, 3, 3, 3);
-	r += test_rw(type | MASTER_WR, fd, 5, 3, 3, 3);
-	r += test_rw(type | MASTER_RD, fd, 3, 3, 5, 5);
-	r += test_rw(type | MASTER_WR, fd, 3, 3, 5, 3);
+	r |= test_rw(type | MASTER_RD, fd, 5, 3, 3, 3);
+	r |= test_rw(type | MASTER_WR, fd, 5, 3, 3, 3);
+	r |= test_rw(type | MASTER_RD, fd, 3, 3, 5, 5);
+	r |= test_rw(type | MASTER_WR, fd, 3, 3, 5, 3);
 
 	/* error cases: no slave connection */
-	r += test_err(type | MASTER_RD, fd);
-	r += test_err(type | MASTER_WR, fd);
+	r |= test_err(type | MASTER_RD, fd);
+	r |= test_err(type | MASTER_WR, fd);
 
-	r += TEST_INT_EQ(close(fd), 0);
+	r |= TEST_INT_EQ(close(fd), 0);
 
 	return -r;
 }
@@ -93,12 +93,12 @@ static int test_err(test_type_t type, int fd){
 	if(type & SLAVE)
 		return 0;
 
-	if(type & MASTER_RD)	r += TEST_INT_EQ(read(fd, buf, 4), -1);
-	else					r += TEST_INT_EQ(write(fd, buf, 4), -1);
+	if(type & MASTER_RD)	r |= TEST_INT_EQ(read(fd, buf, 4), -1);
+	else					r |= TEST_INT_EQ(write(fd, buf, 4), -1);
 
-	r += TEST_INT_EQ(errno, E_NOCONN);
+	r |= TEST_INT_EQ(errno, E_NOCONN);
 
-	return r;
+	return -r;
 }
 
 static int test_rw(test_type_t type, int fd, size_t tx, size_t tx_exp, size_t rx, size_t rx_exp){
@@ -118,12 +118,12 @@ static int test_rw(test_type_t type, int fd, size_t tx, size_t tx_exp, size_t rx
 		if(tx_exp < rx_exp && type & MASTER)
 			memset(tx_buf + tx_exp, 0xff, rx_exp - tx_exp);
 
-		r += TEST_INT_EQ(read(fd, rx_buf, rx), rx_exp);
-		r += TEST_STRN_EQ(rx_buf, tx_buf, rx_exp);
+		r |= TEST_INT_EQ(read(fd, rx_buf, rx), rx_exp);
+		r |= TEST_STRN_EQ(rx_buf, tx_buf, rx_exp);
 	}
 	else{
-		r += TEST_INT_EQ(write(fd, tx_buf, tx), tx_exp);
+		r |= TEST_INT_EQ(write(fd, tx_buf, tx), tx_exp);
 	}
 
-	return r;
+	return -r;
 }

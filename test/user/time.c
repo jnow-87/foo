@@ -23,11 +23,11 @@ TEST(time){
 
 
 	for(size_t i=0; i<10; i++){
-		r += TEST_INT_NEQ(t0 = time_ms(), 0);
-		r += TEST_INT_EQ(sleep(50, 0), 0);
-		r += TEST_INT_NEQ(t1 = time_ms(), 0);
+		r |= TEST_INT_NEQ(t0 = time_ms(), 0);
+		r |= TEST_INT_EQ(sleep(50, 0), 0);
+		r |= TEST_INT_NEQ(t1 = time_ms(), 0);
 
-		r += TEST_INT_EQ(t1 >= t0, true);
+		r |= TEST_INT_EQ(t1 >= t0, true);
 	}
 
 	return -r;
