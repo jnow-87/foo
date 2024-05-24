@@ -14,8 +14,9 @@
 #include <sys/vector.h>
 #include <sys/list.h>
 #include <sys/escape.h>
-#include <options.h>
+#include <asserts.h>
 #include <nodes.h>
+#include <options.h>
 
 
 /* macros */
@@ -31,23 +32,24 @@
 
 
 /* types */
-typedef void (*write_attr_t)(FILE *fp, base_node_t *node, char const *node_ident);
+typedef void (*write_attr_t)(FILE *fp, node_t *node, char const *node_ident);
 
 
 /* local/static prototypes */
-static void traverse(FILE *fp, base_node_t *node, write_attr_t write_attr);
+static void traverse(FILE *fp, node_t *node, write_attr_t write_attr);
 
-static void device_makevars(FILE *fp, base_node_t *node, char const *node_ident);
-static void memory_makevars(FILE *fp, base_node_t *node, char const *node_ident);
-static void arch_makevars(FILE *fp, base_node_t *node, char const *node_ident);
-static void device_macros(FILE *fp, base_node_t *node, char const *node_ident);
-static void memory_macros(FILE *fp, base_node_t *node, char const *node_ident);
-static void arch_macros(FILE *fp, base_node_t *node, char const *node_ident);
-static void base_declaration(FILE *fp, base_node_t *node, char const *node_ident);
-static void base_definition(FILE *fp, base_node_t *node, char const *node_ident);
-static void device_definition(FILE *fp, base_node_t *node, char const *node_ident);
-static void memory_definition(FILE *fp, base_node_t *node, char const *node_ident);
-static void arch_definition(FILE *fp, base_node_t *node, char const *node_ident);
+static void device_makevars(FILE *fp, node_t *node, char const *node_ident);
+static void memory_makevars(FILE *fp, node_t *node, char const *node_ident);
+static void arch_makevars(FILE *fp, node_t *node, char const *node_ident);
+static void device_macros(FILE *fp, node_t *node, char const *node_ident);
+static void memory_macros(FILE *fp, node_t *node, char const *node_ident);
+static void arch_macros(FILE *fp, node_t *node, char const *node_ident);
+static void base_declaration(FILE *fp, node_t *node, char const *node_ident);
+static void base_definition(FILE *fp, node_t *node, char const *node_ident);
+static void device_definition(FILE *fp, node_t *node, char const *node_ident);
+static void memory_definition(FILE *fp, node_t *node, char const *node_ident);
+static void arch_definition(FILE *fp, node_t *node, char const *node_ident);
+static void base_asserts(FILE *fp, node_t *node, char const *node_ident);
 
 static void file_header(FILE *fp, char const *start_comment, char const *end_comment);
 static void section_header(FILE *fp, char const *start_comment, char const *end_comment, char const *s);
@@ -55,8 +57,8 @@ static void src_node_header(FILE *fp, char const *node_ident);
 static void include_guard_top(FILE *fp);
 static void include_guard_bottom(FILE *fp);
 static void includes(FILE *fp);
-static void childs(FILE *fp, base_node_t *node, char const *node_ident);
-static void payload(FILE *fp, device_node_t *node, char const *node_ident);
+static void childs(FILE *fp, node_t *node, char const *node_ident);
+static void attributes(FILE *fp, node_t *node, char const *node_ident);
 
 
 /* static variables */
@@ -74,17 +76,17 @@ void export_make(FILE *fp){
 
 	if(options.export_sections & DT_DEVICES){
 		MAKE_SECTION_HEADER(fp, "device variables");
-		traverse(fp, (base_node_t*)device_root(), device_makevars);
+		traverse(fp, device_root(), device_makevars);
 	}
 
 	if(options.export_sections & DT_MEMORY){
 		MAKE_SECTION_HEADER(fp, "memory variables");
-		traverse(fp, (base_node_t*)memory_root(), memory_makevars);
+		traverse(fp, memory_root(), memory_makevars);
 	}
 
 	if(options.export_sections & DT_ARCH){
 		MAKE_SECTION_HEADER(fp, "arch variables");
-		traverse(fp, (base_node_t*)arch_root(), arch_makevars);
+		traverse(fp, arch_root(), arch_makevars);
 	}
 }
 
@@ -94,17 +96,17 @@ void export_header(FILE *fp){
 
 	if(options.export_sections & DT_DEVICES){
 		SRC_SECTION_HEADER(fp, "device macros");
-		traverse(fp, (base_node_t*)device_root(), device_macros);
+		traverse(fp, device_root(), device_macros);
 	}
 
 	if(options.export_sections & DT_MEMORY){
 		SRC_SECTION_HEADER(fp, "memory macros");
-		traverse(fp, (base_node_t*)memory_root(), memory_macros);
+		traverse(fp, memory_root(), memory_macros);
 	}
 
 	if(options.export_sections & DT_ARCH){
 		SRC_SECTION_HEADER(fp, "arch macros");
-		traverse(fp, (base_node_t*)arch_root(), arch_macros);
+		traverse(fp, arch_root(), arch_macros);
 	}
 
 	include_guard_bottom(fp);
@@ -116,35 +118,35 @@ void export_source(FILE *fp){
 
 	if(options.export_sections & DT_DEVICES){
 		SRC_SECTION_HEADER(fp, "device node declarations");
-		traverse(fp, (base_node_t*)device_root(), base_declaration);
+		traverse(fp, device_root(), base_declaration);
 
 		SRC_SECTION_HEADER(fp, "device node definitions");
-		traverse(fp, (base_node_t*)device_root(), base_definition);
+		traverse(fp, device_root(), base_definition);
 	}
 
 	if(options.export_sections & DT_MEMORY){
 		SRC_SECTION_HEADER(fp, "memory node declarations");
-		traverse(fp, (base_node_t*)memory_root(), base_declaration);
+		traverse(fp, memory_root(), base_declaration);
 
 		SRC_SECTION_HEADER(fp, "memory node definitions");
-		traverse(fp, (base_node_t*)memory_root(), base_definition);
+		traverse(fp, memory_root(), base_definition);
 	}
 
 	if(options.export_sections & DT_ARCH){
 		SRC_SECTION_HEADER(fp, "arch node declarations");
-		traverse(fp, (base_node_t*)arch_root(), base_declaration);
+		traverse(fp, arch_root(), base_declaration);
 
 		SRC_SECTION_HEADER(fp, "arch node definitions");
-		traverse(fp, (base_node_t*)arch_root(), base_definition);
+		traverse(fp, arch_root(), base_definition);
 	}
 }
 
 
 /* local functions */
-static void traverse(FILE *fp, base_node_t *node, write_attr_t write_attr){
+static void traverse(FILE *fp, node_t *node, write_attr_t write_attr){
 	size_t name_len = strlen(node->name);
 	char node_ident[name_len + 1];
-	base_node_t *child;
+	node_t *child;
 
 
 	strcident_r(node->name, node_ident, name_len);
@@ -154,55 +156,53 @@ static void traverse(FILE *fp, base_node_t *node, write_attr_t write_attr){
 		traverse(fp, child, write_attr);
 }
 
-static void device_makevars(FILE *fp, base_node_t *node, char const *node_ident){
-	fprintf(fp, "DEVTREE_%s_COMPATIBLE := %zu\n", strupr(node_ident), ((device_node_t*)node)->compatible);
+static void device_makevars(FILE *fp, node_t *node, char const *node_ident){
+	fprintf(fp, "DEVTREE_%s_COMPATIBLE := %zu\n", strupr(node_ident), node_attr_get(node, MT_COMPATIBLE, 0)->p);
 }
 
-static void memory_makevars(FILE *fp, base_node_t *node, char const *node_ident){
+static void memory_makevars(FILE *fp, node_t *node, char const *node_ident){
 	// NOTE Do not export memory nodes for x86 to avoid confusion, since its heap is allocated
 	// 		dynamically, cf. the note in memory_macros().
 #ifndef CONFIG_X86
-	memory_node_t *mem = (memory_node_t*)node;
-
-
 	node_ident = strupr(node_ident);
 
-	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", node_ident, mem->base);
-	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", node_ident, mem->size);
+	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", node_ident, node_attr_get(node, MT_BASE_ADDR, 0)->i);
+	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", node_ident, node_attr_get(node, MT_SIZE, 0)->i);
 #endif // CONFIG_X86
 }
 
-static void arch_makevars(FILE *fp, base_node_t *node, char const *node_ident){
-	arch_node_t *arch = (arch_node_t*)node;
+static void arch_makevars(FILE *fp, node_t *node, char const *node_ident){
+	bool multi_core;
 
 
 	if(node->type != NT_ARCH)
 		return;
 
-	fprintf(fp, "DEVTREE_ARCH_ADDR_WIDTH := %u\n", arch->addr_width);
-	fprintf(fp, "DEVTREE_ARCH_REG_WIDTH := %u\n", arch->reg_width);
-	fprintf(fp, "DEVTREE_ARCH_CORE_MASK := %#x\n", arch->core_mask);
-	fprintf(fp, "DEVTREE_ARCH_NCORES := %u\n", arch->ncores);
+	multi_core = (node_attr_get(node, MT_NCORES, 0)->i > 1);
 
-	if(arch->ncores > 1)
+	fprintf(fp, "DEVTREE_ARCH_ADDR_WIDTH := %u\n", node_attr_get(node, MT_ADDR_WIDTH, 0)->i);
+	fprintf(fp, "DEVTREE_ARCH_REG_WIDTH := %u\n", node_attr_get(node, MT_REG_WIDTH, 0)->i);
+	fprintf(fp, "DEVTREE_ARCH_CORE_MASK := %#x\n", node_attr_get(node, MT_CORE_MASK, 0)->i);
+	fprintf(fp, "DEVTREE_ARCH_NCORES := %u\n", node_attr_get(node, MT_NCORES, 0)->i);
+
+	if(multi_core)
 		fprintf(fp, "DEVTREE_ARCH_MULTI_CORE := y\n");
 
-	fprintf(fp, "DEVTREE_ARCH_NUM_INTS := %u\n", arch->num_ints);
-	fprintf(fp, "DEVTREE_ARCH_NUM_VINTS := %u\n", arch->num_vints);
-	fprintf(fp, "DEVTREE_ARCH_TIMER_INT := %u\n", arch->timer_int);
-	fprintf(fp, "DEVTREE_ARCH_SYSCALL_INT := %u\n", arch->syscall_int);
-	fprintf(fp, "DEVTREE_ARCH_IPI_INT := %u\n", arch->ipi_int);
-	fprintf(fp, "DEVTREE_ARCH_TIMER_CYCLE_TIME_US := %u\n", arch->timer_cycle_time_us);
+	fprintf(fp, "DEVTREE_ARCH_NUM_INTS := %u\n", node_attr_get(node, MT_NUM_INTS, 0)->i);
+	fprintf(fp, "DEVTREE_ARCH_TIMER_INT := %u\n", node_attr_get(node, MT_TIMER_INT, 0)->i);
+	fprintf(fp, "DEVTREE_ARCH_SYSCALL_INT := %u\n", node_attr_get(node, MT_SYSCALL_INT, 0)->i);
+
+	if(multi_core)
+		fprintf(fp, "DEVTREE_ARCH_IPI_INT := %u\n", node_attr_get(node, MT_IPI_INT, 0)->i);
+
+	fprintf(fp, "DEVTREE_ARCH_TIMER_CYCLE_TIME_US := %u\n", node_attr_get(node, MT_TIMER_CYCLE_TIME_US, 0)->i);
 }
 
-static void device_macros(FILE *fp, base_node_t *node, char const *node_ident){
-	fprintf(fp, "#define DEVTREE_%s_COMPATIBLE %zu\n", strupr(node_ident), ((device_node_t*)node)->compatible);
+static void device_macros(FILE *fp, node_t *node, char const *node_ident){
+	fprintf(fp, "#define DEVTREE_%s_COMPATIBLE %zu\n", strupr(node_ident), node_attr_get(node, MT_COMPATIBLE, 0)->p);
 }
 
-static void memory_macros(FILE *fp, base_node_t *node, char const *node_ident){
-	memory_node_t *mem = (memory_node_t*)node;
-
-
+static void memory_macros(FILE *fp, node_t *node, char const *node_ident){
 	node_ident = strupr(node_ident);
 
 #ifdef CONFIG_X86
@@ -215,45 +215,50 @@ static void memory_macros(FILE *fp, base_node_t *node, char const *node_ident){
 	}
 	else
 #endif // CONFIG_X86
-		fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", node_ident, mem->base);
+		fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", node_ident, node_attr_get(node, MT_BASE_ADDR, 0)->i);
 
-	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", node_ident, mem->size);
+	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", node_ident, node_attr_get(node, MT_SIZE, 0)->i);
 }
 
-static void arch_macros(FILE *fp, base_node_t *node, char const *node_ident){
-	arch_node_t *arch = (arch_node_t*)node;
+static void arch_macros(FILE *fp, node_t *node, char const *node_ident){
+	bool multi_core;
 
 
-	if(arch->type != NT_ARCH)
+	if(node->type != NT_ARCH)
 		return;
 
-	fprintf(fp, "#define DEVTREE_ARCH_ADDR_WIDTH %u\n", arch->addr_width);
-	fprintf(fp, "#define DEVTREE_ARCH_REG_WIDTH %u\n", arch->reg_width);
-	fprintf(fp, "#define DEVTREE_ARCH_CORE_MASK %#x\n", arch->core_mask);
-	fprintf(fp, "#define DEVTREE_ARCH_NCORES %u\n", arch->ncores);
+	multi_core = (node_attr_get(node, MT_NCORES, 0)->i > 1);
 
-	if(arch->ncores > 1)
+	fprintf(fp, "#define DEVTREE_ARCH_ADDR_WIDTH %u\n", node_attr_get(node, MT_ADDR_WIDTH, 0)->i);
+	fprintf(fp, "#define DEVTREE_ARCH_REG_WIDTH %u\n", node_attr_get(node, MT_REG_WIDTH, 0)->i);
+	fprintf(fp, "#define DEVTREE_ARCH_CORE_MASK %#x\n", node_attr_get(node, MT_CORE_MASK, 0)->i);
+	fprintf(fp, "#define DEVTREE_ARCH_NCORES %u\n", node_attr_get(node, MT_NCORES, 0)->i);
+
+	if(multi_core)
 		fprintf(fp, "#define DEVTREE_ARCH_MULTI_CORE\n");
 
-	fprintf(fp, "#define DEVTREE_ARCH_NUM_INTS %u\n", arch->num_ints);
-	fprintf(fp, "#define DEVTREE_ARCH_NUM_VINTS %u\n", arch->num_vints);
-	fprintf(fp, "#define DEVTREE_ARCH_TIMER_INT %u\n", arch->timer_int);
-	fprintf(fp, "#define DEVTREE_ARCH_SYSCALL_INT %u\n", arch->syscall_int);
-	fprintf(fp, "#define DEVTREE_ARCH_IPI_INT %u\n", arch->ipi_int);
-	fprintf(fp, "#define DEVTREE_ARCH_TIMER_CYCLE_TIME_US %u\n", arch->timer_cycle_time_us);
+	fprintf(fp, "#define DEVTREE_ARCH_NUM_INTS %u\n", node_attr_get(node, MT_NUM_INTS, 0)->i);
+	fprintf(fp, "#define DEVTREE_ARCH_TIMER_INT %u\n", node_attr_get(node, MT_TIMER_INT, 0)->i);
+	fprintf(fp, "#define DEVTREE_ARCH_SYSCALL_INT %u\n", node_attr_get(node, MT_SYSCALL_INT, 0)->i);
+
+	if(multi_core)
+		fprintf(fp, "#define DEVTREE_ARCH_IPI_INT %u\n", node_attr_get(node, MT_IPI_INT, 0)->i);
+
+	fprintf(fp, "#define DEVTREE_ARCH_TIMER_CYCLE_TIME_US %u\n", node_attr_get(node, MT_TIMER_CYCLE_TIME_US, 0)->i);
 }
 
-static void base_declaration(FILE *fp, base_node_t *node, char const *node_ident){
+static void base_declaration(FILE *fp, node_t *node, char const *node_ident){
 	fprintf(fp, "devtree_%s_t const __dt_%s;\n", node_type_names[node->type], node_ident);
 }
 
-static void base_definition(FILE *fp, base_node_t *node, char const *node_ident){
+static void base_definition(FILE *fp, node_t *node, char const *node_ident){
 	src_node_header(fp, node_ident);
 
+	base_asserts(fp, node, node_ident);
 	childs(fp, node, node_ident);
 
 	if(node->type == NT_DEVICE)
-		payload(fp, (device_node_t*)node, node_ident);
+		attributes(fp, node, node_ident);
 
 	fprintf(fp, "devtree_%s_t const __dt_%s = {\n", node_type_names[node->type], node_ident);
 
@@ -273,47 +278,65 @@ static void base_definition(FILE *fp, base_node_t *node, char const *node_ident)
 	fprintf(fp, "};\n\n\n");
 }
 
-static void device_definition(FILE *fp, base_node_t *node, char const *node_ident){
-	device_node_t *dev = (device_node_t*)node;
-	member_t *m;
+static void device_definition(FILE *fp, node_t *node, char const *node_ident){
+	attr_t *a;
 
 
-	m = vector_get(&dev->payload, 0);
+	fprintf(fp, "\t.name = \"%s\",\n", node->name);
+	fprintf(fp, "\t.compatible = \"%s\",\n", node_attr_get(node, MT_COMPATIBLE, 0)->p);
 
-	fprintf(fp, "\t.name = \"%s\",\n", dev->name);
-	fprintf(fp, "\t.compatible = \"%s\",\n", dev->compatible);
+	if(node->attrs.size > 1){
+		a = vector_get(&node->attrs, 0);
 
-	if(m == 0x0 || m->payload == 0x0)	fprintf(fp, "\t.payload = 0x0,\n");
-	else								fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_ident);
+		if(a->value.p != 0x0){
+			fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_ident);
+			return;
+		}
+	}
+
+	fprintf(fp, "\t.payload = 0x0,\n");
 }
 
-static void memory_definition(FILE *fp, base_node_t *node, char const *node_ident){
-	memory_node_t *mem = (memory_node_t*)node;
-
-
-	fprintf(fp, "\t.name = \"%s\",\n", mem->name);
-	fprintf(fp, "\t.base = (void*)%#x,\n", mem->base);
-	fprintf(fp, "\t.size = %zu,\n", mem->size);
+static void memory_definition(FILE *fp, node_t *node, char const *node_ident){
+	fprintf(fp, "\t.name = \"%s\",\n", node->name);
+	fprintf(fp, "\t.base = (void*)%#x,\n", node_attr_get(node, MT_BASE_ADDR, 0)->i);
+	fprintf(fp, "\t.size = %zu,\n", node_attr_get(node, MT_SIZE, 0)->i);
 }
 
-static void arch_definition(FILE *fp, base_node_t *node, char const *node_ident){
-	arch_node_t *arch = (arch_node_t*)node;
+static void arch_definition(FILE *fp, node_t *node, char const *node_ident){
+	bool multi_core;
 
 
 	if(node->type == NT_ARCH){
-		fprintf(fp, "\t.addr_width = %u,\n", arch->addr_width);
-		fprintf(fp, "\t.reg_width = %u,\n", arch->reg_width);
-		fprintf(fp, "\t.core_mask = %#x,\n", arch->core_mask);
-		fprintf(fp, "\t.ncores = %u,\n", arch->ncores);
-		fprintf(fp, "\t.num_ints = %u,\n", arch->num_ints);
-		fprintf(fp, "\t.num_vints = %u,\n", arch->num_vints);
-		fprintf(fp, "\t.timer_int = %u,\n", arch->timer_int);
-		fprintf(fp, "\t.syscall_int = %u,\n", arch->syscall_int);
-		fprintf(fp, "\t.ipi_int = %u,\n", arch->ipi_int);
-		fprintf(fp, "\t.timer_cycle_time_us = %u,\n", arch->timer_cycle_time_us);
+		multi_core = (node_attr_get(node, MT_NCORES, 0)->i > 1);
+
+		fprintf(fp, "\t.addr_width = %u,\n", node_attr_get(node, MT_ADDR_WIDTH, 0)->i);
+		fprintf(fp, "\t.reg_width = %u,\n", node_attr_get(node, MT_REG_WIDTH, 0)->i);
+		fprintf(fp, "\t.core_mask = %#x,\n", node_attr_get(node, MT_CORE_MASK, 0)->i);
+		fprintf(fp, "\t.ncores = %u,\n", node_attr_get(node, MT_NCORES, 0)->i);
+		fprintf(fp, "\t.num_ints = %u,\n", node_attr_get(node, MT_NUM_INTS, 0)->i);
+		fprintf(fp, "\t.timer_int = %u,\n", node_attr_get(node, MT_TIMER_INT, 0)->i);
+		fprintf(fp, "\t.syscall_int = %u,\n", node_attr_get(node, MT_SYSCALL_INT, 0)->i);
+
+		if(multi_core)
+			fprintf(fp, "\t.ipi_int = %u,\n", node_attr_get(node, MT_IPI_INT, 0)->i);
+
+		fprintf(fp, "\t.timer_cycle_time_us = %u,\n", node_attr_get(node, MT_TIMER_CYCLE_TIME_US, 0)->i);
 	}
 	else if(node->type == NT_DEVICE)
 		device_definition(fp, node, node_ident);
+}
+
+static void base_asserts(FILE *fp, node_t *node, char const *node_ident){
+	assert_t *a;
+
+
+	list_for_each(node->asserts, a){
+		fprintf(fp, "_Static_assert(%s, \"%s: %s\");\n", a->expr, node_ident, a->msg);
+	}
+
+	if(node->asserts)
+		fprintf(fp, "\n");
 }
 
 static void file_header(FILE *fp, char const *start_comment, char const *end_comment){
@@ -365,8 +388,8 @@ static void includes(FILE *fp){
 	);
 }
 
-static void childs(FILE *fp, base_node_t *node, char const *node_ident){
-	base_node_t *child;
+static void childs(FILE *fp, node_t *node, char const *node_ident){
+	node_t *child;
 
 
 	if(list_empty(node->childs))
@@ -383,40 +406,40 @@ static void childs(FILE *fp, base_node_t *node, char const *node_ident){
 	fprintf(fp, "\t0x0\n};\n\n");
 }
 
-static void payload(FILE *fp, device_node_t *node, char const *node_ident){
+static void attributes(FILE *fp, node_t *node, char const *node_ident){
 	size_t n_int = 0,
 		   n_reg = 0,
 		   n_base = 0;
-	unsigned int *p;
-	member_t *m;
-	member_int_t *int_lst;
+	unsigned long int *p;
+	attr_t *a;
 
 
-	if(vector_get(&node->payload, 0) == 0x0)
+	if(node->attrs.size < 2)
 		return;
 
 	// struct definition
 	fprintf(fp, "struct{\n");
 
-	vector_for_each(&node->payload, m){
-		switch(m->type){
+	vector_for_each(&node->attrs, a){
+		switch(a->type){
 		case MT_BASE_ADDR:	fprintf(fp, "\tvoid *base%zu;\n", n_base++); break;
 		case MT_STRING:		fprintf(fp, "\tchar *string%zu;\n", n_base++); break;
 
 		case MT_REG_LIST:
-			vector_for_each((vector_t*)m->payload, p)
+			vector_for_each(a->value.lst->items, p)
 				fprintf(fp, "\tvoid *reg%zu;\n", n_reg++);
 			break;
 
 		case MT_INT_LIST:
-			int_lst = m->payload;
+			vector_for_each(a->value.lst->items, p)
+				fprintf(fp, "\tuint%d_t int%zu;\n", a->value.lst->type_size, n_int++);
+			break;
 
-			vector_for_each(int_lst->lst, p)
-				fprintf(fp, "\tuint%d_t int%zu;\n", int_lst->size, n_int++);
+		case MT_COMPATIBLE:
 			break;
 
 		default:
-			WARN(node, "unexpected member type (%d)\n", m->type);
+			WARN(node, "unexpected attribute type (%d)\n", a->type);
 			break;
 		}
 	}
@@ -430,20 +453,18 @@ static void payload(FILE *fp, device_node_t *node, char const *node_ident){
 	n_reg = 0;
 	n_base = 0;
 
-	vector_for_each(&node->payload, m){
-		switch(m->type){
-		case MT_BASE_ADDR:	fprintf(fp, "\t.base%zu = (void*)%#x,\n", n_base++, m->payload); break;
-		case MT_STRING:		fprintf(fp, "\t.string%zu = \"%s\",\n", n_base++, m->payload); break;
+	vector_for_each(&node->attrs, a){
+		switch(a->type){
+		case MT_BASE_ADDR:	fprintf(fp, "\t.base%zu = (void*)%#x,\n", n_base++, a->value.i); break;
+		case MT_STRING:		fprintf(fp, "\t.string%zu = \"%s\",\n", n_base++, a->value.p); break;
 
 		case MT_REG_LIST:
-			vector_for_each((vector_t*)m->payload, p)
+			vector_for_each(a->value.lst->items, p)
 				fprintf(fp, "\t.reg%zu = (void*)%#x,\n", n_reg++, *p);
 			break;
 
 		case MT_INT_LIST:
-			int_lst = m->payload;
-
-			vector_for_each(int_lst->lst, p)
+			vector_for_each(a->value.lst->items, p)
 				fprintf(fp, "\t.int%zu = %u,\n", n_int++, *p);
 			break;
 

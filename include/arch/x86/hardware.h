@@ -12,6 +12,7 @@
 
 
 #include <kernel/interrupt.h>
+#include <sys/devicetree.h>
 #include <sys/types.h>
 #include <sys/uart.h>
 #include <sys/vram.h>
@@ -43,7 +44,10 @@ typedef enum{
 	INT_SYSCALL,
 	INT_UART0,
 	INT_UART1,
+	INT_NUM_HWINTS
 } x86_int_num_t;
+
+STATIC_ASSERT(DEVTREE_ARCH_NUM_INTS >= INT_NUM_HWINTS);
 
 typedef enum{
 	PRIV_KERNEL = 0,

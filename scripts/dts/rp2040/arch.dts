@@ -17,16 +17,6 @@ ncores = 2;
 
 // interrupts
 num-ints = 42;
-num-vints = 0
-#ifdef CONFIG_RP2040_UART
-	+ 2
-#endif // CONFIG_RP2040_UART
-
-#ifdef CONFIG_DRIVER_GPIO
-	+ 1
-#endif // CONFIG_DRIVER_GPIO
-;
-
 timer-int = 15;
 syscall-int = 11;
 ipi-int = 31;

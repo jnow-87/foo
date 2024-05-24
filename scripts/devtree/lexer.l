@@ -55,13 +55,12 @@
 
 	/* node attributes */
 "compatible"					{ return NA_COMPATIBLE; }
-"baseaddr"						{ return NA_BASEADDR; }
+"baseaddr"						{ return NA_BASE_ADDR; }
 "reg"							{ return NA_REG; }
 "addr-width"					{ return NA_ADDR_WIDTH; }
 "reg-width"						{ return NA_REG_WIDTH; }
 "ncores"						{ return NA_NCORES; }
 "num-ints"						{ return NA_INTERRUPTS; }
-"num-vints"						{ return NA_VIRTUAL_INTERRUPTS; }
 "timer-cycle-time-us"			{ return NA_TIMER_CYCLE_TIME_US; }
 "timer-int"						{ return NA_TIMER_INT; }
 "syscall-int"					{ return NA_SYSCALL_INT; }
@@ -69,6 +68,9 @@
 "int"							{ return NA_INT; }
 "size"							{ return NA_SIZE; }
 "string"						{ return NA_STRING; }
+
+	/* asserts */
+"assert"						{ return ASSERT; }
 
 	/* comments */
 \/\/.*\r?\n						{ devtree_col = 1; ++devtree_line; }
@@ -81,7 +83,7 @@
 [a-zA-Z][a-zA-Z_\-0-9]+			{ devtreelval.str.s = devtreetext; devtreelval.str.len = devtreeleng; return IDFR; }
 
 	/* string */
-\".*\"							{ devtreelval.str.s = devtreetext + 1; devtreelval.str.len = devtreeleng - 2; return STRING; }
+\"[^"]*\"						{ devtreelval.str.s = devtreetext + 1; devtreelval.str.len = devtreeleng - 2; return STRING; }
 
 	/* integer */
 (0x)?[0-9a-fA-F]+				{ devtreelval.i = strtol(devtreetext, 0x0, 0); return INT; }

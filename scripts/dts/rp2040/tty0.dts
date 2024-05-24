@@ -19,8 +19,8 @@ uart0 = {
 	int<8> = [
 		22,					// reset id
 		36,					// hardware interrupt
-		42,					// virtual rx interrupt
-		43,					// virtual tx interrupt
+		(arch.num-ints++),	// rx interrupt
+		(arch.num-ints++),	// tx interrupt
 	];
 
 	// cfg (uart_cfg_t)
@@ -53,6 +53,6 @@ uart0 = {
 			compatible = "kernel,log";
 		};
 # endif // CONFIG_KERNEL_LOG
-#endif // CONFIG_DRIVER_TERM
 	};
+#endif // CONFIG_DRIVER_TERM
 };

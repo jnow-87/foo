@@ -15,18 +15,18 @@ port-test = {
 	compatible = "x86,gpio";
 
 	/* gpio hardware (dt_data_t) */
-	int<8> = [ 8 ];		// interrupt (virtual)
-	int<16> = [ 10 ];	// interrupt timer period [ms]
+	int<8> = [ (arch.num-ints++) ];	// interrupt
+	int<16> = [ 10 ];				// interrupt timer period [ms]
 
 	gpio-port = {
 		compatible = "gpio,port";
 
 		gpio_cfg_t(
-			0xff0f,		// in mask
-			0xff00,		// out mask
-			0x000f,		// int mask
-			0x0005,		// invert mask
-			0			// interrupt
+			0xff0f,					// in mask
+			0xff00,					// out mask
+			0x000f,					// int mask
+			0x0005,					// invert mask
+			0						// interrupt
 		);
 	};
 
@@ -34,11 +34,11 @@ port-test = {
 		compatible = "gpio,pin";
 
 		gpio_cfg_t(
-			0xff,		// in mask
-			0xff,		// out mask
-			0x0f,		// int mask
-			0x00,		// invert mask
-			0			// interrupt
+			0xff,					// in mask
+			0xff,					// out mask
+			0x0f,					// int mask
+			0x00,					// invert mask
+			0						// interrupt
 		);
 	};
 
@@ -46,11 +46,11 @@ port-test = {
 		compatible = "gpio,port";
 
 		gpio_cfg_t(
-			0xffffffff,	// in mask
-			0xffffffff,	// out mask
-			0xffffffff,	// int mask
-			0x00000000,	// invert mask
-			9			// interrupt
+			0xffffffff,				// in mask
+			0xffffffff,				// out mask
+			0xffffffff,				// int mask
+			0x00000000,				// invert mask
+			(arch.num-ints++)		// interrupt
 		);
 	};
 };

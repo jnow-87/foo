@@ -60,7 +60,7 @@ static size_t priorities[] = {
 	0,	// INT_UART1
 };
 
-STATIC_ASSERT(sizeof_array(priorities) == DEVTREE_ARCH_NUM_INTS);
+STATIC_ASSERT(sizeof_array(priorities) == INT_NUM_HWINTS);
 
 
 /* global functions */

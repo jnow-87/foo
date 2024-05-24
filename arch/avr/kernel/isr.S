@@ -14,7 +14,7 @@
 
 /* macros */
 .macro	int_lvl0 num
-	.if (\num < DEVTREE_ARCH_NUM_INTS)
+	.if (\num < INT_NUM_HWINTS)
 		.if(\num == 0)					// reset
 			XJMP	__isr_reset
 		.else
@@ -24,7 +24,7 @@
 .endm
 
 .macro int_lvl1 num
-	.if (\num < DEVTREE_ARCH_NUM_INTS)
+	.if (\num < INT_NUM_HWINTS)
 		__int_lvl1_\num:
 			XCALL	__isr_int
 			ret

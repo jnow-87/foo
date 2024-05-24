@@ -12,10 +12,10 @@ brdg0-right = {
 
 	/* bridge config (bridge_cfg_t) */
 	int<8> = [
-		0,				// id
-		2,				// chunksize
-		37,				// rx interrupt (virtual)
-		38,				// tx interrupt (virtual)
+		0,					// id
+		2,					// chunksize
+		(arch.num-ints++),	// rx interrupt
+		(arch.num-ints++),	// tx interrupt
 	];
 
 	brdg0-itf = {
