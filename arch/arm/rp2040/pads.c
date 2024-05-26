@@ -8,8 +8,10 @@
 
 
 #include <arch/arm/rp2040.h>
+#include <sys/compiler.h>
 #include <sys/devtree.h>
 #include <sys/errno.h>
+#include <sys/math.h>
 #include <sys/register.h>
 #include <sys/types.h>
 
@@ -38,6 +40,27 @@
 #define INTE_EDGE_LOW			2
 #define INTE_EDGE_HIGH			3
 
+// pad configurations
+#define RESET_PAD_DRIVE			RP2040_PAD_DRV_4MA
+#define RESET_PAD_FLAGS			(RP2040_PAD_FLAG_OUTPUT_EN | RP2040_PAD_FLAG_INPUT_EN | RP2040_PAD_FLAG_PULLDOWN_EN | RP2040_PAD_FLAG_SCHMITT_EN)
+
+
+/* static variables */
+// default pad configuration per function, cf. rp2040_pad_func_t
+static rp2040_pad_cfg_t pad_func_cfgs[] = {
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// xip
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// spi
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// uart
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// i2c
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// pwm
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// sio
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// pio0
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// pio1
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// clk
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// usb
+	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// reset
+};
+
 
 /* global functions */
 void rp2040_pads_init(void){
@@ -50,6 +73,7 @@ void rp2040_pads_init(void){
 
 	for(uint8_t i=0; i<30; i++){
 		GPIO_CTRL(i) = plt->gpio_funcsel[i] << GPIO_CTRL_FUNCSEL;
+		rp2040_pad_init(i, &pad_func_cfgs[MIN(plt->gpio_funcsel[i], sizeof_array(pad_func_cfgs) - 1)]);
 	}
 
 	BANK0_VOLTAGE_SELECT = plt->gpio_v33 ? 0 : 1;
