@@ -32,4 +32,8 @@ devices = {
 #ifdef CONFIG_DRIVER_GPIO
 # include "rp2040/gpio.dts"
 #endif // CONFIG_DRIVER_GPIO
+
+#ifdef CONFIG_DRIVER_I2C
+# include "rp2040/i2c.dts"
+#endif // CONFIG_DRIVER_I2C
 };

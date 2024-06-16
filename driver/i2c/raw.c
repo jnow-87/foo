@@ -81,6 +81,11 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 
 	mutex_lock(&dev->node->mtx);
 
+	// TODO if fewer bytes are received this is not true
+	// 		example:
+	// 			cat -n 1 -s 4 on slave
+	// 			echo -n "12"
+	// 			=> slave prints 4 characters, which is wrong
 	return n;
 }
 

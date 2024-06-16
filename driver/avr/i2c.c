@@ -9,6 +9,7 @@
 
 #include <arch/arch.h>
 #include <kernel/driver.h>
+#include <kernel/kprintf.h>
 #include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>
@@ -113,7 +114,7 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 
 	/* compute baud rate */
 	// NOTE assumption: TWSR[TWPS] = 0
-	brate = ((AVR_IO_CLOCK_HZ / (cfg->clock_khz * 1000)) - 16) / 2;
+	brate = (((AVR_IO_CLOCK_HZ / 1000) / cfg->clock_khz) - 16) / 2;
 
 	if(brate == 0)
 		return_errno(E_INVAL);
@@ -132,6 +133,8 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 			   | (0x0 << TWCR_TWEA)
 			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
 			   ;
+
+	DEBUG("i2c config: mode=%s, addr=%u\n", (cfg->mode == I2C_MODE_MASTER) ? "master" : "slave", cfg->addr);
 
 	return 0;
 }

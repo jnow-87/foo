@@ -11,6 +11,7 @@ menuconfig DRIVER_I2C
 	bool "i2c driver"
 	select SYS_LINEBUFFER
 	select AVR_I2C if AVR
+	select RP2040_I2C if ARM_CHIP_RP2040
 	select X86_I2C if X86
 
 if DRIVER_I2C

@@ -13,7 +13,7 @@
 addr-width = 32;
 reg-width = 32;
 
-ncores = 2;
+ncores = 1;
 
 // interrupts
 num-ints = 42;
@@ -63,16 +63,16 @@ plt = {
 		5,		// gpio5 (sio)
 		5,		// gpio6 (sio)
 		5,		// gpio7 (sio)
-		31,		// gpio8 (reset)
-		31,		// gpio9 (reset)
+		31,		// gpio8 (i2c0)
+		31,		// gpio9 (i2c0)
 		31,		// gpio10 (reset)
 		31,		// gpio11 (reset)
 		31,		// gpio12 (reset)
 		31,		// gpio13 (reset)
 		31,		// gpio14 (reset)
 		5,		// gpio15 (sio)
-		31,		// gpio16 (reset)
-		31,		// gpio17 (reset)
+		3,		// gpio16 (i2c0)
+		3,		// gpio17 (i2c0)
 		31,		// gpio18 (reset)
 		31,		// gpio19 (reset)
 		31,		// gpio20 (reset)
