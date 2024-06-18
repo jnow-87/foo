@@ -24,9 +24,11 @@ struct i2c_t;
 
 /* types */
 typedef enum{
-	I2C_MODE_MASTER = 1,
-	I2C_MODE_SLAVE
-} i2c_mode_t;
+	I2C_CMD_MASTER = 0x1,
+	I2C_CMD_SLAVE = 0x2,
+	I2C_CMD_READ = 0x4,
+	I2C_CMD_WRITE = 0x8,
+} i2c_cmd_t;
 
 typedef enum{
 	I2C_SPD_STD = 0,
@@ -85,11 +87,6 @@ typedef enum{
 	I2C_STATE_SLA_SLAR_DATA_LAST_ACK,
 } i2c_state_t;
 
-typedef enum{
-	I2C_CMD_READ = 1,
-	I2C_CMD_WRITE,
-} i2c_cmd_t;
-
 typedef struct{
 	uint8_t spike_len_ns;
 	uint8_t data_setup_ns;
@@ -100,22 +97,11 @@ typedef struct{
 } i2c_timing_t;
 
 typedef struct{
-	i2c_cmd_t cmd;
-	uint8_t slave;
-
-	blob_t *blobs;
-	size_t nblobs;
-
-	linebuf_t buf;
-} i2c_dgram_t;
-
-typedef struct{
 	/**
 	 * NOTE fixed-size types are used to allow
 	 * 		using this type with the device tree
 	 */
 
-	uint8_t mode;		/**< cf. i2c_mode_t */
 	uint16_t clock_khz;
 
 	uint8_t bcast_en;
@@ -133,16 +119,15 @@ typedef struct{
 	void (*ack)(bool ack, void *hw);
 
 	void (*slave_mode)(bool addressable, bool stop, void *hw);
-	void (*slave_addr)(i2c_cmd_t cmd, uint8_t slave, void *hw);
+	void (*slave_addr)(bool read, uint8_t slave, void *hw);
 
 	uint8_t (*byte_read)(void *hw);
 	void (*byte_write)(uint8_t c, bool last, void *hw);
 
 	/* root callbacks */
-	// if either of the following callbacks is set to zero the default i2c_read() and
-	// i2c_write() functions are used and the above primitives need to be set
-	int (*read)(struct i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-	int (*write)(struct i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
+	// if the following callback is set to zero the default i2c_xfer()
+	// function is used and the above primitives need to be set
+	int (*xfer)(struct i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 } i2c_ops_t;
 
 typedef struct i2c_t{
@@ -150,9 +135,7 @@ typedef struct i2c_t{
 	i2c_ops_t ops;
 	void *hw;
 
-	itask_queue_t master_cmds,
-				  slave_cmds;
-
+	itask_queue_t cmds;
 	mutex_t mtx;
 } i2c_t;
 
@@ -161,9 +144,8 @@ typedef struct i2c_t{
 i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw);
 void i2c_destroy(i2c_t *i2c);
 
-int i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-int i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-int i2c_write_n(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
+int i2c_xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, void *buf, size_t n);
+int i2c_xfer_n(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 
 i2c_speed_t i2c_speed(uint16_t clock_khz);
 i2c_timing_t *i2c_timing(i2c_speed_t speed);

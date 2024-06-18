@@ -18,7 +18,6 @@ i2c0 = {
 	baseaddr = 0x40044000;
 
 	/* i2c config (i2c_cfg_t) */
-	int<8> = [ 1 ];		// mode (master)
 	int<16> = [ 100 ];	// clock (100kHz)
 	int<8> = [
 	   1,				// broadcast (enabled)
@@ -29,6 +28,10 @@ i2c0 = {
 #ifdef CONFIG_I2C_RAW
 # include "../common/i2c0-raw.dts"
 #endif // CONFIG_I2C_RAW
+
+#ifdef CONFIG_DRIVER_BME280
+# include "../common/bme280.dts"
+#endif // CONFIG_DRIVER_BME280
 
 #ifdef CONFIG_DRIVER_MCP23017
 # include "../common/mcp23017.dts"

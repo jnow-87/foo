@@ -69,7 +69,7 @@ static void start(void *hw);
 static void ack(bool ack, void *hw);
 
 static void slave_mode(bool addressable, bool stop, void *hw);
-static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw);
+static void slave_addr(bool read, uint8_t slave, void *hw);
 
 static uint8_t byte_read(void *hw);
 static void byte_write(uint8_t c, bool ack, void *hw);
@@ -89,8 +89,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.slave_addr = slave_addr;
 	ops.byte_read = byte_read;
 	ops.byte_write = byte_write;
-	ops.read = 0x0;
-	ops.write = 0x0;
+	ops.xfer = 0x0;
 
 	return i2c_create(&ops, &dtd->cfg, dtd);
 }
@@ -134,7 +133,7 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
 			   ;
 
-	DEBUG("i2c config: mode=%s, addr=%u\n", (cfg->mode == I2C_MODE_MASTER) ? "master" : "slave", cfg->addr);
+	DEBUG("i2c config: addr=%u\n", cfg->addr);
 
 	return 0;
 }
@@ -206,11 +205,11 @@ static void slave_mode(bool addressable, bool stop, void *hw){
 			   ;
 }
 
-static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw){
+static void slave_addr(bool read, uint8_t slave, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
-	regs->twdr = (slave << TWDR_ADDR) | (((cmd & I2C_CMD_READ) ? 0x1 : 0x0) << TWDR_RW);
+	regs->twdr = (slave << TWDR_ADDR) | (read << TWDR_RW);
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)

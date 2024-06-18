@@ -63,7 +63,8 @@ int shell_term(char const *prompt){
 
 	cmd_init();
 
-	history_add("i2ccfg dev/i2c-raw0 20");
+	history_add("i2ccfg dev/i2c-raw0 master 20");
+	history_add("i2ccfg dev/i2c-raw0 slave");
 	history_add("cat -n 1 -s 2 dev/i2c-raw0");
 	history_add("echo -n \"1234\" > dev/i2c-raw0");
 

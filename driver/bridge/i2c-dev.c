@@ -21,9 +21,7 @@
 
 
 /* local/static prototypes */
-static int read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-static int write(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
-static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
+static int xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 
 static int ack_check(i2c_t *i2c);
 
@@ -39,8 +37,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 	memset(&ops, 0x0, sizeof(i2c_ops_t));
 
-	ops.read = read;
-	ops.write = write;
+	ops.xfer = xfer;
 
 	return i2c_create(&ops, dt_data, dti);
 
@@ -51,15 +48,7 @@ err:
 
 driver_probe("bridge,i2c-dev", probe);
 
-static int read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return rw(i2c, I2C_CMD_READ, slave, BLOBS(BLOB(buf, n)), 1);
-}
-
-static int write(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n){
-	return rw(i2c, I2C_CMD_WRITE, slave, bufs, n);
-}
-
-static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
+static int xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	i2cbrdg_hdr_t hdr;
 
 
@@ -78,10 +67,10 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	hdr.nbuf = n;
 	hdr.len = bufs[0].len;
 
-	if(cmd == I2C_CMD_WRITE && bufs[0].len <= CONFIG_BRIDGE_I2C_INLINE_DATA)
+	if((cmd & I2C_CMD_WRITE) && bufs[0].len <= CONFIG_BRIDGE_I2C_INLINE_DATA)
 		memcpy(hdr.buf, bufs[0].buf, bufs[0].len);
 
-	DEBUG("%s: slave = %u, len = %zu\n", (cmd == I2C_CMD_READ) ? "read" : "write", slave, n);
+	DEBUG("%s: slave = %u, len = %zu\n", (cmd & I2C_CMD_READ) ? "read" : "write", slave, n);
 
 	if(i2cbrdg_write(i2c->hw, &hdr, sizeof(i2cbrdg_hdr_t)) != 0)
 		goto end;
@@ -90,7 +79,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 		goto end;
 
 	/* write payload if not already sent with the header */
-	if(cmd == I2C_CMD_WRITE && (n > 1 || bufs[0].len > CONFIG_BRIDGE_I2C_INLINE_DATA)){
+	if((cmd & I2C_CMD_WRITE) && (n > 1 || bufs[0].len > CONFIG_BRIDGE_I2C_INLINE_DATA)){
 		for(size_t i=0; i<n; i++){
 			// write payload length
 			if(i2cbrdg_write(i2c->hw, (uint8_t*)(&bufs[i].len), 1) != 0)
@@ -110,7 +99,7 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 		goto end;
 
 	/* read data */
-	if(cmd == I2C_CMD_READ)
+	if(cmd & I2C_CMD_READ)
 		i2cbrdg_read(i2c->hw, bufs[0].buf, bufs[0].len);
 
 end:

@@ -388,15 +388,15 @@ static int wait_update(dev_data_t *bme){
 }
 
 static int reg_r(dev_data_t *bme, uint8_t addr, uint8_t *v, size_t n){
-	if(i2c_write(bme->i2c, bme->dtd->addr, &addr, 1) != 0)
+	if(i2c_xfer(bme->i2c, I2C_CMD_MASTER | I2C_CMD_WRITE, bme->dtd->addr, &addr, 1) != 0)
 		return -1;
 
-	return i2c_read(bme->i2c, bme->dtd->addr, v, n);
+	return i2c_xfer(bme->i2c, I2C_CMD_MASTER | I2C_CMD_READ, bme->dtd->addr, v, n);
 }
 
 static int reg_w(dev_data_t *bme, uint8_t addr, uint8_t val){
 	uint8_t data[] = { addr, val };
 
 
-	return i2c_write(bme->i2c, bme->dtd->addr, data, 2);
+	return i2c_xfer(bme->i2c, I2C_CMD_MASTER | I2C_CMD_WRITE, bme->dtd->addr, data, 2);
 }

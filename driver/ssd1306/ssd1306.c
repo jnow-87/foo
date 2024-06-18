@@ -20,8 +20,8 @@
 
 /* macros */
 // i2c wrapper
-#define I2C_WRITE(i2c, slave, buf)		i2c_write(i2c, slave, buf, sizeof_array(buf))
-#define I2C_WRITE_N(i2c, slave, buf)	i2c_write_n(i2c, slave, buf, sizeof_array(buf))
+#define I2C_WRITE(i2c, slave, buf)		i2c_xfer(i2c, I2C_CMD_MASTER | I2C_CMD_WRITE, slave, buf, sizeof_array(buf))
+#define I2C_WRITE_N(i2c, slave, buf)	i2c_xfer_n(i2c, I2C_CMD_MASTER | I2C_CMD_WRITE, slave, buf, sizeof_array(buf))
 #define I2C_DATA(...)					((uint8_t []){ __VA_ARGS__ })
 
 

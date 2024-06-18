@@ -137,7 +137,7 @@ static int rx_header(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 		return DS_ERROR;
 
 	DEBUG("%s: slave = %u, nbuf = %zu, len = %zu\n",
-		(hdr->cmd == I2C_CMD_READ) ? "read" : "write",
+		(hdr->cmd & I2C_CMD_READ) ? "read" : "write",
 		hdr->slave,
 		hdr->nbuf,
 		hdr->len
@@ -147,7 +147,7 @@ static int rx_header(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	if(hdr->nbuf > 1 || hdr->len > CONFIG_BRIDGE_I2C_INLINE_DATA){
 		i2c->bufs = kmalloc(hdr->nbuf * sizeof(blob_t));
 
-		if(hdr->cmd == I2C_CMD_READ && i2c->bufs)
+		if((hdr->cmd & I2C_CMD_READ) && i2c->bufs)
 			i2c->bufs[0].buf = kmalloc(hdr->len);
 
 		i2c->buf = i2c->bufs[0].buf;
@@ -157,7 +157,7 @@ static int rx_header(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	if(ack(i2c, errno) != 0)
 		return DS_ERROR;
 
-	if(hdr->cmd == I2C_CMD_WRITE && (hdr->nbuf > 1 || hdr->len > CONFIG_BRIDGE_I2C_INLINE_DATA))
+	if((hdr->cmd & I2C_CMD_WRITE) && (hdr->nbuf > 1 || hdr->len > CONFIG_BRIDGE_I2C_INLINE_DATA))
 		return DS_PAYLOAD_LEN;
 
 	return DS_EXEC;
@@ -196,19 +196,19 @@ static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	/* perform i2c operations */
 	DEBUG("issue i2c command\n");
 
-	if(hdr->cmd == I2C_CMD_WRITE){
+	if(hdr->cmd & I2C_CMD_WRITE){
 		r = (hdr->nbuf == 1)
-		  ? i2c_write(i2c->brdg->hw, hdr->slave, i2c->buf, hdr->len)
-		  : i2c_write_n(i2c->brdg->hw, hdr->slave, i2c->bufs, i2c->nbuf)
+		  ? i2c_xfer(i2c->brdg->hw, I2C_CMD_MASTER | I2C_CMD_WRITE, hdr->slave, i2c->buf, hdr->len)
+		  : i2c_xfer_n(i2c->brdg->hw, I2C_CMD_MASTER | I2C_CMD_WRITE, hdr->slave, i2c->bufs, i2c->nbuf)
 		;
 	}
 	else
-		r = i2c_read(i2c->brdg->hw, hdr->slave, i2c->buf, hdr->len);
+		r = i2c_xfer(i2c->brdg->hw, I2C_CMD_MASTER | I2C_CMD_READ, hdr->slave, i2c->buf, hdr->len);
 
 	if(ack(i2c, ((r == 0) ? 0 : (errno ? errno : E_AGAIN))) != 0)
 		return;
 
-	if(hdr->cmd == I2C_CMD_READ)
+	if(hdr->cmd & I2C_CMD_READ)
 		(void)i2cbrdg_write(i2c->brdg, i2c->buf, hdr->len);
 }
 

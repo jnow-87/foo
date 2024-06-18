@@ -20,10 +20,20 @@
 #include <sys/string.h>
 
 
+/* types */
+typedef struct{
+	i2c_cmd_t cmd;
+	uint8_t slave;
+
+	blob_t *blobs;
+	size_t nblobs;
+
+	linebuf_t buf;
+} i2c_dgram_t;
+
+
 /* local/static prototypes */
-static int read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-static int write(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
-static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
+static int xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 
 static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
 static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
@@ -44,9 +54,8 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 
 
 	/* check/set required callbacks */
-	if(ops->read == 0x0 || ops->write == 0x0){
-		ops->read = read;
-		ops->write = write;
+	if(ops->xfer == 0x0){
+		ops->xfer = xfer;
 
 		// ensure all i2c primitives are set to valid callbacks
 		if(!callbacks_set(ops, i2c_ops_t))
@@ -65,8 +74,7 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 	memcpy(&i2c->ops, ops, sizeof(i2c_ops_t));
 
 	mutex_init(&i2c->mtx, MTX_NOINT);
-	itask_queue_init(&i2c->master_cmds);
-	itask_queue_init(&i2c->slave_cmds);
+	itask_queue_init(&i2c->cmds);
 
 	// register interrupt only of they are enabled and the i2c primitives are set in ops
 	if(cfg->int_num && ops->configure && int_register(cfg->int_num, int_hdlr, i2c) != 0)
@@ -93,22 +101,16 @@ void i2c_destroy(i2c_t *i2c){
 	if(i2c->cfg->int_num)
 		int_release(i2c->cfg->int_num);
 
-	itask_queue_destroy(&i2c->master_cmds);
-	itask_queue_destroy(&i2c->slave_cmds);
-
+	itask_queue_destroy(&i2c->cmds);
 	kfree(i2c);
 }
 
-int i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return i2c->ops.read(i2c, slave, buf, n);
+int i2c_xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, void *buf, size_t n){
+	return i2c_xfer_n(i2c, cmd, slave, BLOBS(BLOB(buf, n)), 1);
 }
 
-int i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return i2c->ops.write(i2c, slave, BLOBS(BLOB(buf, n)), 1);
-}
-
-int i2c_write_n(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n){
-	return i2c->ops.write(i2c, slave, bufs, n);
+int i2c_xfer_n(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
+	return i2c->ops.xfer(i2c, cmd, slave, bufs, n);
 }
 
 i2c_speed_t i2c_speed(uint16_t clock_khz){
@@ -124,11 +126,11 @@ i2c_speed_t i2c_speed(uint16_t clock_khz){
 i2c_timing_t *i2c_timing(i2c_speed_t speed){
 	static i2c_timing_t timings[] = {
 		{ .spike_len_ns = 50,	.data_setup_ns = 250,	.scl_fall_ns = 300,	.data_hold_ns = 3450,	.scl_low_ns = 4700,	.scl_high_linux_ns = 4000 },	// standard mode
-		{ .spike_len_ns = 50,	.data_setup_ns = 100,	.scl_fall_ns = 300,	.data_hold_ns = 900,	.scl_low_ns = 1300,	.scl_high_linux_ns = 600 },	// fast mode
-		{ .spike_len_ns = 50,	.data_setup_ns = 50,	.scl_fall_ns = 120,	.data_hold_ns = 450,	.scl_low_ns = 500,	.scl_high_linux_ns = 260 },	// fast mode plus
-		{ .spike_len_ns = 10,	.data_setup_ns = 10,	.scl_fall_ns = 80,	.data_hold_ns = 70,		.scl_low_ns = 1600,	.scl_high_linux_ns = 160 },	// high speed mode
+		{ .spike_len_ns = 50,	.data_setup_ns = 100,	.scl_fall_ns = 300,	.data_hold_ns = 900,	.scl_low_ns = 1300,	.scl_high_linux_ns = 600 },		// fast mode
+		{ .spike_len_ns = 50,	.data_setup_ns = 50,	.scl_fall_ns = 120,	.data_hold_ns = 450,	.scl_low_ns = 500,	.scl_high_linux_ns = 260 },		// fast mode plus
+		{ .spike_len_ns = 10,	.data_setup_ns = 10,	.scl_fall_ns = 80,	.data_hold_ns = 70,		.scl_low_ns = 1600,	.scl_high_linux_ns = 160 },		// high speed mode
 		{ .spike_len_ns = 10,	.data_setup_ns = 30,	.scl_fall_ns = 50,	.data_hold_ns = 10,		.scl_low_ns = 50,	.scl_high_linux_ns = 160 },		// ultra fast speed mode
-		{ 0 },																							// invalid
+		{ 0 },																																			// invalid
 	};
 
 	return timings + speed;
@@ -141,15 +143,7 @@ bool i2c_address_reserved(uint8_t addr){
 }
 
 /* local functions */
-static int read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return rw(i2c, I2C_CMD_READ, slave, BLOBS(BLOB(buf, n)), 1);
-}
-
-static int write(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n){
-	return rw(i2c, I2C_CMD_WRITE, slave, bufs, n);
-}
-
-static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
+static int xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	i2c_dgram_t dgram;
 
 
@@ -159,6 +153,8 @@ static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	dgram.nblobs = n;
 
 	buffer_load(&dgram);
+
+	DEBUG("issue i2c command: mode=%s, slave=%u, n=%zu\n", (cmd & I2C_CMD_MASTER) ? "master" : "slave", slave, n);
 
 	return (i2c->cfg->int_num ? int_cmd(i2c, &dgram) : poll_cmd(i2c, &dgram));
 }
@@ -170,7 +166,7 @@ static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 
 
 	state = I2C_STATE_NEXT_CMD;
-	op = (i2c->cfg->mode == I2C_MODE_SLAVE) ? int_slave : int_master;
+	op = (dgram->cmd & I2C_CMD_SLAVE) ? int_slave : int_master;
 
 	while(1){
 		mutex_lock(&i2c->mtx);
@@ -186,20 +182,15 @@ static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 }
 
 static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
-	return itask_issue(
-		(i2c->cfg->mode == I2C_MODE_MASTER) ? &i2c->master_cmds : &i2c->slave_cmds,
-		dgram,
-		i2c->cfg->int_num
-	);
+	return itask_issue(&i2c->cmds, dgram, i2c->cfg->int_num);
 }
 
 static void int_hdlr(int_num_t num, void *payload){
 	i2c_t *i2c = (i2c_t*)payload;
 	int r;
-	bool master_cmd;
 	i2c_state_t state;
 	i2c_dgram_t *dgram;
-	itask_queue_t *cmds;
+	int (*hdlr)(i2c_t *, i2c_dgram_t *, i2c_state_t);
 
 
 	mutex_lock(&i2c->mtx);
@@ -207,9 +198,7 @@ static void int_hdlr(int_num_t num, void *payload){
 	/* identify dgram */
 	state = i2c->ops.state(i2c->hw);
 
-	master_cmd = (i2c->cfg->mode == I2C_MODE_MASTER && !(state & I2C_STATE_BIT_SLAVE));
-	cmds = master_cmd ? &i2c->master_cmds : &i2c->slave_cmds;
-	dgram = itask_query_payload(cmds, 0x0);
+	dgram = itask_query_payload(&i2c->cmds, 0x0);
 
 	if(dgram == 0x0)
 		goto unlock;
@@ -219,15 +208,16 @@ static void int_hdlr(int_num_t num, void *payload){
 	if(state == I2C_STATE_NONE)
 		state = I2C_STATE_NEXT_CMD;
 
-	r = master_cmd ? int_master(i2c, dgram, state) : int_slave(i2c, dgram, state);
+	hdlr = ((dgram->cmd & I2C_CMD_MASTER) && !(state & I2C_STATE_BIT_SLAVE)) ? int_master : int_slave;
+	r = hdlr(i2c, dgram, state);
 
 	if(r > 0)
 		goto unlock;
 
 	/* transfer complete */
-	itask_complete(cmds, -r);
+	itask_complete(&i2c->cmds, -r);
 
-	if(itask_query_payload(&i2c->master_cmds, 0x0) || itask_query_payload(&i2c->slave_cmds, 0x0))
+	if(itask_query_payload(&i2c->cmds, 0x0))
 		int_foretell(i2c->cfg->int_num);
 
 unlock:
@@ -253,7 +243,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_MST_START:
 	case I2C_STATE_MST_RESTART:
 		DEBUG("start (%#hhx)\n", state);
-		ops->slave_addr(dgram->cmd, dgram->slave, i2c->hw);
+		ops->slave_addr(dgram->cmd & I2C_CMD_READ, dgram->slave, i2c->hw);
 		break;
 
 	case I2C_STATE_MST_SLAW_NACK:
@@ -355,8 +345,8 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		DEBUG("(n)ack (%#hhx)\n", state);
 
 		if(linebuf_empty(&dgram->buf)){
-			itask_complete(&i2c->slave_cmds, 0);
-			dgram = itask_query_payload(&i2c->slave_cmds, 0x0);
+			itask_complete(&i2c->cmds, 0);
+			dgram = itask_query_payload(&i2c->cmds, 0x0);
 		}
 
 		if(state == I2C_STATE_SLA_SLAR_DATA_LAST_ACK || state == I2C_STATE_SLA_SLAR_DATA_NACK || dgram == 0x0)
@@ -407,7 +397,7 @@ static int buffer_load(i2c_dgram_t *dgram){
 		&dgram->buf,
 		dgram->blobs->buf,
 		dgram->blobs->len,
-		(dgram->cmd == I2C_CMD_WRITE) ? dgram->blobs->len : 0
+		(dgram->cmd & I2C_CMD_WRITE) ? dgram->blobs->len : 0
 	);
 
 	dgram->blobs++;

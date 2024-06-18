@@ -11,8 +11,17 @@
 #define SYS_I2C_H
 
 
+#include <sys/types.h>
+
+
 /* types */
+typedef enum{
+	I2C_MASTER = 0,
+	I2C_SLAVE,
+} i2c_dev_mode_t;
+
 typedef struct{
+	i2c_dev_mode_t mode;
 	uint8_t slave;
 } i2c_dev_cfg_t;
 
