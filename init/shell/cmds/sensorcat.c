@@ -32,7 +32,7 @@
 /* types */
 typedef struct{
 	void (*fmt)(void *data);
-	ssize_t data_size;
+	size_t data_offset;
 } sensor_t;
 
 
@@ -46,15 +46,15 @@ static void fmt_env(void *data);
 /* local functions */
 static int exec(int argc, char **argv){
 	sensor_t sensors[] = {
-		{ .fmt = fmt_temp,	.data_size = sizeof(temperature_t) },
-		{ .fmt = fmt_press,	.data_size = sizeof(pressure_t) },
-		{ .fmt = fmt_hum,	.data_size = sizeof(humidity_t) },
-		{ .fmt = fmt_env,	.data_size = sizeof(envsensor_t) },
+		{ .fmt = fmt_temp,	.data_offset = offsetof(envsensor_t, temp) },
+		{ .fmt = fmt_press,	.data_offset = offsetof(envsensor_t, press) },
+		{ .fmt = fmt_hum,	.data_offset = offsetof(envsensor_t, hum) },
+		{ .fmt = fmt_env,	.data_offset = 0 },
 	};
+	int r = 0;
 	int fd;
 	unsigned int type;
 	uint8_t data[sizeof(envsensor_t)];
-	ssize_t r;
 
 
 	if(argc < 3)
@@ -70,16 +70,15 @@ static int exec(int argc, char **argv){
 	if(fd < 0)
 		return -ERROR("opening %s", argv[1]);
 
-	if(read(fd, &data, sensors[type].data_size) == sensors[type].data_size){
-		sensors[type].fmt(data);
-		r = 0;
-	}
-	else
-		r = ERROR("read");
-
+	r = (read(fd, &data, sizeof(envsensor_t)) != sizeof(envsensor_t));
 	close(fd);
 
-	return -r;
+	if(r != 0)
+		return -ERROR("read");
+
+	sensors[type].fmt(data + sensors[type].data_offset);
+
+	return 0;
 }
 
 command("sensorcat", exec);
