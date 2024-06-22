@@ -157,13 +157,19 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *data, size_t n){
 	envsensor_t v;
 
 
-	if(read_sensor(dev->payload, &v) != 0)
-		return 0;
+	if(n != sizeof(envsensor_t))
+		goto_errno(err, E_INVAL);
 
-	n = MIN(n, sizeof(envsensor_t));
+	if(read_sensor(dev->payload, &v) != 0)
+		goto err;
+
 	memcpy(data, &v, n);
 
 	return n;
+
+
+err:
+	return 0;
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
