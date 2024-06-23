@@ -22,6 +22,13 @@
 
 /* local/static prototypes */
 static int xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
+static i2c_state_t state(void *hw);
+static void start(void *hw);
+static void ack(bool ack, void *hw);
+static void slave_mode(bool addressable, bool stop, void *hw);
+static void slave_addr(bool read, uint8_t slave, void *hw);
+static uint8_t byte_read(void *hw);
+static void byte_write(uint8_t c, bool ack, void *hw);
 
 static int ack_check(i2c_t *i2c);
 

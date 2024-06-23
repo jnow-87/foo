@@ -257,13 +257,12 @@ static int xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n
 	size_t x;
 
 
-	DEBUG("issue i2c command: mode=%s, slave=%u, n=%zu\n", (cmd & I2C_CMD_MASTER) ? "master" : "slave", slave, n);
+	DEBUG("issue i2c command: mode=%s, slave=%u, n=%zu\n", (cmd & I2C_CMD_MASTER) ? "master" : "slave", (cmd & I2C_CMD_MASTER) ? slave : regs->sar, n);
 
-	if(cmd & I2C_CMD_MASTER){
-		if(configure_transfer(cmd, slave, dtd->regs) != 0)
-			return -errno;
-	}
-	else if(cmd & I2C_CMD_WRITE){
+	if(configure_transfer(cmd, slave, dtd->regs) != 0)
+		return -errno;
+
+	if((cmd & I2C_CMD_SLAVE) && (cmd & I2C_CMD_WRITE)){
 		while((regs->raw_intr_stat & (0x1 << INT_RD_REQ)) == 0);
 		DEBUG("got addressed: status=%#x\n", regs->status);
 
@@ -324,6 +323,13 @@ static size_t rx(uint8_t *buf, size_t n, bool blocking, i2c_regs_t *regs){
 }
 
 static void enable(bool en, i2c_regs_t *regs){
+	// TODO
+	//	aborted transfer in the following scenario
+	//		rpi: slave
+	//		rpi: cat -n 1 -s 2
+	//		avr: echo -n "1234"
+	//		rpi: echo -n "12"
+	//			-> abort
 	if((regs->status & (0x1 << STATUS_TX_FIFO_EMPTY)) == 0 || (regs->status & (0x1 << STATUS_RX_FIFO_NOT_EMPTY)))
 		WARN("abort incomplete operation (status=%#x)\n", regs->status);
 
@@ -340,7 +346,7 @@ int configure_transfer(i2c_cmd_t cmd, uint8_t slave, i2c_regs_t *regs){
 	bool master_mode = (cmd & I2C_CMD_MASTER);
 
 
-	if(gen_call && (cmd & I2C_CMD_READ))
+	if(gen_call && (cmd == (I2C_CMD_MASTER | I2C_CMD_READ)))
 		return_errno(E_INVAL);
 
 	enable(false, regs);

@@ -68,11 +68,11 @@ static i2c_state_t state(void *hw);
 static void start(void *hw);
 static void ack(bool ack, void *hw);
 
-static void slave_mode(bool addressable, bool stop, void *hw);
-static void slave_addr(bool read, uint8_t slave, void *hw);
+static void idle(bool addressable, bool stop, void *hw);
+static void connect(bool read, uint8_t slave, void *hw);
 
-static uint8_t byte_read(void *hw);
-static void byte_write(uint8_t c, bool ack, void *hw);
+static size_t read(uint8_t *buf, size_t n, void *hw);
+static size_t write(uint8_t *buf, size_t n, bool last, void *hw);
 
 
 /* local functions */
@@ -85,10 +85,10 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.state = state;
 	ops.start = start;
 	ops.ack = ack;
-	ops.slave_mode = slave_mode;
-	ops.slave_addr = slave_addr;
-	ops.byte_read = byte_read;
-	ops.byte_write = byte_write;
+	ops.idle = idle;
+	ops.connect = connect;
+	ops.read = read;
+	ops.write = write;
 	ops.xfer = 0x0;
 
 	return i2c_create(&ops, &dtd->cfg, dtd);
@@ -127,13 +127,13 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 	regs->twsr = 0x0;
 	regs->twbr = brate;
 	regs->twamr = 0x0;
-	regs->twar = cfg->addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
+	regs->twar = cfg->addr << 0x1 | (cfg->bcast_en << TWAR_TWGCE);
 	regs->twcr = (0x1 << TWCR_TWEN)
 			   | (0x0 << TWCR_TWEA)
-			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
+			   | ((bool)cfg->int_num << TWCR_TWIE)
 			   ;
 
-	DEBUG("i2c config: addr=%u\n", cfg->addr);
+	DEBUG("i2c config: addr=%u, twcr=%#x\n", cfg->addr, regs->twcr);
 
 	return 0;
 }
@@ -141,6 +141,8 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 static i2c_state_t state(void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
+
+	DEBUG("get state\n");
 
 	if((regs->twcr & (0x1 << TWCR_TWINT)) == 0)
 		return I2C_STATE_NONE;
@@ -190,22 +192,29 @@ static void ack(bool ack, void *hw){
 
 
 	regs->twcr &= ~(0x1 << TWCR_TWEA);
-	regs->twcr |= ((ack ? 0x1 : 0x0) << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+	regs->twcr |= (ack << TWCR_TWEA) | (0x1 << TWCR_TWINT);
 }
 
-static void slave_mode(bool addressable, bool stop, void *hw){
+static void idle(bool addressable, bool stop, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
-			   | ((addressable ? 0x1 : 0x0) << TWCR_TWEA)
+			   | (addressable << TWCR_TWEA)
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)
-			   | ((stop ? 0x1 : 0x0)  << TWCR_TWSTO)
+			   | (stop << TWCR_TWSTO)
 			   ;
+
+	INFO(
+		"twar: %#x\n"
+		"twcr: %#x\n"
+		, regs->twar
+		, regs->twcr
+	);
 }
 
-static void slave_addr(bool read, uint8_t slave, void *hw){
+static void connect(bool read, uint8_t slave, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
@@ -216,11 +225,15 @@ static void slave_addr(bool read, uint8_t slave, void *hw){
 			   ;
 }
 
-static uint8_t byte_read(void *hw){
-	return ((dt_data_t*)hw)->regs->twdr;
+static size_t read(uint8_t *buf, size_t n, void *hw){
+	buf[0] = ((dt_data_t*)hw)->regs->twdr;
+
+	return 1;
 }
 
-static void byte_write(uint8_t c, bool last, void *hw){
-	((dt_data_t*)hw)->regs->twdr = c;
+static size_t write(uint8_t *buf, size_t n, bool last, void *hw){
+	((dt_data_t*)hw)->regs->twdr = buf[0];
 	ack(!last, hw);
+
+	return 1;
 }

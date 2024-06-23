@@ -118,11 +118,11 @@ typedef struct{
 	void (*start)(void *hw);
 	void (*ack)(bool ack, void *hw);
 
-	void (*slave_mode)(bool addressable, bool stop, void *hw);
-	void (*slave_addr)(bool read, uint8_t slave, void *hw);
+	void (*idle)(bool addressable, bool stop, void *hw);
+	void (*connect)(bool read, uint8_t slave, void *hw);
 
-	uint8_t (*byte_read)(void *hw);
-	void (*byte_write)(uint8_t c, bool last, void *hw);
+	size_t (*read)(uint8_t *buf, size_t n, void *hw);
+	size_t (*write)(uint8_t *buf, size_t n, bool last, void *hw);
 
 	/* root callbacks */
 	// if the following callback is set to zero the default i2c_xfer()

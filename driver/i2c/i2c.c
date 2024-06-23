@@ -84,8 +84,8 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 	if(ops->configure != 0x0 && ops->configure(i2c->cfg, i2c->hw) != 0)
 		goto err_1;
 
-	if(ops->slave_mode != 0x0)
-		ops->slave_mode(true, false, hw);
+	if(ops->idle != 0x0)
+		ops->idle(true, false, hw);
 
 	return i2c;
 
@@ -243,7 +243,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_MST_START:
 	case I2C_STATE_MST_RESTART:
 		DEBUG("start (%#hhx)\n", state);
-		ops->slave_addr(dgram->cmd & I2C_CMD_READ, dgram->slave, i2c->hw);
+		ops->connect(dgram->cmd & I2C_CMD_READ, dgram->slave, i2c->hw);
 		break;
 
 	case I2C_STATE_MST_SLAW_NACK:
@@ -268,14 +268,15 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		linebuf_peek(&dgram->buf, &c, 1);
 		DEBUG("sla-w (%#hhx): %#hhx\n", state, c);
 
-		ops->byte_write(c, true, i2c->hw);
+		// TODO why is last=true
+		ops->write(&c, 1, true, i2c->hw);
 		break;
 
 
 	/* master read */
 	case I2C_STATE_MST_SLAR_DATA_ACK:
 	case I2C_STATE_MST_SLAR_DATA_NACK:
-		c = ops->byte_read(i2c->hw);
+		ops->read(&c, 1, i2c->hw);
 		linebuf_write(&dgram->buf, &c, 1);
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
@@ -311,7 +312,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	switch(state){
 	case I2C_STATE_NEXT_CMD:
 		DEBUG("make addressable\n");
-		i2c->ops.slave_mode(true, false, i2c->hw);
+		i2c->ops.idle(true, false, i2c->hw);
 		break;
 
 	/* slave read */
@@ -319,7 +320,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_SLAW_DATA_NACK:
 	case I2C_STATE_SLA_BCAST_DATA_ACK:
 	case I2C_STATE_SLA_BCAST_DATA_NACK:
-		c = ops->byte_read(i2c->hw);
+		ops->read(&c, 1, i2c->hw);
 		linebuf_write(&dgram->buf, &c, 1);
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
@@ -360,7 +361,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		linebuf_read(&dgram->buf, &c, 1);
 		DEBUG("write (%#hhx): %#hhx\n", state, c);
 
-		ops->byte_write(c, (linebuf_contains(&dgram->buf) == 0), i2c->hw);
+		ops->write(&c, 1, (linebuf_contains(&dgram->buf) == 0), i2c->hw);
 		break;
 
 	case I2C_STATE_SLA_SLAW_STOP:
@@ -384,7 +385,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 static int complete(i2c_t *i2c, errno_t errnum, bool stop){
 	DEBUG("complete: %s, %sstop\n", strerror(errnum), (stop ? "" : "no "));
-	i2c->ops.slave_mode(true, stop, i2c->hw);
+	i2c->ops.idle(true, stop, i2c->hw);
 
 	return -errnum;
 }
