@@ -32,7 +32,6 @@
 
 /* types */
 typedef _Bool							bool;
-typedef void							*addr_t;
 
 #ifndef BUILD_HOST
 # if DEVTREE_ARCH_REG_WIDTH == 8
