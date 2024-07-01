@@ -266,4 +266,7 @@ config KERNEL_STAT
 config KERNEL_INIT_DEBUG
 	bool "debug kernel initialisation"
 	select KERNEL_LOG_DEBUG
+
+config KERNEL_MEMCHECK
+	bool "kernel memory checker"
 # }}}

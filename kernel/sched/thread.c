@@ -38,8 +38,6 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 
 	this_t->tid = tid;
 
-	mutex_init(&this_t->mtx, MTX_NOINT);
-
 	/* set thread attributes */
 	this_t->state = CREATED;
 	this_t->affinity = DEVTREE_ARCH_CORE_MASK;
@@ -47,12 +45,15 @@ thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entr
 	this_t->entry = entry;
 	this_t->parent = this_p;
 
+	mutex_init(&this_t->mtx, MTX_NOINT);
+
 	/* prepare stack */
-	// NOTE the memory stack is ensured to exist by the build system
 	this_t->stack = page_alloc(this_p, CONFIG_STACK_SIZE);
 
 	if(this_t->stack == 0x0)
 		goto_errno(err_1, E_NOMEM);
+
+	memcheck_stack_prime(this_t->stack);
 
 	/* init thread context */
 	ctx = (thread_ctx_t*)(this_t->stack->phys_addr + CONFIG_STACK_SIZE - sizeof(thread_ctx_t));

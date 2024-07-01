@@ -66,8 +66,14 @@ static mutex_t sched_mtx = NOINT_MUTEX_INITIALISER();
 
 // NOTE having valid entries is required for functions that use
 //      sched_running() early on, e.g. nested mutexes
-static process_t kernel_process = { .name = "kernel" };
-static thread_t kernel_threads[DEVTREE_ARCH_NCORES] = { { .tid = 0, .parent = &kernel_process } };
+static thread_t kernel_threads[DEVTREE_ARCH_NCORES] = {
+	{
+		.tid = 0,
+		.stack = &(page_t){ .phys_addr = 0x0 },
+		.parent = &(process_t){ .name = "kernel" },
+		.mtx = NOINT_MUTEX_INITIALISER(),
+	}
+};
 static thread_t *running[DEVTREE_ARCH_NCORES] = { kernel_threads };
 
 
@@ -156,7 +162,7 @@ static int init(void){
 
 
 	/* init kernel process */
-	this_p = &kernel_process;
+	this_p = kernel_threads[0].parent;
 
 	// one thread per core
 	for(size_t i=0; i<DEVTREE_ARCH_NCORES; i++){
@@ -174,7 +180,10 @@ static int init(void){
 		this_t->priority = CONFIG_SCHED_PRIO_DEFAULT;
 		this_t->affinity = (0x1 << i);
 		this_t->parent = this_p;
+		this_t->stack->phys_addr = KERNEL_STACK(i + 1);
 
+		memcheck_stack_prime(this_t->stack);
+		mutex_init(&this_t->mtx, MTX_NOINT);
 		list_add_tail(this_p->threads, this_t);
 
 		// add kernel threads to running queue

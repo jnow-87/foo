@@ -94,7 +94,7 @@ void kmunmap(void *addr){
 }
 
 bool iskheap(void *addr){
-	return (addr >= (void*)DEVTREE_HEAP_BASE) && addr < (void*)KERNEL_STACK(DEVTREE_ARCH_NCORES);
+	return (addr >= (void*)DEVTREE_HEAP_BASE) && addr < KERNEL_STACK(DEVTREE_ARCH_NCORES);
 }
 
 int copy_from_user(void *kernel, void const *user, size_t n, struct process_t *this_p){
@@ -137,7 +137,7 @@ void *addr_phys_to_virt(void *pa){
 /* local functions */
 static int init(void){
 	kernel_heap = (void*)DEVTREE_HEAP_BASE;
-	memblock_init(kernel_heap, KERNEL_STACK(DEVTREE_ARCH_NCORES) - DEVTREE_HEAP_BASE);
+	memblock_init(kernel_heap, (size_t)(KERNEL_STACK(DEVTREE_ARCH_NCORES) - DEVTREE_HEAP_BASE));
 
 	return -errno;
 }

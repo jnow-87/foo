@@ -10,6 +10,7 @@
 obj-y := kernel.o page.o
 
 obj-$(CONFIG_SC_DYNMEM) += syscall.o
+obj-$(CONFIG_KERNEL_MEMCHECK) += check.o
 
 
 cppflags-$(CONFIG_SC_DYNMEM_DEBUG) := -DBUILD_KERNEL_LOG_DEBUG

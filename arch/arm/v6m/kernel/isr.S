@@ -26,7 +26,7 @@
 .global vector_table
 vector_table:
 	// stack pointer
-.word	KERNEL_STACK(0)
+.word	KERNEL_STACK_ASM(0)
 
 	// arm v6-m exceptions
 .word	__av6m_start			// reset
