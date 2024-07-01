@@ -7,14 +7,24 @@
 
 
 
+#include <config/config.h>
 #include <arch/arch.h>
 #include <kernel/kprintf.h>
 #include <kernel/thread.h>
 #include <kernel/sched.h>
+#include <sys/ctype.h>
 #include <sys/devicetree.h>
-#include <sys/stdarg.h>
 #include <sys/stack.h>
+#include <sys/stdarg.h>
 #include <sys/types.h>
+
+
+/* macros */
+#define STACK_CHUNK_SIZE	16
+
+
+/* local/static prototypes */
+void print_stack(void *addr);
 
 
 /* global functions */
@@ -46,6 +56,7 @@ void kpanic_ext(char const *file, char const *func, unsigned int line, char cons
 			(unsigned int)(this_t->parent->pid),
 			(unsigned int)(this_t->tid)
 		);
+		print_stack(this_t->stack->phys_addr);
 	}
 	else
 		kprintf(KMSG_ANY, "%10.10s: 0x0\n\n", "thread");
@@ -59,4 +70,29 @@ void kpanic_ext(char const *file, char const *func, unsigned int line, char cons
 	while(1){
 		core_sleep();
 	}
+}
+
+
+/* local functions */
+void print_stack(void *addr){
+	uint8_t byte;
+
+
+	for(size_t i=0; i<CONFIG_STACK_SIZE; i+=STACK_CHUNK_SIZE){
+		kprintf(KMSG_ANY, "  %p\t", addr + i);
+
+		for(size_t j=0; j<STACK_CHUNK_SIZE; j++)
+			kprintf(KMSG_ANY, " %2.2hhx", *((uint8_t*)addr + i + j));
+
+		kprintf(KMSG_ANY, "\t");
+
+		for(size_t j=0; j<STACK_CHUNK_SIZE; j++){
+			byte = *((uint8_t*)addr + i + j);
+			kprintf(KMSG_ANY, "%c", isprint(byte) ? byte : '.');
+		}
+
+		kprintf(KMSG_ANY, "\n");
+	}
+
+	kprintf(KMSG_ANY, "\n");
 }

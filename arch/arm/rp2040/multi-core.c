@@ -56,7 +56,7 @@ void rp2040_cores_boot(void){
 		0,
 		1,
 		ppb_read(VTOR),						// interrupt vector table
-		KERNEL_STACK(1),					// stack pointer
+		(uint32_t)KERNEL_STACK(1),			// stack pointer
 		(uint32_t)__av6m_start_multi_core,	// entry point
 	};
 	uint8_t i = 0;

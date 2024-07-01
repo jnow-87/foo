@@ -20,8 +20,21 @@
 
 
 /* macros */
-#define KERNEL_STACK(core)		(DEVTREE_HEAP_BASE + DEVTREE_HEAP_SIZE - (core * CONFIG_STACK_SIZE))
+#define KERNEL_STACK_ASM(core)	(DEVTREE_HEAP_BASE + DEVTREE_HEAP_SIZE - (core * CONFIG_STACK_SIZE))
+
+#ifndef ASM
+// cast KERNEL_STACK_ASM() twice since for some architectures, e.g. avr, the ram addresses
+// have an artificial offset to the actual hardware addresses, which, if casted directly
+// to a pointer, causes a warning due to different sizes of integer and pointer
+# define KERNEL_STACK(core)		((void*)(ptrdiff_t)KERNEL_STACK_ASM(core))
+#endif // ASM
+
 #define PAGESIZE_BYTES(psize)	((0x1 << (2 * (psize))) * 4096)
+
+# ifndef CONFIG_KERNEL_MEMCHECK
+#  define memcheck_stack_prime(stack)	{}
+#  define memcheck_stack_check(stack)	{}
+# endif // CONFIG_KERNEL_MEMCHECK
 
 
 /* incomplete types */
@@ -123,6 +136,11 @@ int copy_to_user(void *user, void const *kernel, size_t n, struct process_t *thi
 void *addr_virt_to_phys(void *va);
 void *addr_phys_to_virt(void *pa);
 # endif // CONFIG_KERNEL_VIRT_MEM
+
+# ifdef CONFIG_KERNEL_MEMCHECK
+void memcheck_stack_prime(page_t *stack);
+void memcheck_stack_check(page_t *stack);
+# endif // CONFIG_KERNEL_MEMCHECK
 #endif // ASM
 
 

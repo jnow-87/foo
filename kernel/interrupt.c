@@ -12,6 +12,7 @@
 #include <kernel/interrupt.h>
 #include <kernel/panic.h>
 #include <kernel/sched.h>
+#include <kernel/thread.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/devicetree.h>
@@ -58,6 +59,8 @@ void int_khdlr(int_num_t num){
 	errno_t e = errno;
 
 
+	memcheck_stack_check(sched_running()->stack);
+
 	/* handle the given interrupt */
 	reset_errno();
 	call_hdlr(num);
@@ -80,6 +83,7 @@ void int_khdlr(int_num_t num){
 		}
 	}
 
+	memcheck_stack_check(sched_running()->stack);
 	set_errno(e);
 }
 

@@ -13,6 +13,7 @@
 
 #include <arch/types.h>
 #include <arch/x86/hardware.h>
+#include <sys/devtree.h>
 #include <sys/syscall.h>
 #include <sys/thread.h>
 #include <sys/types.h>
