@@ -145,32 +145,32 @@ static i2c_state_t state(void *hw){
 
 	switch(regs->twsr & ~(0x3 << TWSR_TWPS)){
 	case 0x08:	return I2C_STATE_MST_START;
-	case 0x10:	return I2C_STATE_MST_RESTART;
-	case 0x18:	return I2C_STATE_MST_SLAW_ACK;
-	case 0x20:	return I2C_STATE_MST_SLAW_NACK;
-	case 0x28:	return I2C_STATE_MST_SLAW_DATA_ACK;
-	case 0x30:	return I2C_STATE_MST_SLAW_DATA_NACK;
-	case 0x40:	return I2C_STATE_MST_SLAR_ACK;
-	case 0x48:	return I2C_STATE_MST_SLAR_NACK;
-	case 0x50:	return I2C_STATE_MST_SLAR_DATA_ACK;
-	case 0x58:	return I2C_STATE_MST_SLAR_DATA_NACK;
+	case 0x10:	return I2C_STATE_MST_START;
+	case 0x20:	return I2C_STATE_MST_START_NACK;
+	case 0x48:	return I2C_STATE_MST_START_NACK;
+	case 0x18:	return I2C_STATE_MST_WR_ACK;
+	case 0x28:	return I2C_STATE_MST_WR_DATA_ACK;
+	case 0x30:	return I2C_STATE_MST_WR_DATA_NACK;
+	case 0x40:	return I2C_STATE_MST_RD_ACK;
+	case 0x50:	return I2C_STATE_MST_RD_DATA_ACK;
+	case 0x58:	return I2C_STATE_MST_RD_DATA_NACK;
 	case 0x38:	return I2C_STATE_MST_ARBLOST;
-	case 0x60:	return I2C_STATE_SLA_SLAW_MATCH;
-	case 0x68:	return I2C_STATE_SLA_SLAW_ARBLOST_ADDR_MATCH;
-	case 0xa8:	return I2C_STATE_SLA_SLAR_ADDR_MATCH;
-	case 0xb0:	return I2C_STATE_SLA_SLAR_ARBLOST_ADDR_MATCH;
-	case 0x70:	return I2C_STATE_SLA_BCAST_MATCH;
-	case 0x78:	return I2C_STATE_SLA_BCAST_ARBLOST_MATCH;
-	case 0x80:	return I2C_STATE_SLA_SLAW_DATA_ACK;
-	case 0x88:	return I2C_STATE_SLA_SLAW_DATA_NACK;
-	case 0x90:	return I2C_STATE_SLA_BCAST_DATA_ACK;
-	case 0x98:	return I2C_STATE_SLA_BCAST_DATA_NACK;
-	case 0xa0:	return I2C_STATE_SLA_SLAW_STOP;
-	case 0xb8:	return I2C_STATE_SLA_SLAR_DATA_ACK;
-	case 0xc0:	return I2C_STATE_SLA_SLAR_DATA_NACK;
-	case 0xc8:	return I2C_STATE_SLA_SLAR_DATA_LAST_ACK;
+	case 0x60:	return I2C_STATE_SLA_RD_MATCH;
+	case 0x68:	return I2C_STATE_SLA_RD_MATCH;
+	case 0x70:	return I2C_STATE_SLA_RD_MATCH;
+	case 0x78:	return I2C_STATE_SLA_RD_MATCH;
+	case 0x80:	return I2C_STATE_SLA_RD_DATA_ACK;
+	case 0x90:	return I2C_STATE_SLA_RD_DATA_ACK;
+	case 0x88:	return I2C_STATE_SLA_RD_DATA_NACK;
+	case 0x98:	return I2C_STATE_SLA_RD_DATA_NACK;
+	case 0xa0:	return I2C_STATE_SLA_RD_STOP;
+	case 0xa8:	return I2C_STATE_SLA_WR_MATCH;
+	case 0xb0:	return I2C_STATE_SLA_WR_MATCH;
+	case 0xb8:	return I2C_STATE_SLA_WR_DATA_ACK;
+	case 0xc8:	return I2C_STATE_SLA_WR_DATA_ACK;
+	case 0xc0:	return I2C_STATE_SLA_WR_DATA_NACK;
 	case 0x00:	return I2C_STATE_ERROR;
-	default:	return I2C_STATE_INVAL;
+	default:	return I2C_STATE_ERROR;
 	}
 }
 

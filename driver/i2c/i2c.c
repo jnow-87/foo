@@ -179,7 +179,7 @@ static void int_hdlr(int_num_t num, void *payload){
 	/* identify dgram */
 	state = i2c->ops.state(i2c->hw);
 
-	master_cmd = (i2c->cfg->mode == I2C_MODE_MASTER && !(state & I2C_STATE_BIT_SLAVE));
+	master_cmd = (i2c->cfg->mode == I2C_MODE_MASTER && !(state & I2C_STATE_SLAVE));
 	cmds = master_cmd ? &i2c->master_cmds : &i2c->slave_cmds;
 	dgram = itask_query_payload(cmds, 0x0);
 
@@ -223,30 +223,28 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		break;
 
 	case I2C_STATE_MST_START:
-	case I2C_STATE_MST_RESTART:
 		DEBUG("start (%#hhx)\n", state);
 		ops->slave_addr(dgram->cmd, dgram->slave, i2c->hw);
 		break;
 
-	case I2C_STATE_MST_SLAW_NACK:
-	case I2C_STATE_MST_SLAR_NACK:
+	case I2C_STATE_MST_START_NACK:
 		DEBUG("nack (%#hhx)\n", state);
 		return complete(i2c, E_NOCONN, true);
 
 
 	/* master write */
-	case I2C_STATE_MST_SLAW_DATA_ACK:
+	case I2C_STATE_MST_WR_DATA_ACK:
 		linebuf_read(&dgram->buf, &c, 1);
 
 		// fall through
-	case I2C_STATE_MST_SLAW_DATA_NACK:
+	case I2C_STATE_MST_WR_DATA_NACK:
 		DEBUG("(n)ack (%#hhx)\n", state);
 
-		if((linebuf_empty(&dgram->buf) && buffer_load(dgram) == -1) || state == I2C_STATE_MST_SLAW_DATA_NACK)
+		if((linebuf_empty(&dgram->buf) && buffer_load(dgram) == -1) || state == I2C_STATE_MST_WR_DATA_NACK)
 			return complete(i2c, 0, true);
 
 		// fall through
-	case I2C_STATE_MST_SLAW_ACK:
+	case I2C_STATE_MST_WR_ACK:
 		linebuf_peek(&dgram->buf, &c, 1);
 		DEBUG("sla-w (%#hhx): %#hhx\n", state, c);
 
@@ -255,17 +253,17 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 
 	/* master read */
-	case I2C_STATE_MST_SLAR_DATA_ACK:
-	case I2C_STATE_MST_SLAR_DATA_NACK:
+	case I2C_STATE_MST_RD_DATA_ACK:
+	case I2C_STATE_MST_RD_DATA_NACK:
 		c = ops->byte_read(i2c->hw);
 		linebuf_write(&dgram->buf, &c, 1);
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
-		if(linebuf_empty(&dgram->buf) || state == I2C_STATE_MST_SLAR_DATA_NACK)
+		if(linebuf_empty(&dgram->buf) || state == I2C_STATE_MST_RD_DATA_NACK)
 			return complete(i2c, 0, true);
 
 		// fall through
-	case I2C_STATE_MST_SLAR_ACK:
+	case I2C_STATE_MST_RD_ACK:
 		DEBUG("sla-r (%#hhx)\n", state);
 		ops->ack((linebuf_left(&dgram->buf) > 1), i2c->hw);
 		break;
@@ -277,7 +275,6 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 	/* error */
 	case I2C_STATE_ERROR:
-	case I2C_STATE_INVAL:
 	default:
 		return complete(i2c, E_IO, true);
 	}
@@ -297,33 +294,31 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		break;
 
 	/* slave read */
-	case I2C_STATE_SLA_SLAW_DATA_ACK:
-	case I2C_STATE_SLA_SLAW_DATA_NACK:
-	case I2C_STATE_SLA_BCAST_DATA_ACK:
-	case I2C_STATE_SLA_BCAST_DATA_NACK:
+	case I2C_STATE_SLA_RD_DATA_ACK:
+	case I2C_STATE_SLA_RD_DATA_NACK:
 		c = ops->byte_read(i2c->hw);
 		linebuf_write(&dgram->buf, &c, 1);
 		DEBUG("read (%#hhx): %#hhx\n", state, c);
 
-		if(state == I2C_STATE_SLA_SLAW_DATA_NACK || state == I2C_STATE_SLA_BCAST_DATA_NACK)
+		if(state == I2C_STATE_SLA_RD_DATA_NACK)
 			return complete(i2c, 0, false);
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
 	// 		command will be continued once the slave transmission has beem finished
-	case I2C_STATE_SLA_SLAW_ARBLOST_ADDR_MATCH:
-	case I2C_STATE_SLA_BCAST_ARBLOST_MATCH:
-	case I2C_STATE_SLA_SLAW_MATCH:
-	case I2C_STATE_SLA_BCAST_MATCH:
+	case I2C_STATE_SLA_RD_MATCH:
 		DEBUG("match (%#hhx)\n", state);
 		ops->ack(!(linebuf_full(&dgram->buf)), i2c->hw);
 		break;
 
+	case I2C_STATE_SLA_RD_STOP:
+		DEBUG("stop (%#hhx)\n", state);
+		return complete(i2c, 0, false);
+
 
 	/* slave write */
-	case I2C_STATE_SLA_SLAR_DATA_ACK:
-	case I2C_STATE_SLA_SLAR_DATA_NACK:
-	case I2C_STATE_SLA_SLAR_DATA_LAST_ACK:
+	case I2C_STATE_SLA_WR_DATA_ACK:
+	case I2C_STATE_SLA_WR_DATA_NACK:
 		DEBUG("(n)ack (%#hhx)\n", state);
 
 		if(linebuf_empty(&dgram->buf)){
@@ -331,23 +326,18 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 			dgram = itask_query_payload(&i2c->slave_cmds, 0x0);
 		}
 
-		if(state == I2C_STATE_SLA_SLAR_DATA_LAST_ACK || state == I2C_STATE_SLA_SLAR_DATA_NACK || dgram == 0x0)
+		if(state == I2C_STATE_SLA_WR_DATA_NACK || dgram == 0x0)
 			return complete(i2c, 0, false);
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
 	// 		command will be continued once the slave transmission has beem finished
-	case I2C_STATE_SLA_SLAR_ARBLOST_ADDR_MATCH:
-	case I2C_STATE_SLA_SLAR_ADDR_MATCH:
+	case I2C_STATE_SLA_WR_MATCH:
 		linebuf_read(&dgram->buf, &c, 1);
 		DEBUG("write (%#hhx): %#hhx\n", state, c);
 
 		ops->byte_write(c, (linebuf_contains(&dgram->buf) == 0), i2c->hw);
 		break;
-
-	case I2C_STATE_SLA_SLAW_STOP:
-		DEBUG("stop (%#hhx)\n", state);
-		return complete(i2c, 0, false);
 
 
 	/* no state change */
@@ -356,7 +346,6 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 	/* error */
 	case I2C_STATE_ERROR:
-	case I2C_STATE_INVAL:
 	default:
 		return complete(i2c, E_IO, true);
 	}
