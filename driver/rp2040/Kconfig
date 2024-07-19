@@ -14,3 +14,7 @@ config RP2040_GPIO
 # uart
 config RP2040_UART
 	bool "uart driver"
+
+# i2c
+config RP2040_I2C
+	bool "i2c driver"

@@ -9,3 +9,7 @@
 
 obj-$(CONFIG_RP2040_UART) += uart.o
 obj-$(CONFIG_RP2040_GPIO) += gpio.o
+obj-$(CONFIG_RP2040_I2C) += i2c.o
+
+
+i2c-cppflags += -DBUILD_KERNEL_LOG_DEBUG -O0
