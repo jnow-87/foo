@@ -148,6 +148,10 @@ static int readwrite(int fd, char const *file, bool interactive){
 			return ERROR("reading %s", file);
 
 		/* write */
+		printf("read: %zd\n", r);
+		for(size_t i=0; i<r; i++)
+			printf("%c %hhx\n", isprint(buf[i]) ? buf[i] : '.', buf[i]);
+
 		if(opts.hexdump){
 			for(ssize_t i=0; i<r; i++)
 				printf("%.2hhx", buf[i]);

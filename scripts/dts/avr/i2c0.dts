@@ -23,7 +23,7 @@ i2c0 = {
 	int<16> = [ 100 ];	// clock (100kHz)
 	int<8> = [
 	   1,				// broadcast (enabled)
-	   1,				// address
+	   20,				// address
 #if defined(CONFIG_DRIVER_SSD1306) \
  || defined(CONFIG_DRIVER_MCP23017) \
  || defined(CONFIG_DRIVER_BME280)

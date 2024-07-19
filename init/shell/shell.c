@@ -63,6 +63,12 @@ int shell_term(char const *prompt){
 
 	cmd_init();
 
+	history_add("i2ccfg dev/i2c-raw0 master 20");
+	history_add("i2ccfg dev/i2c-raw0 slave");
+	history_add("cat -n 1 -s 2 dev/i2c-raw0");
+	history_add("echo -n \"1234\" > dev/i2c-raw0");
+	history_add("echo -n -e \"\\xff\\x00\\x00\\x00\" > dev/gpio-mcp0a");
+
 	while(1){
 		write(1, prompt, strlen(prompt));
 		(void)shell_script(stdin, "stdin", SH_ONCE);

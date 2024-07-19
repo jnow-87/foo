@@ -33,12 +33,12 @@ ram = {
 
 	kernel-data = {
 		baseaddr = 0x00800100;
-		size = 5376;
+		size = 6144;
 	};
 
 	app-data = {
-		baseaddr = 0x00801600;
-		size = 5120;
+		baseaddr = 0x801900;
+		size = 4352;
 	};
 
 	heap = {

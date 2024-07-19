@@ -51,6 +51,8 @@ static int complete(i2c_t *i2c, errno_t errnum, bool stop);
 static char const *strstate(i2c_state_t state);
 #endif // BUILD_KERNEL_LOG_DEBUG
 
+#include <sys/ctype.h>
+
 
 /* global functions */
 i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
@@ -120,6 +122,8 @@ int i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *
 	dgram.nblobs = n;
 	dgram.n = 0;
 	dgram.incomplete = 0;
+
+	DEBUG("issue cmd: mode=%s, slave=%u, blobs=%zu\n", (cmd & I2C_MASTER) ? "master" : "slave", slave, n);
 
 	return (i2c->cfg->int_num ? int_cmd(i2c, &dgram) : poll_cmd(i2c, &dgram));
 }
@@ -244,6 +248,8 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		n = dgram->blobs->len - dgram->n;
 		DEBUG("sla-w: state=%s, n=%zu\n", strstate(state), n);
 
+		// TODO move the condition for 'last' in a function, it is also used to detect if the
+		// 		a dgram has been transfered completely
 		dgram->incomplete = ops->write(dgram->blobs->buf + dgram->n, n, (dgram->n + n >= dgram->blobs->len && dgram->nblobs == 1), i2c->hw);
 		break;
 
@@ -253,6 +259,11 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_MST_SLAR_DATA_NACK:
 		n = ops->read(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
 		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
+
+		for(size_t i=0; i<n; i++){
+			char c = ((char*)dgram->blobs->buf)[dgram->n + i];
+			DEBUG("read: %hhx (%c)\n", c, isprint(c) ? c : '.');
+		}
 
 		dgram->n += n;
 		dgram->incomplete -= n;
@@ -295,6 +306,8 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	i2c_ops_t *ops = &i2c->ops;
 	size_t n;
 
+	// TODO
+	// 	it seems slave ops cannot read or write multiple blobs
 
 	switch(state){
 	case I2C_STATE_NEXT_CMD:
@@ -306,9 +319,15 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_SLAW_DATA_ACK:
 	case I2C_STATE_SLA_SLAW_DATA_NACK:
 		n = ops->read(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
-		dgram->n += n;
 
 		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
+
+		for(size_t i=0; i<n; i++){
+			char c = ((char*)dgram->blobs->buf)[dgram->n + i];
+			DEBUG("read: %hhx (%c)\n", c, isprint(c) ? c : '.');
+		}
+
+		dgram->n += n;
 
 		if(state == I2C_STATE_SLA_SLAW_DATA_NACK)
 			return complete(i2c, 0, false);
@@ -319,8 +338,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_SLAW_MATCH:
 		n = dgram->blobs->len - dgram->n;
 		DEBUG("match: state=%s, n=%zu\n", strstate(state), n);
-
-		(void)ops->ack(n, i2c->hw);
+		ops->ack(n, i2c->hw);	// TODO ack now has a return value, check also other functions with changed return values
 		break;
 
 

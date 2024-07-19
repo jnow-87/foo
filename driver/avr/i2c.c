@@ -9,6 +9,7 @@
 
 #include <arch/arch.h>
 #include <kernel/driver.h>
+#include <kernel/kprintf.h>
 #include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>
@@ -130,6 +131,8 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 			   | (0x0 << TWCR_TWEA)
 			   | (((bool)cfg->int_num) << TWCR_TWIE)
 			   ;
+
+	DEBUG("i2c config: addr=%u, twcr=%#x\n", cfg->addr, regs->twcr);
 
 	return 0;
 }

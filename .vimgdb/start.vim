@@ -86,7 +86,7 @@ Vimgdb start
 exec "Inferior " . s:image
 
 " open windows
-call s:open_window("peripherals", "rightbelow", "source", 60, "v")
+call s:open_window("peripherals", "rightbelow", "source", 90, "v")
 call s:open_window("memory", "leftabove", "source", 40, "v")
 call s:open_window("breakpoints", "rightbelow", "peripherals", 10, "")
 call s:open_window("callstack", "rightbelow", "source", 15, "")
