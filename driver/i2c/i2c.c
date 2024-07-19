@@ -132,6 +132,29 @@ bool i2c_address_reserved(uint8_t addr){
 	return ((addr & 0x78) == 0) || ((addr & 0x78) == 0x78);
 }
 
+i2c_speed_t i2c_speed(uint16_t clock_khz){
+	if(clock_khz <= 100)	return I2C_SPD_STD;
+	if(clock_khz <= 400)	return I2C_SPD_FAST;
+	if(clock_khz <= 1000)	return I2C_SPD_FASTPLUS;
+	if(clock_khz <= 3400)	return I2C_SPD_HIGH;
+	if(clock_khz <= 5000)	return I2C_SPD_ULTRA;
+
+	return I2C_SPD_INVAL;
+}
+
+i2c_timing_t *i2c_timing(i2c_speed_t speed){
+	static i2c_timing_t timings[] = {
+		{ .spike_len_ns = 50,	.data_setup_ns = 250,	.scl_fall_ns = 300,	.data_hold_ns = 3450,	.scl_low_ns = 4700,	.scl_high_linux_ns = 4000 },	// standard mode
+		{ .spike_len_ns = 50,	.data_setup_ns = 100,	.scl_fall_ns = 300,	.data_hold_ns = 900,	.scl_low_ns = 1300,	.scl_high_linux_ns = 600 },		// fast mode
+		{ .spike_len_ns = 50,	.data_setup_ns = 50,	.scl_fall_ns = 120,	.data_hold_ns = 450,	.scl_low_ns = 500,	.scl_high_linux_ns = 260 },		// fast mode plus
+		{ .spike_len_ns = 10,	.data_setup_ns = 10,	.scl_fall_ns = 80,	.data_hold_ns = 70,		.scl_low_ns = 1600,	.scl_high_linux_ns = 160 },		// high speed mode
+		{ .spike_len_ns = 10,	.data_setup_ns = 30,	.scl_fall_ns = 50,	.data_hold_ns = 10,		.scl_low_ns = 50,	.scl_high_linux_ns = 160 },		// ultra fast speed mode
+		{ 0 },																																			// invalid
+	};
+
+	return timings + speed;
+}
+
 
 /* local functions */
 static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){

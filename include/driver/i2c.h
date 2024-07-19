@@ -29,6 +29,15 @@ typedef enum{
 } i2c_cmd_t;
 
 typedef enum{
+	I2C_SPD_STD = 0,
+	I2C_SPD_FAST,
+	I2C_SPD_FASTPLUS,
+	I2C_SPD_HIGH,
+	I2C_SPD_ULTRA,
+	I2C_SPD_INVAL
+} i2c_speed_t;
+
+typedef enum{
 	// state sections bits
 	I2C_STATE_SPECIAL = 0x20,
 	I2C_STATE_MASTER = 0x40,
@@ -64,6 +73,14 @@ typedef enum{
 	I2C_STATE_SLA_WR_DATA_NACK,
 } i2c_state_t;
 
+typedef struct{
+	uint8_t spike_len_ns;
+	uint8_t data_setup_ns;
+	uint16_t scl_fall_ns;
+	uint16_t data_hold_ns;
+	uint16_t scl_low_ns;
+	uint16_t scl_high_linux_ns;
+} i2c_timing_t;
 
 typedef struct{
 	/**
@@ -128,5 +145,8 @@ size_t i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n
 size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 
 bool i2c_address_reserved(uint8_t addr);
+i2c_speed_t i2c_speed(uint16_t clock_khz);
+i2c_timing_t *i2c_timing(i2c_speed_t speed);
+
 
 #endif // DRIVER_I2C_H

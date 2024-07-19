@@ -43,6 +43,7 @@
 // pad configurations
 #define RESET_PAD_DRIVE			RP2040_PAD_DRV_4MA
 #define RESET_PAD_FLAGS			(RP2040_PAD_FLAG_OUTPUT_EN | RP2040_PAD_FLAG_INPUT_EN | RP2040_PAD_FLAG_PULLDOWN_EN | RP2040_PAD_FLAG_SCHMITT_EN)
+#define I2C_PAD_FLAGS			(RP2040_PAD_FLAG_OUTPUT_EN | RP2040_PAD_FLAG_INPUT_EN | RP2040_PAD_FLAG_PULLUP_EN | RP2040_PAD_FLAG_SCHMITT_EN)
 
 
 /* static variables */
@@ -51,7 +52,7 @@ static rp2040_pad_cfg_t pad_func_cfgs[] = {
 	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// xip
 	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// spi
 	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// uart
-	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// i2c
+	{ .flags = I2C_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// i2c
 	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// pwm
 	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// sio
 	{ .flags = RESET_PAD_FLAGS,	.drive = RESET_PAD_DRIVE, },	// pio0
