@@ -127,10 +127,10 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 	regs->twsr = 0x0;
 	regs->twbr = brate;
 	regs->twamr = 0x0;
-	regs->twar = cfg->addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
+	regs->twar = cfg->addr << 0x1 | (((bool)cfg->bcast_en) << TWAR_TWGCE);
 	regs->twcr = (0x1 << TWCR_TWEN)
 			   | (0x0 << TWCR_TWEA)
-			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
+			   | (((bool)cfg->int_num) << TWCR_TWIE)
 			   ;
 
 	return 0;
@@ -198,10 +198,10 @@ static void idle(bool addressable, bool stop, void *hw){
 
 
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
-			   | ((addressable ? 0x1 : 0x0) << TWCR_TWEA)
+			   | (addressable << TWCR_TWEA)
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)
-			   | ((stop ? 0x1 : 0x0)  << TWCR_TWSTO)
+			   | (stop << TWCR_TWSTO)
 			   ;
 }
 
@@ -209,7 +209,7 @@ static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
-	regs->twdr = (slave << TWDR_ADDR) | (((cmd & I2C_CMD_READ) ? 0x1 : 0x0) << TWDR_RW);
+	regs->twdr = (slave << TWDR_ADDR) | (((bool)(cmd & I2C_CMD_READ)) << TWDR_RW);
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)
