@@ -65,13 +65,13 @@ static int configure(i2c_cfg_t *cfg, void *hw);
 
 static i2c_state_t state(void *hw);
 static void start(void *hw);
-static void ack(bool ack, void *hw);
+static size_t ack(size_t remaining, void *hw);
 
-static void slave_mode(bool addressable, bool stop, void *hw);
-static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw);
+static void idle(bool addressable, bool stop, void *hw);
+static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw);
 
-static uint8_t byte_read(void *hw);
-static void byte_write(uint8_t c, bool ack, void *hw);
+static size_t read_bytes(uint8_t *buf, size_t n, void *hw);
+static size_t write_bytes(uint8_t *buf, size_t n, bool last, void *hw);
 
 
 /* local functions */
@@ -84,10 +84,10 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.state = state;
 	ops.start = start;
 	ops.ack = ack;
-	ops.slave_mode = slave_mode;
-	ops.slave_addr = slave_addr;
-	ops.byte_read = byte_read;
-	ops.byte_write = byte_write;
+	ops.idle = idle;
+	ops.connect = connect;
+	ops.read_bytes = read_bytes;
+	ops.write_bytes = write_bytes;
 	ops.read = 0x0;
 	ops.write = 0x0;
 
@@ -183,15 +183,17 @@ static void start(void *hw){
 			   ;
 }
 
-static void ack(bool ack, void *hw){
+static size_t ack(size_t remaining, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
 	regs->twcr &= ~(0x1 << TWCR_TWEA);
-	regs->twcr |= ((ack ? 0x1 : 0x0) << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+	regs->twcr |= ((remaining > 1) << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+
+	return 1;
 }
 
-static void slave_mode(bool addressable, bool stop, void *hw){
+static void idle(bool addressable, bool stop, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
@@ -203,7 +205,7 @@ static void slave_mode(bool addressable, bool stop, void *hw){
 			   ;
 }
 
-static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw){
+static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
@@ -214,11 +216,15 @@ static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw){
 			   ;
 }
 
-static uint8_t byte_read(void *hw){
-	return ((dt_data_t*)hw)->regs->twdr;
+static size_t read_bytes(uint8_t *buf, size_t n, void *hw){
+	buf[0] = ((dt_data_t*)hw)->regs->twdr;
+
+	return 1;
 }
 
-static void byte_write(uint8_t c, bool last, void *hw){
-	((dt_data_t*)hw)->regs->twdr = c;
-	ack(!last, hw);
+static size_t write_bytes(uint8_t *buf, size_t n, bool last, void *hw){
+	((dt_data_t*)hw)->regs->twdr = buf[0];
+
+	// only the last byte must not be acknowledged
+	return ack((last && n == 1) ? 1 : 2, hw);
 }

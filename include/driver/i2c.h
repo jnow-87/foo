@@ -15,7 +15,6 @@
 #include <sys/types.h>
 #include <sys/blob.h>
 #include <sys/mutex.h>
-#include <sys/linebuf.h>
 
 
 /* incomplete types */
@@ -77,7 +76,8 @@ typedef struct{
 	blob_t *blobs;
 	size_t nblobs;
 
-	linebuf_t buf;
+	size_t n,
+		   incomplete;
 } i2c_dgram_t;
 
 typedef struct{
@@ -101,13 +101,13 @@ typedef struct{
 
 	i2c_state_t (*state)(void *hw);
 	void (*start)(void *hw);
-	void (*ack)(bool ack, void *hw);
+	size_t (*ack)(size_t remaining, void *hw);
 
-	void (*slave_mode)(bool addressable, bool stop, void *hw);
-	void (*slave_addr)(i2c_cmd_t cmd, uint8_t slave, void *hw);
+	void (*idle)(bool addressable, bool stop, void *hw);
+	void (*connect)(i2c_cmd_t cmd, uint8_t slave, void *hw);
 
-	uint8_t (*byte_read)(void *hw);
-	void (*byte_write)(uint8_t c, bool last, void *hw);
+	size_t (*read_bytes)(uint8_t *buf, size_t n, void *hw);
+	size_t (*write_bytes)(uint8_t *buf, size_t n, bool last, void *hw);
 
 	/* root callbacks */
 	// if either of the following callbacks is set to zero the default i2c_read() and
