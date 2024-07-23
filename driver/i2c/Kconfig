@@ -9,7 +9,6 @@
 
 menuconfig DRIVER_I2C
 	bool "i2c driver"
-	select SYS_LINEBUFFER
 	select AVR_I2C if AVR
 	select X86_I2C if X86
 
