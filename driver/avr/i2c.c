@@ -70,8 +70,8 @@ static size_t ack(size_t remaining, void *hw);
 static void idle(bool addressable, bool stop, void *hw);
 static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw);
 
-static size_t read_bytes(uint8_t *buf, size_t n, void *hw);
-static size_t write_bytes(uint8_t *buf, size_t n, bool last, void *hw);
+static size_t read(uint8_t *buf, size_t n, void *hw);
+static size_t write(uint8_t *buf, size_t n, bool last, void *hw);
 
 
 /* local functions */
@@ -86,10 +86,8 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.ack = ack;
 	ops.idle = idle;
 	ops.connect = connect;
-	ops.read_bytes = read_bytes;
-	ops.write_bytes = write_bytes;
-	ops.read = 0x0;
-	ops.write = 0x0;
+	ops.read = read;
+	ops.write = write;
 
 	return i2c_create(&ops, &dtd->cfg, dtd);
 }
@@ -216,13 +214,13 @@ static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw){
 			   ;
 }
 
-static size_t read_bytes(uint8_t *buf, size_t n, void *hw){
+static size_t read(uint8_t *buf, size_t n, void *hw){
 	buf[0] = ((dt_data_t*)hw)->regs->twdr;
 
 	return 1;
 }
 
-static size_t write_bytes(uint8_t *buf, size_t n, bool last, void *hw){
+static size_t write(uint8_t *buf, size_t n, bool last, void *hw){
 	((dt_data_t*)hw)->regs->twdr = buf[0];
 
 	// only the last byte must not be acknowledged
