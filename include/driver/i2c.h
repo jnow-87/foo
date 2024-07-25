@@ -106,14 +106,8 @@ typedef struct{
 	void (*idle)(bool addressable, bool stop, void *hw);
 	void (*connect)(i2c_cmd_t cmd, uint8_t slave, void *hw);
 
-	size_t (*read_bytes)(uint8_t *buf, size_t n, void *hw);
-	size_t (*write_bytes)(uint8_t *buf, size_t n, bool last, void *hw);
-
-	/* root callbacks */
-	// if either of the following callbacks is set to zero the default i2c_read() and
-	// i2c_write() functions are used and the above primitives need to be set
-	int (*read)(struct i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-	int (*write)(struct i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
+	size_t (*read)(uint8_t *buf, size_t n, void *hw);
+	size_t (*write)(uint8_t *buf, size_t n, bool last, void *hw);
 } i2c_ops_t;
 
 typedef struct i2c_t{

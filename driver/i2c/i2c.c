@@ -21,8 +21,6 @@
 
 
 /* local/static prototypes */
-static int read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-static int write(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
 static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 
 static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
@@ -42,16 +40,6 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 	i2c_t *i2c;
 
 
-	/* check/set required callbacks */
-	if(ops->read == 0x0 || ops->write == 0x0){
-		ops->read = read;
-		ops->write = write;
-
-		// ensure all i2c primitives are set to valid callbacks
-		if(!callbacks_set(ops, i2c_ops_t))
-			goto_errno(err_0, E_INVAL);
-	}
-
 	/* allocated device */
 	i2c = kcalloc(1, sizeof(i2c_t));
 
@@ -67,16 +55,14 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 	itask_queue_init(&i2c->master_cmds);
 	itask_queue_init(&i2c->slave_cmds);
 
-	// register interrupt only of they are enabled and the i2c primitives are set in ops
-	if(cfg->int_num && ops->configure && int_register(cfg->int_num, int_hdlr, i2c) != 0)
-		goto err_1;
-
 	/* configure device */
-	if(ops->configure != 0x0 && ops->configure(i2c->cfg, i2c->hw) != 0)
+	if(ops->configure(i2c->cfg, i2c->hw) != 0)
 		goto err_1;
 
-	if(ops->idle != 0x0)
-		ops->idle(false, false, hw);
+	if(cfg->int_num && int_register(cfg->int_num, int_hdlr, i2c) != 0)
+		goto err_1;
+
+	ops->idle(false, false, hw);
 
 	return i2c;
 
@@ -99,27 +85,19 @@ void i2c_destroy(i2c_t *i2c){
 }
 
 int i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return i2c->ops.read(i2c, slave, buf, n);
+	return rw(i2c, I2C_CMD_READ, slave, BLOBS(BLOB(buf, n)), 1);
 }
 
 int i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return i2c->ops.write(i2c, slave, BLOBS(BLOB(buf, n)), 1);
+	return rw(i2c, I2C_CMD_WRITE, slave, BLOBS(BLOB(buf, n)), 1);
 }
 
 int i2c_write_n(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n){
-	return i2c->ops.write(i2c, slave, bufs, n);
+	return rw(i2c, I2C_CMD_WRITE, slave, bufs, n);
 }
 
 
 /* local functions */
-static int read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return rw(i2c, I2C_CMD_READ, slave, BLOBS(BLOB(buf, n)), 1);
-}
-
-static int write(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n){
-	return rw(i2c, I2C_CMD_WRITE, slave, bufs, n);
-}
-
 static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	i2c_dgram_t dgram;
 
@@ -254,14 +232,14 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		n = dgram->blobs->len - dgram->n;
 		DEBUG("sla-w (%#hhx): %zu\n", state, n);
 
-		dgram->incomplete = ops->write_bytes(dgram->blobs->buf + dgram->n, n, (dgram->n + n >= dgram->blobs->len && dgram->nblobs == 1), i2c->hw);
+		dgram->incomplete = ops->write(dgram->blobs->buf + dgram->n, n, (dgram->n + n >= dgram->blobs->len && dgram->nblobs == 1), i2c->hw);
 		break;
 
 
 	/* master read */
 	case I2C_STATE_MST_SLAR_DATA_ACK:
 	case I2C_STATE_MST_SLAR_DATA_NACK:
-		n = ops->read_bytes(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
+		n = ops->read(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
 		DEBUG("read (%#hhx): %#zu\n", state, n);
 
 		dgram->n += n;
@@ -313,7 +291,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	/* slave read */
 	case I2C_STATE_SLA_SLAW_DATA_ACK:
 	case I2C_STATE_SLA_SLAW_DATA_NACK:
-		n = ops->read_bytes(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
+		n = ops->read(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
 		dgram->n += n;
 		DEBUG("read (%#hhx): %zu\n", state, n);
 
@@ -349,7 +327,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		n = dgram->blobs->len - dgram->n;
 		DEBUG("write (%#hhx): %zu\n", state, n);
 
-		dgram->n += ops->write_bytes(dgram->blobs->buf + dgram->n, n, (dgram->blobs->len - dgram->n - n == 0), i2c->hw);
+		dgram->n += ops->write(dgram->blobs->buf + dgram->n, n, (dgram->blobs->len - dgram->n - n == 0), i2c->hw);
 		break;
 
 	case I2C_STATE_SLA_SLAW_STOP:

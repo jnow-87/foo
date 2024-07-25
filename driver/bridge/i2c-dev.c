@@ -37,8 +37,8 @@ static void start(void *hw);
 static size_t ack(size_t remaining, void *hw);
 static void idle(bool addressable, bool stop, void *hw);
 static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw);
-static size_t read_bytes(uint8_t *buf, size_t n, void *hw);
-static size_t write_bytes(uint8_t *buf, size_t n, bool last, void *hw);
+static size_t read(uint8_t *buf, size_t n, void *hw);
+static size_t write(uint8_t *buf, size_t n, bool last, void *hw);
 
 static size_t rw(uint8_t *buf, size_t n, i2c_cmd_t cmd, uint8_t slave, bridge_t *brdg, bool last);
 static int ack_check(bridge_t *brdg);
@@ -69,10 +69,8 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.ack = ack;
 	ops.idle = idle;
 	ops.connect = connect;
-	ops.read_bytes = read_bytes;
-	ops.write_bytes = write_bytes;
-	ops.read = 0x0;
-	ops.write = 0x0;
+	ops.read = read;
+	ops.write = write;
 
 	itf = i2c_create(&ops, dt_data, i2c);
 
@@ -126,7 +124,7 @@ static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw){
 	i2c->state = (cmd == I2C_CMD_READ) ? I2C_STATE_MST_SLAR_ACK : I2C_STATE_MST_SLAW_ACK;
 }
 
-static size_t read_bytes(uint8_t *buf, size_t n, void *hw){
+static size_t read(uint8_t *buf, size_t n, void *hw){
 	dev_data_t *i2c = (dev_data_t*)hw;
 
 
@@ -136,7 +134,7 @@ static size_t read_bytes(uint8_t *buf, size_t n, void *hw){
 	return n;
 }
 
-static size_t write_bytes(uint8_t *buf, size_t n, bool last, void *hw){
+static size_t write(uint8_t *buf, size_t n, bool last, void *hw){
 	dev_data_t *i2c = (dev_data_t*)hw;
 
 
