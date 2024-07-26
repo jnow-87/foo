@@ -16,6 +16,7 @@
 #include <sys/blob.h>
 #include <sys/errno.h>
 #include <sys/mutex.h>
+#include <sys/stream.h>
 #include <sys/string.h>
 #include <sys/types.h>
 
@@ -33,6 +34,9 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
 
 static int complete(i2c_t *i2c, errno_t errnum, bool stop);
 
+#ifdef BUILD_KERNEL_LOG_DEBUG
+static char const *strstate(i2c_state_t state);
+#endif // BUILD_KERNEL_LOG_DEBUG
 
 
 /* global functions */
@@ -191,7 +195,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	switch(state){
 	/* master start */
 	case I2C_STATE_MST_ARBLOST:
-		DEBUG("arb lost (%#hhx)\n", state);
+		DEBUG("arb-lost: state=%s\n", strstate(state));
 
 		// fall through
 	case I2C_STATE_NEXT_CMD:
@@ -200,13 +204,13 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		break;
 
 	case I2C_STATE_MST_START:
-		DEBUG("start (%#hhx)\n", state);
+		DEBUG("start: state=%s\n", strstate(state));
 		ops->connect(dgram->cmd, dgram->slave, i2c->hw);
 		break;
 
 	case I2C_STATE_MST_SLAW_NACK:
 	case I2C_STATE_MST_SLAR_NACK:
-		DEBUG("nack (%#hhx)\n", state);
+		DEBUG("nack: state=%s\n", strstate(state));
 		return complete(i2c, E_NOCONN, true);
 
 
@@ -216,7 +220,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 		// fall through
 	case I2C_STATE_MST_SLAW_DATA_NACK:
-		DEBUG("(n)ack (%#hhx)\n", state);
+		DEBUG("(n)ack: state=%s\n", strstate(state));
 
 		if((dgram->n >= dgram->blobs->len && dgram->nblobs == 1) || state == I2C_STATE_MST_SLAW_DATA_NACK)
 			return complete(i2c, 0, true);
@@ -230,7 +234,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		// fall through
 	case I2C_STATE_MST_SLAW_ACK:
 		n = dgram->blobs->len - dgram->n;
-		DEBUG("sla-w (%#hhx): %zu\n", state, n);
+		DEBUG("sla-w: state=%s, n=%zu\n", strstate(state), n);
 
 		dgram->incomplete = ops->write(dgram->blobs->buf + dgram->n, n, (dgram->n + n >= dgram->blobs->len && dgram->nblobs == 1), i2c->hw);
 		break;
@@ -240,7 +244,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_MST_SLAR_DATA_ACK:
 	case I2C_STATE_MST_SLAR_DATA_NACK:
 		n = ops->read(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
-		DEBUG("read (%#hhx): %#zu\n", state, n);
+		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
 
 		dgram->n += n;
 		dgram->incomplete -= n;
@@ -259,8 +263,10 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 		// fall through
 	case I2C_STATE_MST_SLAR_ACK:
-		DEBUG("sla-r (%#hhx)\n", state);
-		dgram->incomplete = ops->ack(dgram->blobs->len - dgram->n, i2c->hw);
+		n = dgram->blobs->len - dgram->n;
+		dgram->incomplete = ops->ack(n, i2c->hw);
+
+		DEBUG("sla-r: state=%s, n=%zu, incomplete=%zu\n", strstate(state), n, dgram->incomplete);
 		break;
 
 
@@ -293,7 +299,8 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_SLAW_DATA_NACK:
 		n = ops->read(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
 		dgram->n += n;
-		DEBUG("read (%#hhx): %zu\n", state, n);
+
+		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
 
 		if(state == I2C_STATE_SLA_SLAW_DATA_NACK)
 			return complete(i2c, 0, false);
@@ -302,15 +309,17 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	// NOTE lost arbitration does not require any special treatment since the last master
 	// 		command will be continued once the slave transmission has beem finished
 	case I2C_STATE_SLA_SLAW_MATCH:
-		DEBUG("match (%#hhx)\n", state);
-		(void)ops->ack(dgram->blobs->len - dgram->n, i2c->hw);
+		n = dgram->blobs->len - dgram->n;
+		DEBUG("match: state=%s, n=%zu\n", strstate(state), n);
+
+		(void)ops->ack(n, i2c->hw);
 		break;
 
 
 	/* slave write */
 	case I2C_STATE_SLA_SLAR_DATA_ACK:
 	case I2C_STATE_SLA_SLAR_DATA_NACK:
-		DEBUG("(n)ack (%#hhx)\n", state);
+		DEBUG("(n)ack: state=%s\n", strstate(state));
 
 		if(dgram->n >= dgram->blobs->len){
 			itask_complete(&i2c->slave_cmds, 0);
@@ -325,13 +334,13 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	// 		command will be continued once the slave transmission has beem finished
 	case I2C_STATE_SLA_SLAR_MATCH:
 		n = dgram->blobs->len - dgram->n;
-		DEBUG("write (%#hhx): %zu\n", state, n);
+		DEBUG("write: state=%s, n=%zu\n", strstate(state), n);
 
 		dgram->n += ops->write(dgram->blobs->buf + dgram->n, n, (dgram->blobs->len - dgram->n - n == 0), i2c->hw);
 		break;
 
 	case I2C_STATE_SLA_SLAW_STOP:
-		DEBUG("stop (%#hhx)\n", state);
+		DEBUG("stop: state=%s\n", strstate(state));
 		return complete(i2c, 0, false);
 
 
@@ -354,3 +363,40 @@ static int complete(i2c_t *i2c, errno_t errnum, bool stop){
 
 	return -errnum;
 }
+
+#ifdef BUILD_KERNEL_LOG_DEBUG
+static char const *strstate(i2c_state_t state){
+	static char s[5];
+
+
+	switch(state){
+	case I2C_STATE_BIT_SPECIAL:				return "special-bit";
+	case I2C_STATE_BIT_MASTER:				return "mst-bit";
+	case I2C_STATE_BIT_SLAVE:				return "sla-bit";
+	case I2C_STATE_NEXT_CMD:				return "next";
+	case I2C_STATE_ERROR:					return "error";
+	case I2C_STATE_NONE:					return "none";
+	case I2C_STATE_MST_START:				return "mst-start";
+	case I2C_STATE_MST_SLAW_ACK:			return "mst-wr-ack";
+	case I2C_STATE_MST_SLAW_NACK:			return "mst-wr-nack";
+	case I2C_STATE_MST_SLAW_DATA_ACK:		return "mst-wr-data-ack";
+	case I2C_STATE_MST_SLAW_DATA_NACK:		return "mst-wr-data-nack";
+	case I2C_STATE_MST_SLAR_ACK:			return "mst-rd-ack";
+	case I2C_STATE_MST_SLAR_NACK:			return "mst-rd-nack";
+	case I2C_STATE_MST_SLAR_DATA_ACK:		return "mst-rd-data-ack";
+	case I2C_STATE_MST_SLAR_DATA_NACK:		return "mst-rd-data-nack";
+	case I2C_STATE_MST_ARBLOST:				return "mst-arblost";
+	case I2C_STATE_SLA_SLAW_MATCH:			return "sla-wr-match";
+	case I2C_STATE_SLA_SLAR_MATCH:			return "sla-rd-match";
+	case I2C_STATE_SLA_SLAW_DATA_ACK:		return "sla-wr-data-ack";
+	case I2C_STATE_SLA_SLAW_DATA_NACK:		return "sla-wr-data-nack";
+	case I2C_STATE_SLA_SLAW_STOP:			return "sla-wr-stop";
+	case I2C_STATE_SLA_SLAR_DATA_ACK:		return "sla-rd-data-ack";
+	case I2C_STATE_SLA_SLAR_DATA_NACK:		return "sla-rd-data-nack";
+
+	default:
+		snprintf(s, sizeof(s), "%hhx", state);
+		return s;
+	}
+}
+#endif // BUILD_KERNEL_LOG_DEBUG
