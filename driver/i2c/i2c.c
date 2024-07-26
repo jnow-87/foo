@@ -15,15 +15,28 @@
 #include <driver/i2c.h>
 #include <sys/blob.h>
 #include <sys/errno.h>
+#include <sys/i2c.h>
 #include <sys/mutex.h>
 #include <sys/stream.h>
 #include <sys/string.h>
 #include <sys/types.h>
 
 
-/* local/static prototypes */
-static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
+/* types */
+typedef struct{
+	i2c_mode_t mode;
+	i2c_cmd_t cmd;
+	uint8_t slave;
 
+	blob_t *blobs;
+	size_t nblobs;
+
+	size_t n,
+		   incomplete;
+} i2c_dgram_t;
+
+
+/* local/static prototypes */
 static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
 static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
 
@@ -88,24 +101,19 @@ void i2c_destroy(i2c_t *i2c){
 	kfree(i2c);
 }
 
-int i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return rw(i2c, I2C_CMD_READ, slave, BLOBS(BLOB(buf, n)), 1);
+int i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n){
+	return i2c_xfer(i2c, mode, I2C_READ, slave, BLOBS(BLOB(buf, n)), 1);
 }
 
-int i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n){
-	return rw(i2c, I2C_CMD_WRITE, slave, BLOBS(BLOB(buf, n)), 1);
+int i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n){
+	return i2c_xfer(i2c, mode, I2C_WRITE, slave, BLOBS(BLOB(buf, n)), 1);
 }
 
-int i2c_write_n(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n){
-	return rw(i2c, I2C_CMD_WRITE, slave, bufs, n);
-}
-
-
-/* local functions */
-static int rw(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
+int i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	i2c_dgram_t dgram;
 
 
+	dgram.mode = mode;
 	dgram.cmd = cmd;
 	dgram.slave = slave;
 	dgram.blobs = bufs;
@@ -123,7 +131,7 @@ static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 
 
 	state = I2C_STATE_NEXT_CMD;
-	op = (i2c->cfg->mode == I2C_MODE_SLAVE) ? int_slave : int_master;
+	op = (dgram->mode == I2C_SLAVE) ? int_slave : int_master;
 
 	while(1){
 		mutex_lock(&i2c->mtx);
@@ -140,7 +148,7 @@ static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 
 static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 	return itask_issue(
-		(i2c->cfg->mode == I2C_MODE_MASTER) ? &i2c->master_cmds : &i2c->slave_cmds,
+		(dgram->mode == I2C_MASTER) ? &i2c->master_cmds : &i2c->slave_cmds,
 		dgram,
 		i2c->cfg->int_num
 	);
@@ -160,7 +168,7 @@ static void int_hdlr(int_num_t num, void *payload){
 	/* identify dgram */
 	state = i2c->ops.state(i2c->hw);
 
-	master_cmd = (i2c->cfg->mode == I2C_MODE_MASTER && !(state & I2C_STATE_BIT_SLAVE));
+	master_cmd = !(state & I2C_STATE_BIT_SLAVE);
 	cmds = master_cmd ? &i2c->master_cmds : &i2c->slave_cmds;
 	dgram = itask_query_payload(cmds, 0x0);
 
