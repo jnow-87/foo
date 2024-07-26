@@ -77,8 +77,7 @@ i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
 	memcpy(&i2c->ops, ops, sizeof(i2c_ops_t));
 
 	mutex_init(&i2c->mtx, MTX_NOINT);
-	itask_queue_init(&i2c->master_cmds);
-	itask_queue_init(&i2c->slave_cmds);
+	itask_queue_init(&i2c->cmds);
 
 	/* configure device */
 	if(ops->configure(i2c->cfg, i2c->hw) != 0)
@@ -103,9 +102,7 @@ void i2c_destroy(i2c_t *i2c){
 	if(i2c->cfg->int_num)
 		int_release(i2c->cfg->int_num);
 
-	itask_queue_destroy(&i2c->master_cmds);
-	itask_queue_destroy(&i2c->slave_cmds);
-
+	itask_queue_destroy(&i2c->cmds);
 	kfree(i2c);
 }
 
@@ -152,53 +149,44 @@ static size_t poll_cmd(i2c_t *i2c, dgram_t *dgram){
 }
 
 static size_t int_cmd(i2c_t *i2c, dgram_t *dgram){
-	size_t r;
+	if(itask_issue(&i2c->cmds, dgram, i2c->cfg->int_num) != 0)
+		return 0;
 
-
-	r = itask_issue(
-		(dgram->mode == I2C_MASTER) ? &i2c->master_cmds : &i2c->slave_cmds,
-		dgram,
-		i2c->cfg->int_num
-	);
-
-	return (r == 0) ? dgram->total : 0;
+	return dgram->total;
 }
 
 static void int_hdlr(int_num_t num, void *payload){
 	i2c_t *i2c = (i2c_t*)payload;
 	int r;
-	bool master_cmd;
 	i2c_state_t state;
 	dgram_t *dgram;
-	itask_queue_t *cmds;
 
 
 	mutex_lock(&i2c->mtx);
 
 	/* identify dgram */
-	state = i2c->ops.state(i2c->hw);
-
-	master_cmd = !(state & I2C_STATE_SLAVE);
-	cmds = master_cmd ? &i2c->master_cmds : &i2c->slave_cmds;
-	dgram = itask_query_payload(cmds, 0x0);
+	dgram = itask_query_payload(&i2c->cmds, 0x0);
 
 	if(dgram == 0x0)
 		goto unlock;
 
 	/* perform state action */
-	// ensure master commands are started
+	state = i2c->ops.state(i2c->hw);
+
 	if(state == I2C_STATE_NONE)
 		state = I2C_STATE_NEXT_CMD;
 
-	r = master_cmd ? int_master(i2c, dgram, state) : int_slave(i2c, dgram, state);
+	// NOTE the error of handling a master-mode dgram while the hardware is in a slave state is not
+	// 		checked here, since it is handled in the master_hdlr's default case, causing an io error
+	r = (dgram->mode == I2C_MASTER) ? master_hdlr(i2c, dgram, state) : slave_hdlr(i2c, dgram, state);
 
 	if(r > 0)
 		goto unlock;
 
 	/* transfer complete */
-	itask_complete(cmds, -r);
+	itask_complete(&i2c->cmds, -r);
 
-	if(itask_query_payload(&i2c->master_cmds, 0x0) || itask_query_payload(&i2c->slave_cmds, 0x0))
+	if(itask_query_payload(&i2c->cmds, 0x0))
 		int_foretell(i2c->cfg->int_num);
 
 unlock:
@@ -359,6 +347,8 @@ static int int_slave(i2c_t *i2c, dgram_t *dgram, i2c_state_t state){
 }
 
 static int complete(i2c_t *i2c, errno_t errnum, bool stop){
+	errnum = errno ? errno : errnum;
+
 	DEBUG("complete: status=%s, bytes=%zu\n", strerror(errnum), i2c->dgram->total);
 	i2c->ops.idle(false, stop, i2c->hw);
 
