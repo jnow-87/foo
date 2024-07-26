@@ -187,7 +187,7 @@ static int rx_payload(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 }
 
 static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
-	int r;
+	size_t r;
 	blob_t blobs[i2c->nbuf];
 	buf_t *buf;
 
@@ -208,7 +208,7 @@ static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	r = i2c_xfer(i2c->brdg->hw, I2C_MASTER, hdr->cmd, hdr->slave, blobs, i2c->nbuf);
 
 	/* ack status */
-	if(ack(i2c, ((r == 0) ? 0 : (errno ? errno : E_AGAIN))) != 0)
+	if(ack(i2c, ((r != 0) ? 0 : (errno ? errno : E_AGAIN))) != 0)
 		return;
 
 	/* write data */

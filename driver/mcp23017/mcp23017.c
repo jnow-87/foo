@@ -38,11 +38,6 @@
 #define IOCON_ODR		2
 #define IOCON_INTPOL	1
 
-// I/O wrapper
-#define MCP_READ(i2c, dtd, buf, n)	i2c_read(i2c, I2C_MASTER, (dtd)->slave_addr, buf, n)
-#define MCP_WRITE(i2c, dtd, buf)	i2c_write(i2c, I2C_MASTER, (dtd)->slave_addr, buf, sizeof_array(buf))
-#define MCP_DATA(...)				((uint8_t []){ __VA_ARGS__ })
-
 
 /* types */
 typedef enum{
@@ -62,7 +57,8 @@ static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload);
 static intgpio_t read(void *dt_data, void *payload);
 static int write(intgpio_t v, void *dt_data, void *payload);
 
-static intgpio_t reg_read(uint8_t reg, dt_data_t *dtd, i2c_t *i2c);
+static int reg_read(uint8_t reg, uint8_t *v, dt_data_t *dtd, i2c_t *i2c);
+static int reg_write(uint8_t reg, uint8_t v, dt_data_t *dtd, i2c_t *i2c);
 
 
 /* local functions */
@@ -84,56 +80,68 @@ static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
 	int r = 0;
 	dt_data_t *dtd = (dt_data_t*)dt_data;
 	i2c_t *i2c = *((i2c_t**)payload);
+	uint8_t v;
 
 
 	// device config
-	r |= MCP_WRITE(i2c, dtd,
-		MCP_DATA(IOCON + dtd->port,
-			  (0x0 << IOCON_BANK)
-			| (0x0 << IOCON_MIRROR)
-			| (0x1 << IOCON_SEQOP)
-			| (0x0 << IOCON_DISSLW)
-			| (0x0 << IOCON_HAEN)
-			| (0x0 << IOCON_ODR)
-			| (0x1 << IOCON_INTPOL)
-		)
-	);
+	v = (0x0 << IOCON_BANK)
+	  | (0x0 << IOCON_MIRROR)
+	  | (0x1 << IOCON_SEQOP)
+	  | (0x0 << IOCON_DISSLW)
+	  | (0x0 << IOCON_HAEN)
+	  | (0x0 << IOCON_ODR)
+	  | (0x1 << IOCON_INTPOL)
+	  ;
+
+	r |= reg_write(IOCON, v, dtd, i2c);
 
 	// port config
-	r |= MCP_WRITE(i2c, dtd, MCP_DATA(IODIR + dtd->port, cfg->in_mask));
-	r |= MCP_WRITE(i2c, dtd, MCP_DATA(IPOL + dtd->port, 0x0));
-	r |= MCP_WRITE(i2c, dtd, MCP_DATA(GPPU + dtd->port, cfg->in_mask));
+	r |= reg_write(IODIR, cfg->in_mask, dtd, i2c);
+	r |= reg_write(IPOL, 0x0, dtd, i2c);
+	r |= reg_write(GPPU, cfg->in_mask, dtd, i2c);
 
-	r |= MCP_WRITE(i2c, dtd, MCP_DATA(GPIO + dtd->port, cfg->out_mask & cfg->invert_mask));
+	r |= reg_write(GPIO, cfg->out_mask & cfg->invert_mask, dtd, i2c);
 
 	// interrupt config
-	r |= MCP_WRITE(i2c, dtd, MCP_DATA(INTCON + dtd->port, 0x0));
-	r |= MCP_WRITE(i2c, dtd, MCP_DATA(DEFVAL + dtd->port, 0x0));
-	r |= MCP_WRITE(i2c, dtd, MCP_DATA(GPINTEN + dtd->port, cfg->int_mask));
+	r |= reg_write(INTCON, 0x0, dtd, i2c);
+	r |= reg_write(DEFVAL, 0x0, dtd, i2c);
+	r |= reg_write(GPINTEN, cfg->int_mask, dtd, i2c);
 
 	// clear interrupts
-	reg_read(INTCAP, dtd, i2c);
+	r |= reg_read(INTCAP, &v, dtd, i2c);
 
 	return -r;
 }
 
 static intgpio_t read(void *dt_data, void *payload){
-	return reg_read(GPIO, dt_data, *((i2c_t**)payload));
+	uint8_t v;
+
+
+	(void)reg_read(GPIO, &v, dt_data, *((i2c_t**)payload));
+
+	return v;
 }
 
 static int write(intgpio_t v, void *dt_data, void *payload){
-	dt_data_t *dtd = (dt_data_t*)dt_data;
-
-
-	return MCP_WRITE(*((i2c_t**)payload), dtd, MCP_DATA(GPIO + dtd->port, v));
+	return reg_write(GPIO, v, (dt_data_t*)dt_data, *((i2c_t**)payload));
 }
 
-static intgpio_t reg_read(uint8_t reg, dt_data_t *dtd, i2c_t *i2c){
-	intgpio_t v;
+static int reg_read(uint8_t reg, uint8_t *v, dt_data_t *dtd, i2c_t *i2c){
+	int r = 0;
 
 
-	MCP_WRITE(i2c, dtd, MCP_DATA(reg + dtd->port));
-	MCP_READ(i2c, dtd, &v, 1);
+	r |= (i2c_write(i2c, I2C_MASTER, dtd->slave_addr, ((uint8_t []){ reg + dtd->port }), 1) != 1);
+	r |= (i2c_read(i2c, I2C_MASTER, dtd->slave_addr, v, 1) != 1);
 
-	return v;
+	if(r != 0)
+		return_errno(errno ? errno : E_IO);
+
+	return 0;
+}
+
+static int reg_write(uint8_t reg, uint8_t v, dt_data_t *dtd, i2c_t *i2c){
+	if(i2c_write(i2c, I2C_MASTER, dtd->slave_addr, ((uint8_t []){ reg + dtd->port, v }), 2) != 2)
+		return_errno(errno ? errno : E_IO);
+
+	return 0;
 }

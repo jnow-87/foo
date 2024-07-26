@@ -31,14 +31,15 @@ typedef struct{
 	blob_t *blobs;
 	size_t nblobs;
 
-	size_t n,
+	size_t total,
+		   partial,
 		   incomplete;
 } i2c_dgram_t;
 
 
 /* local/static prototypes */
-static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
-static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
+static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
+static size_t int_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
 
 static void int_hdlr(int_num_t num, void *payload);
 
@@ -100,15 +101,15 @@ void i2c_destroy(i2c_t *i2c){
 	kfree(i2c);
 }
 
-int i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n){
+size_t i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n){
 	return i2c_xfer(i2c, mode, I2C_READ, slave, BLOBS(BLOB(buf, n)), 1);
 }
 
-int i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n){
+size_t i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n){
 	return i2c_xfer(i2c, mode, I2C_WRITE, slave, BLOBS(BLOB(buf, n)), 1);
 }
 
-int i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
+size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
 	i2c_dgram_t dgram;
 
 
@@ -117,13 +118,16 @@ int i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *
 	dgram.slave = slave;
 	dgram.blobs = bufs;
 	dgram.nblobs = n;
-	dgram.n = 0;
+	dgram.total = 0;
+	dgram.partial = 0;
 	dgram.incomplete = 0;
 
 	return (i2c->cfg->int_num ? int_cmd(i2c, &dgram) : poll_cmd(i2c, &dgram));
 }
 
-static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
+
+/* local functions */
+static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 	int r;
 	i2c_state_t state;
 	int (*op)(i2c_t *, i2c_dgram_t *, i2c_state_t);
@@ -141,16 +145,21 @@ static int poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 		mutex_unlock(&i2c->mtx);
 
 		if(r <= 0)
-			return_errno(-r);
+			return dgram->total;
 	}
 }
 
-static int int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
-	return itask_issue(
+static size_t int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
+	size_t r;
+
+
+	r = itask_issue(
 		(dgram->mode == I2C_MASTER) ? &i2c->master_cmds : &i2c->slave_cmds,
 		dgram,
 		i2c->cfg->int_num
 	);
+
+	return (r == 0) ? dgram->total : 0;
 }
 
 static void int_hdlr(int_num_t num, void *payload){
@@ -222,54 +231,56 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 	/* master write */
 	case I2C_STATE_MST_WR_DATA_ACK:
-		dgram->n += dgram->incomplete;
+		dgram->partial += dgram->incomplete;
+		dgram->total += dgram->incomplete;
 
 		// fall through
 	case I2C_STATE_MST_WR_DATA_NACK:
 		DEBUG("(n)ack: state=%s\n", strstate(state));
 
-		if((dgram->n >= dgram->blobs->len && dgram->nblobs == 1) || state == I2C_STATE_MST_WR_DATA_NACK)
+		if((dgram->partial >= dgram->blobs->len && dgram->nblobs == 1) || state == I2C_STATE_MST_WR_DATA_NACK)
 			return complete(i2c, 0, true);
 
-		if(dgram->n >= dgram->blobs->len){
+		if(dgram->partial >= dgram->blobs->len){
 			dgram->blobs++;
 			dgram->nblobs--;
-			dgram->n = 0;
+			dgram->partial = 0;
 		}
 
 		// fall through
 	case I2C_STATE_MST_WR_ACK:
-		n = dgram->blobs->len - dgram->n;
+		n = dgram->blobs->len - dgram->partial;
 		DEBUG("sla-w: state=%s, n=%zu\n", strstate(state), n);
 
-		dgram->incomplete = ops->write(dgram->blobs->buf + dgram->n, n, (dgram->n + n >= dgram->blobs->len && dgram->nblobs == 1), i2c->hw);
+		dgram->incomplete = ops->write(dgram->blobs->buf + dgram->partial, n, (dgram->partial + n >= dgram->blobs->len && dgram->nblobs == 1), i2c->hw);
 		break;
 
 
 	/* master read */
 	case I2C_STATE_MST_RD_DATA_ACK:
 	case I2C_STATE_MST_RD_DATA_NACK:
-		n = ops->read(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
+		n = ops->read(dgram->blobs->buf + dgram->partial, dgram->blobs->len - dgram->partial, i2c->hw);
 		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
 
-		dgram->n += n;
+		dgram->partial += n;
+		dgram->total += n;
 		dgram->incomplete -= n;
 
 		if(dgram->incomplete)
 			break;
 
-		if((dgram->n >= dgram->blobs->len && dgram->nblobs == 1) || state == I2C_STATE_MST_RD_DATA_NACK)
+		if((dgram->partial >= dgram->blobs->len && dgram->nblobs == 1) || state == I2C_STATE_MST_RD_DATA_NACK)
 			return complete(i2c, 0, true);
 
-		if(dgram->n >= dgram->blobs->len){
+		if(dgram->partial >= dgram->blobs->len){
 			dgram->blobs++;
 			dgram->nblobs--;
-			dgram->n = 0;
+			dgram->partial = 0;
 		}
 
 		// fall through
 	case I2C_STATE_MST_RD_ACK:
-		n = dgram->blobs->len - dgram->n;
+		n = dgram->blobs->len - dgram->partial;
 		dgram->incomplete = ops->ack(n, i2c->hw);
 
 		DEBUG("sla-r: state=%s, n=%zu, incomplete=%zu\n", strstate(state), n, dgram->incomplete);
@@ -303,8 +314,9 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	/* slave read */
 	case I2C_STATE_SLA_RD_DATA_ACK:
 	case I2C_STATE_SLA_RD_DATA_NACK:
-		n = ops->read(dgram->blobs->buf + dgram->n, dgram->blobs->len - dgram->n, i2c->hw);
-		dgram->n += n;
+		n = ops->read(dgram->blobs->buf + dgram->partial, dgram->blobs->len - dgram->partial, i2c->hw);
+		dgram->partial += n;
+		dgram->total += n;
 
 		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
 
@@ -315,7 +327,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	// NOTE lost arbitration does not require any special treatment since the last master
 	// 		command will be continued once the slave transmission has beem finished
 	case I2C_STATE_SLA_RD_MATCH:
-		n = dgram->blobs->len - dgram->n;
+		n = dgram->blobs->len - dgram->partial;
 		DEBUG("match: state=%s, n=%zu\n", strstate(state), n);
 
 		(void)ops->ack(n, i2c->hw);
@@ -331,7 +343,7 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_WR_DATA_NACK:
 		DEBUG("(n)ack: state=%s\n", strstate(state));
 
-		if(dgram->n >= dgram->blobs->len){
+		if(dgram->partial >= dgram->blobs->len){
 			itask_complete(&i2c->slave_cmds, 0);
 			dgram = itask_query_payload(&i2c->slave_cmds, 0x0);
 		}
@@ -343,10 +355,12 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	// NOTE lost arbitration does not require any special treatment since the last master
 	// 		command will be continued once the slave transmission has beem finished
 	case I2C_STATE_SLA_WR_MATCH:
-		n = dgram->blobs->len - dgram->n;
+		n = dgram->blobs->len - dgram->partial;
 		DEBUG("write: state=%s, n=%zu\n", strstate(state), n);
 
-		dgram->n += ops->write(dgram->blobs->buf + dgram->n, n, (dgram->blobs->len - dgram->n - n == 0), i2c->hw);
+		n = ops->write(dgram->blobs->buf + dgram->partial, n, (dgram->blobs->len - dgram->partial - n == 0), i2c->hw);
+		dgram->partial += n;
+		dgram->total += n;
 		break;
 
 
