@@ -19,9 +19,7 @@ i2c0 = {
 	reg = [ 0x64 ];	  	// PRRO
 	int<8> = [ 0x80 ];	// PRR0_PRTWI
 
-	/**
-	 * i2c config (i2c_cfg_t) */
-	int<8> = [ 1 ];		// mode (master)
+	/* i2c config (i2c_cfg_t) */
 	int<16> = [ 100 ];	// clock (100kHz)
 	int<8> = [
 	   1,				// broadcast (enabled)

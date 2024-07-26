@@ -12,9 +12,10 @@
 
 
 #include <kernel/inttask.h>
-#include <sys/types.h>
 #include <sys/blob.h>
+#include <sys/i2c.h>
 #include <sys/mutex.h>
+#include <sys/types.h>
 
 
 /* incomplete types */
@@ -23,9 +24,9 @@ struct i2c_t;
 
 /* types */
 typedef enum{
-	I2C_MODE_MASTER = 1,
-	I2C_MODE_SLAVE
-} i2c_mode_t;
+	I2C_READ = 1,
+	I2C_WRITE
+} i2c_cmd_t;
 
 typedef enum{
 	// state sections bits
@@ -62,21 +63,6 @@ typedef enum{
 	I2C_STATE_SLA_WR_DATA_NACK,
 } i2c_state_t;
 
-typedef enum{
-	I2C_CMD_READ = 1,
-	I2C_CMD_WRITE,
-} i2c_cmd_t;
-
-typedef struct{
-	i2c_cmd_t cmd;
-	uint8_t slave;
-
-	blob_t *blobs;
-	size_t nblobs;
-
-	size_t n,
-		   incomplete;
-} i2c_dgram_t;
 
 typedef struct{
 	/**
@@ -84,7 +70,6 @@ typedef struct{
 	 * 		using this type with the device tree
 	 */
 
-	uint8_t mode;		/**< cf. i2c_mode_t */
 	uint16_t clock_khz;
 
 	uint8_t bcast_en;
@@ -123,9 +108,9 @@ typedef struct i2c_t{
 i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw);
 void i2c_destroy(i2c_t *i2c);
 
-int i2c_read(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-int i2c_write(i2c_t *i2c, uint8_t slave, void *buf, size_t n);
-int i2c_write_n(i2c_t *i2c, uint8_t slave, blob_t *bufs, size_t n);
+int i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
+int i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
+int i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 
 
 #endif // DRIVER_I2C_H

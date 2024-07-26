@@ -147,7 +147,7 @@ static int rx_header(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 		return DS_ERROR;
 
 	DEBUG("%s: slave=%u, last=%u, len=%zu\n",
-		(hdr->cmd == I2C_CMD_READ) ? "read" : "write",
+		(hdr->cmd == I2C_READ) ? "read" : "write",
 		hdr->slave,
 		hdr->last,
 		hdr->len
@@ -166,7 +166,7 @@ static int rx_header(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	list_add_tail(i2c->bufs, buf);
 	i2c->nbuf++;
 
-	if((hdr->cmd == I2C_CMD_WRITE)){
+	if((hdr->cmd == I2C_WRITE)){
 		if(hdr->len > CONFIG_BRIDGE_I2C_INLINE_DATA)
 			return DS_PAYLOAD;
 
@@ -192,36 +192,28 @@ static void exec(dev_data_t *i2c, i2cbrdg_hdr_t *hdr){
 	buf_t *buf;
 
 
-	/* perform i2c operations */
-	DEBUG("issue i2c command\n");
+	/* prepare data */
 	buf = list_first(i2c->bufs);
 
-	if(hdr->cmd == I2C_CMD_WRITE){
-		if(i2c->nbuf > 1){
-			buf = list_first(i2c->bufs);
+	for(uint8_t i=0; i<i2c->nbuf; i++){
+		blobs[i].buf = buf->data;
+		blobs[i].len = buf->len;
 
-			for(uint8_t i=0; i<i2c->nbuf; i++){
-				blobs[i].buf = buf->data;
-				blobs[i].len = buf->len;
-
-				buf = buf->next;
-			}
-
-			r = i2c_write_n(i2c->brdg->hw, hdr->slave, blobs, i2c->nbuf);
-		}
-		else
-			r = i2c_write(i2c->brdg->hw, hdr->slave, buf->data, buf->len);
+		buf = buf->next;
 	}
-	else
-		r = i2c_read(i2c->brdg->hw, hdr->slave, buf->data, buf->len);
+
+	/* perform i2c operations */
+	DEBUG("issue i2c command\n");
+
+	r = i2c_xfer(i2c->brdg->hw, I2C_MASTER, hdr->cmd, hdr->slave, blobs, i2c->nbuf);
 
 	/* ack status */
 	if(ack(i2c, ((r == 0) ? 0 : (errno ? errno : E_AGAIN))) != 0)
 		return;
 
 	/* write data */
-	if(hdr->cmd == I2C_CMD_READ)
-		(void)i2cbrdg_write(i2c->brdg, buf->data, buf->len);
+	if(hdr->cmd == I2C_READ)
+		(void)i2cbrdg_write(i2c->brdg, blobs[0].buf, blobs[0].len);
 }
 
 static int ack(dev_data_t *i2c, errno_t errnum){

@@ -121,7 +121,7 @@ static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw){
 
 	i2c->cmd = cmd;
 	i2c->slave = slave;
-	i2c->state = (cmd == I2C_CMD_READ) ? I2C_STATE_MST_RD_ACK : I2C_STATE_MST_WR_ACK;
+	i2c->state = (cmd == I2C_READ) ? I2C_STATE_MST_RD_ACK : I2C_STATE_MST_WR_ACK;
 }
 
 static size_t read(uint8_t *buf, size_t n, void *hw){
@@ -158,10 +158,10 @@ static size_t rw(uint8_t *buf, size_t n, i2c_cmd_t cmd, uint8_t slave, bridge_t 
 	hdr.last = last;
 	hdr.len = n;
 
-	if((cmd == I2C_CMD_WRITE) && n <= CONFIG_BRIDGE_I2C_INLINE_DATA)
+	if((cmd == I2C_WRITE) && n <= CONFIG_BRIDGE_I2C_INLINE_DATA)
 		memcpy(hdr.buf, buf, n);
 
-	DEBUG("%s: slave=%u, len=%zu, last=%u\n", (cmd == I2C_CMD_READ) ? "read" : "write", slave, n, last);
+	DEBUG("%s: slave=%u, len=%zu, last=%u\n", (cmd == I2C_READ) ? "read" : "write", slave, n, last);
 
 	if(i2cbrdg_write(brdg, &hdr, sizeof(i2cbrdg_hdr_t)) != 0)
 		goto err;
@@ -170,7 +170,7 @@ static size_t rw(uint8_t *buf, size_t n, i2c_cmd_t cmd, uint8_t slave, bridge_t 
 		goto err;
 
 	/* write payload if not already sent with the header */
-	if((cmd == I2C_CMD_WRITE) && (n > CONFIG_BRIDGE_I2C_INLINE_DATA)){
+	if((cmd == I2C_WRITE) && (n > CONFIG_BRIDGE_I2C_INLINE_DATA)){
 		if(i2cbrdg_write(brdg, buf, n) != 0)
 			goto err;
 	}
@@ -180,7 +180,7 @@ static size_t rw(uint8_t *buf, size_t n, i2c_cmd_t cmd, uint8_t slave, bridge_t 
 		goto err;
 
 	/* read data */
-	if(cmd == I2C_CMD_READ){
+	if(cmd == I2C_READ){
 		if(i2cbrdg_read(brdg, buf, n) != 0)
 			goto err;
 	}

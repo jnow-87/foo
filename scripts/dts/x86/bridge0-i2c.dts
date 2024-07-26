@@ -25,7 +25,6 @@ brdg0-right-i2c = {
 		compatible = "bridge,i2c-dev";
 
 		/* i2c config (i2c_cfg_t) */
-		int<8> = [ 1 ];		// mode (master)
 		int<16> = [ 0 ];	// clock (0kHz)
 		int<8> = [
 		   0,				// broadcast (disabled)

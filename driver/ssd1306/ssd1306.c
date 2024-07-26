@@ -20,9 +20,9 @@
 
 /* macros */
 // i2c wrapper
-#define I2C_WRITE(i2c, slave, buf)		i2c_write(i2c, slave, buf, sizeof_array(buf))
-#define I2C_WRITE_N(i2c, slave, buf)	i2c_write_n(i2c, slave, buf, sizeof_array(buf))
-#define I2C_DATA(...)					((uint8_t []){ __VA_ARGS__ })
+#define SSD_WRITE(i2c, slave, buf)	i2c_write(i2c, I2C_MASTER, slave, buf, sizeof_array(buf))
+#define SSD_XFER(i2c, slave, blobs)	i2c_xfer(i2c, I2C_MASTER, I2C_WRITE, slave, blobs, sizeof_array(blobs))
+#define SSD_DATA(...)				((uint8_t []){ __VA_ARGS__ })
 
 
 /* types */
@@ -111,8 +111,8 @@ static int configure(vram_cfg_t *cfg, void *hw){
 	int r;
 
 
-	r = I2C_WRITE(dtd->i2c, dtd->slave,
-		I2C_DATA(
+	r = SSD_WRITE(dtd->i2c, dtd->slave,
+		SSD_DATA(
 			CTRL_CMD_N,
 			CMD_HW_MUX, 0x3f,
 			CMD_HW_ROWMAP, 0x12,
@@ -135,7 +135,7 @@ static int configure(vram_cfg_t *cfg, void *hw){
 	);
 
 	// turn display and charge pump on
-	r |= I2C_WRITE(dtd->i2c, dtd->slave, I2C_DATA(CTRL_CMD_N, CMD_HW_CHARGEPUMP, 0x14, CMD_DSP_ON));
+	r |= SSD_WRITE(dtd->i2c, dtd->slave, SSD_DATA(CTRL_CMD_N, CMD_HW_CHARGEPUMP, 0x14, CMD_DSP_ON));
 
 	return 0;
 }
@@ -146,11 +146,8 @@ static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
 	int r;
 
 
-	// set page address
-	r = I2C_WRITE(dtd->i2c, dtd->slave, I2C_DATA(CTRL_CMD_1, CMD_ADDR_PAGE_START | page));
-
-	// write data
-	r |= I2C_WRITE_N(dtd->i2c, dtd->slave, BLOBS(BLOB(&cmd, 1), BLOB(buf, cfg->width)));
+	r = SSD_WRITE(dtd->i2c, dtd->slave, SSD_DATA(CTRL_CMD_1, CMD_ADDR_PAGE_START | page));	// set page address
+	r |= SSD_XFER(dtd->i2c, dtd->slave, BLOBS(BLOB(&cmd, 1), BLOB(buf, cfg->width)));		// write data
 
 	return r;
 }

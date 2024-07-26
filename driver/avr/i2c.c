@@ -207,7 +207,7 @@ static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
-	regs->twdr = (slave << TWDR_ADDR) | (((bool)(cmd & I2C_CMD_READ)) << TWDR_RW);
+	regs->twdr = (slave << TWDR_ADDR) | ((cmd == I2C_READ) << TWDR_RW);
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)
