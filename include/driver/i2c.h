@@ -126,9 +126,9 @@ typedef struct i2c_t{
 i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw);
 void i2c_destroy(i2c_t *i2c);
 
-int i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
-int i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
-int i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
+size_t i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
+size_t i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
+size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 
 i2c_speed_t i2c_speed(uint16_t clock_khz);
 i2c_timing_t *i2c_timing(i2c_speed_t speed);

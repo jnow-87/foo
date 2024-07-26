@@ -84,8 +84,7 @@ static size_t xfer(devfs_dev_t *dev, fs_filed_t *fd, i2c_cmd_t cmd, void *buf, s
 	mutex_unlock(&dev->node->mtx);
 
 	// TODO update i2c_xfer() return value to size_t
-	if(i2c_xfer(i2c->itf, i2c->cfg.mode, cmd, i2c->cfg.slave, BLOBS(BLOB(buf, n)), 1) != 0)
-		n = 0;
+	n = i2c_xfer(i2c->itf, i2c->cfg.mode, cmd, i2c->cfg.slave, BLOBS(BLOB(buf, n)), 1);
 
 	mutex_lock(&dev->node->mtx);
 

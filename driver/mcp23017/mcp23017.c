@@ -39,8 +39,8 @@
 #define IOCON_INTPOL	1
 
 // I/O wrapper
-#define MCP_READ(i2c, dtd, buf, n)	i2c_read(i2c, I2C_MASTER, (dtd)->slave_addr, buf, n)
-#define MCP_WRITE(i2c, dtd, buf)	i2c_write(i2c, I2C_MASTER, (dtd)->slave_addr, buf, sizeof_array(buf))
+#define MCP_READ(i2c, dtd, buf, n)	(i2c_read(i2c, I2C_MASTER, (dtd)->slave_addr, buf, n) != n)
+#define MCP_WRITE(i2c, dtd, buf)	(i2c_write(i2c, I2C_MASTER, (dtd)->slave_addr, buf, sizeof_array(buf)) != sizeof_array(buf))
 #define MCP_DATA(...)				((uint8_t []){ __VA_ARGS__ })
 
 

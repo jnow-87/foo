@@ -20,9 +20,9 @@
 
 /* macros */
 // i2c wrapper
-#define SSD_WRITE(i2c, slave, buf)	i2c_write(i2c, I2C_MASTER, slave, buf, sizeof_array(buf))
-#define SSD_XFER(i2c, slave, blobs)	i2c_xfer(i2c, I2C_MASTER, I2C_WRITE, slave, blobs, sizeof_array(blobs))
-#define SSD_DATA(...)				((uint8_t []){ __VA_ARGS__ })
+#define SSD_WRITE(i2c, slave, buf)		(i2c_write(i2c, I2C_MASTER, slave, buf, sizeof_array(buf)) != sizeof_array(buf))
+#define SSD_XFER(i2c, slave, blobs, n)	(i2c_xfer(i2c, I2C_MASTER, I2C_WRITE, slave, blobs, sizeof_array(blobs)) != (size_t)(n))
+#define SSD_DATA(...)					((uint8_t []){ __VA_ARGS__ })
 
 
 /* types */
@@ -137,7 +137,7 @@ static int configure(vram_cfg_t *cfg, void *hw){
 	// turn display and charge pump on
 	r |= SSD_WRITE(dtd->i2c, dtd->slave, SSD_DATA(CTRL_CMD_N, CMD_HW_CHARGEPUMP, 0x14, CMD_DSP_ON));
 
-	return 0;
+	return r;
 }
 
 static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
@@ -146,8 +146,8 @@ static int write_page(uint8_t *buf, size_t page, vram_cfg_t *cfg, void *hw){
 	int r;
 
 
-	r = SSD_WRITE(dtd->i2c, dtd->slave, SSD_DATA(CTRL_CMD_1, CMD_ADDR_PAGE_START | page));	// set page address
-	r |= SSD_XFER(dtd->i2c, dtd->slave, BLOBS(BLOB(&cmd, 1), BLOB(buf, cfg->width)));		// write data
+	r = SSD_WRITE(dtd->i2c, dtd->slave, SSD_DATA(CTRL_CMD_1, CMD_ADDR_PAGE_START | page));				// set page address
+	r |= SSD_XFER(dtd->i2c, dtd->slave, BLOBS(BLOB(&cmd, 1), BLOB(buf, cfg->width)), cfg->width + 1);	// write data
 
 	return r;
 }
