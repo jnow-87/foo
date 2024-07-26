@@ -144,8 +144,8 @@ typedef struct{
 	dt_data_t *dtd;
 
 	i2c_state_t state;
+	i2c_mode_t mode;
 	i2c_cmd_t cmd;
-	uint8_t slave;
 } dev_data_t;
 
 
@@ -154,16 +154,15 @@ typedef struct{
 
 /* local/static prototypes */
 static int configure(i2c_cfg_t *cfg, void *hw);
-static int xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 static i2c_state_t state(void *hw);
 static void start(void *hw);
-static size_t ack(size_t n, void *hw);
+static size_t ack(size_t remaining, void *hw);
 static void idle(bool addressable, bool stop, void *hw);
 static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw);
 static size_t read(uint8_t *buf, size_t n, void *hw);
 static size_t write(uint8_t *buf, size_t n, bool last, void *hw);
 static void enable(bool en, i2c_regs_t *regs);
-int configure_transfer(i2c_cmd_t cmd, uint8_t slave, i2c_regs_t *regs);
+int configure_transfer(dev_data_t *i2c, uint8_t slave);
 static size_t rx(uint8_t *buf, size_t n, bool blocking, i2c_regs_t *regs);
 static size_t tx(uint8_t *buf, size_t n, i2c_cmd_t cmd, bool blocking, bool stop, i2c_regs_t *regs);
 
@@ -183,17 +182,11 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 		goto err_0;
 
 	i2c->dtd = dtd;
+	i2c->mode = I2C_SLAVE;
+	i2c->cmd = I2C_READ;
 	i2c->state = I2C_STATE_NONE;
 
-	memset(&ops, 0, sizeof(ops));
-
-//	ops.xfer = xfer;
-//
-//	if(configure(&dtd->cfg, i2c) != 0)
-//		return 0x0;
-
-	ops.configure = configure;	// TODO is it needed
-	ops.xfer = 0x0;
+	ops.configure = configure;
 	ops.state = state;
 	ops.start = start;
 	ops.ack = ack;
@@ -351,7 +344,7 @@ static i2c_state_t state(void *hw){
 			return I2C_STATE_SLA_SLAR_MATCH;
 		}
 
-		if(i2c->cmd == 0 && regs->rxflr > 0)
+		if(i2c->mode == I2C_SLAVE && regs->rxflr > 0)
 			return I2C_STATE_SLA_SLAW_MATCH;
 
 		// fall through
@@ -364,38 +357,37 @@ static void start(void *hw){
 	((dev_data_t*)hw)->state = I2C_STATE_MST_START;
 }
 
-static size_t ack(size_t n, void *hw){
+static size_t ack(size_t remaining, void *hw){
 	dev_data_t *i2c = (dev_data_t*)hw;
 
 
 	/* master read */
 	if(i2c->state == I2C_STATE_MST_SLAR_ACK || i2c->state == I2C_STATE_MST_SLAR_DATA_ACK){
-		DEBUG("ack: n=%zu stop=%u\n", n > 2 ? 2 : n, n <= 2);
+		DEBUG("ack: remaining=%zu stop=%u\n", remaining > 2 ? 2 : remaining, remaining <= 2);
 		i2c->state = I2C_STATE_MST_SLAR_DATA_ACK;
 
-		return tx(0x0, n > 2 ? 2 : n, I2C_CMD_READ, false, n <= 2, i2c->dtd->regs);
+		return tx(0x0, remaining > 2 ? 2 : remaining, I2C_READ, false, remaining <= 2, i2c->dtd->regs);
 	}
 
 	/* slave read */
 	i2c->state = I2C_STATE_SLA_SLAW_DATA_ACK;
 
-	if(n <= 1)
+	if(remaining <= 1)
 		i2c->state = I2C_STATE_SLA_SLAW_DATA_NACK;
 
-	return n;
+	return remaining;
 }
 
 static void idle(bool addressable, bool stop, void *hw){
 	dev_data_t *i2c = (dev_data_t*)hw;
 
 
+	i2c->mode = I2C_SLAVE;
+	i2c->cmd = I2C_READ;	// cmd doesn't // TODO enhance comment
 	i2c->state = I2C_STATE_NONE;
-	i2c->cmd = 0;
 
 	if(addressable){
-		// TODO set state - or maybe rely on hardware state
-
-		if(configure_transfer(I2C_CMD_SLAVE, 0, i2c->dtd->regs) != 0)
+		if(configure_transfer(i2c, 0) != 0)
 			i2c->state = I2C_STATE_ERROR;
 	}
 }
@@ -404,10 +396,11 @@ static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw){
 	dev_data_t *i2c = (dev_data_t*)hw;
 
 
+	i2c->mode = I2C_MASTER;
 	i2c->cmd = cmd;
-	i2c->state = (cmd & I2C_CMD_READ) ? I2C_STATE_MST_SLAR_ACK : I2C_STATE_MST_SLAW_ACK;
+	i2c->state = (cmd == I2C_READ) ? I2C_STATE_MST_SLAR_ACK : I2C_STATE_MST_SLAW_ACK;
 
-	if(configure_transfer(cmd, slave, i2c->dtd->regs) != 0)
+	if(configure_transfer(i2c, slave) != 0)
 		i2c->state = I2C_STATE_ERROR;
 }
 
@@ -428,13 +421,13 @@ static size_t write(uint8_t *buf, size_t n, bool last, void *hw){
 	dev_data_t *i2c = (dev_data_t*)hw;
 
 
-	i2c->state = (i2c->cmd & I2C_CMD_MASTER) ? I2C_STATE_MST_SLAW_ACK : I2C_STATE_SLA_SLAR_MATCH;
+	i2c->state = (i2c->mode == I2C_MASTER) ? I2C_STATE_MST_SLAW_ACK : I2C_STATE_SLA_SLAR_MATCH;
 
 	// clear tx abort interrupt, which is raised if the tx fifo still contains data when
 	// receiving a slave read request, required to flush the tx fifo
 	(void)i2c->dtd->regs->clr_tx_abrt;
 
-	n = tx(buf, n, I2C_CMD_WRITE, false, last, i2c->dtd->regs);
+	n = tx(buf, n, I2C_WRITE, false, last, i2c->dtd->regs);
 
 	// clear read request interrupt to allow multiple slave writes
 	// if not cleared a subsequent slave write would immediately write its data even if no
@@ -445,46 +438,6 @@ static size_t write(uint8_t *buf, size_t n, bool last, void *hw){
 	return n;
 }
 
-static int xfer(i2c_t *i2c, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
-	dev_data_t *devdata = i2c->hw;
-	dt_data_t *dtd = devdata->dtd;
-	i2c_regs_t *regs = dtd->regs;
-	size_t x;
-
-
-	DEBUG("issue i2c command: mode=%s, slave=%u, n=%zu\n", (cmd & I2C_CMD_MASTER) ? "master" : "slave", (cmd & I2C_CMD_MASTER) ? slave : regs->sar, n);
-
-	if(configure_transfer(cmd, slave, dtd->regs) != 0)
-		return -errno;
-
-	if((cmd & I2C_CMD_SLAVE) && (cmd & I2C_CMD_WRITE)){
-		while((regs->raw_intr_stat & (0x1 << INT_RD_REQ)) == 0);
-		DEBUG("got addressed: status=%#x\n", regs->status);
-
-		// TODO multiple successive slave writes do not work, only the first one or two get through to the master
-		(void)regs->clr_rd_req;
-	}
-
-	if(cmd & I2C_CMD_READ){
-		for(size_t i=0; i<n; i++){
-			for(size_t j=0; j<bufs[i].len; j+=x){
-				x = bufs[i].len - j;
-
-				if(cmd & I2C_CMD_MASTER)
-					x = tx(bufs[i].buf, x, cmd, false, true, regs);
-
-				x = rx(bufs[i].buf + j, x, true, regs);
-			}
-		}
-	}
-	else{
-		for(size_t i=0; i<n; i++)
-			(void)tx(bufs[i].buf, bufs[i].len, cmd, true, i + 1 == n, regs);
-	}
-
-	return 0;
-}
-
 static size_t tx(uint8_t *buf, size_t n, i2c_cmd_t cmd, bool blocking, bool stop, i2c_regs_t *regs){
 	for(size_t i=0; i<n; i++){
 		while((regs->status & (0x1 << STATUS_TX_FIFO_NOT_FULL)) == 0){
@@ -493,7 +446,7 @@ static size_t tx(uint8_t *buf, size_t n, i2c_cmd_t cmd, bool blocking, bool stop
 		}
 
 		regs->data_cmd = ((buf ? buf[i] : 0x0) << DATA_CMD_DAT)
-					   | ((bool)(cmd & I2C_CMD_READ) << DATA_CMD_CMD)
+					   | ((cmd == I2C_READ) << DATA_CMD_CMD)
 					   | ((stop && i + 1 == n) << DATA_CMD_STOP)
 					   ;
 
@@ -540,12 +493,12 @@ static void enable(bool en, i2c_regs_t *regs){
 	while((regs->enable_status & (0x1 << ENABLE_STATUS_IC_EN)) != en);
 }
 
-int configure_transfer(i2c_cmd_t cmd, uint8_t slave, i2c_regs_t *regs){
+int configure_transfer(dev_data_t *i2c, uint8_t slave){
 	bool gen_call = (slave == 0);
-	bool master_mode = (cmd & I2C_CMD_MASTER);
+	i2c_regs_t *regs = i2c->dtd->regs;
 
 
-	DEBUG("configure: mode=%s, slave=%u\n", (cmd & I2C_CMD_MASTER) ? "master" : "slave", (cmd & I2C_CMD_MASTER) ? slave : regs->sar);
+	DEBUG("configure: mode=%s, slave=%u\n", (i2c->mode == I2C_MASTER) ? "master" : "slave", (i2c->mode == I2C_MASTER) ? slave : regs->sar);
 
 	// clear interrupts
 	// clear stop detected interrupt to allow successive slave reads
@@ -561,20 +514,21 @@ int configure_transfer(i2c_cmd_t cmd, uint8_t slave, i2c_regs_t *regs){
 	// the device is still addressed in slave mode, in that case the hardware
 	// cannot be disabled, which would lead to enable() not being able to return
 	// TODO check if the slave is also the same in master mode
-	if(((cmd & I2C_CMD_MASTER) && (regs->con & (0x1 << CON_MASTER_MODE))) || ((cmd & I2C_CMD_SLAVE) && !(regs->con & (0x1 << CON_MASTER_MODE))))
+	if(((i2c->mode == I2C_MASTER) && (regs->con & (0x1 << CON_MASTER_MODE))) || ((i2c->mode == I2C_SLAVE) && !(regs->con & (0x1 << CON_MASTER_MODE))))
 		return 0;
 
-	if(gen_call && (cmd == (I2C_CMD_MASTER | I2C_CMD_READ)))
+	// TODO move this check to the common i2c driver
+	if(gen_call && i2c->mode == I2C_MASTER && i2c->cmd == I2C_READ)
 		return_errno(E_INVAL);
 
-	if((regs->status & (0x1 << STATUS_SLV_ACTIVITY)) && (cmd & (I2C_CMD_MASTER)))
+	if((regs->status & (0x1 << STATUS_SLV_ACTIVITY)) && (i2c->mode == I2C_MASTER))
 		return_errno(E_INUSE);
 
 	enable(false, regs);
 
 	// TODO test general call
 	regs->con &= ~((0x1 << CON_IC_SLAVE_DISABLED) | (0x1 << CON_MASTER_MODE));
-	regs->con |= (master_mode << CON_IC_SLAVE_DISABLED) | (master_mode << CON_MASTER_MODE);
+	regs->con |= ((i2c->mode == I2C_MASTER) << CON_IC_SLAVE_DISABLED) | ((i2c->mode == I2C_MASTER) << CON_MASTER_MODE);
 
 	regs->tar = (slave << TAR_IC_TAR)
 			  | (gen_call << TAR_SPECIAL)
