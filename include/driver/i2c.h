@@ -117,9 +117,7 @@ typedef struct i2c_t{
 	i2c_ops_t ops;
 	void *hw;
 
-	itask_queue_t master_cmds,
-				  slave_cmds;
-
+	itask_queue_t cmds;
 	mutex_t mtx;
 } i2c_t;
 
