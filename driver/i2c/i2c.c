@@ -28,25 +28,33 @@ typedef struct{
 	i2c_cmd_t cmd;
 	uint8_t slave;
 
-	blob_t *blobs;
-	size_t nblobs;
+	blob_t *bufs;
+	size_t nbuf;
 
 	size_t total,
-		   partial,
-		   incomplete;
-} i2c_dgram_t;
+		   buf_lvl,
+		   staged;
+} dgram_t;
 
 
 /* local/static prototypes */
-static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
-static size_t int_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
+static size_t poll_cmd(i2c_t *i2c, dgram_t *dgram);
+static size_t int_cmd(i2c_t *i2c, dgram_t *dgram);
 
 static void int_hdlr(int_num_t num, void *payload);
 
-static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
-static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
+static int int_master(i2c_t *i2c, dgram_t *dgram, i2c_state_t state);
+static int int_slave(i2c_t *i2c, dgram_t *dgram, i2c_state_t state);
 
 static int complete(i2c_t *i2c, errno_t errnum, bool stop);
+
+static void dgram_init(dgram_t *dgram, i2c_mode_t mode, i2c_cmd_t cmd, int8_t slave, blob_t *bufs, size_t n);
+static void *dgram_data(dgram_t *dgram);
+static size_t dgram_chunk(dgram_t *dgram);
+static void dgram_stage(dgram_t *dgram, size_t n);
+static void dgram_commit(dgram_t *dgram, size_t n);
+static bool dgram_last(dgram_t *dgram, size_t n);
+static bool dgram_complete(dgram_t *dgram);
 
 #ifdef BUILD_KERNEL_LOG_DEBUG
 static char const *strstate(i2c_state_t state);
@@ -110,27 +118,21 @@ size_t i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n
 }
 
 size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
-	i2c_dgram_t dgram;
+	dgram_t dgram;
 
 
-	dgram.mode = mode;
-	dgram.cmd = cmd;
-	dgram.slave = slave;
-	dgram.blobs = bufs;
-	dgram.nblobs = n;
-	dgram.total = 0;
-	dgram.partial = 0;
-	dgram.incomplete = 0;
+	DEBUG("issue cmd: mode=%s, slave=%u, bufs=%zu\n", (mode == I2C_MASTER) ? "master" : "slave", slave, n);
+	dgram_init(&dgram, mode, cmd, slave, bufs, n);
 
 	return (i2c->cfg->int_num ? int_cmd(i2c, &dgram) : poll_cmd(i2c, &dgram));
 }
 
 
 /* local functions */
-static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
+static size_t poll_cmd(i2c_t *i2c, dgram_t *dgram){
 	int r;
 	i2c_state_t state;
-	int (*op)(i2c_t *, i2c_dgram_t *, i2c_state_t);
+	int (*op)(i2c_t *, dgram_t *, i2c_state_t);
 
 
 	state = I2C_STATE_NEXT_CMD;
@@ -149,7 +151,7 @@ static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 	}
 }
 
-static size_t int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
+static size_t int_cmd(i2c_t *i2c, dgram_t *dgram){
 	size_t r;
 
 
@@ -167,7 +169,7 @@ static void int_hdlr(int_num_t num, void *payload){
 	int r;
 	bool master_cmd;
 	i2c_state_t state;
-	i2c_dgram_t *dgram;
+	dgram_t *dgram;
 	itask_queue_t *cmds;
 
 
@@ -203,7 +205,7 @@ unlock:
 	mutex_unlock(&i2c->mtx);
 }
 
-static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
+static int int_master(i2c_t *i2c, dgram_t *dgram, i2c_state_t state){
 	i2c_ops_t *ops = &i2c->ops;
 	size_t n;
 
@@ -231,59 +233,42 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 	/* master write */
 	case I2C_STATE_MST_WR_DATA_ACK:
-		dgram->partial += dgram->incomplete;
-		dgram->total += dgram->incomplete;
+		dgram_commit(dgram, dgram->staged);
 
 		// fall through
 	case I2C_STATE_MST_WR_DATA_NACK:
 		DEBUG("(n)ack: state=%s\n", strstate(state));
 
-		if((dgram->partial >= dgram->blobs->len && dgram->nblobs == 1) || state == I2C_STATE_MST_WR_DATA_NACK)
+		if(dgram_complete(dgram) || state == I2C_STATE_MST_WR_DATA_NACK)
 			return complete(i2c, 0, true);
-
-		if(dgram->partial >= dgram->blobs->len){
-			dgram->blobs++;
-			dgram->nblobs--;
-			dgram->partial = 0;
-		}
 
 		// fall through
 	case I2C_STATE_MST_WR_ACK:
-		n = dgram->blobs->len - dgram->partial;
+		n = dgram_chunk(dgram);
 		DEBUG("sla-w: state=%s, n=%zu\n", strstate(state), n);
 
-		dgram->incomplete = ops->write(dgram->blobs->buf + dgram->partial, n, (dgram->partial + n >= dgram->blobs->len && dgram->nblobs == 1), i2c->hw);
+		dgram_stage(dgram, ops->write(dgram_data(dgram), n, dgram_last(dgram, n), i2c->hw));
 		break;
 
 
 	/* master read */
 	case I2C_STATE_MST_RD_DATA_ACK:
 	case I2C_STATE_MST_RD_DATA_NACK:
-		n = ops->read(dgram->blobs->buf + dgram->partial, dgram->blobs->len - dgram->partial, i2c->hw);
+		n = ops->read(dgram_data(dgram), dgram->staged, i2c->hw);
 		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
 
-		dgram->partial += n;
-		dgram->total += n;
-		dgram->incomplete -= n;
+		dgram_commit(dgram, n);
 
-		if(dgram->incomplete)
+		if(dgram->staged)
 			break;
 
-		if((dgram->partial >= dgram->blobs->len && dgram->nblobs == 1) || state == I2C_STATE_MST_RD_DATA_NACK)
+		if(dgram_complete(dgram) || state == I2C_STATE_MST_RD_DATA_NACK)
 			return complete(i2c, 0, true);
-
-		if(dgram->partial >= dgram->blobs->len){
-			dgram->blobs++;
-			dgram->nblobs--;
-			dgram->partial = 0;
-		}
 
 		// fall through
 	case I2C_STATE_MST_RD_ACK:
-		n = dgram->blobs->len - dgram->partial;
-		dgram->incomplete = ops->ack(n, i2c->hw);
-
-		DEBUG("sla-r: state=%s, n=%zu, incomplete=%zu\n", strstate(state), n, dgram->incomplete);
+		dgram_stage(dgram, ops->ack(dgram_chunk(dgram), i2c->hw));
+		DEBUG("sla-r: state=%s, staged=%zu\n", strstate(state), dgram->staged);
 		break;
 
 
@@ -300,7 +285,7 @@ static int int_master(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	return 1;
 }
 
-static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
+static int int_slave(i2c_t *i2c, dgram_t *dgram, i2c_state_t state){
 	i2c_ops_t *ops = &i2c->ops;
 	size_t n;
 
@@ -314,23 +299,24 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	/* slave read */
 	case I2C_STATE_SLA_RD_DATA_ACK:
 	case I2C_STATE_SLA_RD_DATA_NACK:
-		n = ops->read(dgram->blobs->buf + dgram->partial, dgram->blobs->len - dgram->partial, i2c->hw);
-		dgram->partial += n;
-		dgram->total += n;
-
+		n = ops->read(dgram_data(dgram), dgram->staged, i2c->hw);
 		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
 
-		if(state == I2C_STATE_SLA_RD_DATA_NACK)
+		dgram_commit(dgram, n);
+
+		if(dgram->staged)
+			break;
+
+		if(dgram_complete(dgram) || state == I2C_STATE_SLA_RD_DATA_NACK)
 			return complete(i2c, 0, false);
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
 	// 		command will be continued once the slave transmission has beem finished
 	case I2C_STATE_SLA_RD_MATCH:
-		n = dgram->blobs->len - dgram->partial;
-		DEBUG("match: state=%s, n=%zu\n", strstate(state), n);
+		dgram_stage(dgram, ops->ack(dgram_chunk(dgram), i2c->hw));
 
-		(void)ops->ack(n, i2c->hw);
+		DEBUG("match: state=%s, staged=%zu\n", strstate(state), dgram->staged);
 		break;
 
 	case I2C_STATE_SLA_RD_STOP:
@@ -343,24 +329,19 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_WR_DATA_NACK:
 		DEBUG("(n)ack: state=%s\n", strstate(state));
 
-		if(dgram->partial >= dgram->blobs->len){
-			itask_complete(&i2c->slave_cmds, 0);
-			dgram = itask_query_payload(&i2c->slave_cmds, 0x0);
-		}
+		dgram_commit(dgram, dgram->staged);
 
-		if(state == I2C_STATE_SLA_WR_DATA_NACK || dgram == 0x0)
+		if(dgram_complete(dgram) || state == I2C_STATE_SLA_WR_DATA_NACK)
 			return complete(i2c, 0, false);
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
 	// 		command will be continued once the slave transmission has beem finished
 	case I2C_STATE_SLA_WR_MATCH:
-		n = dgram->blobs->len - dgram->partial;
+		n = dgram_chunk(dgram);
 		DEBUG("write: state=%s, n=%zu\n", strstate(state), n);
 
-		n = ops->write(dgram->blobs->buf + dgram->partial, n, (dgram->blobs->len - dgram->partial - n == 0), i2c->hw);
-		dgram->partial += n;
-		dgram->total += n;
+		dgram_stage(dgram, ops->write(dgram_data(dgram), n, dgram_last(dgram, n), i2c->hw));
 		break;
 
 
@@ -378,10 +359,58 @@ static int int_slave(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 }
 
 static int complete(i2c_t *i2c, errno_t errnum, bool stop){
-	DEBUG("complete: status=%s\n", strerror(errnum));
+	DEBUG("complete: status=%s, bytes=%zu\n", strerror(errnum), i2c->dgram->total);
 	i2c->ops.idle(false, stop, i2c->hw);
 
 	return -errnum;
+}
+
+static void dgram_init(dgram_t *dgram, i2c_mode_t mode, i2c_cmd_t cmd, int8_t slave, blob_t *bufs, size_t n){
+	dgram->mode = mode;
+	dgram->cmd = cmd;
+	dgram->slave = slave;
+
+	dgram->bufs = bufs;
+	dgram->nbuf = n;
+	dgram->buf_lvl = 0;
+
+	dgram->staged = 0;
+	dgram->total = 0;
+}
+
+static void *dgram_data(dgram_t *dgram){
+	return dgram->bufs->buf + dgram->buf_lvl;
+}
+
+static size_t dgram_chunk(dgram_t *dgram){
+	if(dgram->nbuf == 0)
+		return 0;
+
+	if(dgram->buf_lvl >= dgram->bufs->len){
+		dgram->bufs++;
+		dgram->nbuf--;
+		dgram->buf_lvl = 0;
+	}
+
+	return dgram->bufs->len - dgram->buf_lvl;
+}
+
+static void dgram_stage(dgram_t *dgram, size_t n){
+	dgram->staged = n;
+}
+
+static void dgram_commit(dgram_t *dgram, size_t n){
+	dgram->buf_lvl += n;
+	dgram->total += n;
+	dgram->staged -= n;
+}
+
+static bool dgram_last(dgram_t *dgram, size_t n){
+	return (dgram->buf_lvl + n >= dgram->bufs->len) && (dgram->nbuf == 1);
+}
+
+static bool dgram_complete(dgram_t *dgram){
+	return dgram_last(dgram, 0);
 }
 
 #ifdef BUILD_KERNEL_LOG_DEBUG
