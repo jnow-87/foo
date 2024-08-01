@@ -276,7 +276,7 @@ static void write_hdlr(int_num_t num, void *payload){
 	// 		as long as EECR_EEPE is zero, i.e. always except
 	// 		during ongoing write operations
 	eeprom->dtd->regs->eecr &= ~(0x1 << EECR_EERIE);
-	dgram = itask_query_payload(&eeprom->write_queue, write_complete);
+	dgram = itask_payload(&eeprom->write_queue, write_complete);
 
 	if(dgram == 0x0)
 		return;

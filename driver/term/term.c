@@ -162,7 +162,7 @@ void term_tx_hdlr(int_num_t num, void *payload){
 	tx_dgram_t *dgram;
 
 
-	dgram = itask_query_payload(&term->tx_queue, tx_complete);
+	dgram = itask_payload(&term->tx_queue, tx_complete);
 
 	if(dgram == 0x0)
 		return;

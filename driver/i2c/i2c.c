@@ -150,7 +150,7 @@ static void int_hdlr(int_num_t num, void *payload){
 
 
 	while(1){
-		dgram = itask_query_payload(&i2c->cmds, 0x0);
+		dgram = itask_payload(&i2c->cmds, 0x0);
 
 		if(dgram == 0x0 || dgram_hdlr(i2c, dgram) > 0)
 			break;
