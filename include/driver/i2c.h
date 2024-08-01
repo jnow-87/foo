@@ -92,12 +92,26 @@ typedef struct{
 	size_t (*write)(uint8_t *buf, size_t n, bool last, void *hw);
 } i2c_ops_t;
 
+typedef struct{
+	i2c_mode_t mode;
+	i2c_cmd_t cmd;
+	uint8_t slave;
+
+	blob_t *bufs;
+	size_t nbuf;
+
+	size_t total,
+		   buf_lvl,
+		   staged;
+} i2c_dgram_t;
+
 typedef struct i2c_t{
 	i2c_cfg_t *cfg;
 	i2c_ops_t ops;
 	void *hw;
 
 	itask_queue_t cmds;
+	i2c_dgram_t *dgram;
 	mutex_t mtx;
 } i2c_t;
 

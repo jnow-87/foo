@@ -22,39 +22,25 @@
 #include <sys/types.h>
 
 
-/* types */
-typedef struct{
-	i2c_mode_t mode;
-	i2c_cmd_t cmd;
-	uint8_t slave;
-
-	blob_t *bufs;
-	size_t nbuf;
-
-	size_t total,
-		   buf_lvl,
-		   staged;
-} dgram_t;
-
-
 /* local/static prototypes */
-static size_t poll_cmd(i2c_t *i2c, dgram_t *dgram);
-static size_t int_cmd(i2c_t *i2c, dgram_t *dgram);
+static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
+static size_t int_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
 
 static void int_hdlr(int_num_t num, void *payload);
 
-static int int_master(i2c_t *i2c, dgram_t *dgram, i2c_state_t state);
-static int int_slave(i2c_t *i2c, dgram_t *dgram, i2c_state_t state);
+static int dgram_hdlr(i2c_t *i2c, i2c_dgram_t *dgram);
+static int master_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
+static int slave_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
 
 static int complete(i2c_t *i2c, errno_t errnum, bool stop);
 
-static void dgram_init(dgram_t *dgram, i2c_mode_t mode, i2c_cmd_t cmd, int8_t slave, blob_t *bufs, size_t n);
-static void *dgram_data(dgram_t *dgram);
-static size_t dgram_chunk(dgram_t *dgram);
-static void dgram_stage(dgram_t *dgram, size_t n);
-static void dgram_commit(dgram_t *dgram, size_t n);
-static bool dgram_last(dgram_t *dgram, size_t n);
-static bool dgram_complete(dgram_t *dgram);
+static void dgram_init(i2c_dgram_t *dgram, i2c_mode_t mode, i2c_cmd_t cmd, int8_t slave, blob_t *bufs, size_t n);
+static void *dgram_data(i2c_dgram_t *dgram);
+static size_t dgram_chunk(i2c_dgram_t *dgram);
+static void dgram_stage(i2c_dgram_t *dgram, size_t n);
+static void dgram_commit(i2c_dgram_t *dgram, size_t n);
+static bool dgram_last(i2c_dgram_t *dgram, size_t n);
+static bool dgram_complete(i2c_dgram_t *dgram);
 
 #ifdef BUILD_KERNEL_LOG_DEBUG
 static char const *strstate(i2c_state_t state);
@@ -115,7 +101,7 @@ size_t i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n
 }
 
 size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n){
-	dgram_t dgram;
+	i2c_dgram_t dgram;
 
 
 	DEBUG("issue cmd: mode=%s, slave=%u, bufs=%zu\n", (mode == I2C_MASTER) ? "master" : "slave", slave, n);
@@ -126,29 +112,14 @@ size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_
 
 
 /* local functions */
-static size_t poll_cmd(i2c_t *i2c, dgram_t *dgram){
-	int r;
-	i2c_state_t state;
-	int (*op)(i2c_t *, dgram_t *, i2c_state_t);
+static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
+	i2c->dgram = 0x0;
+	while(dgram_hdlr(i2c, dgram) > 0);
 
-
-	state = I2C_STATE_NEXT_CMD;
-	op = (dgram->mode == I2C_SLAVE) ? int_slave : int_master;
-
-	while(1){
-		mutex_lock(&i2c->mtx);
-
-		r = op(i2c, dgram, state);
-		state = i2c->ops.state(i2c->hw);
-
-		mutex_unlock(&i2c->mtx);
-
-		if(r <= 0)
-			return dgram->total;
-	}
+	return dgram->total;
 }
 
-static size_t int_cmd(i2c_t *i2c, dgram_t *dgram){
+static size_t int_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 	if(itask_issue(&i2c->cmds, dgram, i2c->cfg->int_num) != 0)
 		return 0;
 
@@ -157,43 +128,41 @@ static size_t int_cmd(i2c_t *i2c, dgram_t *dgram){
 
 static void int_hdlr(int_num_t num, void *payload){
 	i2c_t *i2c = (i2c_t*)payload;
+	i2c_dgram_t *dgram;
+
+
+	while(1){
+		dgram = itask_query_payload(&i2c->cmds, 0x0);
+
+		if(dgram == 0x0 || dgram_hdlr(i2c, dgram) > 0)
+			break;
+
+		itask_complete(&i2c->cmds, errno);
+		i2c->dgram = 0x0;
+	}
+}
+
+static int dgram_hdlr(i2c_t *i2c, i2c_dgram_t *dgram){
 	int r;
 	i2c_state_t state;
-	dgram_t *dgram;
+
 
 
 	mutex_lock(&i2c->mtx);
 
-	/* identify dgram */
-	dgram = itask_query_payload(&i2c->cmds, 0x0);
-
-	if(dgram == 0x0)
-		goto unlock;
-
-	/* perform state action */
-	state = i2c->ops.state(i2c->hw);
-
-	if(state == I2C_STATE_NONE)
-		state = I2C_STATE_NEXT_CMD;
+	state = (i2c->dgram != dgram) ? I2C_STATE_NEXT_CMD : i2c->ops.state(i2c->hw);
+	i2c->dgram = dgram;
 
 	// NOTE the error of handling a master-mode dgram while the hardware is in a slave state is not
 	// 		checked here, since it is handled in the master_hdlr's default case, causing an io error
 	r = (dgram->mode == I2C_MASTER) ? master_hdlr(i2c, dgram, state) : slave_hdlr(i2c, dgram, state);
 
-	if(r > 0)
-		goto unlock;
-
-	/* transfer complete */
-	itask_complete(&i2c->cmds, -r);
-
-	if(itask_query_payload(&i2c->cmds, 0x0))
-		int_foretell(i2c->cfg->int_num);
-
-unlock:
 	mutex_unlock(&i2c->mtx);
+
+	return r;
 }
 
-static int int_master(i2c_t *i2c, dgram_t *dgram, i2c_state_t state){
+static int master_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	i2c_ops_t *ops = &i2c->ops;
 	size_t n;
 
@@ -273,7 +242,7 @@ static int int_master(i2c_t *i2c, dgram_t *dgram, i2c_state_t state){
 	return 1;
 }
 
-static int int_slave(i2c_t *i2c, dgram_t *dgram, i2c_state_t state){
+static int slave_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	i2c_ops_t *ops = &i2c->ops;
 	size_t n;
 
@@ -352,10 +321,10 @@ static int complete(i2c_t *i2c, errno_t errnum, bool stop){
 	DEBUG("complete: status=%s, bytes=%zu\n", strerror(errnum), i2c->dgram->total);
 	i2c->ops.idle(false, stop, i2c->hw);
 
-	return -errnum;
+	return_errno(errnum);
 }
 
-static void dgram_init(dgram_t *dgram, i2c_mode_t mode, i2c_cmd_t cmd, int8_t slave, blob_t *bufs, size_t n){
+static void dgram_init(i2c_dgram_t *dgram, i2c_mode_t mode, i2c_cmd_t cmd, int8_t slave, blob_t *bufs, size_t n){
 	dgram->mode = mode;
 	dgram->cmd = cmd;
 	dgram->slave = slave;
@@ -368,11 +337,11 @@ static void dgram_init(dgram_t *dgram, i2c_mode_t mode, i2c_cmd_t cmd, int8_t sl
 	dgram->total = 0;
 }
 
-static void *dgram_data(dgram_t *dgram){
+static void *dgram_data(i2c_dgram_t *dgram){
 	return dgram->bufs->buf + dgram->buf_lvl;
 }
 
-static size_t dgram_chunk(dgram_t *dgram){
+static size_t dgram_chunk(i2c_dgram_t *dgram){
 	if(dgram->nbuf == 0)
 		return 0;
 
@@ -385,21 +354,21 @@ static size_t dgram_chunk(dgram_t *dgram){
 	return dgram->bufs->len - dgram->buf_lvl;
 }
 
-static void dgram_stage(dgram_t *dgram, size_t n){
+static void dgram_stage(i2c_dgram_t *dgram, size_t n){
 	dgram->staged = n;
 }
 
-static void dgram_commit(dgram_t *dgram, size_t n){
+static void dgram_commit(i2c_dgram_t *dgram, size_t n){
 	dgram->buf_lvl += n;
 	dgram->total += n;
 	dgram->staged -= n;
 }
 
-static bool dgram_last(dgram_t *dgram, size_t n){
+static bool dgram_last(i2c_dgram_t *dgram, size_t n){
 	return (dgram->buf_lvl + n >= dgram->bufs->len) && (dgram->nbuf == 1);
 }
 
-static bool dgram_complete(dgram_t *dgram){
+static bool dgram_complete(i2c_dgram_t *dgram){
 	return dgram_last(dgram, 0);
 }
 
