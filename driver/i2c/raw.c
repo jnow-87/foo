@@ -101,16 +101,15 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 		break;
 
 	case IOCTL_CFGWR:
+		if(i2c_address_reserved(((i2c_dev_cfg_t*)arg)->slave))
+			return_errno(E_INVAL);
+
 		memcpy(&i2c->cfg, arg, n);
 		break;
 
 	default:
-		goto_errno(err, E_NOSUP);
+		return_errno(E_NOSUP);
 	}
 
 	return 0;
-
-
-err:
-	return -errno;
 }

@@ -37,15 +37,13 @@ static int exec(int argc, char **argv){
 
 	dev = argv[1];
 	cfg.mode = (strcmp(argv[2], "master") == 0) ? I2C_MASTER : I2C_SLAVE;
+	cfg.slave = 0xf0;
 
 	if(cfg.mode == I2C_MASTER){
 		if(argc != 4)
 			return CMD_HELP(argv[0], 0x0);
 
 		cfg.slave = atoi(argv[3]);
-
-		if(cfg.slave & 0x80)
-			return CMD_HELP(argv[0], "invalid slave address");
 	}
 
 	/* apply configuration */

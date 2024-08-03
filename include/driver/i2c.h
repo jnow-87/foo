@@ -124,5 +124,6 @@ size_t i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n)
 size_t i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
 size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);
 
+bool i2c_address_reserved(uint8_t addr);
 
 #endif // DRIVER_I2C_H

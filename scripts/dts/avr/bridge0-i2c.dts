@@ -20,7 +20,7 @@ i2c0 = {
 	int<16> = [ 100 ];			// clock (100kHz)
 	int<8> = [
 	   1,						// broadcast (enabled)
-	   1,						// address
+	   16,						// address
 	   0,						// interrupt
 	];
 

@@ -28,7 +28,7 @@ brdg0-right-i2c = {
 		int<16> = [ 0 ];	// clock (0kHz)
 		int<8> = [
 		   0,				// broadcast (disabled)
-		   0,				// address
+		   17,				// address
 		   0,				// interrupt
 		];
 
