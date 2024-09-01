@@ -217,6 +217,9 @@ static int master_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		if(dgram_complete(dgram) || state == I2C_STATE_MST_WR_DATA_NACK)
 			return complete(i2c, 0, true);
 
+		if(dgram->staged)
+			break;
+
 		// fall through
 	case I2C_STATE_MST_WR_ACK:
 		n = dgram_chunk(dgram);
@@ -234,11 +237,11 @@ static int master_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 		dgram_commit(dgram, n);
 
-		if(dgram->staged)
-			break;
-
 		if(dgram_complete(dgram) || state == I2C_STATE_MST_RD_DATA_NACK)
 			return complete(i2c, 0, true);
+
+		if(dgram->staged)
+			break;
 
 		// fall through
 	case I2C_STATE_MST_RD_ACK:
@@ -279,11 +282,11 @@ static int slave_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 		dgram_commit(dgram, n);
 
-		if(dgram->staged)
-			break;
-
 		if(dgram_complete(dgram) || state == I2C_STATE_SLA_RD_DATA_NACK)
 			return complete(i2c, 0, false);
+
+		if(dgram->staged)
+			break;
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
@@ -308,6 +311,9 @@ static int slave_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 		if(dgram_complete(dgram) || state == I2C_STATE_SLA_WR_DATA_NACK)
 			return complete(i2c, 0, false);
+
+		if(dgram->staged)
+			break;
 
 		// fall through
 	// NOTE lost arbitration does not require any special treatment since the last master
