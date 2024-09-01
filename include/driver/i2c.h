@@ -83,7 +83,9 @@ typedef struct{
 
 	i2c_state_t (*state)(void *hw);
 	void (*start)(void *hw);
+
 	size_t (*ack)(size_t remaining, void *hw);
+	size_t (*acked)(size_t staged, void *hw);
 
 	void (*idle)(bool addressable, bool stop, void *hw);
 	void (*connect)(i2c_cmd_t cmd, uint8_t slave, void *hw);

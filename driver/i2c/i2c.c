@@ -208,7 +208,7 @@ static int master_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 
 	/* master write */
 	case I2C_STATE_MST_WR_DATA_ACK:
-		dgram_commit(dgram, dgram->staged);
+		dgram_commit(dgram, ops->acked(dgram->staged, i2c->hw));
 
 		// fall through
 	case I2C_STATE_MST_WR_DATA_NACK:
@@ -304,7 +304,7 @@ static int slave_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_SLA_WR_DATA_NACK:
 		DEBUG("(n)ack: state=%s\n", strstate(state));
 
-		dgram_commit(dgram, dgram->staged);
+		dgram_commit(dgram, ops->acked(dgram->staged, i2c->hw));
 
 		if(dgram_complete(dgram) || state == I2C_STATE_SLA_WR_DATA_NACK)
 			return complete(i2c, 0, false);

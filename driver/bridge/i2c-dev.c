@@ -35,6 +35,7 @@ static int configure(i2c_cfg_t *cfg, void *hw);
 static i2c_state_t state(void *hw);
 static void start(void *hw);
 static size_t ack(size_t remaining, void *hw);
+static size_t acked(size_t staged, void *hw);
 static void idle(bool addressable, bool stop, void *hw);
 static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw);
 static size_t read(uint8_t *buf, size_t n, void *hw);
@@ -67,6 +68,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.state = state;
 	ops.start = start;
 	ops.ack = ack;
+	ops.acked = acked;
 	ops.idle = idle;
 	ops.connect = connect;
 	ops.read = read;
@@ -109,6 +111,10 @@ static size_t ack(size_t remaining, void *hw){
 		i2c->state = I2C_STATE_MST_RD_DATA_ACK;
 
 	return remaining;
+}
+
+static size_t acked(size_t staged, void *hw){
+	return staged;
 }
 
 static void idle(bool addressable, bool stop, void *hw){
