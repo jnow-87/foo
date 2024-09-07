@@ -29,8 +29,7 @@ static size_t int_cmd(i2c_t *i2c, i2c_dgram_t *dgram);
 static void int_hdlr(int_num_t num, void *payload);
 
 static int dgram_hdlr(i2c_t *i2c, i2c_dgram_t *dgram);
-static int master_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
-static int slave_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
+static int protocol_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state);
 
 static int complete(i2c_t *i2c, errno_t errnum, bool stop);
 
@@ -168,171 +167,104 @@ static int dgram_hdlr(i2c_t *i2c, i2c_dgram_t *dgram){
 
 	mutex_lock(&i2c->mtx);
 
-	state = (i2c->dgram != dgram) ? I2C_STATE_NEXT_CMD : i2c->ops.state(i2c->hw);
-	i2c->dgram = dgram;
+	if(i2c->dgram != dgram){
+		state = (dgram->mode == I2C_MASTER) ? I2C_STATE_NEXT_MST : I2C_STATE_NEXT_SLA;
+		i2c->dgram = dgram;
+	}
+	else
+		state = i2c->ops.state(i2c->hw);
 
-	// NOTE the error of handling a master-mode dgram while the hardware is in a slave state is not
-	// 		checked here, since it is handled in the master_hdlr's default case, causing an io error
-	r = (dgram->mode == I2C_MASTER) ? master_hdlr(i2c, dgram, state) : slave_hdlr(i2c, dgram, state);
+	if(!(state & I2C_STATE_BIT_SPECIAL) && dgram->mode != ((state & I2C_STATE_BIT_MASTER) ? I2C_MASTER : I2C_SLAVE))
+		state = I2C_STATE_ERROR;
+
+	r = protocol_hdlr(i2c, dgram, state);
 
 	mutex_unlock(&i2c->mtx);
 
 	return r;
 }
 
-static int master_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
+static int protocol_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	i2c_ops_t *ops = &i2c->ops;
 	size_t n;
 
 
+	if(state != I2C_STATE_NONE)
+		DEBUG("%s\n", strstate(state));
+
 	switch(state){
 	/* master start */
+	case I2C_STATE_NEXT_MST:
 	case I2C_STATE_MST_ARBLOST:
-		DEBUG("arb-lost: state=%s\n", strstate(state));
-
-		// fall through
-	case I2C_STATE_NEXT_CMD:
-		DEBUG("issue start\n");
 		ops->start(i2c->hw);
 		break;
 
 	case I2C_STATE_MST_START:
-		DEBUG("start: state=%s\n", strstate(state));
 		ops->connect(dgram->cmd, dgram->slave, i2c->hw);
 		break;
 
-	case I2C_STATE_MST_START_NACK:
-		DEBUG("nack: state=%s\n", strstate(state));
-		return complete(i2c, E_NOCONN, true);
+	/* slave start */
+	case I2C_STATE_NEXT_SLA:
+		i2c->ops.idle(true, false, i2c->hw);
+		break;
 
-
-	/* master write */
+	/* write */
 	case I2C_STATE_MST_WR_DATA_ACK:
 	case I2C_STATE_MST_WR_DATA_NACK:
+	case I2C_STATE_SLA_WR_DATA_ACK:
+	case I2C_STATE_SLA_WR_DATA_NACK:
 		dgram_commit(dgram, ops->acked(dgram->staged, i2c->hw));
 
-		DEBUG("(n)ack: state=%s\n", strstate(state));
-
-		if(dgram_complete(dgram) || state == I2C_STATE_MST_WR_DATA_NACK)
-			return complete(i2c, 0, true);
+		if(dgram_complete(dgram) || state == I2C_STATE_MST_WR_DATA_NACK || state == I2C_STATE_SLA_WR_DATA_NACK)
+			return complete(i2c, 0, (bool)(state & I2C_STATE_MASTER));
 
 		if(dgram->staged)
 			break;
 
 		// fall through
 	case I2C_STATE_MST_WR_ACK:
+	case I2C_STATE_SLA_WR_MATCH:
 		n = dgram_chunk(dgram);
-		DEBUG("sla-w: state=%s, n=%zu\n", strstate(state), n);
-
 		dgram_stage(dgram, ops->write(dgram_data(dgram), n, dgram_last(dgram, n), i2c->hw));
+
+		DEBUG("write %zu\n", n);
 		break;
 
-
-	/* master read */
+	/* read */
 	case I2C_STATE_MST_RD_DATA_ACK:
 	case I2C_STATE_MST_RD_DATA_NACK:
+	case I2C_STATE_SLA_RD_DATA_ACK:
+	case I2C_STATE_SLA_RD_DATA_NACK:
 		n = ops->read(dgram_data(dgram), dgram->staged, i2c->hw);
-		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
-
 		dgram_commit(dgram, n);
 
-		if(dgram_complete(dgram) || state == I2C_STATE_MST_RD_DATA_NACK)
-			return complete(i2c, 0, true);
+		DEBUG("read %zu\n", n);
+
+		if(dgram_complete(dgram) || state == I2C_STATE_MST_RD_DATA_NACK || state == I2C_STATE_SLA_RD_DATA_NACK)
+			return complete(i2c, 0, (bool)(state & I2C_STATE_MASTER));
 
 		if(dgram->staged)
 			break;
 
 		// fall through
 	case I2C_STATE_MST_RD_ACK:
-		dgram_stage(dgram, ops->ack(dgram_chunk(dgram), i2c->hw));
-		DEBUG("sla-r: state=%s, staged=%zu\n", strstate(state), dgram->staged);
-		break;
-
-
-	/* no state change */
-	case I2C_STATE_NONE:
-		break;
-
-	/* error */
-	case I2C_STATE_ERROR:
-	default:
-		return complete(i2c, E_IO, true);
-	}
-
-	return 1;
-}
-
-static int slave_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
-	i2c_ops_t *ops = &i2c->ops;
-	size_t n;
-
-
-	switch(state){
-	case I2C_STATE_NEXT_CMD:
-		DEBUG("make addressable\n");
-		i2c->ops.idle(true, false, i2c->hw);
-		break;
-
-	/* slave read */
-	case I2C_STATE_SLA_RD_DATA_ACK:
-	case I2C_STATE_SLA_RD_DATA_NACK:
-		n = ops->read(dgram_data(dgram), dgram->staged, i2c->hw);
-		DEBUG("read: state=%s, n=%zu\n", strstate(state), n);
-
-		dgram_commit(dgram, n);
-
-		if(dgram_complete(dgram) || state == I2C_STATE_SLA_RD_DATA_NACK)
-			return complete(i2c, 0, false);
-
-		if(dgram->staged)
-			break;
-
-		// fall through
-	// NOTE lost arbitration does not require any special treatment since the last master
-	// 		command will be continued once the slave transmission has beem finished
 	case I2C_STATE_SLA_RD_MATCH:
 		dgram_stage(dgram, ops->ack(dgram_chunk(dgram), i2c->hw));
-
-		DEBUG("match: state=%s, staged=%zu\n", strstate(state), dgram->staged);
+		DEBUG("staged %zu\n", dgram->staged);
 		break;
-
-	case I2C_STATE_SLA_RD_STOP:
-		DEBUG("stop: state=%s\n", strstate(state));
-		return complete(i2c, 0, false);
-
-
-	/* slave write */
-	case I2C_STATE_SLA_WR_DATA_ACK:
-	case I2C_STATE_SLA_WR_DATA_NACK:
-		DEBUG("(n)ack: state=%s\n", strstate(state));
-
-		dgram_commit(dgram, ops->acked(dgram->staged, i2c->hw));
-
-		if(dgram_complete(dgram) || state == I2C_STATE_SLA_WR_DATA_NACK)
-			return complete(i2c, 0, false);
-
-		if(dgram->staged)
-			break;
-
-		// fall through
-	// NOTE lost arbitration does not require any special treatment since the last master
-	// 		command will be continued once the slave transmission has beem finished
-	case I2C_STATE_SLA_WR_MATCH:
-		n = dgram_chunk(dgram);
-		DEBUG("write: state=%s, n=%zu\n", strstate(state), n);
-
-		dgram_stage(dgram, ops->write(dgram_data(dgram), n, dgram_last(dgram, n), i2c->hw));
-		break;
-
 
 	/* no state change */
 	case I2C_STATE_NONE:
 		break;
 
-	/* error */
+	/* end states */
+	case I2C_STATE_SLA_RD_STOP:
+		return complete(i2c, 0, false);
+
+	case I2C_STATE_MST_START_NACK:
 	case I2C_STATE_ERROR:
 	default:
-		return complete(i2c, E_IO, true);
+		return complete(i2c, (state == I2C_STATE_MST_START_NACK) ? E_NOCONN : E_IO, true);
 	}
 
 	return 1;
@@ -404,7 +336,8 @@ static char const *strstate(i2c_state_t state){
 	case I2C_STATE_SPECIAL:				return "special";
 	case I2C_STATE_MASTER:				return "mst";
 	case I2C_STATE_SLAVE:				return "sla";
-	case I2C_STATE_NEXT_CMD:			return "next";
+	case I2C_STATE_NEXT_MST:			return "next-mst";
+	case I2C_STATE_NEXT_SLA:			return "next-sla";
 	case I2C_STATE_ERROR:				return "error";
 	case I2C_STATE_NONE:				return "none";
 	case I2C_STATE_MST_START:			return "mst-start";
