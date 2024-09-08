@@ -106,16 +106,21 @@ size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_
 	i2c_dgram_t dgram;
 
 
-	if(i2c_address_reserved(slave)){
-		set_errno(E_INVAL);
-
-		return 0;
+	if(slave == 0 && mode == I2C_MASTER){
+		if(cmd == I2C_READ) // reject general call reads
+			goto_errno(err, E_INVAL);
 	}
+	else if(i2c_address_reserved(slave))
+		goto_errno(err, E_INVAL);
 
 	DEBUG("issue cmd: mode=%s, slave=%u, bufs=%zu\n", (mode == I2C_MASTER) ? "master" : "slave", slave, n);
 	dgram_init(&dgram, mode, cmd, slave, bufs, n);
 
 	return (i2c->cfg->int_num ? int_cmd(i2c, &dgram) : poll_cmd(i2c, &dgram));
+
+
+err:
+	return 0;
 }
 
 bool i2c_address_reserved(uint8_t addr){
