@@ -165,24 +165,31 @@ static void int_hdlr(int_num_t num, void *payload){
 }
 
 static int dgram_hdlr(i2c_t *i2c, i2c_dgram_t *dgram){
-	int r;
-	i2c_state_t state;
-
+	int r = 1;
+	i2c_state_t state[2] = { 0 };
 
 
 	mutex_lock(&i2c->mtx);
 
-	if(i2c->dgram != dgram){
-		state = (dgram->mode == I2C_MASTER) ? I2C_STATE_NEXT_MST : I2C_STATE_NEXT_SLA;
-		i2c->dgram = dgram;
+	while(r > 0){
+		state[0] = state[1];
+
+		if(i2c->dgram != dgram){
+			state[1] = (dgram->mode == I2C_MASTER) ? I2C_STATE_NEXT_MST : I2C_STATE_NEXT_SLA;
+			i2c->dgram = dgram;
+		}
+		else
+			state[1] = i2c->ops.state(i2c->hw);
+
+		// detect mismatch between hardware and dgram mode
+		if(!(state[1] & I2C_STATE_SPECIAL) && ((dgram->mode == I2C_SLAVE) != (bool)(state[1] & I2C_STATE_SLAVE)))
+			state[1] = I2C_STATE_ERROR;
+
+		if(state[0] == state[1])
+			break;
+
+		r = protocol_hdlr(i2c, dgram, state[1]);
 	}
-	else
-		state = i2c->ops.state(i2c->hw);
-
-	if(!(state & I2C_STATE_BIT_SPECIAL) && dgram->mode != ((state & I2C_STATE_BIT_MASTER) ? I2C_MASTER : I2C_SLAVE))
-		state = I2C_STATE_ERROR;
-
-	r = protocol_hdlr(i2c, dgram, state);
 
 	mutex_unlock(&i2c->mtx);
 
