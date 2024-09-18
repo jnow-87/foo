@@ -18,7 +18,7 @@ static int init(void){
 	//  - PLLs since some clocks might still use them as source, e.g. after a warm reset
 	rp2040_resets_halt(~((0x1 << RP2040_RST_IO_QSPI) | (0x1 << RP2040_RST_PADS_QSPI) | (0x1 << RP2040_RST_PLL_SYS)));
 	rp2040_clocks_init();
-	rp2040_iomux_init();
+	rp2040_pads_init();
 
 	return 0;
 }

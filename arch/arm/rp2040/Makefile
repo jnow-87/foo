@@ -17,7 +17,7 @@ obj-y := \
 	bootloader.o \
 	clocks.o \
 	core.o \
-	iomux.o \
+	pads.o \
 	resets.o \
 	soc.o
 

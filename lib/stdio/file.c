@@ -274,15 +274,17 @@ int fputs(char const *s, FILE *stream){
 }
 
 int fflush(FILE *stream){
+	size_t widx;
+
+
 	if(stream == 0x0)
 		return EOF;
 
-	if(stream->widx > 0){
-		if(write(stream->fileno, stream->wbuf, stream->widx) < 0)
-			return EOF;
+	widx = stream->widx;
+	stream->widx = 0;
 
-		stream->widx = 0;
-	}
+	if(widx > 0 && write(stream->fileno, stream->wbuf, widx) < 0)
+		return EOF;
 
 	return 0;
 }

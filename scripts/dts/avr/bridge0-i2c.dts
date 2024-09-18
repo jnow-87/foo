@@ -17,11 +17,10 @@ i2c0 = {
 	int<8> = [ 0x80 ];			// PRR0_PRTWI
 
 	/* i2c config (i2c_cfg_t) */
-	int<8> = [ 1 ];				// mode (master)
 	int<16> = [ 100 ];			// clock (100kHz)
 	int<8> = [
 	   1,						// broadcast (enabled)
-	   1,						// address
+	   16,						// address
 	   0,						// interrupt
 	];
 

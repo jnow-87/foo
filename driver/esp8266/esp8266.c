@@ -627,7 +627,7 @@ static void tx_hdlr(int_num_t num, void *payload){
 	tx_dgram_t *dgram;
 
 
-	dgram = itask_query_payload(&esp->tx_queue, tx_complete);
+	dgram = itask_payload(&esp->tx_queue, tx_complete);
 
 	if(dgram == 0x0)
 		return;

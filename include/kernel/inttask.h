@@ -42,7 +42,7 @@ void itask_queue_destroy(itask_queue_t *queue);
 
 int itask_issue(itask_queue_t *queue, void *payload, int_num_t num);
 void itask_complete(itask_queue_t *queue, errno_t errnum);
-void *itask_query_payload(itask_queue_t *queue, int (*complete)(void *payload));
+void *itask_payload(itask_queue_t *queue, int (*complete)(void *payload));
 
 
 #endif // KERNEL_INTTASK_H

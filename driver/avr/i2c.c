@@ -65,13 +65,14 @@ static int configure(i2c_cfg_t *cfg, void *hw);
 
 static i2c_state_t state(void *hw);
 static void start(void *hw);
-static void ack(bool ack, void *hw);
+static size_t ack(size_t remaining, void *hw);
+static size_t acked(size_t staged, void *hw);
 
-static void slave_mode(bool addressable, bool stop, void *hw);
-static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw);
+static void idle(bool addressable, bool stop, void *hw);
+static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw);
 
-static uint8_t byte_read(void *hw);
-static void byte_write(uint8_t c, bool ack, void *hw);
+static size_t read(uint8_t *buf, size_t n, void *hw);
+static size_t write(uint8_t *buf, size_t n, bool last, void *hw);
 
 
 /* local functions */
@@ -84,12 +85,11 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.state = state;
 	ops.start = start;
 	ops.ack = ack;
-	ops.slave_mode = slave_mode;
-	ops.slave_addr = slave_addr;
-	ops.byte_read = byte_read;
-	ops.byte_write = byte_write;
-	ops.read = 0x0;
-	ops.write = 0x0;
+	ops.acked = acked;
+	ops.idle = idle;
+	ops.connect = connect;
+	ops.read = read;
+	ops.write = write;
 
 	return i2c_create(&ops, &dtd->cfg, dtd);
 }
@@ -113,7 +113,7 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 
 	/* compute baud rate */
 	// NOTE assumption: TWSR[TWPS] = 0
-	brate = ((AVR_IO_CLOCK_HZ / (cfg->clock_khz * 1000)) - 16) / 2;
+	brate = (((AVR_IO_CLOCK_HZ / 1000) / cfg->clock_khz) - 16) / 2;
 
 	if(brate == 0)
 		return_errno(E_INVAL);
@@ -127,10 +127,10 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 	regs->twsr = 0x0;
 	regs->twbr = brate;
 	regs->twamr = 0x0;
-	regs->twar = cfg->addr << 0x1 | ((cfg->bcast_en ? 0x1 : 0x0) << TWAR_TWGCE);
+	regs->twar = cfg->addr << 0x1 | (((bool)cfg->bcast_en) << TWAR_TWGCE);
 	regs->twcr = (0x1 << TWCR_TWEN)
 			   | (0x0 << TWCR_TWEA)
-			   | ((cfg->int_num ? 0x1 : 0x0) << TWCR_TWIE)
+			   | (((bool)cfg->int_num) << TWCR_TWIE)
 			   ;
 
 	return 0;
@@ -145,32 +145,32 @@ static i2c_state_t state(void *hw){
 
 	switch(regs->twsr & ~(0x3 << TWSR_TWPS)){
 	case 0x08:	return I2C_STATE_MST_START;
-	case 0x10:	return I2C_STATE_MST_RESTART;
-	case 0x18:	return I2C_STATE_MST_SLAW_ACK;
-	case 0x20:	return I2C_STATE_MST_SLAW_NACK;
-	case 0x28:	return I2C_STATE_MST_SLAW_DATA_ACK;
-	case 0x30:	return I2C_STATE_MST_SLAW_DATA_NACK;
-	case 0x40:	return I2C_STATE_MST_SLAR_ACK;
-	case 0x48:	return I2C_STATE_MST_SLAR_NACK;
-	case 0x50:	return I2C_STATE_MST_SLAR_DATA_ACK;
-	case 0x58:	return I2C_STATE_MST_SLAR_DATA_NACK;
+	case 0x10:	return I2C_STATE_MST_START;
+	case 0x20:	return I2C_STATE_MST_START_NACK;
+	case 0x48:	return I2C_STATE_MST_START_NACK;
+	case 0x18:	return I2C_STATE_MST_WR_ACK;
+	case 0x28:	return I2C_STATE_MST_WR_DATA_ACK;
+	case 0x30:	return I2C_STATE_MST_WR_DATA_NACK;
+	case 0x40:	return I2C_STATE_MST_RD_ACK;
+	case 0x50:	return I2C_STATE_MST_RD_DATA_ACK;
+	case 0x58:	return I2C_STATE_MST_RD_DATA_NACK;
 	case 0x38:	return I2C_STATE_MST_ARBLOST;
-	case 0x60:	return I2C_STATE_SLA_SLAW_MATCH;
-	case 0x68:	return I2C_STATE_SLA_SLAW_ARBLOST_ADDR_MATCH;
-	case 0xa8:	return I2C_STATE_SLA_SLAR_ADDR_MATCH;
-	case 0xb0:	return I2C_STATE_SLA_SLAR_ARBLOST_ADDR_MATCH;
-	case 0x70:	return I2C_STATE_SLA_BCAST_MATCH;
-	case 0x78:	return I2C_STATE_SLA_BCAST_ARBLOST_MATCH;
-	case 0x80:	return I2C_STATE_SLA_SLAW_DATA_ACK;
-	case 0x88:	return I2C_STATE_SLA_SLAW_DATA_NACK;
-	case 0x90:	return I2C_STATE_SLA_BCAST_DATA_ACK;
-	case 0x98:	return I2C_STATE_SLA_BCAST_DATA_NACK;
-	case 0xa0:	return I2C_STATE_SLA_SLAW_STOP;
-	case 0xb8:	return I2C_STATE_SLA_SLAR_DATA_ACK;
-	case 0xc0:	return I2C_STATE_SLA_SLAR_DATA_NACK;
-	case 0xc8:	return I2C_STATE_SLA_SLAR_DATA_LAST_ACK;
+	case 0x60:	return I2C_STATE_SLA_RD_MATCH;
+	case 0x68:	return I2C_STATE_SLA_RD_MATCH;
+	case 0x70:	return I2C_STATE_SLA_RD_MATCH;
+	case 0x78:	return I2C_STATE_SLA_RD_MATCH;
+	case 0x80:	return I2C_STATE_SLA_RD_DATA_ACK;
+	case 0x90:	return I2C_STATE_SLA_RD_DATA_ACK;
+	case 0x88:	return I2C_STATE_SLA_RD_DATA_NACK;
+	case 0x98:	return I2C_STATE_SLA_RD_DATA_NACK;
+	case 0xa0:	return I2C_STATE_SLA_RD_STOP;
+	case 0xa8:	return I2C_STATE_SLA_WR_MATCH;
+	case 0xb0:	return I2C_STATE_SLA_WR_MATCH;
+	case 0xb8:	return I2C_STATE_SLA_WR_DATA_ACK;
+	case 0xc8:	return I2C_STATE_SLA_WR_DATA_ACK;
+	case 0xc0:	return I2C_STATE_SLA_WR_DATA_NACK;
 	case 0x00:	return I2C_STATE_ERROR;
-	default:	return I2C_STATE_INVAL;
+	default:	return I2C_STATE_ERROR;
 	}
 }
 
@@ -183,42 +183,52 @@ static void start(void *hw){
 			   ;
 }
 
-static void ack(bool ack, void *hw){
+static size_t ack(size_t remaining, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
 	regs->twcr &= ~(0x1 << TWCR_TWEA);
-	regs->twcr |= ((ack ? 0x1 : 0x0) << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+	regs->twcr |= ((remaining > 1) << TWCR_TWEA) | (0x1 << TWCR_TWINT);
+
+	return 1;
 }
 
-static void slave_mode(bool addressable, bool stop, void *hw){
+static size_t acked(size_t staged, void *hw){
+	return staged;
+}
+
+static void idle(bool addressable, bool stop, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
-			   | ((addressable ? 0x1 : 0x0) << TWCR_TWEA)
+			   | (addressable << TWCR_TWEA)
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)
-			   | ((stop ? 0x1 : 0x0)  << TWCR_TWSTO)
+			   | (stop << TWCR_TWSTO)
 			   ;
 }
 
-static void slave_addr(i2c_cmd_t cmd, uint8_t slave, void *hw){
+static void connect(i2c_cmd_t cmd, uint8_t slave, void *hw){
 	i2c_regs_t *regs = ((dt_data_t*)hw)->regs;
 
 
-	regs->twdr = (slave << TWDR_ADDR) | (((cmd & I2C_CMD_READ) ? 0x1 : 0x0) << TWDR_RW);
+	regs->twdr = (slave << TWDR_ADDR) | ((cmd == I2C_READ) << TWDR_RW);
 	regs->twcr = (regs->twcr & (0x1 << TWCR_TWIE))
 			   | (0x1 << TWCR_TWEN)
 			   | (0x1 << TWCR_TWINT)
 			   ;
 }
 
-static uint8_t byte_read(void *hw){
-	return ((dt_data_t*)hw)->regs->twdr;
+static size_t read(uint8_t *buf, size_t n, void *hw){
+	buf[0] = ((dt_data_t*)hw)->regs->twdr;
+
+	return 1;
 }
 
-static void byte_write(uint8_t c, bool last, void *hw){
-	((dt_data_t*)hw)->regs->twdr = c;
-	ack(!last, hw);
+static size_t write(uint8_t *buf, size_t n, bool last, void *hw){
+	((dt_data_t*)hw)->regs->twdr = buf[0];
+
+	// only the last byte must not be acknowledged
+	return ack((last && n == 1) ? 1 : 2, hw);
 }

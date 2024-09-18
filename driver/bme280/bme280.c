@@ -157,13 +157,19 @@ static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *data, size_t n){
 	envsensor_t v;
 
 
-	if(read_sensor(dev->payload, &v) != 0)
-		return 0;
+	if(n != sizeof(envsensor_t))
+		goto_errno(err, E_INVAL);
 
-	n = MIN(n, sizeof(envsensor_t));
+	if(read_sensor(dev->payload, &v) != 0)
+		goto err;
+
 	memcpy(data, &v, n);
 
 	return n;
+
+
+err:
+	return 0;
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
@@ -382,15 +388,12 @@ static int wait_update(dev_data_t *bme){
 }
 
 static int reg_r(dev_data_t *bme, uint8_t addr, uint8_t *v, size_t n){
-	if(i2c_write(bme->i2c, bme->dtd->addr, &addr, 1) != 0)
+	if(i2c_write(bme->i2c, I2C_MASTER, bme->dtd->addr, &addr, 1) != 1)
 		return -1;
 
-	return i2c_read(bme->i2c, bme->dtd->addr, v, n);
+	return (i2c_read(bme->i2c, I2C_MASTER, bme->dtd->addr, v, n) != n);
 }
 
 static int reg_w(dev_data_t *bme, uint8_t addr, uint8_t val){
-	uint8_t data[] = { addr, val };
-
-
-	return i2c_write(bme->i2c, bme->dtd->addr, data, 2);
+	return (i2c_write(bme->i2c, I2C_MASTER, bme->dtd->addr, (uint8_t []){ addr, val }, 2) != 2);
 }

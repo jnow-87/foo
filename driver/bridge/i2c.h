@@ -21,8 +21,8 @@
 typedef struct{
 	uint8_t cmd;
 	uint8_t slave;
-	uint8_t nbuf,
-			len;
+	uint8_t last;
+	uint8_t len;
 	uint8_t buf[CONFIG_BRIDGE_I2C_INLINE_DATA];
 } __packed i2cbrdg_hdr_t;
 

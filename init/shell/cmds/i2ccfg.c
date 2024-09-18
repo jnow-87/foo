@@ -7,9 +7,10 @@
 
 
 
-#include <sys/stdarg.h>
-#include <sys/ioctl.h>
 #include <sys/errno.h>
+#include <sys/i2c.h>
+#include <sys/ioctl.h>
+#include <sys/stdarg.h>
 #include <sys/string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,32 +20,39 @@
 
 
 /* macros */
-#define ARGS	"<device> <7-bit slave>"
+#define ARGS	"<device> master <7-bit slave> | <device> slave"
 #define OPTS	""
 
 
 /* local functions */
 static int exec(int argc, char **argv){
 	int fd;
-	uint8_t slave;
+	char *dev;
+	i2c_dev_cfg_t cfg;
 
 
 	/* check options */
-	if(argc != 3)
+	if(argc < 3)
 		return CMD_HELP(argv[0], 0x0);
 
-	slave = atoi(argv[2]);
+	dev = argv[1];
+	cfg.mode = (strcmp(argv[2], "master") == 0) ? I2C_MASTER : I2C_SLAVE;
+	cfg.slave = 0xf0;
 
-	if(slave & 0x80)
-		return CMD_HELP(argv[0], "invalid slave address");
+	if(cfg.mode == I2C_MASTER){
+		if(argc != 4)
+			return CMD_HELP(argv[0], 0x0);
+
+		cfg.slave = atoi(argv[3]);
+	}
 
 	/* apply configuration */
-	fd = open(argv[1], O_RDWR);
+	fd = open(dev, O_RDWR);
 
 	if(fd < 0)
-		return -ERROR("opening %s", argv[1]);
+		return -ERROR("opening %s", dev);
 
-	if(ioctl(fd, IOCTL_CFGWR, &slave) != 0)
+	if(ioctl(fd, IOCTL_CFGWR, &cfg) != 0)
 		return -ERROR("ioctl");
 
 	return 0;

@@ -24,7 +24,7 @@ void itask_queue_init(itask_queue_t *queue){
 }
 
 void itask_queue_destroy(itask_queue_t *queue){
-	while(itask_query_payload(queue, 0x0)){
+	while(itask_payload(queue, 0x0)){
 		itask_complete(queue, E_END);
 	}
 }
@@ -68,7 +68,7 @@ void itask_complete(itask_queue_t *queue, errno_t errnum){
 	mutex_unlock(&queue->mtx);
 }
 
-void *itask_query_payload(itask_queue_t *queue, int (*complete)(void *payload)){
+void *itask_payload(itask_queue_t *queue, int (*complete)(void *payload)){
 	int e;
 	itask_t *task;
 

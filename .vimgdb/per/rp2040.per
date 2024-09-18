@@ -33,7 +33,7 @@ range 0xe000ed00 40{
 			bits "VECTACTIVE"	0	9
 		}
 
-		register "VTOR"		"Vector Table Offset Regiter"	0x08	4{
+		register "VTOR"		"Vector Table Offset Register"	0x08	4{
 			bits "TBLOFF"		8	24
 		}
 
@@ -1680,6 +1680,534 @@ range 0x40038000 76{
 			bits "DMAONERR"	2	1
 			bits "TXDMAE"	1	1
 			bits "RXDMAE"	0	1
+		}
+	}
+}
+
+range 0x40044000 256{
+	section "Inter-Integrated Circuit 0 (I2C0)"{
+		heading "Control and Status"
+		register "IC_CON"					"Control Register"													0x00	4{
+			bits "STOP_DET_IF_MASTER_ACTIVE"	10	1
+			bits "RX_FIFO_FULL_HLD_CTRL"		9	1
+			bits "TX_EMPTY_CTRL"				8	1
+			bits "STOP_DET_IF_ADDRESSED"		7	1
+			bits "IC_SLAVE_DISABLED"			6	1
+			bits "IC_RESTART_EN"				5	1
+			bits "IC_10BITADDR_MASTER"			4	1
+			bits "IC_10BITADDR_SLAVE"			3	1
+			bits "SPEED"						1	2
+			bits "MASTER_MODE"					0	1
+		}
+
+		register "IC_ENABLE"				"Enable Register"													0x6c	4{
+			bits "TX_CMD_BLOCK"	2	1
+			bits "ABORT"		1	1
+			bits "ENABLE"		0	1
+		}
+
+		register "IC_ACK_GENERAL_CALL"		"ACK General Call Register"											0x98	4{
+			bits "ACK_GEN_CALL"	0	1
+		}
+
+		register "IC_SLV_DATA_NACK_ONLY"	"Generate Slave Data NACK Register"									0x84	4{
+			bits "NACK"	0	1
+		}
+
+		register "IC_STATUS"				"Status Register"													0x70	4{
+			bits "SLV_ACTIVITY"			6	1
+			bits "MST_ACTIVITY"			5	1
+			bits "RX_FIFO_FULL"			4	1
+			bits "RX_FIFO_NOT_EMPTY"	3	1			
+			bits "TX_FIFO_EMPTY"		2	1
+			bits "TX_FIFO_NOT_FULL"		1	1
+			bits "ACTIVITY"				0	1
+		}
+
+		register "IC_ENABLE_STATUS"			"Enable Status Register"											0x9c	4{
+			bits "SLV_RX_DATA_LOST"			2	1
+			bits "SLV_DISABLED_WHILE_BUSY"	1	1
+			bits "IC_EN"					0	1
+		}
+
+		register "IC_TAR"					"Target Address Register"											0x04	4{
+			bits "SPECIAL"		11	1
+			bits "GC_OR_START"	10	1
+			bits "IC_TAR"		0	10
+		}
+
+		register "IC_SAR"					"Slave Address Register"											0x08	4{
+			bits "IC_SAR"		0	10
+		}
+
+		register "IC_DATA_CMD"				"RX/TX Data Buffer and Command Register"							0x10	4{
+			bits "FIRST_DATA_BYTE"	11	1
+			bits "RESTART"			10	1
+			bits "STOP"				9	1
+			bits "CMD"				8	1
+			bits "DAT"				0	8
+		}
+
+		heading "FIFO Control and Status"
+		register "IC_RX_TL"					"Receive FIFO Threshold Register"									0x38	4{
+			bits "LEVEL"		0	8
+		}
+
+		register "IC_TX_TL"					"Transmit FIFO Threshold Register"									0x3c	4{
+			bits "LEVEL"		0	8
+		}
+
+		register "IC_TXFLR"					"Transmit FIFO Level Register"										0x74	4{
+			bits "LEVEL"	0	5
+		}
+
+		register "IC_RXFLR"					"Receive FIFO Level Register"										0x78	4{
+			bits "LEVEL"	0	5
+		}
+
+		heading "DMA Control"
+		register "IC_DMA_CR"				"DMA Control Register"												0x88	4{
+			bits "TDMAE"	1	1
+			bits "RDMAE"	0	1
+		}
+
+		register "IC_DMA_TDLR"				"DMA Transmit Data Level Register"									0x8c	4{
+			bits "DMATDL"	0	4
+		}
+
+		register "IC_DMA_RDLR"				"DMA Receive Data Level Register"									0x90	4{
+			bits "DMARDL"	0	4
+		}
+
+		heading "Interrupt Control and Status"
+		register "IC_INTR_MASK"				"Interrupt Mask Register"											0x30	4{
+			bits "RESTART_DET"	12	1
+			bits "GEN_CALL"		11	1
+			bits "START_DET"	10	1
+			bits "STOP_DET"		9	1
+			bits "ACTIVITY"		8	1
+			bits "RX_DONE"		7	1
+			bits "TX_ABRT"		6	1
+			bits "RD_REQ"		5	1
+			bits "TX_EMPTY"		4	1
+			bits "TX_OVER"		3	1
+			bits "RX_FULL"		2	1
+			bits "RX_OVER"		1	1
+			bits "RX_UNDER"		0	1
+		}
+
+		register "IC_INTR_STAT"				"Interrupt Status Register"											0x2c	4{
+			bits "RESTART_DET"	12	1
+			bits "GEN_CALL"		11	1
+			bits "START_DET"	10	1
+			bits "STOP_DET"		9	1
+			bits "ACTIVITY"		8	1
+			bits "RX_DONE"		7	1
+			bits "TX_ABRT"		6	1
+			bits "RD_REQ"		5	1
+			bits "TX_EMPTY"		4	1
+			bits "TX_OVER"		3	1
+			bits "RX_FULL"		2	1
+			bits "RX_OVER"		1	1
+			bits "RX_UNDER"		0	1
+		}
+
+		register "IC_RAW_INTR_STAT"			"Raw Interrupt Status Register"										0x34	4{
+			bits "RESTART_DET"	12	1
+			bits "GEN_CALL"		11	1
+			bits "START_DET"	10	1
+			bits "STOP_DET"		9	1
+			bits "ACTIVITY"		8	1
+			bits "RX_DONE"		7	1
+			bits "TX_ABRT"		6	1
+			bits "RD_REQ"		5	1
+			bits "TX_EMPTY"		4	1
+			bits "TX_OVER"		3	1
+			bits "RX_FULL"		2	1
+			bits "RX_OVER"		1	1
+			bits "RX_UNDER"		0	1
+		}
+
+		register "IC_TX_ABRT_SOURCE"		"Transmit Abort Source Register"									0x80	4{
+			bits "TX_FLUSH_CNT"		23	9
+			bits "USER_ABRT"		16	1
+			bits "SLVRD_INTX"		15	1
+			bits "SLV_ARBLIST"		14	1
+			bits "SLVFLUSH_TXFIFO"	13	1
+			bits "LOST"				12	1
+			bits "MST_DIS"			11	1
+			bits "10B_RD_NORSTRT"	10	1
+			bits "SBYTE_NORSTRT"	9	1
+			bits "HS_NORSTRT"		8	1
+			bits "SBYTE_ACKDET"		7	1
+			bits "HS_ACKDET"		6	1
+			bits "GCALL_READ"		5	1
+			bits "GCAL_NOACK"		4	1
+			bits "TXDATA_NOACK"		3	1
+			bits "10ADDR2_NOACK"	2	1
+			bits "10ADDR1_NOACK"	1	1
+			bits "7B_ADDR_NOACK"	0	1
+		}
+
+		register "IC_CLR_INTR"				"Clear Combined and Individual Interrupt Register"					0x40	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RX_UNDER"			"Clear RX_UNDER Interrupt Register"									0x44	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RX_OVER"			"Clear RX_OVER Interrupt Register"									0x48	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_TX_OVER"			"Clear TX_OVER Interrupt Register"									0x4c	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RD_REQ"			"Clear RD_REQI Interrupt Register"									0x50	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_TX_ABRT"			"Clear TX_ABRT Interrupt Register"									0x54	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RX_DONE"			"Clear RX_DONE Interrupt Register"									0x58	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_ACTIVITY"			"Clear ACTIVITY Interrupt Register"									0x5c	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_STOP_DET"			"Clear STOP_DET Interrupt Register"									0x60	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_START_DET"			"Clear START_DET Interrupt Register"								0x64	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_GEN_CALL"			"Clear GEN_CALL Interrupt Register"									0x68	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RESTART_DET"		"Clear RESTART_DET Interrupt Register"								0xa8	4{
+			bits "CLR"	0	1
+		}
+
+		heading "Timing"
+		register "IC_SDA_SETUP"				"SDA Setup Register"												0x94	4{
+			bits "SETUP"	0	8
+		}
+
+		register "IC_SDA_HOLD"				"SDA Hold Time Length Register"										0x7c	4{
+			bits "SDA_RX_HOLD"	16	8
+			bits "SDA_TX_HOLD"	0	16
+		}
+
+		register "IC_FS_SPKLEN"				"SS, FS or FM+ Spike Suppression Limit"								0xa0	4{
+			bits "LEN"	0	8
+		}
+
+		register "IC_SS_SCL_HCNT"			"Standard Speed i2c Clock SCL High Count Register"					0x14	4{
+			bits "HCNT"	0	16
+		}
+
+		register "IC_SS_SCL_LCNT"			"Standard Speed i2c Clock SCL Low Count Register"					0x18	4{
+			bits "LCNT"	0	16
+		}
+
+		register "IC_FS_SCL_HCNT"			"Fast Mode or Fast Mode Plus i2c Clock SCL High Count Register"		0x1c	4{
+			bits "HCNT"	0	16
+		}
+
+		register "IC_FS_SCL_LCNT"			"Fast Mode or Fast Mode Plus i2c Clock SCL Low Count Register"		0x20	4{
+			bits "LCNT"	0	16
+		}
+
+		register "IC_COMP_PARAM_1"			"Component Parameter Register 1"									0xf4	4{
+			bits "TX_BUFFER_DEPTH"		16	8
+			bits "RX_BUFFER_DEPTH"		8	8
+			bits "ADD_ENCODED_PARAMS"	7	1
+			bits "HAS_DMA"				6	1
+			bits "INTR_IO"				5	1
+			bits "HC_COUNT_VALUES"		4	1
+			bits "MAX_SPEED_MODE"		2	2
+			bits "APB_DATA_WIDTH"		0	2
+		}
+
+		register "IC_COMP_VERSION"			"Component Version Register"										0xf8	4{
+			bits "VERSION"	0	32
+		}
+
+		register "IC_COM_TYPE"				"Component Type Register"											0xfc	4{
+			bits "TYPE"	0	32
+		}
+	}
+}
+
+range 0x40048000 256{
+	section "Inter-Integrated Circuit 1 (I2C1)"{
+		heading "Control and Status"
+		register "IC_CON"					"Control Register"													0x00	4{
+			bits "STOP_DET_IF_MASTER_ACTIVE"	10	1
+			bits "RX_FIFO_FULL_HLD_CTRL"		9	1
+			bits "TX_EMPTY_CTRL"				8	1
+			bits "STOP_DET_IF_ADDRESSED"		7	1
+			bits "IC_SLAVE_DISABLED"			6	1
+			bits "IC_RESTART_EN"				5	1
+			bits "IC_10BITADDR_MASTER"			4	1
+			bits "IC_10BITADDR_SLAVE"			3	1
+			bits "SPEED"						1	2
+			bits "MASTER_MODE"					0	1
+		}
+
+		register "IC_ENABLE"				"Enable Register"													0x6c	4{
+			bits "TX_CMD_BLOCK"	2	1
+			bits "ABORT"		1	1
+			bits "ENABLE"		0	1
+		}
+
+		register "IC_ACK_GENERAL_CALL"		"ACK General Call Register"											0x98	4{
+			bits "ACK_GEN_CALL"	0	1
+		}
+
+		register "IC_SLV_DATA_NACK_ONLY"	"Generate Slave Data NACK Register"									0x84	4{
+			bits "NACK"	0	1
+		}
+
+		register "IC_STATUS"				"Status Register"													0x70	4{
+			bits "SLV_ACTIVITY"			6	1
+			bits "MST_ACTIVITY"			5	1
+			bits "RX_FIFO_FULL"			4	1
+			bits "RX_FIFO_NOT_EMPTY"	3	1			
+			bits "TX_FIFO_EMPTY"		2	1
+			bits "TX_FIFO_NOT_FULL"		1	1
+			bits "ACTIVITY"				0	1
+		}
+
+		register "IC_ENABLE_STATUS"			"Enable Status Register"											0x9c	4{
+			bits "SLV_RX_DATA_LOST"			2	1
+			bits "SLV_DISABLED_WHILE_BUSY"	1	1
+			bits "IC_EN"					0	1
+		}
+
+		register "IC_TAR"					"Target Address Register"											0x04	4{
+			bits "SPECIAL"		11	1
+			bits "GC_OR_START"	10	1
+			bits "IC_TAR"		0	10
+		}
+
+		register "IC_SAR"					"Slave Address Register"											0x08	4{
+			bits "IC_SAR"		0	10
+		}
+
+		register "IC_DATA_CMD"				"RX/TX Data Buffer and Command Register"							0x10	4{
+			bits "FIRST_DATA_BYTE"	11	1
+			bits "RESTART"			10	1
+			bits "STOP"				9	1
+			bits "CMD"				8	1
+			bits "DAT"				0	8
+		}
+
+		heading "FIFO Control and Status"
+		register "IC_RX_TL"					"Receive FIFO Threshold Register"									0x38	4{
+			bits "LEVEL"		0	8
+		}
+
+		register "IC_TX_TL"					"Transmit FIFO Threshold Register"									0x3c	4{
+			bits "LEVEL"		0	8
+		}
+
+		register "IC_TXFLR"					"Transmit FIFO Level Register"										0x74	4{
+			bits "LEVEL"	0	5
+		}
+
+		register "IC_RXFLR"					"Receive FIFO Level Register"										0x78	4{
+			bits "LEVEL"	0	5
+		}
+
+		heading "DMA Control"
+		register "IC_DMA_CR"				"DMA Control Register"												0x88	4{
+			bits "TDMAE"	1	1
+			bits "RDMAE"	0	1
+		}
+
+		register "IC_DMA_TDLR"				"DMA Transmit Data Level Register"									0x8c	4{
+			bits "DMATDL"	0	4
+		}
+
+		register "IC_DMA_RDLR"				"DMA Receive Data Level Register"									0x90	4{
+			bits "DMARDL"	0	4
+		}
+
+		heading "Interrupt Control and Status"
+		register "IC_INTR_MASK"				"Interrupt Mask Register"											0x30	4{
+			bits "RESTART_DET"	12	1
+			bits "GEN_CALL"		11	1
+			bits "START_DET"	10	1
+			bits "STOP_DET"		9	1
+			bits "ACTIVITY"		8	1
+			bits "RX_DONE"		7	1
+			bits "TX_ABRT"		6	1
+			bits "RD_REQ"		5	1
+			bits "TX_EMPTY"		4	1
+			bits "TX_OVER"		3	1
+			bits "RX_FULL"		2	1
+			bits "RX_OVER"		1	1
+			bits "RX_UNDER"		0	1
+		}
+
+		register "IC_INTR_STAT"				"Interrupt Status Register"											0x2c	4{
+			bits "RESTART_DET"	12	1
+			bits "GEN_CALL"		11	1
+			bits "START_DET"	10	1
+			bits "STOP_DET"		9	1
+			bits "ACTIVITY"		8	1
+			bits "RX_DONE"		7	1
+			bits "TX_ABRT"		6	1
+			bits "RD_REQ"		5	1
+			bits "TX_EMPTY"		4	1
+			bits "TX_OVER"		3	1
+			bits "RX_FULL"		2	1
+			bits "RX_OVER"		1	1
+			bits "RX_UNDER"		0	1
+		}
+
+		register "IC_RAW_INTR_STAT"			"Raw Interrupt Status Register"										0x34	4{
+			bits "RESTART_DET"	12	1
+			bits "GEN_CALL"		11	1
+			bits "START_DET"	10	1
+			bits "STOP_DET"		9	1
+			bits "ACTIVITY"		8	1
+			bits "RX_DONE"		7	1
+			bits "TX_ABRT"		6	1
+			bits "RD_REQ"		5	1
+			bits "TX_EMPTY"		4	1
+			bits "TX_OVER"		3	1
+			bits "RX_FULL"		2	1
+			bits "RX_OVER"		1	1
+			bits "RX_UNDER"		0	1
+		}
+
+		register "IC_TX_ABRT_SOURCE"		"Transmit Abort Source Register"									0x80	4{
+			bits "TX_FLUSH_CNT"		23	9
+			bits "USER_ABRT"		16	1
+			bits "SLVRD_INTX"		15	1
+			bits "SLV_ARBLIST"		14	1
+			bits "SLVFLUSH_TXFIFO"	13	1
+			bits "LOST"				12	1
+			bits "MST_DIS"			11	1
+			bits "10B_RD_NORSTRT"	10	1
+			bits "SBYTE_NORSTRT"	9	1
+			bits "HS_NORSTRT"		8	1
+			bits "SBYTE_ACKDET"		7	1
+			bits "HS_ACKDET"		6	1
+			bits "GCALL_READ"		5	1
+			bits "GCAL_NOACK"		4	1
+			bits "TXDATA_NOACK"		3	1
+			bits "10ADDR2_NOACK"	2	1
+			bits "10ADDR1_NOACK"	1	1
+			bits "7B_ADDR_NOACK"	0	1
+		}
+
+		register "IC_CLR_INTR"				"Clear Combined and Individual Interrupt Register"					0x40	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RX_UNDER"			"Clear RX_UNDER Interrupt Register"									0x44	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RX_OVER"			"Clear RX_OVER Interrupt Register"									0x48	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_TX_OVER"			"Clear TX_OVER Interrupt Register"									0x4c	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RD_REQ"			"Clear RD_REQI Interrupt Register"									0x50	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_TX_ABRT"			"Clear TX_ABRT Interrupt Register"									0x54	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RX_DONE"			"Clear RX_DONE Interrupt Register"									0x58	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_ACTIVITY"			"Clear ACTIVITY Interrupt Register"									0x5c	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_STOP_DET"			"Clear STOP_DET Interrupt Register"									0x60	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_START_DET"			"Clear START_DET Interrupt Register"								0x64	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_GEN_CALL"			"Clear GEN_CALL Interrupt Register"									0x68	4{
+			bits "CLR"	0	1
+		}
+
+		register "IC_CLR_RESTART_DET"		"Clear RESTART_DET Interrupt Register"								0xa8	4{
+			bits "CLR"	0	1
+		}
+
+		heading "Timing"
+		register "IC_SDA_SETUP"				"SDA Setup Register"												0x94	4{
+			bits "SETUP"	0	8
+		}
+
+		register "IC_SDA_HOLD"				"SDA Hold Time Length Register"										0x7c	4{
+			bits "SDA_RX_HOLD"	16	8
+			bits "SDA_TX_HOLD"	0	16
+		}
+
+		register "IC_FS_SPKLEN"				"SS, FS or FM+ Spike Suppression Limit"								0xa0	4{
+			bits "LEN"	0	8
+		}
+
+		register "IC_SS_SCL_HCNT"			"Standard Speed i2c Clock SCL High Count Register"					0x14	4{
+			bits "HCNT"	0	16
+		}
+
+		register "IC_SS_SCL_LCNT"			"Standard Speed i2c Clock SCL Low Count Register"					0x18	4{
+			bits "LCNT"	0	16
+		}
+
+		register "IC_FS_SCL_HCNT"			"Fast Mode or Fast Mode Plus i2c Clock SCL High Count Register"		0x1c	4{
+			bits "HCNT"	0	16
+		}
+
+		register "IC_FS_SCL_LCNT"			"Fast Mode or Fast Mode Plus i2c Clock SCL Low Count Register"		0x20	4{
+			bits "LCNT"	0	16
+		}
+
+		register "IC_COMP_PARAM_1"			"Component Parameter Register 1"									0xf4	4{
+			bits "TX_BUFFER_DEPTH"		16	8
+			bits "RX_BUFFER_DEPTH"		8	8
+			bits "ADD_ENCODED_PARAMS"	7	1
+			bits "HAS_DMA"				6	1
+			bits "INTR_IO"				5	1
+			bits "HC_COUNT_VALUES"		4	1
+			bits "MAX_SPEED_MODE"		2	2
+			bits "APB_DATA_WIDTH"		0	2
+		}
+
+		register "IC_COMP_VERSION"			"Component Version Register"										0xf8	4{
+			bits "VERSION"	0	32
+		}
+
+		register "IC_COM_TYPE"				"Component Type Register"											0xfc	4{
+			bits "TYPE"	0	32
 		}
 	}
 }
