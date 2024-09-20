@@ -97,6 +97,20 @@ typedef struct{
 } i2c_cfg_t;
 
 typedef struct{
+	i2c_mode_t mode;
+	i2c_cmd_t cmd;
+	uint8_t slave;
+
+	blob_t *bufs;
+	size_t nbuf;
+
+	size_t total,
+		   buf_lvl,
+		   staged;
+} i2c_dgram_t;
+
+typedef struct{
+	// callbacks
 	int (*configure)(i2c_cfg_t *cfg, void *hw);
 
 	i2c_state_t (*state)(void *hw);
@@ -110,25 +124,14 @@ typedef struct{
 
 	size_t (*read)(uint8_t *buf, size_t n, void *hw);
 	size_t (*write)(uint8_t *buf, size_t n, bool last, void *hw);
-} i2c_ops_t;
 
-typedef struct{
-	i2c_mode_t mode;
-	i2c_cmd_t cmd;
-	uint8_t slave;
-
-	blob_t *bufs;
-	size_t nbuf;
-
-	size_t total,
-		   buf_lvl,
-		   staged;
-} i2c_dgram_t;
+	// device data
+	void *hw;
+} i2c_itf_t;
 
 typedef struct i2c_t{
 	i2c_cfg_t *cfg;
-	i2c_ops_t ops;
-	void *hw;
+	i2c_itf_t *itf;
 
 	itask_queue_t cmds;
 	i2c_dgram_t *dgram;
@@ -137,9 +140,6 @@ typedef struct i2c_t{
 
 
 /* prototypes */
-i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw);
-void i2c_destroy(i2c_t *i2c);
-
 size_t i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
 size_t i2c_write(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n);
 size_t i2c_xfer(i2c_t *i2c, i2c_mode_t mode, i2c_cmd_t cmd, uint8_t slave, blob_t *bufs, size_t n);

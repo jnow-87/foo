@@ -27,6 +27,8 @@ typedef struct{
 	i2c_state_t state;
 	i2c_cmd_t cmd;
 	uint8_t slave;
+
+	i2c_itf_t itf;
 } dev_data_t;
 
 
@@ -49,43 +51,35 @@ static int ack_check(bridge_t *brdg);
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	bridge_t *dti = (bridge_t*)dt_itf;
 	dev_data_t *i2c;
-	i2c_t *itf;
-	i2c_ops_t ops;
 
 
 	if(dti->cfg->rx_int != 0 || dti->cfg->tx_int != 0)
-		goto_errno(err_0, E_INVAL);
+		goto_errno(err, E_INVAL);
 
 	i2c = kmalloc(sizeof(dev_data_t));
 
 	if(i2c == 0x0)
-		goto err_0;
+		goto err;
 
 	i2c->brdg = dti;
 	i2c->state = I2C_STATE_NONE;
 
-	ops.configure = configure;
-	ops.state = state;
-	ops.start = start;
-	ops.ack = ack;
-	ops.acked = acked;
-	ops.idle = idle;
-	ops.connect = connect;
-	ops.read = read;
-	ops.write = write;
+	i2c->itf.configure = configure;
+	i2c->itf.state = state;
+	i2c->itf.start = start;
+	i2c->itf.ack = ack;
+	i2c->itf.acked = acked;
+	i2c->itf.idle = idle;
+	i2c->itf.connect = connect;
+	i2c->itf.read = read;
+	i2c->itf.write = write;
 
-	itf = i2c_create(&ops, dt_data, i2c);
+	i2c->itf.hw = i2c;
 
-	if(itf == 0x0)
-		goto err_1;
-
-	return itf;
+	return &i2c->itf;
 
 
-err_1:
-	kfree(i2c);
-
-err_0:
+err:
 	return 0x0;
 }
 

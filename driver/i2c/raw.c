@@ -67,7 +67,7 @@ err:
 	return 0x0;
 }
 
-driver_probe("i2c", probe);
+driver_probe("i2c,raw", probe);
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
 	return xfer(dev, fd, I2C_READ, buf, n);

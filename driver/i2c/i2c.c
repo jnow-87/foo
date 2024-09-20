@@ -8,10 +8,11 @@
 
 
 #include <config/config.h>
-#include <kernel/memory.h>
-#include <kernel/kprintf.h>
+#include <kernel/driver.h>
 #include <kernel/interrupt.h>
 #include <kernel/inttask.h>
+#include <kernel/kprintf.h>
+#include <kernel/memory.h>
 #include <driver/i2c.h>
 #include <sys/blob.h>
 #include <sys/errno.h>
@@ -45,55 +46,8 @@ static bool dgram_complete(i2c_dgram_t *dgram);
 static char const *strstate(i2c_state_t state);
 #endif // BUILD_KERNEL_LOG_DEBUG
 
+
 /* global functions */
-i2c_t *i2c_create(i2c_ops_t *ops, i2c_cfg_t *cfg, void *hw){
-	i2c_t *i2c;
-
-
-	if(i2c_address_reserved(cfg->addr))
-		goto_errno(err_0, E_INVAL);
-
-	/* allocated device */
-	i2c = kcalloc(1, sizeof(i2c_t));
-
-	if(i2c == 0x0)
-		goto err_0;
-
-	i2c->cfg = cfg;
-	i2c->hw = hw;
-
-	memcpy(&i2c->ops, ops, sizeof(i2c_ops_t));
-
-	mutex_init(&i2c->mtx, MTX_NOINT);
-	itask_queue_init(&i2c->cmds);
-
-	/* configure device */
-	if(ops->configure(i2c->cfg, i2c->hw) != 0)
-		goto err_1;
-
-	if(cfg->int_num && int_register(cfg->int_num, int_hdlr, i2c) != 0)
-		goto err_1;
-
-	ops->idle(false, false, hw);
-
-	return i2c;
-
-
-err_1:
-	i2c_destroy(i2c);
-
-err_0:
-	return 0x0;
-}
-
-void i2c_destroy(i2c_t *i2c){
-	if(i2c->cfg->int_num)
-		int_release(i2c->cfg->int_num);
-
-	itask_queue_destroy(&i2c->cmds);
-	kfree(i2c);
-}
-
 size_t i2c_read(i2c_t *i2c, i2c_mode_t mode, uint8_t slave, void *buf, size_t n){
 	return i2c_xfer(i2c, mode, I2C_READ, slave, BLOBS(BLOB(buf, n)), 1);
 }
@@ -157,6 +111,48 @@ i2c_timing_t *i2c_timing(i2c_speed_t speed){
 
 
 /* local functions */
+static void *probe(char const *name, void *dt_data, void *dt_itf){
+	i2c_cfg_t *dtd = (i2c_cfg_t*)dt_data;
+	i2c_itf_t *dti = (i2c_itf_t*)dt_itf;
+	i2c_t *i2c;
+
+
+	if(i2c_address_reserved(dtd->addr))
+		goto_errno(err_0, E_INVAL);
+
+	/* allocated device */
+	i2c = kcalloc(1, sizeof(i2c_t));
+
+	if(i2c == 0x0)
+		goto err_0;
+
+	i2c->cfg = dtd;
+	i2c->itf = dti;
+
+	mutex_init(&i2c->mtx, MTX_NOINT);
+	itask_queue_init(&i2c->cmds);
+
+	/* configure device */
+	if(dti->configure(dtd, dti->hw) != 0)
+		goto err_1;
+
+	if(dtd->int_num && int_register(dtd->int_num, int_hdlr, i2c) != 0)
+		goto err_1;
+
+	dti->idle(false, false, dti->hw);
+
+	return i2c;
+
+
+err_1:
+	kfree(i2c);
+
+err_0:
+	return 0x0;
+}
+
+driver_probe("i2c", probe);
+
 static size_t poll_cmd(i2c_t *i2c, i2c_dgram_t *dgram){
 	i2c->dgram = 0x0;
 	while(dgram_hdlr(i2c, dgram) > 0);
@@ -202,7 +198,7 @@ static int dgram_hdlr(i2c_t *i2c, i2c_dgram_t *dgram){
 			i2c->dgram = dgram;
 		}
 		else
-			state[1] = i2c->ops.state(i2c->hw);
+			state[1] = i2c->itf->state(i2c->itf->hw);
 
 		// detect mismatch between hardware and dgram mode
 		if(!(state[1] & I2C_STATE_SPECIAL) && ((dgram->mode == I2C_SLAVE) != (bool)(state[1] & I2C_STATE_SLAVE)))
@@ -220,7 +216,7 @@ static int dgram_hdlr(i2c_t *i2c, i2c_dgram_t *dgram){
 }
 
 static int protocol_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
-	i2c_ops_t *ops = &i2c->ops;
+	i2c_itf_t *itf = i2c->itf;
 	size_t n;
 
 
@@ -231,16 +227,16 @@ static int protocol_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	/* master start */
 	case I2C_STATE_NEXT_MST:
 	case I2C_STATE_MST_ARBLOST:
-		ops->start(i2c->hw);
+		itf->start(itf->hw);
 		break;
 
 	case I2C_STATE_MST_START:
-		ops->connect(dgram->cmd, dgram->slave, i2c->hw);
+		itf->connect(dgram->cmd, dgram->slave, itf->hw);
 		break;
 
 	/* slave start */
 	case I2C_STATE_NEXT_SLA:
-		i2c->ops.idle(true, false, i2c->hw);
+		itf->idle(true, false, itf->hw);
 		break;
 
 	/* write */
@@ -248,7 +244,7 @@ static int protocol_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_MST_WR_DATA_NACK:
 	case I2C_STATE_SLA_WR_DATA_ACK:
 	case I2C_STATE_SLA_WR_DATA_NACK:
-		dgram_commit(dgram, ops->acked(dgram->staged, i2c->hw));
+		dgram_commit(dgram, itf->acked(dgram->staged, itf->hw));
 
 		if(dgram_complete(dgram) || state == I2C_STATE_MST_WR_DATA_NACK || state == I2C_STATE_SLA_WR_DATA_NACK)
 			return complete(i2c, 0, (bool)(state & I2C_STATE_MASTER));
@@ -260,7 +256,7 @@ static int protocol_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_MST_WR_ACK:
 	case I2C_STATE_SLA_WR_MATCH:
 		n = dgram_chunk(dgram);
-		dgram_stage(dgram, ops->write(dgram_data(dgram), n, dgram_last(dgram, n), i2c->hw));
+		dgram_stage(dgram, itf->write(dgram_data(dgram), n, dgram_last(dgram, n), itf->hw));
 
 		DEBUG("write %zu\n", n);
 		break;
@@ -270,7 +266,7 @@ static int protocol_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 	case I2C_STATE_MST_RD_DATA_NACK:
 	case I2C_STATE_SLA_RD_DATA_ACK:
 	case I2C_STATE_SLA_RD_DATA_NACK:
-		n = ops->read(dgram_data(dgram), dgram->staged, i2c->hw);
+		n = itf->read(dgram_data(dgram), dgram->staged, itf->hw);
 		dgram_commit(dgram, n);
 
 		DEBUG("read %zu\n", n);
@@ -284,7 +280,7 @@ static int protocol_hdlr(i2c_t *i2c, i2c_dgram_t *dgram, i2c_state_t state){
 		// fall through
 	case I2C_STATE_MST_RD_ACK:
 	case I2C_STATE_SLA_RD_MATCH:
-		dgram_stage(dgram, ops->ack(dgram_chunk(dgram), i2c->hw));
+		dgram_stage(dgram, itf->ack(dgram_chunk(dgram), itf->hw));
 		DEBUG("staged %zu\n", dgram->staged);
 		break;
 
@@ -309,7 +305,7 @@ static int complete(i2c_t *i2c, errno_t errnum, bool stop){
 	errnum = errno ? errno : errnum;
 
 	DEBUG("complete: status=%s, bytes=%zu\n", strerror(errnum), i2c->dgram->total);
-	i2c->ops.idle(false, stop, i2c->hw);
+	i2c->itf->idle(false, stop, i2c->itf->hw);
 
 	return_errno(errnum);
 }
