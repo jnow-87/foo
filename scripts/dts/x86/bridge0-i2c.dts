@@ -30,7 +30,6 @@ brdg0-right-i2c = {
 			/* i2c config (i2c_cfg_t) */
 			int<16> = [ 0 ];	// clock (0kHz)
 			int<8> = [
-			   0,				// broadcast (disabled)
 			   17,				// address
 			   0,				// interrupt
 			];

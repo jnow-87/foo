@@ -89,10 +89,7 @@ typedef struct{
 	 */
 
 	uint16_t clock_khz;
-
-	uint8_t bcast_en;
 	uint8_t addr;
-
 	uint8_t int_num;
 } i2c_cfg_t;
 

@@ -22,7 +22,6 @@ i2c0 = {
 		/* i2c config (i2c_cfg_t) */
 		int<16> = [ 100 ];			// clock (100kHz)
 		int<8> = [
-		   1,						// broadcast (enabled)
 		   16,						// address
 		   0,						// interrupt
 		];

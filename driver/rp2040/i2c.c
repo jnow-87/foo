@@ -230,7 +230,7 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 			  ;
 
 	regs->slv_data_nack_only = (0x0 << SLV_DATA_NACK_ONLY_NACK);
-	regs->ack_gen_call = (cfg->bcast_en << ACK_GENERAL_CALL_ACK_GEN_CALL);
+	regs->ack_gen_call = (0x1 << ACK_GENERAL_CALL_ACK_GEN_CALL);
 	regs->rx_tl = 1;
 	regs->tx_tl = 0;
 

@@ -132,7 +132,7 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 	regs->twsr = 0x0;
 	regs->twbr = brate;
 	regs->twamr = 0x0;
-	regs->twar = cfg->addr << 0x1 | (((bool)cfg->bcast_en) << TWAR_TWGCE);
+	regs->twar = cfg->addr << 0x1 | (0x1 << TWAR_TWGCE);
 	regs->twcr = (0x1 << TWCR_TWEN)
 			   | (0x0 << TWCR_TWEA)
 			   | (((bool)cfg->int_num) << TWCR_TWIE)

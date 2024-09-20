@@ -25,7 +25,6 @@ i2c0 = {
 		/* i2c config (i2c_cfg_t) */
 		int<16> = [ 100 ];	// clock (100kHz)
 		int<8> = [
-		   1,				// broadcast (enabled)
 		   16,				// address
 #if defined(CONFIG_DRIVER_SSD1306) \
  || defined(CONFIG_DRIVER_MCP23017) \
