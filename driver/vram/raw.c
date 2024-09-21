@@ -24,22 +24,14 @@ static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	devfs_ops_t ops;
-	vram_t *vram;
+	vram_t *dti = (vram_t*)dt_itf;
+	devfs_ops_t ops = { 0 };
 
-
-	vram = vram_create(dt_itf, dt_data);
-
-	if(vram == 0x0)
-		return 0x0;
-
-	memset(&ops, 0x0, sizeof(ops));
 
 	ops.ioctl = ioctl;
 	ops.mmap = mmap;
 
-	if(devfs_dev_register(name, &ops, vram) == 0x0)
-		vram_destroy(vram);
+	(void)devfs_dev_register(name, &ops, dti);
 
 	return 0x0;
 }
@@ -54,7 +46,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 		return_errno(E_INVAL);
 
 	switch(request){
-	case IOCTL_CFGRD:	memcpy(arg, &vram->cfg, n); return 0;
+	case IOCTL_CFGRD:	memcpy(arg, vram->cfg, n); return 0;
 	case IOCTL_CFGWR:	return vram_configure(vram, arg);
 	default:			return_errno(E_NOSUP);
 	};
@@ -64,7 +56,7 @@ static void *mmap(devfs_dev_t *dev, fs_filed_t *fd, size_t n){
 	vram_t *vram = (vram_t*)dev->payload;
 
 
-	if(n != vram->npages * vram->cfg.width + vram_ndirty(vram->npages))
+	if(n != vram->npages * vram->cfg->width + vram_ndirty(vram->npages))
 		goto_errno(err, E_INVAL);
 
 	return kmmap(vram->ram);

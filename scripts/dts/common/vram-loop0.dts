@@ -10,8 +10,8 @@
 vram-loop0 = {
 	compatible = "loop,vram";
 
-	vram-loop0-tty = {
-		compatible = "vram,term";
+	vram-loop0-vram = {
+		compatible = "vram";
 
 		/* display config (vram_cfg_t) */
 		int<16> = [
@@ -23,21 +23,25 @@ vram-loop0 = {
 		int<8> = [ 0x00 ];	// flags
 		int<16> = [ 100 ];	// refresh_ms
 
-		tty-vram0 = {
-			compatible = "terminal";
+		vram-loop0-tty = {
+			compatible = "vram,term";
 
-			/* terminal config (term_cfg_t) */
-			int<8> = [
-				0x0,		// iflags (none)
-				0x0,		// oflags (none)
-				0x2,		// lflags (TLFL_CANON)
-				2,			// tabs
-			];
+			tty-vram0 = {
+				compatible = "terminal";
 
-			int<16> = [
-				0,			// lines (set by the driver)
-				0,			// columns (set by the driver)
-			];
+				/* terminal config (term_cfg_t) */
+				int<8> = [
+					0x0,		// iflags (none)
+					0x0,		// oflags (none)
+					0x2,		// lflags (TLFL_CANON)
+					2,			// tabs
+				];
+
+				int<16> = [
+					0,			// lines (set by the driver)
+					0,			// columns (set by the driver)
+				];
+			};
 		};
 	};
 };

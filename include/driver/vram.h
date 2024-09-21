@@ -25,8 +25,8 @@ typedef struct{
 } vram_itf_t;
 
 typedef struct{
-	vram_cfg_t cfg;
-	vram_itf_t itf;
+	vram_cfg_t *cfg;
+	vram_itf_t *itf;
 
 	uint8_t *dirty;
 	uint8_t *ram;
@@ -39,9 +39,6 @@ typedef struct{
 
 
 /* prototypes */
-vram_t *vram_create(vram_itf_t *itf, vram_cfg_t *cfg);
-void vram_destroy(vram_t *vram);
-
 int vram_configure(vram_t *vram, vram_cfg_t *cfg);
 
 int vram_write_page(vram_t *vram, size_t page, size_t column, size_t n, uint8_t pattern);

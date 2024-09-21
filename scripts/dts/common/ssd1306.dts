@@ -17,9 +17,8 @@ ssd1306 = {
 	int<8> = [ 60 ];		// slave address
 	baseaddr = 0x0;			// i2c device, cf. i2c_t, set by the driver
 
-#ifdef CONFIG_VRAM_RAW
 	vram0 = {
-		compatible = "vram,raw";
+		compatible = "vram";
 
 		/* display config (vram_cfg_t) */
 		int<16> = [
@@ -30,39 +29,35 @@ ssd1306 = {
 		int<8> = [ 0x10 ];	// contrast
 		int<8> = [ 0x07 ];	// flags (DSPFL_MIRROR_VERT | DSPFL_MIRROR_HOR | DSPFL_ORIEN_HOR)
 		int<16> = [ 100 ];	// refresh_ms
-	};
+
+#ifdef CONFIG_VRAM_RAW
+		vram0-raw = {
+			compatible = "vram,raw";
+
+		};
 #endif // CONFIG_VRAM_RAW
 
 #ifdef CONFIG_VRAM_TERM
-	vram0-tty = {
-		compatible = "vram,term";
+		vram0-tty = {
+			compatible = "vram,term";
 
-		/* display config (vram_cfg_t) */
-		int<16> = [
-			64,				// height
-			128,			// width
-		];
+			tty1 = {
+				compatible = "terminal";
 
-		int<8> = [ 0x10 ];	// contrast
-		int<8> = [ 0x07 ];	// flags (DSPFL_MIRROR_VERT | DSPFL_MIRROR_HOR | DSPFL_ORIEN_HOR)
-		int<16> = [ 100 ];	// refresh_ms
+				/* terminal config (term_cfg_t) */
+				int<8> = [
+					0x0,		// iflags (none)
+					0x2,		// oflags (TOFL_NLCR)
+					0x1e,		// lflags (TLFL_CURSOR | TLFL_SCROLL | TLFL_WRAP | TLFL_CANON)
+					4,			// tabs
+				];
 
-		tty1 = {
-			compatible = "terminal";
-
-			/* terminal config (term_cfg_t) */
-			int<8> = [
-				0x0,		// iflags (none)
-				0x2,		// oflags (TOFL_NLCR)
-				0x1e,		// lflags (TLFL_CURSOR | TLFL_SCROLL | TLFL_WRAP | TLFL_CANON)
-				4,			// tabs
-			];
-
-			int<16> = [
-				0,			// lines (set by the driver)
-				0,			// columns (set by the driver)
-			];
+				int<16> = [
+					0,			// lines (set by the driver)
+					0,			// columns (set by the driver)
+				];
+			};
 		};
-	};
 #endif // CONFIG_VRAM_TERM
+	};
 };
