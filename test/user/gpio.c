@@ -316,7 +316,9 @@ static int test_read(int fd, intgpio_t expect, size_t size, gpio_masks_t *cfg){
 	intgpio_t v = 0;
 
 
-	expect = ((expect & cfg->out_mask) ^ cfg->invert_mask) & cfg->in_mask;
+	// only those bits which are part of the in_mask but not of the out_mask
+	// are expected to be inverted due to the invert_mask
+	expect = (expect ^ (cfg->invert_mask & ~cfg->out_mask)) & cfg->in_mask;
 
 	r |= TEST_INT_EQ(read(fd, &v, sizeof(v)), size);
 	r |= TEST_INT_EQ(v, expect);

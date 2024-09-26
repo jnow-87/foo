@@ -24,7 +24,7 @@ port1 = {
 			0xffffffff,			// in mask
 			0xffffffff,			// out mask
 			0xffffffff,			// int mask
-			0x00000005,			// invert mask
+			0x000005f5,			// invert mask
 			(arch.num-ints++)	// interrupt
 		);
 
