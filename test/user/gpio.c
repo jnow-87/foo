@@ -246,7 +246,7 @@ TEST(gpio_signal){
 	r |= test_ioctl(fd, IOCTL_CFGWR, &(gpio_sig_cfg_t){ .mask = dt_cfg.int_mask, .signum = SIGNAL }, sizeof(gpio_sig_cfg_t), 0);
 
 	// enable test signal
-	r |= TEST_INT_EQ(write(fd, &((intgpio_t){ INT_MAGIC }), sizeof(intgpio_t)), sizeof(intgpio_t));
+	r |= TEST_INT_EQ(write(fd, &((intgpio_t){ INT_MAGIC ^ dt_cfg.invert_mask }), sizeof(intgpio_t)), sizeof(intgpio_t));
 
 	/* wait for signals */
 	for(size_t i=0; i<100 && caught_sigs<SIGNAL_MAX; i++){
@@ -257,7 +257,7 @@ TEST(gpio_signal){
 
 	/* cleanup */
 	// disable test signal
-	r |= TEST_INT_EQ(write(fd, &((intgpio_t){ INT_MAGIC }), sizeof(intgpio_t)), sizeof(intgpio_t));
+	r |= TEST_INT_EQ(write(fd, &((intgpio_t){ INT_MAGIC ^ dt_cfg.invert_mask }), sizeof(intgpio_t)), sizeof(intgpio_t));
 
 	r |= TEST_INT_EQ(signal(SIGNAL, 0x0), 0);
 	r |= TEST_INT_EQ(close(fd), 0);
