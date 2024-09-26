@@ -35,39 +35,47 @@ typedef struct{
 			 drive_4ma,
 			 drive_8ma,
 			 drive_12ma;
-
-	uint8_t int_num;	/**< cf. int_num_t */
 } dt_data_t;
+
+typedef struct{
+	uint32_t out_last;
+
+	dt_data_t *dtd;
+	gpio_itf_t itf;
+} dev_data_t;
 
 
 /* local/static prototypes */
-static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload);
-static intgpio_t read(void *dt_data, void *payload);
-static int write(intgpio_t v, void *dt_data, void *payload);
+static int configure(gpio_cfg_t *cfg, void *hw);
+static intgpio_t read(void *hw);
+static int write(intgpio_t v, void *hw);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd = (dt_data_t*)dt_data;
-	gpio_ops_t ops;
-	gpio_itf_t *itf;
+	dev_data_t *gpio;
 
 
-	ops.configure = configure;
-	ops.read = read;
-	ops.write = write;
+	gpio = kmalloc(sizeof(dev_data_t));
 
-	itf = gpio_itf_create(&ops, dtd->int_num, dtd, &(uint32_t){ 0 }, sizeof(uint32_t));
+	if(gpio == 0x0)
+		return 0x0;
 
-	if(itf != 0x0 && dtd->int_num)
-		av6m_nvic_int_enable(dtd->int_num);
+	gpio->out_last = 0;
+	gpio->dtd = dt_data;
 
-	return itf;
+	gpio->itf.configure = configure;
+	gpio->itf.read = read;
+	gpio->itf.write = write;
+
+	gpio->itf.hw = gpio;
+
+	return &gpio->itf;
 }
 
 driver_probe("rp2040,gpio", probe);
 
-static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
+static int configure(gpio_cfg_t *cfg, void *hw){
 	uint8_t drive[] = {
 		RP2040_PAD_DRV_2MA,
 		RP2040_PAD_DRV_4MA,
@@ -75,7 +83,7 @@ static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
 		RP2040_PAD_DRV_2MA,
 		RP2040_PAD_DRV_12MA
 	};
-	dt_data_t *dtd = (dt_data_t*)dt_data;
+	dt_data_t *dtd = ((dev_data_t*)hw)->dtd;
 	uint32_t mask;
 	uint8_t drive_idx;
 	rp2040_pad_cfg_t pad;
@@ -109,11 +117,14 @@ static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
 
 	GPIO_OE = (GPIO_OE | cfg->out_mask) & ~cfg->in_mask;
 
+	if(cfg->int_num)
+		av6m_nvic_int_enable(cfg->int_num);
+
 	return 0;
 }
 
-static intgpio_t read(void *dt_data, void *payload){
-	uint32_t *out_last = (uint32_t*)payload;
+static intgpio_t read(void *hw){
+	dev_data_t *gpio = (dev_data_t*)hw;
 
 
 	INTR(0) = INTR(0);	// clear interrupts
@@ -124,14 +135,14 @@ static intgpio_t read(void *dt_data, void *payload){
 	// prevent that, out_last is used to capture the last value written to
 	// output pins and ored to the read value to be compatible with the gpio
 	// driver layer.
-	return GPIO_IN | *out_last;
+	return GPIO_IN | gpio->out_last;
 }
 
-static int write(intgpio_t v, void *dt_data, void *payload){
-	uint32_t *out_last = (uint32_t*)payload;
+static int write(intgpio_t v, void *hw){
+	dev_data_t *gpio = (dev_data_t*)hw;
 
 
-	*out_last = v & GPIO_OE;
+	gpio->out_last = v & GPIO_OE;
 	GPIO_OUT = v;
 
 	return 0;

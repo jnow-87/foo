@@ -11,20 +11,22 @@
 #include <kernel/timer.h>
 #include <kernel/ktask.h>
 #include <driver/gpio.h>
+#include <sys/errno.h>
+#include <sys/gpio.h>
 #include <sys/types.h>
 
 
 /* types */
 typedef struct{
-	gpio_cfg_t port;
+	uint8_t pin;
 
 	uint16_t wave;
 	uint16_t period_ms;
 } dt_data_t;
 
 typedef struct{
-	gpio_t *gpio;
 	dt_data_t *dtd;
+	gpio_t *dti;
 
 	uint32_t time_ms;
 	uint8_t idx;
@@ -38,36 +40,28 @@ static void task(void *payload);
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd = (dt_data_t*)dt_data;
-	gpio_itf_t *dti = (gpio_itf_t*)dt_itf;
-	gpio_t *gpio;
+	gpio_t *dti = (gpio_t*)dt_itf;
+	intgpio_t mask = (0x1 << dtd->pin);
 	dev_data_t heartbeat;
 
 
-	gpio = gpio_create(dti, &dtd->port);
+	if((mask & dti->cfg->out_mask) != mask)
+		goto_errno(err, E_INVAL);
 
-	if(gpio == 0x0)
-		goto err_0;
-
-	if(gpio_configure(gpio) != 0)
-		goto err_1;
-
-	heartbeat.gpio = gpio;
 	heartbeat.dtd = dtd;
+	heartbeat.dti = dti;
 	heartbeat.time_ms = ktimer_ms();
 	heartbeat.idx = 0;
 
 	if(ktask_create(task, &heartbeat, sizeof(dev_data_t), 0x0, true) != 0)
-		goto err_1;
+		goto err;
 
-	gpio_write(gpio, dtd->port.out_mask);
+	gpio_write(dti, mask, mask);
 
 	return 0x0;
 
 
-err_1:
-	gpio_destroy(gpio);
-
-err_0:
+err:
 	return 0x0;
 }
 
@@ -76,7 +70,8 @@ driver_probe("kernel,heartbeat", probe);
 static void task(void *payload){
 	dev_data_t *heartbeat = (dev_data_t*)payload;
 	dt_data_t *dtd = heartbeat->dtd;
-	gpio_t *gpio = heartbeat->gpio;
+	gpio_t *dti = heartbeat->dti;
+	intgpio_t mask = (0x1 << dtd->pin);
 	intgpio_t v;
 	uint32_t time_ms;
 
@@ -86,12 +81,12 @@ static void task(void *payload){
 	if(time_ms < heartbeat->time_ms + dtd->period_ms)
 		return;
 
-	v = gpio_read(gpio) | dtd->port.out_mask;
+	v = gpio_read(dti, mask) | mask;
 
 	if((dtd->wave & (0x1 << heartbeat->idx)) == 0)
-		v ^= dtd->port.out_mask;
+		v ^= mask;
 
-	gpio_write(gpio, v);
+	gpio_write(dti, v, mask);
 
 	heartbeat->time_ms = time_ms;
 	heartbeat->idx = (heartbeat->idx + 1) & 0xf;

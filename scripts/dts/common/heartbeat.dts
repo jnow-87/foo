@@ -10,28 +10,17 @@
 #include <gpio.dts>
 
 
-#ifndef HEARTBEAT_PIN_MASK
-# error "heartbeat pin-mask not defined"
+#ifndef HEARTBEAT_PIN
+# error "heartbeat pin not defined"
 #endif
 
 heartbeat = {
 	compatible = "kernel,heartbeat";
 
 	/* heartbeat config (dt_data_t) */
-	gpio_cfg_t(
-		0x0,				// in mask
-		HEARTBEAT_PIN_MASK,	// out mask
-		0x0,				// int mask
-#if HEARTBEAT_INVERT != 0
-		HEARTBEAT_PIN_MASK,	// invert mask
-#else
-		0x0,				// invert mask
-#endif // HEARTBEAT_INVERT
-		0					// interrupt
-	);
-
+	int<8> = [ HEARTBEAT_PIN ];	// pin
 	int<16> = [
-		0x0505,	// wave
-		200,	// period [ms]
+		0x0505,					// wave
+		200,					// period [ms]
 	];
 };

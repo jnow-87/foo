@@ -18,11 +18,10 @@ mcp-porta = {
 	int<8> = [
 		0,			// port (a)
 		33,			// slave address
-		0,			// interrupt
 	];
 
-	gpio-mcp0a = {
-		compatible = "gpio,port";
+	mcp-gpio0 = {
+		compatible = "gpio";
 
 		gpio_cfg_t(
 			0x00,	// in_mask
@@ -31,6 +30,17 @@ mcp-porta = {
 			0xff,	// invert_mask
 			0		// interrupt
 		);
+
+		gpio-mcp0a = {
+			compatible = "gpio,port";
+
+			/* port config (gpio_port_cfg_t) */
+			int<CONFIG_GPIO_INT_WIDTH> = [
+				0x00,	// in_mask
+				0xff,	// out_mask
+				0x00,	// int_mask
+			];
+		};
 	};
 };
 
@@ -39,24 +49,34 @@ mcp-portb = {
 
 	/* mcp23017 port config (dt_data_t) */
 	int<8> = [
-		1,						// port (b)
-		33,						// slave address
-#ifdef CONFIG_GPIO_INTFWD
-		mcp-int.int[5],		// interrupt
-#else
-		0,
-#endif // CONFIG_GPIO_INTFWD
+		1,				// port (b)
+		33,				// slave address
 	];
 
-	gpio-mcp0b = {
-		compatible = "gpio,port";
+	mcp-gpio1 = {
+		compatible = "gpio";
 
 		gpio_cfg_t(
-			0xff,				// in mask
-			0x00,				// out mask
-			0xff,				// int mask
-			0xff,				// invert mask
-			(arch.num-ints++)	// interrupt
+			0xff,		// in mask
+			0x00,		// out mask
+			0xff,		// int mask
+			0xff,		// invert mask
+#ifdef CONFIG_GPIO_INTFWD
+			mcp-int.int[1]	// interrupt
+#else
+			0
+#endif // CONFIG_GPIO_INTFWD
 		);
+
+		gpio-mcp0b = {
+			compatible = "gpio,port";
+
+			/* port config (gpio_port_cfg_t) */
+			int<CONFIG_GPIO_INT_WIDTH> = [
+				0xff,	// in mask
+				0x00,	// out mask
+				0xff,	// int mask
+			];
+		};
 	};
 };

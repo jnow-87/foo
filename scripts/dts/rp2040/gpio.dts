@@ -26,35 +26,41 @@ gpios = {
 		0x02008000,				// drive_12ma,
 	];
 
-	int<8> = [ 29 ];			// interrupt (io_irq_bank0)
-
-	gpio = {
-		compatible = "gpio,port";
+	gpio0 = {
+		compatible = "gpio";
 
 		gpio_cfg_t(
 			0x00000030,			// in mask
-			0x000000c0,			// out mask
+			0x020080c0,			// out mask
 			0x00000030,			// int mask
 			0x000000c0,			// invert mask
-			(arch.num-ints++)	// interrupt
+			29					// interrupt (io_irq_bank0)
 		);
-	};
 
-	led = {
-		compatible = "gpio,pin";
+		gpio0-port0 = {
+			compatible = "gpio,port";
 
-		gpio_cfg_t(
-			0x00000000,			// in mask
-			0x00008000,			// out mask
-			0x00000000,			// int mask
-			0x00000000,			// invert mask
-			0					// interrupt
-		);
-	};
+			/* port config (gpio_port_cfg_t) */
+			int<CONFIG_GPIO_INT_WIDTH> = [
+				0x00000030,		// in mask
+				0x000000c0,		// out mask
+				0x00000030,		// int mask
+			];
+		};
+
+		led = {
+			compatible = "gpio,pin";
+
+			/* pin config (dt_data_t) */
+			int<8> = [
+				15,		// pin
+				0x2,	// mode (out)
+			];
+		};
 
 #ifdef CONFIG_KERNEL_HEARTBEAT
-# define HEARTBEAT_PIN_MASK	0x02000000
-# define HEARTBEAT_INVERT	0
+# define HEARTBEAT_PIN	25
 # include "../common/heartbeat.dts"
 #endif // CONFIG_KERNEL_HEARTBEAT
+	};
 };

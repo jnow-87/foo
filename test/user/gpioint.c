@@ -42,7 +42,7 @@ static int dev_fd;
 TEST_LONG(gpioint, "test gpio device interrupts"){
 	char c;
 	f_mode_t f_mode;
-	gpio_int_cfg_t cfg;
+	gpio_sig_cfg_t cfg;
 
 
 	/* prepare */
@@ -61,7 +61,6 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	}
 
 	// register signal to device interrupt
-	cfg.op = GPIO_INT_REGISTER;
 	cfg.mask = (intgpio_t)-1;
 	cfg.signum = SIGNAL;
 
@@ -88,7 +87,7 @@ TEST_LONG(gpioint, "test gpio device interrupts"){
 	}
 
 	/* cleanup */
-	cfg.op = GPIO_INT_REGISTER;
+	cfg.mask = 0x0;
 
 	if(ioctl(dev_fd, IOCTL_CFGWR, &cfg) != 0)
 		printf(FG("error ", RED) "releasing signal \"%s\"\n", strerror(errno));
