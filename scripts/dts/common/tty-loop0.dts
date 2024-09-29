@@ -13,7 +13,7 @@ loop1 = {
 	/* loop config (loop_cfg_t) */
 	int<16> = [ 32 ];	// buffer size
 
-	tty-loop0 = {
+	loop1-term = {
 		compatible = "terminal";
 
 		/* terminal config (term_cfg_t) */
@@ -28,5 +28,9 @@ loop1 = {
 			0,			// lines (set by the driver)
 			0,			// columns (set by the driver)
 		];
+
+		tty-loop0 = {
+			compatible = "terminal,raw";
+		};
 	};
 };

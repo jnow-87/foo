@@ -13,7 +13,7 @@ x11 = {
 	/* x11 hardware (dt_data_t) */
 	int<8> = [ 3 ];			// scale
 
-	vram0 = {
+	x11-vram = {
 		compatible = "vram";
 
 		/* display config (vram_cfg_t) */
@@ -26,14 +26,14 @@ x11 = {
 		int<8> = [ 0x0 ];	// flags (none)
 		int<16> = [ 100 ];	// refresh_ms
 
-		vram0-raw = {
+		x11-raw = {
 			compatible = "vram,raw";
 		};
 
-		vram0-tty = {
+		x11-tty = {
 			compatible = "vram,term";
 
-			tty1 = {
+			x11-term = {
 				compatible = "terminal";
 
 				/* terminal config (term_cfg_t) */
@@ -48,6 +48,10 @@ x11 = {
 					0,			// lines (set by the driver)
 					0,			// columns (set by the driver)
 				];
+
+				x11-tty1 = {
+					compatible = "terminal,raw";
+				};
 			};
 		};
 	};

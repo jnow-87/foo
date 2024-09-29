@@ -33,7 +33,7 @@ spi0 = {
 		1,				// prescaler (4)
 	];
 
-	tty1 = {
+	term1 = {
 		compatible = "terminal";
 
 		/* terminal config (term_cfg_t) */
@@ -48,5 +48,9 @@ spi0 = {
 			0,			// lines (set by the driver)
 			0,			// columns (set by the driver)
 		];
+
+		tty1 = {
+			compatible = "terminal,raw";
+		};
 	};
 };

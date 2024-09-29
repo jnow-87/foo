@@ -26,7 +26,7 @@ uart0 = {
 	];
 
 #ifdef CONFIG_DRIVER_TERM
-	tty0 = {
+	term0 = {
 		compatible = "terminal";
 
 		/* terminal config (term_cfg_t) */
@@ -41,6 +41,10 @@ uart0 = {
 			0,				// lines (set by the driver)
 			0,				// columns (set by the driver)
 		];
+
+		tty0 = {
+			compatible = "terminal,raw";
+		};
 
 # ifdef CONFIG_KERNEL_LOG
 		klog = {

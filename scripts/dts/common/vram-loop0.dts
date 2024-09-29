@@ -26,7 +26,7 @@ vram-loop0 = {
 		vram-loop0-tty = {
 			compatible = "vram,term";
 
-			tty-vram0 = {
+			vram-loop0-term = {
 				compatible = "terminal";
 
 				/* terminal config (term_cfg_t) */
@@ -41,6 +41,10 @@ vram-loop0 = {
 					0,			// lines (set by the driver)
 					0,			// columns (set by the driver)
 				];
+
+				tty-vram0 = {
+					compatible = "terminal,raw";
+				};
 			};
 		};
 	};

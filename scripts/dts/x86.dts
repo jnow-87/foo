@@ -34,7 +34,7 @@ devices = {
 #endif // CONFIG_LOOP_VRAM
 
 #ifdef CONFIG_DRIVER_X11
-# include "x86/vram0.dts"
+# include "x86/x11.dts"
 #endif // CONFIG_DRIVER_X11
 
 #ifdef CONFIG_DRIVER_GPIO

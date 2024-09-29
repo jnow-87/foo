@@ -13,7 +13,7 @@
 #include <kernel/kprintf.h>
 #include <kernel/driver.h>
 #include <kernel/opt.h>
-#include <driver/klog.h>
+#include <driver/term.h>
 #include <sys/devicetree.h>
 #include <sys/types.h>
 #include <sys/stream.h>
@@ -30,7 +30,7 @@
 
 /* types */
 typedef struct{
-	klog_itf_t *dev;
+	term_t *dev;
 
 	char buf[CONFIG_KERNEL_LOG_SIZE];
 	size_t idx;
@@ -92,14 +92,13 @@ void kvprintf(kmsg_t lvl, char const *format, va_list lst){
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
+	term_t *dti = (term_t*)dt_itf;
+
+
 	mutex_lock(&log.mtx);
 
-	if(((klog_itf_t*)dt_itf)->puts != 0x0){
-		log.dev = dt_itf;
-		flush();
-	}
-	else
-		set_errno(E_INVAL);
+	log.dev = dti;
+	flush();
 
 	mutex_unlock(&log.mtx);
 
@@ -124,10 +123,17 @@ static char putc(char c, FILE *stream){
 }
 
 static void flush(void){
-	log.dev->puts(log.buf, log.idx, log.dev->hw);
+	term_t *term = log.dev;
+
+
+	mutex_lock(&term->node->mtx);
+
+	term_puts(term, log.buf, log.idx);
 
 	if(log.overflow)
-		log.dev->puts(OVERFLOW_MSG, strlen(OVERFLOW_MSG), log.dev->hw);
+		term_puts(term, OVERFLOW_MSG, strlen(OVERFLOW_MSG));
+
+	mutex_unlock(&term->node->mtx);
 
 	log.overflow = false;
 	log.idx = 0;

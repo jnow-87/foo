@@ -21,7 +21,7 @@ brdg0-right = {
 	brdg0-itf = {
 		compatible = "bridge,uart-dev";
 
-		tty-bridge0 = {
+		brdg0-term = {
 			compatible = "terminal";
 
 			/* terminal config (term_cfg_t) */
@@ -36,6 +36,10 @@ brdg0-right = {
 				0,			// lines (set by the driver)
 				0,			// columns (set by the driver)
 			];
+
+			tty-bridge0 = {
+				compatible = "terminal,raw";
+			};
 		};
 	};
 };

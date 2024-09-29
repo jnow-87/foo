@@ -14,7 +14,7 @@
 
 
 /* global functions */
-int term_cursor_set(term_t *term, uint16_t line, uint16_t column){
+int cursor_set(term_t *term, uint16_t line, uint16_t column){
 	if(term->itf->cursor == 0x0)
 		return 0;
 
@@ -24,7 +24,7 @@ int term_cursor_set(term_t *term, uint16_t line, uint16_t column){
 	return term->itf->cursor(term->cursor.line, term->cursor.column, 0, term->itf->hw);
 }
 
-int term_cursor_move(term_t *term, int16_t lines, int16_t columns, bool force_scroll){
+int cursor_move(term_t *term, int16_t lines, int16_t columns, bool force_scroll){
 	if(columns < 0)
 		columns = -MIN((uint16_t)-columns, term->cursor.column);
 
@@ -58,19 +58,19 @@ int term_cursor_move(term_t *term, int16_t lines, int16_t columns, bool force_sc
 		lines = term->cfg->lines - term->cursor.line - 1;
 	}
 
-	return term_cursor_set(term, term->cursor.line + lines, term->cursor.column + columns);
+	return cursor_set(term, term->cursor.line + lines, term->cursor.column + columns);
 }
 
-void term_cursor_save(term_t *term){
+void cursor_save(term_t *term){
 	term->cursor.save_lime = term->cursor.line;
 	term->cursor.save_column = term->cursor.column;
 }
 
-int term_cursor_restore(term_t *term){
-	return term_cursor_set(term, term->cursor.save_lime, term->cursor.save_column);
+int cursor_restore(term_t *term){
+	return cursor_set(term, term->cursor.save_lime, term->cursor.save_column);
 }
 
-int term_cursor_show(term_t *term, bool show){
+int cursor_show(term_t *term, bool show){
 	if(show == term->cursor.visible)
 		return 0;
 

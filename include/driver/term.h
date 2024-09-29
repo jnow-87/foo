@@ -41,8 +41,6 @@ struct term_t;
 
 
 /* types */
-typedef void * (*esc_hdlr_t)(struct term_t *term, char c);
-
 typedef enum{
 	TFT_I = 0,
 	TFT_O,
@@ -102,24 +100,14 @@ typedef struct term_t{
 	ringbuf_t rx_buf;
 	itask_queue_t tx_queue;
 
-	errno_t errnum;
-
 	term_cursor_t cursor;
 	esc_state_t esc;
 } term_t;
 
 
 /* prototypes */
-term_t *term_create(term_itf_t *itf, term_cfg_t *cfg, fs_node_t *node);
-void term_destroy(term_t *term);
-
 size_t term_gets(term_t *term, char *s, size_t n);
 size_t term_puts(term_t *term, char const *s, size_t n);
-
-void term_rx_hdlr(int_num_t num, void *payload);
-void term_tx_hdlr(int_num_t num, void *payload);
-
-char *term_flags_apply(term_t *term, char *s, size_t n, size_t incr, term_flag_type_t fl_type, uint8_t flags);
 
 
 #endif // DRIVER_TERM_H
