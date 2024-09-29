@@ -135,16 +135,16 @@ typedef struct{
 } i2c_regs_t;
 
 typedef struct{
-	uint8_t reset_id;
 	i2c_regs_t *regs;
-	i2c_cfg_t cfg;
+	uint8_t reset_id;
 } dt_data_t;
 
 typedef struct{
-	dt_data_t *dtd;
-
 	i2c_state_t state;
 	i2c_mode_t mode;
+
+	dt_data_t *dtd;
+	i2c_itf_t itf;
 } dev_data_t;
 
 
@@ -168,44 +168,31 @@ static size_t rx(uint8_t *buf, size_t n, dev_data_t *i2c);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd = (dt_data_t*)dt_data;
-	i2c_ops_t ops;
-	i2c_t *itf;
 	dev_data_t *i2c;
 
 
 	i2c = kmalloc(sizeof(dev_data_t));
 
 	if(i2c == 0x0)
-		goto err_0;
+		return 0x0;
 
-	i2c->dtd = dtd;
+	i2c->dtd = dt_data;
 	i2c->mode = I2C_SLAVE;
 	i2c->state = I2C_STATE_NONE;
 
-	ops.configure = configure;
-	ops.state = state;
-	ops.start = start;
-	ops.ack = ack;
-	ops.acked = acked;
-	ops.idle = idle;
-	ops.connect = connect;
-	ops.read = read;
-	ops.write = write;
+	i2c->itf.configure = configure;
+	i2c->itf.state = state;
+	i2c->itf.start = start;
+	i2c->itf.ack = ack;
+	i2c->itf.acked = acked;
+	i2c->itf.idle = idle;
+	i2c->itf.connect = connect;
+	i2c->itf.read = read;
+	i2c->itf.write = write;
 
-	itf = i2c_create(&ops, &dtd->cfg, i2c);
+	i2c->itf.hw = i2c;
 
-	if(itf == 0x0)
-		goto err_1;
-
-	return itf;
-
-
-err_1:
-	kfree(i2c);
-
-err_0:
-	return 0x0;
+	return &i2c->itf;
 }
 
 driver_probe("rp2040,i2c", probe);
@@ -243,7 +230,7 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 			  ;
 
 	regs->slv_data_nack_only = (0x0 << SLV_DATA_NACK_ONLY_NACK);
-	regs->ack_gen_call = (cfg->bcast_en << ACK_GENERAL_CALL_ACK_GEN_CALL);
+	regs->ack_gen_call = (0x1 << ACK_GENERAL_CALL_ACK_GEN_CALL);
 	regs->rx_tl = 1;
 	regs->tx_tl = 0;
 

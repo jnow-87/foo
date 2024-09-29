@@ -9,6 +9,7 @@
 
 #include <arch/arch.h>
 #include <kernel/driver.h>
+#include <kernel/memory.h>
 #include <driver/i2c.h>
 #include <sys/types.h>
 #include <sys/errno.h>
@@ -55,8 +56,6 @@ typedef struct{
 	// power control
 	uint8_t volatile *prr;
 	uint8_t const prr_en;		// PRR device enable value (bit mask)
-
-	i2c_cfg_t cfg;
 } dt_data_t;
 
 
@@ -77,21 +76,27 @@ static size_t write(uint8_t *buf, size_t n, bool last, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd = (dt_data_t*)dt_data;
-	i2c_ops_t ops;
+	i2c_itf_t *itf;
 
 
-	ops.configure = configure;
-	ops.state = state;
-	ops.start = start;
-	ops.ack = ack;
-	ops.acked = acked;
-	ops.idle = idle;
-	ops.connect = connect;
-	ops.read = read;
-	ops.write = write;
+	itf = kmalloc(sizeof(i2c_itf_t));
 
-	return i2c_create(&ops, &dtd->cfg, dtd);
+	if(itf == 0x0)
+		return 0x0;
+
+	itf->configure = configure;
+	itf->state = state;
+	itf->start = start;
+	itf->ack = ack;
+	itf->acked = acked;
+	itf->idle = idle;
+	itf->connect = connect;
+	itf->read = read;
+	itf->write = write;
+
+	itf->hw = dt_data;
+
+	return itf;
 }
 
 driver_probe("avr,i2c", probe);
@@ -127,7 +132,7 @@ static int configure(i2c_cfg_t *cfg, void *hw){
 	regs->twsr = 0x0;
 	regs->twbr = brate;
 	regs->twamr = 0x0;
-	regs->twar = cfg->addr << 0x1 | (((bool)cfg->bcast_en) << TWAR_TWGCE);
+	regs->twar = cfg->addr << 0x1 | (0x1 << TWAR_TWGCE);
 	regs->twcr = (0x1 << TWCR_TWEN)
 			   | (0x0 << TWCR_TWEA)
 			   | (((bool)cfg->int_num) << TWCR_TWIE)

@@ -7,17 +7,13 @@
 
 
 
-#include <config/config.h>
+x11 = {
+	compatible = "x11";
 
+	/* x11 hardware (dt_data_t) */
+	int<8> = [ 3 ];			// scale
 
-ssd1306 = {
-	compatible = "ssd1306";
-
-	/* ssd1306 hardware (dt_data_t) */
-	int<8> = [ 60 ];		// slave address
-	baseaddr = 0x0;			// i2c device, cf. i2c_t, set by the driver
-
-	vram0 = {
+	x11-vram = {
 		compatible = "vram";
 
 		/* display config (vram_cfg_t) */
@@ -27,21 +23,17 @@ ssd1306 = {
 		];
 
 		int<8> = [ 0x10 ];	// contrast
-		int<8> = [ 0x07 ];	// flags (DSPFL_MIRROR_VERT | DSPFL_MIRROR_HOR | DSPFL_ORIEN_HOR)
+		int<8> = [ 0x0 ];	// flags (none)
 		int<16> = [ 100 ];	// refresh_ms
 
-#ifdef CONFIG_VRAM_RAW
-		vram0-raw = {
+		x11-raw = {
 			compatible = "vram,raw";
-
 		};
-#endif // CONFIG_VRAM_RAW
 
-#ifdef CONFIG_VRAM_TERM
-		vram0-tty = {
+		x11-tty = {
 			compatible = "vram,term";
 
-			vram0-term = {
+			x11-term = {
 				compatible = "terminal";
 
 				/* terminal config (term_cfg_t) */
@@ -57,11 +49,10 @@ ssd1306 = {
 					0,			// columns (set by the driver)
 				];
 
-				tty1 = {
+				x11-tty1 = {
 					compatible = "terminal,raw";
 				};
 			};
 		};
-#endif // CONFIG_VRAM_TERM
 	};
 };

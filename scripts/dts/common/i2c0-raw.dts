@@ -8,5 +8,5 @@
 
 
 i2c-raw0 = {
-	compatible = "i2c";
+	compatible = "i2c,raw";
 };

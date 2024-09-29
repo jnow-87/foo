@@ -25,7 +25,7 @@ static int erase(term_t *term, term_erase_t type, uint16_t n);
 
 
 /* global functions */
-int term_esc_handle(term_t *term, char c){
+int esc_handle(term_t *term, char c){
 	int r = 0;
 
 
@@ -34,27 +34,27 @@ int term_esc_handle(term_t *term, char c){
 	case ESC_PARTIAL:				return 0;
 
 	case ESC_TAB:					r = tab(term); break;
-	case ESC_BACKSPACE:				r = term_cursor_move(term, 0, -1, false); break;
-	case ESC_CARRIAGE_RETURN:		r = term_cursor_set(term, term->cursor.line, 0); break;
+	case ESC_BACKSPACE:				r = cursor_move(term, 0, -1, false); break;
+	case ESC_CARRIAGE_RETURN:		r = cursor_set(term, term->cursor.line, 0); break;
 
 	case ESC_NEWLINE:	// fall through
 	case ESC_VERT_TAB:	// fall through
 	case ESC_FORM_FEED:
-		r = term_cursor_move(term, 1, 0, false);
+		r = cursor_move(term, 1, 0, false);
 		break;
 
-	case ESC_CURSOR_MOVE_UP:		r = term_cursor_move(term, -OPTVAL(term, 1), 0, false); break;
-	case ESC_CURSOR_MOVE_UP_HOME:	r = term_cursor_move(term, -OPTVAL(term, 1), -term->cursor.column, false); break;
-	case ESC_CURSOR_MOVE_DOWN:		r = term_cursor_move(term, OPTVAL(term, 1), 0, false); break;
-	case ESC_CURSOR_MOVE_DOWN_HOME:	r = term_cursor_move(term, OPTVAL(term, 1), -term->cursor.column, false); break;
-	case ESC_CURSOR_MOVE_LEFT:		r = term_cursor_move(term, 0, -OPTVAL(term, 1), false); break;
-	case ESC_CURSOR_MOVE_RIGHT:		r = term_cursor_move(term, 0, OPTVAL(term, 1), false); break;
-	case ESC_CURSOR_MOVE_HOME:		r = term_cursor_set(term, term->esc.val[0], term->esc.val[1]); break;
-	case ESC_CURSOR_SCROLL_DOWN:	r = term_cursor_move(term, 1, 0, true); break;
-	case ESC_CURSOR_SCROLL_UP:		r = term_cursor_move(term, -1, 0, true); break;
-	case ESC_CURSOR_SET_COLUMN:		r = term_cursor_set(term, term->cursor.line, OPTVAL(term, 0)); break;
-	case ESC_CURSOR_RESTORE:		r = term_cursor_restore(term); break;
-	case ESC_CURSOR_SAVE:			term_cursor_save(term); break;
+	case ESC_CURSOR_MOVE_UP:		r = cursor_move(term, -OPTVAL(term, 1), 0, false); break;
+	case ESC_CURSOR_MOVE_UP_HOME:	r = cursor_move(term, -OPTVAL(term, 1), -term->cursor.column, false); break;
+	case ESC_CURSOR_MOVE_DOWN:		r = cursor_move(term, OPTVAL(term, 1), 0, false); break;
+	case ESC_CURSOR_MOVE_DOWN_HOME:	r = cursor_move(term, OPTVAL(term, 1), -term->cursor.column, false); break;
+	case ESC_CURSOR_MOVE_LEFT:		r = cursor_move(term, 0, -OPTVAL(term, 1), false); break;
+	case ESC_CURSOR_MOVE_RIGHT:		r = cursor_move(term, 0, OPTVAL(term, 1), false); break;
+	case ESC_CURSOR_MOVE_HOME:		r = cursor_set(term, term->esc.val[0], term->esc.val[1]); break;
+	case ESC_CURSOR_SCROLL_DOWN:	r = cursor_move(term, 1, 0, true); break;
+	case ESC_CURSOR_SCROLL_UP:		r = cursor_move(term, -1, 0, true); break;
+	case ESC_CURSOR_SET_COLUMN:		r = cursor_set(term, term->cursor.line, OPTVAL(term, 0)); break;
+	case ESC_CURSOR_RESTORE:		r = cursor_restore(term); break;
+	case ESC_CURSOR_SAVE:			cursor_save(term); break;
 
 	case ESC_ERASE_IN_DISPLAY:		r = erase(term, TE_MULTILINE, 0); break;
 	case ESC_ERASE_IN_LINE:			r = erase(term, 0x0, 0); break;
@@ -81,7 +81,7 @@ static int tab(term_t *term){
 
 
 	r |= erase(term, TE_TO_END, term->cfg->tabs);
-	r |= term_cursor_move(term, 0, term->cfg->tabs, false);
+	r |= cursor_move(term, 0, term->cfg->tabs, false);
 
 	return r;
 }

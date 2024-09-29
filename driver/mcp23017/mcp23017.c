@@ -11,7 +11,7 @@
 #include <kernel/memory.h>
 #include <driver/gpio.h>
 #include <driver/i2c.h>
-#include <sys/compiler.h>
+#include <sys/errno.h>
 #include <sys/gpio.h>
 
 
@@ -48,38 +48,52 @@ typedef enum{
 typedef struct{
 	uint8_t port;		/**< cf. port_t */
 	uint8_t slave_addr;
-	uint8_t int_num;	/**< cf. int_num_t */
 } dt_data_t;
+
+typedef struct{
+	dt_data_t *dtd;
+	i2c_t *dti;
+
+	gpio_itf_t itf;
+} dev_data_t;
 
 
 /* local/static prototypes */
-static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload);
-static intgpio_t read(void *dt_data, void *payload);
-static int write(intgpio_t v, void *dt_data, void *payload);
+static int configure(gpio_cfg_t *cfg, void *hw);
+static intgpio_t read(void *hw);
+static int write(intgpio_t v, void *hw);
 
-static int reg_read(uint8_t reg, uint8_t *v, dt_data_t *dtd, i2c_t *i2c);
-static int reg_write(uint8_t reg, uint8_t v, dt_data_t *dtd, i2c_t *i2c);
+static int reg_read(uint8_t reg, uint8_t *v, dev_data_t *gpio);
+static int reg_write(uint8_t reg, uint8_t v, dev_data_t *gpio);
 
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	dt_data_t *dtd = (dt_data_t*)dt_data;
-	gpio_ops_t ops;
+	dev_data_t *gpio;
 
 
-	ops.configure = configure;
-	ops.read = read;
-	ops.write = write;
+	gpio = kmalloc(sizeof(dev_data_t));
 
-	return gpio_itf_create(&ops, dtd->int_num, dtd, &dt_itf, sizeof(i2c_t*));
+	if(gpio == 0x0)
+		return 0x0;
+
+	gpio->dtd = dt_data;
+	gpio->dti = dt_itf;
+
+	gpio->itf.configure = configure;
+	gpio->itf.read = read;
+	gpio->itf.write = write;
+
+	gpio->itf.hw = gpio;
+
+	return &gpio->itf;
 }
 
 driver_probe("mcp23017", probe);
 
-static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
+static int configure(gpio_cfg_t *cfg, void *hw){
 	int r = 0;
-	dt_data_t *dtd = (dt_data_t*)dt_data;
-	i2c_t *i2c = *((i2c_t**)payload);
+	dev_data_t *gpio = (dev_data_t*)hw;
 	uint8_t v;
 
 
@@ -93,45 +107,46 @@ static int configure(gpio_cfg_t *cfg, void *dt_data, void *payload){
 	  | (0x1 << IOCON_INTPOL)
 	  ;
 
-	r |= reg_write(IOCON, v, dtd, i2c);
+	r |= reg_write(IOCON, v, gpio);
 
 	// port config
-	r |= reg_write(IODIR, cfg->in_mask, dtd, i2c);
-	r |= reg_write(IPOL, 0x0, dtd, i2c);
-	r |= reg_write(GPPU, cfg->in_mask, dtd, i2c);
+	r |= reg_write(IODIR, cfg->in_mask, gpio);
+	r |= reg_write(IPOL, 0x0, gpio);
+	r |= reg_write(GPPU, cfg->in_mask, gpio);
 
-	r |= reg_write(GPIO, cfg->out_mask & cfg->invert_mask, dtd, i2c);
+	r |= reg_write(GPIO, cfg->out_mask & cfg->invert_mask, gpio);
 
 	// interrupt config
-	r |= reg_write(INTCON, 0x0, dtd, i2c);
-	r |= reg_write(DEFVAL, 0x0, dtd, i2c);
-	r |= reg_write(GPINTEN, cfg->int_mask, dtd, i2c);
+	r |= reg_write(INTCON, 0x0, gpio);
+	r |= reg_write(DEFVAL, 0x0, gpio);
+	r |= reg_write(GPINTEN, cfg->int_mask, gpio);
 
 	// clear interrupts
-	r |= reg_read(INTCAP, &v, dtd, i2c);
+	r |= reg_read(INTCAP, &v, gpio);
 
 	return -r;
 }
 
-static intgpio_t read(void *dt_data, void *payload){
+static intgpio_t read(void *hw){
 	uint8_t v;
 
 
-	(void)reg_read(GPIO, &v, dt_data, *((i2c_t**)payload));
+	(void)reg_read(GPIO, &v, hw);
 
 	return v;
 }
 
-static int write(intgpio_t v, void *dt_data, void *payload){
-	return reg_write(GPIO, v, (dt_data_t*)dt_data, *((i2c_t**)payload));
+static int write(intgpio_t v, void *hw){
+	return reg_write(GPIO, v, hw);
 }
 
-static int reg_read(uint8_t reg, uint8_t *v, dt_data_t *dtd, i2c_t *i2c){
+static int reg_read(uint8_t reg, uint8_t *v, dev_data_t *gpio){
 	int r = 0;
+	dt_data_t *dtd = gpio->dtd;
 
 
-	r |= (i2c_write(i2c, I2C_MASTER, dtd->slave_addr, ((uint8_t []){ reg + dtd->port }), 1) != 1);
-	r |= (i2c_read(i2c, I2C_MASTER, dtd->slave_addr, v, 1) != 1);
+	r |= (i2c_write(gpio->dti, I2C_MASTER, dtd->slave_addr, ((uint8_t []){ reg + dtd->port }), 1) != 1);
+	r |= (i2c_read(gpio->dti, I2C_MASTER, dtd->slave_addr, v, 1) != 1);
 
 	if(r != 0)
 		return_errno(errno ? errno : E_IO);
@@ -139,8 +154,8 @@ static int reg_read(uint8_t reg, uint8_t *v, dt_data_t *dtd, i2c_t *i2c){
 	return 0;
 }
 
-static int reg_write(uint8_t reg, uint8_t v, dt_data_t *dtd, i2c_t *i2c){
-	if(i2c_write(i2c, I2C_MASTER, dtd->slave_addr, ((uint8_t []){ reg + dtd->port, v }), 2) != 2)
+static int reg_write(uint8_t reg, uint8_t v, dev_data_t *gpio){
+	if(i2c_write(gpio->dti, I2C_MASTER, gpio->dtd->slave_addr, ((uint8_t []){ reg + gpio->dtd->port, v }), 2) != 2)
 		return_errno(errno ? errno : E_IO);
 
 	return 0;

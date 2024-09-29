@@ -40,23 +40,18 @@ static int erase(term_erase_t type, uint16_t n, void *hw);
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	vram_cfg_t *dtd = (vram_cfg_t*)dt_data;
-	vram_itf_t *dti = (vram_itf_t*)dt_itf;
 	dev_data_t *term;
 
 
 	term = kmalloc(sizeof(dev_data_t));
 
 	if(term == 0x0)
-		goto err_0;
+		return 0x0;
 
-	term->vram = vram_create(dti, dtd);
+	term->vram = dt_itf;
 	term->font = font_resolve(0x0);
 	term->line = 0;
 	term->column = 0;
-
-	if(term->vram == 0x0)
-		goto err_1;
 
 	term->itf.configure = configure;
 	term->itf.puts = puts;
@@ -67,19 +62,12 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	term->itf.error = 0x0;
 
 	term->itf.hw = term;
-	term->itf.cfg = &term->vram->cfg;
+	term->itf.cfg = term->vram->cfg;
 	term->itf.cfg_size = sizeof(vram_cfg_t);
 	term->itf.rx_int = 0;
 	term->itf.tx_int = 0;
 
 	return &term->itf;
-
-
-err_1:
-	kfree(term);
-
-err_0:
-	return 0x0;
 }
 
 driver_probe("vram,term", probe);
@@ -149,9 +137,9 @@ static int erase(term_erase_t type, uint16_t n, void *hw){
 		}
 
 		if(type & TE_TO_END){
-			x = (n == 0) ? vram_npages(&term->vram->cfg) - (term->line + 1) : n * term->font->height / 8;
+			x = (n == 0) ? vram_npages(term->vram->cfg) - (term->line + 1) : n * term->font->height / 8;
 
-			if(term->line + 1 < term->vram->cfg.height)
+			if(term->line + 1 < term->vram->cfg->height)
 				r |= vram_write_pages(term->vram, term->line + 1, x, 0x0);
 		}
 	}
@@ -163,7 +151,7 @@ static int erase(term_erase_t type, uint16_t n, void *hw){
 	}
 
 	if(type & TE_TO_END){
-		x = (n == 0) ? term->vram->cfg.width - term->column : n * term->font->width;
+		x = (n == 0) ? term->vram->cfg->width - term->column : n * term->font->width;
 		r |= vram_write_page(term->vram, term->line, term->column, x, 0x0);
 	}
 

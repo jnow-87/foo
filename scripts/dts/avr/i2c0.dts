@@ -16,22 +16,24 @@ i2c0 = {
 	/* i2c hardware (dt_data_t) */
 	baseaddr = 0xb8;
 
-	reg = [ 0x64 ];	  	// PRRO
-	int<8> = [ 0x80 ];	// PRR0_PRTWI
+	reg = [ 0x64 ];			// PRRO
+	int<8> = [ 0x80 ];		// PRR0_PRTWI
 
-	/* i2c config (i2c_cfg_t) */
-	int<16> = [ 100 ];	// clock (100kHz)
-	int<8> = [
-	   1,				// broadcast (enabled)
-	   16,				// address
+	i2c-bus0 = {
+		compatible = "i2c";
+
+		/* i2c config (i2c_cfg_t) */
+		int<16> = [ 100 ];	// clock (100kHz)
+		int<8> = [
+		   16,				// address
 #if defined(CONFIG_DRIVER_SSD1306) \
  || defined(CONFIG_DRIVER_MCP23017) \
  || defined(CONFIG_DRIVER_BME280)
-	   0,				// interrupt
+		   0,				// interrupt
 #else
-	   26,				// interrupt (twi)
+		   26,				// interrupt (twi)
 #endif // CONFIG_DRIVER_SSD1306
-	];
+		];
 
 #ifdef CONFIG_I2C_RAW
 # include "../common/i2c0-raw.dts"
@@ -48,4 +50,5 @@ i2c0 = {
 #ifdef CONFIG_DRIVER_SSD1306
 # include "../common/ssd1306.dts"
 #endif // CONFIG_DRIVER_SSD1306
+	};
 };

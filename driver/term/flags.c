@@ -9,6 +9,7 @@
 
 #include <driver/term.h>
 #include <sys/types.h>
+#include "term.h"
 
 
 /* types */
@@ -51,7 +52,7 @@ static flag_hdlr_t *flag_hdlr[] = {
 
 
 /* global functions */
-char *term_flags_apply(term_t *term, char *s, size_t n, size_t incr, term_flag_type_t fl_type, uint8_t flags){
+char *flags_apply(term_t *term, char *s, size_t n, size_t incr, term_flag_type_t fl_type, uint8_t flags){
 	char *x = s;
 	size_t n_put;
 
@@ -102,12 +103,12 @@ static char *o_nlcr(char *s, size_t idx, size_t n, term_t *term){
 	if(s[idx] != '\n')
 		return s;
 
-	r = term_puts(term, s, idx);
-	r += term_puts(term, "\r\n", 2);
+	r = puts_raw(term, s, idx);
+	r += puts_raw(term, "\r\n", 2);
 
 	return (r == idx + 2) ? s + idx + 1 : 0x0;
 }
 
 static char *l_echo(char *s, size_t idx, size_t n, term_t *term){
-	return (term_puts(term, s, n) == n) ? s : 0x0;
+	return (puts_raw(term, s, n) == n) ? s : 0x0;
 }

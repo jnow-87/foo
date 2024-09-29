@@ -11,46 +11,53 @@
 #include <gpio.dts>
 
 
-port-test = {
+port1 = {
 	compatible = "x86,gpio";
 
 	/* gpio hardware (dt_data_t) */
-	int<8> = [ (arch.num-ints++) ];	// interrupt
 	int<16> = [ 10 ];				// interrupt timer period [ms]
 
-	gpio-port = {
-		compatible = "gpio,port";
+	gpio1 = {
+		compatible = "gpio";
 
 		gpio_cfg_t(
-			0xff0f,					// in mask
-			0xff00,					// out mask
-			0x000f,					// int mask
-			0x0005,					// invert mask
-			0						// interrupt
+			0xffffffff,			// in mask
+			0xffffffff,			// out mask
+			0xffffffff,			// int mask
+			0x000005f5,			// invert mask
+			(arch.num-ints++)	// interrupt
 		);
-	};
 
-	gpio-pin = {
-		compatible = "gpio,pin";
+		gpio1-port0 = {
+			compatible = "gpio,port";
 
-		gpio_cfg_t(
-			0xff,					// in mask
-			0xff,					// out mask
-			0x0f,					// int mask
-			0x00,					// invert mask
-			0						// interrupt
-		);
-	};
+			/* port config (gpio_port_cfg_t) */
+			int<CONFIG_GPIO_INT_WIDTH> = [
+				0xff0f,			// in mask
+				0xff00,			// out mask
+				0x000f,			// int mask
+			];
+		};
 
-	gpio-int = {
-		compatible = "gpio,port";
+		gpio1-pin0 = {
+			compatible = "gpio,pin";
 
-		gpio_cfg_t(
-			0xffffffff,				// in mask
-			0xffffffff,				// out mask
-			0xffffffff,				// int mask
-			0x00000000,				// invert mask
-			(arch.num-ints++)		// interrupt
-		);
+			/* pin config (dt_data_t) */
+			int<8> = [
+				4,		// pin
+				0x3,	// mode (i/o)
+			];
+		};
+
+		gpio1-int0 = {
+			compatible = "gpio,port";
+
+			/* port config (gpio_port_cfg_t) */
+			int<CONFIG_GPIO_INT_WIDTH> = [
+				0xffffffff,		// in mask
+				0xffffffff,		// out mask
+				0xffffffff,		// int mask
+			];
+		};
 	};
 };

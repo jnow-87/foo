@@ -24,13 +24,15 @@ brdg0-right-i2c = {
 	brdg0-itf-i2c = {
 		compatible = "bridge,i2c-dev";
 
-		/* i2c config (i2c_cfg_t) */
-		int<16> = [ 0 ];	// clock (0kHz)
-		int<8> = [
-		   0,				// broadcast (disabled)
-		   17,				// address
-		   0,				// interrupt
-		];
+		i2c-bus0 = {
+			compatible = "i2c";
+
+			/* i2c config (i2c_cfg_t) */
+			int<16> = [ 0 ];	// clock (0kHz)
+			int<8> = [
+			   17,				// address
+			   0,				// interrupt
+			];
 
 #ifdef CONFIG_I2C_RAW
 # include "../common/i2c0-raw.dts"
@@ -47,5 +49,6 @@ brdg0-right-i2c = {
 #ifdef CONFIG_DRIVER_SSD1306
 # include "../common/ssd1306.dts"
 #endif // CONFIG_DRIVER_SSD1306
+		};
 	};
 };
