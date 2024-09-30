@@ -144,10 +144,6 @@ static size_t puts(char const *s, size_t n, bool blocking, void *hw){
 	}
 
 	return i;
-
-
-err:
-	return 0;
 }
 
 static size_t gets(char *s, size_t n, void *hw){
