@@ -11,11 +11,48 @@
 
 
 arch = {
-#include "x86/arch.dts"
+	addr-width = 64;
+	reg-width = 64;
+
+	ncores = 1;
+
+	// interrupts
+	num-ints = 4;
+
+	timer-int = 0;
+	syscall-int = 1;
+
+	timer-cycle-time-us = 50000;
 };
 
 memory = {
-#include "x86/memory.dts"
+	ram = {
+		baseaddr = 0x00400000;
+		size = 62914560;
+
+		text = {
+			baseaddr = 0x00400000;
+			size = 20971520;
+		};
+
+		kernel-data = {
+			baseaddr = 0x1800000;
+			size = 20971520;
+		};
+
+		app-data = {
+			baseaddr = 0x2c00000;
+			size = 20971520;
+		};
+	};
+
+	// The heap needs to be allocated dynamically to allow
+	// using it as shared memory. However, a heap node is
+	// needed since the kernel assumes its presence.
+	heap = {
+		baseaddr = 0x0;
+		size = 1048576;
+	};
 };
 
 devices = {
