@@ -7,35 +7,38 @@
 
 
 
+#include <avr.dts>
+#include <bridge.dts>
+#include <i2c.dts>
+
+
 i2c0 = {
 	compatible = "avr,i2c";
 
-	/* i2c hardware (dt_data_t) */
-	baseaddr = 0xb8;
-
-	reg = [ 0x64 ];					// PRRO
-	int<8> = [ 0x80 ];				// PRR0_PRTWI
+	avr_i2c_dtd(
+		0xb8,	// register base
+		0x64,	// PRRO
+		0x80	// PRR0_PRTWI
+	)
 
 	i2c-bus0 = {
 		compatible = "i2c";
 
-		/* i2c config (i2c_cfg_t) */
-		int<16> = [ 100 ];			// clock (100kHz)
-		int<8> = [
-		   16,						// address
-		   0,						// interrupt
-		];
+		i2c_cfg_t(
+			100,	// clock (100kHz)
+			16,		// address
+			0		// interrupt
+		)
 
 		brdg0-right = {
 			compatible = "bridge,i2c-itf";
 
-			/* bridge config (bridge_cfg_t) */
-			int<8> = [
+			bridge_cfg_t(
 				0,					// id
 				2,					// chunksize
 				(arch.num-ints++),	// rx interrupt
-				(arch.num-ints++),	// tx interrupt
-			];
+				(arch.num-ints++)	// tx interrupt
+			)
 		};
 	};
 };

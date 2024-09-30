@@ -1,0 +1,88 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+/* macros */
+// avr platform config (avr_platform_cfg_t)
+#define avr_platform_cfg_t(sys_clk_hz, sys_clk_prescale, wdt_prescale) \
+	int<32> = [ sys_clk_hz ]; \
+	int<8> = [ sys_clk_prescale ]; \
+	int<8> = [ wdt_prescale ];
+
+// avr uart driver config (dt_data_t)
+#define avr_uart_dtd(regs, prr, prr_mask, rx_int, tx_int) \
+	baseaddr = regs; \
+	\
+	reg = [ prr ]; \
+	int<8> = [ prr_mask ]; \
+	\
+	int<8> = [ \
+		rx_int, \
+		tx_int, \
+	];
+
+// avr spi driver config (dt_data_t)
+#define avr_spi_dtd(regs, ddr, miso, mosi, sck, prr, prr_mask, int_num) \
+	baseaddr = regs; \
+	\
+	reg = [ ddr ]; \
+	int<8> = [ \
+		miso, \
+		mosi, \
+		sck, \
+	]; \
+	\
+	reg = [ prr ]; \
+	int<8> = [ prr_mask ]; \
+	\
+	int<8> = [ int_num ];
+
+// avr i2c driver config (dt_data_t)
+#define avr_i2c_dtd(regs, prr, prr_mask) \
+	baseaddr = regs; \
+	reg = [ prr ]; \
+	int<8> = [ prr_mask ];
+
+// avr eeprom driver config (dt_data_t)
+#define avr_eeprom_dtd(regs, mem_base, mem_size, int_num) \
+	baseaddr = regs; \
+	\
+	int<16> = [ \
+		mem_base, \
+		mem_size, \
+	]; \
+	\
+	int<8> = [ int_num ];
+
+// avr pwm config (dt_data_t)
+#define avr_pwm_dtd(regs, tifr, tifr_mask, prr, prr_mask, ddr, ddr_mask) \
+	baseaddr = regs; \
+	\
+	reg = [ \
+		tifr, \
+		tifr_mask, \
+	]; \
+	\
+	reg = [ prr ]; \
+	int<8> = [ prr_mask ]; \
+	\
+	reg = [ ddr ]; \
+	int<8> = [ ddr_mask ];
+
+// avr gpio config (dt_data_t)
+#define avr_gpio_dtd(regs, pcicr, pc_mask, pullup_mask) \
+	baseaddr = regs; \
+	\
+	reg = [ \
+		pcicr, \
+		pc_mask, \
+	]; \
+	\
+	int<8> = [ \
+		pullup_mask, \
+	];

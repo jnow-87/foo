@@ -7,16 +7,19 @@
 
 
 
+#include <bridge.dts>
+#include <term.dts>
+
+
 brdg0-right = {
 	compatible = "bridge,itf";
 
-	/* bridge config (bridge_cfg_t) */
-	int<8> = [
+	bridge_cfg_t(
 		0,					// id
 		2,					// chunksize
 		(arch.num-ints++),	// rx interrupt
-		(arch.num-ints++),	// tx interrupt
-	];
+		(arch.num-ints++)	// tx interrupt
+	)
 
 	brdg0-itf = {
 		compatible = "bridge,uart-dev";
@@ -24,18 +27,12 @@ brdg0-right = {
 		brdg0-term = {
 			compatible = "terminal";
 
-			/* terminal config (term_cfg_t) */
-			int<8> = [
+			term_cfg_t(
 				0x0,		// iflags (none)
 				0x0,		// oflags (none)
 				0x0,		// lflags (none)
-				0,			// tabs
-			];
-
-			int<16> = [
-				0,			// lines (set by the driver)
-				0,			// columns (set by the driver)
-			];
+				0			// tabs
+			)
 
 			tty-bridge0 = {
 				compatible = "terminal,raw";

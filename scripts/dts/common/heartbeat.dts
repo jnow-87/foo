@@ -7,7 +7,7 @@
 
 
 
-#include <gpio.dts>
+#include <heartbeat.dts>
 
 
 #ifndef HEARTBEAT_PIN
@@ -17,10 +17,9 @@
 heartbeat = {
 	compatible = "kernel,heartbeat";
 
-	/* heartbeat config (dt_data_t) */
-	int<8> = [ HEARTBEAT_PIN ];	// pin
-	int<16> = [
-		0x0505,					// wave
-		200,					// period [ms]
-	];
+	heartbeat_dtd(
+		HEARTBEAT_PIN,	// pin
+		0x0505,			// wave
+		200				// period [ms]
+	)
 };

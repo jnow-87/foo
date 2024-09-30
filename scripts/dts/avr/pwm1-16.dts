@@ -7,20 +7,19 @@
 
 
 
+#include <avr.dts>
+
+
 pwm1 = {
 	compatible = "avr,pwm16";
 
-	/* pwm hardware (dt_data_t) */
-	baseaddr = 0x80;	// tcc1 config register base
-
-	reg = [
-		0x36,			// TIFR1
-		0x6f,			// TIMSK1
-	];
-
-	reg = [ 0x64 ];		// PRR0
-	int<8> = [ 0x08 ];	// PRR0_PRTIM1
-
-	reg = [ 0x2a ];		// DDRD
-	int<8> = [ 0x30 ];	// DDRD bits 4..5
+	avr_pwm_dtd(
+		0x80,	// tcc1 config register base
+		0x36,	// TIFR1
+		0x6f,	// TIMSK1
+		0x64,	// PRR0
+		0x08,	// PRR0_PRTIM1
+		0x2a,	// DDRD
+		0x30	// DDRD bits 4..5
+	)
 };

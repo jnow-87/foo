@@ -1,0 +1,24 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+/* macros */
+// bme280 config (dt_data_t)
+#define bme280_dtd(addr, mode, features, t_standby, filter, ovs_temp, ovs_press, ovs_hum) \
+	int<8> = [ addr ]; \
+	\
+	/* bme280 config (bme280_cfg_t) */ \
+	int <8> = [ \
+		mode, \
+		features, \
+		t_standby, \
+		filter, \
+		ovs_temp, \
+		ovs_press, \
+		ovs_hum, \
+	];

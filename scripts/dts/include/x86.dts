@@ -1,0 +1,21 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+/* macros */
+// x86 uart config (dt_data_t)
+#define x86_uart_dtd(path, rx_int, tx_int) \
+	string = path; \
+	int<8> = [ \
+		rx_int, \
+		tx_int, \
+	];
+
+// x86 gpio config (dt_data_t)
+#define x86_gpio_dtd(int_period_ms) \
+	int<16> = [ int_period_ms ];

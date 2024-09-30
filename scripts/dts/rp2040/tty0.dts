@@ -8,45 +8,39 @@
 
 
 #include <config/config.h>
+#include <rp2040.dts>
+#include <term.dts>
+#include <uart.dts>
 
 
 uart0 = {
 	compatible = "rp2040,uart";
 
-	/* uart hardware (dt_data_t) */
-	baseaddr = 0x40034000;	// uart0 register base
-
-	int<8> = [
+	rp2040_uart_dtd(
+		0x40034000,			// uart0 register base
 		22,					// reset id
 		36,					// hardware interrupt
 		(arch.num-ints++),	// rx interrupt
-		(arch.num-ints++),	// tx interrupt
-	];
+		(arch.num-ints++)	// tx interrupt
+	)
 
-	// cfg (uart_cfg_t)
-	int<32> = [ 115200 ];	// baudrate
-	int<8> = [
+	uart_cfg_t(
+		115200,				// baudrate
 		0,					// stop bits (1)
 		0,					// parity (UART_PARITY_NONE)
-		3,					// csize (UART_CS_8)
-	];
+		3					// csize (UART_CS_8)
+	)
 
 #ifdef CONFIG_DRIVER_TERM
 	term0 = {
 		compatible = "terminal";
 
-		/* terminal config (term_cfg_t) */
-		int<8> = [
+		term_cfg_t(
 			0x0,			// iflags (none)
 			0x2,			// oflags (TOFL_NLCR)
 			0x0,			// lflags (none)
-			0,				// tabs
-		];
-
-		int<16> = [
-			0,				// lines (set by the driver)
-			0,				// columns (set by the driver)
-		];
+			0				// tabs
+		)
 
 		tty0 = {
 			compatible = "terminal,raw";

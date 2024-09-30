@@ -1,0 +1,17 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+/* macros */
+// kernel heartbeat config (dt_data_t)
+#define heartbeat_dtd(pin, wave, period_ms) \
+	int<8> = [ pin ]; \
+	int<16> = [ \
+		wave, \
+		period_ms, \
+	];

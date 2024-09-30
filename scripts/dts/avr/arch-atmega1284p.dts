@@ -8,6 +8,7 @@
 
 
 #include <config/config.h>
+#include <avr.dts>
 
 
 addr-width = 16;
@@ -29,8 +30,9 @@ timer-cycle-time-us = 31250;
 plt = {
 	compatible = "avr,platform";
 
-	// config (avr_platform_cfg_t)
-	int<32> = [ 20000000 ];	// system clock [Hz]
-	int<8> = [ 0 ];			// system clock prescale (1)
-	int<8> = [ 0x1 ];		// watchdog prescaler (4096 -> 31.250ms)
+	avr_platform_cfg_t(
+		20000000,	// system clock [Hz]
+		0,			// system clock prescale (1)
+		0x1			// watchdog prescaler (4096 -> 31.250ms)
+	)
 };

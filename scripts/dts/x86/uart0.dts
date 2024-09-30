@@ -7,40 +7,38 @@
 
 
 
+
+#include <term.dts>
+#include <uart.dts>
+#include <x86.dts>
+
+
 uart0 = {
 	compatible = "x86,uart";
 
-	/* uart hardware (dt_data_t) */
-	string = "/dev/stdin";	// path
-	int<8> = [
-		3,					// rx interrupt (uart0)
-		0,					// tx interrupt
-	];
+	x86_uart_dtd(
+		"/dev/stdin",	// path
+		3,				// rx interrupt (uart0)
+		0				// tx interrupt
+	)
 
-	// cfg (uart_cfg_t)
-	int<32> = [ 115200 ];	// baudrate
-	int<8> = [
-		0,					// stop bits (1)
-		0,					// parity (UART_PARITY_NONE)
-		3,					// csize (UART_CS_8)
-	];
+	uart_cfg_t(
+		115200,			// baudrate
+		0,				// stop bits (1)
+		0,				// parity (UART_PARITY_NONE)
+		3				// csize (UART_CS_8)
+	)
 
 #ifdef CONFIG_DRIVER_TERM
 	term0 = {
 		compatible = "terminal";
 
-		/* terminal config (term_cfg_t) */
-		int<8> = [
-			0x1,			// iflags (TIFL_CRNL)
-			0x2,			// oflags (TOFL_NLCR)
-			0x0,			// lflags (none)
-			0,				// tabs
-		];
-
-		int<16> = [
-			0,				// lines (set by the driver)
-			0,				// columns (set by the driver)
-		];
+		term_cfg_t(
+			0x1,		// iflags (TIFL_CRNL)
+			0x2,		// oflags (TOFL_NLCR)
+			0x0,		// lflags (none)
+			0			// tabs
+		)
 
 		tty0 = {
 			compatible = "terminal,raw";

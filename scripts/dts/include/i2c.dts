@@ -1,0 +1,17 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+/* macros */
+// i2c driver config (i2c_cfg_t)
+#define i2c_cfg_t(clk_khz, addr, int_num) \
+	int<16> = [ clk_khz ]; \
+	int<8> = [ \
+	   addr, \
+	   int_num, \
+	];

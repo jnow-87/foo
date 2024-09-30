@@ -1,0 +1,65 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+/* macros */
+// rp2040 pll config (rp2040_pll_cfg_t)
+#define rp2040_pll_cfg_t(ref_div, post_div1, post_div2 , feedback_div) \
+	int<8> = [ \
+		ref_div, \
+		post_div1, \
+		post_div2, \
+	]; \
+	int<16> = [ feedback_div ];
+
+// rp2040 gpio function selection (array wrapper)
+#define rp2040_gpio_funcsel(...) \
+	int<8> = [ __VA_ARGS__ ];
+
+// rp2040 platform config (rp2040_platform_cfg_t)
+#define rp2040_platform_cfg_t(crystal_clk_khz, pll_sys, pll_usb, gpio_funcsel, gpio_v33) \
+	int<32> = [ \
+		crystal_clk_khz, \
+		0, /* system clock [kHz] (set by the platform) */ \
+		0, /* peripheral clock [kHz] (set by the platform) */ \
+	]; \
+	\
+	pll_sys \
+	pll_usb \
+	\
+	gpio_funcsel \
+	int<8> = [gpio_v33 ];
+
+// rp2040 uart config (dt_data_t)
+#define rp2040_uart_dtd(regs, reset_id, hw_int, rx_int, tx_int) \
+	baseaddr = regs; \
+	\
+	int<8> = [ \
+		reset_id, \
+		hw_int, \
+		rx_int, \
+		tx_int, \
+	];
+
+// rp2040 i2c config (dt_data_t)
+#define rp2040_i2c_dtd(regs, reset_id) \
+	baseaddr = regs; \
+	int<8> = [ reset_id ];
+
+// rp2040 gpio config (dt_data_t)
+#define rp2040_gpio_dtd(pu_mask, pd_mask, schmitt_en, slewfast, drv_2ma, drv_4ma, drv_8ma, drv_12ma) \
+	int<32> = [ \
+		pu_mask, \
+		pd_mask, \
+		schmitt_en, \
+		slewfast, \
+		drv_2ma, \
+		drv_4ma, \
+		drv_8ma, \
+		drv_12ma, \
+	];

@@ -1,0 +1,13 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+/* macros */
+// x11 display config (dt_data_t)
+#define x11_dtd(scale) \
+	int<8> = [ scale ];

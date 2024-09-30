@@ -8,30 +8,32 @@
 
 
 #include <config/config.h>
+#include <i2c.dts>
+#include <rp2040.dts>
 
 
 i2c0 = {
 	compatible = "rp2040,i2c";
 
-	/* i2c hardware (dt_data_t) */
-	baseaddr = 0x40044000;
-	int<8> = [ 3 ];			// reset id (i2c0)
+	rp2040_i2c_dtd(
+		0x40044000,
+		3			// reset id (i2c0)
+	)
 
 	i2c-bus0 = {
 		compatible = "i2c";
 
-		/* i2c config (i2c_cfg_t) */
-		int<16> = [ 100 ];	// clock (100kHz)
-		int<8> = [
-		   18,				// address
+		i2c_cfg_t(
+			100,	// clock (100kHz)
+			18,		// address
 #if defined(CONFIG_DRIVER_SSD1306) \
  || defined(CONFIG_DRIVER_MCP23017) \
  || defined(CONFIG_DRIVER_BME280)
-		   0,				// interrupt
+			0		// interrupt
 #else
-		   39,				// interrupt
+			39		// interrupt
 #endif // CONFIG_DRIVER_SSD1306
-		];
+		)
 
 #ifdef CONFIG_I2C_RAW
 # include "../common/i2c0-raw.dts"

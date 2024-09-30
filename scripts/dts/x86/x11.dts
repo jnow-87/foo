@@ -7,24 +7,29 @@
 
 
 
+#include <term.dts>
+#include <vram.dts>
+#include <x11.dts>
+#include <x86.dts>
+
+
 x11 = {
 	compatible = "x11";
 
-	/* x11 hardware (dt_data_t) */
-	int<8> = [ 3 ];			// scale
+	x11_dtd(
+		3			// scale
+	)
 
 	x11-vram = {
 		compatible = "vram";
 
-		/* display config (vram_cfg_t) */
-		int<16> = [
-			64,				// height
-			128,			// width
-		];
-
-		int<8> = [ 0x10 ];	// contrast
-		int<8> = [ 0x0 ];	// flags (none)
-		int<16> = [ 100 ];	// refresh_ms
+		vram_cfg_t(
+			64,		// height
+			128,	// width
+			0x10,	// contrast
+			0x0,	// flags (none)
+			100		// refresh_ms
+		)
 
 		x11-raw = {
 			compatible = "vram,raw";
@@ -36,18 +41,12 @@ x11 = {
 			x11-term = {
 				compatible = "terminal";
 
-				/* terminal config (term_cfg_t) */
-				int<8> = [
-					0x0,		// iflags (none)
-					0x2,		// oflags (TOFL_NLCR)
-					0x1e,		// lflags (TLFL_CURSOR | TLFL_SCROLL | TLFL_WRAP | TLFL_CANON)
-					4,			// tabs
-				];
-
-				int<16> = [
-					0,			// lines (set by the driver)
-					0,			// columns (set by the driver)
-				];
+				term_cfg_t(
+					0x0,	// iflags (none)
+					0x2,	// oflags (TOFL_NLCR)
+					0x1e,	// lflags (TLFL_CURSOR | TLFL_SCROLL | TLFL_WRAP | TLFL_CANON)
+					4		// tabs
+				)
 
 				x11-tty1 = {
 					compatible = "terminal,raw";

@@ -8,18 +8,19 @@
 
 
 #include <config/config.h>
+#include <bridge.dts>
+#include <i2c.dts>
 
 
 brdg0-right-i2c = {
 	compatible = "bridge,itf";
 
-	/* bridge config (bridge_cfg_t) */
-	int<8> = [
-		0,				// id
-		2,				// chunksize
-		0,				// rx interrupt
-		0,				// tx interrupt
-	];
+	bridge_cfg_t(
+		0,			// id
+		2,			// chunksize
+		0,			// rx interrupt
+		0			// tx interrupt
+	)
 
 	brdg0-itf-i2c = {
 		compatible = "bridge,i2c-dev";
@@ -27,12 +28,11 @@ brdg0-right-i2c = {
 		i2c-bus0 = {
 			compatible = "i2c";
 
-			/* i2c config (i2c_cfg_t) */
-			int<16> = [ 0 ];	// clock (0kHz)
-			int<8> = [
-			   17,				// address
-			   0,				// interrupt
-			];
+			i2c_cfg_t(
+				0,	// clock (0kHz)
+				17,	// address
+				0	// interrupt
+			)
 
 #ifdef CONFIG_I2C_RAW
 # include "../common/i2c0-raw.dts"

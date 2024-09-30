@@ -7,27 +7,26 @@
 
 
 
+#include <loop.dts>
+#include <term.dts>
+
+
 loop1 = {
 	compatible = "loop,term";
 
-	/* loop config (loop_cfg_t) */
-	int<16> = [ 32 ];	// buffer size
+	loop_cfg_t(
+		32	// buffer size
+	)
 
 	loop1-term = {
 		compatible = "terminal";
 
-		/* terminal config (term_cfg_t) */
-		int<8> = [
+		term_cfg_t(
 			0x0,		// iflags (none)
 			0x0,		// oflags (none)
 			0x0,		// lflags (none)
-			0,			// tabs
-		];
-
-		int<16> = [
-			0,			// lines (set by the driver)
-			0,			// columns (set by the driver)
-		];
+			0			// tabs
+		)
 
 		tty-loop0 = {
 			compatible = "terminal,raw";

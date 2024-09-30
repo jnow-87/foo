@@ -8,23 +8,19 @@
 
 
 #include <config/config.h>
+#include <avr.dts>
 #include <gpio.dts>
 
 
 porta = {
 	compatible = "avr,gpio";
 
-	/* gpio hardware (dt_data_t) */
-	baseaddr = 0x20;	// porta
-
-	reg = [
+	avr_gpio_dtd(
+		0x20,			// porta
 		0x68,			// PCICR
 		0x6b,			// PCMSK0
-	];
-
-	int<8> = [
-		0xf0,			// pull-up mask
-	];
+		0xf0			// pull-up mask
+	)
 
 	gpio0 = {
 		compatible = "gpio";
@@ -40,34 +36,31 @@ porta = {
 		switches = {
 			compatible = "gpio,port";
 
-			/* port config (gpio_port_cfg_t) */
-			int<CONFIG_GPIO_INT_WIDTH> = [
+			gpio_port_cfg_t(
 				0xf0,	// in mask
 				0x00,	// out mask
-				0xf0,	// int mask
-			];
+				0xf0	// int mask
+			)
 		};
 
 		adc = {
 			compatible = "gpio,port";
 
-			/* port config (gpio_port_cfg_t) */
-			int<CONFIG_GPIO_INT_WIDTH> = [
+			gpio_port_cfg_t(
 				0x0f,	// in mask
 				0x00,	// out mask
-				0x00,	// int mask
-			];
+				0x00	// int mask
+			)
 		};
 
 #if defined(CONFIG_DRIVER_MCP23017) && defined(CONFIG_GPIO_INTFWD)
 		mcp-int = {
 			compatible = "gpio,intfwd";
 
-			/* intfwd config (dt_data_t) */
-			int<8> = [
+			gpio_intfwd_dtd(
 				0,					// pin
-				(arch.num-ints++),	// interrupt to trigger
-			];
+				(arch.num-ints++)	// interrupt to trigger
+			)
 		};
 #endif // CONFIG_DRIVER_MCP23017 && CONFIG_GPIO_INTFWD
 	};
@@ -76,37 +69,31 @@ porta = {
 portb = {
 	compatible = "avr,gpio";
 
-	/* gpio hardware (dt_data_t) */
-	baseaddr = 0x23;	// portb
-
-	reg = [
-		0x68,			// PCICR
-		0x6c,			// PCMSK1
-	];
-
-	int<8> = [
-		0x01,			// pull-up mask
-	];
+	avr_gpio_dtd(
+		0x23,		// portb
+		0x68,		// PCICR
+		0x6c,		// PCMSK1
+		0x01		// pull-up mask
+	)
 
 	gpio1 = {
 		compatible = "gpio";
 
 		gpio_cfg_t(
-			0x00,		// in mask
-			0x03,		// out mask
-			0x00,		// int mask
-			0x03,		// invert mask
-			0			// interrupt
+			0x00,	// in mask
+			0x03,	// out mask
+			0x00,	// int mask
+			0x03,	// invert mask
+			0		// interrupt
 		);
 
 		uled = {
 			compatible = "gpio,pin";
 
-			/* pin config (dt_data_t) */
-			int<8> = [
-				0,		// pin
-				0x2,	// mode (out)
-			];
+			gpio_pin_dtd(
+				0,	// pin
+				0x2	// mode (out)
+			)
 		};
 
 #ifdef CONFIG_KERNEL_HEARTBEAT
@@ -119,38 +106,32 @@ portb = {
 portc = {
 	compatible = "avr,gpio";
 
-	/* gpio hardware (dt_data_t) */
-	baseaddr = 0x26;	// portc
-
-	reg = [
-		0x68,			// PCICR
-		0x6d,			// PCMSK2
-	];
-
-	int<8> = [
-		0xc0,			// pull-up mask
-	];
+	avr_gpio_dtd(
+		0x26,		// portc
+		0x68,		// PCICR
+		0x6d,		// PCMSK2
+		0xc0		// pull-up mask
+	)
 
 	gpio2 = {
 		compatible = "gpio";
 
 		gpio_cfg_t(
-			0xc0,		// in mask
-			0xc0,		// out mask
-			0xc0,		// int mask
-			0xc0,		// invert mask
-			6			// interrupt (pcint2)
+			0xc0,	// in mask
+			0xc0,	// out mask
+			0xc0,	// int mask
+			0xc0,	// invert mask
+			6		// interrupt (pcint2)
 		);
 
 		int0 = {
 			compatible = "gpio,port";
 
-			/* port config (gpio_port_cfg_t) */
-			int<CONFIG_GPIO_INT_WIDTH> = [
+			gpio_port_cfg_t(
 				0xc0,	// in mask
 				0xc0,	// out mask
-				0xc0,	// int mask
-			];
+				0xc0	// int mask
+			)
 		};
 	};
 };

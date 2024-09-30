@@ -7,16 +7,16 @@
 
 
 
+#include <avr.dts>
+
+
 eeprom0 = {
 	compatible = "avr,eeprom";
 
-	/* eeprom hardware (dt_data_t) */
-	baseaddr = 0x3f;	// eeprom register base
-
-	int<16> = [
-		0x0,			// base address
-		4096,			// size
-	];
-
-	int<8> = [ 25 ];	// interrupt (eeprom)
+	avr_eeprom_dtd(
+		0x3f,	// eeprom register base
+		0x0,	// base address
+		4096,	// size
+		25		// interrupt (eeprom)
+	)
 };

@@ -8,27 +8,28 @@
 
 
 #include <config/config.h>
+#include <ssd1306.dts>
+#include <term.dts>
+#include <vram.dts>
 
 
 ssd1306 = {
 	compatible = "ssd1306";
 
-	/* ssd1306 hardware (dt_data_t) */
-	int<8> = [ 60 ];		// slave address
-	baseaddr = 0x0;			// i2c device, cf. i2c_t, set by the driver
+	ssd1306_dtd(
+		60			// slave address
+	)
 
 	vram0 = {
 		compatible = "vram";
 
-		/* display config (vram_cfg_t) */
-		int<16> = [
-			64,				// height
-			128,			// width
-		];
-
-		int<8> = [ 0x10 ];	// contrast
-		int<8> = [ 0x07 ];	// flags (DSPFL_MIRROR_VERT | DSPFL_MIRROR_HOR | DSPFL_ORIEN_HOR)
-		int<16> = [ 100 ];	// refresh_ms
+		vram_cfg_t(
+			64,		// height
+			128,	// width
+			0x10,	// contrast
+			0x07,	// flags (DSPFL_MIRROR_VERT | DSPFL_MIRROR_HOR | DSPFL_ORIEN_HOR)
+			100		// refresh_ms
+		)
 
 #ifdef CONFIG_VRAM_RAW
 		vram0-raw = {
@@ -44,18 +45,12 @@ ssd1306 = {
 			vram0-term = {
 				compatible = "terminal";
 
-				/* terminal config (term_cfg_t) */
-				int<8> = [
-					0x0,		// iflags (none)
-					0x2,		// oflags (TOFL_NLCR)
-					0x1e,		// lflags (TLFL_CURSOR | TLFL_SCROLL | TLFL_WRAP | TLFL_CANON)
-					4,			// tabs
-				];
-
-				int<16> = [
-					0,			// lines (set by the driver)
-					0,			// columns (set by the driver)
-				];
+				term_cfg_t(
+					0x0,	// iflags (none)
+					0x2,	// oflags (TOFL_NLCR)
+					0x1e,	// lflags (TLFL_CURSOR | TLFL_SCROLL | TLFL_WRAP | TLFL_CANON)
+					4		// tabs
+				)
 
 				tty1 = {
 					compatible = "terminal,raw";

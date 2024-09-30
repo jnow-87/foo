@@ -9,13 +9,15 @@
 
 #include <config/config.h>
 #include <gpio.dts>
+#include <x86.dts>
 
 
 port0 = {
 	compatible = "x86,gpio";
 
-	/* gpio hardware (dt_data_t) */
-	int<16> = [ 0 ];	// interrupt timer period [ms]
+	x86_gpio_dtd(
+		0			// interrupt timer period [ms]
+	)
 
 	gpio0 = {
 		compatible = "gpio";
@@ -31,12 +33,11 @@ port0 = {
 		gpio0-port0 = {
 			compatible = "gpio,port";
 
-			/* port config (gpio_port_cfg_t) */
-			int<CONFIG_GPIO_INT_WIDTH> = [
+			gpio_port_cfg_t(
 				0xff,	// in mask
 				0xff,	// out mask
-				0x00,	// int mask
-			];
+				0x00	// int mask
+			)
 		};
 	};
 };

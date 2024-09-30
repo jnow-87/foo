@@ -7,47 +7,40 @@
 
 
 
+#include <avr.dts>
+#include <spi.dts>
+#include <term.dts>
+
 spi0 = {
 	compatible = "avr,spi";
 
-	/* spi hardware (dt_data_t) */
-	baseaddr = 0x4c;	// spi config register base
+	avr_spi_dtd(
+		0x4c,		// spi config register base
+		0x24,		// DDRB
+		0x40,		// PB6 (MISO)
+		0x20,		// PB5 (MOSI)
+		0x80,		// PB7 (SCK)
+		0x64,		// PRRO
+		0x4,		// PRR0_PRSPI
+		19			// interrupt (spi)
+	)
 
-	reg = [ 0x24 ];		// DDRB
-	int<8> = [
-		0x40,			// PB6 (MISO)
-		0x20,			// PB5 (MOSI)
-		0x80,			// PB7 (SCK)
-	];
-
-	reg = [ 0x64 ];		// PRRO
-	int<8> = [ 0x4 ];	// PRR0_PRSPI
-
-	int<8> = [ 19 ];	// interrupt (spi)
-
-	// cfg (spi_cfg_t)
-	int<8> = [
-		1,				// device mode (master)
-		0,				// sample mode (CPOL = 0, CPHA = 0)
-		0,				// data order (MSB first)
-		1,				// prescaler (4)
-	];
+	spi_cfg_t(
+		1,			// device mode (master)
+		0,			// sample mode (CPOL = 0, CPHA = 0)
+		0,			// data order (MSB first)
+		1			// prescaler (4)
+	)
 
 	term1 = {
 		compatible = "terminal";
 
-		/* terminal config (term_cfg_t) */
-		int<8> = [
-			0x0,		// iflags (none)
-			0x0,		// oflags (none)
-			0x0,		// lflags (none)
-			0,			// tabs
-		];
-
-		int<16> = [
-			0,			// lines (set by the driver)
-			0,			// columns (set by the driver)
-		];
+		term_cfg_t(
+			0x0,	// iflags (none)
+			0x0,	// oflags (none)
+			0x0,	// lflags (none)
+			0		// tabs
+		)
 
 		tty1 = {
 			compatible = "terminal,raw";
