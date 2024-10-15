@@ -7,10 +7,10 @@
 
 
 
-obj-y := file.o process.o math.o fs.o error.o memory.o kernel.o
+obj-y := file.o process.o math.o fs.o error.o memory.o string.o kernel.o
 obj-nobuiltin-y := libbrick.o
 
-libbrick-y := file.o process.o math.o fs.o error.o memory.o
+libbrick-y := file.o process.o math.o fs.o error.o memory.o string.o
 libbrick-y := $(patsubst %.o,%.libbrick.o,$(libbrick-y))
 
 
