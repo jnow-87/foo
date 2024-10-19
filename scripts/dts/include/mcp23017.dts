@@ -7,10 +7,33 @@
 
 
 
+#ifndef MCP23017_DTS
+#define MCP23017_DTS
+
+
 /* macros */
 // mcp23017 config (dt_data_t)
 #define mcp23017_dtd(port, addr) \
 	int<8> = [ \
 		port, \
 		addr, \
-	];
+	]
+
+// mcp device
+#define mcp23017(name, addr, port_a_gpio, port_b_gpio) \
+	mcp23017 ##name ##a = { \
+		compatible = "mcp23017"; \
+		\
+		mcp23017_dtd(0, addr); \
+		port_a_gpio \
+	}; \
+	\
+	mcp23017 ##name ##b = { \
+		compatible = "mcp23017"; \
+		\
+		mcp23017_dtd(1, addr); \
+		port_b_gpio \
+	}
+
+
+#endif // MCP23017_DTS

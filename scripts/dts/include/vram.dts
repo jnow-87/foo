@@ -7,14 +7,48 @@
 
 
 
+#ifndef VRAM_DTS
+#define VRAM_DTS
+
+
+#include <term.dts>
+#include "../common/tty.dts"
+
+
 /* macros */
-// vram config (vram_cfg_t)
-#define vram_cfg_t(height, width, contrast, flags, refresh_ms) \
-	int<16> = [ \
-		height, \
-		width, \
-	]; \
-	\
-	int<8> = [ contrast ]; \
-	int<8> = [ flags ]; \
-	int<16> = [ refresh_ms];
+// vram interface
+#define vram(name, width, height, contrast, flags, refresh_ms, ...) \
+	vram ##name = { \
+		compatible = "vram"; \
+		\
+		/* vram config (vram_cfg_t) */ \
+		int<16> = [ \
+			height, \
+			width, \
+		]; \
+		\
+		int<8> = [ contrast ]; \
+		int<8> = [ flags ]; \
+		int<16> = [ refresh_ms]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// vram raw device
+#define vram_raw(name) \
+	vramraw ##name = { \
+		compatible = "vram,raw"; \
+	}
+
+// vram terminal device
+#define vram_term(name, ...) \
+	vramterm ##name = { \
+		compatible = "vram,term"; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+
+#endif // VRAM_DTS

@@ -7,6 +7,10 @@
 
 
 
+#ifndef SPI_DTS
+#define SPI_DTS
+
+
 /* macros */
 // spi config (spi_cfg_t)
 #define spi_cfg_t(dev_mode, sample_mode, data_order, prescaler) \
@@ -15,4 +19,7 @@
 		sample_mode, \
 		data_order, \
 		prescaler, \
-	];
+	]
+
+
+#endif // SPI_DTS

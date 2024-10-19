@@ -7,7 +7,25 @@
 
 
 
+#ifndef X11_DTS
+#define X11_DTS
+
+
+#include <names.dts>
+
+
 /* macros */
-// x11 display config (dt_data_t)
-#define x11_dtd(scale) \
-	int<8> = [ scale ];
+// x11 display device
+#define x11_dsp(name, scale, ...) \
+	display_name(name) = { \
+		compatible = "x11"; \
+		\
+		/* x11 display config (dt_data_t) */ \
+		int<8> = [ scale ]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+
+#endif // X11_DTS

@@ -7,11 +7,15 @@
 
 
 
+#ifndef KLOG_DTS
+#define KLOG_DTS
+
+
 /* macros */
-// kernel heartbeat config (dt_data_t)
-#define heartbeat_dtd(pin, wave, period_ms) \
-	int<8> = [ pin ]; \
-	int<16> = [ \
-		wave, \
-		period_ms, \
-	];
+#define kernel_log() \
+	klog = { \
+		compatible = "kernel,log"; \
+	}
+
+
+#endif // KLOG_DTS

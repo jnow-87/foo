@@ -7,6 +7,13 @@
 
 
 
+#ifndef ASSERT_DTS
+#define ASSERT_DTS
+
+
 /* macros */
 #define ASSERT(expr, msg) \
 	assert(#expr, msg)
+
+
+#endif // ASSERT_DTS

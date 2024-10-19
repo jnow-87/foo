@@ -7,6 +7,13 @@
 
 
 
+#ifndef BRIDGE_DTS
+#define BRIDGE_DTS
+
+
+#include <i2c.dts>
+
+
 /* macros */
 // bridge config (bridge_cfg_t)
 #define bridge_cfg_t(id, chunksize, rx_int, tx_int) \
@@ -15,4 +22,51 @@
 		chunksize, \
 		rx_int, \
 		tx_int, \
-	];
+	]
+
+// bridge interface
+#define bridge(name, id, chunksize, rx_int, tx_int, ...) \
+	brdg ##name = { \
+		compatible = "bridge,itf"; \
+		\
+		bridge_cfg_t(id, chunksize, rx_int, tx_int); \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// bridge i2c bus device
+#define bridge_i2c_dev(name, clk_hz, addr, ...) \
+	i2c ##name = { \
+		compatible = "bridge,i2c-dev"; \
+		\
+		i2c_bus(name, clk_hz, addr, 0, __VA_ARGS__); \
+	}
+
+// bridge i2c interface
+#define bridge_i2c_itf(name, id, chunksize, rx_int, tx_int) \
+	brdg ##name = { \
+		compatible = "bridge,i2c-itf"; \
+		\
+		bridge_cfg_t(id, chunksize, rx_int, tx_int); \
+	}
+
+// bridge uart device
+#define bridge_uart_dev(name, ...) \
+	uart ##name = { \
+		compatible = "bridge,uart-dev"; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// bridge uart interface
+#define bridge_uart_itf(name, id, chunksize, rx_int, tx_int) \
+	brdg ##name = { \
+		compatible = "bridge,uart-itf"; \
+		\
+		bridge_cfg_t(id, chunksize, rx_int, tx_int); \
+	}
+
+
+#endif // BRIDGE_DTS

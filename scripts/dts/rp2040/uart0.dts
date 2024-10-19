@@ -7,50 +7,22 @@
 
 
 
-#include <config/config.h>
 #include <rp2040.dts>
-#include <term.dts>
-#include <uart.dts>
+#include "../common/tty0.dts"
 
 
-uart0 = {
-	compatible = "rp2040,uart";
+rp2040_uart(
+	0,			// uart name
+	0x40034000,	// uart0 register base
+	22,			// reset id
+	36,			// interrupt
+	115200,		// baudrate
+	0,			// stop bits (1)
+	0,			// parity (UART_PARITY_NONE)
+	3,			// csize (UART_CS_8)
 
-	rp2040_uart_dtd(
-		0x40034000,			// uart0 register base
-		22,					// reset id
-		36,					// hardware interrupt
-		(arch.num-ints++),	// rx interrupt
-		(arch.num-ints++)	// tx interrupt
-	)
-
-	uart_cfg_t(
-		115200,				// baudrate
-		0,					// stop bits (1)
-		0,					// parity (UART_PARITY_NONE)
-		3					// csize (UART_CS_8)
-	)
-
-#ifdef CONFIG_DRIVER_TERM
-	term0 = {
-		compatible = "terminal";
-
-		term_cfg_t(
-			0x0,			// iflags (none)
-			0x2,			// oflags (TOFL_NLCR)
-			0x0,			// lflags (none)
-			0				// tabs
-		)
-
-		tty0 = {
-			compatible = "terminal,raw";
-		};
-
-# ifdef CONFIG_KERNEL_LOG
-		klog = {
-			compatible = "kernel,log";
-		};
-# endif // CONFIG_KERNEL_LOG
-	};
-#endif // CONFIG_DRIVER_TERM
-};
+	tty_user(
+		0,	// term name
+		0	// tty name
+	);
+);

@@ -9,55 +9,49 @@
 
 #include <config/config.h>
 #include <gpio.dts>
+#include <rp2040.dts>
+#include "../common/heartbeat.dts"
 
 
-gpios = {
-	compatible = "rp2040,gpio";
+rp2040_gpio(
+	0,			// gpio name
+	0x00000000,	// pullup_mask,
+	0x00000030,	// pulldown_mask,
+	0x00000030,	// schmitt_en,
+	0x00000000,	// slewfast,
+	0x00000030,	// drive_2ma,
+	0x00000000,	// drive_4ma,
+	0x00000000,	// drive_8ma,
+	0x02008000,	// drive_12ma,
 
-	rp2040_gpio_dtd(
-		0x00000000,		// pullup_mask,
-		0x00000030,		// pulldown_mask,
-		0x00000030,		// schmitt_en,
-		0x00000000,		// slewfast,
-		0x00000030,		// drive_2ma,
-		0x00000000,		// drive_4ma,
-		0x00000000,		// drive_8ma,
-		0x02008000		// drive_12ma,
-	)
+	gpio(
+		0,			// gpio name
+		0x00000030,	// in mask
+		0x020080c0,	// out mask
+		0x00000030,	// int mask
+		0x000000c0,	// invert mask
+		29,			// interrupt (io_irq_bank0)
 
-	gpio0 = {
-		compatible = "gpio";
-
-		gpio_cfg_t(
+		gpio_port(
+			0,			// gpio name
+			0,			// port name
 			0x00000030,	// in mask
-			0x020080c0,	// out mask
-			0x00000030,	// int mask
-			0x000000c0,	// invert mask
-			29			// interrupt (io_irq_bank0)
+			0x000000c0,	// out mask
+			0x00000030	// int mask
 		);
 
-		gpio0-port0 = {
-			compatible = "gpio,port";
+		gpio_pin(
+			0,		// gpio name
+			uled,	// pin name
+			15,		// pin
+			0x2		// mode (out)
+		);
 
-			gpio_port_cfg_t(
-				0x00000030,	// in mask
-				0x000000c0,	// out mask
-				0x00000030	// int mask
-			)
-		};
-
-		led = {
-			compatible = "gpio,pin";
-
-			gpio_pin_dtd(
-				15,			// pin
-				0x2			// mode (out)
-			)
-		};
-
-#ifdef CONFIG_KERNEL_HEARTBEAT
-# define HEARTBEAT_PIN	25
-# include "../common/heartbeat.dts"
-#endif // CONFIG_KERNEL_HEARTBEAT
-	};
-};
+# ifdef CONFIG_KERNEL_HEARTBEAT
+		heartbeat(
+			0,	// heartbeat name
+			25	// pin
+		);
+# endif // CONFIG_KERNEL_HEARTBEAT
+	);
+);

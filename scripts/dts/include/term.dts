@@ -7,17 +7,38 @@
 
 
 
+#ifndef TERM_DTS
+#define TERM_DTS
+
+
 /* macros */
-// terminal config (term_cfg_t)
-#define term_cfg_t(iflags, oflags, lflags, tabs) \
-	int<8> = [ \
-		iflags, \
-		oflags, \
-		lflags, \
-		tabs, \
-	]; \
-	\
-	int<16> = [ \
-		0,	/* lines (set by the driver) */ \
-		0,	/* columns (set by the driver) */ \
-	];
+// terminal interface
+#define term(name, iflags, oflags, lflags, tabs, ...) \
+	term ##name = { \
+		compatible = "terminal"; \
+		\
+		/* terminal config (term_cfg_t) */ \
+		int<8> = [ \
+			iflags, \
+			oflags, \
+			lflags, \
+			tabs, \
+		]; \
+		\
+		int<16> = [ \
+			0,	/* lines (set by the driver) */ \
+			0,	/* columns (set by the driver) */ \
+		]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// terminal device
+#define tty(name) \
+	tty ##name = { \
+		compatible = "terminal,raw"; \
+	}
+
+
+#endif // TERM_DTS

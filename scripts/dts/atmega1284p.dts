@@ -9,6 +9,8 @@
 
 #include <config/config.h>
 #include <avr.dts>
+#include <loop.dts>
+#include "common/looptty.dts"
 
 
 arch = {
@@ -28,15 +30,11 @@ arch = {
 
 	timer-cycle-time-us = 31250; 
 
-	plt = {
-		compatible = "avr,platform";
-
-		avr_platform_cfg_t(
-			20000000,	// system clock [Hz]
-			0,			// system clock prescale (1)
-			0x1			// watchdog prescaler (4096 -> 31.250ms)
-		)
-	};
+	avr_platform(
+		20000000,	// system clock [Hz]
+		0,			// system clock prescale (1)
+		0x1			// watchdog prescaler (4096 -> 31.250ms)
+	);
 };
 
 memory = {
@@ -127,10 +125,17 @@ devices = {
 #endif // CONFIG_DRIVER_BRIDGE
 
 #ifdef CONFIG_LOOP_BLOCK
-# include "common/loop0.dts"
+	loop(
+		0,	// loop name
+		32	// buffer size
+	);
 #endif // CONFIG_LOOP_BLOCK
 
 #ifdef CONFIG_LOOP_TERM
-# include "common/tty-loop0.dts"
+	tty_loop(
+		0,		// loop name
+		2,		// term name
+		loop0	// tty name
+	);
 #endif // CONFIG_LOOP_TERM
 };

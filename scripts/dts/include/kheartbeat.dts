@@ -1,0 +1,29 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef KERNEL_HEARTBEAT_DTS
+#define KERNEL_HEARTBEAT_DTS
+
+
+/* macros */
+// heartbeat device
+#define kernel_heartbeat(name, pin, wave, period_ms) \
+	hb ##name = { \
+		compatible = "kernel,heartbeat"; \
+		\
+		/* heartbeat config (dt_data_t) */ \
+		int<8> = [ pin ]; \
+		int<16> = [ \
+			wave, \
+			period_ms, \
+		]; \
+	}
+
+
+#endif // KERNEL_HEARTBEAT_DTS

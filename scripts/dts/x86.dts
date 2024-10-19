@@ -8,6 +8,9 @@
 
 
 #include <config/config.h>
+#include <loop.dts>
+#include "common/looptty.dts"
+#include "common/loopvram.dts"
 
 
 arch = {
@@ -59,15 +62,27 @@ devices = {
 #include "x86/uart0.dts"
 
 #ifdef CONFIG_LOOP_BLOCK
-# include "common/loop0.dts"
+	loop(
+		0,	// loop name
+		32	// buffer size
+	);
 #endif // CONFIG_LOOP_BLOCK
 
 #ifdef CONFIG_LOOP_TERM
-# include "common/tty-loop0.dts"
+	tty_loop(
+		0,		// loop name
+		1,		// term name
+		loop0	// tty name
+	);
 #endif // CONFIG_LOOP_TERM
 
 #ifdef CONFIG_LOOP_VRAM
-# include "common/vram-loop0.dts"
+	vram_loop(
+		0,		// loop name
+		0,		// vram name
+		2,		// term name
+		vram0	// tty name
+	);
 #endif // CONFIG_LOOP_VRAM
 
 #ifdef CONFIG_DRIVER_X11

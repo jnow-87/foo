@@ -8,47 +8,23 @@
 
 
 #include <avr.dts>
-#include <term.dts>
-#include <uart.dts>
+#include "../common/tty0.dts"
 
-uart0 = {
-	compatible = "avr,uart";
 
-	avr_uart_dtd(
-		0xc0,		// uart0 config register base
-		0x64,		// PRR0
-		0x2,		// PRR0_PRUSART0
-		20,			// rx interrupt (uart0)
-		22			// tx interrupt (uart0)
-	)
+avr_uart(
+	0,		// uart name
+	0xc0,	// uart0 config register base
+	0x64,	// PRR0
+	0x2,	// PRR0_PRUSART0
+	20,		// rx interrupt (uart0)
+	22,		// tx interrupt (uart0)
+	115200,	// baudrate
+	0,		// stop bits (1)
+	0,		// parity (UART_PARITY_NONE)
+	3,		// csize (UART_CS_8)
 
-	uart_cfg_t(		
-		115200,		// baudrate
-		0,			// stop bits (1)
-		0,			// parity (UART_PARITY_NONE)
-		3			// csize (UART_CS_8)
-	)
-
-#ifdef CONFIG_DRIVER_TERM
-	term0 = {
-		compatible = "terminal";
-
-		term_cfg_t(
-			0x0,	// iflags (none)
-			0x2,	// oflags (TOFL_NLCR)
-			0x0,	// lflags (none)
-			0		// tabs
-		)
-
-		tty0 = {
-			compatible = "terminal,raw";
-		};
-
-# ifdef CONFIG_KERNEL_LOG
-		klog = {
-			compatible = "kernel,log";
-		};
-# endif // CONFIG_KERNEL_LOG
-	};
-#endif // CONFIG_DRIVER_TERM
-};
+	tty_user(
+		0,	// term name
+		0	// tty name
+	);
+);

@@ -28,15 +28,11 @@ arch = {
 
 	timer-cycle-time-us = 31250; 
 
-	plt = {
-		compatible = "avr,platform";
-
-		avr_platform_cfg_t(
-			11059200,	// system clock [Hz]
-			0,			// system clock prescale (1)
-			0x1			// watchdog prescaler (4096 -> 31.250ms)
-		)
-	};
+	avr_platform(
+		11059200,	// system clock [Hz]
+		0,			// system clock prescale (1)
+		0x1			// watchdog prescaler (4096 -> 31.250ms)
+	);
 };
 
 memory = {

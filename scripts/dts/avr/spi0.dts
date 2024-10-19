@@ -8,42 +8,33 @@
 
 
 #include <avr.dts>
-#include <spi.dts>
 #include <term.dts>
 
-spi0 = {
-	compatible = "avr,spi";
 
-	avr_spi_dtd(
-		0x4c,		// spi config register base
-		0x24,		// DDRB
-		0x40,		// PB6 (MISO)
-		0x20,		// PB5 (MOSI)
-		0x80,		// PB7 (SCK)
-		0x64,		// PRRO
-		0x4,		// PRR0_PRSPI
-		19			// interrupt (spi)
-	)
+avr_spi(
+	0,		// spi name
+	0x4c,	// spi config register base
+	0x24,	// DDRB
+	0x40,	// PB6 (MISO)
+	0x20,	// PB5 (MOSI)
+	0x80,	// PB7 (SCK)
+	0x64,	// PRRO
+	0x4,	// PRR0_PRSPI
+	19,		// interrupt (spi)
+	1,		// device mode (master)
+	0,		// sample mode (CPOL = 0, CPHA = 0)
+	0,		// data order (MSB first)
+	1,		// prescaler (4)
 
-	spi_cfg_t(
-		1,			// device mode (master)
-		0,			// sample mode (CPOL = 0, CPHA = 0)
-		0,			// data order (MSB first)
-		1			// prescaler (4)
-	)
+	term(
+		1,		// term name
+		0x0,	// iflags (none)
+		0x0,	// oflags (none)
+		0x0,	// lflags (none)
+		0,		// tabs
 
-	term1 = {
-		compatible = "terminal";
-
-		term_cfg_t(
-			0x0,	// iflags (none)
-			0x0,	// oflags (none)
-			0x0,	// lflags (none)
-			0		// tabs
-		)
-
-		tty1 = {
-			compatible = "terminal,raw";
-		};
-	};
-};
+		tty(
+			spi0	// tty name
+		);
+	);
+);

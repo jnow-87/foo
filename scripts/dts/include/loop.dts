@@ -7,7 +7,42 @@
 
 
 
+#ifndef LOOP_DTS
+#define LOOP_DTS
+
+
 /* macros */
 // loop config (loop_cfg_t)
 #define loop_cfg_t(size) \
-	int<16> = [ size ];
+	int<16> = [ size ]
+
+// loop device
+#define loop(name, buf_size) \
+	loop ##name = { \
+		compatible = "loop,block"; \
+		\
+		loop_cfg_t(buf_size); \
+	}
+
+// loop terminal device
+#define loop_term(name, buf_size, ...) \
+	loopterm ##name = { \
+		compatible = "loop,term"; \
+		\
+		loop_cfg_t(buf_size); \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// loop vram device
+#define loop_vram(name, ...) \
+	loopvram ##name = { \
+		compatible = "loop,vram"; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+
+#endif // LOOP_DTS

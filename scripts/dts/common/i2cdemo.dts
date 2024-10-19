@@ -1,0 +1,110 @@
+	/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef I2C_DEMO_DTS
+#define I2C_DEMO_DTS
+
+
+#include <config/config.h>
+#include <bme280.dts>
+#include <gpio.dts>
+#include <i2c.dts>
+#include <mcp23017.dts>
+#include <ssd1306.dts>
+#include "../common/vramdemo.dts"
+
+
+/* macros */
+#if defined(CONFIG_DRIVER_MCP23017) && defined(CONFIG_GPIO_INTFWD)
+# define MCP0B_INT	gpiointfwdmcp.int[1]
+#else
+# define MCP0B_INT	0
+#endif // CONFIG_DRIVER_MCP23017 && CONFIG_GPIO_INTFWD
+
+#ifndef CONFIG_I2C_RAW
+# undef i2c_raw
+# define i2c_raw(...)
+#endif // CONFIG_I2C_RAW
+
+#ifndef CONFIG_DRIVER_BME280
+# undef bme280
+# define bme280(...)
+#endif // CONFIG_DRIVER_BME280
+
+#ifndef CONFIG_DRIVER_MCP23017
+# undef mcp23017
+# define mcp23017(...)
+#endif // CONFIG_DRIVER_MCP23017
+
+#ifndef CONFIG_DRIVER_SSD1306
+# undef ssd1306
+# define ssd1306(...)
+#endif // CONFIG_DRIVER_SSD1306
+
+#define i2c_demo_devices(i2craw_name, envsensor_name, gpio_name, display_name) \
+	i2c_raw(i2craw_name); \
+	bme280(envsensor_name, 118); \
+	 \
+	mcp23017( \
+		0,	/* name */ \
+		33,	/* address */ \
+		 \
+		/* port a */ \
+		gpio( \
+			gpio_name ##a, \
+			0x00,	/* in_mask */ \
+			0xff,	/* out_mask */ \
+			0x00,	/* int_mask */ \
+			0xff,	/* invert_mask */ \
+			0,		/* interrupt */ \
+			 \
+			gpio_port( \
+				gpio_name ##a,	/* gpio name */ \
+				0,				/* port name */ \
+				0x00,			/* in mask */ \
+				0xff,			/* out mask */ \
+				0x00			/* int_mask */ \
+			); \
+		); \
+		, \
+		 \
+		/* port b */ \
+		gpio( \
+			gpio_name ##b, \
+			0xff,		/* in mask */ \
+			0x00,		/* out mask */ \
+			0xff,		/* int mask */ \
+			0xff,		/* invert mask */ \
+			MCP0B_INT, \
+		 	\
+			gpio_port( \
+				gpio_name ##b,	/* gpio name */ \
+				0,				/* port name */ \
+				0xff,			/* in mask */ \
+				0x00,			/* out mask */ \
+				0xff			/* int mask */ \
+			); \
+		); \
+	); \
+	 \
+	ssd1306( \
+		ssd1206,	/* name */ \
+		60,			/* address */ \
+		\
+		vram_demo( \
+			display_name,	/* vram name */ \
+			ssd1206,		/* term name */ \
+			display_name,	/* tty name */ \
+			128,			/* width */ \
+			64				/* height */ \
+		); \
+	)
+
+
+#endif // I2C_DEMO_DTS

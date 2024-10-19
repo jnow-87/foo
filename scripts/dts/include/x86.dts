@@ -7,15 +7,43 @@
 
 
 
-/* macros */
-// x86 uart config (dt_data_t)
-#define x86_uart_dtd(path, rx_int, tx_int) \
-	string = path; \
-	int<8> = [ \
-		rx_int, \
-		tx_int, \
-	];
+#ifndef X86_DTS
+#define X86_DTS
 
-// x86 gpio config (dt_data_t)
-#define x86_gpio_dtd(int_period_ms) \
-	int<16> = [ int_period_ms ];
+
+#include <uart.dts>
+
+
+/* macros */
+// x86 uart
+#define x86_uart(name, path, rx_int, tx_int, baudrate, nstop, parity, csize, ...) \
+	uart ##name = { \
+		compatible = "x86,uart"; \
+		\
+		/* x86 uart config (dt_data_t) */ \
+		string = path; \
+		int<8> = [ \
+			rx_int, \
+			tx_int, \
+		]; \
+		\
+		uart_cfg_t(baudrate, nstop, parity, csize); \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// x86 gpio
+#define x86_gpio(name, int_timer_ms, ...) \
+	port ##name = { \
+		compatible = "x86,gpio"; \
+		\
+		/* x86 gpio config (dt_data_t) */ \
+		int<16> = [ int_timer_ms ]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+
+#endif // X86_DTS

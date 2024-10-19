@@ -10,16 +10,13 @@
 #include <avr.dts>
 
 
-pwm1 = {
-	compatible = "avr,pwm16";
-
-	avr_pwm_dtd(
-		0x80,	// tcc1 config register base
-		0x36,	// TIFR1
-		0x6f,	// TIMSK1
-		0x64,	// PRR0
-		0x08,	// PRR0_PRTIM1
-		0x2a,	// DDRD
-		0x30	// DDRD bits 4..5
-	)
-};
+avr_pwm16(
+	1,		// pwm name
+	0x80,	// tcc1 config register base
+	0x36,	// TIFR1
+	0x6f,	// TIMSK1
+	0x64,	// PRR0
+	0x08,	// PRR0_PRTIM1
+	0x2a,	// DDRD
+	0x30	// DDRD bits 4..5
+);

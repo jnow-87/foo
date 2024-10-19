@@ -9,34 +9,24 @@
 
 
 #include <bridge.dts>
-#include <uart.dts>
 #include <x86.dts>
 
 
-uart1 = {
-	compatible = "x86,uart";
+x86_uart(
+	1,				// uart name
+	"/dev/ttyUSB1",	// path
+	0,				// rx interrupt
+	0,				// tx interrupt
+	115200,			// baudrate
+	0,				// stop bits (1)
+	0,				// parity (UART_PARITY_NONE)
+	3,				// csize (UART_CS_8)
 
-	x86_uart_dtd(
-		"/dev/ttyUSB1",	// path
-		0,				// rx interrupt
-		0				// tx interrupt
-	)
-
-	uart_cfg_t(
-		115200,			// baudrate
-		0,				// stop bits (1)
-		0,				// parity (UART_PARITY_NONE)
-		3				// csize (UART_CS_8)
-	)
-
-	brdg0-left = {
-		compatible = "bridge,uart-itf";
-
-		bridge_cfg_t(
-			0,			// id
-			2,			// chunksize
-			0,			// rx interrupt
-			0			// tx interrupt
-		)
-	};
-};
+	bridge_uart_itf(
+		0uarti,		// bridge name
+		0,			// id
+		2,			// chunksize
+		0,			// rx interrupt
+		0			// tx interrupt
+	);
+);

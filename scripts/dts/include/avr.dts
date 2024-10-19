@@ -7,82 +7,162 @@
 
 
 
+#ifndef AVR_DTS
+#define AVR_DTS
+
+
+#include <uart.dts>
+#include <spi.dts>
+
+
 /* macros */
-// avr platform config (avr_platform_cfg_t)
-#define avr_platform_cfg_t(sys_clk_hz, sys_clk_prescale, wdt_prescale) \
-	int<32> = [ sys_clk_hz ]; \
-	int<8> = [ sys_clk_prescale ]; \
-	int<8> = [ wdt_prescale ];
+// avr platform
+#define avr_platform(sys_clk_hz, sys_clk_prescale, wdt_prescale) \
+	plt = { \
+		compatible = "avr,platform"; \
+		\
+		/* avr platform config (avr_platform_cfg_t) */ \
+		int<32> = [ sys_clk_hz ]; \
+		int<8> = [ sys_clk_prescale ]; \
+		int<8> = [ wdt_prescale ]; \
+	}
 
-// avr uart driver config (dt_data_t)
-#define avr_uart_dtd(regs, prr, prr_mask, rx_int, tx_int) \
-	baseaddr = regs; \
-	\
-	reg = [ prr ]; \
-	int<8> = [ prr_mask ]; \
-	\
-	int<8> = [ \
-		rx_int, \
-		tx_int, \
-	];
+// avr uart
+#define avr_uart(name, regs, prr, prr_mask, rx_int, tx_int, baudrate, nstop, parity, csize, ...) \
+	uart ##name = { \
+		compatible = "avr,uart"; \
+		\
+		/* avr uart driver config (dt_data_t) */ \
+		baseaddr = regs; \
+		\
+		reg = [ prr ]; \
+		int<8> = [ prr_mask ]; \
+		\
+		int<8> = [ \
+			rx_int, \
+			tx_int, \
+		]; \
+		\
+		uart_cfg_t(baudrate, nstop, parity, csize); \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
 
-// avr spi driver config (dt_data_t)
-#define avr_spi_dtd(regs, ddr, miso, mosi, sck, prr, prr_mask, int_num) \
-	baseaddr = regs; \
-	\
-	reg = [ ddr ]; \
-	int<8> = [ \
-		miso, \
-		mosi, \
-		sck, \
-	]; \
-	\
-	reg = [ prr ]; \
-	int<8> = [ prr_mask ]; \
-	\
-	int<8> = [ int_num ];
+// avr gpio
+#define avr_gpio(name, regs, pcicr, pc_mask, pullup_mask, ...) \
+	port ##name = { \
+		compatible = "avr,gpio"; \
+		\
+		/* avr gpio config (dt_data_t) */ \
+		baseaddr = regs; \
+		\
+		reg = [ \
+			pcicr, \
+			pc_mask, \
+		]; \
+		\
+		int<8> = [ \
+			pullup_mask, \
+		]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
 
-// avr i2c driver config (dt_data_t)
-#define avr_i2c_dtd(regs, prr, prr_mask) \
-	baseaddr = regs; \
-	reg = [ prr ]; \
-	int<8> = [ prr_mask ];
+// avr spi
+#define avr_spi(name, regs, ddr, miso, mosi, sck, prr, prr_mask, int_num, dev_mode, sample_mode, data_order, prescaler, ...) \
+	spi ##name = { \
+		compatible = "avr,spi"; \
+		\
+		/* avr spi driver config (dt_data_t) */ \
+		baseaddr = regs; \
+		\
+		reg = [ ddr ]; \
+		int<8> = [ \
+			miso, \
+			mosi, \
+			sck, \
+		]; \
+		\
+		reg = [ prr ]; \
+		int<8> = [ prr_mask ]; \
+		\
+		int<8> = [ int_num ]; \
+		\
+		spi_cfg_t(dev_mode, sample_mode, data_order, prescaler); \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
 
-// avr eeprom driver config (dt_data_t)
-#define avr_eeprom_dtd(regs, mem_base, mem_size, int_num) \
-	baseaddr = regs; \
-	\
-	int<16> = [ \
-		mem_base, \
-		mem_size, \
-	]; \
-	\
-	int<8> = [ int_num ];
+// avr pwm
+#define avr_pwm8(name, regs, tifr, tifr_mask, prr, prr_mask, ddr, ddr_mask) \
+	pwm ##name = { \
+		compatible = "avr,pwm8"; \
+		\
+		/* avr pwm config (dt_data_t) */ \
+		baseaddr = regs; \
+		\
+		reg = [ \
+			tifr, \
+			tifr_mask, \
+		]; \
+		\
+		reg = [ prr ]; \
+		int<8> = [ prr_mask ]; \
+		\
+		reg = [ ddr ]; \
+		int<8> = [ ddr_mask ]; \
+	}
 
-// avr pwm config (dt_data_t)
-#define avr_pwm_dtd(regs, tifr, tifr_mask, prr, prr_mask, ddr, ddr_mask) \
-	baseaddr = regs; \
-	\
-	reg = [ \
-		tifr, \
-		tifr_mask, \
-	]; \
-	\
-	reg = [ prr ]; \
-	int<8> = [ prr_mask ]; \
-	\
-	reg = [ ddr ]; \
-	int<8> = [ ddr_mask ];
+#define avr_pwm16(name, regs, tifr, tifr_mask, prr, prr_mask, ddr, ddr_mask) \
+	pwm ##name = { \
+		compatible = "avr,pwm16"; \
+		\
+		/* avr pwm config (dt_data_t) */ \
+		baseaddr = regs; \
+		\
+		reg = [ \
+			tifr, \
+			tifr_mask, \
+		]; \
+		\
+		reg = [ prr ]; \
+		int<8> = [ prr_mask ]; \
+		\
+		reg = [ ddr ]; \
+		int<8> = [ ddr_mask ]; \
+	}
 
-// avr gpio config (dt_data_t)
-#define avr_gpio_dtd(regs, pcicr, pc_mask, pullup_mask) \
-	baseaddr = regs; \
-	\
-	reg = [ \
-		pcicr, \
-		pc_mask, \
-	]; \
-	\
-	int<8> = [ \
-		pullup_mask, \
-	];
+// avr i2c bus
+#define avr_i2c_bus(name, regs, prr, prr_mask, clock_khz, addr, int_num, ...) \
+	i2c ##name = { \
+		compatible = "avr,i2c"; \
+		\
+		/* avr i2c driver config (dt_data_t) */ \
+		baseaddr = regs; \
+		reg = [ prr ]; \
+		int<8> = [ prr_mask ]; \
+		\
+		i2c_bus(name, clock_khz, addr, int_num, __VA_ARGS__); \
+	}
+
+// avr eeprom
+#define avr_eeprom(name, regs, mem_base, mem_size, int_num) \
+	eeprom ##name = { \
+		compatible = "avr,eeprom"; \
+		\
+		/* avr eeprom driver config (dt_data_t) */ \
+		baseaddr = regs; \
+		\
+		int<16> = [ \
+			mem_base, \
+			mem_size, \
+		]; \
+		\
+		int<8> = [ int_num ]; \
+	}
+
+
+#endif // AVR_DTS

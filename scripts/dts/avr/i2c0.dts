@@ -9,47 +9,29 @@
 
 #include <config/config.h>
 #include <avr.dts>
-#include <i2c.dts>
+#include "../common/i2cdemo.dts"
 
 
-i2c0 = {
-	compatible = "avr,i2c";
-
-	avr_i2c_dtd(
-		0xb8,
-		0x64,	// PRRO
-		0x80	// PRR0_PRTWI
-	)
-
-	i2c-bus0 = {
-		compatible = "i2c";
-
-		i2c_cfg_t(
-			100,	// clock (100kHz)
-			16,		// address
-#if defined(CONFIG_DRIVER_SSD1306) \
- || defined(CONFIG_DRIVER_MCP23017) \
- || defined(CONFIG_DRIVER_BME280)
-			0		// interrupt
+#if defined(CONFIG_DRIVER_SSD1306) || defined(CONFIG_DRIVER_MCP23017) || defined(CONFIG_DRIVER_BME280)
+# define I2C_INT_NUM	0
 #else
-			26		// interrupt (twi)
-#endif // CONFIG_DRIVER_SSD1306
-		)
+# define I2C_INT_NUM	26
+#endif // CONFIG_DRIVER_*
 
-#ifdef CONFIG_I2C_RAW
-# include "../common/i2c0-raw.dts"
-#endif // CONFIG_I2C_RAW
 
-#ifdef CONFIG_DRIVER_BME280
-# include "../common/bme280.dts"
-#endif // CONFIG_DRIVER_BME280
+avr_i2c_bus(
+	0,				// i2c name
+	0xb8,			// regs
+	0x64,			// PRRO
+	0x80,			// PRR0_PRTWI
+	100,			// clock (100kHz)
+	16,				// address
+	I2C_INT_NUM,	// interrupt
 
-#ifdef CONFIG_DRIVER_MCP23017
-# include "../common/mcp23017.dts"
-#endif // CONFIG_DRIVER_MCP23017
-
-#ifdef CONFIG_DRIVER_SSD1306
-# include "../common/ssd1306.dts"
-#endif // CONFIG_DRIVER_SSD1306
-	};
-};
+	i2c_demo_devices(
+		0,		// i2craw name
+		0,		// envsensor name
+		mcp,	// mcp23017 name
+		i2c		// display name
+	);
+);

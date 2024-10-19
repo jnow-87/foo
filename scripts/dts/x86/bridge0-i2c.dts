@@ -7,48 +7,27 @@
 
 
 
-#include <config/config.h>
 #include <bridge.dts>
-#include <i2c.dts>
+#include "../common/i2cdemo.dts"
 
 
-brdg0-right-i2c = {
-	compatible = "bridge,itf";
+bridge(
+	0i2c,	// bridge name
+	0,		// id
+	2,		// chunksize
+	0,		// rx interrupt
+	0,		// tx interrupt
 
-	bridge_cfg_t(
-		0,			// id
-		2,			// chunksize
-		0,			// rx interrupt
-		0			// tx interrupt
-	)
+	bridge_i2c_dev(
+		0,	// bridge name
+		0,	// clk_khz
+		17,	// addr
 
-	brdg0-itf-i2c = {
-		compatible = "bridge,i2c-dev";
-
-		i2c-bus0 = {
-			compatible = "i2c";
-
-			i2c_cfg_t(
-				0,	// clock (0kHz)
-				17,	// address
-				0	// interrupt
-			)
-
-#ifdef CONFIG_I2C_RAW
-# include "../common/i2c0-raw.dts"
-#endif // CONFIG_I2C_RAW
-
-#ifdef CONFIG_DRIVER_BME280
-# include "../common/bme280.dts"
-#endif // CONFIG_DRIVER_BME280
-
-#ifdef CONFIG_DRIVER_MCP23017
-# include "../common/mcp23017.dts"
-#endif // CONFIG_DRIVER_MCP23017
-
-#ifdef CONFIG_DRIVER_SSD1306
-# include "../common/ssd1306.dts"
-#endif // CONFIG_DRIVER_SSD1306
-		};
-	};
-};
+		i2c_demo_devices(
+			0,		// i2craw name
+			0,		// envsensor name
+			mcp,	// mcp23017 name
+			i2c		// display name
+		);
+	);
+);

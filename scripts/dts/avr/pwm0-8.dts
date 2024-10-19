@@ -10,16 +10,13 @@
 #include <avr.dts>
 
 
-pwm0 = {
-	compatible = "avr,pwm8";
-
-	avr_pwm_dtd(
-		0x44,	// tcc0 config register base
-		0x35,	// TIFR0
-		0x6e,	// TIMSK0
-		0x64,	// PRR0
-		0x20,	// PRR0_PRTIM0
-		0x24,	// DDRB
-		0x18	// DDRB bits 3..4
-	)
-};
+avr_pwm8(
+	0,		// pwm name
+	0x44,	// tcc0 config register base
+	0x35,	// TIFR0
+	0x6e,	// TIMSK0
+	0x64,	// PRR0
+	0x20,	// PRR0_PRTIM0
+	0x24,	// DDRB
+	0x18	// DDRB bits 3..4
+);

@@ -12,32 +12,23 @@
 #include <uart.dts>
 
 
-uart1 = {
-	compatible = "avr,uart";
+avr_uart(
+	2,		// uart name
+	0xc8,	// register base (uart1)
+	0x64,	// PRR0
+	0x10,	// PRR0_PRUSART1
+	28,		// rx interrupt (uart1)
+	30,		// tx interrupt (uart1)
+	115200,	// baudrate
+	0,		// stop bits (1)
+	0,		// parity (UART_PARITY_NONE)
+	3,		// csize (UART_CS_8)
 
-	avr_uart_dtd(
-		0xc8,	// uart1 config register base
-		0x64,	// PRR0
-		0x10,	// PRR0_PRUSART1
-		28,		// rx interrupt (uart1)
-		30		// tx interrupt (uart1)
-	)
-
-	uart_cfg_t(
-		115200,	// baudrate
-		0,		// stop bits (1)
-		0,		// parity (UART_PARITY_NONE)
-		3		// csize (UART_CS_8)
-	)
-
-	brdg0-left = {
-		compatible = "bridge,uart-itf";
-
-		bridge_cfg_t(
-			0,	// id
-			2,	// chunksize
-			0,	// rx interrupt
-			0	// tx interrupt
-		)
-	};
-};
+	bridge_uart_itf(
+		0uarti,	// bridge name
+		0,		// id
+		2,		// chunksize
+		0,		// rx interrupt
+		0		// tx interrupt
+	);
+);

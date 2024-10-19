@@ -7,37 +7,28 @@
 
 
 
-#include <config/config.h>
 #include <gpio.dts>
 #include <x86.dts>
 
 
-port0 = {
-	compatible = "x86,gpio";
+x86_gpio(
+	0,	// gpio name
+	0,	// interrupt timer period [ms]
 
-	x86_gpio_dtd(
-		0			// interrupt timer period [ms]
-	)
+	gpio(
+		0,		// gpio name
+		0xff,	// in mask
+		0xff,	// out mask
+		0x00,	// int mask
+		0x00,	// invert mask
+		0,		// interrupt
 
-	gpio0 = {
-		compatible = "gpio";
-
-		gpio_cfg_t(
+		gpio_port(
+			0,		// gpio name
+			0, 		// port name
 			0xff,	// in mask
 			0xff,	// out mask
-			0x00,	// int mask
-			0x00,	// invert mask
-			0		// interrupt
+			0x00	// int mask
 		);
-
-		gpio0-port0 = {
-			compatible = "gpio,port";
-
-			gpio_port_cfg_t(
-				0xff,	// in mask
-				0xff,	// out mask
-				0x00	// int mask
-			)
-		};
-	};
-};
+	);
+);

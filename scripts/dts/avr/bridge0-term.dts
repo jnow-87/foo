@@ -11,32 +11,26 @@
 #include <term.dts>
 
 
-brdg0-right = {
-	compatible = "bridge,itf";
+bridge(
+	0uart,				// bridge name
+	0,					// id
+	2,					// chunksize
+	(arch.num-ints++),	// rx interrupt
+	(arch.num-ints++),	// tx interrupt
 
-	bridge_cfg_t(
-		0,					// id
-		2,					// chunksize
-		(arch.num-ints++),	// rx interrupt
-		(arch.num-ints++)	// tx interrupt
-	)
+	bridge_uart_dev(
+		3,	// uart name
 
-	brdg0-itf = {
-		compatible = "bridge,uart-dev";
+		term(
+			brdg0,	// term name
+			0x0,	// iflags (none)
+			0x0,	// oflags (none)
+			0x0,	// lflags (none)
+			0,		// tabs
 
-		brdg0-term = {
-			compatible = "terminal";
-
-			term_cfg_t(
-				0x0,		// iflags (none)
-				0x0,		// oflags (none)
-				0x0,		// lflags (none)
-				0			// tabs
-			)
-
-			tty-bridge0 = {
-				compatible = "terminal,raw";
-			};
-		};
-	};
-};
+			tty(
+				brdg0	// tty name
+			);
+		);
+	);
+);

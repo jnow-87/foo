@@ -1,0 +1,37 @@
+	/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef COMMON_VRAM_DEMO_DTS
+#define COMMON_VRAM_DEMO_DTS
+
+
+#include <vram.dts>
+#include "../common/tty.dts"
+
+
+/* macros */
+// vram interface
+#define vram_demo(vram_name, term_name, tty_name, width, height) \
+	vram( \
+		vram_name, \
+		width, \
+		height, \
+		0x10,	/* contrast */ \
+		0x07,	/* flags (VRFL_MIRROR_VERT | VRFL_MIRROR_HOR | VRFL_ORIEN_HOR) */ \
+		100,	/* refresh_ms */ \
+		\
+		vram_raw(vram_name); \
+		vram_term( \
+			vram_name, \
+			tty_vram(term_name, tty_name); \
+		); \
+	)
+
+
+#endif // COMMON_VRAM_DEMO_DTS

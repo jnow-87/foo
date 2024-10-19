@@ -7,18 +7,33 @@
 
 
 
+#ifndef BME280_DTS
+#define BME280_DTS
+
+
+#include <names.dts>
+
+
 /* macros */
-// bme280 config (dt_data_t)
-#define bme280_dtd(addr, mode, features, t_standby, filter, ovs_temp, ovs_press, ovs_hum) \
-	int<8> = [ addr ]; \
-	\
-	/* bme280 config (bme280_cfg_t) */ \
-	int <8> = [ \
-		mode, \
-		features, \
-		t_standby, \
-		filter, \
-		ovs_temp, \
-		ovs_press, \
-		ovs_hum, \
-	];
+// bme280 device
+#define bme280(name, addr) \
+	envsensor_name(name) = { \
+		compatible = "bme280"; \
+		\
+		/* bme280 config (dt_data_t) */ \
+		int<8> = [ addr ]; \
+		\
+		/* bme280 config (bme280_cfg_t) */ \
+		int <8> = [ \
+			1,		/* mode (forced) */ \
+			0x7,	/* features (all) */ \
+			0,		/* standby time (500) */ \
+			0,		/* filter (off) */ \
+			1,		/* temperature oversampling (1) */ \
+			1,		/* pressure oversampling (1) */ \
+			1		/* humidity oversampling (1) */ \
+		]; \
+	}
+
+
+#endif // BME280_DTS

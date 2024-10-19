@@ -7,6 +7,10 @@
 
 
 
+#ifndef UART_DTS
+#define UART_DTS
+
+
 /* macros */
 // uart config (uart_cfg_t)
 #define uart_cfg_t(baudrate, stop, parity, csize) \
@@ -15,4 +19,7 @@
 		stop, \
 		parity, \
 		csize, \
-	];
+	]
+
+
+#endif // UART_DTS
