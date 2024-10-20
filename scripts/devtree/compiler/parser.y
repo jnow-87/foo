@@ -209,6 +209,7 @@ start : error													{ cleanup(); YYABORT; }
 
 /* sections */
 section-lst : %empty											{ }
+			| section-lst ';'									{ }
 			| section-lst section ';'							{ }
 			;
 
@@ -219,12 +220,14 @@ section : SEC_DEVICES '=' '{' devices-lst '}'					{ }
 
 /* node lists */
 devices-lst : %empty											{ }
+			| devices-lst ';'									{ }
 			| devices-lst device ';'							{ CHILD_ADD(device_root(), $2); }
 			| devices-lst assert ';'							{ ASSERT_ADD(device_root(), $2); }
 			| devices-lst attr-update ';'						{ }
 			;
 
 memory-lst : %empty												{ }
+		   | memory-lst ';'										{ }
 		   | memory-lst memory ';'								{ CHILD_ADD(memory_root(), $2); }
 		   | memory-lst assert ';'								{ ASSERT_ADD(memory_root(), $2); }
 		   | memory-lst attr-update ';'							{ }
@@ -236,6 +239,7 @@ memory : IDFR '=' '{' mem-body '}'								{ $$ = $4; $$->name = STRALLOC($1.s, $
 
 /* node bodies */
 dev-body : %empty												{ $$ = CREATE(node, NT_DEVICE); }
+		 | dev-body ';'											{ }
 		 | dev-body assert ';'									{ $$ = $1; ASSERT_ADD($$, $2); }
 		 | dev-body attr-update ';'								{ $$ = $1; }
 		 | dev-body device ';'									{ $$ = $1; CHILD_ADD($$, $2); }
@@ -246,6 +250,7 @@ dev-body : %empty												{ $$ = CREATE(node, NT_DEVICE); }
 		 ;
 
 mem-body : %empty												{ $$ = CREATE(node, NT_MEMORY); }
+		 | mem-body ';'											{ }
 		 | mem-body assert ';'									{ $$ = $1; ASSERT_ADD($$, $2); }
 		 | mem-body attr-update ';'								{ $$ = $1; }
 		 | mem-body memory ';'									{ $$ = $1; CHILD_ADD($$, $2); }
@@ -253,6 +258,7 @@ mem-body : %empty												{ $$ = CREATE(node, NT_MEMORY); }
 		 ;
 
 arch-body : %empty												{ }
+		  | arch-body ';'										{ }
 		  | arch-body assert ';'								{ ASSERT_ADD(arch_root(), $2); }
 		  | arch-body device ';'								{ CHILD_ADD(arch_root(), $2); }
 		  | arch-body arch-attr-int '=' int ';'					{ ATTR_ADD(arch_root(), $2, ATTR_VALUE(i, $4)); }
