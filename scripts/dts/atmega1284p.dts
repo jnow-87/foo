@@ -9,8 +9,16 @@
 
 #include <config/config.h>
 #include <avr.dts>
+#include <bridge.dts>
+#include <esp8266.dts>
+#include <gpio.dts>
 #include <loop.dts>
+#include <term.dts>
+#include <uart.dts>
+#include "common/heartbeat.dts"
+#include "common/i2cdemo.dts"
 #include "common/looptty.dts"
+#include "common/tty.dts"
 
 
 arch = {
@@ -80,47 +88,301 @@ memory = {
 };
 
 devices = {
-#include "avr/uart0.dts"
+	avr_uart(
+		0,		// uart name
+		0xc0,	// uart0 config register base
+		0x64,	// PRR0
+		0x2,	// PRR0_PRUSART0
+		20,		// rx interrupt (uart0)
+		22,		// tx interrupt (uart0)
+		115200,	// baudrate
+		0,		// stop bits (1)
+		0,		// parity (UART_PARITY_NONE)
+		3,		// csize (UART_CS_8)
+
+		tty_user(
+			0,	// term name
+			0	// tty name
+		);
+	);
 
 #ifdef CONFIG_AVR_EEPROM
-# include "avr/eeprom0.dts"
+	avr_eeprom(
+		0,		// eeprom name
+		0x3f,	// register base
+		0x0,	// base address
+		4096,	// size
+		25		// interrupt (eeprom)
+	);
 #endif // CONFIG_AVR_EEPROM
 
 #ifdef CONFIG_AVR_PWM8
-# include "avr/pwm0-8.dts"
+	avr_pwm8(
+		0,		// pwm name
+		0x44,	// tcc0 config register base
+		0x35,	// TIFR0
+		0x6e,	// TIMSK0
+		0x64,	// PRR0
+		0x20,	// PRR0_PRTIM0
+		0x24,	// DDRB
+		0x18	// DDRB bits 3..4
+	);
 #endif // CONFIG_AVR_PWM8
 
 #ifdef CONFIG_AVR_PWM16
-# include "avr/pwm1-16.dts"
+	avr_pwm16(
+		1,		// pwm name
+		0x80,	// tcc1 config register base
+		0x36,	// TIFR1
+		0x6f,	// TIMSK1
+		0x64,	// PRR0
+		0x08,	// PRR0_PRTIM1
+		0x2a,	// DDRD
+		0x30	// DDRD bits 4..5
+	);
 #endif // CONFIG_AVR_PWM16
 
 #ifdef CONFIG_DRIVER_GPIO
-# include "avr/gpio.dts"
+	avr_gpio(
+		a,		// gpio name
+		0x20,	// porta
+		0x68,	// PCICR
+		0x6b,	// PCMSK0
+		0xf0,	// pull-up mask
+
+		gpio(
+			0,		// gpio name
+			0xff,	// in mask
+			0x00,	// out mask
+			0xf1,	// int mask
+			0xf0,	// invert mask
+			4,		// interrupt (pcint0)
+
+			gpio_port(
+				0,			// gpio name
+				switches,	// port name
+				0xf0,		// in mask
+				0x00,		// out mask
+				0xf0		// int mask
+			);
+
+			gpio_port(
+				0,		// gpio name
+				adc,	// name
+				0x0f,	// in mask
+				0x00,	// out mask
+				0x00	// int mask
+			);
+
+# if defined(CONFIG_DRIVER_MCP23017) && defined(CONFIG_GPIO_INTFWD)
+			gpio_intfwd(
+				mcp,				// pin name
+				0,					// pin
+				(arch.num-ints++)	// interrupt to trigger
+			);
+# endif // CONFIG_DRIVER_MCP23017 && CONFIG_GPIO_INTFWD
+		);
+	);
+
+	avr_gpio(
+		b,		// gpio name
+		0x23,	// portb
+		0x68,	// PCICR
+		0x6c,	// PCMSK1
+		0x01,	// pull-up mask
+
+		gpio(
+			1,		// gpio name
+			0x00,	// in mask
+			0x03,	// out mask
+			0x00,	// int mask
+			0x03,	// invert mask
+			0,		// interrupt
+
+			gpio_pin(
+				1,		// gpio name
+				uled,	// pin name
+				0,		// pin
+				0x2		// mode (out)
+			);
+
+# ifdef CONFIG_KERNEL_HEARTBEAT
+			heartbeat(
+				0,	// heartbeat name
+				1	// pin
+			);
+# endif // CONFIG_KERNEL_HEARTBEAT
+		);
+	);
+
+	avr_gpio(
+		c,		// gpio name
+		0x26,	// portc
+		0x68,	// PCICR
+		0x6d,	// PCMSK2
+		0xc0,	// pull-up mask
+
+		gpio(
+			2,		// gpio name
+			0xc0,	// in mask
+			0xc0,	// out mask
+			0xc0,	// int mask
+			0xc0,	// invert mask
+			6,		// interrupt (pcint2)
+
+			gpio_port(
+				2,		// gpio name
+				int,	// port name
+				0xc0,	// in mask
+				0xc0,	// out mask
+				0xc0	// int mask
+			);
+		);
+	);
 #endif // CONFIG_DRIVER_GPIO
 
 #ifdef CONFIG_AVR_SPI
-# include "avr/spi0.dts"
+	avr_spi(
+		0,		// spi name
+		0x4c,	// spi config register base
+		0x24,	// DDRB
+		0x40,	// PB6 (MISO)
+		0x20,	// PB5 (MOSI)
+		0x80,	// PB7 (SCK)
+		0x64,	// PRRO
+		0x4,	// PRR0_PRSPI
+		19,		// interrupt (spi)
+		1,		// device mode (master)
+		0,		// sample mode (CPOL = 0, CPHA = 0)
+		0,		// data order (MSB first)
+		1,		// prescaler (4)
+
+		term(
+			1,		// term name
+			0x0,	// iflags (none)
+			0x0,	// oflags (none)
+			0x0,	// lflags (none)
+			0,		// tabs
+
+			tty(
+				spi0	// tty name
+			);
+		);
+	);
 #endif // CONFIG_AVR_SPI
 
 #ifdef CONFIG_DRIVER_I2C
 # if !(defined(CONFIG_BRIDGE_I2C_DEV) || defined(CONFIG_BRIDGE_I2C_ITF))
-#  include "avr/i2c0.dts"
+#  if defined(CONFIG_DRIVER_SSD1306) || defined(CONFIG_DRIVER_MCP23017) || defined(CONFIG_DRIVER_BME280)
+#   define I2C_INT_NUM	0
+#  else
+#   define I2C_INT_NUM	26
+#  endif // CONFIG_DRIVER_*
+
+	avr_i2c_bus(
+		0,				// i2c name
+		0xb8,			// regs
+		0x64,			// PRRO
+		0x80,			// PRR0_PRTWI
+		100,			// clock (100kHz)
+		16,				// address
+		I2C_INT_NUM,	// interrupt
+
+		i2c_demo_devices(
+			0,		// i2craw name
+			0,		// envsensor name
+			mcp,	// mcp23017 name
+			i2c		// display name
+		);
+	);
 # endif // CONFIG_BRIDGE_I2C
 #endif // CONFIG_DRIVER_I2C
 
 #ifdef CONFIG_DRIVER_ESP8266
-# include "avr/esp8266-uart.dts"
+	avr_uart(
+		1,		// uart name
+		0xc8,	// register base (uart1)
+		0x64,	// PRR0
+		0x10,	// PRR0_PRUSART1
+		28,		// rx interrupt (uart1)
+		30,		// tx interrupt (uart1)
+		2400,	// baudrate
+		0,		// stop bits (1)
+		0,		// parity (UART_PARITY_NONE)
+		3,		// csize (UART_CS_8)
+
+		esp8266(
+			0	// esp name
+		);
+	);
 #endif // CONFIG_DRIVER_ESP8266
 
 #ifdef CONFIG_DRIVER_BRIDGE
-# include "avr/bridge0-uart.dts"
+	avr_uart(
+		2,		// uart name
+		0xc8,	// register base (uart1)
+		0x64,	// PRR0
+		0x10,	// PRR0_PRUSART1
+		28,		// rx interrupt (uart1)
+		30,		// tx interrupt (uart1)
+		115200,	// baudrate
+		0,		// stop bits (1)
+		0,		// parity (UART_PARITY_NONE)
+		3,		// csize (UART_CS_8)
+
+		bridge_uart_itf(
+			0uarti,	// bridge name
+			0,		// id
+			2,		// chunksize
+			0,		// rx interrupt
+			0		// tx interrupt
+		);
+	);
 
 # ifdef CONFIG_BRIDGE_UART_DEV
-#  include "avr/bridge0-term.dts"
+	bridge(
+		0uart,				// bridge name
+		0,					// id
+		2,					// chunksize
+		(arch.num-ints++),	// rx interrupt
+		(arch.num-ints++),	// tx interrupt
+
+		bridge_uart_dev(
+			3,	// uart name
+
+			term(
+				brdg0,	// term name
+				0x0,	// iflags (none)
+				0x0,	// oflags (none)
+				0x0,	// lflags (none)
+				0,		// tabs
+
+				tty(
+					brdg0	// tty name
+				);
+			);
+		);
+	);
 # endif // CONFIG_BRIDGE_UART_DEV
 
 # ifdef CONFIG_BRIDGE_I2C_ITF
-#  include "avr/bridge0-i2c.dts"
+	avr_i2c_bus(
+		1,		// i2c name
+		0xb8,	// register base
+		0x64,	// PRRO
+		0x80,	// PRR0_PRTWI
+		100,	// clock (100kHz)
+		16,		// address
+		0,		// interrupt
+
+		bridge_i2c_itf(
+			0i2ci,				// bridge name
+			0,					// id
+			2,					// chunksize
+			(arch.num-ints++),	// rx interrupt
+			(arch.num-ints++)	// tx interrupt
+		);
+	);
 # endif // CONFIG_BRIDGE_I2C_ITF
 #endif // CONFIG_DRIVER_BRIDGE
 
