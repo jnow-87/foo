@@ -52,6 +52,7 @@ typedef struct{
 
 	uint16_t refresh_ms;
 	font_t *font;
+	term_vram_cfg_t cfg;
 } test_data_t;
 
 
@@ -341,9 +342,13 @@ static int prepare(test_data_t *td){
 	ASSERT_PTR_NEQ(td->font = font_resolve(0x0), 0x0);
 	ASSERT_INT_NEQ(td->fd_loop = open(LOOP_DEV, O_RDWR), -1);
 	ASSERT_INT_NEQ(td->fd_term = open(TERM_DEV, O_RDWR), -1);
-	ASSERT_INT_EQ(ioctl(td->fd_term, IOCTL_CFGRD, &cfg), 0);
+	ASSERT_INT_EQ(ioctl(td->fd_term, IOCTL_CFGRD, &td->cfg), 0);
 
+	cfg = td->cfg;
+	cfg.term.iflags = 0;
+	cfg.term.oflags = 0;
 	cfg.term.lflags = TLFL_CANON;
+	cfg.term.tabs = 2;
 	ASSERT_INT_EQ(ioctl(td->fd_term, IOCTL_CFGWR, &cfg), 0);
 
 	td->refresh_ms = cfg.vram.refresh_ms;
@@ -365,6 +370,8 @@ static int prepare(test_data_t *td){
 }
 
 static void cleanup(test_data_t *td){
+	ioctl(td->fd_term, IOCTL_CFGWR, &td->cfg);
+
 	free(td->ref.ram);
 
 	close(td->fd_loop);
