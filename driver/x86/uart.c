@@ -9,9 +9,10 @@
 
 #include <arch/x86/linux.h>
 #include <arch/x86/hardware.h>
-#include <kernel/memory.h>
 #include <kernel/driver.h>
 #include <kernel/interrupt.h>
+#include <kernel/kprintf.h>
+#include <kernel/memory.h>
 #include <driver/term.h>
 #include <sys/compiler.h>
 #include <sys/types.h>
@@ -57,9 +58,14 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	uart->dtd = dtd;
 	uart->fd = lnx_open(dtd->path, LNX_O_RDWR, 0666);
 
+	if(uart->fd < 0){
+		WARN("unable to open uart at \"%s\": lnx-errno=%d\n", dtd->path, -uart->fd);
+		goto_errno(err_0, E_IO);
+	}
+
 	// make file operations non-blocking to ensure gets() doesn't block
 	if(lnx_fcntl(uart->fd, LNX_F_SETFL, LNX_O_NONBLOCK) != 0)
-		goto err_1;
+		goto_errno(err_1, E_IO);
 
 	itf->configure = configure;
 	itf->puts = puts;
