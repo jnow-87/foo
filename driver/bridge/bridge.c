@@ -59,13 +59,6 @@ bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
 	if(ops != 0x0)
 		brdg->ops = *ops;
 
-	/* init interrupts */
-	if(ops && cfg->rx_int && int_register(cfg->rx_int, int_hdlr, brdg) != 0)
-		goto err_1;
-
-	if(ops && cfg->tx_int && int_register(cfg->tx_int, int_hdlr, brdg) != 0)
-		goto err_1;
-
 	/* link bridge peers */
 	mutex_lock(&bridge_mtx);
 
@@ -73,6 +66,10 @@ bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
 		if(brdg->peer->cfg->id == cfg->id)
 			break;
 	}
+
+	list_add_tail(bridge_lst, brdg);
+
+	mutex_unlock(&bridge_mtx);
 
 	if(brdg->peer){
 		if(brdg->peer->peer != 0x0){
@@ -83,9 +80,13 @@ bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
 		brdg->peer->peer = brdg;
 	}
 
-	list_add_tail(bridge_lst, brdg);
 
-	mutex_unlock(&bridge_mtx);
+	/* init interrupts */
+	if(ops && cfg->rx_int && int_register(cfg->rx_int, int_hdlr, brdg) != 0)
+		goto err_1;
+
+	if(ops && cfg->tx_int && int_register(cfg->tx_int, int_hdlr, brdg) != 0)
+		goto err_1;
 
 	return brdg;
 
@@ -101,6 +102,8 @@ void bridge_destroy(bridge_t *brdg){
 	bridge_cfg_t *cfg = brdg->cfg;
 	bridge_dgram_t *dgram;
 
+
+	list_rm_safe(bridge_lst, brdg, &bridge_mtx);
 
 	if(cfg->rx_int)
 		int_release(cfg->rx_int);
