@@ -53,7 +53,7 @@
 # define LOCK_ALIGN
 #endif // ARCH_CACHELINE_SIZE
 
-#define LOCK_SECTION(mtx, expr){ \
+#define MUTEXED(mtx, expr){ \
 	mutex_lock(mtx); \
 	expr; \
 	mutex_unlock(mtx); \
