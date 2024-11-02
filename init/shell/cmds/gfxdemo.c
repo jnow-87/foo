@@ -16,7 +16,7 @@
 
 
 /* macros */
-#define DEFAULT_DEV		"/dev/vram0-raw"
+#define DEFAULT_DEV		"/dev/vramrawi2c"
 
 
 /* local functions */

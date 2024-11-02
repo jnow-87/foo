@@ -15,8 +15,7 @@
 
 
 /* macros */
-#define DEVNAME	"loop0"
-#define DEVICE	"/dev/" DEVNAME
+#define DEVICE	"/dev/loop0"
 
 
 /* local functions */

@@ -14,7 +14,7 @@
 
 
 /* macros */
-#define DEVICE	"/dev/tty-loop0"
+#define DEVICE	"/dev/ttyloop0"
 
 
 /* local/static prototypes */

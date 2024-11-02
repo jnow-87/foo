@@ -17,7 +17,7 @@
 
 
 /* macros */
-#define I2C_DEV		"/dev/i2c0"
+#define I2C_DEV		"/dev/i2craw0"
 
 
 /* types */

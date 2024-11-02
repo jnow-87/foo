@@ -24,9 +24,9 @@
 #define INT_MAGIC	0xfade
 
 #define DEV_PARENT	"gpio1"
-#define DEV_PORT	"gpio1-port0"
-#define DEV_PIN		"gpio1-pin0"
-#define DEV_INT		"gpio1-int0"
+#define DEV_PORT	"gpio1p0"
+#define DEV_PIN		"gpio1i0"
+#define DEV_INT		"gpio1pint0"
 
 #define SIGNAL		SIG_USR1
 #define SIGNAL_MAX	3
