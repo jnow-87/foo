@@ -59,13 +59,6 @@ bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
 	if(ops != 0x0)
 		brdg->ops = *ops;
 
-	/* init interrupts */
-	if(ops && cfg->rx_int && int_register(cfg->rx_int, int_hdlr, brdg) != 0)
-		goto err_1;
-
-	if(ops && cfg->tx_int && int_register(cfg->tx_int, int_hdlr, brdg) != 0)
-		goto err_1;
-
 	/* link bridge peers */
 	mutex_lock(&bridge_mtx);
 
@@ -74,18 +67,26 @@ bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
 			break;
 	}
 
+	list_add_tail(bridge_lst, brdg);
+
+	mutex_unlock(&bridge_mtx);
+
 	if(brdg->peer){
 		if(brdg->peer->peer != 0x0){
 			FATAL("bridge id %hhu used more than twice\n", cfg->id);
 			goto_errno(err_1, E_INUSE);
 		}
 
-		brdg->peer->peer = brdg;
+		MUTEXED(&brdg->peer->mtx, brdg->peer->peer = brdg);
 	}
 
-	list_add_tail(bridge_lst, brdg);
 
-	mutex_unlock(&bridge_mtx);
+	/* init interrupts */
+	if(ops && cfg->rx_int && int_register(cfg->rx_int, int_hdlr, brdg) != 0)
+		goto err_1;
+
+	if(ops && cfg->tx_int && int_register(cfg->tx_int, int_hdlr, brdg) != 0)
+		goto err_1;
 
 	return brdg;
 
@@ -102,6 +103,8 @@ void bridge_destroy(bridge_t *brdg){
 	bridge_dgram_t *dgram;
 
 
+	list_rm_safe(bridge_lst, brdg, &bridge_mtx);
+
 	if(cfg->rx_int)
 		int_release(cfg->rx_int);
 
@@ -114,7 +117,9 @@ void bridge_destroy(bridge_t *brdg){
 	list_for_each(brdg->tx_dgrams, dgram)
 		dgram_free(dgram, brdg);
 
-	brdg->peer->peer = 0x0;
+	if(brdg->peer)
+		MUTEXED(&brdg->peer->mtx, brdg->peer->peer = 0x0);
+
 	kfree(brdg);
 }
 
@@ -135,15 +140,31 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 driver_probe("bridge,itf", probe);
 
 static int16_t rw(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t type){
-	bridge_t *peer = brdg->peer;
+	int16_t r = -1;
+	bridge_t *peer;
 
+
+	mutex_lock(&brdg->mtx);
+
+	peer = brdg->peer;
+
+	if(peer == 0x0)
+		goto_errno(end, E_NOCONN);
 
 	if(!callbacks_set(&peer->ops, bridge_ops_t))
-		return_errno(E_NOIMP);
+		goto_errno(end, E_NOIMP);
 
-	if(type == BDT_READ && peer->cfg->rx_int)		return read_int(peer, buf, n);
-	else if(type == BDT_WRITE && peer->cfg->tx_int)	return write_int(peer, buf, n);
-	else											return poll(peer, buf, n, type);
+	if(type == BDT_READ && peer->cfg->rx_int)		r = read_int(peer, buf, n);
+	else if(type == BDT_WRITE && peer->cfg->tx_int)	r = write_int(peer, buf, n);
+	else											r = poll(peer, buf, n, type);
+
+end:
+	mutex_unlock(&brdg->mtx);
+
+	if(r < 0)
+		return_errno(errno ? errno : E_IO);
+
+	return r;
 }
 
 static int16_t read_int(bridge_t *brdg, void *buf, uint8_t n){
@@ -151,8 +172,6 @@ static int16_t read_int(bridge_t *brdg, void *buf, uint8_t n){
 			x;
 	bridge_dgram_t *dgram;
 
-
-	mutex_lock(&brdg->mtx);
 
 	for(i=0; i<n; i+=x){
 		dgram = list_first(brdg->rx_dgrams);
@@ -169,8 +188,6 @@ static int16_t read_int(bridge_t *brdg, void *buf, uint8_t n){
 			dgram_free(dgram, brdg);
 	}
 
-	mutex_unlock(&brdg->mtx);
-
 	return i;
 }
 
@@ -178,14 +195,10 @@ static int16_t write_int(bridge_t *brdg, void *buf, uint8_t n){
 	bridge_dgram_t *dgram;
 
 
-	mutex_lock(&brdg->mtx);
-
 	dgram = dgram_alloc_tx(brdg, buf, n);
 
 	if(dgram != 0x0 && brdg->rx_dgrams == 0x0 && brdg->tx_dgrams == dgram)
 		int_foretell(brdg->cfg->tx_int);
-
-	mutex_unlock(&brdg->mtx);
 
 	return (dgram == 0x0) ? -1 : n;
 }
@@ -200,9 +213,7 @@ static int16_t poll(bridge_t *brdg, void *buf, uint8_t n, bridge_dgram_type_t ty
 	dgram_init(&dgram, type, buf, n, brdg);
 
 	while(1){
-		mutex_lock(&brdg->mtx);
 		s = op(&dgram, brdg);
-		mutex_unlock(&brdg->mtx);
 
 		if(s == BDS_COMPLETE)
 			return dgram.len;

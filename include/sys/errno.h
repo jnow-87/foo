@@ -44,7 +44,7 @@
 #endif // CONFIG_EXTENDED_ERRNO
 
 #define reset_errno()				set_errno(0)
-#define return_errno(e_code)		{ set_errno(e_code); return (-e_code); }
+#define return_errno(e_code)		{ errno_t _e = e_code; set_errno(_e); return -_e; }
 #define goto_errno(label, e_code)	{ set_errno(e_code); goto label; }
 
 

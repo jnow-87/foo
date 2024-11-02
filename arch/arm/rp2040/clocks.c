@@ -231,7 +231,7 @@ static void pll_init(uint32_t pll_base, rp2040_pll_cfg_t *cfg){
 	pll_powerup(pll_base, PLL_PWR_NONE);
 
 	PLLCS(pll_base) = (0x0 << PLLCS_BYPASS) | ((cfg->ref_div & 0x3f) << PLLCS_REFDIV);
-	PLLFBDIV(pll_base) = cfg->feeback_div & 0xfff;
+	PLLFBDIV(pll_base) = cfg->feedback_div & 0xfff;
 
 	pll_powerup(pll_base, PLL_PWR_MAIN | PLL_PWR_VCO);
 	while((PLLCS(pll_base) & (0x1 << PLLCS_LOCK)) == 0);

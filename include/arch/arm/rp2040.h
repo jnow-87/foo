@@ -101,7 +101,7 @@ typedef enum{
 typedef struct{
 	uint8_t ref_div;			/**< reference clock divider, range = [1, 63] */
 	uint8_t post_div[2];		/**< post dividers 1 and 2, range = [1, 7] */
-	uint16_t feeback_div;		/**< feedback divider, range = [16, 320] */
+	uint16_t feedback_div;		/**< feedback divider, range = [16, 320] */
 } rp2040_pll_cfg_t;
 
 typedef struct{
