@@ -51,6 +51,7 @@
 		compatible = "gpio,port"; \
 		\
 		gpio_port_cfg_t(in_mask, out_mask, int_mask); \
+		baseaddr = 0x0; /**< gpio interface (set by the driver) */ \
 	}
 
 // gpio pin device
@@ -63,6 +64,7 @@
 			pin, \
 			mode, \
 		]; \
+		baseaddr = 0x0; /**< gpio interface (set by the driver) */ \
 	}
 
 // gpio intfwd device

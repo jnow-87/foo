@@ -25,6 +25,7 @@
 		int<8> = [ \
 			rx_int, \
 			tx_int, \
+			0, /* file descriptor (set by the driver) */ \
 		]; \
 		\
 		uart_cfg_t(baudrate, nstop, parity, csize); \

@@ -19,8 +19,8 @@
 
 
 /* macros */
-#define MASK_INVAL(pin, md, mask_name)	\
-	(((pin)->dtd->mode & md) && (((0x1 << (pin)->dtd->pin) & (pin)->dti->cfg->mask_name) != (intgpio_t)(0x1 << (pin)->dtd->pin)))
+#define MASK_INVAL(dtd, md, mask_name)	\
+	(((dtd)->mode & md) && (((0x1 << (dtd)->pin) & (dtd)->dti->cfg->mask_name) != (intgpio_t)(0x1 << (dtd)->pin)))
 
 
 /* types */
@@ -32,12 +32,9 @@ typedef enum{
 typedef struct{
 	uint8_t pin;
 	uint8_t mode;	/**< cf. mode_t */
-} dt_data_t;
 
-typedef struct{
-	dt_data_t *dtd;
-	gpio_t *dti;
-} dev_data_t;
+	gpio_t *dti;	/**< set by the driver */
+} dt_data_t;
 
 
 /* local/static prototypes */
@@ -51,21 +48,13 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd = (dt_data_t*)dt_data;
 	gpio_t *dti = (gpio_t*)dt_itf;
-	dev_data_t *pin;
-	devfs_dev_t *dev;
 	devfs_ops_t ops;
 
 
-	pin = kmalloc(sizeof(dev_data_t));
+	dtd->dti = dti;
 
-	if(pin == 0x0)
-		goto err_0;
-
-	pin->dtd = dtd;
-	pin->dti = dti;
-
-	if(MASK_INVAL(pin, MODE_IN, in_mask) || MASK_INVAL(pin, MODE_OUT, out_mask))
-		goto_errno(err_1, E_INVAL)
+	if(MASK_INVAL(dtd, MODE_IN, in_mask) || MASK_INVAL(dtd, MODE_OUT, out_mask))
+		goto_errno(end, E_INVAL)
 
 	ops.open = 0x0;
 	ops.close = close;
@@ -75,49 +64,40 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	ops.fcntl = 0x0;
 	ops.mmap = 0x0;
 
-	dev = devfs_dev_register(name, &ops, pin);
+	(void)devfs_dev_register(name, &ops, dtd);
 
-	if(dev == 0x0)
-		goto err_1;
-
-	return 0x0;
-
-
-err_1:
-	kfree(pin);
-
-err_0:
+end:
 	return 0x0;
 }
 
 driver_probe("gpio,pin", probe);
 
 static int close(devfs_dev_t *dev, fs_filed_t *fd){
-	if(gpio_sig_release(((dev_data_t*)dev->payload)->dti, fd) != 0)
+	if(gpio_sig_release(((dt_data_t*)dev->payload)->dti, fd) != 0)
 		reset_errno();
 
 	return 0;
 }
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dev_data_t *pin = (dev_data_t*)dev->payload;
+	dt_data_t *dtd = (dt_data_t*)dev->payload;
 
 
-	*((bool*)buf) = (bool)gpio_read(pin->dti, (0x1 << pin->dtd->pin));
+	*((bool*)buf) = (bool)gpio_read(dtd->dti, (0x1 << dtd->pin));
 
 	return errno ? 0 : 1;
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dev_data_t *pin = (dev_data_t*)dev->payload;
-	intgpio_t v = ((bool)(*((uint8_t*)buf)) << pin->dtd->pin);
+	dt_data_t *dtd = (dt_data_t*)dev->payload;
+	intgpio_t v = ((bool)(*((uint8_t*)buf)) << dtd->pin);
 
 
-	return (gpio_write(pin->dti, v, (0x1 << pin->dtd->pin)) == 0) ? 1 : 0;
+	return (gpio_write(dtd->dti, v, (0x1 << dtd->pin)) == 0) ? 1 : 0;
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
-	dev_data_t *pin = (dev_data_t*)dev->payload;
+	dt_data_t *dtd = (dt_data_t*)dev->payload;
 	gpio_sig_cfg_t *scfg = (gpio_sig_cfg_t*)arg;
 
 
@@ -126,7 +106,7 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 		if(n != sizeof(gpio_sig_cfg_t))
 			return_errno(E_INVAL);
 
-		gpio_sig_probe(pin->dti, fd, scfg);
+		gpio_sig_probe(dtd->dti, fd, scfg);
 		scfg->mask = (bool)scfg->mask;
 
 		return 0;
@@ -136,11 +116,11 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 			return_errno(E_INVAL);
 
 		if(scfg->mask == 0x0)
-			return gpio_sig_release(pin->dti, fd);
+			return gpio_sig_release(dtd->dti, fd);
 
-		scfg->mask = (0x1 << pin->dtd->pin);
+		scfg->mask = (0x1 << dtd->pin);
 
-		return gpio_sig_register(pin->dti, fd, scfg);
+		return gpio_sig_register(dtd->dti, fd, scfg);
 
 
 	default:

@@ -26,14 +26,10 @@ typedef struct{
 	char const *path;
 	uint8_t const rx_int,
 				  tx_int;
+	int fd; /**< set by the driver */
 
 	uart_cfg_t cfg;
 } dt_data_t;
-
-typedef struct{
-	dt_data_t *dtd;
-	int fd;
-} dev_data_t;
 
 
 /* local/static prototypes */
@@ -46,32 +42,29 @@ static size_t gets(char *s, size_t n, void *hw);
 static void *probe(char const *name, void *dt_data, void *dt_itf){
 	dt_data_t *dtd = (dt_data_t*)dt_data;
 	term_itf_t *itf;
-	dev_data_t *uart;
 
 
 	itf = kcalloc(1, sizeof(term_itf_t));
-	uart = kmalloc(sizeof(dev_data_t));
 
-	if(itf == 0x0 || uart == 0x0)
+	if(itf == 0x0)
 		goto err_0;
 
-	uart->dtd = dtd;
-	uart->fd = lnx_open(dtd->path, LNX_O_RDWR, 0666);
+	dtd->fd = lnx_open(dtd->path, LNX_O_RDWR, 0666);
 
-	if(uart->fd < 0){
-		WARN("unable to open uart at \"%s\": lnx-errno=%d\n", dtd->path, -uart->fd);
+	if(dtd->fd < 0){
+		WARN("unable to open uart at \"%s\": lnx-errno=%d\n", dtd->path, -dtd->fd);
 		goto_errno(err_0, E_IO);
 	}
 
 	// make file operations non-blocking to ensure gets() doesn't block
-	if(lnx_fcntl(uart->fd, LNX_F_SETFL, LNX_O_NONBLOCK) != 0)
+	if(lnx_fcntl(dtd->fd, LNX_F_SETFL, LNX_O_NONBLOCK) != 0)
 		goto_errno(err_1, E_IO);
 
 	itf->configure = configure;
 	itf->puts = puts;
 	itf->gets = gets;
 
-	itf->hw = uart;
+	itf->hw = dtd;
 	itf->cfg = &dtd->cfg;
 	itf->cfg_size = sizeof(uart_cfg_t);
 	itf->rx_int = dtd->rx_int;
@@ -81,10 +74,9 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 
 
 err_1:
-	lnx_close(uart->fd);
+	lnx_close(dtd->fd);
 
 err_0:
-	kfree(uart);
 	kfree(itf);
 
 	return 0x0;
@@ -93,7 +85,7 @@ err_0:
 driver_probe("x86,uart", probe);
 
 static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
-	dt_data_t *dtd = ((dev_data_t*)hw)->dtd;
+	dt_data_t *dtd = (dt_data_t*)hw;
 
 
 	x86_hw_uart_cfg(dtd->path, dtd->rx_int, hw_cfg);
@@ -102,15 +94,15 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 }
 
 static size_t puts(char const *s, size_t n, bool blocking, void *hw){
-	dev_data_t *uart = (dev_data_t*)hw;
+	dt_data_t *dtd = (dt_data_t*)hw;
 
 
-	lnx_write(uart->fd, s, n);
+	lnx_write(dtd->fd, s, n);
 
 	// the x86 hardware simulated by the test framework doesn't support
 	// tx interrupts, hence a fake interrupt is produced here
-	if(uart->dtd->tx_int)
-		int_foretell(uart->dtd->tx_int);
+	if(dtd->tx_int)
+		int_foretell(dtd->tx_int);
 
 	return n;
 }
@@ -119,7 +111,7 @@ static size_t gets(char *s, size_t n, void *hw){
 	ssize_t r;
 
 
-	r = lnx_read(((dev_data_t*)hw)->fd, s, n);
+	r = lnx_read(((dt_data_t*)hw)->fd, s, n);
 
 	if(r < 0){
 		switch(r){
