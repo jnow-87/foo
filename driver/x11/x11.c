@@ -30,7 +30,7 @@ typedef struct{
 
 	int shm_id;
 
-	dt_data_t *dsp_cfg;
+	dt_data_t *cfg;
 } dev_data_t;
 
 
@@ -52,7 +52,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(dsp == 0x0 || itf == 0x0)
 		goto err;
 
-	dsp->dsp_cfg = dtd;
+	dsp->cfg = dtd;
 
 	itf->configure = configure;
 	itf->write_page = write_page;
@@ -95,7 +95,7 @@ static int configure(vram_cfg_t *cfg, void *hw){
 	dsp->dirty = dsp->shm + npages * cfg->width;
 
 	/* configure hardware */
-	x86_hw_display_cfg(cfg, dsp->dsp_cfg->scale, dsp->shm_id);
+	x86_hw_display_cfg(cfg, dsp->cfg->scale, dsp->shm_id);
 
 	return 0;
 
