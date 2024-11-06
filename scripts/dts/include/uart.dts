@@ -1,0 +1,25 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef UART_DTS
+#define UART_DTS
+
+
+/* macros */
+// uart config (uart_cfg_t)
+#define uart_cfg_t(baudrate, stop, parity, csize) \
+	int<32> = [ baudrate ]; \
+	int<8> = [ \
+		stop, \
+		parity, \
+		csize, \
+	]
+
+
+#endif // UART_DTS

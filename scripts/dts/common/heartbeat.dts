@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2022 Jan Nowotsch
+ * Copyright (C) 2024 Jan Nowotsch
  * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
  *
  * Released under the terms of the GNU GPL v2.0
@@ -7,20 +7,22 @@
 
 
 
-#include <gpio.dts>
+#ifndef COMMON_HEARTBEAT_DTS
+#define COMMON_HEARTBEAT_DTS
 
 
-#ifndef HEARTBEAT_PIN
-# error "heartbeat pin not defined"
-#endif
+#include <kheartbeat.dts>
 
-heartbeat = {
-	compatible = "kernel,heartbeat";
 
-	/* heartbeat config (dt_data_t) */
-	int<8> = [ HEARTBEAT_PIN ];	// pin
-	int<16> = [
-		0x0505,					// wave
-		200,					// period [ms]
-	];
-};
+/* macros */
+// heartbeat device
+#define heartbeat(name, pin) \
+	kernel_heartbeat( \
+		name, \
+		pin, \
+		0x0505,	/* wave */ \
+		200		/* period [ms] */ \
+	)
+
+
+#endif // COMMON_HEARTBEAT_DTS

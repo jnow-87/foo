@@ -1,0 +1,32 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef SSD1306_DTS
+#define SSD1306_DTS
+
+
+#include <names.dts>
+
+
+/* macros */
+// ssd1306 device
+#define ssd1306(name, addr, ...) \
+	display_name(name) = { \
+		compatible = "ssd1306"; \
+		\
+		/* ssd1306 config (dt_data_t) */ \
+		int<8> = [ addr ]; \
+		baseaddr = 0x0;	/* i2c device (set by the driver) */ \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+
+#endif // SSD1306_DTS

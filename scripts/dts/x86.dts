@@ -8,52 +8,250 @@
 
 
 #include <config/config.h>
+#include <bridge.dts>
+#include <gpio.dts>
+#include <loop.dts>
+#include <term.dts>
+#include <x11.dts>
+#include <x86.dts>
+#include "common/i2cdemo.dts"
+#include "common/looptty.dts"
+#include "common/loopvram.dts"
+#include "common/tty.dts"
+#include "common/vramdemo.dts"
 
 
 arch = {
-#include "x86/arch.dts"
+	addr-width = 64;
+	reg-width = 64;
+
+	ncores = 1;
+
+	// interrupts
+	num-ints = 4;
+
+	timer-int = 0;
+	syscall-int = 1;
+
+	timer-cycle-time-us = 50000;
 };
 
 memory = {
-#include "x86/memory.dts"
+	ram = {
+		baseaddr = 0x00400000;
+		size = 62914560;
+
+		text = {
+			baseaddr = 0x00400000;
+			size = 20971520;
+		};
+
+		kernel-data = {
+			baseaddr = 0x1800000;
+			size = 20971520;
+		};
+
+		app-data = {
+			baseaddr = 0x2c00000;
+			size = 20971520;
+		};
+	};
+
+	// The heap needs to be allocated dynamically to allow
+	// using it as shared memory. However, a heap node is
+	// needed since the kernel assumes its presence.
+	heap = {
+		baseaddr = 0x0;
+		size = 1048576;
+	};
 };
 
 devices = {
-#include "x86/uart0.dts"
+	x86_uart(
+		0,				// uart name
+		"/dev/stdin",	// path
+		3,				// rx interrupt
+		0,				// tx interrupt
+		115200,			// baudrate
+		0,				// stop bits (1)
+		0,				// parity (UART_PARITY_NONE)
+		3,				// csize (UART_CS_8)
+
+		tty_user(
+			0,	// term name
+			0	// tty name
+		);
+	);
 
 #ifdef CONFIG_LOOP_BLOCK
-# include "common/loop0.dts"
+	loop(
+		0,	// loop name
+		32	// buffer size
+	);
 #endif // CONFIG_LOOP_BLOCK
 
 #ifdef CONFIG_LOOP_TERM
-# include "common/tty-loop0.dts"
+	tty_loop(
+		0,		// loop name
+		1,		// term name
+		loop0	// tty name
+	);
 #endif // CONFIG_LOOP_TERM
 
 #ifdef CONFIG_LOOP_VRAM
-# include "common/vram-loop0.dts"
+	vram_loop(
+		0,		// loop name
+		0,		// vram name
+		2,		// term name
+		vram0	// tty name
+	);
 #endif // CONFIG_LOOP_VRAM
 
 #ifdef CONFIG_DRIVER_X11
-# include "x86/x11.dts"
+	x11_dsp(
+		x11,	// display name
+		3,		// scale
+
+		vram_demo(
+			x11,	// vram name
+			3,		// term name
+			x11,	// tty name
+			128,	// width
+			64		// height
+		);
+	);
 #endif // CONFIG_DRIVER_X11
 
 #ifdef CONFIG_DRIVER_GPIO
-# include "x86/gpio.dts"
+	x86_gpio(
+		0,	// gpio name
+		0,	// interrupt timer period [ms]
+
+		gpio(
+			0,		// gpio name
+			0xff,	// in mask
+			0xff,	// out mask
+			0x00,	// int mask
+			0x00,	// invert mask
+			0,		// interrupt
+
+			gpio_port(
+				0,		// gpio name
+				0, 		// port name
+				0xff,	// in mask
+				0xff,	// out mask
+				0x00	// int mask
+			);
+		);
+	);
 
 # ifdef CONFIG_INIT_TEST
-#  include "x86/gpio-test.dts"
+	x86_gpio(
+		1,	// gpio name
+		10,	// interrupt timer period [ms]
+
+		gpio(
+			1,					// gpio name
+			0xffffffff,			// in mask
+			0xffffffff,			// out mask
+			0xffffffff,			// int mask
+			0x000005f5,			// invert mask
+			(arch.num-ints++),	// interrupt
+
+			gpio_port(
+				1,		// gpio name
+				0,		// port name
+				0xff0f,	// in mask
+				0xff00,	// out mask
+				0x000f	// int mask
+			);
+
+			gpio_pin(
+				1,		// gpio name
+				0,		// pin name
+				4,		// pin
+				0x3		// mode (i/o)
+			);
+
+			gpio_port(
+				1,				// gpio name
+				int0,			// port name
+				0xffffffff,		// in mask
+				0xffffffff,		// out mask
+				0xffffffff		// int mask
+			);
+		);
+	);
 # endif // CONFIG_INIT_TEST
 #endif // CONFIG_DRIVER_GPIO
 
 #ifdef CONFIG_DRIVER_BRIDGE
-# include "x86/bridge0-uart.dts"
+	x86_uart(
+		1,				// uart name
+		"/dev/ttyUSB1",	// path
+		0,				// rx interrupt
+		0,				// tx interrupt
+		115200,			// baudrate
+		0,				// stop bits (1)
+		0,				// parity (UART_PARITY_NONE)
+		3,				// csize (UART_CS_8)
+
+		bridge_uart_itf(
+			0uarti,		// bridge name
+			0,			// id
+			2,			// chunksize
+			0,			// rx interrupt
+			0			// tx interrupt
+		);
+	);
 
 # ifdef CONFIG_BRIDGE_UART_DEV
-#  include "x86/bridge0-term.dts"
+	bridge(
+		0uart,				// bridge name
+		0,					// id
+		2,					// chunksize
+		(arch.num-ints++),	// rx interrupt
+		(arch.num-ints++),	// tx interrupt
+
+		bridge_uart_dev(
+			3,			// uart name
+
+			term(
+				4, 		// term name
+				0x0,	// iflags (none)
+				0x0,	// oflags (none)
+				0x0,	// lflags (none)
+				0,		// tabs
+
+				tty(
+					brdg0	// tty name
+				);
+			);
+		);
+	);
 # endif // CONFIG_BRIDGE_UART_DEV
 
 # ifdef CONFIG_BRIDGE_I2C_DEV
-#  include "x86/bridge0-i2c.dts"
+	bridge(
+		0i2c,	// bridge name
+		0,		// id
+		2,		// chunksize
+		0,		// rx interrupt
+		0,		// tx interrupt
+
+		bridge_i2c_dev(
+			0,	// bridge name
+			0,	// clk_khz
+			17,	// addr
+
+			i2c_demo_devices(
+				0,		// i2craw name
+				0,		// envsensor name
+				mcp,	// mcp23017 name
+				i2c		// display name
+			);
+		);
+	);
 # endif // CONFIG_BRIDGE_I2C_DEV
 #endif // CONFIG_DRIVER_BRIDGE
 };

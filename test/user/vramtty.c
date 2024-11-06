@@ -20,8 +20,8 @@
 
 
 /* macros */
-#define LOOP_DEV		"/dev/vram-loop0"
-#define TERM_DEV		"/dev/tty-vram0"
+#define LOOP_DEV		"/dev/loopvram0"
+#define TERM_DEV		"/dev/ttyvram0"
 
 #define LINES_MIN		4
 #define COLUMNS_MIN		8

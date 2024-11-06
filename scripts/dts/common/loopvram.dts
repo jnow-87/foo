@@ -1,0 +1,42 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef COMMON_LOOPVRAM_DTS
+#define COMMON_LOOPVRAM_DTS
+
+
+#include <loop.dts>
+#include <term.dts>
+#include <vram.dts>
+#include "../common/tty.dts"
+
+
+/* macros */
+#define vram_loop(loop_name, vram_name, term_name, tty_name) \
+	loop_vram( \
+		loop_name,	/* name */ \
+		\
+		vram( \
+			vram_name,		/* name */ \
+			64,				/* height */ \
+			32,				/* width */ \
+			0x10,			/* contrast */ \
+			0x00,			/* flags */ \
+			100,			/* refresh_ms */ \
+			\
+			vram_term( \
+				vram_name, \
+				\
+				tty_vram(term_name, tty_name); \
+			); \
+		); \
+	)
+
+
+#endif // COMMON_LOOPVRAM_DTS

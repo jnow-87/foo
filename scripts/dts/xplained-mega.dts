@@ -7,17 +7,92 @@
 
 
 
-#include <config/config.h>
+#include <avr.dts>
+#include "common/tty.dts"
 
 
 arch = {
-#include "avr/arch-xplained-mega.dts"
+	addr-width = 16;
+	reg-width = 8;
+
+	ncores = 1;
+
+	// interrupts
+	//  35 hardwares
+	//   1 syscall
+	//   1 instruction overflow
+	num-ints = 37;
+
+	timer-int = 8;
+	syscall-int = 35;
+
+	timer-cycle-time-us = 31250; 
+
+	avr_platform(
+		11059200,	// system clock [Hz]
+		0,			// system clock prescale (1)
+		0x1			// watchdog prescaler (4096 -> 31.250ms)
+	);
 };
 
 memory = {
-#include "avr/memory-atmega1284p.dts"
+	flash = {
+		baseaddr = 0x0;
+		size = 131072;
+
+		kernel-flash = {
+			baseaddr = 0x0;
+			size = 61440;
+		};
+
+		app-flash = {
+			baseaddr = 0x0000f000;
+			size = 69632;
+		};
+	};
+
+	ram = {
+		baseaddr = 0x00800000;
+		size = 16640;
+
+		registers = {
+			baseaddr = 0x00800000;
+			size = 256;
+		};
+
+		kernel-data = {
+			baseaddr = 0x00800100;
+			size = 5376;
+		};
+
+		app-data = {
+			baseaddr = 0x00801600;
+			size = 5120;
+		};
+
+		heap = {
+			baseaddr = 0x00802a00;
+			size = 5888;
+		};
+	};
 };
 
 devices = {
-#include "avr/uart0.dts"
+	avr_uart(
+		0,		// uart name
+		0xc0,	// uart0 config register base
+		0x64,	// PRR0
+		0x2,	// PRR0_PRUSART0
+		20,		// rx interrupt (uart0)
+		22,		// tx interrupt (uart0)
+		115200,	// baudrate
+		0,		// stop bits (1)
+		0,		// parity (UART_PARITY_NONE)
+		3,		// csize (UART_CS_8)
+
+		tty_user(
+			0,	// term name
+			0	// tty name
+		);
+	);
 };

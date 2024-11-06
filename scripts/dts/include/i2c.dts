@@ -1,0 +1,38 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef I2C_DTS
+#define I2C_DTS
+
+
+/* macros */
+// i2c bus device
+#define i2c_bus(name, clk_khz, addr, int_num, ...) \
+	i2cbus ##name = { \
+		compatible = "i2c"; \
+		\
+		/* i2c driver config (i2c_cfg_t) */ \
+		int<16> = [ clk_khz ]; \
+		int<8> = [ \
+		   addr, \
+		   int_num, \
+		]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// i2c raw device
+#define i2c_raw(name) \
+	i2craw ##name = { \
+		compatible = "i2c,raw"; \
+	}
+
+
+#endif // I2C_DTS

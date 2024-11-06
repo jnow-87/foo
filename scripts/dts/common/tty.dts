@@ -1,0 +1,51 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef COMMON_TTY_DTS
+#define COMMON_TTY_DTS
+
+
+#include <config/config.h>
+#include <klog.dts>
+#include <term.dts>
+
+
+#ifdef CONFIG_X86
+# define USER_IFLAGS	0x1
+#else
+# define USER_IFLAGS	0x0
+#endif // CONFIG_X86
+
+
+/* macros */
+#define tty_user(term_name, tty_name) \
+	term( \
+		term_name,		/* name */ \
+		USER_IFLAGS,	/* iflags (TIFL_CRNL) */ \
+		0x2,			/* oflags (TOFL_NLCR) */ \
+		0x0,			/* lflags (none) */ \
+		0,				/* tabs */ \
+		\
+		tty(tty_name); \
+		kernel_log(); \
+	)
+
+#define tty_vram(term_name, tty_name) \
+	term( \
+		term_name,	/* name */ \
+		0x0,		/* iflags (none) */ \
+		0x2,		/* oflags (TOFL_NLCR) */ \
+		0x1e,		/* lflags (TLFL_CURSOR | TLFL_SCROLL | TLFL_WRAP | TLFL_CANON) */ \
+		4,			/* tabs */ \
+		\
+		tty(tty_name); \
+	)
+
+
+#endif // COMMON_TTY_DTS

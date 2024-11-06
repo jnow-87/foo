@@ -1,0 +1,20 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef NAMES_DTS
+#define NAMES_DTS
+
+
+/* macros */
+#define display_name(name)		dsp ##name
+#define envsensor_name(name)	env ##name
+#define netdev_name(name)		eth ##name
+
+
+#endif // NAMES_DTS

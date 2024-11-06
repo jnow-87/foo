@@ -1,0 +1,44 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef TERM_DTS
+#define TERM_DTS
+
+
+/* macros */
+// terminal interface
+#define term(name, iflags, oflags, lflags, tabs, ...) \
+	term ##name = { \
+		compatible = "terminal"; \
+		\
+		/* terminal config (term_cfg_t) */ \
+		int<8> = [ \
+			iflags, \
+			oflags, \
+			lflags, \
+			tabs, \
+		]; \
+		\
+		int<16> = [ \
+			0,	/* lines (set by the driver) */ \
+			0,	/* columns (set by the driver) */ \
+		]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// terminal device
+#define tty(name) \
+	tty ##name = { \
+		compatible = "terminal,raw"; \
+	}
+
+
+#endif // TERM_DTS

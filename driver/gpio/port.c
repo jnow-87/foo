@@ -19,15 +19,15 @@
 
 
 /* macros */
-#define MASK_INVAL(port, mask_name)	\
-	(((port)->dtd->mask_name & (port)->dti->cfg->mask_name) != (port)->dtd->mask_name)
+#define MASK_INVAL(dtd, mask_name)	\
+	(((dtd)->cfg.mask_name & (dtd)->dti->cfg->mask_name) != (dtd)->cfg.mask_name)
 
 
 /* types */
 typedef struct{
-	gpio_port_cfg_t *dtd;
-	gpio_t *dti;
-} dev_data_t;
+	gpio_port_cfg_t cfg;
+	gpio_t *dti; /**< set by the driver */
+} dt_data_t;
 
 
 /* local/static prototypes */
@@ -39,61 +39,47 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	gpio_port_cfg_t *dtd = (gpio_port_cfg_t*)dt_data;
+	dt_data_t *dtd = (dt_data_t*)dt_data;
 	gpio_t *dti = (gpio_t*)dt_itf;
-	dev_data_t *port;
 	devfs_ops_t ops;
 
 
-	port = kmalloc(sizeof(dev_data_t));
+	dtd->dti = dti;
 
-	if(port == 0x0)
-		goto err_0;
-
-	port->dtd = dtd;
-	port->dti = dti;
-
-	if(MASK_INVAL(port, in_mask) || MASK_INVAL(port, out_mask) || MASK_INVAL(port, int_mask))
-		goto_errno(err_1, E_INVAL);
+	if(MASK_INVAL(dtd, in_mask) || MASK_INVAL(dtd, out_mask) || MASK_INVAL(dtd, int_mask))
+		goto_errno(end, E_INVAL);
 
 	ops.open = 0x0;
 	ops.close = close;
-	ops.read = dtd->in_mask ? read : 0x0;
-	ops.write = dtd->out_mask ? write : 0x0;
+	ops.read = dtd->cfg.in_mask ? read : 0x0;
+	ops.write = dtd->cfg.out_mask ? write : 0x0;
 	ops.ioctl = ioctl;
 	ops.fcntl = 0x0;
 	ops.mmap = 0x0;
 
-	if(devfs_dev_register(name, &ops, port) == 0x0)
-		goto err_1;
+	(void)devfs_dev_register(name, &ops, dtd);
 
-	return 0x0;
-
-
-err_1:
-	kfree(port);
-
-err_0:
+end:
 	return 0x0;
 }
 
 driver_probe("gpio,port", probe);
 
 static int close(devfs_dev_t *dev, fs_filed_t *fd){
-	if(gpio_sig_release(((dev_data_t*)dev->payload)->dti, fd) != 0)
+	if(gpio_sig_release(((dt_data_t*)dev->payload)->dti, fd) != 0)
 		reset_errno();
 
 	return 0;
 }
 
 static size_t read(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dev_data_t *port = (dev_data_t*)dev->payload;
+	dt_data_t *dtd = (dt_data_t*)dev->payload;
 
 
 	if(n != sizeof(intgpio_t))
 		goto_errno(err, E_LIMIT);
 
-	*((intgpio_t*)buf) = gpio_read(port->dti, port->dtd->in_mask);
+	*((intgpio_t*)buf) = gpio_read(dtd->dti, dtd->cfg.in_mask);
 
 	return n;
 
@@ -103,13 +89,13 @@ err:
 }
 
 static size_t write(devfs_dev_t *dev, fs_filed_t *fd, void *buf, size_t n){
-	dev_data_t *port = (dev_data_t*)dev->payload;
+	dt_data_t *dtd = (dt_data_t*)dev->payload;
 
 
 	if(n != sizeof(intgpio_t))
 		goto_errno(err, E_LIMIT);
 
-	return (gpio_write(port->dti, *((intgpio_t*)buf), port->dtd->out_mask) != 0) ? 0 : n;
+	return (gpio_write(dtd->dti, *((intgpio_t*)buf), dtd->cfg.out_mask) != 0) ? 0 : n;
 
 
 err:
@@ -117,7 +103,7 @@ err:
 }
 
 static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_t n){
-	dev_data_t *port = (dev_data_t*)dev->payload;
+	dt_data_t *dtd = (dt_data_t*)dev->payload;
 	gpio_sig_cfg_t *scfg = (gpio_sig_cfg_t*)arg;
 	gpio_port_cfg_t *pcfg = (gpio_port_cfg_t*)arg;
 
@@ -126,14 +112,14 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 	case IOCTL_CFGRD:
 		switch(n){
 		case sizeof(gpio_port_cfg_t):
-			pcfg->in_mask = port->dtd->in_mask;
-			pcfg->out_mask = port->dtd->out_mask;
-			pcfg->int_mask = port->dtd->int_mask;
+			pcfg->in_mask = dtd->cfg.in_mask;
+			pcfg->out_mask = dtd->cfg.out_mask;
+			pcfg->int_mask = dtd->cfg.int_mask;
 			break;
 
 		case sizeof(gpio_sig_cfg_t):
-			gpio_sig_probe(port->dti, fd, scfg);
-			scfg->mask &= port->dtd->int_mask;
+			gpio_sig_probe(dtd->dti, fd, scfg);
+			scfg->mask &= dtd->cfg.int_mask;
 			break;
 
 		default:
@@ -147,9 +133,9 @@ static int ioctl(devfs_dev_t *dev, fs_filed_t *fd, int request, void *arg, size_
 			return_errno(E_INVAL);
 
 		if(scfg->mask == 0x0)
-			return gpio_sig_release(port->dti, fd);
+			return gpio_sig_release(dtd->dti, fd);
 
-		return gpio_sig_register(port->dti, fd, scfg);
+		return gpio_sig_register(dtd->dti, fd, scfg);
 
 	default:
 		return_errno(E_NOSUP);

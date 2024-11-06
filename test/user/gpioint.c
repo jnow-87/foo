@@ -23,7 +23,7 @@
 
 
 /* macros */
-#define GPIO_DEV	"/dev/int0"
+#define GPIO_DEV	"/dev/gpio2int0"
 #define SIGNAL		SIG_USR1
 
 

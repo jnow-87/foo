@@ -1,0 +1,36 @@
+/**
+ * Copyright (C) 2022 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef COMMON_LOOPTTY_DTS
+#define COMMON_LOOPTTY_DTS
+
+
+#include <loop.dts>
+#include <term.dts>
+
+
+/* macros */
+#define tty_loop(loop_name, term_name, tty_name) \
+	loop_term( \
+		loop_name,	/* name */ \
+		32,			/* buffer size */ \
+		\
+		term( \
+			term_name,	/* name */ \
+			0x0,		/* iflags (none) */ \
+			0x0,		/* oflags (none) */ \
+			0x0,		/* lflags (none) */ \
+			0,			/* tabs */ \
+			\
+			tty(tty_name); \
+		); \
+	)
+
+
+#endif // COMMON_LOOPTTY_DTS

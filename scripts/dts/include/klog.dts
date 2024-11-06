@@ -7,13 +7,15 @@
 
 
 
-#ifndef ASSERT_DTS
-#define ASSERT_DTS
+#ifndef KLOG_DTS
+#define KLOG_DTS
 
 
 /* macros */
-#define ASSERT(expr, msg) \
-	assert(#expr, msg)
+#define kernel_log() \
+	klog = { \
+		compatible = "kernel,log"; \
+	}
 
 
-#endif // ASSERT_DTS
+#endif // KLOG_DTS

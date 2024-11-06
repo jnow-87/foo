@@ -8,32 +8,220 @@
 
 
 #include <config/config.h>
+#include <gpio.dts>
+#include <loop.dts>
+#include <rp2040.dts>
+#include "common/heartbeat.dts"
+#include "common/i2cdemo.dts"
+#include "common/looptty.dts"
+#include "common/tty.dts"
 
 
 arch = {
-#include "rp2040/arch.dts"
+	addr-width = 32;
+	reg-width = 32;
+
+	ncores = 1;
+
+	// interrupts
+	num-ints = 42;
+	timer-int = 15;
+	syscall-int = 11;
+	ipi-int = 31;
+
+	timer-cycle-time-us = 125000;
+
+	rp2040_platform(
+		12000,		// crystal clock [kHz]
+
+		// system pll (133 MHz)
+		rp2040_pll_cfg_t(
+			1,		// reference clock divider
+			6,		// post divider 1
+			2,		// post divider 2
+			133		// feedback divider
+		),
+
+		// usb pll (48 MHz)
+		rp2040_pll_cfg_t(
+			1,		// reference clock divider
+			6,		// post divider 1
+			4,		// post divider 2
+			96		// feedback divider
+		),
+
+		// gpio function selection
+		rp2040_gpio_funcsel(
+			2,		// gpio0 (uart0 tx)
+			2,		// gpio1 (uart0 rx)
+			31,		// gpio2 (reset)
+			31,		// gpio3 (reset)
+			5,		// gpio4 (sio)
+			5,		// gpio5 (sio)
+			5,		// gpio6 (sio)
+			5,		// gpio7 (sio)
+			31,		// gpio8 (i2c0)
+			31,		// gpio9 (i2c0)
+			31,		// gpio10 (reset)
+			31,		// gpio11 (reset)
+			31,		// gpio12 (reset)
+			31,		// gpio13 (reset)
+			31,		// gpio14 (reset)
+			5,		// gpio15 (sio)
+			3,		// gpio16 (i2c0)
+			3,		// gpio17 (i2c0)
+			31,		// gpio18 (reset)
+			31,		// gpio19 (reset)
+			31,		// gpio20 (reset)
+			31,		// gpio21 (reset)
+			31,		// gpio22 (reset)
+			31,		// gpio23 (reset)
+			31,		// gpio24 (reset)
+			5,		// gpio25 (sio)
+			31,		// gpio26 (reset)
+			31,		// gpio27 (reset)
+			31,		// gpio28 (reset)
+			31,		// gpio29 (reset)
+		),
+		1			// gpio voltage select (3.3v)
+	);
 };
 
 memory = {
-#include "rp2040/memory.dts"
+	flash = {
+		baseaddr = 0x10000000;
+		size = 2097152;
+
+		kernel-flash = {
+			baseaddr = 0x10000000;
+			size = 1048576;
+		};
+
+		app-flash = {
+			baseaddr = 0x10100000;
+			size = 1048576;
+		};
+	};
+
+	ram = {
+		baseaddr = 0x20000000;
+		size = 270336;
+
+		kernel-data = {
+			baseaddr = 0x20000000;
+			size = 32768;
+		};
+
+		app-data = {
+			baseaddr = 0x20008000;
+			size = 32768;
+		};
+
+		heap = {
+			baseaddr = 0x20010000;
+			size = 204800;
+		};
+	};
 };
 
 devices = {
-#include "rp2040/tty0.dts"
+	rp2040_uart(
+		0,			// uart name
+		0x40034000,	// uart0 register base
+		22,			// reset id
+		36,			// interrupt
+		115200,		// baudrate
+		0,			// stop bits (1)
+		0,			// parity (UART_PARITY_NONE)
+		3,			// csize (UART_CS_8)
+
+		tty_user(
+			0,	// term name
+			0	// tty name
+		);
+	);
 
 #ifdef CONFIG_LOOP_BLOCK
-# include "common/loop0.dts"
+	loop(
+		0,	// loop name
+		32	// buffer size
+	);
 #endif // CONFIG_LOOP_BLOCK
 
 #ifdef CONFIG_LOOP_TERM
-# include "common/tty-loop0.dts"
+	tty_loop(
+		0,		// loop name
+		1,		// term name
+		loop0	// tty name
+	);
 #endif // CONFIG_LOOP_TERM
 
 #ifdef CONFIG_DRIVER_GPIO
-# include "rp2040/gpio.dts"
+	rp2040_gpio(
+		0,			// gpio name
+		0x00000000,	// pullup_mask,
+		0x00000030,	// pulldown_mask,
+		0x00000030,	// schmitt_en,
+		0x00000000,	// slewfast,
+		0x00000030,	// drive_2ma,
+		0x00000000,	// drive_4ma,
+		0x00000000,	// drive_8ma,
+		0x02008000,	// drive_12ma,
+
+		gpio(
+			0,			// gpio name
+			0x00000030,	// in mask
+			0x020080c0,	// out mask
+			0x00000030,	// int mask
+			0x000000c0,	// invert mask
+			29,			// interrupt (io_irq_bank0)
+
+			gpio_port(
+				0,			// gpio name
+				0,			// port name
+				0x00000030,	// in mask
+				0x000000c0,	// out mask
+				0x00000030	// int mask
+			);
+
+			gpio_pin(
+				0,		// gpio name
+				uled,	// pin name
+				15,		// pin
+				0x2		// mode (out)
+			);
+
+# ifdef CONFIG_KERNEL_HEARTBEAT
+			heartbeat(
+				0,	// heartbeat name
+				25	// pin
+			);
+# endif // CONFIG_KERNEL_HEARTBEAT
+		);
+	);
 #endif // CONFIG_DRIVER_GPIO
 
 #ifdef CONFIG_DRIVER_I2C
-# include "rp2040/i2c.dts"
+# if defined(CONFIG_DRIVER_SSD1306) || defined(CONFIG_DRIVER_MCP23017) || defined(CONFIG_DRIVER_BME280)
+#  define I2C_INT_NUM	0
+# else
+#  define I2C_INT_NUM	39
+# endif // CONFIG_DRIVER_*
+
+	rp2040_i2c_bus(
+		0,				// i2c name
+		0x40044000,		// regs (i2c0)
+		3,				// reset id (i2c0)
+		100,			// clock [kHz]
+		18,				// address
+		I2C_INT_NUM,	// interrupt
+
+		i2c_demo_devices(
+			0,		// i2craw name
+			0,		// envsensor name
+			mcp,	// mcp23017 name
+			i2c		// display name
+		);
+	);
 #endif // CONFIG_DRIVER_I2C
 };

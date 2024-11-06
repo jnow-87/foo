@@ -7,19 +7,77 @@
 
 
 
+#ifndef GPIO_DTS
+#define GPIO_DTS
+
+
+#include <config/config.h>
 #include <assert.dts>
 
 
 /* macros */
-#define gpio_cfg_t(in_mask, out_mask, int_mask, invert_mask, int_num) \
+// gpio port config (gpio_port_cfg_t)
+#define gpio_port_cfg_t(in_mask, out_mask, int_mask) \
 	ASSERT((int_mask & ~(in_mask | out_mask)) == 0, "int_mask has to match in_mask and out_mask"); \
-	ASSERT((invert_mask & ~(in_mask | out_mask)) == 0, "invert_mask has to match in_mask and out_mask"); \
 	\
-	/* gpio config (gpio_cfg_t) */ \
 	int<CONFIG_GPIO_INT_WIDTH> = [ \
 		in_mask, \
 		out_mask, \
 		int_mask, \
-		invert_mask, \
-		int_num, \
 	]
+
+// gpio interface
+#define gpio(name, in_mask, out_mask, int_mask, invert_mask, int_num, ...) \
+	gpio ##name = { \
+		compatible = "gpio"; \
+		\
+		/* gpio config (gpio_cfg_t) */ \
+		ASSERT((invert_mask & ~(in_mask | out_mask)) == 0, "invert_mask has to match in_mask and out_mask"); \
+		\
+		gpio_port_cfg_t(in_mask, out_mask, int_mask); \
+		\
+		int<CONFIG_GPIO_INT_WIDTH> = [ \
+			invert_mask, \
+			int_num, \
+		]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+// gpio port device
+#define gpio_port(gpio_name, port_name, in_mask, out_mask, int_mask) \
+	gpio ##gpio_name ##p ##port_name = { \
+		compatible = "gpio,port"; \
+		\
+		gpio_port_cfg_t(in_mask, out_mask, int_mask); \
+		baseaddr = 0x0; /**< gpio interface (set by the driver) */ \
+	}
+
+// gpio pin device
+#define gpio_pin(gpio_name, pin_name, pin, mode) \
+	 gpio ##gpio_name ##i ##pin_name = { \
+		compatible = "gpio,pin"; \
+		\
+		/* gpio pin config (dt_data_t) */ \
+		int<8> = [ \
+			pin, \
+			mode, \
+		]; \
+		baseaddr = 0x0; /**< gpio interface (set by the driver) */ \
+	}
+
+// gpio intfwd device
+#define gpio_intfwd(name, pin, int_num) \
+	gpiointfwd ##name = { \
+		compatible = "gpio,intfwd"; \
+		\
+		/* gpio interrupt forward config (dt_data_t) */ \
+		int<8> = [ \
+			pin, \
+			int_num, \
+		]; \
+	}
+
+
+#endif // GPIO_DTS

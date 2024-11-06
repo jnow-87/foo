@@ -1,0 +1,39 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef BME280_DTS
+#define BME280_DTS
+
+
+#include <names.dts>
+
+
+/* macros */
+// bme280 device
+#define bme280(name, addr) \
+	envsensor_name(name) = { \
+		compatible = "bme280"; \
+		\
+		/* bme280 config (dt_data_t) */ \
+		int<8> = [ addr ]; \
+		\
+		/* bme280 config (bme280_cfg_t) */ \
+		int <8> = [ \
+			1,		/* mode (forced) */ \
+			0x7,	/* features (all) */ \
+			0,		/* standby time (500) */ \
+			0,		/* filter (off) */ \
+			1,		/* temperature oversampling (1) */ \
+			1,		/* pressure oversampling (1) */ \
+			1		/* humidity oversampling (1) */ \
+		]; \
+	}
+
+
+#endif // BME280_DTS

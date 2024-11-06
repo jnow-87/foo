@@ -1,0 +1,31 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef X11_DTS
+#define X11_DTS
+
+
+#include <names.dts>
+
+
+/* macros */
+// x11 display device
+#define x11_dsp(name, scale, ...) \
+	display_name(name) = { \
+		compatible = "x11"; \
+		\
+		/* x11 display config (dt_data_t) */ \
+		int<8> = [ scale ]; \
+		\
+		/* childs */ \
+		__VA_ARGS__ \
+	}
+
+
+#endif // X11_DTS
