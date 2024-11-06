@@ -89,36 +89,36 @@ arch = {
 
 memory = {
 	flash = {
-		baseaddr = 0x10000000;
+		addr = 0x10000000;
 		size = 2097152;
 
 		kernel-flash = {
-			baseaddr = 0x10000000;
+			addr = 0x10000000;
 			size = 1048576;
 		};
 
 		app-flash = {
-			baseaddr = 0x10100000;
+			addr = 0x10100000;
 			size = 1048576;
 		};
 	};
 
 	ram = {
-		baseaddr = 0x20000000;
+		addr = 0x20000000;
 		size = 270336;
 
 		kernel-data = {
-			baseaddr = 0x20000000;
+			addr = 0x20000000;
 			size = 32768;
 		};
 
 		app-data = {
-			baseaddr = 0x20008000;
+			addr = 0x20008000;
 			size = 32768;
 		};
 
 		heap = {
-			baseaddr = 0x20010000;
+			addr = 0x20010000;
 			size = 204800;
 		};
 	};
@@ -213,7 +213,7 @@ devices = {
 		0x40044000,		// regs (i2c0)
 		3,				// reset id (i2c0)
 		100,			// clock [kHz]
-		18,				// address
+		18,				// slave address
 		I2C_INT_NUM,	// interrupt
 
 		i2c_demo_devices(

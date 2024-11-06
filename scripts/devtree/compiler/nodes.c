@@ -45,8 +45,8 @@ static node_t *index_query(char const *name, size_t len);
 
 /* static variables */
 static node_t root_device,
-				   root_memory,
-				   root_arch;
+			  root_memory,
+			  root_arch;
 static vector_t node_index;
 
 
@@ -71,7 +71,7 @@ int nodes_init(void){
 	if(vector_init(&root_memory.attrs, sizeof(attr_t), 16) != 0)
 		return -1;
 
-	node_attr_add(&root_memory, MT_BASE_ADDR, (attr_value_t){ .i = 0x0 });
+	node_attr_add(&root_memory, MT_ADDR, (attr_value_t){ .i = 0x0 });
 	node_attr_add(&root_memory, MT_SIZE, (attr_value_t){ .i = 0 });
 
 	memset(&root_arch, 0, sizeof(node_t));
@@ -196,7 +196,7 @@ unsigned long int *node_attr_ilist_ref(node_t *node, attr_type_t type, size_t id
 	unsigned long int *item;
 
 
-	if(type != MT_INT_LIST && type != MT_REG_LIST){
+	if(type != MT_INT_LIST){
 		devtree_parser_error("%s: internal parser error: non-list type used on list", node->name);
 
 		return 0x0;
@@ -239,7 +239,7 @@ int device_validate(node_t *node){
 }
 
 int memory_validate(node_t *node){
-	ATTR_ASSERT_MISSING(node, MT_BASE_ADDR);
+	ATTR_ASSERT_MISSING(node, MT_ADDR);
 	ATTR_ASSERT_MISSING(node, MT_SIZE);
 
 	if(node_attr_get(node, MT_SIZE, 0)->i == 0 && node->childs == 0x0)
@@ -287,7 +287,7 @@ void memory_node_complement(node_t *node){
 	list_for_each(node->childs, child){
 		memory_node_complement(child);
 
-		base = node_attr_get(child, MT_BASE_ADDR, 0)->i;
+		base = node_attr_get(child, MT_ADDR, 0)->i;
 		size = node_attr_get(child, MT_SIZE, 0)->i;
 
 		if(min > base)
@@ -297,7 +297,7 @@ void memory_node_complement(node_t *node){
 			max = base + size;
 	}
 
-	base = node_attr_get(node, MT_BASE_ADDR, 0)->i;
+	base = node_attr_get(node, MT_ADDR, 0)->i;
 	size = node_attr_get(node, MT_SIZE, 0)->i;
 
 	if(size != 0 && base != min)
@@ -306,7 +306,7 @@ void memory_node_complement(node_t *node){
 	if(size != 0 && size != max - min)
 		devtree_parser_error("%s: memory size doesn't match childs, should be %u\n", node->name, max - min);
 
-	node_attr_set(node, MT_BASE_ADDR, 0, ATTR_VALUE(i, min));
+	node_attr_set(node, MT_ADDR, 0, ATTR_VALUE(i, min));
 	node_attr_set(node, MT_SIZE, 0, ATTR_VALUE(i, max - min));
 }
 
