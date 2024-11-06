@@ -53,7 +53,7 @@
 		compatible = "rp2040,uart"; \
 		\
 		/* rp2040 uart config (dt_data_t) */ \
-		baseaddr = regs; \
+		addr = regs; \
 		\
 		int<8> = [ \
 			reset_id, \
@@ -90,15 +90,15 @@
 	}
 
 // rp2040 i2c bus
-#define rp2040_i2c_bus(name, regs, reset_id, clock_khz, addr, int_num, ...) \
+#define rp2040_i2c_bus(name, regs, reset_id, clock_khz, slave, int_num, ...) \
 	i2c ##name = { \
 		compatible = "rp2040,i2c"; \
 		\
 		/* rp2040 i2c config (dt_data_t) */ \
-		baseaddr = regs; \
+		addr = regs; \
 		int<8> = [ reset_id ]; \
 		\
-		i2c_bus(name, clock_khz, addr, int_num, __VA_ARGS__); \
+		i2c_bus(name, clock_khz, slave, int_num, __VA_ARGS__); \
 	}
 
 

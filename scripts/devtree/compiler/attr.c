@@ -20,8 +20,7 @@ char const *attr_name(attr_type_t type){
 	static char const *names[] = {
 		"unknown",
 		"compatible",
-		"baseaddr",
-		"reg",
+		"addr",
 		"int-list",
 		"string",
 		"int",

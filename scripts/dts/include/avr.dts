@@ -33,9 +33,8 @@
 		compatible = "avr,uart"; \
 		\
 		/* avr uart driver config (dt_data_t) */ \
-		baseaddr = regs; \
-		\
-		reg = [ prr ]; \
+		addr = regs; \
+		addr = prr; \
 		int<8> = [ prr_mask ]; \
 		\
 		int<8> = [ \
@@ -55,12 +54,9 @@
 		compatible = "avr,gpio"; \
 		\
 		/* avr gpio config (dt_data_t) */ \
-		baseaddr = regs; \
-		\
-		reg = [ \
-			pcicr, \
-			pc_mask, \
-		]; \
+		addr = regs; \
+		addr = pcicr; \
+		addr = pc_mask; \
 		\
 		int<8> = [ \
 			pullup_mask, \
@@ -76,16 +72,15 @@
 		compatible = "avr,spi"; \
 		\
 		/* avr spi driver config (dt_data_t) */ \
-		baseaddr = regs; \
-		\
-		reg = [ ddr ]; \
+		addr = regs; \
+		addr = ddr; \
 		int<8> = [ \
 			miso, \
 			mosi, \
 			sck, \
 		]; \
 		\
-		reg = [ prr ]; \
+		addr = prr; \
 		int<8> = [ prr_mask ]; \
 		\
 		int<8> = [ int_num ]; \
@@ -102,17 +97,13 @@
 		compatible = "avr,pwm8"; \
 		\
 		/* avr pwm config (dt_data_t) */ \
-		baseaddr = regs; \
-		\
-		reg = [ \
-			tifr, \
-			tifr_mask, \
-		]; \
-		\
-		reg = [ prr ]; \
+		addr = regs; \
+		addr = tifr; \
+		addr = tifr_mask; \
+		addr = prr; \
 		int<8> = [ prr_mask ]; \
 		\
-		reg = [ ddr ]; \
+		addr = ddr; \
 		int<8> = [ ddr_mask ]; \
 	}
 
@@ -121,31 +112,27 @@
 		compatible = "avr,pwm16"; \
 		\
 		/* avr pwm config (dt_data_t) */ \
-		baseaddr = regs; \
-		\
-		reg = [ \
-			tifr, \
-			tifr_mask, \
-		]; \
-		\
-		reg = [ prr ]; \
+		addr = regs; \
+		addr = tifr; \
+		addr = tifr_mask; \
+		addr = prr; \
 		int<8> = [ prr_mask ]; \
 		\
-		reg = [ ddr ]; \
+		addr = ddr; \
 		int<8> = [ ddr_mask ]; \
 	}
 
 // avr i2c bus
-#define avr_i2c_bus(name, regs, prr, prr_mask, clock_khz, addr, int_num, ...) \
+#define avr_i2c_bus(name, regs, prr, prr_mask, clock_khz, slave, int_num, ...) \
 	i2c ##name = { \
 		compatible = "avr,i2c"; \
 		\
 		/* avr i2c driver config (dt_data_t) */ \
-		baseaddr = regs; \
-		reg = [ prr ]; \
+		addr = regs; \
+		addr = prr; \
 		int<8> = [ prr_mask ]; \
 		\
-		i2c_bus(name, clock_khz, addr, int_num, __VA_ARGS__); \
+		i2c_bus(name, clock_khz, slave, int_num, __VA_ARGS__); \
 	}
 
 // avr eeprom
@@ -154,7 +141,7 @@
 		compatible = "avr,eeprom"; \
 		\
 		/* avr eeprom driver config (dt_data_t) */ \
-		baseaddr = regs; \
+		addr = regs; \
 		\
 		int<16> = [ \
 			mem_base, \

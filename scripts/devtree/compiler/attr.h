@@ -23,8 +23,7 @@
 /* types */
 typedef enum{
 	MT_COMPATIBLE = 1,
-	MT_BASE_ADDR,
-	MT_REG_LIST,
+	MT_ADDR,
 	MT_INT_LIST,
 	MT_STRING,
 	MT_INT,
