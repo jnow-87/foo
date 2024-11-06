@@ -16,13 +16,13 @@
 
 /* macros */
 // ssd1306 device
-#define ssd1306(name, addr, ...) \
+#define ssd1306(name, slave, ...) \
 	display_name(name) = { \
 		compatible = "ssd1306"; \
 		\
 		/* ssd1306 config (dt_data_t) */ \
-		int<8> = [ addr ]; \
-		baseaddr = 0x0;	/* i2c device (set by the driver) */ \
+		int<8> = [ slave ]; \
+		addr = 0x0;	/* i2c device (set by the driver) */ \
 		\
 		/* childs */ \
 		__VA_ARGS__ \

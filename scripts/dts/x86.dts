@@ -38,21 +38,21 @@ arch = {
 
 memory = {
 	ram = {
-		baseaddr = 0x00400000;
+		addr = 0x00400000;
 		size = 62914560;
 
 		text = {
-			baseaddr = 0x00400000;
+			addr = 0x00400000;
 			size = 20971520;
 		};
 
 		kernel-data = {
-			baseaddr = 0x1800000;
+			addr = 0x1800000;
 			size = 20971520;
 		};
 
 		app-data = {
-			baseaddr = 0x2c00000;
+			addr = 0x2c00000;
 			size = 20971520;
 		};
 	};
@@ -61,7 +61,7 @@ memory = {
 	// using it as shared memory. However, a heap node is
 	// needed since the kernel assumes its presence.
 	heap = {
-		baseaddr = 0x0;
+		addr = 0x0;
 		size = 1048576;
 	};
 };

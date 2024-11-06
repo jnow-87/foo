@@ -166,7 +166,7 @@ static void memory_makevars(FILE *fp, node_t *node, char const *node_ident){
 #ifndef CONFIG_X86
 	node_ident = strupr(node_ident);
 
-	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", node_ident, node_attr_get(node, MT_BASE_ADDR, 0)->i);
+	fprintf(fp, "DEVTREE_%s_BASE := %#lx\n", node_ident, node_attr_get(node, MT_ADDR, 0)->i);
 	fprintf(fp, "DEVTREE_%s_SIZE := %zu\n", node_ident, node_attr_get(node, MT_SIZE, 0)->i);
 #endif // CONFIG_X86
 }
@@ -215,7 +215,7 @@ static void memory_macros(FILE *fp, node_t *node, char const *node_ident){
 	}
 	else
 #endif // CONFIG_X86
-		fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", node_ident, node_attr_get(node, MT_BASE_ADDR, 0)->i);
+		fprintf(fp, "#define DEVTREE_%s_BASE %#lx\n", node_ident, node_attr_get(node, MT_ADDR, 0)->i);
 
 	fprintf(fp, "#define DEVTREE_%s_SIZE %zu\n", node_ident, node_attr_get(node, MT_SIZE, 0)->i);
 }
@@ -299,7 +299,7 @@ static void device_definition(FILE *fp, node_t *node, char const *node_ident){
 
 static void memory_definition(FILE *fp, node_t *node, char const *node_ident){
 	fprintf(fp, "\t.name = \"%s\",\n", node->name);
-	fprintf(fp, "\t.base = (void*)%#x,\n", node_attr_get(node, MT_BASE_ADDR, 0)->i);
+	fprintf(fp, "\t.base = (void*)%#x,\n", node_attr_get(node, MT_ADDR, 0)->i);
 	fprintf(fp, "\t.size = %zu,\n", node_attr_get(node, MT_SIZE, 0)->i);
 }
 
@@ -408,8 +408,7 @@ static void childs(FILE *fp, node_t *node, char const *node_ident){
 
 static void attributes(FILE *fp, node_t *node, char const *node_ident){
 	size_t n_int = 0,
-		   n_reg = 0,
-		   n_base = 0;
+		   n_ptr = 0;
 	unsigned long int *p;
 	attr_t *a;
 
@@ -422,13 +421,8 @@ static void attributes(FILE *fp, node_t *node, char const *node_ident){
 
 	vector_for_each(&node->attrs, a){
 		switch(a->type){
-		case MT_BASE_ADDR:	fprintf(fp, "\tvoid *base%zu;\n", n_base++); break;
-		case MT_STRING:		fprintf(fp, "\tchar *string%zu;\n", n_base++); break;
-
-		case MT_REG_LIST:
-			vector_for_each(a->value.lst->items, p)
-				fprintf(fp, "\tvoid *reg%zu;\n", n_reg++);
-			break;
+		case MT_ADDR:		fprintf(fp, "\tvoid *ptr%zu;\n", n_ptr++); break;
+		case MT_STRING:		fprintf(fp, "\tchar *string%zu;\n", n_ptr++); break;
 
 		case MT_INT_LIST:
 			vector_for_each(a->value.lst->items, p)
@@ -450,18 +444,12 @@ static void attributes(FILE *fp, node_t *node, char const *node_ident){
 	fprintf(fp, " const __dt_%s_payload = {\n", node_ident);
 
 	n_int = 0;
-	n_reg = 0;
-	n_base = 0;
+	n_ptr = 0;
 
 	vector_for_each(&node->attrs, a){
 		switch(a->type){
-		case MT_BASE_ADDR:	fprintf(fp, "\t.base%zu = (void*)%#x,\n", n_base++, a->value.i); break;
-		case MT_STRING:		fprintf(fp, "\t.string%zu = \"%s\",\n", n_base++, a->value.p); break;
-
-		case MT_REG_LIST:
-			vector_for_each(a->value.lst->items, p)
-				fprintf(fp, "\t.reg%zu = (void*)%#x,\n", n_reg++, *p);
-			break;
+		case MT_ADDR:		fprintf(fp, "\t.ptr%zu = (void*)%#x,\n", n_ptr++, a->value.i); break;
+		case MT_STRING:		fprintf(fp, "\t.string%zu = \"%s\",\n", n_ptr++, a->value.p); break;
 
 		case MT_INT_LIST:
 			vector_for_each(a->value.lst->items, p)
