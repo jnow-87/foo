@@ -18,11 +18,9 @@
 		compatible = "i2c"; \
 		\
 		/* i2c driver config (i2c_cfg_t) */ \
-		int<16> = [ clk_khz ]; \
-		int<8> = [ \
-		   addr, \
-		   int_num, \
-		]; \
+		int16 = clk_khz; \
+		int8 = addr; \
+		int8 = int_num; \
 		\
 		/* childs */ \
 		__VA_ARGS__ \

@@ -22,9 +22,9 @@
 		compatible = "avr,platform"; \
 		\
 		/* avr platform config (avr_platform_cfg_t) */ \
-		int<32> = [ sys_clk_hz ]; \
-		int<8> = [ sys_clk_prescale ]; \
-		int<8> = [ wdt_prescale ]; \
+		int32 = sys_clk_hz; \
+		int8 = sys_clk_prescale; \
+		int8 = wdt_prescale; \
 	}
 
 // avr uart
@@ -35,12 +35,10 @@
 		/* avr uart driver config (dt_data_t) */ \
 		addr = regs; \
 		addr = prr; \
-		int<8> = [ prr_mask ]; \
+		int8 = prr_mask; \
 		\
-		int<8> = [ \
-			rx_int, \
-			tx_int, \
-		]; \
+		int8 = rx_int; \
+		int8 = tx_int; \
 		\
 		uart_cfg_t(baudrate, nstop, parity, csize); \
 		\
@@ -58,9 +56,7 @@
 		addr = pcicr; \
 		addr = pc_mask; \
 		\
-		int<8> = [ \
-			pullup_mask, \
-		]; \
+		int8 = pullup_mask; \
 		\
 		/* childs */ \
 		__VA_ARGS__ \
@@ -74,16 +70,14 @@
 		/* avr spi driver config (dt_data_t) */ \
 		addr = regs; \
 		addr = ddr; \
-		int<8> = [ \
-			miso, \
-			mosi, \
-			sck, \
-		]; \
+		int8 miso; \
+		int8 mosi; \
+		int8 sck; \
 		\
 		addr = prr; \
-		int<8> = [ prr_mask ]; \
+		int8 = prr_mask; \
 		\
-		int<8> = [ int_num ]; \
+		int8 = int_num; \
 		\
 		spi_cfg_t(dev_mode, sample_mode, data_order, prescaler); \
 		\
@@ -101,10 +95,10 @@
 		addr = tifr; \
 		addr = tifr_mask; \
 		addr = prr; \
-		int<8> = [ prr_mask ]; \
+		int8 = prr_mask; \
 		\
 		addr = ddr; \
-		int<8> = [ ddr_mask ]; \
+		int8 = ddr_mask; \
 	}
 
 #define avr_pwm16(name, regs, tifr, tifr_mask, prr, prr_mask, ddr, ddr_mask) \
@@ -116,10 +110,10 @@
 		addr = tifr; \
 		addr = tifr_mask; \
 		addr = prr; \
-		int<8> = [ prr_mask ]; \
+		int8 = prr_mask; \
 		\
 		addr = ddr; \
-		int<8> = [ ddr_mask ]; \
+		int8 = ddr_mask; \
 	}
 
 // avr i2c bus
@@ -130,7 +124,7 @@
 		/* avr i2c driver config (dt_data_t) */ \
 		addr = regs; \
 		addr = prr; \
-		int<8> = [ prr_mask ]; \
+		int8 = prr_mask; \
 		\
 		i2c_bus(name, clock_khz, slave, int_num, __VA_ARGS__); \
 	}
@@ -143,12 +137,10 @@
 		/* avr eeprom driver config (dt_data_t) */ \
 		addr = regs; \
 		\
-		int<16> = [ \
-			mem_base, \
-			mem_size, \
-		]; \
+		int16 = mem_base; \
+		int16 = mem_size; \
 		\
-		int<8> = [ int_num ]; \
+		int8 =  int_num; \
 	}
 
 

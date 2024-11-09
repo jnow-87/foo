@@ -22,14 +22,12 @@
 		compatible = "vram"; \
 		\
 		/* vram config (vram_cfg_t) */ \
-		int<16> = [ \
-			height, \
-			width, \
-		]; \
+		int16 = height; \
+		int16 = width; \
 		\
-		int<8> = [ contrast ]; \
-		int<8> = [ flags ]; \
-		int<16> = [ refresh_ms]; \
+		int8 = contrast; \
+		int8 = flags; \
+		int16 = refresh_ms; \
 		\
 		/* childs */ \
 		__VA_ARGS__ \

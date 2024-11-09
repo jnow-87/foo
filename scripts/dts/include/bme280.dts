@@ -21,18 +21,16 @@
 		compatible = "bme280"; \
 		\
 		/* bme280 config (dt_data_t) */ \
-		int<8> = [ addr ]; \
+		int8 = addr; \
 		\
 		/* bme280 config (bme280_cfg_t) */ \
-		int <8> = [ \
-			1,		/* mode (forced) */ \
-			0x7,	/* features (all) */ \
-			0,		/* standby time (500) */ \
-			0,		/* filter (off) */ \
-			1,		/* temperature oversampling (1) */ \
-			1,		/* pressure oversampling (1) */ \
-			1		/* humidity oversampling (1) */ \
-		]; \
+		int8 = 1;		/* mode (forced) */ \
+		int8 = 0x7;	/* features (all) */ \
+		int8 = 0;		/* standby time (500) */ \
+		int8 = 0;		/* filter (off) */ \
+		int8 = 1;		/* temperature oversampling (1) */ \
+		int8 = 1;		/* pressure oversampling (1) */ \
+		int8 = 1;		/* humidity oversampling (1) */ \
 	}
 
 

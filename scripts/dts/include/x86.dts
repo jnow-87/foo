@@ -22,11 +22,9 @@
 		\
 		/* x86 uart config (dt_data_t) */ \
 		string = path; \
-		int<8> = [ \
-			rx_int, \
-			tx_int, \
-			0, /* file descriptor (set by the driver) */ \
-		]; \
+		int8 = rx_int; \
+		int8 = tx_int; \
+		int8 = 0; /* file descriptor (set by the driver) */ \
 		\
 		uart_cfg_t(baudrate, nstop, parity, csize); \
 		\
@@ -40,7 +38,7 @@
 		compatible = "x86,gpio"; \
 		\
 		/* x86 gpio config (dt_data_t) */ \
-		int<16> = [ int_timer_ms ]; \
+		int16 = int_timer_ms; \
 		\
 		/* childs */ \
 		__VA_ARGS__ \

@@ -190,33 +190,6 @@ attr_value_t *node_attr_ref(node_t *node, attr_type_t type, size_t idx){
 	return 0x0;
 }
 
-unsigned long int *node_attr_ilist_ref(node_t *node, attr_type_t type, size_t idx){
-	size_t i = 0;
-	attr_t *a;
-	unsigned long int *item;
-
-
-	if(type != MT_INT_LIST){
-		devtree_parser_error("%s: internal parser error: non-list type used on list", node->name);
-
-		return 0x0;
-	}
-
-	vector_for_each(&node->attrs, a){
-		if(a->type != type)
-			continue;
-
-		vector_for_each(a->value.lst->items, item){
-			if(i++ == idx)
-				return item;
-		}
-	}
-
-	devtree_parser_error("%s: undefined attribute \"%s\" or index (%zu) out of range", node->name, attr_name(type), idx);
-
-	return 0x0;
-}
-
 node_t *device_root(void){
 	return &root_device;
 }
