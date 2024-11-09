@@ -14,7 +14,7 @@
 /* macros */
 // loop config (loop_cfg_t)
 #define loop_cfg_t(size) \
-	int<16> = [ size ]
+	int16 = size
 
 // loop device
 #define loop(name, buf_size) \

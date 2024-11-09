@@ -14,12 +14,10 @@
 /* macros */
 // uart config (uart_cfg_t)
 #define uart_cfg_t(baudrate, stop, parity, csize) \
-	int<32> = [ baudrate ]; \
-	int<8> = [ \
-		stop, \
-		parity, \
-		csize, \
-	]
+	int32 =  baudrate; \
+	int8 = stop; \
+	int8 = parity; \
+	int8 = csize \
 
 
 #endif // UART_DTS

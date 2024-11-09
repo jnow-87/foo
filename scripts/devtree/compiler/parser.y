@@ -60,9 +60,6 @@
 	#define ATTR_ADD(node, attr, v) \
 		EABORT(node_attr_add(node, attr, v) != 0)
 
-	#define ILIST_ADD(lst, v) \
-		EABORT(ilist_add(lst, v) != 0);
-
 	#define ASSERT_ADD(node, a) \
 		node_assert_add(node, a)
 
@@ -74,12 +71,6 @@
 
 	#define ATTR_REF(node, attr, idx)({ \
 		attr_value_t *_v = node_attr_ref(node, attr, idx); \
-		EABORT(_v == 0x0); \
-		_v; \
-	})
-
-	#define ILIST_REF(node, attr, idx)({ \
-		unsigned long int *_v = node_attr_ilist_ref(node, attr, idx); \
 		EABORT(_v == 0x0); \
 		_v; \
 	})
@@ -168,7 +159,10 @@
 %token NA_TIMER_INT
 %token NA_SYSCALL_INT
 %token NA_IPI_INT
-%token NA_INT
+%token NA_INT8
+%token NA_INT16
+%token NA_INT32
+%token NA_INT64
 %token NA_SIZE
 %token NA_STRING
 
@@ -183,17 +177,14 @@
 %type <assert> assert
 %type <attr> dev-attr-addr
 %type <attr> dev-attr-str
-%type <attr> dev-attr-int-lst
+%type <attr> dev-attr-int
 %type <attr> arch-attr-int
 %type <attr> mem-attr
-%type <vec> ilist
-%type <vec> opt-int
 %type <i> int
 %type <sptr> string
 %type <iptr> i-ref
 %type <aptr> iattr-ref
 %type <aptr> sattr-ref
-%type <iptr> ilist-ref
 %type <i> attr-inc
 
 
@@ -243,7 +234,7 @@ dev-body : %empty												{ $$ = CREATE(node, NT_DEVICE); }
 		 | dev-body device ';'									{ $$ = $1; CHILD_ADD($$, $2); }
 		 | dev-body dev-attr-addr '=' int ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(i, $4)); }
 		 | dev-body dev-attr-str '=' string ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(p, $4)); }
-		 | dev-body dev-attr-int-lst '<' int '>' '=' ilist ';'	{ $$ = $1; ATTR_ADD($$, MT_INT_LIST, ATTR_VALUE(lst, CREATE(attr_ilist, $4, $7))); }
+		 | dev-body dev-attr-int '=' int ';'					{ $$ = $1; ATTR_ADD($$, $2, ATTR_VALUE(i, $4)); }
 		 ;
 
 mem-body : %empty												{ $$ = CREATE(node, NT_MEMORY); }
@@ -266,19 +257,16 @@ assert : ASSERT '(' string ',' string ')'						{ $$ = CREATE(assert, $3, $5); };
 
 /* references */
 i-ref : iattr-ref												{ $$ = &$1->i; }
-	  | ilist-ref												{ $$ = $1; }
 	  ;
 
 iattr-ref : IDFR '.' dev-attr-addr '[' int ']'					{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
+		  | IDFR '.' dev-attr-int '[' int ']'					{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
 		  | IDFR '.' mem-attr									{ $$ = ATTR_REF(NODE_REF($1, NT_MEMORY), $3, 0); }
 		  | SEC_ARCH '.' arch-attr-int							{ $$ = ATTR_REF(arch_root(), $3, 0); }
 		  ;
 
 sattr-ref : IDFR '.' dev-attr-str '[' int ']'					{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
 		  | IDFR '.' dev-attr-str								{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, 0); }
-		  ;
-
-ilist-ref : IDFR '.' dev-attr-int-lst '[' int ']'				{ $$ = ILIST_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
 		  ;
 
 /* attribute updates */
@@ -293,14 +281,6 @@ attr-inc : i-ref '+' '+'										{ $$ = (*$1)++; }
 		 ;
 
 /* basic types */
-ilist : '[' opt-int ']'											{ $$ = $2; }
-	  | '[' opt-int ',' ']'										{ $$ = $2; }
-	  ;
-
-opt-int : %empty												{ $$ = CREATE(ilist); devtreeunput(','); }
-		| opt-int ',' int										{ $$ = $1; ILIST_ADD($$, $3); }
-		;
-
 int : INT														{ $$ = $1; }
 	| i-ref														{ $$ = *$1; }
 	| int '+' INT												{ $$ = $1 + $3; }
@@ -320,8 +300,11 @@ dev-attr-str : NA_COMPATIBLE									{ $$ = MT_COMPATIBLE; }
 			 | NA_STRING										{ $$ = MT_STRING; }
 			 ;
 
-dev-attr-int-lst : NA_INT										{ $$ = MT_INT_LIST; }
-				 ;
+dev-attr-int : NA_INT8   										{ $$ = MT_INT8; }
+			 | NA_INT16											{ $$ = MT_INT16; }
+			 | NA_INT32											{ $$ = MT_INT32; }
+			 | NA_INT64											{ $$ = MT_INT64; }
+			 ;
 
 mem-attr : NA_ADDR												{ $$ = MT_ADDR; }
 		 | NA_SIZE												{ $$ = MT_SIZE; }

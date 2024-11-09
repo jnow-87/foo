@@ -21,7 +21,7 @@
 		compatible = "x11"; \
 		\
 		/* x11 display config (dt_data_t) */ \
-		int<8> = [ scale ]; \
+		int8 = scale; \
 		\
 		/* childs */ \
 		__VA_ARGS__ \

@@ -409,7 +409,6 @@ static void childs(FILE *fp, node_t *node, char const *node_ident){
 static void attributes(FILE *fp, node_t *node, char const *node_ident){
 	size_t n_int = 0,
 		   n_ptr = 0;
-	unsigned long int *p;
 	attr_t *a;
 
 
@@ -423,14 +422,11 @@ static void attributes(FILE *fp, node_t *node, char const *node_ident){
 		switch(a->type){
 		case MT_ADDR:		fprintf(fp, "\tvoid *ptr%zu;\n", n_ptr++); break;
 		case MT_STRING:		fprintf(fp, "\tchar *string%zu;\n", n_ptr++); break;
-
-		case MT_INT_LIST:
-			vector_for_each(a->value.lst->items, p)
-				fprintf(fp, "\tuint%d_t int%zu;\n", a->value.lst->type_size, n_int++);
-			break;
-
-		case MT_COMPATIBLE:
-			break;
+		case MT_INT8:		fprintf(fp, "\tuint8_t int%zu;\n", n_int++); break;
+		case MT_INT16:		fprintf(fp, "\tuint16_t int%zu;\n", n_int++); break;
+		case MT_INT32:		fprintf(fp, "\tuint32_t int%zu;\n", n_int++); break;
+		case MT_INT64:		fprintf(fp, "\tuint64_t int%zu;\n", n_int++); break;
+		case MT_COMPATIBLE:	break;
 
 		default:
 			WARN(node, "unexpected attribute type (%d)\n", a->type);
@@ -451,9 +447,11 @@ static void attributes(FILE *fp, node_t *node, char const *node_ident){
 		case MT_ADDR:		fprintf(fp, "\t.ptr%zu = (void*)%#x,\n", n_ptr++, a->value.i); break;
 		case MT_STRING:		fprintf(fp, "\t.string%zu = \"%s\",\n", n_ptr++, a->value.p); break;
 
-		case MT_INT_LIST:
-			vector_for_each(a->value.lst->items, p)
-				fprintf(fp, "\t.int%zu = %u,\n", n_int++, *p);
+		case MT_INT8:	// fall through
+		case MT_INT16:	// fall through
+		case MT_INT32:	// fall through
+		case MT_INT64:
+			fprintf(fp, "\t.int%zu = %u,\n", n_int++, a->value.i);
 			break;
 
 		default:

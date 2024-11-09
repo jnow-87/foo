@@ -18,11 +18,9 @@
 		compatible = "kernel,heartbeat"; \
 		\
 		/* heartbeat config (dt_data_t) */ \
-		int<8> = [ pin ]; \
-		int<16> = [ \
-			wave, \
-			period_ms, \
-		]; \
+		int8 = pin; \
+		int16 = wave; \
+		int16 = period_ms; \
 	}
 
 

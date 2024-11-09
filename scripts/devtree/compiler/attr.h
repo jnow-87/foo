@@ -12,7 +12,6 @@
 
 
 #include <sys/types.h>
-#include <sys/vector.h>
 
 
 /* macros */
@@ -24,9 +23,11 @@
 typedef enum{
 	MT_COMPATIBLE = 1,
 	MT_ADDR,
-	MT_INT_LIST,
 	MT_STRING,
-	MT_INT,
+	MT_INT8,
+	MT_INT16,
+	MT_INT32,
+	MT_INT64,
 	MT_SIZE,
 	MT_ADDR_WIDTH,
 	MT_REG_WIDTH,
@@ -39,15 +40,9 @@ typedef enum{
 	MT_CORE_MASK,
 } attr_type_t;
 
-typedef struct{
-	size_t type_size;
-	vector_t *items;
-} attr_list_t;
-
 typedef union{
 	void *p;
 	unsigned long int i;
-	attr_list_t *lst;
 } attr_value_t;
 
 typedef struct{
@@ -58,11 +53,6 @@ typedef struct{
 
 /* prototypes */
 char const *attr_name(attr_type_t type);
-
-void *attr_ilist_create(size_t size, vector_t *items);
-
-vector_t *ilist_create(void);
-int ilist_add(vector_t *lst, unsigned long int v);
 
 
 #endif // DEVTREE_ATTR_H
