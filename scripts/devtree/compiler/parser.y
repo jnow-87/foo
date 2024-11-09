@@ -123,6 +123,7 @@
 %union{
 	unsigned long int i;
 	char *sptr;
+	char **sref;
 	unsigned long int *iptr;
 	attr_value_t *aptr;
 	attr_type_t attr;
@@ -182,7 +183,8 @@
 %type <attr> mem-attr
 %type <i> int
 %type <sptr> string
-%type <iptr> i-ref
+%type <iptr> int-ref
+%type <sref> str-ref
 %type <aptr> iattr-ref
 %type <aptr> sattr-ref
 %type <i> attr-inc
@@ -256,8 +258,8 @@ arch-body : %empty												{ }
 assert : ASSERT '(' string ',' string ')'						{ $$ = CREATE(assert, $3, $5); };
 
 /* references */
-i-ref : iattr-ref												{ $$ = &$1->i; }
-	  ;
+int-ref : iattr-ref												{ $$ = &$1->i; };
+str-ref : sattr-ref												{ $$ = (char**)&$1->p; };
 
 iattr-ref : IDFR '.' dev-attr-addr '[' int ']'					{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
 		  | IDFR '.' dev-attr-int '[' int ']'					{ $$ = ATTR_REF(NODE_REF($1, NT_DEVICE), $3, $5); }
@@ -270,26 +272,26 @@ sattr-ref : IDFR '.' dev-attr-str '[' int ']'					{ $$ = ATTR_REF(NODE_REF($1, N
 		  ;
 
 /* attribute updates */
-attr-update : i-ref '=' int										{ *$1 = $3; }
-			| i-ref '+' '=' int									{ *$1 += $4; }
-			| sattr-ref '=' string								{ $1->p = $3; }
+attr-update : int-ref '=' int									{ *$1 = $3; }
+			| int-ref '+' '=' int								{ *$1 += $4; }
+			| str-ref '=' string								{ *$1 = $3; }
 			| attr-inc											{ }
 			;
 
-attr-inc : i-ref '+' '+'										{ $$ = (*$1)++; }
-		 | '+' '+' i-ref										{ $$ = ++(*$3); }
+attr-inc : int-ref '+' '+'										{ $$ = (*$1)++; }
+		 | '+' '+' int-ref										{ $$ = ++(*$3); }
 		 ;
 
 /* basic types */
 int : INT														{ $$ = $1; }
-	| i-ref														{ $$ = *$1; }
+	| int-ref													{ $$ = *$1; }
 	| int '+' INT												{ $$ = $1 + $3; }
-	| int '+' i-ref												{ $$ = $1 + *$3; }
+	| int '+' int-ref											{ $$ = $1 + *$3; }
 	| '(' attr-inc ')'											{ $$ = $2; }
 	;
 
 string : STRING													{ $$ = STRALLOC($1.s, $1.len); }
-	   | sattr-ref												{ $$ = $1->p; }
+	   | str-ref												{ $$ = *$1; }
 	   ;
 
 /* node attributes */
