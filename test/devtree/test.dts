@@ -40,11 +40,9 @@ devices = {
 	base-dev = {
 		compatible = "comp,base";
 
-		int<8> = [
-			1,
-			2,
-			3,
-		];
+		int8 = 1;
+		int8 = 2;
+		int8 = 3;
 
 		addr = 0x10;
 		string = "first";
@@ -59,7 +57,7 @@ devices = {
 	arch.num-ints += 1;
 
 	// test device updates
-	base-dev.int[1] += 10;
+	base-dev.int8[1] += 10;
 	base-dev.string[1] = "no longer second";
 	base-dev.addr[0] = 0x11;
 
@@ -73,30 +71,26 @@ devices = {
 			compatible = "comp,dev2";
 
 			// test intermediate updates
-			int<8> = [ arch.num-ints ];
+			int8 = arch.num-ints;
 			arch.num-ints += 1;
-			int<8> = [ arch.num-ints ];
+			int8 = arch.num-ints;
 			arch.num-ints += 1;
 		};
 
 		// test reference to child node
 		string = dev2.compatible;
-		int<32> = [
-			dev2.int[0],
-			dev2.int[1],
-			ram.size,
-		];
+		int32 = dev2.int8[0];
+		int32 = dev2.int8[1];
+		int32 = ram.size;
 
 		// test reference arithmetic
 		addr = base-dev.addr[1] + 0xa;
-		int<8> = [
-			1 + 2 +3,
-			base-dev.int[1] + 10,
-			20 + base-dev.int[1],
-			1 + base-dev.int[1] + 1,
-			(arch.num-ints++),
-			(++arch.num-ints),
-		];
+		int8 = 1 + 2 +3;
+		int8 = base-dev.int8[1] + 10;
+		int8 = 20 + base-dev.int8[1];
+		int8 = 1 + base-dev.int8[1] + 1;
+		int8 = (arch.num-ints++);
+		int8 = (++arch.num-ints);
 
 		arch.num-ints++;
 		++arch.num-ints;

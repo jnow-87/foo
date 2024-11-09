@@ -64,7 +64,10 @@
 "timer-int"						{ return NA_TIMER_INT; }
 "syscall-int"					{ return NA_SYSCALL_INT; }
 "ipi-int"						{ return NA_IPI_INT; }
-"int"							{ return NA_INT; }
+"int8"							{ return NA_INT8; }
+"int16"							{ return NA_INT16; }
+"int32"							{ return NA_INT32; }
+"int64"							{ return NA_INT64; }
 "size"							{ return NA_SIZE; }
 "string"						{ return NA_STRING; }
 

@@ -14,10 +14,8 @@
 /* macros */
 // mcp23017 config (dt_data_t)
 #define mcp23017_dtd(port, addr) \
-	int<8> = [ \
-		port, \
-		addr, \
-	]
+	int8 = port; \
+	int8 = addr \
 
 // mcp device
 #define mcp23017(name, addr, port_a_gpio, port_b_gpio) \
