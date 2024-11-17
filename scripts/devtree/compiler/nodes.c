@@ -40,7 +40,7 @@ typedef struct{
 
 /* local/static prototypes */
 static int index_add(node_t *node);
-static node_t *index_query(char const *name, size_t len);
+static node_t *index_query(char const *name);
 
 
 /* static variables */
@@ -161,16 +161,16 @@ attr_value_t *node_attr_get(node_t *node, attr_type_t type, size_t idx){
 	return 0x0;
 }
 
-node_t *node_ref(char const *name, size_t len, node_type_t type){
+node_t *node_ref(char const *name, node_type_t type){
 	node_t *node;
 
 
-	node = index_query(name, len);
+	node = index_query(name);
 
 	if(node != 0x0 && node->type == type)
 		return node;
 
-	if(node == 0x0)	devtree_parser_error("undefined reference \"%.*s\"", len, name);
+	if(node == 0x0)	devtree_parser_error("undefined reference \"%s\"", name);
 	else			devtree_parser_error("invalid node type");
 
 	return node;
@@ -297,12 +297,12 @@ static int index_add(node_t *node){
 	return vector_add(&node_index, &(index_t){ .name = node->name, .node = node });
 }
 
-static node_t *index_query(char const *name, size_t len){
+static node_t *index_query(char const *name){
 	index_t *i;
 
 
 	vector_for_each(&node_index, i){
-		if(strncmp(i->name, name, len) == 0 && strlen(i->name) == len)
+		if(strcmp(i->name, name) == 0)
 			return i->node;
 	}
 
