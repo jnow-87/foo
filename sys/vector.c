@@ -38,7 +38,7 @@ int vector_add(vector_t *v, void *buf){
 
 
 	if(v->size >= v->capacity){
-		v->capacity *= 2;
+		v->capacity += 8;
 		t = sys_malloc(v->capacity * v->dt_size);
 
 		if(t == 0x0)

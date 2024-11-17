@@ -34,8 +34,38 @@ TEST(vector_init){
 
 	vector_destroy(&v);
 
+	return -r;
+}
+
+TEST(vector_initialiser){
+	int r = 0;
+	vector_t v;
+
+	v = VECTOR_INITIALISER(sizeof(int));
+	vector_destroy(&v);
+
+	v = VECTOR_INITIALISER(sizeof(int));
+
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 10 }), 0);
+	r |= TEST_INT_EQ(v.capacity, 8);
+	r |= TEST_INT_EQ(v.size, 1);
+	r |= TEST_INT_EQ(((int*)v.buf)[0], 10);
+	vector_destroy(&v);
+
+	return -r;
+}
+
+TEST(vector_memerror){
+	int r = 0;
+	vector_t v;
+
+
 	memmock_alloc_fail = 0;
 	r |= TEST_INT_EQ(vector_init(&v, 0, 0), -1);
+
+	memmock_alloc_fail = 0;
+	v = VECTOR_INITIALISER(sizeof(int));
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 10 }), -1);
 
 	return -r;
 }
@@ -57,35 +87,26 @@ TEST(vector_destroy){
 
 TEST(vector_add){
 	int r = 0;
-	int x;
 	vector_t v;
 
 
 	r |= vector_init(&v, sizeof(int), 2);
 
-	x = 10;
-	r |= TEST_INT_EQ(vector_add(&v, &x), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 10 }), 0);
 	r |= TEST_INT_EQ(v.capacity, 2);
 	r |= TEST_INT_EQ(v.size, 1);
 
-	x = 20;
-	r |= TEST_INT_EQ(vector_add(&v, &x), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 20 }), 0);
 	r |= TEST_INT_EQ(v.capacity, 2);
 	r |= TEST_INT_EQ(v.size, 2);
 
-	x = 30;
-	r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	r |= TEST_INT_EQ(v.capacity, 4);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 30 }), 0);
+	r |= TEST_INT_EQ(v.capacity, 10);
 	r |= TEST_INT_EQ(v.size, 3);
 
 	r |= TEST_INT_EQ(((int*)v.buf)[0], 10);
 	r |= TEST_INT_EQ(((int*)v.buf)[1], 20);
 	r |= TEST_INT_EQ(((int*)v.buf)[2], 30);
-
-	r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-
-	memmock_alloc_fail = 0;
-	r |= TEST_INT_EQ(vector_add(&v, &x), -1);
 
 	vector_destroy(&v);
 
@@ -94,17 +115,16 @@ TEST(vector_add){
 
 TEST(vector_rm){
 	int r = 0;
-	int x;
 	vector_t v;
 
 
 	r |= vector_init(&v, sizeof(int), 20);
 
-	x = 10; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 20; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 30; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 40; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 50; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 10 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 20 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 30 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 40 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 50 }), 0);
 
 	vector_rm(&v, 0);
 	r |= TEST_INT_EQ(v.capacity, 20);
@@ -136,17 +156,16 @@ TEST(vector_rm){
 
 TEST(vector_get){
 	int r = 0;
-	int x;
 	vector_t v;
 
 
 	r |= TEST_INT_EQ(vector_init(&v, sizeof(int), 20), 0);
 
-	x = 10; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 20; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 30; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 40; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 50; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 10 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 20 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 30 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 40 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 50 }), 0);
 
 	r |= TEST_INT_EQ(*((int*)vector_get(&v, 0)), 10);
 	r |= TEST_INT_EQ(*((int*)vector_get(&v, 2)), 30);
@@ -168,11 +187,11 @@ TEST(vector_foreach){
 
 	r |= vector_init(&v, sizeof(int), 20);
 
-	x = 10; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 20; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 30; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 40; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
-	x = 50; r |= TEST_INT_EQ(vector_add(&v, &x), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 10 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 20 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 30 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 40 }), 0);
+	r |= TEST_INT_EQ(vector_add(&v, &(int){ 50 }), 0);
 
 	x = 10;
 

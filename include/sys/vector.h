@@ -15,6 +15,13 @@
 
 
 /* macros */
+#define VECTOR_INITIALISER(_dt_size) (vector_t){ \
+	.buf = 0x0, \
+	.dt_size = (_dt_size), \
+	.capacity = 0, \
+	.size = 0, \
+}
+
 #define vector_for_each(v, p) \
 	for(p=(v)->buf; p<(typeof(p))((v)->buf+(v)->dt_size*(v)->size); p++)
 
