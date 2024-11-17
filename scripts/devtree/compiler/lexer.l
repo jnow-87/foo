@@ -82,10 +82,10 @@
 <MULTI_LINE_COMMENT>\r?\n		{ devtree_col = 1; ++devtree_line; }
 
 	/* identifier */
-[a-zA-Z][a-zA-Z_\-0-9]+			{ devtreelval.str.s = devtreetext; devtreelval.str.len = devtreeleng; return IDFR; }
+[a-zA-Z][a-zA-Z_\-0-9]+			{ return devtree_parser_strcpy(devtreelval.str, devtreetext, devtreeleng, IDFR); }
 
 	/* string */
-\"[^"]*\"						{ devtreelval.str.s = devtreetext + 1; devtreelval.str.len = devtreeleng - 2; return STRING; }
+\"[^"]*\"						{ return devtree_parser_strcpy(devtreelval.str, devtreetext + 1, devtreeleng - 2, STRING); }
 
 	/* integer */
 (0x)?[0-9a-fA-F]+				{ devtreelval.i = strtol(devtreetext, 0x0, 0); return INT; }
