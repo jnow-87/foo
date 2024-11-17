@@ -33,8 +33,8 @@
 	}
 
 	// helper
-	#define STRALLOC(s, len)({ \
-		void *_s = stralloc(s, len); \
+	#define STRALLOC(s)({ \
+		void *_s = stralloc(s); \
 		EABORT(_s == 0x0); \
 		_s; \
 	})
@@ -64,7 +64,7 @@
 		node_assert_add(node, a)
 
 	#define NODE_REF(idfr, type)({ \
-		node_t *_node = node_ref(idfr.s, idfr.len, type); \
+		node_t *_node = node_ref(idfr, type); \
 		EABORT(_node == 0x0); \
 		_node; \
 	})
@@ -88,7 +88,7 @@
 	/* local/static prototypes */
 	static int devtreeerror(char const *file, char const *s);
 	static void cleanup(void);
-	static void *stralloc(char const *s, size_t len);
+	static void *stralloc(char const *s);
 %}
 
 %code requires{
@@ -97,8 +97,13 @@
 	#include <nodes.h>
 
 
+	/* macros */
+	#define DEVTREE_STRMAX	64
+
+
 	/* prototypes */
 	int devtree_parser_error(char const *fmt, ...);
+	int devtree_parser_strcpy(char *dst, char const *src, size_t n, int token);
 }
 
 /* parse paramters */
@@ -122,16 +127,12 @@
 /* parser union type */
 %union{
 	unsigned long int i;
+	char str[DEVTREE_STRMAX];
 	char *sptr;
 	char **sref;
 	unsigned long int *iptr;
 	attr_value_t *aptr;
 	attr_type_t attr;
-
-	struct{
-		char *s;
-		size_t len;
-	} str;
 
 	node_t *node;
 	assert_t *assert;
@@ -225,8 +226,8 @@ memory-lst : %empty												{ }
 		   ;
 
 /* nodes */
-device : IDFR '=' '{' dev-body '}'								{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); VALIDATE(device, $$); };
-memory : IDFR '=' '{' mem-body '}'								{ $$ = $4; $$->name = STRALLOC($1.s, $1.len); VALIDATE(memory, $$); };
+device : IDFR '=' '{' dev-body '}'								{ $$ = $4; $$->name = STRALLOC($1); VALIDATE(device, $$); };
+memory : IDFR '=' '{' mem-body '}'								{ $$ = $4; $$->name = STRALLOC($1); VALIDATE(memory, $$); };
 
 /* node bodies */
 dev-body : %empty												{ $$ = CREATE(node, NT_DEVICE); }
@@ -290,7 +291,7 @@ int : INT														{ $$ = $1; }
 	| '(' attr-inc ')'											{ $$ = $2; }
 	;
 
-string : STRING													{ $$ = STRALLOC($1.s, $1.len); }
+string : STRING													{ $$ = STRALLOC($1); }
 	   | str-ref												{ $$ = *$1; }
 	   ;
 
@@ -347,6 +348,22 @@ int devtree_parser_error(char const *fmt, ...){
 	return -1;
 }
 
+int devtree_parser_strcpy(char *dst, char const *src, size_t n, int token){
+	if(n >= DEVTREE_STRMAX){
+		devtree_parser_error("string too long, max=%u", DEVTREE_STRMAX);
+
+		// trigger a parser error
+		// this is not the nicest way to trigger an error since it will cause a syntax
+		// error even though it is not a syntax error and therefor confuse the user
+		return YYSYMBOL_YYEOF;
+	}
+
+	strncpy(dst, src, n);
+	dst[n] = 0;
+
+	return token;
+}
+
 
 /* local functions */
 static int devtreeerror(char const *file, char const *s){
@@ -360,10 +377,12 @@ static void cleanup(void){
 	fclose(fp);
 }
 
-static void *stralloc(char const *s, size_t len){
+static void *stralloc(char const *s){
+	size_t len;
 	char *x;
 
 
+	len = strlen(s);
 	x = malloc(len + 1);
 
 	if(x == 0x0)
