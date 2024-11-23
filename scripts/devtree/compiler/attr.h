@@ -16,36 +16,34 @@
 
 
 /* macros */
-#define ATTR_TYPE_STR_BIT	31
-#define ATTR_TYPE_INT_BIT	30
-
-#define ATTR_TYPE_ISINT(type)	(((type) & MT_INT) && (((type) & ~MT_INT) < MT_INT_MAX))
-#define ATTR_TYPE_ISSTR(type)	(((type) & MT_STRING) && (((type) & ~MT_STRING) == 0))
-
+#define ATTR_FLAGS_TYPE_MASK(flags)	((flags) & ~(AF_HAS_VALUE))
 #define ATTR_VALUE(type, value) \
 	(attr_value_t){ .type = value }
 
 
 /* types */
 typedef enum{
-	// base type
-	MT_UNDEF = 0,
-	MT_INT = 0x1 << ATTR_TYPE_INT_BIT,
-	MT_STRING = 0x1 << ATTR_TYPE_STR_BIT,
+	AF_NONE = 0x0,
+	AF_INT = 0x1,
+	AF_STRING = 0x2,
+	AF_LIST = 0x4,
+	AF_HAS_VALUE = 0x8,
+} attr_flags_t;
 
-	// specific types
-	MT_ADDR = MT_INT + 1,
+typedef enum{
+	MT_UNDEF = 0,
+	MT_STRING,
+	MT_ADDR,
 	MT_INT8,
 	MT_INT16,
 	MT_INT32,
 	MT_INT64,
-
-	MT_INT_MAX,
 } attr_type_t;
 
 typedef union{
 	void *p;
 	unsigned long int i;
+	vector_t v;
 } attr_value_t;
 
 typedef struct{
@@ -53,17 +51,21 @@ typedef struct{
 
 	attr_type_t type;
 	attr_value_t value;
-	bool value_set;
+	attr_flags_t flags;
 } attr_t;
 
 
 /* prototypes */
-int attr_add(vector_t *attrs, char const *name, attr_type_t type, attr_value_t *value);
+int attr_add(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value);
 attr_t *attr_get(vector_t *attrs, char const *name, bool maybe_undef);
 attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool maybe_undef);
 
-int attr_type_check(attr_t *attr, attr_type_t type);
+int attr_type_check(attr_t *attr, attr_type_t type, attr_flags_t flags);
 char const *attr_strtype(attr_type_t type);
+
+size_t attr_int_size(attr_type_t type);
+
+int ilist_add(vector_t *lst, unsigned long int v);
 
 
 #endif // DEVTREE_ATTR_H

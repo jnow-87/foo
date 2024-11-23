@@ -33,7 +33,3 @@ err:
 
 	return 0x0;
 }
-
-void assert_destroy(assert_t *assert){
-	free(assert);
-}
