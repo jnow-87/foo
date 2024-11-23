@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/vector.h>
 #include <parser.tab.h>
 #include <export.h>
 #include <nodes.h>
@@ -18,43 +19,81 @@
 
 
 /* local/static prototypes */
+static int collect_nodes(vector_t *nodes);
 static FILE *output_file(char const *file);
 
 
+// TODO
+// gfe -Wg,-i core_mask
+// gfe -Wg,-i arch_multi_core
+
 /* global functions */
 int main(int argc, char **argv){
+	int r = -1;
 	FILE *ofile;
+	vector_t nodes = VECTOR_INITIALISER(sizeof(node_t*));
 
 
 	opt_parse(argc, argv);
 
 	/* parse device tree */
-	if(nodes_init() != 0)
-		return 1;
-
 	if(devtreeparse(options.ifile_name) != 0)
-		return 1;
+		goto end;
 
 	/* write output file */
+	if(collect_nodes(&nodes) != 0)
+		goto end;
+
 	ofile = output_file(options.ofile_name);
 
-	if(ofile == 0x0)
-		return 1;
-
 	switch(options.ofile_format){
-	case FMT_HEADER:	export_header(ofile); break;
-	case FMT_C:			export_source(ofile); break;
-	case FMT_MAKE:		export_make(ofile); break;
+	case FMT_HEADER:	export_header(ofile, &nodes); break;
+	case FMT_C:			export_source(ofile, &nodes); break;
+	case FMT_MAKE:		export_make(ofile, &nodes); break;
 	}
 
 	if(options.ofile_name != 0x0)
 		fclose(ofile);
 
-	return 0;
+	r = 0;
+
+end:
+	vector_destroy(&nodes);
+
+	return -r;
 }
 
 
 /* local functions */
+static int collect_nodes(vector_t *nodes){
+	char *tk;
+	node_t *node;
+
+
+	if(options.devices != 0x0){
+		while((tk = strtok(options.devices, ","))){
+			options.devices = 0x0;
+			node = node_ref(tk);
+
+			if(node == 0x0){
+				fprintf(stderr, "undefined node \"%s\"\n", tk);
+				return -1;
+			}
+
+			if(vector_add(nodes, &node) != 0)
+				return -1;
+		}
+	}
+	else{
+		list_for_each(nodes_root()->childs, node){
+			if(vector_add(nodes, &node) != 0)
+				return -1;
+		}
+	}
+
+	return 0;
+}
+
 static FILE *output_file(char const *file){
 	FILE *fp;
 
@@ -62,7 +101,7 @@ static FILE *output_file(char const *file){
 	if(file == 0x0)
 		return stdout;
 
-	printf("generating device tree export \"%s\"\n", options.ofile_name);
+	fprintf(stderr, "generating device tree export \"%s\"\n", options.ofile_name);
 
 	fp = fopen(options.ofile_name, "w");
 

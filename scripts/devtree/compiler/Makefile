@@ -18,11 +18,13 @@ dtc-y := \
 	nodes.o \
 	attr.o \
 	asserts.o \
+	types.o \
 	lexer.lex.o \
 	parser.tab.o
 
 # ensure a rebuild if indirect dependencies are updated
 dtc-y += $(build_tree)/sys/libhost.a
+dtc-yaccflags-y := -Wcounterexamples
 
 # additional dependencies for generated headers
 $(loc_build_tree)/parser.tab.host.o: $(loc_build_tree)/lexer.lex.host.o
