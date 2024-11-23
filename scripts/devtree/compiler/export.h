@@ -12,12 +12,13 @@
 
 
 #include <stdio.h>
+#include <sys/vector.h>
 
 
 /* prototypes */
-void export_make(FILE *fp);
-void export_header(FILE *fp);
-void export_source(FILE *fp);
+void export_make(FILE *fp, vector_t *nodes);
+void export_header(FILE *fp, vector_t *nodes);
+void export_source(FILE *fp, vector_t *nodes);
 
 
 #endif // EXPORT_H

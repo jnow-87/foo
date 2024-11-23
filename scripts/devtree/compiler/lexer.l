@@ -48,27 +48,17 @@
 	static unsigned int devtree_line = 1;
 %}
 
-	/* sections */
-"devices"						{ return SEC_DEVICES; }
-"memory"						{ return SEC_MEMORY; }
-"arch"							{ return SEC_ARCH; }
+	/* typedef */
+"archtypedef"					{ return TYPEDEF_ARCH; }
+"memtypedef"					{ return TYPEDEF_MEM; }
+"devtypedef"					{ return TYPEDEF_DEV; }
 
 	/* node attributes */
-"compatible"					{ return NA_COMPATIBLE; }
 "addr"							{ return NA_ADDR; }
-"addr-width"					{ return NA_ADDR_WIDTH; }
-"reg-width"						{ return NA_REG_WIDTH; }
-"ncores"						{ return NA_NCORES; }
-"num-ints"						{ return NA_INTERRUPTS; }
-"timer-cycle-time-us"			{ return NA_TIMER_CYCLE_TIME_US; }
-"timer-int"						{ return NA_TIMER_INT; }
-"syscall-int"					{ return NA_SYSCALL_INT; }
-"ipi-int"						{ return NA_IPI_INT; }
 "int8"							{ return NA_INT8; }
 "int16"							{ return NA_INT16; }
 "int32"							{ return NA_INT32; }
 "int64"							{ return NA_INT64; }
-"size"							{ return NA_SIZE; }
 "string"						{ return NA_STRING; }
 
 	/* asserts */

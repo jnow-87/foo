@@ -18,71 +18,28 @@
 #include <parser.tab.h>
 
 
-/* macros */
-#define ATTR_ASSERT_MISSING(node, attr){ \
-	if(node_attr_get(node, attr, 0) == 0x0) \
-		return devtree_parser_error("%s: missing attribute \"%s\"", (node)->name, attr_name(attr)); \
-}
-
-#define ATTR_ASSERT_POW2(node, attr){ \
-	unsigned long int _v = node_attr_get(node, attr, 0)->i; \
-	if(bits_count(_v) != 1) \
-		return devtree_parser_error("%s: attribute \"%s\" (%u) not a power of 2", (node)->name, attr_name(attr), _v); \
-}
-
-
-/* types */
-typedef struct{
-	char const *name;
-	node_t *node;
-} index_t;
-
-
 /* local/static prototypes */
 static int index_add(node_t *node);
 static node_t *index_query(char const *name);
 
 
 /* static variables */
-static node_t root_device,
-			  root_memory,
-			  root_arch;
-static vector_t node_index;
+static vector_t node_index = VECTOR_INITIALISER(sizeof(node_t));
+static node_t root = {
+	.name = "root",
+	.childs = 0x0,
+	.type = &(type_t){ .name = "" }
+};
 
 
 /* global functions */
-int nodes_init(void){
-	if(vector_init(&node_index, sizeof(index_t), 16) != 0)
-		return -1;
-
-	memset(&root_device, 0, sizeof(node_t));
-	root_device.type = NT_DEVICE;
-	root_device.name = "device_root";
-
-	if(vector_init(&root_device.attrs, sizeof(attr_t), 16) != 0)
-		return -1;
-
-	node_attr_add(&root_device, MT_COMPATIBLE, (attr_value_t){ .p = "" });
-
-	memset(&root_memory, 0, sizeof(node_t));
-	root_memory.type = NT_MEMORY;
-	root_memory.name = "memory_root";
-
-	if(vector_init(&root_memory.attrs, sizeof(attr_t), 16) != 0)
-		return -1;
-
-	node_attr_add(&root_memory, MT_ADDR, (attr_value_t){ .i = 0x0 });
-	node_attr_add(&root_memory, MT_SIZE, (attr_value_t){ .i = 0 });
-
-	memset(&root_arch, 0, sizeof(node_t));
-	root_arch.type = NT_ARCH;
-	root_arch.name = "arch_root";
-
-	return vector_init(&root_arch.attrs, sizeof(attr_t), 16);
+node_t *nodes_root(void){
+	return &root;
 }
 
-void *node_create(node_type_t type){
-	node_t *node;
+node_t *node_create(char const *name, type_t *type, node_t *childs){
+	node_t *node,
+		   *child;
 
 
 	node = calloc(1, sizeof(node_t));
@@ -90,10 +47,14 @@ void *node_create(node_type_t type){
 	if(node == 0x0)
 		goto err_0;
 
-	if(vector_init(&node->attrs, sizeof(attr_t), 16) != 0)
+	if(vector_init(&node->attrs, sizeof(attr_t), type->attrs.size) != 0)
 		goto err_1;
 
+	node->name = name;
 	node->type = type;
+
+	list_for_each(childs, child)
+		node_child_add(node, child);
 
 	return node;
 
@@ -107,8 +68,14 @@ err_0:
 	return 0x0;
 }
 
+void node_destroy(node_t *node){
+	vector_destroy(&node->attrs);
+	free((char*)node->name);
+	free(node);
+}
+
 int node_child_add(node_t *parent, node_t *child){
-	if(index_add(child))
+	if(index_add(child) != 0)
 		return -1;
 
 	child->parent = parent;
@@ -117,193 +84,34 @@ int node_child_add(node_t *parent, node_t *child){
 	return 0;
 }
 
-void node_assert_add(node_t *node, assert_t *a){
-	list_add_tail(node->asserts, a);
-}
-
-int node_attr_add(node_t *node, attr_type_t type, attr_value_t value){
-	attr_t a;
-
-
-	a.type = type;
-	a.value = value;
-
-	if(vector_add(&node->attrs, &a) != 0)
-		return devtree_parser_error("%s: adding attribute failed", node->name);
-
-	return 0;
-}
-
-int node_attr_set(node_t *node, attr_type_t type, size_t idx, attr_value_t value){
-	attr_value_t *v;
-
-
-	v = node_attr_get(node, type, idx);
-
-	if(v == 0x0)
-		return devtree_parser_error("%s: missing attribute \"%s\"", node->name, attr_name(type));
-
-	*v = value;
-
-	return 0;
-}
-
-attr_value_t *node_attr_get(node_t *node, attr_type_t type, size_t idx){
-	size_t i = 0;
-	attr_t *a;
-
-
-	vector_for_each(&node->attrs, a){
-		if(a->type == type && i++ == idx)
-			return &a->value;
-	}
-
-	return 0x0;
-}
-
-node_t *node_ref(char const *name, node_type_t type){
+node_t *node_ref(char const *name){
 	node_t *node;
 
 
 	node = index_query(name);
 
-	if(node != 0x0 && node->type == type)
-		return node;
-
-	if(node == 0x0)	devtree_parser_error("undefined reference \"%s\"", name);
-	else			devtree_parser_error("invalid node type");
+	if(node == 0x0)
+		devtree_parser_error("undefined reference \"%s\"", name);
 
 	return node;
-}
-
-attr_value_t *node_attr_ref(node_t *node, attr_type_t type, size_t idx){
-	attr_value_t *v;
-
-
-	v = node_attr_get(node, type, idx);
-
-	if(v != 0x0)
-		return v;
-
-	devtree_parser_error("%s: undefined attribute \"%s\" or index (%zu) out of range", node->name, attr_name(type), idx);
-
-	return 0x0;
-}
-
-node_t *device_root(void){
-	return &root_device;
-}
-
-node_t *memory_root(void){
-	return &root_memory;
-}
-
-node_t *arch_root(void){
-	return &root_arch;
-}
-
-int device_validate(node_t *node){
-	ATTR_ASSERT_MISSING(node, MT_COMPATIBLE);
-
-	if(*((char*)(node_attr_get(node, MT_COMPATIBLE, 0)->p)) == 0x0)
-		return devtree_parser_error("%s: attribute \"compatible\" empty", node->name);
-
-	return 0;
-}
-
-int memory_validate(node_t *node){
-	ATTR_ASSERT_MISSING(node, MT_ADDR);
-	ATTR_ASSERT_MISSING(node, MT_SIZE);
-
-	if(node_attr_get(node, MT_SIZE, 0)->i == 0 && node->childs == 0x0)
-		return devtree_parser_error("%s: zero-size memory", node->name);
-
-	return 0;
-}
-
-int arch_validate(void){
-	unsigned int ncores;
-
-
-	ATTR_ASSERT_MISSING(&root_arch, MT_NCORES);
-	ncores = node_attr_get(&root_arch, MT_NCORES, 0)->i;
-
-	node_attr_add(&root_arch, MT_CORE_MASK, ATTR_VALUE(i, (0x1 << ncores) - 1));
-
-	ATTR_ASSERT_MISSING(&root_arch, MT_ADDR_WIDTH);
-	ATTR_ASSERT_MISSING(&root_arch, MT_REG_WIDTH);
-	ATTR_ASSERT_MISSING(&root_arch, MT_NUM_INTS);
-	ATTR_ASSERT_MISSING(&root_arch, MT_TIMER_INT);
-	ATTR_ASSERT_MISSING(&root_arch, MT_SYSCALL_INT);
-	ATTR_ASSERT_MISSING(&root_arch, MT_TIMER_CYCLE_TIME_US);
-
-	if(ncores > 1)
-		ATTR_ASSERT_MISSING(&root_arch, MT_IPI_INT);
-
-	ATTR_ASSERT_POW2(&root_arch, MT_ADDR_WIDTH);
-	ATTR_ASSERT_POW2(&root_arch, MT_REG_WIDTH);
-
-	return 0;
-}
-
-void memory_node_complement(node_t *node){
-	unsigned long int min = -1,
-					  max = 0;
-	unsigned long int base,
-					  size;
-	node_t *child;
-
-
-	if(node == 0x0 || list_empty(node->childs))
-		return;
-
-	list_for_each(node->childs, child){
-		memory_node_complement(child);
-
-		base = node_attr_get(child, MT_ADDR, 0)->i;
-		size = node_attr_get(child, MT_SIZE, 0)->i;
-
-		if(min > base)
-			min = base;
-
-		if(max < base + size)
-			max = base + size;
-	}
-
-	base = node_attr_get(node, MT_ADDR, 0)->i;
-	size = node_attr_get(node, MT_SIZE, 0)->i;
-
-	if(size != 0 && base != min)
-		devtree_parser_error("%s: memory base doesn't match childs, should be %#x\n", node->name, min);
-
-	if(size != 0 && size != max - min)
-		devtree_parser_error("%s: memory size doesn't match childs, should be %u\n", node->name, max - min);
-
-	node_attr_set(node, MT_ADDR, 0, ATTR_VALUE(i, min));
-	node_attr_set(node, MT_SIZE, 0, ATTR_VALUE(i, max - min));
 }
 
 
 /* local functions */
 static int index_add(node_t *node){
-	index_t *i;
+	if(index_query(node->name) != 0x0)
+		return devtree_parser_error("node \"%s\" already defined", node->name);
 
-
-	vector_for_each(&node_index, i){
-		if(strcmp(i->name, node->name) == 0)
-			return devtree_parser_error("node \"%s\" already defined", node->name);
-	}
-
-	return vector_add(&node_index, &(index_t){ .name = node->name, .node = node });
+	return vector_add(&node_index, node);
 }
 
 static node_t *index_query(char const *name){
-	index_t *i;
+	node_t *node;
 
 
-	vector_for_each(&node_index, i){
-		if(strcmp(i->name, name) == 0)
-			return i->node;
+	vector_for_each(&node_index, node){
+		if(strcmp(node->name, name) == 0)
+			return node;
 	}
 
 	return 0x0;

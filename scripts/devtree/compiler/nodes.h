@@ -15,51 +15,31 @@
 #include <sys/vector.h>
 #include <asserts.h>
 #include <attr.h>
+#include <types.h>
 
 
 /* types */
-typedef enum{
-	NT_DEVICE = 1,
-	NT_MEMORY,
-	NT_ARCH,
-} node_type_t;
-
 typedef struct node_t{
 	struct node_t *prev,
 				  *next,
 				  *parent,
 				  *childs;
 
-	node_type_t type;
 	char const *name;
-	assert_t *asserts;
+	type_t *type;
 	vector_t attrs;
 } node_t;
 
 
 /* prototypes */
-int nodes_init(void);
-void *node_create(node_type_t type);
+node_t *nodes_root(void);
+
+node_t *node_create(char const *name, type_t *type, node_t *childs);
+void node_destroy(node_t *node);
 
 int node_child_add(node_t *parent, node_t *child);
-void node_assert_add(node_t *node, assert_t *a);
 
-int node_attr_add(node_t *node, attr_type_t type, attr_value_t value);
-int node_attr_set(node_t *node, attr_type_t type, size_t idx, attr_value_t value);
-attr_value_t *node_attr_get(node_t *node, attr_type_t type, size_t idx);
-
-node_t *node_ref(char const *name, node_type_t type);
-attr_value_t *node_attr_ref(node_t *node, attr_type_t type, size_t idx);
-
-node_t *device_root(void);
-node_t *memory_root(void);
-node_t *arch_root(void);
-
-int device_validate(node_t *node);
-int memory_validate(node_t *node);
-int arch_validate(void);
-
-void memory_node_complement(node_t *node);
+node_t *node_ref(char const *name);
 
 
 #endif // DEVTREE_NODE_H
