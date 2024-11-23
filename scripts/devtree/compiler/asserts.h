@@ -23,7 +23,6 @@ typedef struct assert_t{
 
 /* prototypes */
 assert_t *assert_create(char const *expr, char const *msg);
-void assert_destroy(assert_t *assert);
 
 
 #endif // DEVTREE_ASSERT_H

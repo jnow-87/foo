@@ -52,8 +52,8 @@
 	#define CHILD_ADD(node, child) \
 		EABORT(node_child_add(node, child) != 0)
 
-	#define ATTR_ADD(attrs, name, type, v) \
-		EABORT(attr_add(attrs, name, type, v) != 0)
+	#define ATTR_ADD(attrs, name, type, flags, v) \
+		EABORT(attr_add(attrs, name, type, flags, v) != 0)
 
 	#define NODE_REF(idfr)({ \
 		node_t *_node = node_ref(idfr); \
@@ -67,8 +67,8 @@
 		_attr; \
 	})
 
-	#define ATTR_TYPE_CHECK(attr, type) \
-		EABORT(attr_type_check(attr, type) != 0)
+	#define ATTR_TYPE_CHECK(attr, type, flags) \
+		EABORT(attr_type_check(attr, type, flags) != 0)
 
 	#define TYPE_LOOKUP(name)({ \
 		type_t *_type = type_lookup(name); \
@@ -144,6 +144,7 @@
 
 	node_t *node;
 	assert_t *assert;
+	vector_t vec;
 
 	struct{
 		vector_t attrs;
@@ -186,6 +187,8 @@
 %type <assert> assert
 %type <attr_type> sattr
 %type <attr_type> iattr
+%type <vec> ilist
+%type <vec> opt-int
 %type <i> int
 %type <sptr> string
 %type <attr> attr-ref
@@ -217,12 +220,11 @@ typedef : TYPEDEF_ARCH '{' type-body '}' IDFR					{ EABORT(type_add(STRALLOC($5)
 type-body : %empty											{ OBJECT_RESET($$); }
 		  | type-body ';'									{ }
 		  | type-body assert ';'							{ $$ = $1; list_add_tail($$.asserts, $2); }
-		  | type-body sattr IDFR ';'						{ $$ = $1; attr_add(&$$.attrs, STRALLOC($3), $2, 0x0); }
-		  | type-body sattr IDFR '=' string ';'				{ $$ = $1; attr_add(&$$.attrs, STRALLOC($3), $2, &ATTR_VALUE(p, $5)); }
-		  | type-body iattr IDFR ';'						{ $$ = $1; attr_add(&$$.attrs, STRALLOC($3), $2, 0x0); }
-		  | type-body iattr IDFR '=' int ';'				{ $$ = $1; attr_add(&$$.attrs, STRALLOC($3), $2, &ATTR_VALUE(i, $5)); }
-		  | type-body iattr IDFR '=' attr-ref ';'			{ $$ = $1; ATTR_TYPE_CHECK($5, $2); attr_add(&$$.attrs, STRALLOC($3), $2, &ATTR_VALUE(i, $5->value.i)); }
-		  | type-body sattr IDFR '=' attr-ref ';'			{ $$ = $1; ATTR_TYPE_CHECK($5, $2); attr_add(&$$.attrs, STRALLOC($3), $2, &ATTR_VALUE(p, $5->value.p)); }
+		  | type-body iattr IDFR ';'						{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), $2, AF_NONE, 0x0); }
+		  | type-body sattr IDFR ';'						{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), $2, AF_NONE, 0x0); }
+		  | type-body iattr IDFR '=' int ';'				{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), $2, AF_NONE, &ATTR_VALUE(i, $5)); }
+		  | type-body sattr IDFR '=' string ';'				{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), $2, AF_NONE, &ATTR_VALUE(p, $5)); }
+		  | type-body iattr IDFR '[' int ']' ';'			{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), $2, AF_LIST, 0x0); }
 		  ;
 
 /* nodes */
@@ -233,9 +235,10 @@ device : IDFR '=' IDFR '(' type-args ')'						{ $$ = type_instantiate(TYPE_LOOKU
 /* node bodies */
 type-args : %empty												{ OBJECT_RESET($$); devtreeunput(','); }
 		  | type-args ',' device								{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | type-args ',' IDFR '=' int							{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), MT_INT, &ATTR_VALUE(i, $5)); }
-		  | type-args ',' IDFR '=' string						{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), MT_STRING, &ATTR_VALUE(p, $5)); }
-		  | type-args ',' IDFR '=' attr-ref						{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), $5->type, &$5->value); }
+		  | type-args ',' IDFR '=' int							{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), MT_INT64, AF_NONE, &ATTR_VALUE(i, $5)); }
+		  | type-args ',' IDFR '=' string						{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), MT_STRING, AF_NONE, &ATTR_VALUE(p, $5)); }
+		  | type-args ',' IDFR '=' attr-ref						{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), $5->type, AF_NONE, &$5->value); }
+		  | type-args ',' IDFR '=' ilist						{ $$ = $1; ATTR_ADD(&$$.attrs, STRALLOC($3), MT_INT64, AF_LIST, &ATTR_VALUE(v, $5)); }
 		  ;
 
 /* asserts */
@@ -245,22 +248,30 @@ assert : ASSERT '(' string ',' string ')'						{ $$ = CREATE(assert, $3, $5); };
 attr-ref : IDFR '.' IDFR								{ $$ = ATTR_REF(&NODE_REF($1)->attrs, $3); };
 
 /* attribute updates */
-attr-update : attr-ref '=' int									{ ATTR_TYPE_CHECK($1, MT_INT); $1->value.i = $3; }
-			| attr-ref '+' '=' int								{ ATTR_TYPE_CHECK($1, MT_INT); $1->value.i += $4; }
-			| attr-ref '=' string								{ ATTR_TYPE_CHECK($1, MT_STRING); $1->value.p = $3; }
-			| attr-ref '=' attr-ref									{ ATTR_TYPE_CHECK($1, $3->type); $1->value = $3->value; }
-			| attr-ref '+' '=' attr-ref								{ ATTR_TYPE_CHECK($1, MT_INT); ATTR_TYPE_CHECK($4, MT_INT); $1->value.i += $4->value.i; }
+attr-update : attr-ref '=' int									{ ATTR_TYPE_CHECK($1, MT_INT64, AF_INT); $1->value.i = $3; }
+			| attr-ref '+' '=' int								{ ATTR_TYPE_CHECK($1, MT_INT64, AF_INT); $1->value.i += $4; }
+			| attr-ref '=' string								{ ATTR_TYPE_CHECK($1, MT_STRING, AF_STRING); $1->value.p = $3; }
+			| attr-ref '=' attr-ref									{ ATTR_TYPE_CHECK($1, $3->type, $3->flags); $1->value = $3->value; }
+			| attr-ref '+' '=' attr-ref								{ ATTR_TYPE_CHECK($1, $4->type, $4->flags); $1->value.i += $4->value.i; }
 			| attr-inc											{ }
 			;
 
-attr-inc : attr-ref '+' '+'										{ ATTR_TYPE_CHECK($1, MT_INT); $$ = ($1->value.i)++; }
-		 | '+' '+' attr-ref										{ ATTR_TYPE_CHECK($3, MT_INT); $$ = ++($3->value.i); }
+attr-inc : attr-ref '+' '+'										{ ATTR_TYPE_CHECK($1, MT_INT64, AF_INT); $$ = ($1->value.i)++; }
+		 | '+' '+' attr-ref										{ ATTR_TYPE_CHECK($3, MT_INT64, AF_INT); $$ = ++($3->value.i); }
 		 ;
 
 /* basic types */
+ilist : '[' opt-int ']'											{ $$ = $2; }
+	  | '[' opt-int ',' ']'										{ $$ = $2; }
+	  ;
+
+opt-int : %empty												{ $$ = VECTOR_INITIALISER(sizeof(long int)); devtreeunput(','); }
+		| opt-int ',' int										{ $$ = $1; EABORT(ilist_add(&$$, $3) != 0); }
+		;
+
 int : INT													{ $$ = $1; }
 	| int '+' INT											{ $$ = $1 + $3; }
-	| int '+' attr-ref										{ ATTR_TYPE_CHECK($3, MT_INT); $$ = $1 + $3->value.i; }
+	| int '+' attr-ref										{ ATTR_TYPE_CHECK($3, MT_INT64, AF_INT); $$ = $1 + $3->value.i; }
 	| '(' attr-inc ')'										{ $$ = $2; }
 	;
 

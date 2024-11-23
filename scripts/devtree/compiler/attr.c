@@ -18,16 +18,19 @@
 
 
 /* global functions */
-int attr_add(vector_t *attrs, char const *name, attr_type_t type, attr_value_t *value){
+int attr_add(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value){
 	attr_t attr;
 
 
 	attr.name = name;
 	attr.type = type;
-	attr.value_set = (value != 0x0);
+	attr.flags = flags;
+	attr.flags |= ((type == MT_STRING) ? AF_STRING : AF_INT);
 
-	if(attr.value_set)
+	if(value != 0x0){
+		attr.flags |= AF_HAS_VALUE;
 		attr.value = *value;
+	}
 
 	if(vector_add(attrs, &attr) != 0)
 		return devtree_parser_error("adding attribute %s failed", name);
@@ -60,8 +63,8 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 	return 0x0;
 }
 
-int attr_type_check(attr_t *attr, attr_type_t type){
-	if(attr->type == type || (ATTR_TYPE_ISINT(attr->type) && ATTR_TYPE_ISINT(type)))
+int attr_type_check(attr_t *attr, attr_type_t type, attr_flags_t flags){
+	if(ATTR_FLAGS_TYPE_MASK(attr->flags) == ATTR_FLAGS_TYPE_MASK(flags) && (attr->type == type || (flags & AF_INT)))
 		return 0;
 
 	return devtree_parser_error("type mismatch have %s expected %s", attr_strtype(type), attr_strtype(attr->type));
@@ -70,26 +73,33 @@ int attr_type_check(attr_t *attr, attr_type_t type){
 char const *attr_strtype(attr_type_t type){
 	static char const *names[] = {
 		"unknown",
+		"string",
 		"addr",
 		"int8",
 		"int16",
 		"int32",
 		"int64",
-		"size",
-		"addr-width",
-		"reg-width",
-		"ncores",
-		"num-ints",
-		"timer-int",
-		"syscall-int",
-		"ipi-int",
-		"timer-cycle-time-us",
-		"core-mask",
 	};
 
+	if(type < 0 || type > MT_INT64)
+		type = MT_UNDEF;
 
-	if(!ATTR_TYPE_ISINT(type) && !ATTR_TYPE_ISSTR(type))
-		return names[0];
+	return names[type];
+}
 
-	return (type & MT_STRING) ? "string" : names[type & ~MT_INT];
+size_t attr_int_size(attr_type_t type){
+	switch(type){
+	case MT_INT8:	return 8;
+	case MT_INT16:	return 16;
+	case MT_INT32:	return 32;
+	case MT_INT64:	return 64;
+	default:		return 0;
+	}
+}
+
+int ilist_add(vector_t *lst, unsigned long int v){
+	if(vector_add(lst, &v) != 0)
+		return devtree_parser_error("intlist extension failed");
+
+	return 0;
 }

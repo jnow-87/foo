@@ -122,6 +122,8 @@ static void traverse(FILE *fp, node_t *node, write_attr_t write_attr){
 }
 
 static void makevars(FILE *fp, node_t *node, char const *node_ident){
+	size_t i;
+	unsigned long int *v;
 	attr_t *attr;
 
 
@@ -135,13 +137,21 @@ static void makevars(FILE *fp, node_t *node, char const *node_ident){
 	node_ident = strupr(node_ident);
 
 	vector_for_each(&node->attrs, attr){
-		if(attr->type == MT_ADDR)			fprintf(fp, "DEVTREE_%s_%s := %p\n", node_ident, strupr(attr->name), attr->value.i);
-		else if(attr->type & MT_INT)		fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_ident, strupr(attr->name), attr->value.i);
-		else if(attr->type & MT_STRING)		fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_ident, strupr(attr->name), attr->value.p);
+		if(attr->flags & AF_LIST){
+			i = 0;
+
+			vector_for_each(&attr->value.v, v)
+				fprintf(fp, "DEVTREE_%s_%s_%zu := %#u\n", node_ident, strupr(attr->name), i++, *v);
+		}
+		else if(attr->type == MT_ADDR)		fprintf(fp, "DEVTREE_%s_%s := %p\n", node_ident, strupr(attr->name), attr->value.i);
+		else if(attr->flags & AF_INT)		fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_ident, strupr(attr->name), attr->value.i);
+		else if(attr->flags & AF_STRING)	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_ident, strupr(attr->name), attr->value.p);
 	}
 }
 
 static void macros(FILE *fp, node_t *node, char const *node_ident){
+	size_t i;
+	unsigned long int *v;
 	attr_t *attr;
 
 
@@ -159,9 +169,15 @@ static void macros(FILE *fp, node_t *node, char const *node_ident){
 		}
 #endif // CONFIG_X86
 
-		if(attr->type == MT_ADDR)			fprintf(fp, "DEVTREE_%s_%s := %p\n", node_ident, strupr(attr->name), attr->value.i);
-		else if(attr->type & MT_INT)		fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_ident, strupr(attr->name), attr->value.i);
-		else if(attr->type & MT_STRING)		fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_ident, strupr(attr->name), attr->value.p);
+		if(attr->flags & AF_LIST){
+			i = 0;
+
+			vector_for_each(&attr->value.v, v)
+				fprintf(fp, "DEVTREE_%s_%s_%zu := %#u\n", node_ident, strupr(attr->name), i++, *v);
+		}
+		else if(attr->type == MT_ADDR)		fprintf(fp, "DEVTREE_%s_%s := %p\n", node_ident, strupr(attr->name), attr->value.i);
+		else if(attr->flags & AF_INT)		fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_ident, strupr(attr->name), attr->value.i);
+		else if(attr->flags & AF_STRING)	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_ident, strupr(attr->name), attr->value.p);
 	}
 }
 
@@ -252,18 +268,11 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 		if(attr_ignore(node, attr))
 			continue;
 
-		switch(attr->type){
-		case MT_ADDR:		fprintf(fp, "\tvoid *%s;\n", attr->name); break;
-		case MT_STRING:		fprintf(fp, "\tchar *%s;\n", attr->name); break;
-		case MT_INT8:		fprintf(fp, "\tuint8_t %s;\n", attr->name); break;
-		case MT_INT16:		fprintf(fp, "\tuint16_t %;\n", attr->name); break;
-		case MT_INT32:		fprintf(fp, "\tuint32_t %;\n", attr->name); break;
-		case MT_INT64:		fprintf(fp, "\tuint64_t %;\n", attr->name); break;
-
-		default:
-			WARN(node, "unexpected attribute type (%d)\n", attr->type);
-			break;
-		}
+		if(attr->flags & AF_LIST)			fprintf(fp, "\tuint%u_t %s[%zu];\n", attr_int_size(attr->type), attr->name, attr->value.v.size);
+		else if(attr->type == MT_ADDR)		fprintf(fp, "\tvoid *%s;\n", attr->name);
+		else if(attr->flags & AF_INT)		fprintf(fp, "\tuint%u_t %s;\n", attr_int_size(attr->type), attr->name);
+		else if(attr->flags & AF_STRING)	fprintf(fp, "\tchar *%s;\n", attr->name);
+		else								WARN(node, "unexpected attribute type (%d)\n", attr->type);
 	}
 
 	fprintf(fp, "}\n");
@@ -275,6 +284,7 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 }
 
 static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
+	unsigned long int *v;
 	attr_t *attr;
 
 
@@ -282,9 +292,17 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
 		if(attr_ignore(node, attr))
 			continue;
 
-		if(attr->type == MT_ADDR)			fprintf(fp, "\t.%s = (void*)%p,\n", attr->name, attr->value.i);
-		else if(attr->type & MT_INT)		fprintf(fp, "\t.%s = %u,\n", attr->name, attr->value.i);
-		else if(attr->type & MT_STRING)		fprintf(fp, "\t.%s = \"%s\",\n", attr->name, attr->value.p);
+		if(attr->flags & AF_LIST){
+			fprintf(fp, "\t.%s = {\n", attr->name);
+
+			vector_for_each(&attr->value.v, v)
+				fprintf(fp, "\t\t%u,\n", *v);
+
+			fprintf(fp, "\t},\n");
+		}
+		else if(attr->type == MT_ADDR)		fprintf(fp, "\t.%s = (void*)%p,\n", attr->name, attr->value.i);
+		else if(attr->flags & AF_INT)		fprintf(fp, "\t.%s = %u,\n", attr->name, attr->value.i);
+		else if(attr->flags & AF_STRING)	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, attr->value.p);
 	}
 }
 
