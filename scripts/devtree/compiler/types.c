@@ -79,14 +79,14 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 	vector_for_each(&type->attrs, tattr){
 		nattr = attr_get(attrs, tattr->name, true);
 
-		// TODO add type check
+		// TODO add type check including range check for ints
 
-		if(nattr == 0x0 && !tattr->value_set){
+		if(nattr == 0x0 && !(tattr->flags & AF_HAS_VALUE)){
 			devtree_parser_error("%s: missing attribute %s", name, tattr->name);
 			goto err;
 		}
 
-		if(attr_add(&node->attrs, tattr->name, tattr->type, nattr ? &nattr->value : &tattr->value) != 0){
+		if(attr_add(&node->attrs, tattr->name, tattr->type, tattr->flags, nattr ? &nattr->value : &tattr->value) != 0){
 			devtree_parser_error("%s: adding attribute failed", name);
 			goto err;
 		}

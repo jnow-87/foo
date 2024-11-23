@@ -48,7 +48,7 @@ typedef struct{
 			syscall_int,
 			ipi_int;
 
-	size_t timer_cycle_time_us;
+	uint32_t timer_cycle_time_us;
 
 	struct devtree_device_t const * const *childs;
 } devtree_arch_t;
