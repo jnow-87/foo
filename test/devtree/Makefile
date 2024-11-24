@@ -19,6 +19,7 @@ dt_src := $(dt_preproc).c
 # dttest
 dttest-y := main.o $(dt_preproc).o $(build_tree)/sys/devtree.o
 
+cppflags-y := -I$(src_tree)/scripts/dts/include
 hostcppflags-y := -I$(src_tree)/include -I$(loc_build_tree)
 hostcflags-y := -fno-builtin
 
@@ -31,13 +32,13 @@ $(dt_preproc): $(dts) $(dtc)
 	$(call preproc_file)
 
 $(dt_src): $(dt_preproc)
-	$(call cmd_run_script,$(dtc) --format=c --sections=all -o $<.c $<)
+	$(call cmd_run_script,$(dtc) --format=c -o $<.c $<)
 
 $(dt_make): $(dt_preproc)
-	$(call cmd_run_script,$(dtc) --format=make --sections=all -o $<.make $<)
+	$(call cmd_run_script,$(dtc) --format=make -o $<.make $<)
 
 $(dt_header): $(dt_preproc)
-	$(call cmd_run_script,$(dtc) --format=header --sections=all -o $<.h $<)
+	$(call cmd_run_script,$(dtc) --format=header -o $<.h $<)
 
 # test targets
 test-devtree: $(dt_preproc) $(dt_make) $(dt_header)

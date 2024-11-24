@@ -11,6 +11,7 @@
 #include <sys/register.h>
 #include <sys/types.h>
 #include <sys/vector.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <attr.h>
@@ -18,9 +19,12 @@
 
 
 /* global functions */
-int attr_add(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value){
+int attr_assign(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value){
 	attr_t attr;
 
+
+	if(attr_get(attrs, name, true) != 0x0)
+		return devtree_parser_error("%s attribute already defined", name);
 
 	attr.name = name;
 	attr.type = type;
@@ -30,10 +34,49 @@ int attr_add(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t f
 	if(value != 0x0){
 		attr.flags |= AF_HAS_VALUE;
 		attr.value = *value;
+
+		if(attr_range_check(&attr, *value) != 0)
+			return -1;
 	}
 
+	if(attr_type_check(&attr, attr.type, attr.flags) != 0)
+		return -1;
+
 	if(vector_add(attrs, &attr) != 0)
-		return devtree_parser_error("adding attribute %s failed", name);
+		return devtree_parser_error("%s adding attribute failed", name);
+
+	return 0;
+}
+
+int attr_add(attr_t *attr, attr_t *op){
+	char *s;
+	unsigned long int *v;
+
+
+	if(attr_type_check(attr, op->type, op->flags) != 0)
+		return -1;
+
+	if(attr->flags & AF_INT){
+		attr->value.i += op->value.i;
+	}
+	else if(attr->flags & AF_STRING){
+		s = malloc(strlen(attr->value.p) + strlen(op->value.p) + 1);
+
+		if(s == 0x0)
+			return devtree_parser_error("out of memory");
+
+		sprintf(s, "%s%s", attr->value.p, op->value.p);
+		free(attr->value.p);
+		attr->value.p = s;
+	}
+	else if(attr->flags & AF_LIST){
+		vector_for_each(&op->value.v, v){
+			if(vector_add(&attr->value.v, v) != 0)
+				return devtree_parser_error("adding lists failed");
+		}
+	}
+	else
+		return devtree_parser_error("addition not supported for type %s", attr_strtype(attr->type));
 
 	return 0;
 }
@@ -48,7 +91,7 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 
 	vector_for_each(attrs, attr){
 		if(strcmp(attr->name, name) == 0){
-			if(type == MT_UNDEF || attr->type == type)
+			if(type == MT_UNDEF || attr_type_check(attr, type, attr->flags) == 0)
 				return attr;
 
 			devtree_parser_error("%s: invalid type %s, expecting %s", name, attr_strtype(attr->type), attr_strtype(type));
@@ -64,10 +107,35 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 }
 
 int attr_type_check(attr_t *attr, attr_type_t type, attr_flags_t flags){
-	if(ATTR_FLAGS_TYPE_MASK(attr->flags) == ATTR_FLAGS_TYPE_MASK(flags) && (attr->type == type || (flags & AF_INT)))
+	if(type == MT_UNDEF || (((flags & AF_INT) && (flags & AF_STRING)) || !(flags & (AF_INT | AF_STRING))))
+		return devtree_parser_error("%s attribute has to be either string or integer", attr->name);
+
+	if(ATTR_FLAGS_TYPE_MASK(attr->flags) != ATTR_FLAGS_TYPE_MASK(flags) || (attr->type != type && !(flags & AF_INT)))
+		return devtree_parser_error("type mismatch have %s expected %s", attr_strtype(type), attr_strtype(attr->type));
+
+	return 0;
+}
+
+int attr_range_check(attr_t *attr, attr_value_t value){
+	unsigned long int lim;
+	unsigned long int *v;
+
+
+	if(attr->type < MT_INT8 || attr->type > MT_INT64)
 		return 0;
 
-	return devtree_parser_error("type mismatch have %s expected %s", attr_strtype(type), attr_strtype(attr->type));
+	lim = (((unsigned long int)1 << (attr_int_size(attr->type) - 1)) << 1) - 1;
+
+	if(attr->flags & AF_LIST){
+		vector_for_each(&value.v, v){
+			if(*v > lim)
+				return devtree_parser_error("%s out of range %lu > %lu", attr->name, *v, lim);
+		}
+	}
+	else if(value.i > lim)
+		return devtree_parser_error("%s out of range %lu > %lu", attr->name, value.i, lim);
+
+	return 0;
 }
 
 char const *attr_strtype(attr_type_t type){

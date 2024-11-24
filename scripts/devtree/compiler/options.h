@@ -24,10 +24,9 @@ typedef enum{
 typedef struct{
 	char const *ifile_name;
 	char const *ofile_name;
-	char *devices;
+	char *nodes;
 
 	output_file_type_t ofile_format;
-	type_cat_t export_categories;
 } opt_t;
 
 
