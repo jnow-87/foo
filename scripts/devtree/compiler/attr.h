@@ -61,6 +61,7 @@ attr_t *attr_get(vector_t *attrs, char const *name, bool maybe_undef);
 attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool maybe_undef);
 
 int attr_type_check(attr_t *attr, attr_type_t type, attr_flags_t flags);
+int attr_range_check(attr_t *attr, attr_value_t value);
 char const *attr_strtype(attr_type_t type);
 
 size_t attr_int_size(attr_type_t type);
