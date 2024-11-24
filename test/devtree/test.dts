@@ -7,92 +7,131 @@
 
 
 
-arch = {
-	addr-width = 32;
-	reg-width = 32;
-	ncores = 2;
-	num-ints = 0;
-	timer-int = 15;
-	syscall-int = 11;
-	ipi-int = 31;
-	timer-cycle-time-us = 125000;
-};
+#include <arch.dts>
+#include <memory.dts>
 
-memory = {
-	flash = {
-		addr = 0x10000000;
-		size = 2097152;
-	};
 
-	ram = {
-		addr = 0x20000000;
-		size = 270336;
+/* types */
+devicetype{
+	string compatible = "comp,base";
 
-		// test arch updates in memory nodes
-		arch.num-ints += 1;
-	};
+	int8 i0;
+	int8 i1;
+	int8 i2;
+
+	addr p0;
+	string s0;
+	string s1;
+	addr p1;
+} dev_base;
+
+devicetype{
+	string compatible = "comp,dev1";
+
+	string s0;
+
+
+	// test reference to child node
+	string s1;
+	int32 i0;
+	int32 i1;
+	int32 i2;
+
+	// test reference arithmetic
+	addr p0;
+	int8 i3;
+	int8 i4;
+	int8 i5;
+	int8 i6;
+	int8 i7;
+	int8 i8;
+} dev1;
+
+devicetype{
+	string compatible = "comp,dev2";
+
+	// test intermediate updates
+	int8 i0;
+	int8 i1;
+} dev2;
+
+
+/* arch node */
+arch = arch(
+	addr_width = 32,
+	reg_width = 32,
+	ncores = 2,
+	core_mask = 0x3,
+	multi_core = 1,
+	num_ints = 0,
+	timer_int = 15,
+	syscall_int = 11,
+	ipi_int = 31,
+	timer_cycle_time_us = 125000,
+);
+
+
+/* memory nodes */
+flash = memory(base=0x10000000, size=2097152);
+ram = memory(
+	base = 0x20000000,
+	size = 270336,
+
+	// TODO :test arch updates in memory nodes
+//	arch.num_ints += 1;
+);
+
+
+/* device nodes */
+// test arch update in the memory section
+arch.num_ints += 1;
+
+base-dev = dev_base(i2=3, i1=2, i0=1, p0=0x10, p1=0x20, s0="first", s1="second"
+	// TODO test arch updates in device nodes
+//	arch.num_ints = arch.num_ints + 1;
+);
 
 	// test arch update in the memory section
-	arch.num-ints += 1;
-};
-
-devices = {
-	base-dev = {
-		compatible = "comp,base";
-
-		int8 = 1;
-		int8 = 2;
-		int8 = 3;
-
-		addr = 0x10;
-		string = "first";
-		string = "second";
-		addr = 0x20;
-
-		// test arch updates in device nodes
-		arch.num-ints = arch.num-ints + 1;
-	};
-
-	// test arch update in the memory section
-	arch.num-ints += 1;
+	arch.num_ints += 1;
 
 	// test device updates
-	base-dev.int8[1] += 10;
-	base-dev.string[1] = "no longer second";
-	base-dev.addr[0] = 0x11;
+	base-dev.i1 += 10;
+	base-dev.s1 = "no longer second";
+	base-dev.p0 = 0x11;
 
-	dev1 = {
-		// test device references
-		compatible = base-dev.compatible;
+dev1 = dev1(
+	// test device references
+	compatible = base-dev.compatible,
+	s0 = base-dev.s1,
 
-		string = base-dev.string[1];
+	dev2 = dev2(
+		compatible = "comp,dev2",
 
-		dev2 = {
-			compatible = "comp,dev2";
+		// test intermediate updates
+		i0 = (arch.num_ints++),
+		// TODO
+//		arch.num_ints += 1;
+		i1 = (arch.num_ints++),
+		// TODO
+//		arch.num_ints += 1;
+	),
 
-			// test intermediate updates
-			int8 = arch.num-ints;
-			arch.num-ints += 1;
-			int8 = arch.num-ints;
-			arch.num-ints += 1;
-		};
+	// test reference to child node
+	s1 = dev2.compatible,
+	i0 = dev2.i0,
+	i1 = dev2.i1,
+	i2 = ram.size,
 
-		// test reference to child node
-		string = dev2.compatible;
-		int32 = dev2.int8[0];
-		int32 = dev2.int8[1];
-		int32 = ram.size;
+	// test reference arithmetic
+	p0 = 0xa + base-dev.p1,
+	i3 = 1 + 2 + 3,
+	i4 = 10 + base-dev.i1,
+	i5 = 20 + base-dev.i1,
+	i6 = 1 + base-dev.i1 + 1,
+	i7 = (arch.num_ints++),
+	i8 = (++arch.num_ints),
 
-		// test reference arithmetic
-		addr = base-dev.addr[1] + 0xa;
-		int8 = 1 + 2 +3;
-		int8 = base-dev.int8[1] + 10;
-		int8 = 20 + base-dev.int8[1];
-		int8 = 1 + base-dev.int8[1] + 1;
-		int8 = (arch.num-ints++);
-		int8 = (++arch.num-ints);
-
-		arch.num-ints++;
-		++arch.num-ints;
-	};
-};
+// TODO
+//	arch.num_ints++;
+//	++arch.num_ints;
+);

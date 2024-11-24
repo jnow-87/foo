@@ -1,0 +1,21 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef MEMORY_DTS
+#define MEMORY_DTS
+
+
+/* types */
+memorytype{
+	addr base;
+	int32 size;
+} memory;
+
+
+#endif // MEMORY_DTS

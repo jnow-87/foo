@@ -39,29 +39,30 @@ devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root
 	return find(root, root->childs, offsetof(devtree_memory_t, name), name, (traverse_t)devtree_find_memory_by_name);
 }
 
+// TODO check where devtree_arch_payload() is used and try to replace macro uses with a static expression
 void const *devtree_arch_payload(char const *comp){
-	devtree_device_t root = {
-		.name = "",
-		.compatible = "",
-		.payload = 0x0,
-		.childs = __dt_arch_root.childs,
-	};
-	devtree_device_t const *node;
-
-
-	node = devtree_find_device_by_comp(&root, comp);
-
-	if(node == 0x0 || node->payload == 0x0){
-#ifdef BUILD_KERNEL
-		kpanic("devtree arch node \"%s\" not defined\n", comp);
-#endif // BUILD_KERNEL
-		goto_errno(err, E_INVAL);
-	}
-
-	return (node == 0x0) ? 0x0 : node->payload;
-
-
-err:
+//	devtree_device_t root = {
+//		.name = "",
+//		.compatible = "",
+//		.payload = 0x0,
+//		.childs = __dt_arch.childs,
+//	};
+//	devtree_device_t const *node;
+//
+//
+//	node = devtree_find_device_by_comp(&root, comp);
+//
+//	if(node == 0x0 || node->payload == 0x0){
+//#ifdef BUILD_KERNEL
+//		kpanic("devtree arch node \"%s\" not defined\n", comp);
+//#endif // BUILD_KERNEL
+//		goto_errno(err, E_INVAL);
+//	}
+//
+//	return (node == 0x0) ? 0x0 : node->payload;
+//
+//
+//err:
 	return 0x0;
 }
 

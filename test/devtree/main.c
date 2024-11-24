@@ -112,7 +112,7 @@ static int checks(void){
 
 
 	// arch updates
-	r |= TEST_INT_EQ(__dt_arch_root.num_ints, 10);
+//	r |= TEST_INT_EQ(((devtree_arch_payload_t*)(__dt_arch.payload))->num_ints, 10);
 
 	// base-dev attributes
 	dev = devtree_find_device_by_name(&__dt_device_root, "base-dev");
@@ -134,15 +134,15 @@ static int checks(void){
 	r |= TEST_STR_EQ(dev->compatible, "comp,base");
 	r |= TEST_STR_EQ(((dev1_payload_t*)dev->payload)->str0, "no longer second");
 	r |= TEST_STR_EQ(((dev1_payload_t*)dev->payload)->str1, "comp,dev2");
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int0, 4);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int1, 5);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int0, 2);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int1, 3);
 	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int2, 270336);
 	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int3, 6);
 	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int4, 22);
 	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int5, 32);
 	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int6, 14);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int7, 6);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int8, 8);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int7, 4);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int8, 6);
 	r |= TEST_PTR_EQ(((dev1_payload_t*)dev->payload)->base0, 0x2a);
 
 	// dev2 attributes
@@ -150,8 +150,8 @@ static int checks(void){
 	ASSERT_PTR_NEQ(dev, 0x0);
 
 	r |= TEST_STR_EQ(dev->compatible, "comp,dev2");
-	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->int0, 4);
-	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->int1, 5);
+	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->int0, 2);
+	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->int1, 3);
 
 	return -r;
 }

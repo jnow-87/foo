@@ -7,92 +7,94 @@
 
 
 
-#include <avr.dts>
-#include "common/tty.dts"
+#include <arch.dts>
+#include <memory.dts>
+//#include <avr.dts>
+//#include "common/tty.dts"
 
 
-arch = {
-	addr-width = 16;
-	reg-width = 8;
+arch = arch(
+	addr_width = 16,
+	reg_width = 8,
 
-	ncores = 1;
+	ncores = 1,
+	core_mask = 0x1,
 
 	// interrupts
 	//  35 hardwares
 	//   1 syscall
 	//   1 instruction overflow
-	num-ints = 37;
+	num_ints = 37,
 
-	timer-int = 8;
-	syscall-int = 35;
+	timer_int = 8,
+	syscall_int = 35,
+	ipi_int = 0,
 
-	timer-cycle-time-us = 31250; 
+	timer_cycle_time_us = 31250,
 
-	avr_platform(
-		11059200,	// system clock [Hz]
-		0,			// system clock prescale (1)
-		0x1			// watchdog prescaler (4096 -> 31.250ms)
-	);
-};
+//	avr_platform(
+//		11059200,	// system clock [Hz]
+//		0,			// system clock prescale (1)
+//		0x1			// watchdog prescaler (4096 -> 31.250ms)
+//	);
+);
 
-memory = {
-	flash = {
-		addr = 0x0;
-		size = 131072;
+flash = memory(
+	base = 0x0,
+	size = 131072,
 
-		kernel-flash = {
-			addr = 0x0;
-			size = 61440;
-		};
+	kernel-flash = memory(
+		base = 0x0,
+		size = 61440,
+	),
 
-		app-flash = {
-			addr = 0x0000f000;
-			size = 69632;
-		};
-	};
+	app-flash = memory(
+		base = 0x0000f000,
+		size = 69632,
+	),
+);
 
-	ram = {
-		addr = 0x00800000;
-		size = 16640;
+ram = memory(
+	base = 0x00800000,
+	size = 16640,
 
-		registers = {
-			addr = 0x00800000;
-			size = 256;
-		};
+	registers = memory(
+		base = 0x00800000,
+		size = 256,
+	),
 
-		kernel-data = {
-			addr = 0x00800100;
-			size = 5376;
-		};
+	kernel-data = memory(
+		base = 0x00800100,
+		size = 5376,
+	),
 
-		app-data = {
-			addr = 0x00801600;
-			size = 5120;
-		};
+	app-data = memory(
+		base = 0x00801600,
+		size = 5120,
+	),
 
-		heap = {
-			addr = 0x00802a00;
-			size = 5888;
-		};
-	};
-};
+	heap = memory(
+		base = 0x00802a00,
+		size = 5888,
+	),
+);
 
-devices = {
-	avr_uart(
-		0,		// uart name
-		0xc0,	// uart0 config register base
-		0x64,	// PRR0
-		0x2,	// PRR0_PRUSART0
-		20,		// rx interrupt (uart0)
-		22,		// tx interrupt (uart0)
-		115200,	// baudrate
-		0,		// stop bits (1)
-		0,		// parity (UART_PARITY_NONE)
-		3,		// csize (UART_CS_8)
-
-		tty_user(
-			0,	// term name
-			0	// tty name
-		);
-	);
-};
+//devices = {
+//	avr_uart(
+//		0,		// uart name
+//		0xc0,	// uart0 config register base
+//		0x64,	// PRR0
+//		0x2,	// PRR0_PRUSART0
+//		20,		// rx interrupt (uart0)
+//		22,		// tx interrupt (uart0)
+//		115200,	// baudrate
+//		0,		// stop bits (1)
+//		0,		// parity (UART_PARITY_NONE)
+//		3,		// csize (UART_CS_8)
+//
+//		tty_user(
+//			0,	// term name
+//			0	// tty name
+//		);
+//	);
+//};
