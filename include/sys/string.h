@@ -52,8 +52,7 @@ char *itoa(int v, unsigned int base, char *s, size_t n);
 int atoi(char const *s);
 long int strtol(char const *p, char **endp, int base);
 
-char *strupr(char const *s);
-char *strupr_r(char const *s, char *buf, size_t n);
+char *strupr(char const *s, char *buf, size_t n);
 
 char *strcident(char const *s);
 char *strcident_r(char const *s, char *buf, size_t n);

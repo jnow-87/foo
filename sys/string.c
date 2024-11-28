@@ -289,14 +289,7 @@ long int strtol(char const *p, char **endp, int base){
 	return r * sign;
 }
 
-char *strupr(char const *s){
-	static char _s[NAME_MAX + 1];
-
-
-	return strupr_r(s, _s, NAME_MAX + 1);
-}
-
-char *strupr_r(char const *s, char *buf, size_t n){
+char *strupr(char const *s, char *buf, size_t n){
 	size_t i;
 
 

@@ -331,13 +331,13 @@ TEST(strupr){
 	char s[8];
 
 
-	r |= TEST_STR_EQ(strupr(""), "");
-	r |= TEST_STR_EQ(strupr("foo"), "FOO");
-	r |= TEST_STR_EQ(strupr("FOO"), "FOO");
-	r |= TEST_STR_EQ(strupr("123"), "123");
-	r |= TEST_STR_EQ(strupr("fOo123"), "FOO123");
+	r |= TEST_STR_EQ(strupr("", s, sizeof(s)), "");
+	r |= TEST_STR_EQ(strupr("foo", s, sizeof(s)), "FOO");
+	r |= TEST_STR_EQ(strupr("FOO", s, sizeof(s)), "FOO");
+	r |= TEST_STR_EQ(strupr("123", s, sizeof(s)), "123");
+	r |= TEST_STR_EQ(strupr("fOo123", s, sizeof(s)), "FOO123");
 
-	r |= TEST_STR_EQ(strupr_r("foo", s, 2), "FO");
+	r |= TEST_STR_EQ(strupr("foo", s, 2), "FO");
 
 	return -r;
 }
