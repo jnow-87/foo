@@ -36,6 +36,9 @@ int main(int argc, char **argv){
 
 	opt_parse(argc, argv);
 
+	if(nodes_init() != 0)
+		goto end;
+
 	/* parse device tree */
 	if(devtreeparse(options.ifile_name) != 0)
 		goto end;
@@ -66,32 +69,31 @@ end:
 
 /* local functions */
 static int collect_nodes(vector_t *nodes){
+	int r = 0;
 	char *tk;
 	node_t *node;
 
 
-	if(options.devices != 0x0){
-		while((tk = strtok(options.devices, ","))){
-			options.devices = 0x0;
+	if(options.nodes != 0x0){
+		while(r == 0 && (tk = strtok(options.nodes, ","))){
+			options.nodes = 0x0;
 			node = node_ref(tk);
 
 			if(node == 0x0){
 				fprintf(stderr, "undefined node \"%s\"\n", tk);
-				return -1;
+				r = -1;
 			}
-
-			if(vector_add(nodes, &node) != 0)
-				return -1;
+			else{
+				r |= vector_add(nodes, &node);
+			}
 		}
 	}
 	else{
-		list_for_each(nodes_root()->childs, node){
-			if(vector_add(nodes, &node) != 0)
-				return -1;
-		}
+		r |= vector_add(nodes, &(node_t*){ nodes_root(TC_MEMORY) });
+		r |= vector_add(nodes, &(node_t*){ nodes_root(TC_DEVICE) });
 	}
 
-	return 0;
+	return r;
 }
 
 static FILE *output_file(char const *file){

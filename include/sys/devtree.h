@@ -49,9 +49,7 @@ typedef struct{
 			ipi_int;
 
 	uint32_t timer_cycle_time_us;
-
-	struct devtree_device_t const * const *childs;
-} devtree_arch_t;
+} devtree_arch_payload_t;
 
 
 /* prototypes */
@@ -66,7 +64,7 @@ void const *devtree_arch_payload(char const *comp);
 /* external variables */
 extern devtree_device_t const __dt_device_root;
 extern devtree_memory_t const __dt_memory_root;
-extern devtree_arch_t const __dt_arch_root;
+extern devtree_device_t const __dt_arch;
 
 
 #endif // SYS_DEVTREE_H

@@ -25,6 +25,24 @@ libbrick-y := \
 
 
 ####
+## avr-specific device tree
+###
+
+avr_devtree_make := $(loc_build_tree)/devicetree.make
+avr_devtree_header := $(loc_build_tree)/devicetree.h
+
+$(avr_devtree_make): $(devtree_preproc) $(dtc)
+	$(call compile_devicetree,make,kernel-flash$(comma)kernel-data$(comma)app-flash$(comma)app-data)
+
+$(avr_devtree_header): $(devtree_preproc) $(dtc)
+	$(call compile_devicetree,header,kernel-flash)
+
+prepare_deps: $(avr_devtree_header) $(avr_devtree_make)
+
+-include $(avr_devtree_make)
+
+
+####
 ## linker scripts
 ####
 
@@ -98,6 +116,7 @@ define yesno
   test $$x = y || exit 1
 endef
 
+
 ####
 ## debug
 ####
@@ -130,6 +149,7 @@ else
 	)
 endif
 
+
 ####
 ## update flash and fuses
 ####
@@ -154,6 +174,7 @@ $(flash_hex): all
 		sed -i "$$ d" $(kernel).hex; \
 		cat $(kernel).hex $(init).hex > $@ \
 	)
+
 
 ####
 ## read flash

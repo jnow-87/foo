@@ -21,6 +21,20 @@ libbrick-y := \
 
 
 ####
+## arm-specific device tree
+###
+
+arm_devtree_make := $(loc_build_tree)/devicetree.make
+
+$(arm_devtree_make): $(devtree_preproc) $(dtc)
+	$(call compile_devicetree,make,kernel-flash$(comma)kernel-data$(comma)app-flash$(comma)app-data)
+
+prepare_deps: $(arm_devtree_make)
+
+-include $(arm_devtree_make)
+
+
+####
 ## flags
 ####
 

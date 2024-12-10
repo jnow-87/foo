@@ -10,6 +10,7 @@
 #include <config/config.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <sys/limits.h>
 #include <sys/string.h>
 #include <sys/vector.h>
@@ -18,11 +19,10 @@
 #include <asserts.h>
 #include <nodes.h>
 #include <options.h>
+#include <parser.tab.h>
 
 
 /* macros */
-#define INCLUDE_GUARD	"GENERATED_DEVICETREE_H"
-
 #define MAKE_FILE_HEADER(fp)			file_header(fp, "#", "")
 #define MAKE_SECTION_HEADER(fp, s, ...)	section_header(fp, "#", "", s, ##__VA_ARGS__)
 #define SRC_FILE_HEADER(fp)				file_header(fp, "/*", "*/")
@@ -33,6 +33,11 @@
 
 
 /* types */
+typedef enum{
+	GUARD_TOP = 1,
+	GUARD_BOTTOM,
+} include_guard_location_t;
+
 typedef void (*write_attr_t)(FILE *fp, node_t *node, char const *node_ident);
 
 
@@ -52,8 +57,7 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_ident);
 static void file_header(FILE *fp, char const *start_comment, char const *end_comment);
 static void section_header(FILE *fp, char const *start_comment, char const *end_comment, char const *s, ...);
 static void src_node_header(FILE *fp, char const *node_ident);
-static void include_guard_top(FILE *fp);
-static void include_guard_bottom(FILE *fp);
+static void include_guard(FILE *fp, include_guard_location_t loc);
 static void includes(FILE *fp);
 
 static int attr_ignore(node_t *node, attr_t *attr);
@@ -77,14 +81,14 @@ void export_header(FILE *fp, vector_t *nodes){
 
 
 	SRC_FILE_HEADER(fp);
-	include_guard_top(fp);
+	include_guard(fp, GUARD_TOP);
 
 	vector_for_each(nodes, node){
 		SRC_SECTION_HEADER(fp, "%s macros", (*node)->name);
 		traverse(fp, *node, macros);
 	}
 
-	include_guard_bottom(fp);
+	include_guard(fp, GUARD_BOTTOM);
 }
 
 void export_source(FILE *fp, vector_t *nodes){
@@ -111,9 +115,6 @@ static void traverse(FILE *fp, node_t *node, write_attr_t write_attr){
 	node_t *child;
 
 
-	if((node->type->category & options.export_categories) == 0)
-		return;
-
 	strcident_r(node->name, node_ident, name_len);
 	write_attr(fp, node, node_ident);
 
@@ -124,6 +125,8 @@ static void traverse(FILE *fp, node_t *node, write_attr_t write_attr){
 static void makevars(FILE *fp, node_t *node, char const *node_ident){
 	size_t i;
 	unsigned long int *v;
+	char node_name[DEVTREE_STRMAX],
+		 attr_name[DEVTREE_STRMAX];
 	attr_t *attr;
 
 
@@ -134,28 +137,32 @@ static void makevars(FILE *fp, node_t *node, char const *node_ident){
 		return;
 #endif // CONFIG_X86
 
-	node_ident = strupr(node_ident);
+	strupr(node_ident, node_name, sizeof(node_name));
 
 	vector_for_each(&node->attrs, attr){
+		strupr(attr->name, attr_name, sizeof(attr_name));
+
 		if(attr->flags & AF_LIST){
 			i = 0;
 
 			vector_for_each(&attr->value.v, v)
-				fprintf(fp, "DEVTREE_%s_%s_%zu := %#u\n", node_ident, strupr(attr->name), i++, *v);
+				fprintf(fp, "DEVTREE_%s_%s_%zu := %#u\n", node_name, attr_name, i++, *v);
 		}
-		else if(attr->type == MT_ADDR)		fprintf(fp, "DEVTREE_%s_%s := %p\n", node_ident, strupr(attr->name), attr->value.i);
-		else if(attr->flags & AF_INT)		fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_ident, strupr(attr->name), attr->value.i);
-		else if(attr->flags & AF_STRING)	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_ident, strupr(attr->name), attr->value.p);
+		else if(attr->type == MT_ADDR)		fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, attr->value.i);
+		else if(attr->flags & AF_INT)		fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, attr->value.i);
+		else if(attr->flags & AF_STRING)	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, attr->value.p);
 	}
 }
 
 static void macros(FILE *fp, node_t *node, char const *node_ident){
 	size_t i;
 	unsigned long int *v;
+	char node_name[DEVTREE_STRMAX],
+		 attr_name[DEVTREE_STRMAX];
 	attr_t *attr;
 
 
-	node_ident = strupr(node_ident);
+	strupr(node_ident, node_name, sizeof(node_name));
 
 	vector_for_each(&node->attrs, attr){
 #ifdef CONFIG_X86
@@ -169,15 +176,17 @@ static void macros(FILE *fp, node_t *node, char const *node_ident){
 		}
 #endif // CONFIG_X86
 
+		strupr(attr->name, attr_name, sizeof(attr_name));
+
 		if(attr->flags & AF_LIST){
 			i = 0;
 
 			vector_for_each(&attr->value.v, v)
-				fprintf(fp, "DEVTREE_%s_%s_%zu := %#u\n", node_ident, strupr(attr->name), i++, *v);
+				fprintf(fp, "#define DEVTREE_%s_%s_%zu %#u\n", node_name, attr_name, i++, *v);
 		}
-		else if(attr->type == MT_ADDR)		fprintf(fp, "DEVTREE_%s_%s := %p\n", node_ident, strupr(attr->name), attr->value.i);
-		else if(attr->flags & AF_INT)		fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_ident, strupr(attr->name), attr->value.i);
-		else if(attr->flags & AF_STRING)	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_ident, strupr(attr->name), attr->value.p);
+		else if(attr->type == MT_ADDR)		fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, attr->value.i);
+		else if(attr->flags & AF_INT)		fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, attr->value.i);
+		else if(attr->flags & AF_STRING)	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, attr->value.p);
 	}
 }
 
@@ -209,10 +218,6 @@ static void definition(FILE *fp, node_t *node, char const *node_ident){
 
 	case TC_MEMORY:
 		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		def_attributes(fp, node, node_ident);
-		break;
-
-	case TC_ARCH:
 		def_attributes(fp, node, node_ident);
 		break;
 
@@ -300,7 +305,7 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
 
 			fprintf(fp, "\t},\n");
 		}
-		else if(attr->type == MT_ADDR)		fprintf(fp, "\t.%s = (void*)%p,\n", attr->name, attr->value.i);
+		else if(attr->type == MT_ADDR)		fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, attr->value.i);
 		else if(attr->flags & AF_INT)		fprintf(fp, "\t.%s = %u,\n", attr->name, attr->value.i);
 		else if(attr->flags & AF_STRING)	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, attr->value.p);
 	}
@@ -333,21 +338,40 @@ static void src_node_header(FILE *fp, char const *node_ident){
 	fprintf(fp, "// __dt_%s\n", node_ident);
 }
 
-static void include_guard_top(FILE *fp){
-	fprintf(fp,
-		"\n"
-		"\n"
-		"#ifndef " INCLUDE_GUARD "\n"
-		"#define " INCLUDE_GUARD "\n"
-	);
-}
+static void include_guard(FILE *fp, include_guard_location_t loc){
+	size_t len = options.ofile_name ? strlen(options.ofile_name) : 7;
+	char guard[len + 1];
 
-static void include_guard_bottom(FILE *fp){
-	fprintf(fp,
-		"\n"
-		"\n"
-		"#endif // " INCLUDE_GUARD "\n"
-	);
+
+	if(options.ofile_name){
+		strupr(options.ofile_name, guard, sizeof(guard));
+
+		for(size_t i=0; i<len; i++){
+			if(!isalnum(guard[i]))
+				guard[i] = '_';
+		}
+	}
+	else
+		strcpy(guard, "GUARD_H");
+
+	if(loc == GUARD_TOP){
+		fprintf(fp,
+			"\n"
+			"\n"
+			"#ifndef %s\n"
+			"#define %s\n"
+			, guard
+			, guard
+		);
+	}
+	else{
+		fprintf(fp,
+			"\n"
+			"\n"
+			"#endif // %s\n"
+			, guard
+		);
+	}
 }
 
 static void includes(FILE *fp){

@@ -8,12 +8,12 @@
 
 
 #include <arch/arch.h>
+#include <arch/avr/devicetree.h>
 #include <arch/avr/register.h>
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/register.h>
 #include <sys/syscall.h>
-#include <sys/devicetree.h>
 
 
 /* macros */

@@ -23,9 +23,8 @@ struct node_t;
 
 /* types */
 typedef enum{
-	TC_ARCH = 1,
-	TC_MEMORY,
-	TC_DEVICE,
+	TC_MEMORY = 0x1,
+	TC_DEVICE = 0x2,
 } type_cat_t;
 
 typedef struct type_t{

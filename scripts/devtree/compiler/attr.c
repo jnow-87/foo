@@ -11,6 +11,7 @@
 #include <sys/register.h>
 #include <sys/types.h>
 #include <sys/vector.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <attr.h>
@@ -18,9 +19,12 @@
 
 
 /* global functions */
-int attr_add(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value){
+int attr_assign(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value){
 	attr_t attr;
 
+
+	if(attr_get(attrs, name, true) != 0x0)
+		return devtree_parser_error("%s attribute already defined", name);
 
 	attr.name = name;
 	attr.type = type;
@@ -40,6 +44,39 @@ int attr_add(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t f
 
 	if(vector_add(attrs, &attr) != 0)
 		return devtree_parser_error("%s adding attribute failed", name);
+
+	return 0;
+}
+
+int attr_add(attr_t *attr, attr_t *op){
+	char *s;
+	unsigned long int *v;
+
+
+	if(attr_type_check(attr, op->type, op->flags) != 0)
+		return -1;
+
+	if(attr->flags & AF_INT){
+		attr->value.i += op->value.i;
+	}
+	else if(attr->flags & AF_STRING){
+		s = malloc(strlen(attr->value.p) + strlen(op->value.p) + 1);
+
+		if(s == 0x0)
+			return devtree_parser_error("out of memory");
+
+		sprintf(s, "%s%s", attr->value.p, op->value.p);
+		free(attr->value.p);
+		attr->value.p = s;
+	}
+	else if(attr->flags & AF_LIST){
+		vector_for_each(&op->value.v, v){
+			if(vector_add(&attr->value.v, v) != 0)
+				return devtree_parser_error("adding lists failed");
+		}
+	}
+	else
+		return devtree_parser_error("addition not supported for type %s", attr_strtype(attr->type));
 
 	return 0;
 }

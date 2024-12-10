@@ -1,0 +1,29 @@
+/**
+ * Copyright (C) 2024 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+#ifndef ARCH_DTS
+#define ARCH_DTS
+
+
+devicetype{
+	string compatible = "";
+
+	int8 addr_width;
+	int8 reg_width;
+	int8 core_mask;
+	int8 ncores;
+	int8 num_ints;
+	int8 timer_int;
+	int8 syscall_int;
+	int8 ipi_int;
+	int32 timer_cycle_time_us;
+} arch;
+
+
+#endif // ARCH_DTS

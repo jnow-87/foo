@@ -87,7 +87,7 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 		if(nattr != 0x0 && (attr_type_check(nattr, tattr->type, tattr->flags) != 0 || attr_range_check(tattr, nattr->value) != 0))
 			goto err;
 
-		if(attr_add(&node->attrs, tattr->name, tattr->type, tattr->flags, nattr ? &nattr->value : &tattr->value) != 0){
+		if(attr_assign(&node->attrs, tattr->name, tattr->type, tattr->flags, nattr ? &nattr->value : &tattr->value) != 0){
 			devtree_parser_error("%s: adding attribute failed", name);
 			goto err;
 		}
@@ -111,15 +111,11 @@ end:
 }
 
 char const *type_strcat(type_cat_t category){
-	static char const *names[] = {
-		"invalid",
-		"arch",
-		"memory",
-		"device",
-	};
-
-
-	return names[category];
+	switch(category){
+	case TC_MEMORY:	return "memory";
+	case TC_DEVICE:	return "device";
+	default:		return "invalid";
+	}
 }
 
 

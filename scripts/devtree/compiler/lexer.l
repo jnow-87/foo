@@ -16,9 +16,8 @@
 	#include <stdlib.h>
 
 
-	/* define YY_USER_ACTION, executed for every token, before excuting its
-	 * action code
-	 */
+	/* macros */
+	// define YY_USER_ACTION, executed for every token, before excuting its action code
 	#define YY_USER_ACTION { \
 		/* update location based on current token */ \
 		devtreelloc.first_line = devtreelloc.last_line = devtree_line; \
@@ -27,12 +26,12 @@
 		devtree_col += devtreeleng; \
 	}
 
-	/* make yyunput available outside of the lexer */
-	static void yyunput(int c, char *buf_ptr);
+	#define INC_LINE { devtree_col = 1; devtree_line++; }
 
-	void devtreeunput(char c){
-		yyunput(c, (yytext_ptr));
-	}
+
+	/* local/static prototypes */
+	// make yyunput available outside of the lexer
+	static void yyunput(int c, char *buf_ptr);
 %}
 
 /* start states */
@@ -49,9 +48,8 @@
 %}
 
 	/* typedef */
-"archtypedef"					{ return TYPEDEF_ARCH; }
-"memtypedef"					{ return TYPEDEF_MEM; }
-"devtypedef"					{ return TYPEDEF_DEV; }
+"memorytype"					{ return TYPEDEF_MEM; }
+"devicetype"					{ return TYPEDEF_DEV; }
 
 	/* node attributes */
 "addr"							{ return NA_ADDR; }
@@ -65,24 +63,32 @@
 "assert"						{ return ASSERT; }
 
 	/* comments */
-\/\/.*\r?\n						{ devtree_col = 1; ++devtree_line; }
+\/\/.*\r?\n						{ INC_LINE }
 \/\*							{ BEGIN MULTI_LINE_COMMENT; }
 <MULTI_LINE_COMMENT>\*\/		{ BEGIN INITIAL; }
 <MULTI_LINE_COMMENT>.			{ }
-<MULTI_LINE_COMMENT>\r?\n		{ devtree_col = 1; ++devtree_line; }
+<MULTI_LINE_COMMENT>\r?\n		{ INC_LINE }
 
 	/* identifier */
-[a-zA-Z][a-zA-Z_\-0-9]+			{ return devtree_parser_strcpy(devtreelval.str, devtreetext, devtreeleng, IDFR); }
+[a-zA-Z][a-zA-Z_\-0-9]*			{ return devtree_parser_strcpy(devtreelval.s, devtreetext, devtreeleng, IDFR); }
 
 	/* string */
-\"[^"]*\"						{ return devtree_parser_strcpy(devtreelval.str, devtreetext + 1, devtreeleng - 2, STRING); }
+\"[^"]*\"						{ return devtree_parser_strcpy(devtreelval.s, devtreetext + 1, devtreeleng - 2, STRING); }
 
 	/* integer */
 (0x)?[0-9a-fA-F]+				{ devtreelval.i = strtol(devtreetext, 0x0, 0); return INT; }
 
 	/* general patterns */
-\r?\n							{ devtree_col = 1; ++devtree_line; }
+\r?\n							{ INC_LINE }
 [ \t]							{ }
 
 	/* default */
 .								{ return devtreetext[0]; }
+
+
+%%
+
+
+void devtreeunput(char c){
+	yyunput(c, (yytext_ptr));
+}

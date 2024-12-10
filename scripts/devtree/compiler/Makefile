@@ -62,7 +62,7 @@ prepare_deps: $(devtree_header) $(devtree_make) $(devtree_src)
 
 # compile the desired devicetree <output-format>
 #
-#	$(call compile_devicetree,<output-format>,<sections>
+#	$(call compile_devicetree,<output-format>,<nodes>
 #
 #
 # NOTE to prevent rebuilds of all files depending on the devicetree header, first compile
@@ -73,7 +73,7 @@ prepare_deps: $(devtree_header) $(devtree_make) $(devtree_src)
 # 	   check for the build stage, only running it on stage1.
 define compile_devicetree
 	$(if $(call is_prestage,stage1), \
-		$(QBUILD)$(dtc) --format=$(1) --sections=$(2) -o $@.tmp $< && \
+		$(QBUILD)$(dtc) --format=$(1) $(if $(2),--nodes=$(2)) -o $@.tmp $< && \
 		{ diff $@ $@.tmp 1>/dev/null 2>&1 || { echo "updating $@"; cp $@.tmp $@; } } \
 		, \
 	)
@@ -84,13 +84,13 @@ $(devtree_preproc): $(CONFIG_DEVICE_TREE) $(config_header)
 	$(call preproc_file)
 
 $(devtree_src): $(devtree_preproc) $(dtc)
-	$(call compile_devicetree,c,all)
+	$(call compile_devicetree,c,)
 
 $(devtree_make): $(devtree_preproc) $(dtc)
-	$(call compile_devicetree,make,memory$(comma)arch)
+	$(call compile_devicetree,make,heap$(comma)arch)
 
 $(devtree_header): $(devtree_preproc) $(dtc)
-	$(call compile_devicetree,header,memory$(comma)arch)
+	$(call compile_devicetree,header,heap$(comma)arch)
 
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.o,          $(devtree_src),)
 $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o,     $(devtree_src), host)
