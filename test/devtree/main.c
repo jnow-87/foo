@@ -22,34 +22,34 @@
 
 /* types */
 typedef struct{
-	uint8_t int0,
-			int1,
-			int2;
+	uint8_t i0,
+			i1,
+			i2;
 
-	void *base0;
-	char *str0,
-		 *str1;
-	void *base1;
+	void *p0;
+	char *s0,
+		 *s1;
+	void *p1;
 } base_dev_payload_t;
 
 typedef struct{
-	char *str0,
-		 *str1;
-	uint32_t int0,
-			 int1,
-			 int2;
-	void *base0;
-	uint8_t int3,
-			int4,
-			int5,
-			int6,
-			int7,
-			int8;
+	char *s0,
+		 *s1;
+	uint32_t i0,
+			 i1,
+			 i2;
+	void *p0;
+	uint8_t i3,
+			i4,
+			i5,
+			i6,
+			i7,
+			i8;
 } dev1_payload_t;
 
 typedef struct{
-	uint8_t int0,
-			int1;
+	uint8_t i0,
+			i1;
 } dev2_payload_t;
 
 
@@ -119,39 +119,39 @@ static int checks(void){
 	ASSERT_PTR_NEQ(dev, 0x0);
 
 	r |= TEST_STR_EQ(dev->compatible, "comp,base");
-	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->int0, 1);
-	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->int1, 12);
-	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->int2, 3);
-	r |= TEST_PTR_EQ(((base_dev_payload_t*)dev->payload)->base0, 0x11);
-	r |= TEST_PTR_EQ(((base_dev_payload_t*)dev->payload)->base1, 0x20);
-	r |= TEST_STR_EQ(((base_dev_payload_t*)dev->payload)->str0, "first");
-	r |= TEST_STR_EQ(((base_dev_payload_t*)dev->payload)->str1, "no longer second");
+	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->i0, 1);
+	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->i1, 12);
+	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->i2, 3);
+	r |= TEST_PTR_EQ(((base_dev_payload_t*)dev->payload)->p0, 0x11);
+	r |= TEST_PTR_EQ(((base_dev_payload_t*)dev->payload)->p1, 0x20);
+	r |= TEST_STR_EQ(((base_dev_payload_t*)dev->payload)->s0, "first");
+	r |= TEST_STR_EQ(((base_dev_payload_t*)dev->payload)->s1, "no longer second");
 
 	// dev1 attributes
 	dev = devtree_find_device_by_name(&__dt_device_root, "dev1");
 	ASSERT_PTR_NEQ(dev, 0x0);
 
 	r |= TEST_STR_EQ(dev->compatible, "comp,base");
-	r |= TEST_STR_EQ(((dev1_payload_t*)dev->payload)->str0, "no longer second");
-	r |= TEST_STR_EQ(((dev1_payload_t*)dev->payload)->str1, "comp,dev2");
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int0, 2);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int1, 3);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int2, 270336);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int3, 6);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int4, 22);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int5, 32);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int6, 14);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int7, 4);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->int8, 6);
-	r |= TEST_PTR_EQ(((dev1_payload_t*)dev->payload)->base0, 0x2a);
+	r |= TEST_STR_EQ(((dev1_payload_t*)dev->payload)->s0, "no longer second");
+	r |= TEST_STR_EQ(((dev1_payload_t*)dev->payload)->s1, "comp,dev2xx");
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i0, 2);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i1, 3);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i2, 270336);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i3, 6);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i4, 22);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i5, 32);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i6, 14);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i7, 4);
+	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i8, 6);
+	r |= TEST_PTR_EQ(((dev1_payload_t*)dev->payload)->p0, 0x2a);
 
 	// dev2 attributes
 	dev = devtree_find_device_by_name(&__dt_device_root, "dev2");
 	ASSERT_PTR_NEQ(dev, 0x0);
 
 	r |= TEST_STR_EQ(dev->compatible, "comp,dev2");
-	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->int0, 2);
-	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->int1, 3);
+	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->i0, 2);
+	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->i1, 3);
 
 	return -r;
 }

@@ -35,7 +35,7 @@ int nodes_init(void){
 	vector_t attrs = VECTOR_INITIALISER(sizeof(attr_t));
 
 
-	if(attr_assign(&attrs, "compatible", MT_STRING, AF_NONE, &ATTR_VALUE(p, "")) != 0)
+	if(attr_assign(&attrs, "compatible", &ATTR_VALUE_STRING("")) != 0)
 		return -1;
 
 	r |= type_add("memory_root", TC_MEMORY, &VECTOR_INITIALISER(sizeof(attr_t)), 0x0);
@@ -50,7 +50,7 @@ int nodes_init(void){
 	if(memory_nodes == 0x0 || device_nodes == 0x0)
 		return -1;
 
-	return attr_assign(&device_nodes->attrs, "compatible", MT_STRING, AF_NONE, &ATTR_VALUE(p, ""));
+	return attr_assign(&device_nodes->attrs, "compatible", &ATTR_VALUE_STRING(""));
 }
 
 node_t *nodes_root(type_cat_t category){
