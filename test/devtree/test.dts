@@ -123,9 +123,9 @@ dev1 = dev1(
 	i2 = ram.size,
 
 	// test reference arithmetic
-	p0 = 0xa + base-dev.p1,
-	i3 = 1 + 2 + 3,
-	i4 = 10 + base-dev.i1,
+	p0 = base-dev.p1 + 0xa,
+	i3 = 1 + 2 +3,
+	i4 = base-dev.i1 + 10,
 	i5 = 20 + base-dev.i1,
 	i6 = 1 + base-dev.i1 + 1,
 	i7 = (arch.num_ints++),

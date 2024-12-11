@@ -19,6 +19,26 @@
 
 
 /* global functions */
+int attr_init(attr_t *attr, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value){
+	attr->name = name;
+	attr->type = type;
+	attr->flags = flags;
+	attr->flags |= ((type == MT_STRING) ? AF_STRING : AF_INT);
+
+	if(value != 0x0){
+		attr->flags |= AF_HAS_VALUE;
+		attr->value = *value;
+
+		if(attr_range_check(attr, *value) != 0)
+			return -1;
+	}
+
+	if(attr_type_check(attr, attr->type, attr->flags) != 0)
+		return -1;
+
+	return 0;
+}
+
 int attr_assign(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value){
 	attr_t attr;
 
@@ -26,20 +46,7 @@ int attr_assign(vector_t *attrs, char const *name, attr_type_t type, attr_flags_
 	if(attr_get(attrs, name, true) != 0x0)
 		return devtree_parser_error("%s attribute already defined", name);
 
-	attr.name = name;
-	attr.type = type;
-	attr.flags = flags;
-	attr.flags |= ((type == MT_STRING) ? AF_STRING : AF_INT);
-
-	if(value != 0x0){
-		attr.flags |= AF_HAS_VALUE;
-		attr.value = *value;
-
-		if(attr_range_check(&attr, *value) != 0)
-			return -1;
-	}
-
-	if(attr_type_check(&attr, attr.type, attr.flags) != 0)
+	if(attr_init(&attr, name, type, flags, value) != 0)
 		return -1;
 
 	if(vector_add(attrs, &attr) != 0)
@@ -107,8 +114,8 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 }
 
 int attr_type_check(attr_t *attr, attr_type_t type, attr_flags_t flags){
-	if(type == MT_UNDEF || (((flags & AF_INT) && (flags & AF_STRING)) || !(flags & (AF_INT | AF_STRING))))
-		return devtree_parser_error("%s attribute has to be either string or integer", attr->name);
+	if(type == MT_UNDEF || ((flags & AF_INT) && (flags & AF_STRING)) || (flags & (AF_INT | AF_STRING)) == 0)
+		return devtree_parser_error("%s attribute has to be either string or integer but is %s %x", attr->name, attr_strtype(type), flags);
 
 	if(ATTR_FLAGS_TYPE_MASK(attr->flags) != ATTR_FLAGS_TYPE_MASK(flags) || (attr->type != type && !(flags & AF_INT)))
 		return devtree_parser_error("type mismatch have %s expected %s", attr_strtype(type), attr_strtype(attr->type));

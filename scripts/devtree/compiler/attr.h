@@ -17,8 +17,8 @@
 
 /* macros */
 #define ATTR_FLAGS_TYPE_MASK(flags)	((flags) & ~(AF_HAS_VALUE))
-#define ATTR_VALUE(type, value) \
-	(attr_value_t){ .type = value }
+#define ATTR_VALUE(member, value) \
+	(attr_value_t){ .member = value }
 
 
 /* types */
@@ -56,6 +56,7 @@ typedef struct{
 
 
 /* prototypes */
+int attr_init(attr_t *attr, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value);
 int attr_assign(vector_t *attrs, char const *name, attr_type_t type, attr_flags_t flags, attr_value_t *value);
 int attr_add(attr_t *attr, attr_t *op);
 
