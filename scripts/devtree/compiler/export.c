@@ -123,11 +123,10 @@ static void traverse(FILE *fp, node_t *node, write_attr_t write_attr){
 }
 
 static void makevars(FILE *fp, node_t *node, char const *node_ident){
-	size_t i;
-	unsigned long int *v;
 	char node_name[DEVTREE_STRMAX],
 		 attr_name[DEVTREE_STRMAX];
 	attr_t *attr;
+	attr_value_t *v;
 
 
 #ifdef CONFIG_X86
@@ -141,25 +140,25 @@ static void makevars(FILE *fp, node_t *node, char const *node_ident){
 
 	vector_for_each(&node->attrs, attr){
 		strupr(attr->name, attr_name, sizeof(attr_name));
+		v = &attr->value;
 
-		if(attr->flags & AF_LIST){
-			i = 0;
+		switch(v->type){
+		case MT_ADDR:	fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, v->i); break;
+		case MT_INT:	fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v->i); break;
+		case MT_STRING:	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, v->p); break;
 
-			vector_for_each(&attr->value.v, v)
-				fprintf(fp, "DEVTREE_%s_%s_%zu := %#u\n", node_name, attr_name, i++, *v);
+		case MT_ILIST:	// fall through
+		default:
+			break;
 		}
-		else if(attr->type == MT_ADDR)		fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, attr->value.i);
-		else if(attr->flags & AF_INT)		fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, attr->value.i);
-		else if(attr->flags & AF_STRING)	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, attr->value.p);
 	}
 }
 
 static void macros(FILE *fp, node_t *node, char const *node_ident){
-	size_t i;
-	unsigned long int *v;
 	char node_name[DEVTREE_STRMAX],
 		 attr_name[DEVTREE_STRMAX];
 	attr_t *attr;
+	attr_value_t *v;
 
 
 	strupr(node_ident, node_name, sizeof(node_name));
@@ -177,16 +176,17 @@ static void macros(FILE *fp, node_t *node, char const *node_ident){
 #endif // CONFIG_X86
 
 		strupr(attr->name, attr_name, sizeof(attr_name));
+		v = &attr->value;
 
-		if(attr->flags & AF_LIST){
-			i = 0;
+		switch(v->type){
+		case MT_ADDR:	fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, v->i); break;
+		case MT_INT:	fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v->i); break;
+		case MT_STRING:	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, v->p); break;
 
-			vector_for_each(&attr->value.v, v)
-				fprintf(fp, "#define DEVTREE_%s_%s_%zu %#u\n", node_name, attr_name, i++, *v);
+		case MT_ILIST:	// fall through
+		default:
+			break;
 		}
-		else if(attr->type == MT_ADDR)		fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, attr->value.i);
-		else if(attr->flags & AF_INT)		fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, attr->value.i);
-		else if(attr->flags & AF_STRING)	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, attr->value.p);
 	}
 }
 
@@ -264,6 +264,7 @@ static void def_childs(FILE *fp, node_t *node, char const *node_ident){
 
 static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 	attr_t *attr;
+	attr_value_t *v;
 
 
 	// struct definition
@@ -273,11 +274,15 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 		if(attr_ignore(node, attr))
 			continue;
 
-		if(attr->flags & AF_LIST)			fprintf(fp, "\tuint%u_t %s[%zu];\n", attr_int_size(attr->type), attr->name, attr->value.v.size);
-		else if(attr->type == MT_ADDR)		fprintf(fp, "\tvoid *%s;\n", attr->name);
-		else if(attr->flags & AF_INT)		fprintf(fp, "\tuint%u_t %s;\n", attr_int_size(attr->type), attr->name);
-		else if(attr->flags & AF_STRING)	fprintf(fp, "\tchar *%s;\n", attr->name);
-		else								WARN(node, "unexpected attribute type (%d)\n", attr->type);
+		v = &attr->value;
+
+		switch(v->type){
+		case MT_ADDR:	fprintf(fp, "\tvoid *%s;\n", attr->name); break;
+		case MT_INT:	fprintf(fp, "\tuint%u_t %s;\n", v->size * 8, attr->name); break;
+		case MT_ILIST:	fprintf(fp, "\tuint%u_t %s[%zu];\n", v->size * 8, attr->name, v->v.size); break;
+		case MT_STRING:	fprintf(fp, "\tchar *%s;\n", attr->name); break;
+		default:		WARN(node, "unexpected attribute type (%d)\n", v->type); break;
+		}
 	}
 
 	fprintf(fp, "}\n");
@@ -289,25 +294,34 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 }
 
 static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
-	unsigned long int *v;
+	unsigned long int *i;
 	attr_t *attr;
+	attr_value_t *v;
 
 
 	vector_for_each(&node->attrs, attr){
 		if(attr_ignore(node, attr))
 			continue;
 
-		if(attr->flags & AF_LIST){
+		v = &attr->value;
+
+		switch(v->type){
+		case MT_ADDR:	fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, v->i); break;
+		case MT_INT:	fprintf(fp, "\t.%s = %u,\n", attr->name, v->i); break;
+		case MT_STRING:	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, v->p); break;
+
+		case MT_ILIST:
 			fprintf(fp, "\t.%s = {\n", attr->name);
 
-			vector_for_each(&attr->value.v, v)
-				fprintf(fp, "\t\t%u,\n", *v);
+			vector_for_each(&v->v, i)
+				fprintf(fp, "\t\t%u,\n", *i);
 
 			fprintf(fp, "\t},\n");
+			break;
+
+		default:
+			break;
 		}
-		else if(attr->type == MT_ADDR)		fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, attr->value.i);
-		else if(attr->flags & AF_INT)		fprintf(fp, "\t.%s = %u,\n", attr->name, attr->value.i);
-		else if(attr->flags & AF_STRING)	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, attr->value.p);
 	}
 }
 

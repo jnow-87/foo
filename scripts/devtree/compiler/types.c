@@ -69,6 +69,7 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 	attr_t *tattr,
 		   *nattr;
 	node_t *node;
+	attr_value_t v;
 
 
 	node = node_create(name, type, childs);
@@ -79,15 +80,20 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 	vector_for_each(&type->attrs, tattr){
 		nattr = attr_get(attrs, tattr->name, true);
 
-		if(nattr == 0x0 && !(tattr->flags & AF_HAS_VALUE)){
+		if(nattr == 0x0 && !(tattr->value.flags & AF_HAS_VALUE)){
 			devtree_parser_error("%s: missing attribute %s", name, tattr->name);
 			goto err;
 		}
 
-		if(nattr != 0x0 && (attr_type_check(nattr, tattr->type, tattr->flags) != 0 || attr_range_check(tattr, nattr->value) != 0))
+		if(nattr != 0x0 && (attr_type_check(&nattr->value, tattr->value.type) != 0 || attr_range_check(tattr, &nattr->value) != 0))
 			goto err;
 
-		if(attr_assign(&node->attrs, tattr->name, tattr->type, tattr->flags, nattr ? &nattr->value : &tattr->value) != 0){
+		v = nattr ? nattr->value : tattr->value;
+		v.type = tattr->value.type;
+		v.flags = tattr->value.flags;
+		v.size = tattr->value.size;
+
+		if(attr_assign(&node->attrs, tattr->name, &v) != 0){
 			devtree_parser_error("%s: adding attribute failed", name);
 			goto err;
 		}

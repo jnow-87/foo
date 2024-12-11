@@ -33,6 +33,20 @@ void vector_destroy(vector_t *v){
 	v->size = 0;
 }
 
+int vector_copy(vector_t *dest, vector_t *src){
+	// TODO especially test that after-copy modifications to the either src or dest do not impact the other one
+
+	*dest = *src;
+	dest->buf = sys_malloc(src->capacity * src->dt_size);
+
+	if(dest->buf == 0x0)
+		return -1;
+
+	memcpy(dest->buf, src->buf, src->size * src->dt_size);
+
+	return 0;
+}
+
 int vector_add(vector_t *v, void *buf){
 	void *t;
 
