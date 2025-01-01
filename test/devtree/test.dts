@@ -11,6 +11,19 @@
 #include <memory.dts>
 
 
+// TODO missing tests
+//	- memorytype: all
+//	- devicetype: default values for attributes
+//	- devicetype: list attributes
+//	- devicetype: asserts
+//	- attr-update: assignment
+//	- attr-update: pre-/post-fix increment
+//	- assignment/increment using
+//		- const
+//		- ilist
+//		- attr-ref
+//		- ...
+
 /* types */
 devicetype{
 	string compatible = "comp,base";
@@ -32,7 +45,7 @@ devicetype{
 
 
 	// test reference to child node
-	string s1;
+	string sx;
 	int32 i0;
 	int32 i1;
 	int32 i2;
@@ -117,7 +130,7 @@ dev1 = dev1(
 	),
 
 	// test reference to child node
-	s1 = dev2.compatible,
+	sx = dev2.compatible + "xx",
 	i0 = dev2.i0,
 	i1 = dev2.i1,
 	i2 = ram.size,

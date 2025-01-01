@@ -41,6 +41,7 @@ typedef struct{
 int vector_init(vector_t *v, size_t dt_size, size_t capa);
 void vector_destroy(vector_t *v);
 
+int vector_copy(vector_t *dest, vector_t *src);
 int vector_add(vector_t *v, void *buf);
 void vector_rm(vector_t *v, size_t idx);
 
