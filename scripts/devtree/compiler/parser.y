@@ -226,7 +226,7 @@ type-body : %empty									{ OBJECT_RESET($$); }
 		  | type-body assert ';'					{ $$ = $1; list_add_tail($$.asserts, $2); }
 		  | type-body xattr IDFR ';'				{ $$ = $1; ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &$2); }
 		  | type-body xattr IDFR '=' const ';'		{ $$ = $1; ATTR_TYPE_CHECK(&$5, $2.type); $5.type = $2.type; $5.size = $2.size; ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &$5); }
-		  | type-body xattr IDFR '[' INT ']' ';'	{ $$ = $1; ATTR_TYPE_CHECK(&$2, MT_INT); ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &ATTR_ILIST($5)); }
+		  | type-body xattr IDFR '[' INT ']' ';'	{ $$ = $1; ATTR_TYPE_CHECK(&$2, MT_INT); ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &ATTR_ILIST($2.size)); /* TODO list size is ignored by now */ }
 		  ;
 
 /* nodes */
