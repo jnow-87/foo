@@ -197,7 +197,6 @@ static void declaration(FILE *fp, node_t *node, char const *node_ident){
 static void definition(FILE *fp, node_t *node, char const *node_ident){
 	src_node_header(fp, node_ident);
 
-	def_asserts(fp, node, node_ident);
 	def_childs(fp, node, node_ident);
 
 	if(node->type->category == TC_DEVICE)
@@ -230,6 +229,8 @@ static void definition(FILE *fp, node_t *node, char const *node_ident){
 	else							fprintf(fp, "\t.childs = 0x0,\n");
 
 	fprintf(fp, "};\n\n\n");
+
+	def_asserts(fp, node, node_ident);
 }
 
 static void def_asserts(FILE *fp, node_t *node, char const *node_ident){
@@ -237,7 +238,8 @@ static void def_asserts(FILE *fp, node_t *node, char const *node_ident){
 
 
 	list_for_each(node->type->asserts, assert){
-		fprintf(fp, "_Static_assert(%s, \"%s: %s\");\n", assert->expr, node_ident, assert->msg);
+		// TODO parse assert->expr replacing all identifiers with the given value for node
+//		fprintf(fp, "_Static_assert(%s, \"%s: %s\");\n", assert->expr, node_ident, assert->msg);
 	}
 
 	if(node->type->asserts)

@@ -19,17 +19,34 @@
 /* macros */
 #define RESULT_EXT	".log"
 
+#define CHECK_TEST_DEV(_name, _compatible, _i, _p) \
+	check_test_dev( \
+		_name, \
+		_compatible, \
+		&((test_dev_payload_t){ \
+			.i = _i, \
+			.p = (void*)_p, \
+		}) \
+	)
+
 
 /* types */
 typedef struct{
-	uint8_t i0,
-			i1,
+	uint8_t i;
+	void *p;
+} test_dev_payload_t;
+
+typedef struct{
+	uint8_t i0;
+	void *p0;
+
+	uint8_t i1,
 			i2;
 
-	void *p0;
+	void *p1;
 	char *s0,
 		 *s1;
-	void *p1;
+	uint8_t l0[2];
 } base_dev_payload_t;
 
 typedef struct{
@@ -55,6 +72,8 @@ typedef struct{
 
 /* local/static prototypes */
 static int checks(void);
+static int check_test_dev(char const *name, char const *compatible, test_dev_payload_t *payload);
+static int check_memory(char const *name, void *base, uint32_t size);
 
 
 /* global variables */
@@ -108,50 +127,59 @@ void test_log(char const *fmt, ...){
 /* local functions */
 static int checks(void){
 	int r = 0;
+
+
+	/* test included type */
+	r |= check_memory("flash", (void*)0x10000000, 2097152);
+
+	/* test type default attributes */
+	r |= CHECK_TEST_DEV("def-0", "default", 1, 0x10);
+	r |= CHECK_TEST_DEV("def-1", "def-1", 1, 0x10);
+	r |= CHECK_TEST_DEV("def-2", "default", 2, 0x10);
+	r |= CHECK_TEST_DEV("def-3", "default", 1, 0x20);
+	r |= CHECK_TEST_DEV("def-4", "def-4", 3, 0x30);
+
+	/* test attribute updates */
+	r |= CHECK_TEST_DEV("updates", "reset-add", 18, 0x2c);
+	r |= CHECK_TEST_DEV("update-consumer", "default", 17, 17);
+
+	/* test arithmetics */
+	r |= CHECK_TEST_DEV("donor", "donation0", 42, 0xbe00);
+	r |= CHECK_TEST_DEV("donor-child", "donation1", 1, 0xef);
+	r |= CHECK_TEST_DEV("arith-const", "some-arith", 6, 0xbeef);
+	r |= CHECK_TEST_DEV("ref-bare", "donation0", 42, 0xbe00);
+	r |= CHECK_TEST_DEV("arith-ref", "pre,donation0-arith-donation1", 46, 0xbeef + 0x2);
+
+	return -r;
+}
+
+static int check_test_dev(char const *name, char const *compatible, test_dev_payload_t *payload){
+	int r = 0;
 	devtree_device_t const *dev;
 
 
-	// arch updates
-//	r |= TEST_INT_EQ(((devtree_arch_payload_t*)(__dt_arch.payload))->num_ints, 10);
-
-	// base-dev attributes
-	dev = devtree_find_device_by_name(&__dt_device_root, "base-dev");
+	TEST_LOG("test: dev=\"%s\"\n", name);
+	dev = devtree_find_device_by_name(&__dt_device_root, name);
 	ASSERT_PTR_NEQ(dev, 0x0);
 
-	r |= TEST_STR_EQ(dev->compatible, "comp,base");
-	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->i0, 1);
-	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->i1, 12);
-	r |= TEST_INT_EQ(((base_dev_payload_t*)dev->payload)->i2, 3);
-	r |= TEST_PTR_EQ(((base_dev_payload_t*)dev->payload)->p0, 0x11);
-	r |= TEST_PTR_EQ(((base_dev_payload_t*)dev->payload)->p1, 0x20);
-	r |= TEST_STR_EQ(((base_dev_payload_t*)dev->payload)->s0, "first");
-	r |= TEST_STR_EQ(((base_dev_payload_t*)dev->payload)->s1, "no longer second");
+	r |= TEST_STR_EQ(dev->compatible, compatible);
+	r |= TEST_INT_EQ(((test_dev_payload_t*)dev->payload)->i, payload->i);
+	r |= TEST_PTR_EQ(((test_dev_payload_t*)dev->payload)->p, payload->p);
 
-	// dev1 attributes
-	dev = devtree_find_device_by_name(&__dt_device_root, "dev1");
-	ASSERT_PTR_NEQ(dev, 0x0);
+	return r;
+}
 
-	r |= TEST_STR_EQ(dev->compatible, "comp,base");
-	r |= TEST_STR_EQ(((dev1_payload_t*)dev->payload)->s0, "no longer second");
-	r |= TEST_STR_EQ(((dev1_payload_t*)dev->payload)->s1, "comp,dev2xx");
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i0, 2);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i1, 3);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i2, 270336);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i3, 6);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i4, 22);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i5, 32);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i6, 14);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i7, 4);
-	r |= TEST_INT_EQ(((dev1_payload_t*)dev->payload)->i8, 6);
-	r |= TEST_PTR_EQ(((dev1_payload_t*)dev->payload)->p0, 0x2a);
+static int check_memory(char const *name, void *base, uint32_t size){
+	int r = 0;
+	devtree_memory_t const *mem;
 
-	// dev2 attributes
-	dev = devtree_find_device_by_name(&__dt_device_root, "dev2");
-	ASSERT_PTR_NEQ(dev, 0x0);
 
-	r |= TEST_STR_EQ(dev->compatible, "comp,dev2");
-	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->i0, 2);
-	r |= TEST_INT_EQ(((dev2_payload_t*)dev->payload)->i1, 3);
+	TEST_LOG("test: memory=\"%s\"\n", name);
+	mem = devtree_find_memory_by_name(&__dt_memory_root, name);
+	ASSERT_PTR_NEQ(mem, 0x0);
 
-	return -r;
+	r |= TEST_PTR_EQ(mem->base, base);
+	r |= TEST_INT_EQ(mem->size, size);
+
+	return r;
 }
