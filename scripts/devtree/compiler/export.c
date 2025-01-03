@@ -143,8 +143,14 @@ static void makevars(FILE *fp, node_t *node, char const *node_ident){
 		v = &attr->value;
 
 		switch(v->type){
+		case MT_INT8:	// fall through
+		case MT_INT16:	// fall through
+		case MT_INT32:	// fall through
+		case MT_INT64:
+			fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v->i);
+			break;
+
 		case MT_ADDR:	fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, v->i); break;
-		case MT_INT:	fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v->i); break;
 		case MT_STRING:	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, v->p); break;
 
 		case MT_ILIST:	// fall through
@@ -179,8 +185,14 @@ static void macros(FILE *fp, node_t *node, char const *node_ident){
 		v = &attr->value;
 
 		switch(v->type){
+		case MT_INT8:	// fall through
+		case MT_INT16:	// fall through
+		case MT_INT32:	// fall through
+		case MT_INT64:
+			fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v->i);
+			break;
+
 		case MT_ADDR:	fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, v->i); break;
-		case MT_INT:	fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v->i); break;
 		case MT_STRING:	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, v->p); break;
 
 		case MT_ILIST:	// fall through
@@ -279,9 +291,15 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 		v = &attr->value;
 
 		switch(v->type){
+		case MT_INT8:	// fall through
+		case MT_INT16:	// fall through
+		case MT_INT32:	// fall through
+		case MT_INT64:
+			fprintf(fp, "\tuint%u_t %s;\n", attr_type_size(v->type) * 8, attr->name);
+			break;
+
 		case MT_ADDR:	fprintf(fp, "\tvoid *%s;\n", attr->name); break;
-		case MT_INT:	fprintf(fp, "\tuint%u_t %s;\n", v->size * 8, attr->name); break;
-		case MT_ILIST:	fprintf(fp, "\tuint%u_t %s[%zu];\n", v->size * 8, attr->name, v->v.size); break;
+		case MT_ILIST:	fprintf(fp, "\tuint%u_t %s[%zu];\n", attr_type_size(v->type) * 8, attr->name, v->ilist.items.size); break;
 		case MT_STRING:	fprintf(fp, "\tchar *%s;\n", attr->name); break;
 		default:		WARN(node, "unexpected attribute type (%d)\n", v->type); break;
 		}
@@ -308,14 +326,20 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
 		v = &attr->value;
 
 		switch(v->type){
+		case MT_INT8:	// fall through
+		case MT_INT16:	// fall through
+		case MT_INT32:	// fall through
+		case MT_INT64:
+			fprintf(fp, "\t.%s = %u,\n", attr->name, v->i);
+			break;
+
 		case MT_ADDR:	fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, v->i); break;
-		case MT_INT:	fprintf(fp, "\t.%s = %u,\n", attr->name, v->i); break;
 		case MT_STRING:	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, v->p); break;
 
 		case MT_ILIST:
 			fprintf(fp, "\t.%s = {\n", attr->name);
 
-			vector_for_each(&v->v, i)
+			vector_for_each(&v->ilist.items, i)
 				fprintf(fp, "\t\t%u,\n", *i);
 
 			fprintf(fp, "\t},\n");

@@ -59,7 +59,10 @@ int attr_add(attr_value_t *value, attr_value_t *op){
 		return -1;
 
 	switch(value->type){
-	case MT_INT:
+	case MT_INT8:	// fall through
+	case MT_INT16:	// fall through
+	case MT_INT32:	// fall through
+	case MT_INT64:
 		value->i += op->i;
 		break;
 
@@ -79,8 +82,8 @@ int attr_add(attr_value_t *value, attr_value_t *op){
 		break;
 
 	case MT_ILIST:
-		vector_for_each(&op->v, v){
-			if(vector_add(&value->v, v) != 0)
+		vector_for_each(&op->ilist.items, v){
+			if(vector_add(&value->ilist.items, v) != 0)
 				return devtree_parser_error("adding lists failed");
 		}
 		break;
@@ -97,7 +100,9 @@ int attr_copy(attr_value_t *dest, attr_value_t *src){
 
 	switch(src->type){
 	case MT_ILIST:
-		if(vector_copy(&dest->v, &src->v) != 0)
+		dest->ilist.limit = src->ilist.limit;
+
+		if(vector_copy(&dest->ilist.items, &src->ilist.items) != 0)
 			goto err;
 		break;
 
@@ -148,16 +153,10 @@ int attr_type_check(attr_value_t *value, attr_type_t type){
 	if(value->type == MT_UNDEF)
 		return devtree_parser_error("attribute with undefined type");
 
-	if(value->type == type)
+	if(value->type == type || (attr_is_int(value->type) && attr_is_int(type)))
 		return 0;
 
-	if((value->type == MT_INT || value->type == MT_ADDR) && (type == MT_INT || type == MT_ADDR))
-		return 0;
-
-	if(value->type != type)
-		return devtree_parser_error("type mismatch have %s expected %s", attr_strtype(value->type), attr_strtype(type));
-
-	return 0;
+	return devtree_parser_error("type mismatch have %s expected %s", attr_strtype(value->type), attr_strtype(type));
 }
 
 int attr_range_check(attr_t *attr, attr_value_t *value){
@@ -165,13 +164,13 @@ int attr_range_check(attr_t *attr, attr_value_t *value){
 				  *v;
 
 
-	if(value->type != MT_INT && value->type != MT_ILIST)
+	if(!attr_is_int(value->type) && value->type != MT_ILIST)
 		return 0;
 
-	lim = (((ATTR_INT_TYPE)1 << ((value->size * 8)- 1)) << 1) - 1;
+	lim = (((ATTR_INT_TYPE)1 << ((attr_type_size(value->type) * 8) - 1)) << 1) - 1;
 
 	if(value->type == MT_ILIST){
-		vector_for_each(&value->v, v){
+		vector_for_each(&value->ilist.items, v){
 			if(*v > lim)
 				return devtree_parser_error("%s out of range %lu > %lu", attr->name, *v, lim);
 		}
@@ -185,8 +184,11 @@ int attr_range_check(attr_t *attr, attr_value_t *value){
 char const *attr_strtype(attr_type_t type){
 	static char const *names[] = {
 		"undef",
+		"int8",
+		"int16",
+		"int32",
+		"int64",
 		"addr",
-		"int",
 		"ilist",
 		"string",
 	};
@@ -197,9 +199,26 @@ char const *attr_strtype(attr_type_t type){
 	return names[type];
 }
 
-int attr_ilist_add(vector_t *lst, ATTR_INT_TYPE value){
-	if(vector_add(lst, &value) != 0)
+int attr_ilist_add(attr_ilist_t *lst, ATTR_INT_TYPE value){
+	if(vector_add(&lst->items, &value) != 0)
 		return devtree_parser_error("intlist extension failed");
 
+	lst->limit = lst->items.size;
+
 	return 0;
+}
+
+bool attr_is_int(attr_type_t type){
+	return (type == MT_ADDR || type == MT_INT8 || type == MT_INT16 || type == MT_INT32 || type == MT_INT64);
+}
+
+size_t attr_type_size(attr_type_t type){
+	switch(type){
+	case MT_ADDR:	return ATTR_INT_SIZE;
+	case MT_INT8:	return 1;
+	case MT_INT16:	return 2;
+	case MT_INT32:	return 4;
+	case MT_INT64:	return 8;
+	default:		return 1;
+	}
 }

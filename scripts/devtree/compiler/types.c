@@ -91,7 +91,6 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 		v = nattr ? nattr->value : tattr->value;
 		v.type = tattr->value.type;
 		v.flags = tattr->value.flags;
-		v.size = tattr->value.size;
 
 		if(attr_assign(&node->attrs, tattr->name, &v) != 0){
 			devtree_parser_error("%s: adding attribute failed", name);

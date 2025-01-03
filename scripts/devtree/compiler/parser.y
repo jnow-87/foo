@@ -151,11 +151,11 @@
 	char s[DEVTREE_STRMAX];
 	char *sptr;
 	attr_t *aptr;
+	attr_type_t type;
 	attr_value_t value;
 
 	node_t *node;
 	assert_t *assert;
-	vector_t vec;
 
 	struct{
 		vector_t attrs;
@@ -190,9 +190,9 @@
 %type <object> type-args
 %type <node> device
 %type <assert> assert
-%type <value> xattr
+%type <type> xattr
 %type <value> ilist
-%type <vec> opt-int
+%type <value> opt-int
 %type <sptr> string
 %type <aptr> attr-ref
 %type <value> attr-inc
@@ -224,9 +224,9 @@ typedef : TYPEDEF_MEM '{' type-body '}' IDFR		{ EABORT(type_add(STRALLOC($5), TC
 type-body : %empty									{ OBJECT_RESET($$); }
 		  | type-body ';'							{ }
 		  | type-body assert ';'					{ $$ = $1; list_add_tail($$.asserts, $2); }
-		  | type-body xattr IDFR ';'				{ $$ = $1; ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &$2); }
-		  | type-body xattr IDFR '=' const ';'		{ $$ = $1; ATTR_TYPE_CHECK(&$5, $2.type); $5.type = $2.type; $5.size = $2.size; ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &$5); }
-		  | type-body xattr IDFR '[' INT ']' ';'	{ $$ = $1; ATTR_TYPE_CHECK(&$2, MT_INT); ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &ATTR_ILIST($2.size)); /* TODO list size is ignored by now */ }
+		  | type-body xattr IDFR ';'				{ $$ = $1; ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &ATTR_NOVALUE($2)); }
+		  | type-body xattr IDFR '=' const ';'		{ $$ = $1; ATTR_TYPE_CHECK(&$5, $2); $5.type = $2; ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &$5); }
+		  | type-body xattr IDFR '[' INT ']' ';'	{ $$ = $1; ATTR_TYPE_CHECK(&ATTR_NOVALUE($2), MT_INT64); ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &ATTR_VALUE_ILIST((ATTR_ILIST($5)))); /* TODO list size is ignored by now */ }
 		  ;
 
 /* nodes */
@@ -248,8 +248,8 @@ attr-update : attr-ref '=' value					{ ATTR_TYPE_CHECK(&$1->value, $3.type); $1-
 			| attr-inc								{ }
 			;
 
-attr-inc : attr-ref '+' '+'							{ ATTR_TYPE_CHECK(&$1->value, MT_INT); $$ = ATTR_VALUE_INT(($1->value.i)++, $1->value.size); }
-		 | '+' '+' attr-ref							{ ATTR_TYPE_CHECK(&$3->value, MT_INT); $$ = ATTR_VALUE_INT(++($3->value.i), $3->value.size); }
+attr-inc : attr-ref '+' '+'							{ ATTR_TYPE_CHECK(&$1->value, MT_INT64); $$ = ATTR_VALUE_INT(($1->value.i)++, $1->value.type); }
+		 | '+' '+' attr-ref							{ ATTR_TYPE_CHECK(&$3->value, MT_INT64); $$ = ATTR_VALUE_INT(++($3->value.i), $3->value.type); }
 		 ;
 
 /* basic types */
@@ -262,29 +262,29 @@ value : const										{ $$ = $1; }
 	  | '(' attr-inc ')'							{ $$ = $2; }
 	  ;
 
-ilist : '[' opt-int ']'								{ $$ = ATTR_VALUE_ILIST($2, ATTR_INT_SIZE); }
-	  | '[' opt-int ',' ']'							{ $$ = ATTR_VALUE_ILIST($2, ATTR_INT_SIZE); }
+ilist : '[' opt-int ']'								{ $$ = $2; }
+	  | '[' opt-int ',' ']'							{ $$ = $2; }
 	  ;
 
-opt-int : %empty									{ $$ = VECTOR_INITIALISER(ATTR_INT_SIZE); devtreeunput(','); }
-		| opt-int ',' INT							{ $$ = $1; ATTR_ILIST_ADD(&$$, $3); }
-		| opt-int ',' attr-ref						{ $$ = $1; ATTR_TYPE_CHECK(&$3->value, MT_INT); ATTR_ILIST_ADD(&$$, $3->value.i); }
+opt-int : %empty									{ $$ = ATTR_VALUE_ILIST((ATTR_ILIST(0))); devtreeunput(','); }
+		| opt-int ',' INT							{ $$ = $1; ATTR_ILIST_ADD(&$$.ilist, $3); }
+		| opt-int ',' attr-ref						{ $$ = $1; ATTR_TYPE_CHECK(&$3->value, MT_INT64); ATTR_ILIST_ADD(&$$.ilist, $3->value.i); }
 		;
 
 attr-ref : IDFR '.' IDFR							{ $$ = ATTR_REF(&NODE_REF($1)->attrs, $3); };
 string : STRING										{ $$ = STRALLOC($1); };
 
-const : INT											{ $$ = ATTR_VALUE_INT($1, ATTR_INT_SIZE); }
+const : INT											{ $$ = ATTR_VALUE_INT($1, MT_INT64); }
 	  | string										{ $$ = ATTR_VALUE_STRING($1); }
 	  ;
 
 /* node attributes */
-xattr : NA_STRING									{ $$ = ATTR_STRING(); }
-	  | NA_ADDR										{ $$ = ATTR_ADDR(); }
-	  | NA_INT8   									{ $$ = ATTR_INT(1); }
-	  | NA_INT16									{ $$ = ATTR_INT(2); }
-	  | NA_INT32									{ $$ = ATTR_INT(4); }
-	  | NA_INT64									{ $$ = ATTR_INT(8); }
+xattr : NA_STRING									{ $$ = MT_STRING; }
+	  | NA_ADDR										{ $$ = MT_ADDR; }
+	  | NA_INT8   									{ $$ = MT_INT8; }
+	  | NA_INT16									{ $$ = MT_INT16; }
+	  | NA_INT32									{ $$ = MT_INT32; }
+	  | NA_INT64									{ $$ = MT_INT64; }
 	  ;
 
 

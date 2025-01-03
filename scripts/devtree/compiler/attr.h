@@ -19,36 +19,39 @@
 #define ATTR_INT_TYPE	unsigned long int
 #define ATTR_INT_SIZE	sizeof(ATTR_INT_TYPE)
 
-#define ATTR_VALUE(member, _value, _type, _size) \
+#define ATTR_VALUE(member, _value, _type) \
 	(attr_value_t){ \
 		.type = _type, \
-		.size = _size, \
 		.member = _value, \
 		.flags = AF_HAS_VALUE, \
 	}
 
-#define ATTR_NOVALUE(_type, _size) \
+#define ATTR_NOVALUE(_type) \
 	(attr_value_t){ \
 		.type = _type, \
-		.size = _size, \
 		.flags = AF_NONE, \
 	}
 
-#define ATTR_VALUE_ADDR(value)			ATTR_VALUE(p, value, MT_ADDR, ATTR_INT_SIZE)
-#define ATTR_VALUE_INT(value, size)		ATTR_VALUE(i, value, MT_INT, size)
-#define ATTR_VALUE_ILIST(value, size)	ATTR_VALUE(v, value, MT_ILIST, size)
-#define ATTR_VALUE_STRING(value)		ATTR_VALUE(p, value, MT_STRING, 1)
-#define ATTR_ADDR()						ATTR_NOVALUE(MT_ADDR, ATTR_INT_SIZE)
-#define ATTR_INT(size)					ATTR_NOVALUE(MT_INT, size)
-#define ATTR_ILIST(size)				ATTR_NOVALUE(MT_ILIST, size)
-#define ATTR_STRING()					ATTR_NOVALUE(MT_STRING, 1)
+#define ATTR_ILIST(_limit) \
+	(attr_ilist_t){ \
+		.items = VECTOR_INITIALISER(ATTR_INT_SIZE), \
+		.limit = _limit, \
+	}
+
+#define ATTR_VALUE_ADDR(value)			ATTR_VALUE(p, value, MT_ADDR)
+#define ATTR_VALUE_INT(value, type)		ATTR_VALUE(i, value, type)
+#define ATTR_VALUE_ILIST(value)			ATTR_VALUE(ilist, value, MT_ILIST)
+#define ATTR_VALUE_STRING(value)		ATTR_VALUE(p, value, MT_STRING)
 
 
 /* types */
 typedef enum{
 	MT_UNDEF = 0,
+	MT_INT8,
+	MT_INT16,
+	MT_INT32,
+	MT_INT64,
 	MT_ADDR,
-	MT_INT,
 	MT_ILIST,
 	MT_STRING,
 } attr_type_t;
@@ -59,14 +62,18 @@ typedef enum{
 } attr_flags_t;
 
 typedef struct{
+	vector_t items;
+	size_t limit;
+} attr_ilist_t;
+
+typedef struct{
 	attr_type_t type;
-	size_t size;
 	attr_flags_t flags;
 
 	union{
 		void *p;
 		ATTR_INT_TYPE i;
-		vector_t v;
+		attr_ilist_t ilist;
 	};
 } attr_value_t;
 
@@ -90,7 +97,10 @@ int attr_type_check(attr_value_t *valie, attr_type_t type);
 int attr_range_check(attr_t *attr, attr_value_t *value);
 char const *attr_strtype(attr_type_t type);
 
-int attr_ilist_add(vector_t *lst, ATTR_INT_TYPE value);
+int attr_ilist_add(attr_ilist_t *lst, ATTR_INT_TYPE value);
+
+bool attr_is_int(attr_type_t type);
+size_t attr_type_size(attr_type_t type);
 
 
 #endif // DEVTREE_ATTR_H
