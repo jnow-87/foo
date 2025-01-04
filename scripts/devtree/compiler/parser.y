@@ -226,7 +226,8 @@ type-body : %empty									{ OBJECT_RESET($$); }
 		  | type-body assert ';'					{ $$ = $1; list_add_tail($$.asserts, $2); }
 		  | type-body xattr IDFR ';'				{ $$ = $1; ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &ATTR_NOVALUE($2)); }
 		  | type-body xattr IDFR '=' const ';'		{ $$ = $1; ATTR_TYPE_CHECK(&$5, $2); $5.type = $2; ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &$5); }
-		  | type-body xattr IDFR '[' INT ']' ';'	{ $$ = $1; ATTR_TYPE_CHECK(&ATTR_NOVALUE($2), MT_INT64); ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &ATTR_VALUE_ILIST((ATTR_ILIST($5)))); /* TODO list size is ignored by now */ }
+		  | type-body xattr IDFR '[' INT ']' ';'	{ $$ = $1; ATTR_TYPE_CHECK(&ATTR_NOVALUE($2), MT_INT64); ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &ATTR_VALUE_ILIST((ATTR_ILIST($5)), $2)); /* TODO list size is ignored by now */ }
+		  | type-body xattr IDFR '[' INT ']' '=' ilist ';'	{ $$ = $1; EABORT($5 != $8.ilist.limit); /* TODO error message */ ATTR_ASSIGN(&$$.attrs, STRALLOC($3), &$8); }
 		  ;
 
 /* nodes */
@@ -266,7 +267,7 @@ ilist : '[' opt-int ']'								{ $$ = $2; }
 	  | '[' opt-int ',' ']'							{ $$ = $2; }
 	  ;
 
-opt-int : %empty									{ $$ = ATTR_VALUE_ILIST((ATTR_ILIST(0))); devtreeunput(','); }
+opt-int : %empty									{ $$ = ATTR_VALUE_ILIST((ATTR_ILIST(0)), MT_INT64); devtreeunput(','); }
 		| opt-int ',' INT							{ $$ = $1; ATTR_ILIST_ADD(&$$.ilist, $3); }
 		| opt-int ',' attr-ref						{ $$ = $1; ATTR_TYPE_CHECK(&$3->value, MT_INT64); ATTR_ILIST_ADD(&$$.ilist, $3->value.i); }
 		;

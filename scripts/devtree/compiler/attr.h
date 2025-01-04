@@ -19,11 +19,11 @@
 #define ATTR_INT_TYPE	unsigned long int
 #define ATTR_INT_SIZE	sizeof(ATTR_INT_TYPE)
 
-#define ATTR_VALUE(member, _value, _type) \
+#define ATTR_VALUE(member, _value, _type, _flags) \
 	(attr_value_t){ \
 		.type = _type, \
 		.member = _value, \
-		.flags = AF_HAS_VALUE, \
+		.flags = _flags | AF_HAS_VALUE, \
 	}
 
 #define ATTR_NOVALUE(_type) \
@@ -38,10 +38,10 @@
 		.limit = _limit, \
 	}
 
-#define ATTR_VALUE_ADDR(value)			ATTR_VALUE(p, value, MT_ADDR)
-#define ATTR_VALUE_INT(value, type)		ATTR_VALUE(i, value, type)
-#define ATTR_VALUE_ILIST(value)			ATTR_VALUE(ilist, value, MT_ILIST)
-#define ATTR_VALUE_STRING(value)		ATTR_VALUE(p, value, MT_STRING)
+#define ATTR_VALUE_ADDR(value)			ATTR_VALUE(p, value, MT_ADDR, AF_NONE)
+#define ATTR_VALUE_INT(value, type)		ATTR_VALUE(i, value, type, AF_NONE)
+#define ATTR_VALUE_ILIST(value, type)	ATTR_VALUE(ilist, value, type, AF_LIST)
+#define ATTR_VALUE_STRING(value)		ATTR_VALUE(p, value, MT_STRING, AF_NONE)
 
 
 /* types */
@@ -52,13 +52,13 @@ typedef enum{
 	MT_INT32,
 	MT_INT64,
 	MT_ADDR,
-	MT_ILIST,
 	MT_STRING,
 } attr_type_t;
 
 typedef enum{
 	AF_NONE = 0x0,
 	AF_HAS_VALUE = 0x1,
+	AF_LIST = 0x2,
 } attr_flags_t;
 
 typedef struct{

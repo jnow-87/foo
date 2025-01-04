@@ -63,7 +63,14 @@ int attr_add(attr_value_t *value, attr_value_t *op){
 	case MT_INT16:	// fall through
 	case MT_INT32:	// fall through
 	case MT_INT64:
-		value->i += op->i;
+		if(value->flags & AF_LIST){
+			vector_for_each(&op->ilist.items, v){
+				if(vector_add(&value->ilist.items, v) != 0)
+					return devtree_parser_error("adding lists failed");
+			}
+		}
+		else
+			value->i += op->i;
 		break;
 
 	case MT_ADDR:
@@ -81,13 +88,6 @@ int attr_add(attr_value_t *value, attr_value_t *op){
 		value->p = s;
 		break;
 
-	case MT_ILIST:
-		vector_for_each(&op->ilist.items, v){
-			if(vector_add(&value->ilist.items, v) != 0)
-				return devtree_parser_error("adding lists failed");
-		}
-		break;
-
 	default:
 		return devtree_parser_error("addition not supported for type %s", attr_strtype(value->type));
 	}
@@ -98,23 +98,17 @@ int attr_add(attr_value_t *value, attr_value_t *op){
 int attr_copy(attr_value_t *dest, attr_value_t *src){
 	*dest = *src;
 
-	switch(src->type){
-	case MT_ILIST:
+	if(src->flags & AF_LIST){
 		dest->ilist.limit = src->ilist.limit;
 
 		if(vector_copy(&dest->ilist.items, &src->ilist.items) != 0)
 			goto err;
-		break;
-
-	case MT_STRING:
+	}
+	else if(src->type == MT_STRING){
 		dest->p = strdup(src->p);
 
 		if(dest->p == 0x0)
 			goto err;
-		break;
-
-	default:
-		break;
 	}
 
 	return 0;
@@ -164,12 +158,12 @@ int attr_range_check(attr_t *attr, attr_value_t *value){
 				  *v;
 
 
-	if(!attr_is_int(value->type) && value->type != MT_ILIST)
+	if(!attr_is_int(value->type))
 		return 0;
 
 	lim = (((ATTR_INT_TYPE)1 << ((attr_type_size(value->type) * 8) - 1)) << 1) - 1;
 
-	if(value->type == MT_ILIST){
+	if(value->flags & AF_LIST){
 		vector_for_each(&value->ilist.items, v){
 			if(*v > lim)
 				return devtree_parser_error("%s out of range %lu > %lu", attr->name, *v, lim);
@@ -189,7 +183,6 @@ char const *attr_strtype(attr_type_t type){
 		"int32",
 		"int64",
 		"addr",
-		"ilist",
 		"string",
 	};
 
