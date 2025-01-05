@@ -18,96 +18,145 @@
 #include <parser.tab.h>
 
 
+/* local/static prototypes */
+static int list_add(attr_t *attr, attr_value_t *v);
+
+
 /* global functions */
-int attr_init(attr_t *attr, char const *name, attr_value_t *value){
+attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t list_limit, attr_value_t *value){
 	attr->name = name;
+	attr->type = type;
+	attr->flags = AF_NONE;
+
+	if(list_limit){
+		attr->flags |= AF_LIST;
+		attr->value.lst.limit = list_limit;
+	}
 
 	if(value == 0x0)
-		return 0;
+		return attr;
 
 	if(attr_range_check(attr, value) != 0)
-		return -1;
+		return 0x0;
 
+	attr->flags |= AF_HAS_VALUE;
 	attr->value = *value;
 
+	return attr;
+}
+
+int attr_enlist(vector_t *attrs, attr_t *attr){
+	if(attr->name == 0x0)
+		return devtree_parser_error("unable to define unnamed attribute");
+
+	if(attr_get(attrs, attr->name, true) != 0x0)
+		return devtree_parser_error("%s attribute already defined", attr->name);
+
+	if(vector_add(attrs, attr) != 0)
+		return devtree_parser_error("%s adding attribute failed", attr->name);
+
 	return 0;
 }
 
-int attr_assign(vector_t *attrs, char const *name, attr_value_t *value){
-	attr_t attr;
+attr_t *attr_assign(attr_t *attr, attr_t *value){
+	if(!attr_type_compatible(attr, value->type))
+		return 0x0;
 
+	if((attr->flags & AF_LIST) != (value->flags & AF_LIST)){
+		devtree_parser_error("unable to assign %s to %s",
+			(attr->flags & AF_LIST) ? "list" : "single value",
+			(value->flags & AF_LIST) ? "list" : "single value"
+		);
 
-	if(attr_get(attrs, name, true) != 0x0)
-		return devtree_parser_error("%s attribute already defined", name);
+		return 0x0;
+	}
 
-	if(attr_init(&attr, name, value) != 0)
-		return -1;
+	if((attr->flags & AF_LIST) && attr->value.lst.limit != value->value.lst.limit){
+		devtree_parser_error("cannot assign list of size %zu to list of size %zu",
+			value->value.lst.limit,
+			attr->value.lst.limit
+		);
 
-	if(vector_add(attrs, &attr) != 0)
-		return devtree_parser_error("%s adding attribute failed", name);
+		return 0x0;
+	}
 
-	return 0;
+	attr->value = value->value;
+	attr->flags |= AF_HAS_VALUE;
+
+	return attr;
 }
 
-int attr_add(attr_value_t *value, attr_value_t *op){
+int attr_add(attr_t *attr, attr_t *op){
 	char *s;
-	ATTR_INT_TYPE *v;
+	attr_value_t *v;
 
 
-	// TODO should ilists be allowed to add ints
-	if(attr_type_check(value, op->type) != 0)
-		return -1;
+	if(!attr_type_compatible(attr, op->type))
+		goto err;
 
-	switch(value->type){
-	case MT_INT8:	// fall through
-	case MT_INT16:	// fall through
-	case MT_INT32:	// fall through
-	case MT_INT64:
-		if(value->flags & AF_LIST){
-			vector_for_each(&op->ilist.items, v){
-				if(vector_add(&value->ilist.items, v) != 0)
-					return devtree_parser_error("adding lists failed");
+	if(attr->flags & AF_LIST){
+		if(op->flags & AF_LIST){
+			vector_for_each(&op->value.lst.items, v){
+				if(attr_range_check(attr, v) != 0 || list_add(attr, v) != 0)
+					return -1;
 			}
 		}
 		else
-			value->i += op->i;
+			return list_add(attr, &op->value);
+	}
+
+	// TODO should the results be range-checked
+	switch(attr->type){
+	case AT_INT8:	// fall through
+	case AT_INT16:	// fall through
+	case AT_INT32:	// fall through
+	case AT_INT64:
+		attr->value.i += op->value.i;
 		break;
 
-	case MT_ADDR:
-		value->p += (ptrdiff_t)op->p;
+	case AT_ADDR:
+		if(op->type == AT_ADDR)	attr->value.p += (ptrdiff_t)op->value.p;
+		else					attr->value.p += op->value.i;
 		break;
 
-	case MT_STRING:
-		s = malloc(strlen(value->p) + strlen(op->p) + 1);
+	case AT_STRING:
+		if(attr->value.p == 0x0)
+			return devtree_parser_error("attr value 0x0");
+
+		s = malloc(strlen(attr->value.p) + strlen(op->value.p) + 1);
 
 		if(s == 0x0)
 			return devtree_parser_error("out of memory");
 
-		sprintf(s, "%s%s", value->p, op->p);
-		free(value->p);
-		value->p = s;
+		sprintf(s, "%s%s", attr->value.p, op->value.p);
+		free(attr->value.p);
+		attr->value.p = s;
 		break;
 
 	default:
-		return devtree_parser_error("addition not supported for type %s", attr_strtype(value->type));
+		goto err;
 	}
 
 	return 0;
+
+
+err:
+	return devtree_parser_error("addition not supported for types %s and %s", attr_type_name(attr->type), attr_type_name(op->type));
 }
 
-int attr_copy(attr_value_t *dest, attr_value_t *src){
+int attr_copy(attr_t *dest, attr_t *src){
 	*dest = *src;
 
 	if(src->flags & AF_LIST){
-		dest->ilist.limit = src->ilist.limit;
+		dest->value.lst.limit = src->value.lst.limit;
 
-		if(vector_copy(&dest->ilist.items, &src->ilist.items) != 0)
+		if(vector_copy(&dest->value.lst.items, &src->value.lst.items) != 0)
 			goto err;
 	}
-	else if(src->type == MT_STRING){
-		dest->p = strdup(src->p);
+	else if(src->type == AT_STRING){
+		dest->value.p = strdup(src->value.p);
 
-		if(dest->p == 0x0)
+		if(dest->value.p == 0x0)
 			goto err;
 	}
 
@@ -119,7 +168,7 @@ err:
 }
 
 attr_t *attr_get(vector_t *attrs, char const *name, bool maybe_undef){
-	return attr_get_typed(attrs, name, MT_UNDEF, maybe_undef);
+	return attr_get_typed(attrs, name, AT_UNDEF, maybe_undef);
 }
 
 attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool maybe_undef){
@@ -128,10 +177,10 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 
 	vector_for_each(attrs, attr){
 		if(strcmp(attr->name, name) == 0){
-			if(type == MT_UNDEF || attr_type_check(&attr->value, type) == 0)
+			if(type == AT_UNDEF || attr_type_compatible(attr, type))
 				return attr;
 
-			devtree_parser_error("%s: invalid type %s, expecting %s", name, attr_strtype(attr->value.type), attr_strtype(type));
+			devtree_parser_error("%s: invalid type %s, expecting %s", name, attr_type_name(attr->type), attr_type_name(type));
 
 			return 0x0;
 		}
@@ -143,39 +192,22 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 	return 0x0;
 }
 
-int attr_type_check(attr_value_t *value, attr_type_t type){
-	if(value->type == MT_UNDEF)
-		return devtree_parser_error("attribute with undefined type");
-
-	if(value->type == type || (attr_is_int(value->type) && attr_is_int(type)))
-		return 0;
-
-	return devtree_parser_error("type mismatch have %s expected %s", attr_strtype(value->type), attr_strtype(type));
-}
-
 int attr_range_check(attr_t *attr, attr_value_t *value){
-	ATTR_INT_TYPE lim,
-				  *v;
+	ATTR_INT_TYPE lim;
 
 
-	if(!attr_is_int(value->type))
+	if(!attr_type_is_int(attr->type))
 		return 0;
 
-	lim = (((ATTR_INT_TYPE)1 << ((attr_type_size(value->type) * 8) - 1)) << 1) - 1;
+	lim = (((ATTR_INT_TYPE)1 << ((attr_type_size(attr->type) * 8) - 1)) << 1) - 1;
 
-	if(value->flags & AF_LIST){
-		vector_for_each(&value->ilist.items, v){
-			if(*v > lim)
-				return devtree_parser_error("%s out of range %lu > %lu", attr->name, *v, lim);
-		}
-	}
-	else if(value->i > lim)
+	if(value->i > lim)
 		return devtree_parser_error("%s out of range %lu > %lu", attr->name, value->i, lim);
 
 	return 0;
 }
 
-char const *attr_strtype(attr_type_t type){
+char const *attr_type_name(attr_type_t type){
 	static char const *names[] = {
 		"undef",
 		"int8",
@@ -186,32 +218,51 @@ char const *attr_strtype(attr_type_t type){
 		"string",
 	};
 
-	if(type < 0 || type > MT_STRING)
-		type = MT_UNDEF;
+	if(type < 0 || type > AT_STRING)
+		type = AT_UNDEF;
 
 	return names[type];
 }
 
-int attr_ilist_add(attr_ilist_t *lst, ATTR_INT_TYPE value){
-	if(vector_add(&lst->items, &value) != 0)
-		return devtree_parser_error("intlist extension failed");
+bool attr_type_compatible(attr_t *attr, attr_type_t type){
+	if(attr->type == AT_UNDEF){
+		attr->type = type;
 
-	lst->limit = lst->items.size;
+		return true;
+	}
 
-	return 0;
+	if(attr->type == type || ((attr->type == AT_ADDR || attr_type_is_int(attr->type)) && (type == AT_ADDR || attr_type_is_int(type))))
+		return true;
+
+	if(attr->name)	devtree_parser_error("%s type mismatch for %s and %s", attr->name, attr_type_name(attr->type), attr_type_name(type));
+	else			devtree_parser_error("type mismatch for %s and %s", attr_type_name(attr->type), attr_type_name(type));
+
+	return false;
 }
 
-bool attr_is_int(attr_type_t type){
-	return (type == MT_ADDR || type == MT_INT8 || type == MT_INT16 || type == MT_INT32 || type == MT_INT64);
+bool attr_type_is_int(attr_type_t type){
+	return (type == AT_INT8 || type == AT_INT16 || type == AT_INT32 || type == AT_INT64);
 }
 
 size_t attr_type_size(attr_type_t type){
 	switch(type){
-	case MT_ADDR:	return ATTR_INT_SIZE;
-	case MT_INT8:	return 1;
-	case MT_INT16:	return 2;
-	case MT_INT32:	return 4;
-	case MT_INT64:	return 8;
+	case AT_ADDR:	return sizeof(void*);
+	case AT_INT8:	return 1;
+	case AT_INT16:	return 2;
+	case AT_INT32:	return 4;
+	case AT_INT64:	return 8;
 	default:		return 1;
 	}
+}
+
+
+/* local functions */
+static int list_add(attr_t *attr, attr_value_t *v){
+	if(attr->value.lst.items.size + 1 > attr->value.lst.limit)
+		return devtree_parser_error("list limit reached, utmost %zu elements allowed", attr->value.lst.limit);
+
+	if(vector_add(&attr->value.lst.items, v) != 0)
+		return devtree_parser_error("adding lists failed");
+
+	return 0;
 }

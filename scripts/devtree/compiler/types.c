@@ -68,8 +68,8 @@ type_t *type_lookup(char const *name){
 node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t *childs){
 	attr_t *tattr,
 		   *nattr;
+	attr_t attr;
 	node_t *node;
-	attr_value_t v;
 
 
 	node = node_create(name, type, childs);
@@ -80,19 +80,19 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 	vector_for_each(&type->attrs, tattr){
 		nattr = attr_get(attrs, tattr->name, true);
 
-		if(nattr == 0x0 && !(tattr->value.flags & AF_HAS_VALUE)){
+		if(nattr == 0x0 && !(tattr->flags & AF_HAS_VALUE)){
 			devtree_parser_error("%s: missing attribute %s", name, tattr->name);
 			goto err;
 		}
 
-		if(nattr != 0x0 && (attr_type_check(&nattr->value, tattr->value.type) != 0 || attr_range_check(tattr, &nattr->value) != 0))
+		if(nattr != 0x0 && (!attr_type_compatible(tattr, nattr->type) || attr_range_check(tattr, &nattr->value) != 0))
 			goto err;
 
-		v = nattr ? nattr->value : tattr->value;
-		v.type = tattr->value.type;
-		v.flags = tattr->value.flags;
+		attr = nattr ? *nattr : *tattr;
+		attr.type = tattr->type;
+		attr.flags = tattr->flags;
 
-		if(attr_assign(&node->attrs, tattr->name, &v) != 0){
+		if(attr_enlist(&node->attrs, &attr) != 0){
 			devtree_parser_error("%s: adding attribute failed", name);
 			goto err;
 		}
@@ -127,7 +127,7 @@ char const *type_strcat(type_cat_t category){
 /* local functions */
 static int type_validate(type_cat_t category, vector_t *attrs){
 	if(category == TC_DEVICE){
-		if(attr_get_typed(attrs, "compatible", MT_STRING, false) == 0x0)
+		if(attr_get_typed(attrs, "compatible", AT_STRING, false) == 0x0)
 			return -1;
 	}
 

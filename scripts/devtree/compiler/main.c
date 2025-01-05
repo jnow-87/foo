@@ -75,17 +75,12 @@ static int collect_nodes(vector_t *nodes){
 
 
 	if(options.nodes != 0x0){
-		while(r == 0 && (tk = strtok(options.nodes, ","))){
+		while((tk = strtok(options.nodes, ","))){
 			options.nodes = 0x0;
 			node = node_ref(tk);
 
-			if(node == 0x0){
-				fprintf(stderr, "undefined node \"%s\"\n", tk);
-				r = -1;
-			}
-			else{
-				r |= vector_add(nodes, &node);
-			}
+			if(node == 0x0 || vector_add(nodes, &node) != 0)
+				return -1;
 		}
 	}
 	else{
