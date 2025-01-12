@@ -142,7 +142,7 @@ static void makevars(FILE *fp, node_t *node, char const *node_ident){
 		strupr(attr->name, attr_name, sizeof(attr_name));
 		v = &attr->value;
 
-		if(attr->flags & AF_LIST)
+		if(attr->flags & AF_ARRAY)
 			continue;
 
 		switch(attr->type){
@@ -186,7 +186,7 @@ static void macros(FILE *fp, node_t *node, char const *node_ident){
 		strupr(attr->name, attr_name, sizeof(attr_name));
 		v = &attr->value;
 
-		if(attr->flags & AF_LIST)
+		if(attr->flags & AF_ARRAY)
 			continue;
 
 		switch(attr->type){
@@ -307,8 +307,8 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 		default:		WARN(node, "unexpected attribute type \n", attr_type_name(attr->type)); break;
 		}
 
-		if(attr->flags & AF_LIST)
-			fprintf(fp, "[%zu]", v->lst.items.size);
+		if(attr->flags & AF_ARRAY)
+			fprintf(fp, "[%zu]", v->arr.items.size);
 
 		fprintf(fp, ";\n");
 	}
@@ -322,9 +322,9 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 }
 
 static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
-	unsigned long int *i;
 	attr_t *attr;
 	attr_value_t *v;
+	vector_t *items;
 
 
 	vector_for_each(&node->attrs, attr){
@@ -333,19 +333,20 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
 
 		v = &attr->value;
 
-		if(attr->flags & AF_LIST){
+		if(attr->flags & AF_ARRAY){
+			items = &v->arr.items;
 			fprintf(fp, "\t.%s = {\n", attr->name);
 
-			vector_for_each(&v->lst.items, i){
+			vector_for_each(items, v){
 				switch(attr->type){
 				case AT_INT8:	// fall through
 				case AT_INT16:	// fall through
 				case AT_INT32:	// fall through
 				case AT_INT64:
-					fprintf(fp, "\t\t%u,\n", *i);
+					fprintf(fp, "\t\t%u,\n", v->i);
 					break;
 
-				case AT_ADDR:	fprintf(fp, "\t\t(void*)%#x,\n", v->i); break;
+				case AT_ADDR:	fprintf(fp, "\t\t(void*)%#x,\n", v->p); break;
 				case AT_STRING:	fprintf(fp, "\t\t\"%s\",\n", v->p); break;
 
 				default:
