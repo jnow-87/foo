@@ -18,14 +18,33 @@
 
 /* macros */
 #define RESULT_EXT	".log"
+#define ARRAY(...)	{ __VA_ARGS__ }
 
-#define CHECK_TEST_DEV(_name, _compatible, _i, _p) \
-	check_test_dev( \
+#define DFLT_COMP	"default"
+#define DFLT_I		1
+#define DFLT_P		0x10
+#define DFLT_IARR	{ 4, 2 }
+#define DFLT_SARR	{ "f", "o", "o" }
+#define DFLT_PARR	{ (void*)0xdead, (void*)0xbeef }
+
+#define CHECK_DEV_SINGLE(_name, _compatible, _i, _p) \
+	check_dev_single( \
 		_name, \
 		_compatible, \
-		&((test_dev_payload_t){ \
+		&((dev_single_payload_t){ \
 			.i = _i, \
 			.p = (void*)_p, \
+		}) \
+	)
+
+#define CHECK_DEV_ARRAY(_name, _compatible, _i, _s, _p) \
+	check_dev_array( \
+		_name, \
+		_compatible, \
+		&((dev_array_payload_t){ \
+			.i = _i, \
+			.s = _s, \
+			.p = _p, \
 		}) \
 	)
 
@@ -34,45 +53,22 @@
 typedef struct{
 	uint8_t i;
 	void *p;
-} test_dev_payload_t;
+	uint16_t iarr[2];
+	char *sarr[3];
+	void *aarr[2];
+} dev_single_payload_t;
 
 typedef struct{
-	uint8_t i0;
-	void *p0;
-
-	uint8_t i1,
-			i2;
-
-	void *p1;
-	char *s0,
-		 *s1;
-	uint8_t l0[2];
-} base_dev_payload_t;
-
-typedef struct{
-	char *s0,
-		 *s1;
-	uint32_t i0,
-			 i1,
-			 i2;
-	void *p0;
-	uint8_t i3,
-			i4,
-			i5,
-			i6,
-			i7,
-			i8;
-} dev1_payload_t;
-
-typedef struct{
-	uint8_t i0,
-			i1;
-} dev2_payload_t;
+	uint16_t i[2];
+	char *s[3];
+	void *p[2];
+} dev_array_payload_t;
 
 
 /* local/static prototypes */
 static int checks(void);
-static int check_test_dev(char const *name, char const *compatible, test_dev_payload_t *payload);
+static int check_dev_single(char const *name, char const *compatible, dev_single_payload_t *payload);
+static int check_dev_array(char const *name, char const *compatible, dev_array_payload_t *payload);
 static int check_memory(char const *name, void *base, uint32_t size);
 
 
@@ -115,12 +111,12 @@ int main(int argc, char **argv){
 }
 
 void test_log(char const *fmt, ...){
-	va_list lst;
+	va_list arr;
 
 
-	va_start(lst, fmt);
-	vdprintf(fileno(log), fmt, lst);
-	va_end(lst);
+	va_start(arr, fmt);
+	vdprintf(fileno(log), fmt, arr);
+	va_end(arr);
 }
 
 
@@ -133,27 +129,32 @@ static int checks(void){
 	r |= check_memory("flash", (void*)0x10000000, 2097152);
 
 	/* test type default attributes */
-	r |= CHECK_TEST_DEV("def-0", "default", 1, 0x10);
-	r |= CHECK_TEST_DEV("def-1", "def-1", 1, 0x10);
-	r |= CHECK_TEST_DEV("def-2", "default", 2, 0x10);
-	r |= CHECK_TEST_DEV("def-3", "default", 1, 0x20);
-	r |= CHECK_TEST_DEV("def-4", "def-4", 3, 0x30);
+	r |= CHECK_DEV_SINGLE("def-0",	DFLT_COMP,	DFLT_I,	DFLT_P);
+	r |= CHECK_DEV_SINGLE("def-1",	"def-1",	DFLT_I,	DFLT_P);
+	r |= CHECK_DEV_SINGLE("def-2",	DFLT_COMP,	2,		DFLT_P);
+	r |= CHECK_DEV_SINGLE("def-3",	DFLT_COMP,	DFLT_I,	0x20);
+	r |= CHECK_DEV_SINGLE("def-4",	"def-4",	3,		0x30);
+
+	r |= CHECK_DEV_ARRAY("def-5",	DFLT_COMP,	ARRAY(1, 2),	DFLT_SARR,				DFLT_PARR);
+	r |= CHECK_DEV_ARRAY("def-6",	DFLT_COMP,	DFLT_IARR,		ARRAY("b", "a", "r"),	DFLT_PARR);
+	r |= CHECK_DEV_ARRAY("def-7",	DFLT_COMP,	DFLT_IARR,		DFLT_SARR,				ARRAY((void*)0xbad, (void*)0xe1f));
+	r |= CHECK_DEV_ARRAY("def-8",	"def-8",	ARRAY(3, 4),	ARRAY("n", "o", "p"),	ARRAY((void*)0x1, (void*)0x2));
 
 	/* test attribute updates */
-	r |= CHECK_TEST_DEV("updates", "reset-add", 18, 0x2c);
-	r |= CHECK_TEST_DEV("update-consumer", "default", 17, 17);
+	r |= CHECK_DEV_SINGLE("updates",			"reset-add",	18,	0x2c);
+	r |= CHECK_DEV_SINGLE("update-consumer",	"default",		17,	17);
 
 	/* test arithmetics */
-	r |= CHECK_TEST_DEV("donor", "donation0", 42, 0xbe00);
-	r |= CHECK_TEST_DEV("donor-child", "donation1", 1, 0xef);
-	r |= CHECK_TEST_DEV("arith-const", "some-arith", 6, 0xbeef);
-	r |= CHECK_TEST_DEV("ref-bare", "donation0", 42, 0xbe00);
-	r |= CHECK_TEST_DEV("arith-ref", "pre,donation0-arith-donation1", 46, 0xbeef + 0x2);
+	r |= CHECK_DEV_SINGLE("donor",			"donation0",						42,	0xbe00);
+	r |= CHECK_DEV_SINGLE("donor-child",	"donation1",						1,	0xef);
+	r |= CHECK_DEV_SINGLE("arith-const",	"some-arith",						6,	0xbeef);
+	r |= CHECK_DEV_SINGLE("ref-bare",		"donation0",						42,	0xbe00);
+	r |= CHECK_DEV_SINGLE("arith-ref",		"pre,donation0-arith-donation1",	46,	0xbeef + 0x2);
 
 	return -r;
 }
 
-static int check_test_dev(char const *name, char const *compatible, test_dev_payload_t *payload){
+static int check_dev_single(char const *name, char const *compatible, dev_single_payload_t *payload){
 	int r = 0;
 	devtree_device_t const *dev;
 
@@ -163,8 +164,29 @@ static int check_test_dev(char const *name, char const *compatible, test_dev_pay
 	ASSERT_PTR_NEQ(dev, 0x0);
 
 	r |= TEST_STR_EQ(dev->compatible, compatible);
-	r |= TEST_INT_EQ(((test_dev_payload_t*)dev->payload)->i, payload->i);
-	r |= TEST_PTR_EQ(((test_dev_payload_t*)dev->payload)->p, payload->p);
+	r |= TEST_INT_EQ(((dev_single_payload_t*)dev->payload)->i, payload->i);
+	r |= TEST_PTR_EQ(((dev_single_payload_t*)dev->payload)->p, payload->p);
+
+	return r;
+}
+
+static int check_dev_array(char const *name, char const *compatible, dev_array_payload_t *payload){
+	int r = 0;
+	devtree_device_t const *dev;
+
+
+	TEST_LOG("test: dev=\"%s\"\n", name);
+	dev = devtree_find_device_by_name(&__dt_device_root, name);
+	ASSERT_PTR_NEQ(dev, 0x0);
+
+	r |= TEST_STR_EQ(dev->compatible, compatible);
+	r |= TEST_INT_EQ(((dev_array_payload_t*)dev->payload)->i[0], payload->i[0]);
+	r |= TEST_INT_EQ(((dev_array_payload_t*)dev->payload)->i[1], payload->i[1]);
+	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[0], payload->s[0]);
+	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[1], payload->s[1]);
+	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[2], payload->s[2]);
+	r |= TEST_PTR_EQ(((dev_array_payload_t*)dev->payload)->p[0], payload->p[0]);
+	r |= TEST_PTR_EQ(((dev_array_payload_t*)dev->payload)->p[1], payload->p[1]);
 
 	return r;
 }

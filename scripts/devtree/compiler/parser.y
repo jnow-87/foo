@@ -40,9 +40,9 @@
 		_s; \
 	})
 
-	#define ATTR_INIT(attr, name, type, list_limit, value)({ \
+	#define ATTR_INIT(attr, name, type, array_limit, value)({ \
 		attr_t *_ini = attr; \
-		EABORT(attr_init(_ini, name, type, list_limit, value) != _ini); \
+		EABORT(attr_init(_ini, name, type, array_limit, value) != _ini); \
 		_ini; \
 	})
 
@@ -92,6 +92,11 @@
 		(obj).attrs = VECTOR_INITIALISER(sizeof(attr_t)); \
 		(obj).asserts = 0x0; \
 		(obj).childs = 0x0; \
+	}
+
+	#define ARRAY_SET_LIMIT(arr){ \
+		if((arr)->limit == ATTR_ARRAY_UNLIMITED) \
+			(arr)->limit = (arr)->items.size; \
 	}
 
 
@@ -198,8 +203,8 @@
 %type <attr> attr-inc
 
 %type <attr> value
-%type <attr> list
-%type <attr> list-body
+%type <attr> array
+%type <attr> array-body
 %type <attr> const
 %type <sptr> string
 
@@ -232,7 +237,7 @@ type-body : %empty									{ OBJECT_RESET($$); }
 		  | type-body assert ';'					{ $$ = $1; list_add_tail($$.asserts, $2); }
 		  | type-body type-attr ';'					{ $$ = $1; ATTR_ENLIST(&$$.attrs, &$2); }
 		  | type-body type-attr '=' const ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
-		  | type-body type-attr '=' list ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
+		  | type-body type-attr '=' array ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
 		  ;
 
 type-attr : type IDFR								{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
@@ -264,21 +269,21 @@ attr-inc : attr-ref '+' '+'							{ ATTR_COPY(&$$, $1); ATTR_ADD($1, UNNAMED_ATT
 
 /* attribute values */
 value : const										{ $$ = $1; }
-	  | list										{ $$ = $1; }
+	  | array										{ $$ = $1; }
 	  | attr-ref									{ ATTR_COPY(&$$, $1); }
 	  | value '+' const								{ $$ = $1; ATTR_ADD(&$$, &$3); }
-	  | value '+' list								{ $$ = $1; ATTR_ADD(&$$, &$3); }
+	  | value '+' array								{ $$ = $1; ATTR_ADD(&$$, &$3); }
 	  | value '+' attr-ref							{ $$ = $1; ATTR_ADD(&$$, $3); }
 	  | '(' attr-inc ')'							{ $$ = $2; }
 	  ;
 
-list : '[' list-body ']'							{ $$ = $2; }
-	 | '[' list-body ',' ']'						{ $$ = $2; }
+array : '[' array-body ']'							{ $$ = $2; ARRAY_SET_LIMIT(&$$.value.arr); }
+	 | '[' array-body ',' ']'						{ $$ = $2; ARRAY_SET_LIMIT(&$$.value.arr); }
 	 ;
 
-list-body : %empty									{ ATTR_INIT(&$$, 0x0, AT_UNDEF, -1, 0x0); devtreeunput(','); }
-		  | list-body ',' const						{ $$ = $1; ATTR_ADD(&$$, &$3); }
-		  | list-body ',' attr-ref					{ $$ = $1; ATTR_ADD(&$$, $3); }
+array-body : %empty									{ ATTR_INIT(&$$, 0x0, AT_UNDEF, ATTR_ARRAY_UNLIMITED, 0x0); devtreeunput(','); }
+		  | array-body ',' const						{ $$ = $1; ATTR_ADD(&$$, &$3); }
+		  | array-body ',' attr-ref					{ $$ = $1; ATTR_ADD(&$$, $3); }
 		  ;
 
 const : INT											{ $$ = *UNNAMED_INT($1); }

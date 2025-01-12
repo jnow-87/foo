@@ -19,18 +19,19 @@
 
 
 /* local/static prototypes */
-static int list_add(attr_t *attr, attr_value_t *v);
+static int array_add(attr_t *attr, attr_value_t *v);
 
 
 /* global functions */
-attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t list_limit, attr_value_t *value){
+attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t array_limit, attr_value_t *value){
 	attr->name = name;
 	attr->type = type;
 	attr->flags = AF_NONE;
 
-	if(list_limit){
-		attr->flags |= AF_LIST;
-		attr->value.lst.limit = list_limit;
+	if(array_limit){
+		attr->flags |= AF_ARRAY;
+		attr->value.arr.items = VECTOR_INITIALISER(sizeof(attr_value_t));
+		attr->value.arr.limit = array_limit;
 	}
 
 	if(value == 0x0)
@@ -39,8 +40,8 @@ attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t list_
 	if(attr_range_check(attr, value) != 0)
 		return 0x0;
 
-	attr->flags |= AF_HAS_VALUE;
 	attr->value = *value;
+	attr->flags |= AF_HAS_VALUE;
 
 	return attr;
 }
@@ -59,29 +60,36 @@ int attr_enlist(vector_t *attrs, attr_t *attr){
 }
 
 attr_t *attr_assign(attr_t *attr, attr_t *value){
-	if(!attr_type_compatible(attr, value->type))
-		return 0x0;
+	if(attr->type != AT_UNDEF){
+		if(!attr_type_compatible(attr, value->type))
+			return 0x0;
 
-	if((attr->flags & AF_LIST) != (value->flags & AF_LIST)){
-		devtree_parser_error("unable to assign %s to %s",
-			(attr->flags & AF_LIST) ? "list" : "single value",
-			(value->flags & AF_LIST) ? "list" : "single value"
-		);
+		if((attr->flags & AF_ARRAY) != (value->flags & AF_ARRAY)){
+			devtree_parser_error("unable to assign %s to %s",
+				(value->flags & AF_ARRAY) ? "array" : "single value",
+				(attr->flags & AF_ARRAY) ? "array" : "single value"
+			);
 
-		return 0x0;
+			return 0x0;
+		}
+
+		if((attr->flags & AF_ARRAY) && attr->value.arr.limit != value->value.arr.limit){
+			devtree_parser_error("cannot assign array of size %zu to array of size %zu",
+				value->value.arr.limit,
+				attr->value.arr.limit
+			);
+
+			return 0x0;
+		}
+
+		if(attr_range_check(attr, &value->value) != 0)
+			return 0x0;
 	}
+	else
+		attr->type = value->type;
 
-	if((attr->flags & AF_LIST) && attr->value.lst.limit != value->value.lst.limit){
-		devtree_parser_error("cannot assign list of size %zu to list of size %zu",
-			value->value.lst.limit,
-			attr->value.lst.limit
-		);
-
-		return 0x0;
-	}
-
+	attr->flags = value->flags | AF_HAS_VALUE;
 	attr->value = value->value;
-	attr->flags |= AF_HAS_VALUE;
 
 	return attr;
 }
@@ -94,15 +102,15 @@ int attr_add(attr_t *attr, attr_t *op){
 	if(!attr_type_compatible(attr, op->type))
 		goto err;
 
-	if(attr->flags & AF_LIST){
-		if(op->flags & AF_LIST){
-			vector_for_each(&op->value.lst.items, v){
-				if(attr_range_check(attr, v) != 0 || list_add(attr, v) != 0)
+	if(attr->flags & AF_ARRAY){
+		if(op->flags & AF_ARRAY){
+			vector_for_each(&op->value.arr.items, v){
+				if(attr_range_check(attr, v) != 0 || array_add(attr, v) != 0)
 					return -1;
 			}
 		}
 		else
-			return list_add(attr, &op->value);
+			return array_add(attr, &op->value);
 	}
 
 	// TODO should the results be range-checked
@@ -147,10 +155,10 @@ err:
 int attr_copy(attr_t *dest, attr_t *src){
 	*dest = *src;
 
-	if(src->flags & AF_LIST){
-		dest->value.lst.limit = src->value.lst.limit;
+	if(src->flags & AF_ARRAY){
+		dest->value.arr.limit = src->value.arr.limit;
 
-		if(vector_copy(&dest->value.lst.items, &src->value.lst.items) != 0)
+		if(vector_copy(&dest->value.arr.items, &src->value.arr.items) != 0)
 			goto err;
 	}
 	else if(src->type == AT_STRING){
@@ -194,6 +202,7 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 
 int attr_range_check(attr_t *attr, attr_value_t *value){
 	ATTR_INT_TYPE lim;
+	ATTR_INT_TYPE *v;
 
 
 	if(!attr_type_is_int(attr->type))
@@ -201,7 +210,13 @@ int attr_range_check(attr_t *attr, attr_value_t *value){
 
 	lim = (((ATTR_INT_TYPE)1 << ((attr_type_size(attr->type) * 8) - 1)) << 1) - 1;
 
-	if(value->i > lim)
+	if(attr->flags & AF_ARRAY){
+		vector_for_each(&value->arr.items, v){
+			if(*v > lim)
+				return devtree_parser_error("%s out of range %lu > %lu", attr->name, *v, lim);
+		}
+	}
+	else if(value->i > lim)
 		return devtree_parser_error("%s out of range %lu > %lu", attr->name, value->i, lim);
 
 	return 0;
@@ -257,12 +272,12 @@ size_t attr_type_size(attr_type_t type){
 
 
 /* local functions */
-static int list_add(attr_t *attr, attr_value_t *v){
-	if(attr->value.lst.items.size + 1 > attr->value.lst.limit)
-		return devtree_parser_error("list limit reached, utmost %zu elements allowed", attr->value.lst.limit);
+static int array_add(attr_t *attr, attr_value_t *v){
+	if(attr->value.arr.items.size + 1 > attr->value.arr.limit)
+		return devtree_parser_error("array limit reached, utmost %zu elements allowed", attr->value.arr.limit);
 
-	if(vector_add(&attr->value.lst.items, v) != 0)
-		return devtree_parser_error("adding lists failed");
+	if(vector_add(&attr->value.arr.items, v) != 0)
+		return devtree_parser_error("adding arrays failed");
 
 	return 0;
 }

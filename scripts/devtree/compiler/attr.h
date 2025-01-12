@@ -16,7 +16,8 @@
 
 
 /* macros */
-#define ATTR_INT_TYPE	unsigned long int
+#define ATTR_ARRAY_UNLIMITED	((size_t)-1)
+#define ATTR_INT_TYPE		unsigned long int
 
 #define ATTR_VALUE(member, value)			(attr_value_t){ .member = value }
 #define ATTR_UNNAMED(type, member, value)	attr_init(&(attr_t){}, 0x0, type, 0, &ATTR_VALUE(member, value))
@@ -38,18 +39,18 @@ typedef enum{
 typedef enum{
 	AF_NONE = 0x0,
 	AF_HAS_VALUE = 0x1,
-	AF_LIST = 0x2,
+	AF_ARRAY = 0x2,
 } attr_flags_t;
 
 typedef struct{
 	vector_t items;
 	size_t limit;
-} attr_list_t;
+} attr_array_t;
 
 typedef union{
 	void *p;
 	ATTR_INT_TYPE i;
-	attr_list_t lst;
+	attr_array_t arr;
 } attr_value_t;
 
 typedef struct{
@@ -62,7 +63,7 @@ typedef struct{
 
 
 /* prototypes */
-attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t list_limit, attr_value_t *value);
+attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t array_limit, attr_value_t *value);
 
 int attr_enlist(vector_t *attrs, attr_t *attr);
 attr_t *attr_assign(attr_t *attr, attr_t *value);

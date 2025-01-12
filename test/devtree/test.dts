@@ -12,8 +12,8 @@
 
 // TODO missing tests
 //	- type: asserts
-//	- type: ilists
-//	- arithmetic: using ilists
+//	- type: lists
+//	- arithmetic: using lists
 //	- data type limits
 //	- different integer sizes
 
@@ -21,7 +21,14 @@ devicetype{
 	string compatible = "default";
 	int8 i = 1;
 	addr p = 0x10;
-} test_dev;
+} dev_single;
+
+devicetype{
+	string compatible = "default";
+	int16 i[2] = [ 4, 2 ];
+	string s[3] = [ "f", "o", "o" ];
+	addr p[2] = [ 0xdead, 0xbeef ];
+} dev_array;
 
 
 
@@ -29,17 +36,22 @@ devicetype{
 flash = memory(base=0x10000000, size=2097152);
 
 /* test type default attributes */
-def-0 = test_dev();
-def-1 = test_dev(compatible="def-1");
-def-2 = test_dev(i=2);
-def-3 = test_dev(p=0x20);
-def-4 = test_dev(compatible="def-4", i=3, p=0x30);
+def-0 = dev_single();
+def-1 = dev_single(compatible="def-1");
+def-2 = dev_single(i=2);
+def-3 = dev_single(p=0x20);
+def-4 = dev_single(compatible="def-4", i=3, p=0x30);
+
+def-5 = dev_array(i=[1, 2]);
+def-6 = dev_array(s=["b", "a", "r"]);
+def-7 = dev_array(p=[0xbad, 0xe1f]);
+def-8 = dev_array(compatible="def-8", i=[3, 4], s=["n", "o", "p"], p=[0x1, 0x2]);
 
 /* test trailing comma in node arguments */
-trailing-comma = test_dev(i=3,);
+trailing-comma = dev_single(i=3,);
 
 /* test attribute updates */
-updates = test_dev(compatible="initial", i=1, p=0x1);
+updates = dev_single(compatible="initial", i=1, p=0x1);
 
 updates.compatible = "reset";
 updates.compatible += "-add";
@@ -50,28 +62,28 @@ updates.p += (++updates.i);
 updates.i += 2 + 3;
 updates.p++;
 
-update-consumer = test_dev(
+update-consumer = dev_single(
 	i = (++updates.i),
 	p = (updates.i++),
 );
 
 /* test arithmetics */
-donor = test_dev(compatible="donation0", i=42, p=0xbe00);
+donor = dev_single(compatible="donation0", i=42, p=0xbe00);
 
-arith-const = test_dev(
+arith-const = dev_single(
 	compatible = "some" + "-" + "arith",
 	i = 1 + 2 + 3,
 	p = 0xb000 + 0xe00 + 0xe0 + 0xf,
 );
 
-ref-bare = test_dev(
+ref-bare = dev_single(
 	compatible = donor.compatible,
 	i = donor.i,
 	p = donor.p,
 );
 
-arith-ref = test_dev(
-	donor-child = test_dev(compatible="donation1", i=1, p=0xef),
+arith-ref = dev_single(
+	donor-child = dev_single(compatible="donation1", i=1, p=0xef),
 
 	compatible = "pre," + donor.compatible + "-arith-" + donor-child.compatible,
 	i = 1 + donor.i + 2 + donor-child.i,
