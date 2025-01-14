@@ -65,6 +65,7 @@ type_t *type_lookup(char const *name){
 	return type;
 }
 
+#include <stdio.h>
 node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t *childs){
 	attr_t *tattr,
 		   *nattr;
@@ -72,6 +73,7 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 	node_t *node;
 
 
+	printf("instantiate type %s for %s\n", type->name, name);
 	node = node_create(name, type, childs);
 
 	if(node == 0x0)
@@ -85,12 +87,13 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 			goto err;
 		}
 
-		if(nattr != 0x0 && (!attr_type_compatible(tattr, nattr->type) || attr_range_check(tattr, &nattr->value) != 0))
-			goto err;
+//		if(nattr != 0x0 && (!attr_type_compatible(tattr, nattr) || attr_range_check(tattr, &nattr->value) != 0))
+//			goto err;
 
-		attr = nattr ? *nattr : *tattr;
-		attr.type = tattr->type;
-		attr.flags = tattr->flags;
+		attr = *tattr;
+
+		if(nattr != 0x0 && attr_assign(&attr, nattr) == 0x0)
+			goto err;
 
 		if(attr_enlist(&node->attrs, &attr) != 0){
 			devtree_parser_error("%s: adding attribute failed", name);

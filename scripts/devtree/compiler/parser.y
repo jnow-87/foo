@@ -94,11 +94,6 @@
 		(obj).childs = 0x0; \
 	}
 
-	#define ARRAY_SET_LIMIT(arr){ \
-		if((arr)->limit == ATTR_ARRAY_UNLIMITED) \
-			(arr)->limit = (arr)->items.size; \
-	}
-
 
 	/* local/static variables */
 	static FILE *fp = 0;
@@ -277,14 +272,13 @@ value : const										{ $$ = $1; }
 	  | '(' attr-inc ')'							{ $$ = $2; }
 	  ;
 
-array : '[' array-body ']'							{ $$ = $2; ARRAY_SET_LIMIT(&$$.value.arr); }
-	 | '[' array-body ',' ']'						{ $$ = $2; ARRAY_SET_LIMIT(&$$.value.arr); }
-	 ;
+array : '[' array-body ']'							{ $$ = $2; }
+	  | '[' array-body ',' ']'						{ $$ = $2; }
+	  ;
 
 array-body : %empty									{ ATTR_INIT(&$$, 0x0, AT_UNDEF, ATTR_ARRAY_UNLIMITED, 0x0); devtreeunput(','); }
-		  | array-body ',' const						{ $$ = $1; ATTR_ADD(&$$, &$3); }
-		  | array-body ',' attr-ref					{ $$ = $1; ATTR_ADD(&$$, $3); }
-		  ;
+		   | array-body ',' value					{ $$ = $1; ATTR_ADD(&$$, ($3.flags & AF_ARRAY) ? &$3 : attr_convert_to_list(&$3)); }
+		   ;
 
 const : INT											{ $$ = *UNNAMED_INT($1); }
 	  | string										{ $$ = *UNNAMED_STRING($1); }

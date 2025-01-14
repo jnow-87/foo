@@ -36,12 +36,14 @@ devicetype{
 flash = memory(base=0x10000000, size=2097152);
 
 /* test type default attributes */
+// single-value devices
 def-0 = dev_single();
 def-1 = dev_single(compatible="def-1");
 def-2 = dev_single(i=2);
 def-3 = dev_single(p=0x20);
 def-4 = dev_single(compatible="def-4", i=3, p=0x30);
 
+// array devices
 def-5 = dev_array(i=[1, 2]);
 def-6 = dev_array(s=["b", "a", "r"]);
 def-7 = dev_array(p=[0xbad, 0xe1f]);
@@ -50,42 +52,76 @@ def-8 = dev_array(compatible="def-8", i=[3, 4], s=["n", "o", "p"], p=[0x1, 0x2])
 /* test trailing comma in node arguments */
 trailing-comma = dev_single(i=3,);
 
-/* test attribute updates */
-updates = dev_single(compatible="initial", i=1, p=0x1);
+/* test attribute operations */
+// single-value devices
+upd-single = dev_single(compatible="initial", i=1, p=0x1);
 
-updates.compatible = "reset";
-updates.compatible += "-add";
+upd-single.compatible = "reset";
+upd-single.compatible += "-add";
 
-updates.i = 10;
-updates.p = 0x20;
-updates.p += (++updates.i);
-updates.i += 2 + 3;
-updates.p++;
+upd-single.i = 10;
+upd-single.p = 0x20;
+upd-single.p += (++upd-single.i);
+upd-single.i += 2 + 3;
+upd-single.p++;
 
 update-consumer = dev_single(
-	i = (++updates.i),
-	p = (updates.i++),
+	i = (++upd-single.i),
+	p = (upd-single.i++),
 );
 
-/* test arithmetics */
-donor = dev_single(compatible="donation0", i=42, p=0xbe00);
+// array devices
+upd-array = dev_array();
 
-arith-const = dev_single(
+// TODO should those cases be support by the parser
+//upd-array.i = [ 1 ] + 2 ;
+//upd-array.i = [ 1 ] + [ 2 ] ;
+//upd-array.s = "a" + [ "b" ] + "c";
+
+/* test arithmetics */
+// single-value devices
+donor-single = dev_single(compatible="donation0", i=42, p=0xbe00);
+
+arith-const-single = dev_single(
 	compatible = "some" + "-" + "arith",
 	i = 1 + 2 + 3,
 	p = 0xb000 + 0xe00 + 0xe0 + 0xf,
 );
 
-ref-bare = dev_single(
-	compatible = donor.compatible,
-	i = donor.i,
-	p = donor.p,
+ref-bare-single = dev_single(
+	compatible = donor-single.compatible,
+	i = donor-single.i,
+	p = donor-single.p,
 );
 
-arith-ref = dev_single(
-	donor-child = dev_single(compatible="donation1", i=1, p=0xef),
+arith-ref-single = dev_single(
+	donor-child-single = dev_single(compatible="donation1", i=1, p=0xef),
 
-	compatible = "pre," + donor.compatible + "-arith-" + donor-child.compatible,
-	i = 1 + donor.i + 2 + donor-child.i,
-	p = 0x1 + donor-child.p + donor.p + 0x1,
+	compatible = "pre," + donor-single.compatible + "-arith-" + donor-child-single.compatible,
+	i = 1 + donor-single.i + 2 + donor-child-single.i,
+	p = 0x1 + donor-child-single.p + donor-single.p + 0x1,
+);
+
+// array devices
+donor-array = dev_array(compatible="donation0", i=[4, 2], p=[0xbe00, 0xef], s=["d", "o", "n"]);
+
+arith-const-array = dev_array(
+	// TODO this should raise a parser error
+	i = 1 + 2 + 3,
+	p = 0xb000 + 0xe00 + 0xe0 + 0xf,
+);
+
+ref-bare-array = dev_array(
+	compatible = donor-array.compatible,
+	i = donor-array.i,
+	p = donor-array.p,
+	s = donor-array.s,
+);
+
+arith-ref-array = dev_array(
+	donor-child-array = dev_array(compatible="donation1", i=1, p=0xef),
+
+	i = 1 + donor-array.i + 2 + donor-child-array.i,
+	p = 0x1 + donor-child-array.p + donor-array.p + 0x1,
+	s = "a",
 );
