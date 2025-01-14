@@ -12,12 +12,13 @@
 
 
 #include <sys/types.h>
+#include <sys/vector.h>
 #include <stdbool.h>
 
 
 /* macros */
 #define ATTR_ARRAY_UNLIMITED	((size_t)-1)
-#define ATTR_INT_TYPE		unsigned long int
+#define ATTR_INT_TYPE			unsigned long int
 
 #define ATTR_VALUE(member, value)			(attr_value_t){ .member = value }
 #define ATTR_UNNAMED(type, member, value)	attr_init(&(attr_t){}, 0x0, type, 0, &ATTR_VALUE(member, value))
@@ -73,11 +74,8 @@ int attr_copy(attr_t *dest, attr_t *src);
 attr_t *attr_get(vector_t *attrs, char const *name, bool maybe_undef);
 attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool maybe_undef);
 
-int attr_range_check(attr_t *attr, attr_value_t *value);
-
+attr_t *attr_convert_to_list(attr_t *attr);
 char const *attr_type_name(attr_type_t type);
-bool attr_type_compatible(attr_t *attr, attr_type_t type);
-bool attr_type_is_int(attr_type_t type);
 size_t attr_type_size(attr_type_t type);
 
 
