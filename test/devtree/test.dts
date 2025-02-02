@@ -12,8 +12,6 @@
 
 // TODO missing tests
 //	- type: asserts
-//	- type: lists
-//	- arithmetic: using lists
 //	- data type limits
 //	- different integer sizes
 
@@ -25,11 +23,17 @@ devicetype{
 
 devicetype{
 	string compatible = "default";
-	int16 i[2] = [ 4, 2 ];
-	string s[3] = [ "f", "o", "o" ];
-	addr p[2] = [ 0xdead, 0xbeef ];
+	int16 i[3] = [ 0, 4, 2 ];
+	string s[4] = [ "f", "o", "o", " " ];
+	addr p[3] = [ 0xdead, 0xbeef, 0x0 ];
 } dev_array;
 
+devicetype{
+	string compatible = "default";
+	int16 i[1];
+	string s[2];
+	addr p[1];
+} dev_array_short;
 
 
 /* test included type */
@@ -44,12 +48,12 @@ def-3 = dev_single(p=0x20);
 def-4 = dev_single(compatible="def-4", i=3, p=0x30);
 
 // array devices
-def-5 = dev_array(i=[1, 2]);
-def-6 = dev_array(s=["b", "a", "r"]);
-def-7 = dev_array(p=[0xbad, 0xe1f]);
-def-8 = dev_array(compatible="def-8", i=[3, 4], s=["n", "o", "p"], p=[0x1, 0x2]);
+def-5 = dev_array(i=[1, 2, 3]);
+def-6 = dev_array(s=[" ", "b", "a", "r"]);
+def-7 = dev_array(p=[0xbad, 0xe1, 0xf]);
+def-8 = dev_array(compatible="def-8", i=[3, 4, 5], s=["n", "o", "o", "p"], p=[0x1, 0x2, 0x3]);
 
-/* test trailing comma in node arguments */
+// trailing comma in node arguments
 trailing-comma = dev_single(i=3,);
 
 /* test attribute operations */
@@ -73,10 +77,8 @@ update-consumer = dev_single(
 // array devices
 upd-array = dev_array();
 
-// TODO should those cases be support by the parser
-//upd-array.i = [ 1 ] + 2 ;
-//upd-array.i = [ 1 ] + [ 2 ] ;
-//upd-array.s = "a" + [ "b" ] + "c";
+upd-array.i = [ 1 ] + [ 1 + 1 ] + [ 2 ];
+upd-array.s = [ "b" ] + [ "b" + "a", "r" ] + [ "0" ];
 
 /* test arithmetics */
 // single-value devices
@@ -88,7 +90,7 @@ arith-const-single = dev_single(
 	p = 0xb000 + 0xe00 + 0xe0 + 0xf,
 );
 
-ref-bare-single = dev_single(
+bare-ref-single = dev_single(
 	compatible = donor-single.compatible,
 	i = donor-single.i,
 	p = donor-single.p,
@@ -103,15 +105,15 @@ arith-ref-single = dev_single(
 );
 
 // array devices
-donor-array = dev_array(compatible="donation0", i=[4, 2], p=[0xbe00, 0xef], s=["d", "o", "n"]);
+donor-array = dev_array(compatible="donation0", i=[1, 3, 4], p=[0x0, 0xbe, 0xef], s=["d", "o", "n", "o"]);
 
 arith-const-array = dev_array(
-	// TODO this should raise a parser error
-	i = 1 + 2 + 3,
-	p = 0xb000 + 0xe00 + 0xe0 + 0xf,
+	i = [ 0x7 ] + [ 0x8 + 0x1, 0xa ],
+	p = [ 0xbe00 ] + [ 0xe0 ] + [ 0xf ],
+	s = [ "fo" + "o", " " ] + [ "b" ] + [ "ar" ],
 );
 
-ref-bare-array = dev_array(
+bare-ref-array = dev_array(
 	compatible = donor-array.compatible,
 	i = donor-array.i,
 	p = donor-array.p,
@@ -119,9 +121,20 @@ ref-bare-array = dev_array(
 );
 
 arith-ref-array = dev_array(
-	donor-child-array = dev_array(compatible="donation1", i=1, p=0xef),
+	donor-child-array = dev_array_short(compatible="donation1", i=[4], p=[0xa], s=["a", "b"]),
 
-	i = 1 + donor-array.i + 2 + donor-child-array.i,
-	p = 0x1 + donor-child-array.p + donor-array.p + 0x1,
-	s = "a",
+	p = [ 0xa ] + donor-child-array.p + [ 0xb ],
+	s = [ "ab" ] + donor-child-array.s + [ "c" ],
+	i = [ 1 ] + donor-child-array.i + [ 2 ],
+);
+
+/* error cases */
+error = dev_array(
+	/* incompatible types */
+//	i = 1 + [ 1 ],
+//	i = "foo",
+
+	/* incompatible array sizes */
+//	p = [ 0, 1],
+//	p = donor-child-array.p,
 );

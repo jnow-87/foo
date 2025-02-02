@@ -23,9 +23,9 @@
 #define DFLT_COMP	"default"
 #define DFLT_I		1
 #define DFLT_P		0x10
-#define DFLT_IARR	{ 4, 2 }
-#define DFLT_SARR	{ "f", "o", "o" }
-#define DFLT_PARR	{ (void*)0xdead, (void*)0xbeef }
+#define DFLT_IARR	{ 0, 4, 2 }
+#define DFLT_SARR	{ "f", "o", "o", " " }
+#define DFLT_PARR	{ (void*)0xdead, (void*)0xbeef, 0x0 }
 
 #define CHECK_DEV_SINGLE(_name, _compatible, _i, _p) \
 	check_dev_single( \
@@ -53,15 +53,12 @@
 typedef struct{
 	uint8_t i;
 	void *p;
-	uint16_t iarr[2];
-	char *sarr[3];
-	void *aarr[2];
 } dev_single_payload_t;
 
 typedef struct{
-	uint16_t i[2];
-	char *s[3];
-	void *p[2];
+	uint16_t i[3];
+	char *s[4];
+	void *p[3];
 } dev_array_payload_t;
 
 
@@ -135,21 +132,30 @@ static int checks(void){
 	r |= CHECK_DEV_SINGLE("def-3",	DFLT_COMP,	DFLT_I,	0x20);
 	r |= CHECK_DEV_SINGLE("def-4",	"def-4",	3,		0x30);
 
-	r |= CHECK_DEV_ARRAY("def-5",	DFLT_COMP,	ARRAY(1, 2),	DFLT_SARR,				DFLT_PARR);
-	r |= CHECK_DEV_ARRAY("def-6",	DFLT_COMP,	DFLT_IARR,		ARRAY("b", "a", "r"),	DFLT_PARR);
-	r |= CHECK_DEV_ARRAY("def-7",	DFLT_COMP,	DFLT_IARR,		DFLT_SARR,				ARRAY((void*)0xbad, (void*)0xe1f));
-	r |= CHECK_DEV_ARRAY("def-8",	"def-8",	ARRAY(3, 4),	ARRAY("n", "o", "p"),	ARRAY((void*)0x1, (void*)0x2));
+	r |= CHECK_DEV_ARRAY("def-5",	DFLT_COMP,	ARRAY(1, 2, 3),	DFLT_SARR,					DFLT_PARR);
+	r |= CHECK_DEV_ARRAY("def-6",	DFLT_COMP,	DFLT_IARR,		ARRAY(" ", "b", "a", "r"),	DFLT_PARR);
+	r |= CHECK_DEV_ARRAY("def-7",	DFLT_COMP,	DFLT_IARR,		DFLT_SARR,					ARRAY((void*)0xbad, (void*)0xe1, (void*)0xf));
+	r |= CHECK_DEV_ARRAY("def-8",	"def-8",	ARRAY(3, 4, 5),	ARRAY("n", "o", "o", "p"),	ARRAY((void*)0x1, (void*)0x2, (void*)0x3));
+
+	r |= CHECK_DEV_SINGLE("trailing-comma",	DFLT_COMP,	3,	DFLT_P);
 
 	/* test attribute updates */
 	r |= CHECK_DEV_SINGLE("upd-single",			"reset-add",	18,	0x2c);
 	r |= CHECK_DEV_SINGLE("update-consumer",	"default",		17,	17);
 
+	r |= CHECK_DEV_ARRAY("upd-array",	DFLT_COMP,	ARRAY(1, 2, 2),	ARRAY("b", "ba", "r", "0"),	DFLT_PARR);
+
 	/* test arithmetics */
 	r |= CHECK_DEV_SINGLE("donor-single",		"donation0",						42,	0xbe00);
 	r |= CHECK_DEV_SINGLE("donor-child-single",	"donation1",						1,	0xef);
 	r |= CHECK_DEV_SINGLE("arith-const-single",	"some-arith",						6,	0xbeef);
-	r |= CHECK_DEV_SINGLE("ref-bare-single",	"donation0",						42,	0xbe00);
+	r |= CHECK_DEV_SINGLE("bare-ref-single",	"donation0",						42,	0xbe00);
 	r |= CHECK_DEV_SINGLE("arith-ref-single",	"pre,donation0-arith-donation1",	46,	0xbeef + 0x2);
+
+	r |= CHECK_DEV_ARRAY("donor-array",			"donation0",	ARRAY(1, 3, 4),		ARRAY("d", "o", "n", "o"),		ARRAY((void*)0x0, (void*)0xbe, (void*)0xef));
+	r |= CHECK_DEV_ARRAY("arith-const-array",	DFLT_COMP,		ARRAY(7, 9, 10),	ARRAY("foo", " ", "b", "ar") ,	ARRAY((void*)0xbe00, (void*)0xe0, (void*)0xf));
+	r |= CHECK_DEV_ARRAY("bare-ref-array",		"donation0",	ARRAY(1, 3, 4),		ARRAY("d", "o", "n", "o"),		ARRAY((void*)0x0, (void*)0xbe, (void*)0xef));
+	r |= CHECK_DEV_ARRAY("arith-ref-array",		DFLT_COMP,		ARRAY(1, 4, 2),		ARRAY("ab", "a", "b", "c"),		ARRAY((void*)0xa, (void*)0xa, (void*)0xb));
 
 	return -r;
 }
@@ -182,11 +188,14 @@ static int check_dev_array(char const *name, char const *compatible, dev_array_p
 	r |= TEST_STR_EQ(dev->compatible, compatible);
 	r |= TEST_INT_EQ(((dev_array_payload_t*)dev->payload)->i[0], payload->i[0]);
 	r |= TEST_INT_EQ(((dev_array_payload_t*)dev->payload)->i[1], payload->i[1]);
+	r |= TEST_INT_EQ(((dev_array_payload_t*)dev->payload)->i[2], payload->i[2]);
 	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[0], payload->s[0]);
 	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[1], payload->s[1]);
 	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[2], payload->s[2]);
+	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[3], payload->s[3]);
 	r |= TEST_PTR_EQ(((dev_array_payload_t*)dev->payload)->p[0], payload->p[0]);
 	r |= TEST_PTR_EQ(((dev_array_payload_t*)dev->payload)->p[1], payload->p[1]);
+	r |= TEST_PTR_EQ(((dev_array_payload_t*)dev->payload)->p[2], payload->p[2]);
 
 	return r;
 }

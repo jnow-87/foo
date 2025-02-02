@@ -19,19 +19,35 @@
 #include <parser.tab.h>
 
 
+#if 1
 #define ATTR_PRINT(txt, attr){ \
 	printf(txt); \
 	attr_print(attr); \
 	printf("\n"); \
 }
+#else
+#define ATTR_PRINT(...)	{}
+#endif
+
+
+/* types */
+typedef int (*op_t)(attr_t *a0, attr_t *a1);
 
 
 /* local/static prototypes */
 static int array_add(attr_t *attr, attr_value_t *v);
 static void attr_print(attr_t *attr);
 static void attr_value_print(attr_value_t *v, attr_type_t type);
-static bool types_compatible(attr_t *attr0, attr_t *attr1);
+static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size);
+static attr_type_t type_common(attr_t *a0, attr_t *a1);
+static int type_cast(attr_t *attr, attr_type_t type, attr_flags_t flags);
+static bool type_is_int(attr_type_t type);
+
 static int range_check(attr_t *attr, attr_value_t *value);
+
+static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op);
+static int op_assign(attr_t *a0, attr_t *a1);
+static int op_add(attr_t *a0, attr_t *a1);
 
 
 /* global functions */
@@ -73,13 +89,17 @@ int attr_enlist(vector_t *attrs, attr_t *attr){
 }
 
 attr_t *attr_assign(attr_t *attr, attr_t *value){
+	return op_wrapper(attr, value, op_assign);
+}
+
+attr_t *_attr_assign(attr_t *attr, attr_t *value){
 	attr_value_t v;
 
 
 	ATTR_PRINT("assign ", attr);
 	ATTR_PRINT("  with ", value);
 
-	if(!types_compatible(attr, value))
+	if(type_compatible(attr, value, true) == AT_UNDEF)
 		return 0x0;
 
 	if((attr->flags & AF_ARRAY) != (value->flags & AF_ARRAY)){
@@ -108,11 +128,15 @@ attr_t *attr_assign(attr_t *attr, attr_t *value){
 }
 
 int attr_add(attr_t *attr, attr_t *op){
+	return -(op_wrapper(attr, op, op_add) == 0x0);
+}
+
+int _attr_add(attr_t *attr, attr_t *op){
 	char *s;
 	attr_value_t *v;
 
 
-	if(!types_compatible(attr, op))
+	if(type_compatible(attr, op, false) == AT_UNDEF)
 		goto err;
 
 	ATTR_PRINT("add ", op)
@@ -243,6 +267,8 @@ attr_t *attr_convert_to_list(attr_t *attr){
 	attr_value_t v = attr->value;
 
 
+	ATTR_PRINT("convert to list ", attr);
+
 	attr->flags |= AF_ARRAY;
 	attr->value.arr.items = VECTOR_INITIALISER(sizeof(attr_value_t));
 	attr->value.arr.limit = ATTR_ARRAY_UNLIMITED;
@@ -252,10 +278,7 @@ attr_t *attr_convert_to_list(attr_t *attr){
 	return attr;
 }
 
-bool attr_is_int(attr_t *attr){
-	attr_type_t type = attr->type;
-
-
+bool type_is_int(attr_type_t type){
 	return (type == AT_INT8 || type == AT_INT16 || type == AT_INT32 || type == AT_INT64);
 }
 
@@ -293,7 +316,6 @@ static int array_add(attr_t *attr, attr_value_t *v){
 
 	return 0;
 }
-
 
 static void attr_print(attr_t *attr){
 	attr_value_t *v;
@@ -352,55 +374,114 @@ static void attr_value_print(attr_value_t *v, attr_type_t type){
 	}
 }
 
-static bool types_compatible(attr_t *attr0, attr_t *attr1){
+static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size){
 	size_t limit;
+	attr_type_t common_type;
 
 
-	if(attr0->type == AT_UNDEF){
-		attr0->type = attr1->type;
+	common_type = type_common(a0, a1);
 
-		if(attr1->flags & AF_ARRAY){
-			attr0->flags |= AF_ARRAY;
-			attr0->value.arr.limit = ATTR_ARRAY_UNLIMITED;
-		}
+//	if(a0->type == AT_UNDEF){
+//		a0->type = a1->type;
+//
+//		if(a1->flags & AF_ARRAY){
+//			a0->flags |= AF_ARRAY;
+//			a0->value.arr.limit = ATTR_ARRAY_UNLIMITED;
+//		}
+//
+//		return true;
+//	}
 
-		return true;
-	}
+	if(common_type != AT_UNDEF && (a0->type == AT_UNDEF || a1->type == AT_UNDEF))
+		return common_type;
 
-	if((attr0->flags & AF_ARRAY) != (attr1->flags & AF_ARRAY)){
-		devtree_parser_error("incompatible types %s %s and %s %s",
-			attr_type_name(attr0->type), (attr0->flags & AF_ARRAY) ? "array" : "value",
-			attr_type_name(attr1->type), (attr1->flags & AF_ARRAY) ? "array" : "value"
+	if(common_type == AT_UNDEF || (a0->flags & AF_ARRAY) != (a1->flags & AF_ARRAY)){
+		devtree_parser_error("%s incompatible types %s%s and %s%s",
+			a0->name ? a0->name : a1->name,
+			attr_type_name(a0->type), (a0->flags & AF_ARRAY) ? " array" : "",
+			attr_type_name(a1->type), (a1->flags & AF_ARRAY) ? " array" : ""
 		);
 
-		return false;
+		return AT_UNDEF;
 	}
 
-	if((attr0->flags & AF_ARRAY) && (attr1->flags & AF_ARRAY)){
-		limit = attr1->value.arr.limit;
+	if(check_array_size && (a0->flags & AF_ARRAY)){
+		limit = a1->value.arr.limit;
 
 		if(limit == ATTR_ARRAY_UNLIMITED)
-			limit = attr1->value.arr.items.size;
+			limit = a1->value.arr.items.size;
 
-		if(attr0->value.arr.limit != ATTR_ARRAY_UNLIMITED && attr0->value.arr.limit != limit){
-			devtree_parser_error("incompatible array sizes %zu and %zu",
-				attr0->value.arr.limit,
+		if(a0->value.arr.limit != ATTR_ARRAY_UNLIMITED && a0->value.arr.limit != limit){
+			devtree_parser_error("%s incompatible array sizes %zu and %zu",
+				a0->name ? a0->name : a1->name,
+				a0->value.arr.limit,
 				limit
 			);
 
-			return false;
+			return AT_UNDEF;
 		}
 	}
 
-	if(attr0->type == attr1->type || (attr_is_int(attr0) && attr_is_int(attr1)))
-		return true;
+	return common_type;
+}
 
-	if(attr0->type == AT_ADDR && attr_is_int(attr1))
-		return true;
+static attr_type_t type_common(attr_t *a0, attr_t *a1){
+	if(a0->type == a1->type || a1->type == AT_UNDEF)
+		return a0->type;
 
-	devtree_parser_error("incompatible types %s and %s", attr_type_name(attr0->type), attr_type_name(attr1->type));
+	if(a0->type == AT_UNDEF)
+		return a1->type;
 
-	return false;
+	if(a0->type == AT_STRING || a1->type == AT_STRING)
+		return AT_UNDEF;
+
+	if(type_is_int(a0->type) && type_is_int(a1->type))
+		return MAX(a0->type, a1->type);
+
+	return AT_ADDR;
+}
+
+static int type_cast(attr_t *attr, attr_type_t type, attr_flags_t flags){
+	attr_value_t *v;
+
+
+	if(attr->type == type)
+		return 0;
+
+	if(attr->type == AT_UNDEF){
+		// TODO try to combine this branch with the same assingments
+		// 		later in the function
+		attr->type = type;
+		attr->flags = flags;
+		attr->value.arr.limit = ATTR_ARRAY_UNLIMITED;
+
+		return 0;
+	}
+
+	if(type == AT_UNDEF || type == AT_STRING || attr->type == AT_STRING){
+		return devtree_parser_error("unable to cast %s of type %s to %s",
+			attr->name,
+			attr_type_name(attr->type),
+			attr_type_name(type)
+		);
+	}
+
+	attr->type = type;
+	attr->flags = flags;
+
+	// there is no cast needed for different integer types since they all use attr_value_t::i
+	if(type_is_int(type))
+		return 0;
+
+	if(flags & AF_ARRAY){
+		vector_for_each(&attr->value.arr.items, v){
+			v->p = (void*)v->i; break;
+		}
+	}
+	else
+		attr->value.p = (void*)attr->value.i;
+
+	return 0;
 }
 
 static int range_check(attr_t *attr, attr_value_t *value){
@@ -408,7 +489,7 @@ static int range_check(attr_t *attr, attr_value_t *value){
 	attr_value_t *v;
 
 
-	if(!attr_is_int(attr))
+	if(!type_is_int(attr->type))
 		return 0;
 
 	lim = (((ATTR_INT_TYPE)1 << ((attr_type_size(attr->type) * 8) - 1)) << 1) - 1;
@@ -423,6 +504,120 @@ static int range_check(attr_t *attr, attr_value_t *value){
 	}
 	else if(value->i > lim)
 		return devtree_parser_error("%s out of range %lu > %lu", attr->name, value->i, lim);
+
+	return 0;
+}
+
+static char const *op_name(op_t op){
+	if(op == op_assign)	return "assignment";
+	if(op == op_add)	return "addition";
+
+	return "unknown";
+}
+
+static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op){
+	attr_type_t common_type;
+
+
+	common_type = type_compatible(a0, a1, (op == op_assign));
+
+	printf("%s", op_name(op));
+	ATTR_PRINT(" a0=", a0);
+	ATTR_PRINT("  a1=", a1);
+	printf("common type %s\n", attr_type_name(common_type));
+
+	if(common_type == AT_UNDEF)
+		return 0x0;
+
+	if((op != op_assign || a0->type == AT_UNDEF) && type_cast(a0, common_type, a0->flags | a1->flags) != 0)
+		goto err;
+
+	if(type_cast(a1, common_type, a0->flags | a1->flags) != 0)
+		goto err;
+
+	return (op(a0, a1) != 0) ? 0x0 : a0;
+
+
+err:
+	devtree_parser_error("%s not supported for types %s and %s",
+		op_name(op),
+		attr_type_name(a0->type),
+		attr_type_name(a1->type)
+	);
+
+	return 0x0;
+}
+
+static int op_assign(attr_t *a0, attr_t *a1){
+	attr_value_t v = a1->value;
+
+
+	if((a0->flags & AF_ARRAY) && a0->value.arr.limit != ATTR_ARRAY_UNLIMITED)
+		v.arr.limit = a0->value.arr.limit;
+
+	if(range_check(a0, &v) != 0)
+		return -1;
+
+	a0->flags = a1->flags | AF_HAS_VALUE;
+	a0->value = v;
+
+	ATTR_PRINT("assigned ", a0);
+
+	return 0;
+}
+
+static int op_add(attr_t *a0, attr_t *a1){
+	char *s;
+	attr_value_t *v;
+
+
+	if(a0->flags & AF_ARRAY){
+		if(range_check(a0, &a1->value) != 0)
+			return -1;
+
+		vector_for_each(&a1->value.arr.items, v){
+			if(array_add(a0, v) != 0)
+				return -1;
+		}
+
+		return 0;
+	}
+
+	// TODO should the results be range-checked
+	switch(a0->type){
+	case AT_INT8:	// fall through
+	case AT_INT16:	// fall through
+	case AT_INT32:	// fall through
+	case AT_INT64:
+		a0->value.i += a1->value.i;
+		break;
+
+	case AT_ADDR:
+		a0->value.p += (ptrdiff_t)a1->value.p;
+		break;
+
+	case AT_STRING:
+		if(a0->value.p == 0x0 || a1->value.p == 0x0)
+			return devtree_parser_error("null pointer strings in %s or %s", a0->name, a1->name);
+
+		s = malloc(strlen(a0->value.p) + strlen(a1->value.p) + 1);
+
+		if(s == 0x0)
+			return devtree_parser_error("out of memory");
+
+		sprintf(s, "%s%s", a0->value.p, a1->value.p);
+		free(a0->value.p);
+		a0->value.p = s;
+		break;
+
+	default:
+		return devtree_parser_error("addition not supported for types %s and %s",
+			attr_type_name(a0->type),
+			attr_type_name(a1->type)
+		);
+	}
+
+	ATTR_PRINT("added ", a0);
 
 	return 0;
 }

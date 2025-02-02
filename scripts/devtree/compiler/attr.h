@@ -75,7 +75,6 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 
 attr_t *attr_convert_to_list(attr_t *attr);
 char const *attr_type_name(attr_type_t type);
-bool attr_is_int(attr_t *attr);
 size_t attr_type_size(attr_type_t type);
 
 
