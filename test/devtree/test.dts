@@ -129,12 +129,37 @@ arith-ref-array = dev_array(
 );
 
 /* error cases */
-error = dev_array(
-	/* incompatible types */
+devicetype{
+	// invalid type
+//	int8 compatible;
+
+	// missing attribute
+	string compatible;
+} error_type;
+
+error_single = dev_single(
+	// attribute already defined
+//	i = 10, i = 20,
+
+	// incompatible types
+//	i = "foo",
+//	i = [ 1 ],
+//	i = 1 + "f",
+
+	// type limits
+//	i = 256,
+);
+
+error_array = dev_array(
+	// incompatible types
 //	i = 1 + [ 1 ],
 //	i = "foo",
+//	i = 1,
 
-	/* incompatible array sizes */
+	// incompatible array sizes
 //	p = [ 0, 1],
 //	p = donor-child-array.p,
+
+	// type limits
+//	i = [ 0, 65536, 0 ],
 );

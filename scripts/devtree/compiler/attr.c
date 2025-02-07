@@ -92,110 +92,8 @@ attr_t *attr_assign(attr_t *attr, attr_t *value){
 	return op_wrapper(attr, value, op_assign);
 }
 
-attr_t *_attr_assign(attr_t *attr, attr_t *value){
-	attr_value_t v;
-
-
-	ATTR_PRINT("assign ", attr);
-	ATTR_PRINT("  with ", value);
-
-	if(type_compatible(attr, value, true) == AT_UNDEF)
-		return 0x0;
-
-	if((attr->flags & AF_ARRAY) != (value->flags & AF_ARRAY)){
-		devtree_parser_error("cannot assign %s to %s",
-			(value->flags & AF_ARRAY) ? "array" : "single value",
-			(attr->flags & AF_ARRAY) ? "array" : "single value"
-		);
-
-		return 0x0;
-	}
-
-	v = value->value;
-
-	if((attr->flags & AF_ARRAY) && attr->value.arr.limit != ATTR_ARRAY_UNLIMITED)
-		v.arr.limit = attr->value.arr.limit;
-
-	if(range_check(attr, &value->value) != 0)
-		return 0x0;
-
-	attr->flags = value->flags | AF_HAS_VALUE;
-	attr->value = v;
-
-	ATTR_PRINT("assigned ", attr);
-
-	return attr;
-}
-
 int attr_add(attr_t *attr, attr_t *op){
 	return -(op_wrapper(attr, op, op_add) == 0x0);
-}
-
-int _attr_add(attr_t *attr, attr_t *op){
-	char *s;
-	attr_value_t *v;
-
-
-	if(type_compatible(attr, op, false) == AT_UNDEF)
-		goto err;
-
-	ATTR_PRINT("add ", op)
-	ATTR_PRINT(" to ", attr);
-
-	if(attr->flags & AF_ARRAY){
-		/* TODO only arrays can be added, no longer single values, so remove */
-		if(op->flags & AF_ARRAY){
-			if(range_check(attr, &op->value) != 0)
-				return -1;
-
-			vector_for_each(&op->value.arr.items, v){
-				if(array_add(attr, v) != 0)
-					return -1;
-			}
-		}
-		else
-			return array_add(attr, &op->value);
-
-		return 0;
-	}
-
-	// TODO should the results be range-checked
-	switch(attr->type){
-	case AT_INT8:	// fall through
-	case AT_INT16:	// fall through
-	case AT_INT32:	// fall through
-	case AT_INT64:
-		attr->value.i += op->value.i;
-		break;
-
-	case AT_ADDR:
-		if(op->type == AT_ADDR)	attr->value.p += (ptrdiff_t)op->value.p;
-		else					attr->value.p += op->value.i;
-		break;
-
-	case AT_STRING:
-		if(attr->value.p == 0x0)
-			return devtree_parser_error("attr value 0x0");
-
-		s = malloc(strlen(attr->value.p) + strlen(op->value.p) + 1);
-
-		if(s == 0x0)
-			return devtree_parser_error("out of memory");
-
-		sprintf(s, "%s%s", attr->value.p, op->value.p);
-		free(attr->value.p);
-		attr->value.p = s;
-		break;
-
-	default:
-		goto err;
-	}
-
-	return 0;
-
-
-err:
-	return devtree_parser_error("addition not supported for types %s and %s", attr_type_name(attr->type), attr_type_name(op->type));
 }
 
 int attr_copy(attr_t *dest, attr_t *src){
@@ -234,6 +132,7 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 			if(type == AT_UNDEF || attr->type == type)
 				return attr;
 
+			// TODO align error message format if attributes or node names are printed
 			devtree_parser_error("%s: invalid type %s, expecting %s", name, attr_type_name(attr->type), attr_type_name(type));
 
 			return 0x0;
@@ -530,22 +429,12 @@ static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op){
 		return 0x0;
 
 	if((op != op_assign || a0->type == AT_UNDEF) && type_cast(a0, common_type, a0->flags | a1->flags) != 0)
-		goto err;
+		return 0x0;
 
 	if(type_cast(a1, common_type, a0->flags | a1->flags) != 0)
-		goto err;
+		return 0x0;
 
 	return (op(a0, a1) != 0) ? 0x0 : a0;
-
-
-err:
-	devtree_parser_error("%s not supported for types %s and %s",
-		op_name(op),
-		attr_type_name(a0->type),
-		attr_type_name(a1->type)
-	);
-
-	return 0x0;
 }
 
 static int op_assign(attr_t *a0, attr_t *a1){
