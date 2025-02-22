@@ -27,6 +27,7 @@ static FILE *output_file(char const *file);
 // gfe -Wg,-i core_mask
 // gfe -Wg,-i arch_multi_core
 
+
 /* global functions */
 int main(int argc, char **argv){
 	int r = -1;

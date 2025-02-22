@@ -11,14 +11,14 @@
 
 
 // TODO missing tests
-//	- type: asserts
-//	- data type limits
-//	- different integer sizes
+//	- type: asserts (for memory and device nodes)
 
 devicetype{
 	string compatible = "default";
 	int8 i = 1;
 	addr p = 0x10;
+
+	assert("i == 0", "i wrong");
 } dev_single;
 
 devicetype{

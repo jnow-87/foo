@@ -16,10 +16,11 @@
 #include <types.h>
 #include <nodes.h>
 #include <parser.tab.h>
+#include <sys/list.h>
 
 
 /* local/static prototypes */
-static int type_validate(type_cat_t category, vector_t *attrs);
+static int type_validate(type_cat_t category, vector_t *attrs, assert_t *asserts);
 
 
 /* static variables */
@@ -35,7 +36,7 @@ int type_add(char const *name, type_cat_t category, vector_t *attrs, assert_t *a
 	type_t *type;
 
 
-	if(type_validate(category, attrs) != 0)
+	if(type_validate(category, attrs, asserts) != 0)
 		return devtree_parser_error("invalid type defintion");
 
 	type = malloc(sizeof(type_t));
@@ -65,7 +66,6 @@ type_t *type_lookup(char const *name){
 	return type;
 }
 
-#include <stdio.h>
 node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t *childs){
 	attr_t *tattr,
 		   *nattr;
@@ -73,7 +73,6 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 	node_t *node;
 
 
-	printf("instantiate type %s for %s\n", type->name, name);
 	node = node_create(name, type, childs);
 
 	if(node == 0x0)
@@ -128,9 +127,17 @@ char const *type_strcat(type_cat_t category){
 
 
 /* local functions */
-static int type_validate(type_cat_t category, vector_t *attrs){
+static int type_validate(type_cat_t category, vector_t *attrs, assert_t *asserts){
+	assert_t *assert;
+
+
 	if(category == TC_DEVICE){
 		if(attr_get_typed(attrs, "compatible", AT_STRING, false) == 0x0)
+			return -1;
+	}
+
+	list_for_each(asserts, assert){
+		if(assert_check(assert, attrs) != 0)
 			return -1;
 	}
 

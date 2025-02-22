@@ -19,7 +19,7 @@
 #include <parser.tab.h>
 
 
-#if 1
+#if 0
 #define ATTR_PRINT(txt, attr){ \
 	printf(txt); \
 	attr_print(attr); \
@@ -420,10 +420,8 @@ static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op){
 
 	common_type = type_compatible(a0, a1, (op == op_assign));
 
-	printf("%s", op_name(op));
 	ATTR_PRINT(" a0=", a0);
 	ATTR_PRINT("  a1=", a1);
-	printf("common type %s\n", attr_type_name(common_type));
 
 	if(common_type == AT_UNDEF)
 		return 0x0;

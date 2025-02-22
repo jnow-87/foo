@@ -20,7 +20,8 @@ dtc-y := \
 	asserts.o \
 	types.o \
 	lexer.lex.o \
-	parser.tab.o
+	parser.tab.o \
+	assert.lex.o
 
 # ensure a rebuild if indirect dependencies are updated
 dtc-y += $(build_tree)/sys/libhost.a

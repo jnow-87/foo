@@ -254,8 +254,9 @@ static void def_asserts(FILE *fp, node_t *node, char const *node_ident){
 
 
 	list_for_each(node->type->asserts, assert){
-		// TODO parse assert->expr replacing all identifiers with the given value for node
-//		fprintf(fp, "_Static_assert(%s, \"%s: %s\");\n", assert->expr, node_ident, assert->msg);
+		fprintf(fp, "_Static_assert(");
+		assert_export(fp, assert, &node->attrs);
+		fprintf(fp, ", \"%s: %s\");\n", node_ident, assert->msg);
 	}
 
 	if(node->type->asserts)

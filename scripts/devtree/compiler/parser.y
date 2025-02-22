@@ -137,7 +137,7 @@
 	fp = fopen(file, "r");
 
 	if(fp == 0){
-		fprintf(stderr, "read config file \"%s\" failed \"%s\"\n", file, strerror(errno));
+		fprintf(stderr, "read device tree script \"%s\" failed \"%s\"\n", file, strerror(errno));
 		return 1;
 	}
 
