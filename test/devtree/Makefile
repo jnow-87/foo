@@ -42,4 +42,8 @@ $(dt_header): $(dt_preproc)
 
 # test targets
 test-devtree: $(dt_preproc) $(dt_make) $(dt_header)
-test: test-devtree $(loc_build_tree)/dttest
+test: \
+	test-devtree \
+	$(loc_build_tree)/dttest \
+	$(loc_src_tree)/parser-errors.sh \
+	$(loc_src_tree)/assert-errors.sh

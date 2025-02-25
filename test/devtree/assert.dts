@@ -1,0 +1,36 @@
+/**
+ * Copyright (C) 2025 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+devicetype{
+	string compatible = "";
+
+	int8 i;
+	assert("i >= 9 + 1", "i smaller 10");
+} type;
+
+memorytype{
+	addr base;
+	int32 size;
+
+	assert("size > 10", "size too small");
+} memory;
+
+
+
+// error-string: assertion failed: "v0: i smaller 10"
+// error-string: 8 >= 9 + 1
+v0 = type(i=8);
+
+// error-string: assertion failed: "v1: i smaller 10"
+// error-string: 9 >= 9 + 1
+v1 = type(i=9);
+
+// error-string: assertion failed: "m: size too small"
+// error-string: 1 > 10
+m = memory(base=0x0, size=1);

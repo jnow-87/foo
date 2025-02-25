@@ -10,15 +10,10 @@
 #include <memory.dts>
 
 
-// TODO missing tests
-//	- type: asserts (for memory and device nodes)
-
 devicetype{
 	string compatible = "default";
 	int8 i = 1;
 	addr p = 0x10;
-
-	assert("i == 0", "i wrong");
 } dev_single;
 
 devicetype{
@@ -34,6 +29,13 @@ devicetype{
 	string s[2];
 	addr p[1];
 } dev_array_short;
+
+devicetype{
+	string compatible = "";
+	int32 i;
+
+	assert("i <= 3", "i wrong");
+} dev_assert;
 
 
 /* test included type */
@@ -128,38 +130,6 @@ arith-ref-array = dev_array(
 	i = [ 1 ] + donor-child-array.i + [ 2 ],
 );
 
-/* error cases */
-devicetype{
-	// invalid type
-//	int8 compatible;
-
-	// missing attribute
-	string compatible;
-} error_type;
-
-error_single = dev_single(
-	// attribute already defined
-//	i = 10, i = 20,
-
-	// incompatible types
-//	i = "foo",
-//	i = [ 1 ],
-//	i = 1 + "f",
-
-	// type limits
-//	i = 256,
-);
-
-error_array = dev_array(
-	// incompatible types
-//	i = 1 + [ 1 ],
-//	i = "foo",
-//	i = 1,
-
-	// incompatible array sizes
-//	p = [ 0, 1],
-//	p = donor-child-array.p,
-
-	// type limits
-//	i = [ 0, 65536, 0 ],
-);
+/* test passing asserts */
+assert-0 = dev_assert(i=0);
+assert-1 = dev_assert(i=3);
