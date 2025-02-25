@@ -38,7 +38,7 @@ typedef int (*op_t)(attr_t *a0, attr_t *a1);
 static int array_add(attr_t *attr, attr_value_t *v);
 static void attr_print(attr_t *attr);
 static void attr_value_print(attr_value_t *v, attr_type_t type);
-static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size);
+static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size, char const *descr);
 static attr_type_t type_common(attr_t *a0, attr_t *a1);
 static int type_cast(attr_t *attr, attr_type_t type, attr_flags_t flags);
 static bool type_is_int(attr_type_t type);
@@ -273,7 +273,8 @@ static void attr_value_print(attr_value_t *v, attr_type_t type){
 	}
 }
 
-static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size){
+static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size, char const *descr){
+	char const *name = a0->name ? a0->name : (a1->name ? a1->name : descr);
 	size_t limit;
 	attr_type_t common_type;
 
@@ -296,7 +297,7 @@ static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size
 
 	if(common_type == AT_UNDEF || (a0->flags & AF_ARRAY) != (a1->flags & AF_ARRAY)){
 		devtree_parser_error("%s incompatible types %s%s and %s%s",
-			a0->name ? a0->name : a1->name,
+			name,
 			attr_type_name(a0->type), (a0->flags & AF_ARRAY) ? " array" : "",
 			attr_type_name(a1->type), (a1->flags & AF_ARRAY) ? " array" : ""
 		);
@@ -312,7 +313,7 @@ static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size
 
 		if(a0->value.arr.limit != ATTR_ARRAY_UNLIMITED && a0->value.arr.limit != limit){
 			devtree_parser_error("%s incompatible array sizes %zu and %zu",
-				a0->name ? a0->name : a1->name,
+				name,
 				a0->value.arr.limit,
 				limit
 			);
@@ -408,8 +409,8 @@ static int range_check(attr_t *attr, attr_value_t *value){
 }
 
 static char const *op_name(op_t op){
-	if(op == op_assign)	return "assignment";
-	if(op == op_add)	return "addition";
+	if(op == op_assign)	return "'='";
+	if(op == op_add)	return "'+'";
 
 	return "unknown";
 }
@@ -418,7 +419,7 @@ static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op){
 	attr_type_t common_type;
 
 
-	common_type = type_compatible(a0, a1, (op == op_assign));
+	common_type = type_compatible(a0, a1, (op == op_assign), op_name(op));
 
 	ATTR_PRINT(" a0=", a0);
 	ATTR_PRINT("  a1=", a1);

@@ -98,6 +98,7 @@
 	/* local/static variables */
 	static FILE *fp = 0;
 	static char const *dt_script = 0x0;
+	static bool erroneous = false;
 
 
 	/* prototypes */
@@ -106,7 +107,7 @@
 
 	/* local/static prototypes */
 	static int devtreeerror(char const *file, char const *s);
-	static void cleanup(void);
+	static int cleanup(void);
 	static void *stralloc(char const *s);
 %}
 
@@ -210,12 +211,11 @@
 
 
 /* start */
-start : error										{ cleanup(); YYABORT; }
-	  | devtree										{ cleanup(); }
-	  ;
+start : devtree										{ if(cleanup() != 0) YYABORT; };
 
 /* sections */
 devtree : %empty									{ }
+		| error ';'									{ erroneous = true; yyerrok; }
 		| devtree ';'								{ }
 		| devtree typedef ';'						{ }
 		| devtree node ';'							{ EABORT(node_child_add(nodes_root($2->type->category), $2)); }
@@ -347,11 +347,17 @@ static int devtreeerror(char const *file, char const *s){
 	return 0;
 }
 
-static void cleanup(void){
+static int cleanup(void){
+	bool r = erroneous;
+
+
 	devtreelex_destroy();
 	fclose(fp);
 
 	dt_script = 0x0;
+	erroneous = false;
+
+	return r ? -1 : 0;
 }
 
 static void *stralloc(char const *s){
