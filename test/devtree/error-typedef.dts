@@ -1,0 +1,20 @@
+/**
+ * Copyright (C) 2025 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+// error-string: compatible: invalid type int8, expecting string
+// error-string: invalid type definition
+devicetype{
+	int8 compatible;
+} type;
+
+// error-string: "type" -- undefined attribute "compatible"
+// error-string: invalid type definition
+devicetype{
+	int8 i;
+} type;

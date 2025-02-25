@@ -37,7 +37,7 @@ int type_add(char const *name, type_cat_t category, vector_t *attrs, assert_t *a
 
 
 	if(type_validate(category, attrs, asserts) != 0)
-		return devtree_parser_error("invalid type defintion");
+		return devtree_parser_error("invalid type definition");
 
 	type = malloc(sizeof(type_t));
 

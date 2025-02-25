@@ -1,0 +1,30 @@
+/**
+ * Copyright (C) 2025 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+devicetype{
+	string compatible = "";
+
+	int8 i;
+} type;
+
+
+// error-string: i attribute already defined
+v = type(i = 10, i = 20);
+
+// error-string: i incompatible types int8 and string
+v = type(i="foo");
+
+// error-string: i incompatible types int8 and int64 array
+v = type(i=[1]);
+
+// error-string: '+' incompatible types int64 and string
+v = type(i=1 + "f");
+
+// error-string: i out of range 256 > 255
+v = type(i=256);
