@@ -137,7 +137,7 @@
 	dt_script = file;
 	fp = fopen(file, "r");
 
-	if(fp == 0){
+	if(fp == 0x0){
 		fprintf(stderr, "read device tree script \"%s\" failed \"%s\"\n", file, strerror(errno));
 		return 1;
 	}

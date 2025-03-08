@@ -75,8 +75,18 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 	node = node_create(name, type, childs);
 
 	if(node == 0x0)
-		goto end;
+		goto err;
 
+	/* check for invalid attributes */
+	vector_for_each(attrs, nattr){
+		if(attr_get(&type->attrs, nattr->name, true) != 0x0)
+			continue;
+
+		devtree_parser_error("attribute %s undefined for type %s", nattr->name, type->name);
+		goto err;
+	}
+
+	/* create node attribute list */
 	vector_for_each(&type->attrs, tattr){
 		nattr = attr_get(attrs, tattr->name, true);
 
@@ -99,21 +109,18 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 		}
 	}
 
-	// TODO explicitly print the invalid attributes
-	if(type->attrs.size == node->attrs.size)
-		goto end;
-
-	devtree_parser_error("invalid attributes");
-
-
-err:
-	node_destroy(node);
-	node = 0x0;
-
-end:
 	vector_destroy(attrs);
 
 	return node;
+
+
+err:
+	if(node != 0x0)
+		node_destroy(node);
+
+	vector_destroy(attrs);
+
+	return 0x0;
 }
 
 char const *type_strcat(type_cat_t category){
