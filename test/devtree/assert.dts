@@ -12,7 +12,7 @@ devicetype{
 
 	int8 i;
 	assert("i >= 9 + 1", "i smaller 10");
-} type;
+} dev;
 
 memorytype{
 	addr base;
@@ -22,14 +22,13 @@ memorytype{
 } memory;
 
 
-
 // error-string: assertion failed: "v0: i smaller 10"
 // error-string: 8 >= 9 + 1
-v0 = type(i=8);
+v0 = dev(i=8);
 
 // error-string: assertion failed: "v1: i smaller 10"
 // error-string: 9 >= 9 + 1
-v1 = type(i=9);
+v1 = dev(i=9);
 
 // error-string: assertion failed: "m: size too small"
 // error-string: 1 > 10

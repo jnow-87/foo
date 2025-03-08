@@ -23,9 +23,12 @@ static int collect_nodes(vector_t *nodes);
 static FILE *output_file(char const *file);
 
 
-// TODO
-// gfe -Wg,-i core_mask
-// gfe -Wg,-i arch_multi_core
+// TODO update variables
+// 	gfe -Wg,-i core_mask
+// 	gfe -Wg,-i arch_multi_core
+
+// TODO rename export to compile
+
 
 
 /* global functions */

@@ -1,0 +1,16 @@
+/**
+ * Copyright (C) 2025 Jan Nowotsch
+ * Author Jan Nowotsch	<jan.nowotsch@gmail.com>
+ *
+ * Released under the terms of the GNU GPL v2.0
+ */
+
+
+
+devicetype{
+	string compatible = "";
+	int8 i[2];
+
+	// error-string: i asserts do not support array types
+	assert("i[0] == 1", "arrays not supported");
+} type;

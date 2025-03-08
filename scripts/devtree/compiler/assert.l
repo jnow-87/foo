@@ -22,7 +22,8 @@
 
 
 	/* prototypes */
-	static int assert_parse(assert_t *assert, vector_t *attrs, FILE *fp);
+	static int assert_parse(assert_t *assert, vector_t *attrs, FILE *fp, int (*exporter)(FILE *, attr_t *));
+	static int attr_check(FILE *fp, attr_t *attr);
 	static int attr_export(FILE *fp, attr_t *attr);
 %}
 
@@ -41,14 +42,14 @@
 
 
 int assert_check(assert_t *assert, vector_t *attrs){
-	return assert_parse(assert, attrs, 0x0);
+	return assert_parse(assert, attrs, 0x0, attr_check);
 }
 
 int assert_export(FILE *fp, assert_t *assert, vector_t *attrs){
-	return assert_parse(assert, attrs, fp);
+	return assert_parse(assert, attrs, fp, attr_export);
 }
 
-static int assert_parse(assert_t *assert, vector_t *attrs, FILE *fp){
+static int assert_parse(assert_t *assert, vector_t *attrs, FILE *fp, int (*exporter)(FILE *, attr_t *)){
 	int r = 1;
 	char backup;
 	attr_t *attr;
@@ -69,7 +70,7 @@ static int assert_parse(assert_t *assert, vector_t *attrs, FILE *fp){
 			if(attr == 0x0)
 				return -1;
 
-			if(fp != 0x0 && attr_export(fp, attr) != 0)
+			if(exporter(fp, attr) != 0)
 				return -1;
 		}
 		else if(fp != 0x0 && r > 0 && r <= 255)
@@ -79,12 +80,29 @@ static int assert_parse(assert_t *assert, vector_t *attrs, FILE *fp){
 	return 0;
 }
 
-// TODO rename export to compile
-static int attr_export(FILE *fp, attr_t *attr){
-	if(attr->flags & AF_ARRAY){
-		// TODO print error
-		return -1;
+static int attr_check(FILE *fp, attr_t *attr){
+	if(attr->flags & AF_ARRAY)
+		return devtree_parser_error("%s asserts do not support array types", attr->name);
+
+	switch(attr->type){
+	case AT_INT8:	// fall through
+	case AT_INT16:	// fall through
+	case AT_INT32:	// fall through
+	case AT_INT64:	// fall through
+	case AT_ADDR:	// fall through
+	case AT_STRING:
+		break;
+
+	default:
+		return devtree_parser_error("%s unsupported attribute type %s", attr->name, attr_type_name(attr->type));
 	}
+
+	return 0;
+}
+
+static int attr_export(FILE *fp, attr_t *attr){
+	if(attr_check(0x0, attr) != 0)
+		return -1;
 
 	switch(attr->type){
 	case AT_INT8:	// fall through
@@ -98,7 +116,6 @@ static int attr_export(FILE *fp, attr_t *attr){
 	case AT_STRING:	fprintf(fp, "\"%s\"", attr->value.p); break;
 
 	default:
-		// TODO error message
 		return -1;
 	}
 
