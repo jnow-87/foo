@@ -11,9 +11,9 @@
 #define DEVTREE_ATTR_H
 
 
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/vector.h>
-#include <stdbool.h>
 
 
 /* macros */

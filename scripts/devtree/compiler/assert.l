@@ -15,9 +15,9 @@
 %{
 	#include <stdlib.h>
 	#include <stdio.h>
+	#include <limits.h>
 	#include <asserts.h>
 	#include <attr.h>
-	#include <limits.h>
 	#include <parser.tab.h>
 
 
@@ -80,7 +80,6 @@ static int assert_parse(assert_t *assert, vector_t *attrs, FILE *fp){
 }
 
 // TODO rename export to compile
-// TODO use local includes "" instead of <>
 static int attr_export(FILE *fp, attr_t *attr){
 	if(attr->flags & AF_ARRAY){
 		// TODO print error

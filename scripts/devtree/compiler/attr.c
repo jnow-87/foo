@@ -7,14 +7,14 @@
 
 
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/compiler.h>
 #include <sys/math.h>
 #include <sys/register.h>
 #include <sys/types.h>
 #include <sys/vector.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <attr.h>
 #include <parser.tab.h>
 

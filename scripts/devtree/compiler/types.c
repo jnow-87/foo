@@ -7,16 +7,15 @@
 
 
 
-#include <sys/list.h>
-#include <sys/vector.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/list.h>
+#include <sys/vector.h>
 #include <asserts.h>
 #include <attr.h>
-#include <types.h>
 #include <nodes.h>
 #include <parser.tab.h>
-#include <sys/list.h>
+#include <types.h>
 
 
 /* local/static prototypes */

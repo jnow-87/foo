@@ -14,10 +14,10 @@
 
 /* header */
 %{
-	#include <sys/escape.h>
 	#include <stdarg.h>
 	#include <stdio.h>
 	#include <string.h>
+	#include <sys/escape.h>
 	#include <asserts.h>
 	#include <lexer.lex.h>
 	#include <nodes.h>

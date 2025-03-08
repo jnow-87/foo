@@ -12,10 +12,10 @@
 #endif // BUILD_KERNEL
 
 #include <sys/compiler.h>
-#include <sys/types.h>
-#include <sys/errno.h>
 #include <sys/devtree.h>
+#include <sys/errno.h>
 #include <sys/string.h>
+#include <sys/types.h>
 
 
 /* types */

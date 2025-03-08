@@ -34,9 +34,8 @@ $(loc_build_tree)/main.host.o: $(loc_build_tree)/parser.tab.c
 
 
 hostcppflags-y := \
-	-I$(src_tree) \
 	-I$(src_tree)/include \
-	-I$(loc_src_tree) \
+	-I$(loc_src_tree)/include \
 	-I$(loc_build_tree) \
 	-I/usr/include
 

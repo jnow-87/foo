@@ -8,14 +8,14 @@
 
 
 #include <config/config.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <ctype.h>
+#include <sys/escape.h>
 #include <sys/limits.h>
+#include <sys/list.h>
 #include <sys/string.h>
 #include <sys/vector.h>
-#include <sys/list.h>
-#include <sys/escape.h>
 #include <asserts.h>
 #include <nodes.h>
 #include <options.h>
