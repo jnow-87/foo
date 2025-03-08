@@ -7,16 +7,15 @@
 
 
 
-#include <sys/list.h>
-#include <sys/vector.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/list.h>
+#include <sys/vector.h>
 #include <asserts.h>
 #include <attr.h>
-#include <types.h>
 #include <nodes.h>
 #include <parser.tab.h>
-#include <sys/list.h>
+#include <types.h>
 
 
 /* local/static prototypes */
@@ -37,12 +36,12 @@ int type_add(char const *name, type_cat_t category, vector_t *attrs, assert_t *a
 
 
 	if(type_validate(category, attrs, asserts) != 0)
-		return devtree_parser_error("invalid type definition");
+		return devtree_parser_error("%s: invalid type definition", name);
 
 	type = malloc(sizeof(type_t));
 
 	if(type == 0x0)
-		return devtree_parser_error("type allocation failed");
+		return devtree_parser_error("%s: type allocation failed", name);
 
 	type->name = name;
 	type->category = category;
@@ -61,7 +60,7 @@ type_t *type_lookup(char const *name){
 	type = list_find_str(type_lst, name, name);
 
 	if(type == 0x0)
-		devtree_parser_error("unknown type %s", name);
+		devtree_parser_error("%s: unknown type", name);
 
 	return type;
 }
@@ -76,8 +75,18 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 	node = node_create(name, type, childs);
 
 	if(node == 0x0)
-		goto end;
+		goto err;
 
+	/* check for invalid attributes */
+	vector_for_each(attrs, nattr){
+		if(attr_get(&type->attrs, nattr->name, true) != 0x0)
+			continue;
+
+		devtree_parser_error("%s: undefined attribute %s for type %s", name, nattr->name, type->name);
+		goto err;
+	}
+
+	/* create node attribute list */
 	vector_for_each(&type->attrs, tattr){
 		nattr = attr_get(attrs, tattr->name, true);
 
@@ -100,21 +109,18 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 		}
 	}
 
-	// TODO explicitly print the invalid attributes
-	if(type->attrs.size == node->attrs.size)
-		goto end;
-
-	devtree_parser_error("invalid attributes");
-
-
-err:
-	node_destroy(node);
-	node = 0x0;
-
-end:
 	vector_destroy(attrs);
 
 	return node;
+
+
+err:
+	if(node != 0x0)
+		node_destroy(node);
+
+	vector_destroy(attrs);
+
+	return 0x0;
 }
 
 char const *type_strcat(type_cat_t category){

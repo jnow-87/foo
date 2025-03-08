@@ -7,15 +7,15 @@
 
 
 
-#include <stdio.h>
-#include <unistd.h>
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/vector.h>
-#include <parser.tab.h>
 #include <export.h>
 #include <nodes.h>
 #include <options.h>
+#include <parser.tab.h>
 
 
 /* local/static prototypes */
@@ -23,9 +23,13 @@ static int collect_nodes(vector_t *nodes);
 static FILE *output_file(char const *file);
 
 
-// TODO
-// gfe -Wg,-i core_mask
-// gfe -Wg,-i arch_multi_core
+// TODO update variables
+// 	gfe -Wg,-i core_mask
+// 	gfe -Wg,-i arch_multi_core
+
+// TODO rename export to compile
+// TODO check memory allocation, especially free
+// TODO overall review
 
 
 /* global functions */

@@ -14,10 +14,10 @@
 
 /* header */
 %{
-	#include <sys/escape.h>
 	#include <stdarg.h>
 	#include <stdio.h>
 	#include <string.h>
+	#include <sys/escape.h>
 	#include <asserts.h>
 	#include <lexer.lex.h>
 	#include <nodes.h>
@@ -137,7 +137,7 @@
 	dt_script = file;
 	fp = fopen(file, "r");
 
-	if(fp == 0){
+	if(fp == 0x0){
 		fprintf(stderr, "read device tree script \"%s\" failed \"%s\"\n", file, strerror(errno));
 		return 1;
 	}

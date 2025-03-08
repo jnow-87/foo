@@ -81,6 +81,19 @@
 	},
 }
 
+# scripts/devtree/compiler
+{
+	"If": {
+		"PathMatch": "scripts/devtree/compiler/.*"
+	},
+
+	"CompileFlags": {
+		"Add": [
+			"-Iscripts/devtree/compiler/include/",
+		],
+	},
+}
+
 # test/
 {
 	"If": {
