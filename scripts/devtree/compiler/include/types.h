@@ -11,8 +11,8 @@
 #define DEVTREE_TYPES_H
 
 
-#include <sys/vector.h>
 #include <stdbool.h>
+#include <sys/vector.h>
 #include <asserts.h>
 #include <attr.h>
 

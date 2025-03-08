@@ -8,8 +8,8 @@
 
 
 #include <stdlib.h>
-#include <parser.tab.h>
 #include <assert.h>
+#include <parser.tab.h>
 
 
 /* global functions */

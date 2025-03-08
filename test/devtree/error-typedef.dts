@@ -8,13 +8,13 @@
 
 
 // error-string: compatible: invalid type int8, expecting string
-// error-string: invalid type definition
+// error-string: a-type: invalid type definition
 devicetype{
 	int8 compatible;
-} type;
+} a-type;
 
-// error-string: "type" -- undefined attribute "compatible"
-// error-string: invalid type definition
+// error-string: "b-type" -- compatible: undefined attribute
+// error-string: b-type: invalid type definition
 devicetype{
 	int8 i;
-} type;
+} b-type;

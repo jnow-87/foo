@@ -21,22 +21,22 @@ devicetype{
 } donor;
 
 
-// error-string: i incompatible types int16 array and string
+// error-string: i: incompatible types int16 array and string
 v = type(i="foo");
 
-// error-string: i incompatible types int16 array and int64
+// error-string: i: incompatible types int16 array and int64
 v = type(i=1);
 
-// error-string: '+' incompatible types int64 and int64 array
+// error-string: '+': incompatible types int64 and int64 array
 v = type(i=1 + [1]);
 
-// error-string: i out of range 65536 > 65535
+// error-string: i: out of range 65536 > 65535
 v = type(i=[0, 65536, 0]);
 
-// error-string: p incompatible array sizes 2 and 1
+// error-string: p: incompatible array sizes 2 and 1
 v = type(p=[0]);
 
 d = donor(p=[1, 2, 3]);
 
-// error-string: p incompatible array sizes 2 and 3
+// error-string: p: incompatible array sizes 2 and 3
 v = type(p=d.p);
