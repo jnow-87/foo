@@ -258,18 +258,14 @@ static int type_cast(attr_t *attr, attr_type_t type, attr_flags_t flags){
 	attr_value_t *v;
 
 
-	if(attr->type == type)
-		return 0;
-
 	if(attr->type == AT_UNDEF){
-		// TODO try to combine this branch with the same assingments
-		// 		later in the function
+		attr->value.arr.limit = ATTR_ARRAY_UNLIMITED;
 		attr->type = type;
 		attr->flags = flags;
-		attr->value.arr.limit = ATTR_ARRAY_UNLIMITED;
-
-		return 0;
 	}
+
+	if(attr->type == type)
+		return 0;
 
 	if(type == AT_UNDEF || type == AT_STRING || attr->type == AT_STRING){
 		return devtree_parser_error("%s: unable to cast from %s to %s",

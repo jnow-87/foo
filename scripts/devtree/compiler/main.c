@@ -29,7 +29,7 @@ static FILE *output_file(char const *file);
 
 // TODO rename export to compile
 // TODO check memory allocation, especially free
-
+// TODO overall review
 
 
 /* global functions */
