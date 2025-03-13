@@ -19,25 +19,12 @@
 #include <parser.tab.h>
 
 
-#if 0
-#define ATTR_PRINT(txt, attr){ \
-	printf(txt); \
-	attr_print(attr); \
-	printf("\n"); \
-}
-#else
-#define ATTR_PRINT(...)	{}
-#endif
-
-
 /* types */
 typedef int (*op_t)(attr_t *a0, attr_t *a1);
 
 
 /* local/static prototypes */
 static int array_add(attr_t *attr, attr_value_t *v);
-static void attr_print(attr_t *attr);
-static void attr_value_print(attr_value_t *v, attr_type_t type);
 static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size, char const *descr);
 static attr_type_t type_common(attr_t *a0, attr_t *a1);
 static int type_cast(attr_t *attr, attr_type_t type, attr_flags_t flags);
@@ -68,7 +55,6 @@ attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t array
 	if(range_check(attr, value) != 0)
 		return 0x0;
 
-	// TODO handle array case
 	attr->value = *value;
 	attr->flags |= AF_HAS_VALUE;
 
@@ -80,10 +66,10 @@ int attr_enlist(vector_t *attrs, attr_t *attr){
 		return devtree_parser_error("unable to define unnamed attribute");
 
 	if(attr_get(attrs, attr->name, true) != 0x0)
-		return devtree_parser_error("%s attribute already defined", attr->name);
+		return devtree_parser_error("%s: attribute already defined", attr->name);
 
 	if(vector_add(attrs, attr) != 0)
-		return devtree_parser_error("%s adding attribute failed", attr->name);
+		return devtree_parser_error("%s: adding attribute failed", attr->name);
 
 	return 0;
 }
@@ -116,7 +102,7 @@ int attr_copy(attr_t *dest, attr_t *src){
 
 
 err:
-	return devtree_parser_error("attribute copy failed");
+	return devtree_parser_error("%s: attribute copy failed", src->name);
 }
 
 attr_t *attr_get(vector_t *attrs, char const *name, bool maybe_undef){
@@ -132,7 +118,6 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 			if(type == AT_UNDEF || attr->type == type)
 				return attr;
 
-			// TODO align error message format if attributes or node names are printed
 			devtree_parser_error("%s: invalid type %s, expecting %s", name, attr_type_name(attr->type), attr_type_name(type));
 
 			return 0x0;
@@ -140,7 +125,7 @@ attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool
 	}
 
 	if(!maybe_undef)
-		devtree_parser_error("undefined attribute \"%s\"", name);
+		devtree_parser_error("%s: undefined attribute", name);
 
 	return 0x0;
 }
@@ -165,8 +150,6 @@ char const *attr_type_name(attr_type_t type){
 attr_t *attr_convert_to_list(attr_t *attr){
 	attr_value_t v = attr->value;
 
-
-	ATTR_PRINT("convert to list ", attr);
 
 	attr->flags |= AF_ARRAY;
 	attr->value.arr.items = VECTOR_INITIALISER(sizeof(attr_value_t));
@@ -196,81 +179,11 @@ size_t attr_type_size(attr_type_t type){
 /* local functions */
 static int array_add(attr_t *attr, attr_value_t *v){
 	if(vector_add(&attr->value.arr.items, v) != 0)
-		return devtree_parser_error("adding arrays failed");
-
-	printf("added array: %p =", attr->value.arr.items.buf);
-
-	attr_value_t *x;
-
-	printf("[");
-
-	vector_for_each(&attr->value.arr.items, x){
-		attr_value_print(x, attr->type);
-		printf(" ");
-	}
-
-	printf("]\n");
+		return devtree_parser_error("%s: adding arrays failed", attr->name);
 
 	attr->value.arr.limit = MAX(attr->value.arr.limit, attr->value.arr.items.size);
 
 	return 0;
-}
-
-static void attr_print(attr_t *attr){
-	attr_value_t *v;
-
-
-	printf("%s", attr_type_name(attr->type));
-
-	if(attr->flags & AF_ARRAY){
-		printf("[limit=");
-
-		if(attr->value.arr.limit == ATTR_ARRAY_UNLIMITED)
-			printf("unlimited");
-		else
-			printf("%zu", attr->value.arr.limit);
-
-		printf(",size=%zu", attr->value.arr.items.size);
-
-		printf("]");
-	}
-
-	printf(" %s ", attr->name ? attr->name : "unnamed");
-
-	if((attr->flags & AF_HAS_VALUE) == 0)
-		return;
-
-	printf("=");
-
-	if(attr->flags & AF_ARRAY){
-		printf("[");
-
-		vector_for_each(&attr->value.arr.items, v)
-			attr_value_print(v, attr->type);
-
-		printf("]");
-	}
-	else
-		attr_value_print(&attr->value, attr->type);
-}
-
-static void attr_value_print(attr_value_t *v, attr_type_t type){
-	switch(type){
-	case AT_INT8:
-	case AT_INT16:
-	case AT_INT32:
-	case AT_INT64:
-		printf("%zu", v->i); break;
-
-	case AT_ADDR:
-		printf("%p", v->p); break;
-
-	case AT_STRING:
-		printf("\"%s\"", v->p); break;
-
-	default:
-		printf("undef"); break;
-	}
 }
 
 static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size, char const *descr){
@@ -296,7 +209,7 @@ static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size
 		return common_type;
 
 	if(common_type == AT_UNDEF || (a0->flags & AF_ARRAY) != (a1->flags & AF_ARRAY)){
-		devtree_parser_error("%s incompatible types %s%s and %s%s",
+		devtree_parser_error("%s: incompatible types %s%s and %s%s",
 			name,
 			attr_type_name(a0->type), (a0->flags & AF_ARRAY) ? " array" : "",
 			attr_type_name(a1->type), (a1->flags & AF_ARRAY) ? " array" : ""
@@ -312,7 +225,7 @@ static attr_type_t type_compatible(attr_t *a0, attr_t *a1, bool check_array_size
 			limit = a1->value.arr.items.size;
 
 		if(a0->value.arr.limit != ATTR_ARRAY_UNLIMITED && a0->value.arr.limit != limit){
-			devtree_parser_error("%s incompatible array sizes %zu and %zu",
+			devtree_parser_error("%s: incompatible array sizes %zu and %zu",
 				name,
 				a0->value.arr.limit,
 				limit
@@ -359,7 +272,7 @@ static int type_cast(attr_t *attr, attr_type_t type, attr_flags_t flags){
 	}
 
 	if(type == AT_UNDEF || type == AT_STRING || attr->type == AT_STRING){
-		return devtree_parser_error("unable to cast %s of type %s to %s",
+		return devtree_parser_error("%s: unable to cast from %s to %s",
 			attr->name,
 			attr_type_name(attr->type),
 			attr_type_name(type)
@@ -395,15 +308,13 @@ static int range_check(attr_t *attr, attr_value_t *value){
 	lim = (((ATTR_INT_TYPE)1 << ((attr_type_size(attr->type) * 8) - 1)) << 1) - 1;
 
 	if(attr->flags & AF_ARRAY){
-		printf("range check: %p\n", value->arr.items.buf);
-
 		vector_for_each(&value->arr.items, v){
 			if(v->i > lim)
-				return devtree_parser_error("%s out of range %lu > %lu", attr->name, v->i, lim);
+				return devtree_parser_error("%s: out of range %lu > %lu", attr->name, v->i, lim);
 		}
 	}
 	else if(value->i > lim)
-		return devtree_parser_error("%s out of range %lu > %lu", attr->name, value->i, lim);
+		return devtree_parser_error("%s: out of range %lu > %lu", attr->name, value->i, lim);
 
 	return 0;
 }
@@ -420,9 +331,6 @@ static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op){
 
 
 	common_type = type_compatible(a0, a1, (op == op_assign), op_name(op));
-
-	ATTR_PRINT(" a0=", a0);
-	ATTR_PRINT("  a1=", a1);
 
 	if(common_type == AT_UNDEF)
 		return 0x0;
@@ -448,8 +356,6 @@ static int op_assign(attr_t *a0, attr_t *a1){
 
 	a0->flags = a1->flags | AF_HAS_VALUE;
 	a0->value = v;
-
-	ATTR_PRINT("assigned ", a0);
 
 	return 0;
 }
@@ -504,8 +410,6 @@ static int op_add(attr_t *a0, attr_t *a1){
 			attr_type_name(a1->type)
 		);
 	}
-
-	ATTR_PRINT("added ", a0);
 
 	return 0;
 }

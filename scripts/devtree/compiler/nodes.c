@@ -90,7 +90,7 @@ err_1:
 	free(node);
 
 err_0:
-	devtree_parser_error("node allocation failed");
+	devtree_parser_error("%s: node allocation failed", name);
 
 	return 0x0;
 }
@@ -102,8 +102,13 @@ void node_destroy(node_t *node){
 }
 
 int node_child_add(node_t *parent, node_t *child){
-	if(parent != nodes_root(parent->type->category) && parent->type->category != child->type->category)
-		return devtree_parser_error("invalid child node type, expecting %s", type_strcat(parent->type->category));
+	if(parent != nodes_root(parent->type->category) && parent->type->category != child->type->category){
+		return devtree_parser_error("%s: %s invalid child node type, expecting %s",
+			parent->name,
+			child->name,
+			type_strcat(parent->type->category)
+		);
+	}
 
 	child->parent = parent;
 	list_add_tail(parent->childs, child);
@@ -118,7 +123,7 @@ node_t *node_ref(char const *name){
 	node = index_query(name);
 
 	if(node == 0x0)
-		devtree_parser_error("undefined reference \"%s\"", name);
+		devtree_parser_error("%s: undefined reference", name);
 
 	return node;
 }
@@ -127,7 +132,7 @@ node_t *node_ref(char const *name){
 /* local functions */
 static int index_add(node_t *node){
 	if(index_query(node->name) != 0x0)
-		return devtree_parser_error("node \"%s\" already defined", node->name);
+		return devtree_parser_error("%s: node already defined", node->name);
 
 	return vector_add(&node_index, &node);
 }

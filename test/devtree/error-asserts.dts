@@ -11,6 +11,6 @@ devicetype{
 	string compatible = "";
 	int8 i[2];
 
-	// error-string: i asserts do not support array types
+	// error-string: i: asserts do not support array types
 	assert("i[0] == 1", "arrays not supported");
 } type;

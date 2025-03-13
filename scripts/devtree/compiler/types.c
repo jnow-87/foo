@@ -36,12 +36,12 @@ int type_add(char const *name, type_cat_t category, vector_t *attrs, assert_t *a
 
 
 	if(type_validate(category, attrs, asserts) != 0)
-		return devtree_parser_error("invalid type definition");
+		return devtree_parser_error("%s: invalid type definition", name);
 
 	type = malloc(sizeof(type_t));
 
 	if(type == 0x0)
-		return devtree_parser_error("type allocation failed");
+		return devtree_parser_error("%s: type allocation failed", name);
 
 	type->name = name;
 	type->category = category;
@@ -60,7 +60,7 @@ type_t *type_lookup(char const *name){
 	type = list_find_str(type_lst, name, name);
 
 	if(type == 0x0)
-		devtree_parser_error("unknown type %s", name);
+		devtree_parser_error("%s: unknown type", name);
 
 	return type;
 }
@@ -82,7 +82,7 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 		if(attr_get(&type->attrs, nattr->name, true) != 0x0)
 			continue;
 
-		devtree_parser_error("attribute %s undefined for type %s", nattr->name, type->name);
+		devtree_parser_error("%s: undefined attribute %s for type %s", name, nattr->name, type->name);
 		goto err;
 	}
 

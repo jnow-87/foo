@@ -82,7 +82,7 @@ static int assert_parse(assert_t *assert, vector_t *attrs, FILE *fp, int (*expor
 
 static int attr_check(FILE *fp, attr_t *attr){
 	if(attr->flags & AF_ARRAY)
-		return devtree_parser_error("%s asserts do not support array types", attr->name);
+		return devtree_parser_error("%s: asserts do not support array types", attr->name);
 
 	switch(attr->type){
 	case AT_INT8:	// fall through
@@ -94,7 +94,7 @@ static int attr_check(FILE *fp, attr_t *attr){
 		break;
 
 	default:
-		return devtree_parser_error("%s unsupported attribute type %s", attr->name, attr_type_name(attr->type));
+		return devtree_parser_error("%s: unsupported attribute type %s", attr->name, attr_type_name(attr->type));
 	}
 
 	return 0;

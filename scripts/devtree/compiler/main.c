@@ -28,6 +28,7 @@ static FILE *output_file(char const *file);
 // 	gfe -Wg,-i arch_multi_core
 
 // TODO rename export to compile
+// TODO check memory allocation, especially free
 
 
 
