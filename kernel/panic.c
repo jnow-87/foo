@@ -13,7 +13,7 @@
 #include <kernel/thread.h>
 #include <kernel/sched.h>
 #include <sys/ctype.h>
-#include <sys/devicetree.h>
+#include <sys/devtree.h>
 #include <sys/stack.h>
 #include <sys/stdarg.h>
 #include <sys/types.h>

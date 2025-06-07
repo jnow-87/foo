@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/list.h>
 #include <sys/mutex.h>
-#include <sys/devicetree.h>
+#include <sys/devtree.h>
 
 
 /* local/static prototypes */

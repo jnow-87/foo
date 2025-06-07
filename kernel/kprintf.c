@@ -14,7 +14,7 @@
 #include <kernel/driver.h>
 #include <kernel/opt.h>
 #include <driver/term.h>
-#include <sys/devicetree.h>
+#include <sys/devtree.h>
 #include <sys/types.h>
 #include <sys/stream.h>
 #include <sys/stdarg.h>

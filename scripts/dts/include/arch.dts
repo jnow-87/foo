@@ -16,7 +16,6 @@ devicetype{
 
 	int8 addr_width;
 	int8 reg_width;
-	int8 core_mask;
 	int8 ncores;
 	int8 num_ints;
 	int8 timer_int;
