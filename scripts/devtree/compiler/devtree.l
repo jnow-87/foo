@@ -13,7 +13,7 @@
 
 %{
 	#include <stdlib.h>
-	#include <parser.tab.h>
+	#include <devtree.tab.h>
 
 
 	/* macros */

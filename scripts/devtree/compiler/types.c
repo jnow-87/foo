@@ -13,8 +13,8 @@
 #include <sys/vector.h>
 #include <asserts.h>
 #include <attr.h>
+#include <devtree.tab.h>
 #include <nodes.h>
-#include <parser.tab.h>
 #include <types.h>
 
 

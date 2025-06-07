@@ -18,7 +18,7 @@
 	#include <limits.h>
 	#include <asserts.h>
 	#include <attr.h>
-	#include <parser.tab.h>
+	#include <devtree.tab.h>
 
 
 	/* prototypes */

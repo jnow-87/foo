@@ -20,7 +20,7 @@
 #include <kernel/ktask.h>
 #include <kernel/ipi.h>
 #include <sys/compiler.h>
-#include <sys/devicetree.h>
+#include <sys/devtree.h>
 #include <sys/errno.h>
 #include <sys/list.h>
 #include <sys/mutex.h>

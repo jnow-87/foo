@@ -9,7 +9,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include <parser.tab.h>
+#include <devtree.tab.h>
 
 
 /* global functions */
