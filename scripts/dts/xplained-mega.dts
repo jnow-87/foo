@@ -17,8 +17,7 @@ arch = arch(
 	addr_width = 16,
 	reg_width = 8,
 
-	ncores = 1,
-	core_mask = 0x1,
+	ncores = 2,
 
 	// interrupts
 	//  35 hardwares

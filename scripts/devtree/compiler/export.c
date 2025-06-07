@@ -17,9 +17,9 @@
 #include <sys/string.h>
 #include <sys/vector.h>
 #include <asserts.h>
+#include <devtree.tab.h>
 #include <nodes.h>
 #include <options.h>
-#include <parser.tab.h>
 
 
 /* macros */

@@ -151,6 +151,7 @@ static arch_ops_kernel_t const arch_ops_kernel = {
 # ifdef DEVTREE_ARCH_MULTI_CORE
 	.cores_boot = rp2040_cores_boot,
 # else
+# error "check if DEVTREE_ARCH_MULTI_CORE is defined here"
 	.cores_boot = 0x0,
 # endif // DEVTREE_ARCH_MULTI_CORE
 

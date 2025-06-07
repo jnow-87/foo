@@ -9,7 +9,21 @@
 
 obj-y := devicetree.o
 hostobj-y := devicetree.o
-hostbin-y := dtc
+hostbin-y := dtc dtc-test
+
+dtc-test-y := \
+	test.o \
+	options.o \
+	export.o \
+	nodes.o \
+	attr.o \
+	asserts.o \
+	types.o \
+	devtree.lex.o \
+	devtree.tab.o \
+	assert.lex.o \
+	eval.lex.o \
+	eval.tab.o
 
 dtc-y := \
 	main.o \
@@ -19,18 +33,22 @@ dtc-y := \
 	attr.o \
 	asserts.o \
 	types.o \
-	lexer.lex.o \
-	parser.tab.o \
-	assert.lex.o
+	devtree.lex.o \
+	devtree.tab.o \
+	assert.lex.o \
+	eval.lex.o \
+	eval.tab.o
 
 # ensure a rebuild if indirect dependencies are updated
 dtc-y += $(build_tree)/sys/libhost.a
 dtc-yaccflags-y := -Wcounterexamples
 
 # additional dependencies for generated headers
-$(loc_build_tree)/parser.tab.host.o: $(loc_build_tree)/lexer.lex.host.o
-$(loc_build_tree)/lexer.lex.host.o: $(loc_build_tree)/parser.tab.c
-$(loc_build_tree)/main.host.o: $(loc_build_tree)/parser.tab.c
+$(loc_build_tree)/devtree.tab.host.o: $(loc_build_tree)/devtree.lex.host.o
+$(loc_build_tree)/devtree.lex.host.o: $(loc_build_tree)/devtree.tab.c
+$(loc_build_tree)/eval.tab.host.o: $(loc_build_tree)/eval.lex.host.o
+$(loc_build_tree)/eval.lex.host.o: $(loc_build_tree)/eval.tab.c
+$(loc_build_tree)/main.host.o: $(loc_build_tree)/devtree.tab.c
 
 
 hostcppflags-y := \
@@ -101,3 +119,7 @@ $(call gen_rule_basic, compile_o_c, $(loc_build_tree)/devicetree.host.o,     $(d
 ####
 
 -include $(devtree_make)
+
+ifneq ($(DEVTREE_ARCH_NCORES),1)
+  DEVTREE_ARCH_MULTI_CORE := y
+endif

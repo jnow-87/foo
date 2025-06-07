@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/vector.h>
 #include <attr.h>
-#include <parser.tab.h>
+#include <devtree.tab.h>
 
 
 /* types */

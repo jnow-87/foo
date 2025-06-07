@@ -12,7 +12,7 @@
 
 
 #include BUILD_ARCH_HEADER
-#include <sys/devicetree.h>
+#include <sys/devtree.h>
 
 #ifndef ASM
 # ifndef BUILD_HOST

@@ -19,7 +19,7 @@
 	#include <string.h>
 	#include <sys/escape.h>
 	#include <asserts.h>
-	#include <lexer.lex.h>
+	#include <devtree.lex.h>
 	#include <nodes.h>
 	#include <types.h>
 
@@ -205,6 +205,11 @@
 %type <sptr> string
 
 %type <type> type
+%type <i> calc
+%type <i> shift-op
+%type <i> add
+%type <i> add-op
+%type <i> op
 
 
 %%
@@ -233,7 +238,30 @@ type-body : %empty									{ OBJECT_RESET($$); }
 		  | type-body type-attr ';'					{ $$ = $1; ATTR_ENLIST(&$$.attrs, &$2); }
 		  | type-body type-attr '=' const ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
 		  | type-body type-attr '=' array ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
+		  | type-body type-attr '=' '{' calc '}' ';'		{ printf("calc: %u\n", $5); }
 		  ;
+
+calc : shift-op '<' '<' shift-op { $$ = $1 << $4; }
+	 | shift-op {}
+	 ;
+
+shift-op : add {$$ = $1; }
+		 | add-op {}
+		 ;
+
+add : add-op '+' add-op	{ $$ = $1 + $3; }
+	 | add-op '-' add-op { $$ = $1 - $3; }
+	 ;
+
+add-op : op '*' op { $$ = $1 * $3; }
+	   | op '/' op { $$ = $1 / $3; }
+	   | op { $$ = $1; }
+	   ;
+
+op : INT	{ $$ = $1; }
+   | '(' calc ')'	{ $$ = $2; }
+   ;
+
 
 type-attr : type IDFR								{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
 		  | type IDFR '[' INT ']'					{ ATTR_INIT(&$$, STRALLOC($2), $1, $4, 0x0);}
