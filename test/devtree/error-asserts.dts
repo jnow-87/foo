@@ -7,6 +7,7 @@
 
 
 
+// error-string: type: invalid type definition
 devicetype{
 	string compatible = "";
 	int8 i[2];
