@@ -43,6 +43,14 @@ typedef enum{
 	AF_ARRAY = 0x2,
 } attr_flags_t;
 
+typedef enum{
+	OP_ADD = 0,
+	OP_MUL,
+	OP_LSHIFT,
+	OP_RSHIFT,
+	OP_MOD,
+} attr_op_t;
+
 typedef struct{
 	vector_t items;
 	size_t limit;
@@ -68,6 +76,7 @@ attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t array
 
 int attr_enlist(vector_t *attrs, attr_t *attr);
 attr_t *attr_assign(attr_t *attr, attr_t *value);
+int attr_op(attr_t *a0, attr_t *a1, attr_op_t op);
 int attr_add(attr_t *attr, attr_t *op);
 int attr_copy(attr_t *dest, attr_t *src);
 

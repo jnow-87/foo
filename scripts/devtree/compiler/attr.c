@@ -20,7 +20,7 @@
 
 
 /* types */
-typedef int (*op_t)(attr_t *a0, attr_t *a1);
+typedef int (*op_t)(attr_t *a0, attr_t *a1, attr_op_t op_to_rm);
 
 
 /* local/static prototypes */
@@ -32,9 +32,9 @@ static bool type_is_int(attr_type_t type);
 
 static int range_check(attr_t *attr, attr_value_t *value);
 
-static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op);
-static int op_assign(attr_t *a0, attr_t *a1);
-static int op_add(attr_t *a0, attr_t *a1);
+static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op, attr_op_t op_to_rm);
+static int op_assign(attr_t *a0, attr_t *a1, attr_op_t op_to_rm);
+static int op_add(attr_t *a0, attr_t *a1, attr_op_t op_to_rm);
 
 
 /* global functions */
@@ -75,11 +75,15 @@ int attr_enlist(vector_t *attrs, attr_t *attr){
 }
 
 attr_t *attr_assign(attr_t *attr, attr_t *value){
-	return op_wrapper(attr, value, op_assign);
+	return op_wrapper(attr, value, op_assign, OP_ADD);
+}
+
+int attr_op(attr_t *a0, attr_t *a1, attr_op_t op){
+	return -(op_wrapper(a0, a1, op_add, op) == 0x0);
 }
 
 int attr_add(attr_t *attr, attr_t *op){
-	return -(op_wrapper(attr, op, op_add) == 0x0);
+	return -(op_wrapper(attr, op, op_add, OP_ADD) == 0x0);
 }
 
 int attr_copy(attr_t *dest, attr_t *src){
@@ -322,7 +326,7 @@ static char const *op_name(op_t op){
 	return "unknown";
 }
 
-static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op){
+static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op, attr_op_t op_to_rm){
 	attr_type_t common_type;
 
 
@@ -337,10 +341,10 @@ static attr_t *op_wrapper(attr_t *a0, attr_t *a1, op_t op){
 	if(type_cast(a1, common_type, a0->flags | a1->flags) != 0)
 		return 0x0;
 
-	return (op(a0, a1) != 0) ? 0x0 : a0;
+	return (op(a0, a1, op_to_rm) != 0) ? 0x0 : a0;
 }
 
-static int op_assign(attr_t *a0, attr_t *a1){
+static int op_assign(attr_t *a0, attr_t *a1, attr_op_t op_to_rm){
 	attr_value_t v = a1->value;
 
 
@@ -356,7 +360,7 @@ static int op_assign(attr_t *a0, attr_t *a1){
 	return 0;
 }
 
-static int op_add(attr_t *a0, attr_t *a1){
+static int op_add(attr_t *a0, attr_t *a1, attr_op_t op_to_rm){
 	char *s;
 	attr_value_t *v;
 
@@ -379,14 +383,28 @@ static int op_add(attr_t *a0, attr_t *a1){
 	case AT_INT16:	// fall through
 	case AT_INT32:	// fall through
 	case AT_INT64:
-		a0->value.i += a1->value.i;
+		switch(op_to_rm){
+		case OP_ADD:	a0->value.i += a1->value.i; break;
+		case OP_MUL:	a0->value.i *= a1->value.i; break;
+		case OP_LSHIFT:	a0->value.i <<= a1->value.i; break;
+		case OP_RSHIFT:	a0->value.i >>= a1->value.i; break;
+		case OP_MOD:	a0->value.i %= a1->value.i; break;
+		default: break;
+		}
+
 		break;
 
 	case AT_ADDR:
+		if(op_to_rm != OP_ADD)
+			return devtree_parser_error("foo not supported for pointer types");
+
 		a0->value.p += (ptrdiff_t)a1->value.p;
 		break;
 
 	case AT_STRING:
+		if(op_to_rm != OP_ADD)
+			return devtree_parser_error("foo not supported for string types");
+
 		if(a0->value.p == 0x0 || a1->value.p == 0x0)
 			return devtree_parser_error("null pointer strings in %s or %s", a0->name, a1->name);
 

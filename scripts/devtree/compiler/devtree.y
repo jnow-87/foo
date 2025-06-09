@@ -65,8 +65,14 @@
 		_assi; \
 	})
 
-	#define ATTR_ADD(value, op) \
-		EABORT(attr_add(value, op)); \
+	#define ATTR_OP(a0, a1, op) \
+		EABORT(attr_op(a0, a1, op)); \
+
+	#define ATTR_ADD(value, op)		ATTR_OP(value, op, OP_ADD)
+	#define ATTR_MUL(value, op)		ATTR_OP(value, op, OP_MUL)
+	#define ATTR_LSHIFT(value, op)	ATTR_OP(value, op, OP_LSHIFT)
+	#define ATTR_RSHIFT(value, op)	ATTR_OP(value, op, OP_RSHIFT)
+	#define ATTR_MOD(value, op)		ATTR_OP(value, op, OP_MOD)
 
 	#define ATTR_COPY(dest, src) \
 		EABORT(attr_copy(dest, src))
@@ -184,6 +190,21 @@
 %token NA_INT64
 %token NA_STRING
 
+// operators
+%token EQUAL
+%token UNEQUAL
+%token LESSER
+%token GREATER
+%token LESSEREQ
+%token GREATEREQ
+%token LEFTSHIFT
+%token RIGHTSHIFT
+%token PLUS
+%token MINUS
+%token MULTIPLY
+%token DIVIDE
+%token MODULO
+
 // asserts
 %token ASSERT
 
@@ -205,11 +226,15 @@
 %type <sptr> string
 
 %type <type> type
-%type <i> calc
-%type <i> shift-op
-%type <i> add
-%type <i> add-op
-%type <i> op
+
+%type <attr> expression
+%type <attr> equality
+%type <attr> relational
+%type <attr> shift
+%type <attr> additive
+%type <attr> multiplicative
+
+
 
 
 %%
@@ -236,31 +261,51 @@ type-body : %empty									{ OBJECT_RESET($$); }
 		  | type-body ';'							{ }
 		  | type-body assert ';'					{ $$ = $1; list_add_tail($$.asserts, $2); }
 		  | type-body type-attr ';'					{ $$ = $1; ATTR_ENLIST(&$$.attrs, &$2); }
-		  | type-body type-attr '=' const ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
-		  | type-body type-attr '=' array ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
-		  | type-body type-attr '=' '{' calc '}' ';'		{ printf("calc: %u\n", $5); }
+/*		  | type-body type-attr '=' const ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); } */
+/*		  | type-body type-attr '=' array ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); } */
+		  | type-body type-attr '=' expression ';'	{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
 		  ;
 
-calc : shift-op '<' '<' shift-op { $$ = $1 << $4; }
-	 | shift-op {}
-	 ;
 
-shift-op : add {$$ = $1; }
-		 | add-op {}
+
+expression : equality							{};
+equality : relational							{}
+		 | equality EQUAL relational			{}
+		 | equality UNEQUAL relational			{}
 		 ;
 
-add : add-op '+' add-op	{ $$ = $1 + $3; }
-	 | add-op '-' add-op { $$ = $1 - $3; }
-	 ;
+relational : shift								{}
+		   | relational LESSER shift			{}
+		   | relational GREATER shift			{}
+		   | relational LESSEREQ shift			{}
+		   | relational GREATEREQ shift			{}
+		   ;
 
-add-op : op '*' op { $$ = $1 * $3; }
-	   | op '/' op { $$ = $1 / $3; }
-	   | op { $$ = $1; }
-	   ;
+shift : additive								{}
+	  | shift LEFTSHIFT additive				{}
+	  | shift RIGHTSHIFT additive				{}
+	  ;
 
-op : INT	{ $$ = $1; }
-   | '(' calc ')'	{ $$ = $2; }
-   ;
+additive : multiplicative						{}
+		 | additive PLUS multiplicative			{ $$ = $1; ATTR_ADD(&$$, &$3); }
+		 | additive MINUS multiplicative		{}
+		 ;
+
+multiplicative : value							{}
+			   | multiplicative MULTIPLY value	{ $$ = $1; ATTR_MUL(&$$, &$3); }
+			   | multiplicative DIVIDE value	{}
+			   | multiplicative MODULO value	{}
+			   ;
+
+value : const									{ $$ = $1;  }
+	  | array									{ $$ = $1;   }
+	  | IDFR									{ }
+	  | attr-ref								{ ATTR_COPY(&$$, $1);   }
+	  | '(' expression ')'						{ $$ = $2; }
+	  | attr-inc								{ $$ = $1;   }
+	  ;
+
+
 
 
 type-attr : type IDFR								{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
@@ -275,14 +320,14 @@ node : IDFR '=' IDFR '(' node-args ')'				{ $$ = type_instantiate(TYPE_LOOKUP($3
 
 node-args : %empty									{ OBJECT_RESET($$); devtreeunput(','); }
 		  | node-args ',' node						{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | node-args ',' IDFR '=' value			{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){}, STRALLOC($3), AT_UNDEF, 0, 0x0), &$5)); }
+		  | node-args ',' IDFR '=' expression			{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){}, STRALLOC($3), AT_UNDEF, 0, 0x0), &$5)); }
 		  ;
 
 /* attributes */
 attr-ref : IDFR '.' IDFR							{ $$ = ATTR_REF($1, $3); };
 
-attr-op : attr-ref '=' value						{ ATTR_ASSIGN($1, &$3); }
-		| attr-ref '+' '=' value					{ ATTR_ADD($1, &$4); }
+attr-op : attr-ref '=' expression						{ ATTR_ASSIGN($1, &$3); }
+		| attr-ref '+' '=' expression					{ ATTR_ADD($1, &$4); }
 		| attr-inc									{ }
 		;
 
@@ -291,21 +336,12 @@ attr-inc : attr-ref '+' '+'							{ ATTR_COPY(&$$, $1); ATTR_ADD($1, UNNAMED_ATT
 		 ;
 
 /* attribute values */
-value : const										{ $$ = $1; }
-	  | array										{ $$ = $1; }
-	  | attr-ref									{ ATTR_COPY(&$$, $1); }
-	  | value '+' const								{ $$ = $1; ATTR_ADD(&$$, &$3); }
-	  | value '+' array								{ $$ = $1; ATTR_ADD(&$$, &$3); }
-	  | value '+' attr-ref							{ $$ = $1; ATTR_ADD(&$$, $3); }
-	  | '(' attr-inc ')'							{ $$ = $2; }
-	  ;
-
 array : '[' array-body ']'							{ $$ = $2; }
 	  | '[' array-body ',' ']'						{ $$ = $2; }
 	  ;
 
 array-body : %empty									{ ATTR_INIT(&$$, 0x0, AT_UNDEF, ATTR_ARRAY_UNLIMITED, 0x0); devtreeunput(','); }
-		   | array-body ',' value					{ $$ = $1; ATTR_ADD(&$$, ($3.flags & AF_ARRAY) ? &$3 : attr_convert_to_list(&$3)); }
+		   | array-body ',' expression					{ $$ = $1; ATTR_ADD(&$$, ($3.flags & AF_ARRAY) ? &$3 : attr_convert_to_list(&$3)); }
 		   ;
 
 const : INT											{ $$ = *UNNAMED_INT($1); }

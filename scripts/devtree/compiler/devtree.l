@@ -78,6 +78,22 @@
 	/* integer */
 (0x)?[0-9a-fA-F]+				{ devtreelval.i = strtol(devtreetext, 0x0, 0); return INT; }
 
+	/* operators */
+==	{ return EQUAL; }
+!= { return UNEQUAL; }
+\<	{ return LESSER; }
+>	{ return GREATER; }
+\<=	{ return LESSEREQ; }
+>=	{ return GREATEREQ; }
+\<<	{ return LEFTSHIFT; }
+>>	{ return RIGHTSHIFT; }
+\+	{ return PLUS; }
+-	{ return MINUS; }
+\*	{ return MULTIPLY; }
+\/	{ return DIVIDE; }
+%	{ return MODULO; }
+
+
 	/* general patterns */
 \r?\n							{ INC_LINE }
 [ \t]							{ }
