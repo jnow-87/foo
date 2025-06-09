@@ -8,16 +8,16 @@
 
 
 #include <stdio.h>
-#include <eval.tab.h>
+#include <devtree.tab.h>
 
 
 /* global functions */
 int main(int argc, char **argv){
 	if(argc < 2)
-		return eval_parser_error("no arg");
+		return devtree_parser_error("no arg");
 
-	if(evalparse(argv[1]) != 0)
-		return eval_parser_error("parser error");
+	if(devtreeparse(argv[1]) != 0)
+		return devtree_parser_error("parser error");
 
 	printf("all good\n");
 
