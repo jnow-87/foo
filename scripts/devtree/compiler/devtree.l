@@ -79,19 +79,29 @@
 (0x)?[0-9a-fA-F]+				{ devtreelval.i = strtol(devtreetext, 0x0, 0); return INT; }
 
 	/* operators */
-==	{ return EQUAL; }
-!= { return UNEQUAL; }
-\<	{ return LESSER; }
->	{ return GREATER; }
-\<=	{ return LESSEREQ; }
->=	{ return GREATEREQ; }
-\<<	{ return LEFTSHIFT; }
->>	{ return RIGHTSHIFT; }
-\+	{ return PLUS; }
--	{ return MINUS; }
-\*	{ return MULTIPLY; }
-\/	{ return DIVIDE; }
-%	{ return MODULO; }
+=		{ return ASSIGN; }
+==		{ return EQUAL; }
+!=		{ return UNEQUAL; }
+\<		{ return LESSER; }
+>		{ return GREATER; }
+\<<		{ return LEFTSHIFT; }
+>>		{ return RIGHTSHIFT; }
+\+		{ return PLUS; }
+-		{ return MINUS; }
+\*		{ return MULTIPLY; }
+\/		{ return DIVIDE; }
+%		{ return MODULO; }
+\<=		{ return LESSEREQ; }
+>=		{ return GREATEREQ; }
+\<<=	{ return LSHIFTEQ; }
+>>=		{ return RSHIFTEQ; }
+\+=		{ return PLUSEQ; }
+-=		{ return MINUSEQ; }
+\*=		{ return MULTIPLYEQ; }
+\/=		{ return DIVIDEEQ; }
+%=		{ return MODULOEQ; }
+\+\+	{ return UNARYPLUS; }
+--		{ return UNARYMINUS; }
 
 
 	/* general patterns */

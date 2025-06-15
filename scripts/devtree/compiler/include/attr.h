@@ -45,7 +45,9 @@ typedef enum{
 
 typedef enum{
 	OP_ADD = 0,
+	OP_SUB,
 	OP_MUL,
+	OP_DIV,
 	OP_LSHIFT,
 	OP_RSHIFT,
 	OP_MOD,
@@ -76,8 +78,7 @@ attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t array
 
 int attr_enlist(vector_t *attrs, attr_t *attr);
 attr_t *attr_assign(attr_t *attr, attr_t *value);
-int attr_op(attr_t *a0, attr_t *a1, attr_op_t op);
-int attr_add(attr_t *attr, attr_t *op);
+int attr_math(attr_t *a0, attr_t *a1, attr_op_t op);
 int attr_copy(attr_t *dest, attr_t *src);
 
 attr_t *attr_get(vector_t *attrs, char const *name, bool maybe_undef);

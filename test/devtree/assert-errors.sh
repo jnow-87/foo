@@ -11,6 +11,9 @@
 SCRIPT_PATH=$(dirname ${BASH_SOURCE[0]})
 
 
+source ${SCRIPT_PATH}/helper.sh
+
+
 dtc=recent/scripts/devtree/compiler/dtc
 assert_dts=$(find ${SCRIPT_PATH} -name 'assert*.dts')
 
@@ -22,12 +25,5 @@ do
 	out=$(${dtc} ${dts} --format=c --output=${ofile} 2>&1)  || { echo ${out}; exit 1; }
 	out=$(cc -Irecent -Iinclude -c ${ofile} 2>&1)
 
-	cat ${dts} | grep "error-string" | sed -e 's:// error-string\: \(.*\):\1:' | while read -r error
-	do
-		if ! echo ${out} | grep "${error}" > /dev/null;then
-			echo -e "\033[31merror\033[0m:\033[35m${dts}\033[0m: error-string \"${error}\" not reported when compiling devtree script"
-			echo -e "  compiler output:\n$(echo "$out" | sed -e 's:^:    :')"
-			exit 1
-		fi
-	done
+	verify_errors "${dts}" "${out}" "${dts}\\|_Static_assert"
 done

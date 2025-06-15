@@ -65,14 +65,16 @@
 		_assi; \
 	})
 
-	#define ATTR_OP(a0, a1, op) \
-		EABORT(attr_op(a0, a1, op)); \
+	#define ATTR_MATH(a0, a1, op) \
+		EABORT(attr_math(a0, a1, op)); \
 
-	#define ATTR_ADD(value, op)		ATTR_OP(value, op, OP_ADD)
-	#define ATTR_MUL(value, op)		ATTR_OP(value, op, OP_MUL)
-	#define ATTR_LSHIFT(value, op)	ATTR_OP(value, op, OP_LSHIFT)
-	#define ATTR_RSHIFT(value, op)	ATTR_OP(value, op, OP_RSHIFT)
-	#define ATTR_MOD(value, op)		ATTR_OP(value, op, OP_MOD)
+	#define ATTR_ADD(value, op)		ATTR_MATH(value, op, OP_ADD)
+	#define ATTR_SUB(value, op)		ATTR_MATH(value, op, OP_SUB)
+	#define ATTR_MUL(value, op)		ATTR_MATH(value, op, OP_MUL)
+	#define ATTR_DIV(value, op)		ATTR_MATH(value, op, OP_DIV)
+	#define ATTR_LSHIFT(value, op)	ATTR_MATH(value, op, OP_LSHIFT)
+	#define ATTR_RSHIFT(value, op)	ATTR_MATH(value, op, OP_RSHIFT)
+	#define ATTR_MOD(value, op)		ATTR_MATH(value, op, OP_MOD)
 
 	#define ATTR_COPY(dest, src) \
 		EABORT(attr_copy(dest, src))
@@ -191,12 +193,11 @@
 %token NA_STRING
 
 // operators
+%token ASSIGN
 %token EQUAL
 %token UNEQUAL
 %token LESSER
 %token GREATER
-%token LESSEREQ
-%token GREATEREQ
 %token LEFTSHIFT
 %token RIGHTSHIFT
 %token PLUS
@@ -204,6 +205,17 @@
 %token MULTIPLY
 %token DIVIDE
 %token MODULO
+%token LESSEREQ
+%token GREATEREQ
+%token LSHIFTEQ
+%token RSHIFTEQ
+%token PLUSEQ
+%token MINUSEQ
+%token MULTIPLYEQ
+%token DIVIDEEQ
+%token MODULOEQ
+%token UNARYPLUS
+%token UNARYMINUS
 
 // asserts
 %token ASSERT
@@ -261,9 +273,7 @@ type-body : %empty									{ OBJECT_RESET($$); }
 		  | type-body ';'							{ }
 		  | type-body assert ';'					{ $$ = $1; list_add_tail($$.asserts, $2); }
 		  | type-body type-attr ';'					{ $$ = $1; ATTR_ENLIST(&$$.attrs, &$2); }
-/*		  | type-body type-attr '=' const ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); } */
-/*		  | type-body type-attr '=' array ';'		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); } */
-		  | type-body type-attr '=' expression ';'	{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
+		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
 		  ;
 
 
@@ -314,25 +324,27 @@ type-attr : type IDFR								{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
 assert : ASSERT '(' string ',' string ')'			{ $$ = assert_create($3, $5); EABORT($$ == 0x0); };
 
 /* nodes */
-node : IDFR '=' IDFR '(' node-args ')'				{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
-	 | IDFR '=' IDFR '(' node-args ',' ')'			{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
+node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
+	 | IDFR ASSIGN IDFR '(' node-args ',' ')'			{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
 	 ;
 
 node-args : %empty									{ OBJECT_RESET($$); devtreeunput(','); }
 		  | node-args ',' node						{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | node-args ',' IDFR '=' expression			{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){}, STRALLOC($3), AT_UNDEF, 0, 0x0), &$5)); }
+		  | node-args ',' IDFR ASSIGN expression			{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){}, STRALLOC($3), AT_UNDEF, 0, 0x0), &$5)); }
 		  ;
 
 /* attributes */
 attr-ref : IDFR '.' IDFR							{ $$ = ATTR_REF($1, $3); };
 
-attr-op : attr-ref '=' expression						{ ATTR_ASSIGN($1, &$3); }
-		| attr-ref '+' '=' expression					{ ATTR_ADD($1, &$4); }
+attr-op : attr-ref ASSIGN expression						{ ATTR_ASSIGN($1, &$3); }
+		| attr-ref PLUSEQ expression					{ ATTR_ADD($1, &$3); }
 		| attr-inc									{ }
 		;
 
-attr-inc : attr-ref '+' '+'							{ ATTR_COPY(&$$, $1); ATTR_ADD($1, UNNAMED_ATTR(INT, 1)); }
-		 | '+' '+' attr-ref							{ ATTR_ADD($3, UNNAMED_ATTR(INT, 1)); ATTR_COPY(&$$, $3); }
+attr-inc : attr-ref UNARYPLUS							{ ATTR_COPY(&$$, $1); ATTR_ADD($1, UNNAMED_ATTR(INT, 1)); }
+		 | UNARYPLUS attr-ref							{ ATTR_ADD($2, UNNAMED_ATTR(INT, 1)); ATTR_COPY(&$$, $2); }
+		 | attr-ref UNARYMINUS							{ ATTR_COPY(&$$, $1); ATTR_SUB($1, UNNAMED_ATTR(INT, 1)); }
+		 | UNARYMINUS attr-ref							{ ATTR_SUB($2, UNNAMED_ATTR(INT, 1)); ATTR_COPY(&$$, $2); }
 		 ;
 
 /* attribute values */
