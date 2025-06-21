@@ -65,8 +65,11 @@
 		_assi; \
 	})
 
-	#define ATTR_MATH(a0, a1, op) \
-		EABORT(attr_math(a0, a1, op)); \
+	#define ATTR_MATH(a0, a1, op)({ \
+		attr_t *_r = attr_math(a0, a1, op, resolve_math); \
+		EABORT(_r == 0x0); \
+		_r; \
+	})
 
 	#define ATTR_ADD(value, op)		ATTR_MATH(value, op, OP_ADD)
 	#define ATTR_SUB(value, op)		ATTR_MATH(value, op, OP_SUB)
@@ -107,6 +110,7 @@
 	static FILE *fp = 0;
 	static char const *dt_script = 0x0;
 	static bool erroneous = false;
+	static bool resolve_math = false;
 
 
 	/* prototypes */
@@ -253,66 +257,66 @@
 
 
 /* start */
-start : devtree										{ if(cleanup() != 0) YYABORT; };
+start : devtree											{ if(cleanup() != 0) YYABORT; };
 
 /* sections */
-devtree : %empty									{ }
-		| error ';'									{ erroneous = true; yyerrok; }
-		| devtree ';'								{ }
-		| devtree typedef ';'						{ }
-		| devtree node ';'							{ EABORT(node_child_add(nodes_root($2->type->category), $2)); }
-		| devtree attr-op ';'						{ }
+devtree : %empty										{ }
+		| error ';'										{ erroneous = true; yyerrok; }
+		| devtree ';'									{ }
+		| devtree typedef ';'							{ }
+		| devtree node ';'								{ EABORT(node_child_add(nodes_root($2->type->category), $2)); }
+		| devtree attr-op ';'							{ }
 		;
 
 /* typedef */
-typedef : TYPEDEF_MEM '{' type-body '}' IDFR		{ EABORT(type_add(STRALLOC($5), TC_MEMORY, &$3.attrs, $3.asserts)); }
-		| TYPEDEF_DEV '{' type-body '}' IDFR		{ EABORT(type_add(STRALLOC($5), TC_DEVICE, &$3.attrs, $3.asserts)); }
+typedef : TYPEDEF_MEM '{' type-body '}' IDFR			{ EABORT(type_add(STRALLOC($5), TC_MEMORY, &$3.attrs, $3.asserts)); }
+		| TYPEDEF_DEV '{' type-body '}' IDFR			{ EABORT(type_add(STRALLOC($5), TC_DEVICE, &$3.attrs, $3.asserts)); }
 		;
 
-type-body : %empty									{ OBJECT_RESET($$); }
-		  | type-body ';'							{ }
-		  | type-body assert ';'					{ $$ = $1; list_add_tail($$.asserts, $2); }
-		  | type-body type-attr ';'					{ $$ = $1; ATTR_ENLIST(&$$.attrs, &$2); }
+type-body : %empty										{ OBJECT_RESET($$); resolve_math = false; }
+		  | type-body ';'								{ $$ = $1; }
+		  | type-body assert ';'						{ $$ = $1; list_add_tail($$.asserts, $2); }
+		  | type-body type-attr ';'						{ $$ = $1; ATTR_ENLIST(&$$.attrs, &$2); }
 		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
 		  ;
 
 
 
-expression : equality							{};
-equality : relational							{}
+expression : equality									{ $$ = $1; };
+equality : relational									{ $$ = $1; }
 		 | equality EQUAL relational			{}
 		 | equality UNEQUAL relational			{}
 		 ;
 
-relational : shift								{}
+relational : shift										{ $$ = $1; }
 		   | relational LESSER shift			{}
 		   | relational GREATER shift			{}
 		   | relational LESSEREQ shift			{}
 		   | relational GREATEREQ shift			{}
 		   ;
 
-shift : additive								{}
-	  | shift LEFTSHIFT additive				{}
-	  | shift RIGHTSHIFT additive				{}
+shift : additive										{ $$ = $1; }
+	  | shift LEFTSHIFT additive						{ $$ = *ATTR_LSHIFT(&$1, &$3); }
+	  | shift RIGHTSHIFT additive						{ $$ = *ATTR_RSHIFT(&$1, &$3); }
 	  ;
 
-additive : multiplicative						{}
-		 | additive PLUS multiplicative			{ $$ = $1; ATTR_ADD(&$$, &$3); }
-		 | additive MINUS multiplicative		{}
+additive : multiplicative								{ $$ = $1; }
+		 | additive PLUS multiplicative					{ $$ = *ATTR_ADD(&$1, &$3); }
+		 | additive MINUS multiplicative				{ $$ = *ATTR_SUB(&$1, &$3); }
 		 ;
 
-multiplicative : value							{}
-			   | multiplicative MULTIPLY value	{ $$ = $1; ATTR_MUL(&$$, &$3); }
-			   | multiplicative DIVIDE value	{}
-			   | multiplicative MODULO value	{}
+multiplicative : value									{ $$ = $1; }
+			   | multiplicative MULTIPLY value			{ $$ = *ATTR_MUL(&$1, &$3); }
+			   | multiplicative DIVIDE value			{ $$ = *ATTR_DIV(&$1, &$3); }
+			   | multiplicative MODULO value			{ $$ = *ATTR_MOD(&$1, &$3); }
 			   ;
 
-value : const									{ $$ = $1;  }
-	  | array									{ $$ = $1;   }
-	  | IDFR									{ }
-	  | attr-ref								{ ATTR_COPY(&$$, $1);   }
-	  | '(' expression ')'						{ $$ = $2; }
-	  | attr-inc								{ $$ = $1;   }
+value : const											{ $$ = $1; }
+	  | array											{ $$ = $1; }
+	  | IDFR											{}
+	  | attr-ref										{ ATTR_COPY(&$$, $1);   }
+	  | '(' expression ')'								{ $$ = $2; }
+	  | attr-inc										{ $$ = $1;   }
 	  ;
 
 
@@ -324,13 +328,13 @@ type-attr : type IDFR								{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
 assert : ASSERT '(' string ',' string ')'			{ $$ = assert_create($3, $5); EABORT($$ == 0x0); };
 
 /* nodes */
-node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
-	 | IDFR ASSIGN IDFR '(' node-args ',' ')'			{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
+node : IDFR ASSIGN IDFR '(' node-args ')'			{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
+	 | IDFR ASSIGN IDFR '(' node-args ',' ')'		{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
 	 ;
 
-node-args : %empty									{ OBJECT_RESET($$); devtreeunput(','); }
+node-args : %empty									{ OBJECT_RESET($$); resolve_math = true; devtreeunput(','); }
 		  | node-args ',' node						{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | node-args ',' IDFR ASSIGN expression			{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){}, STRALLOC($3), AT_UNDEF, 0, 0x0), &$5)); }
+		  | node-args ',' IDFR ASSIGN expression	{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){}, STRALLOC($3), AT_UNDEF, 0, 0x0), &$5)); }
 		  ;
 
 /* attributes */
@@ -353,7 +357,7 @@ array : '[' array-body ']'							{ $$ = $2; }
 	  ;
 
 array-body : %empty									{ ATTR_INIT(&$$, 0x0, AT_UNDEF, ATTR_ARRAY_UNLIMITED, 0x0); devtreeunput(','); }
-		   | array-body ',' expression					{ $$ = $1; ATTR_ADD(&$$, ($3.flags & AF_ARRAY) ? &$3 : attr_convert_to_list(&$3)); }
+		   | array-body ',' expression					{ $$ = *ATTR_ADD(&$1, ($3.flags & AF_ARRAY) ? &$3 : attr_convert_to_list(&$3)); }
 		   ;
 
 const : INT											{ $$ = *UNNAMED_INT($1); }
