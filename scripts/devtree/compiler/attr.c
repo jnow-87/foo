@@ -34,6 +34,7 @@ static int range_check(attr_t *attr, attr_value_t *value);
 static char const *op_name(attr_op_t op);
 
 static int types_align(attr_t *a0, attr_t *a1, bool is_assignment, char const *descr);
+static int math_valid(attr_t *a0, attr_t *a1, attr_op_t op);
 
 
 /* global functions */
@@ -92,24 +93,25 @@ attr_t *attr_assign(attr_t *attr, attr_t *value){
 	return attr;
 }
 
-int attr_math(attr_t *a0, attr_t *a1, attr_op_t op){
+attr_t *attr_math(attr_t *a0, attr_t *a1, attr_op_t op, bool resolve){
 	char *s;
 	attr_value_t *v;
 
 
-	if(types_align(a0, a1, false, op_name(op)) != 0)
-		return -1;
+	if(math_valid(a0, a1, op) != 0)
+		return 0x0;
+
+	if(!resolve){
+		// TODO create
+	}
 
 	if(a0->flags & AF_ARRAY){
-		if(range_check(a0, &a1->value) != 0)
-			return -1;
-
 		vector_for_each(&a1->value.arr.items, v){
 			if(array_add(a0, v) != 0)
-				return -1;
+				return 0x0;
 		}
 
-		return 0;
+		return a0;
 	}
 
 	// TODO should the results be range-checked
@@ -132,23 +134,16 @@ int attr_math(attr_t *a0, attr_t *a1, attr_op_t op){
 		break;
 
 	case AT_ADDR:
-		if(op != OP_ADD)
-			return devtree_parser_error("foo not supported for pointer types");
-
 		a0->value.p += (ptrdiff_t)a1->value.p;
 		break;
 
 	case AT_STRING:
-		if(op != OP_ADD)
-			return devtree_parser_error("foo not supported for string types");
-
-		if(a0->value.p == 0x0 || a1->value.p == 0x0)
-			return devtree_parser_error("null pointer strings in %s or %s", a0->name, a1->name);
-
 		s = malloc(strlen(a0->value.p) + strlen(a1->value.p) + 1);
 
-		if(s == 0x0)
-			return devtree_parser_error("out of memory");
+		if(s == 0x0){
+			devtree_parser_error("out of memory");
+			return 0x0;
+		}
 
 		sprintf(s, "%s%s", a0->value.p, a1->value.p);
 		free(a0->value.p);
@@ -156,13 +151,10 @@ int attr_math(attr_t *a0, attr_t *a1, attr_op_t op){
 		break;
 
 	default:
-		return devtree_parser_error("addition not supported for types %s and %s",
-			attr_type_name(a0->type),
-			attr_type_name(a1->type)
-		);
+		return 0x0;
 	}
 
-	return 0;
+	return a0;
 }
 
 int attr_copy(attr_t *dest, attr_t *src){
@@ -420,6 +412,11 @@ static int types_align(attr_t *a0, attr_t *a1, bool is_assignment, char const *d
 	if(common_type == AT_UNDEF)
 		return -1;
 
+	if(a0->flags & AF_ARRAY){
+		if(range_check(a0, &a1->value) != 0)
+			return -1;
+	}
+
 	if((!is_assignment || a0->type == AT_UNDEF) && type_cast(a0, common_type, a0->flags | a1->flags) != 0)
 		return -1;
 
@@ -427,4 +424,43 @@ static int types_align(attr_t *a0, attr_t *a1, bool is_assignment, char const *d
 		return -1;
 
 	return 0;
+}
+
+static int math_valid(attr_t *a0, attr_t *a1, attr_op_t op){
+	// TODO this function shouldn't change anything in the arguments
+	if(types_align(a0, a1, false, op_name(op)) != 0)
+		return -1;
+
+	if(a0->flags & AF_ARRAY)
+		return (op != OP_ADD) ? devtree_parser_error("%s not supported for arrays", op_name(op)) : 0;
+
+	switch(a0->type){
+	case AT_INT8:	// fall through
+	case AT_INT16:	// fall through
+	case AT_INT32:	// fall through
+	case AT_INT64:
+		return 0;
+
+	case AT_ADDR:
+		if(op != OP_ADD)
+			return devtree_parser_error("foo not supported for pointer types");
+
+		return 0;
+
+	case AT_STRING:
+		if(op != OP_ADD)
+			return devtree_parser_error("foo not supported for string types");
+
+		if(a0->value.p == 0x0 || a1->value.p == 0x0)
+			return devtree_parser_error("null pointer strings in %s or %s", a0->name, a1->name);
+
+		return 0;
+
+	default:
+		return devtree_parser_error("%s not supported for types %s and %s",
+			op_name(op),
+			attr_type_name(a0->type),
+			attr_type_name(a1->type)
+		);
+	}
 }
