@@ -23,7 +23,8 @@ dtc-test-y := \
 	devtree.tab.o \
 	assert.lex.o \
 	eval.lex.o \
-	eval.tab.o
+	eval.tab.o \
+	expr.o
 
 dtc-y := \
 	main.o \
@@ -37,7 +38,8 @@ dtc-y := \
 	devtree.tab.o \
 	assert.lex.o \
 	eval.lex.o \
-	eval.tab.o
+	eval.tab.o \
+	expr.o
 
 # ensure a rebuild if indirect dependencies are updated
 dtc-y += $(build_tree)/sys/libhost.a

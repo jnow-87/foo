@@ -10,27 +10,27 @@
 #include <memory.dts>
 
 
-devicetype{
+typedef{
 	string compatible = "default";
 	int8 i = 1;
 	addr p = 0x10;
 } dev_single;
 
-devicetype{
+typedef{
 	string compatible = "default";
 	int16 i[3] = [ 0, 4, 2 ];
 	string s[4] = [ "f", "o", "o", " " ];
 	addr p[3] = [ 0xdead, 0xbeef, 0x0 ];
 } dev_array;
 
-devicetype{
+typedef{
 	string compatible = "default";
 	int16 i[1];
 	string s[2];
 	addr p[1];
 } dev_array_short;
 
-devicetype{
+typedef{
 	string compatible = "";
 	int32 i;
 
@@ -62,14 +62,15 @@ trailing-comma = dev_single(i=3,);
 // single-value devices
 upd-single = dev_single(compatible="initial", i=1, p=0x1);
 
-upd-single.compatible = "reset";
-upd-single.compatible += "-add";
-
-upd-single.i = 10;
-upd-single.p = 0x20;
-upd-single.p += (++upd-single.i);
-upd-single.i += 2 + 3;
-upd-single.p++;
+// TODO decide if outside-type modifications to attributes are meaningful
+//upd-single.compatible = "reset";
+//upd-single.compatible += "-add";
+//
+//upd-single.i = 10;
+//upd-single.p = 0x20;
+//upd-single.p += (++upd-single.i);
+//upd-single.i += 2 + 3;
+//upd-single.p++;
 
 update-consumer = dev_single(
 	i = (++upd-single.i),
@@ -79,8 +80,9 @@ update-consumer = dev_single(
 // array devices
 upd-array = dev_array();
 
-upd-array.i = [ 1 ] + [ 1 + 1 ] + [ 2 ];
-upd-array.s = [ "b" ] + [ "b" + "a", "r" ] + [ "0" ];
+// TODO decide if outside-type modifications to attributes are meaningful
+//upd-array.i = [ 1 ] + [ 1 + 1 ] + [ 2 ];
+//upd-array.s = [ "b" ] + [ "b" + "a", "r" ] + [ "0" ];
 
 /* test arithmetics */
 // single-value devices

@@ -12,7 +12,7 @@
 
 
 /* types */
-memorytype{
+typedef{
 	addr base;
 	int32 size;
 } memory;
