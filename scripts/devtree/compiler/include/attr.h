@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/vector.h>
+#include <expr.h>
 
 
 /* macros */
@@ -72,21 +73,31 @@ typedef struct{
 	attr_value_t value;
 } attr_t;
 
+typedef struct{
+	char const *name;
+	expr_t value;
+} new_attr_t;
+
+typedef vector_t attr_vec_t;
+
 
 /* prototypes */
 attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t array_limit, attr_value_t *value);
 
-int attr_enlist(vector_t *attrs, attr_t *attr);
+int attr_enlist(attr_vec_t *attrs, attr_t *attr);
 attr_t *attr_assign(attr_t *attr, attr_t *value);
 attr_t *attr_math(attr_t *a0, attr_t *a1, attr_op_t op, bool resolve);
 int attr_copy(attr_t *dest, attr_t *src);
 
-attr_t *attr_get(vector_t *attrs, char const *name, bool maybe_undef);
-attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool maybe_undef);
+attr_t *attr_get(attr_vec_t *attrs, char const *name, bool maybe_undef);
+attr_t *attr_get_typed(attr_vec_t *attrs, char const *name, attr_type_t type, bool maybe_undef);
 
 attr_t *attr_convert_to_list(attr_t *attr);
 char const *attr_type_name(attr_type_t type);
 size_t attr_type_size(attr_type_t type);
+
+
+new_attr_t *new_attr_assign(new_attr_t *attr, expr_t *expr);
 
 
 #endif // DEVTREE_ATTR_H

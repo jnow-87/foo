@@ -61,7 +61,7 @@ attr_t *attr_init(attr_t *attr, char const *name, attr_type_t type, size_t array
 	return attr;
 }
 
-int attr_enlist(vector_t *attrs, attr_t *attr){
+int attr_enlist(attr_vec_t *attrs, attr_t *attr){
 	if(attr->name == 0x0)
 		return devtree_parser_error("unable to define unnamed attribute");
 
@@ -180,11 +180,11 @@ err:
 	return devtree_parser_error("%s: attribute copy failed", src->name);
 }
 
-attr_t *attr_get(vector_t *attrs, char const *name, bool maybe_undef){
+attr_t *attr_get(attr_vec_t *attrs, char const *name, bool maybe_undef){
 	return attr_get_typed(attrs, name, AT_UNDEF, maybe_undef);
 }
 
-attr_t *attr_get_typed(vector_t *attrs, char const *name, attr_type_t type, bool maybe_undef){
+attr_t *attr_get_typed(attr_vec_t *attrs, char const *name, attr_type_t type, bool maybe_undef){
 	attr_t *attr;
 
 
@@ -249,6 +249,11 @@ size_t attr_type_size(attr_type_t type){
 	default:		return 1;
 	}
 }
+
+new_attr_t *new_attr_assign(new_attr_t *attr, expr_t *expr){
+	return attr;
+}
+
 
 
 /* local functions */

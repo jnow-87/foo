@@ -56,6 +56,9 @@
 	#define UNNAMED_INT(value)		UNNAMED_ATTR(INT, value)
 	#define UNNAMED_STRING(value)	UNNAMED_ATTR(STRING, value)
 
+	#define EXPR_ARRAY_ADD(array, expr) \
+		EABORT(expr_array_add(array, expr) != 0)
+
 	#define ATTR_ENLIST(attrs, attr) \
 		EABORT(attr_enlist(attrs, attr) != 0)
 
@@ -105,6 +108,9 @@
 		(obj).childs = 0x0; \
 	}
 
+	#define EXPR(expr, op, arg0, arg1) \
+		EABORT(expr_create(expr, op, arg0, arg1) == 0x0)
+
 
 	/* local/static variables */
 	static FILE *fp = 0;
@@ -127,6 +133,7 @@
 	#include <sys/list.h>
 	#include <sys/vector.h>
 	#include <asserts.h>
+	#include <expr.h>
 	#include <nodes.h>
 	#include <types.h>
 
@@ -160,12 +167,13 @@
 
 /* parser union type */
 %union{
+	expr_t expr;
 	ATTR_INT_TYPE i;
 	char s[DEVTREE_STRMAX];
 	char *sptr;
-	attr_t *aptr;
+	new_attr_t *aptr;
 
-	attr_type_t type;
+	attr_type_t basetype;
 	attr_t attr;
 
 	node_t *node;
@@ -185,8 +193,7 @@
 %token <s> IDFR
 
 // typedef
-%token TYPEDEF_MEM
-%token TYPEDEF_DEV
+%token TYPEDEF
 
 // node attributes
 %token NA_ADDR
@@ -209,6 +216,11 @@
 %token MULTIPLY
 %token DIVIDE
 %token MODULO
+%token LOGAND
+%token LOGOR
+%token BITAND
+%token BITOR
+%token BITXOR
 %token LESSEREQ
 %token GREATEREQ
 %token LSHIFTEQ
@@ -232,24 +244,29 @@
 %type <node> node
 %type <object> node-args
 
+
+%type <expr> value
+
+%type <basetype> basetype
+
+%type <expr> expression
+%type <expr> logor
+%type <expr> logand
+%type <expr> bitor
+%type <expr> bitxor
+%type <expr> bitand
+%type <expr> equality
+%type <expr> relational
+%type <expr> shift
+%type <expr> additive
+%type <expr> multiplicative
+%type <expr> unary
+
 %type <aptr> attr-ref
-%type <attr> attr-inc
-
-%type <attr> value
-%type <attr> array
-%type <attr> array-body
-%type <attr> const
+%type <expr> array
+%type <expr> array-body
+%type <expr> const
 %type <sptr> string
-
-%type <type> type
-
-%type <attr> expression
-%type <attr> equality
-%type <attr> relational
-%type <attr> shift
-%type <attr> additive
-%type <attr> multiplicative
-
 
 
 
@@ -265,116 +282,123 @@ devtree : %empty										{ }
 		| devtree ';'									{ }
 		| devtree typedef ';'							{ }
 		| devtree node ';'								{ EABORT(node_child_add(nodes_root($2->type->category), $2)); }
-		| devtree attr-op ';'							{ }
 		;
 
 /* typedef */
-typedef : TYPEDEF_MEM '{' type-body '}' IDFR			{ EABORT(type_add(STRALLOC($5), TC_MEMORY, &$3.attrs, $3.asserts)); }
-		| TYPEDEF_DEV '{' type-body '}' IDFR			{ EABORT(type_add(STRALLOC($5), TC_DEVICE, &$3.attrs, $3.asserts)); }
+typedef : TYPEDEF '{' type-body '}' IDFR				{ EABORT(type_add(STRALLOC($5), &$3.attrs, $3.asserts)); }
 		;
 
 type-body : %empty										{ OBJECT_RESET($$); resolve_math = false; }
 		  | type-body ';'								{ $$ = $1; }
-		  | type-body assert ';'						{ $$ = $1; list_add_tail($$.asserts, $2); }
+		  | type-body assert ';'						{ $$ = $1; /*list_add_tail($$.asserts, $2);*/ }
 		  | type-body type-attr ';'						{ $$ = $1; ATTR_ENLIST(&$$.attrs, &$2); }
 		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
 		  ;
 
+type-attr : basetype IDFR								{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
+		  | basetype IDFR '[' INT ']'					{ ATTR_INIT(&$$, STRALLOC($2), $1, $4, 0x0);}
+		  ;
 
+basetype : NA_STRING									{ $$ = AT_STRING; }
+		 | NA_ADDR										{ $$ = AT_ADDR; }
+		 | NA_INT8   									{ $$ = AT_INT8; }
+		 | NA_INT16										{ $$ = AT_INT16; }
+		 | NA_INT32										{ $$ = AT_INT32; }
+		 | NA_INT64										{ $$ = AT_INT64; }
+		 ;
 
-expression : equality									{ $$ = $1; };
+assert : ASSERT '(' expression ',' string ')'			{ /*$$ = assert_create($3, $5); EABORT($$ == 0x0); */ };
+
+/* nodes */
+node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
+	 | IDFR ASSIGN IDFR '(' node-args ',' ')'			{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
+	 ;
+
+node-args : %empty										{ OBJECT_RESET($$); resolve_math = true; devtreeunput(','); }
+		  | node-args ',' node							{ $$ = $1; list_add_tail($$.childs, $3); }
+		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){}, STRALLOC($3), AT_UNDEF, 0, 0x0), &$5)); }
+		  ;
+
+/* expression */
+expression : logor										{ $$ = $1; };
+
+logor : logand											{ $$ = $1; }
+	  | logor LOGOR logand								{ EXPR(&$$, expr_log_or, &$1, &$3); }
+	  ;
+
+logand : bitor											{ $$ = $1; }
+	   | logand LOGAND bitor							{ EXPR(&$$, expr_log_and, &$1, &$3); }
+	   ;
+
+bitor : bitxor											{ $$ = $1; }
+	  | bitor BITOR bitxor								{ EXPR(&$$, expr_bit_or, &$1, &$3); }
+
+bitxor : bitand											{ $$ = $1; }
+	   | bitxor BITXOR bitand							{ EXPR(&$$, expr_bit_xor, &$1, &$3); }
+	   ;
+
+bitand : equality										{ $$ = $1; }
+	   | bitand BITAND equality							{ EXPR(&$$, expr_bit_and, &$1, &$3); }
+	   ;
+
 equality : relational									{ $$ = $1; }
-		 | equality EQUAL relational			{}
-		 | equality UNEQUAL relational			{}
+		 | equality EQUAL relational					{ EXPR(&$$, expr_eq, &$1, &$3); }
+		 | equality UNEQUAL relational					{ EXPR(&$$, expr_neq, &$1, &$3); }
 		 ;
 
 relational : shift										{ $$ = $1; }
-		   | relational LESSER shift			{}
-		   | relational GREATER shift			{}
-		   | relational LESSEREQ shift			{}
-		   | relational GREATEREQ shift			{}
+		   | relational LESSER shift					{ EXPR(&$$, expr_lesser, &$1, &$3); }
+		   | relational GREATER shift					{ EXPR(&$$, expr_lesser_eq, &$1, &$3); }
+		   | relational LESSEREQ shift					{ EXPR(&$$, expr_greater, &$1, &$3); }
+		   | relational GREATEREQ shift					{ EXPR(&$$, expr_greater_eq, &$1, &$3); }
 		   ;
 
 shift : additive										{ $$ = $1; }
-	  | shift LEFTSHIFT additive						{ $$ = *ATTR_LSHIFT(&$1, &$3); }
-	  | shift RIGHTSHIFT additive						{ $$ = *ATTR_RSHIFT(&$1, &$3); }
+	  | shift LEFTSHIFT additive						{ EXPR(&$$, expr_lshift, &$1, &$3); }
+	  | shift RIGHTSHIFT additive						{ EXPR(&$$, expr_rshift, &$1, &$3); }
 	  ;
 
 additive : multiplicative								{ $$ = $1; }
-		 | additive PLUS multiplicative					{ $$ = *ATTR_ADD(&$1, &$3); }
-		 | additive MINUS multiplicative				{ $$ = *ATTR_SUB(&$1, &$3); }
+		 | additive PLUS multiplicative					{ EXPR(&$$, expr_add, &$1, &$3); }
+		 | additive MINUS multiplicative				{ EXPR(&$$, expr_sub, &$1, &$3); }
 		 ;
 
-multiplicative : value									{ $$ = $1; }
-			   | multiplicative MULTIPLY value			{ $$ = *ATTR_MUL(&$1, &$3); }
-			   | multiplicative DIVIDE value			{ $$ = *ATTR_DIV(&$1, &$3); }
-			   | multiplicative MODULO value			{ $$ = *ATTR_MOD(&$1, &$3); }
+multiplicative : unary									{ $$ = $1; }
+			   | multiplicative MULTIPLY unary			{ EXPR(&$$, expr_mul, &$1, &$3); }
+			   | multiplicative DIVIDE unary			{ EXPR(&$$, expr_div, &$1, &$3); }
+			   | multiplicative MODULO unary			{ EXPR(&$$, expr_mod, &$1, &$3); }
 			   ;
+
+unary : attr-ref UNARYPLUS								{ $$ = $2->value; ATTR_ASSIGN($2, EXPR($2->value, expr_add, $2->value, EXPR_INT(64, 1)); }
+	  | attr-ref UNARYMINUS								{ $$ = $2->value; ATTR_ASSIGN($2, EXPR($2->value, expr_sub, $2->value, EXPR_INT(64, 1)); }
+	  | UNARYPLUS attr-ref								{ ATTR_ASSIGN($2, EXPR($2->value, expr_add, $2->value, EXPR_INT(64, 1)); $$ = $2->value; }
+	  | UNARYMINUS attr-ref								{ ATTR_ASSIGN($2, EXPR($2->value, expr_sub, $2->value, EXPR_INT(64, 1)); $$ = $2->value; }
+	  | value											{ $$ = $1; }
+	  ;
 
 value : const											{ $$ = $1; }
 	  | array											{ $$ = $1; }
-	  | IDFR											{}
-	  | attr-ref										{ ATTR_COPY(&$$, $1);   }
+	  | attr-ref										{ $$ = $1->expr;   }
 	  | '(' expression ')'								{ $$ = $2; }
-	  | attr-inc										{ $$ = $1;   }
+/*	  | IDFR											{ }  TODO unclear if needed*/
 	  ;
 
+/* values */
+attr-ref : IDFR '.' IDFR								{ $$ = ATTR_REF($1, $3); };
 
-
-
-type-attr : type IDFR								{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
-		  | type IDFR '[' INT ']'					{ ATTR_INIT(&$$, STRALLOC($2), $1, $4, 0x0);}
-
-assert : ASSERT '(' string ',' string ')'			{ $$ = assert_create($3, $5); EABORT($$ == 0x0); };
-
-/* nodes */
-node : IDFR ASSIGN IDFR '(' node-args ')'			{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
-	 | IDFR ASSIGN IDFR '(' node-args ',' ')'		{ $$ = type_instantiate(TYPE_LOOKUP($3), STRALLOC($1), &$5.attrs, $5.childs); EABORT($$ == 0x0); }
-	 ;
-
-node-args : %empty									{ OBJECT_RESET($$); resolve_math = true; devtreeunput(','); }
-		  | node-args ',' node						{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | node-args ',' IDFR ASSIGN expression	{ $$ = $1; ATTR_ENLIST(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){}, STRALLOC($3), AT_UNDEF, 0, 0x0), &$5)); }
-		  ;
-
-/* attributes */
-attr-ref : IDFR '.' IDFR							{ $$ = ATTR_REF($1, $3); };
-
-attr-op : attr-ref ASSIGN expression						{ ATTR_ASSIGN($1, &$3); }
-		| attr-ref PLUSEQ expression					{ ATTR_ADD($1, &$3); }
-		| attr-inc									{ }
-		;
-
-attr-inc : attr-ref UNARYPLUS							{ ATTR_COPY(&$$, $1); ATTR_ADD($1, UNNAMED_ATTR(INT, 1)); }
-		 | UNARYPLUS attr-ref							{ ATTR_ADD($2, UNNAMED_ATTR(INT, 1)); ATTR_COPY(&$$, $2); }
-		 | attr-ref UNARYMINUS							{ ATTR_COPY(&$$, $1); ATTR_SUB($1, UNNAMED_ATTR(INT, 1)); }
-		 | UNARYMINUS attr-ref							{ ATTR_SUB($2, UNNAMED_ATTR(INT, 1)); ATTR_COPY(&$$, $2); }
-		 ;
-
-/* attribute values */
-array : '[' array-body ']'							{ $$ = $2; }
-	  | '[' array-body ',' ']'						{ $$ = $2; }
+array : '[' array-body ']'								{ $$ = $2; }
+	  | '[' array-body ',' ']'							{ $$ = $2; }
 	  ;
 
-array-body : %empty									{ ATTR_INIT(&$$, 0x0, AT_UNDEF, ATTR_ARRAY_UNLIMITED, 0x0); devtreeunput(','); }
-		   | array-body ',' expression					{ $$ = *ATTR_ADD(&$1, ($3.flags & AF_ARRAY) ? &$3 : attr_convert_to_list(&$3)); }
+array-body : %empty										{ EXPR_ARRAY(ET_UNDEF); devtreeunput(','); }
+		   | array-body ',' expression					{ $$ = $1; EXPR_ARRAY_ADD(&$$, &$3); }
 		   ;
 
-const : INT											{ $$ = *UNNAMED_INT($1); }
-	  | string										{ $$ = *UNNAMED_STRING($1); }
+const : INT												{ $$ = EXPR_INT(64, $1); }
+	  | string											{ $$ = EXPR_STR($1); }
 	  ;
 
-string : STRING										{ $$ = STRALLOC($1); };
-
-
-/* node attributes */
-type : NA_STRING									{ $$ = AT_STRING; }
-	 | NA_ADDR										{ $$ = AT_ADDR; }
-	 | NA_INT8   									{ $$ = AT_INT8; }
-	 | NA_INT16										{ $$ = AT_INT16; }
-	 | NA_INT32										{ $$ = AT_INT32; }
-	 | NA_INT64										{ $$ = AT_INT64; }
-	 ;
+string : STRING											{ $$ = STRALLOC($1); };
 
 
 %%

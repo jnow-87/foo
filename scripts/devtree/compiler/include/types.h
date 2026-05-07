@@ -35,16 +35,16 @@ typedef struct type_t{
 	type_cat_t category;
 
 	assert_t *asserts;
-	vector_t attrs;
+	attr_vec_t attrs;
 } type_t;
 
 
 /* prototypes */
 type_t *types(void);
 
-int type_add(char const *name, type_cat_t category, vector_t *attrs, assert_t *asserts);
+int type_add(char const *name, attr_vec_t *attrs, assert_t *asserts);
 type_t *type_lookup(char const *name);
-struct node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, struct node_t *childs);
+struct node_t *type_instantiate(type_t *type, char const *name, attr_vec_t *attrs, struct node_t *childs);
 
 char const *type_strcat(type_cat_t category);
 

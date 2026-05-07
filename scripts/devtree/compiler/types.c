@@ -31,9 +31,14 @@ type_t *types(void){
 	return type_lst;
 }
 
-int type_add(char const *name, type_cat_t category, vector_t *attrs, assert_t *asserts){
+int type_add(char const *name, vector_t *attrs, assert_t *asserts){
 	type_t *type;
+	type_cat_t category = TC_MEMORY;
 
+
+	// TODO make the type category detection more robust, adding linter functions
+	if(attr_get(attrs, "compatible", true) != 0)
+		category = TC_DEVICE;
 
 	if(type_validate(category, attrs, asserts) != 0)
 		return devtree_parser_error("%s: invalid type definition", name);
