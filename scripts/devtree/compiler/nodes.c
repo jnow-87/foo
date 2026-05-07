@@ -38,8 +38,8 @@ int nodes_init(void){
 	if(attr_enlist(&attrs, attr_init(&(attr_t){}, "compatible", AT_STRING, 0, &ATTR_VALUE(p, ""))) != 0)
 		return -1;
 
-	r |= type_add("memory_root", TC_MEMORY, &VECTOR_INITIALISER(sizeof(attr_t)), 0x0);
-	r |= type_add("devices_root", TC_DEVICE, &attrs, 0x0);
+	r |= type_add("memory_root", &VECTOR_INITIALISER(sizeof(attr_t)), 0x0);
+	r |= type_add("devices_root", &attrs, 0x0);
 
 	if(r != 0)
 		return -1;

@@ -29,7 +29,7 @@ static FILE *output_file(char const *file);
 // TODO extend parser to support gcc preproc line information
 // 		update scripts/build/compile.make::preproc_file, removing -P to get them
 //
-// TODO simplify terminary operators via bool casts as done in 1e177e4fac19aabf2ecec6424231105d047a4875
+// TODO simplify ternary operators via bool casts as done in 1e177e4fac19aabf2ecec6424231105d047a4875
 
 
 /* global functions */

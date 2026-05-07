@@ -48,8 +48,7 @@
 %}
 
 	/* typedef */
-"memorytype"					{ return TYPEDEF_MEM; }
-"devicetype"					{ return TYPEDEF_DEV; }
+"typedef"					{ return TYPEDEF; }
 
 	/* node attributes */
 "addr"							{ return NA_ADDR; }
@@ -91,6 +90,11 @@
 \*		{ return MULTIPLY; }
 \/		{ return DIVIDE; }
 %		{ return MODULO; }
+&&		{ return LOGAND; }
+\|\|	{ return LOGOR; }
+&		{ return BITAND; }
+\|		{ return BITOR; }
+\^		{ return BITXOR; }
 \<=		{ return LESSEREQ; }
 >=		{ return GREATEREQ; }
 \<<=	{ return LSHIFTEQ; }
