@@ -7,8 +7,8 @@
 
 
 
-#ifndef EXPORT_H
-#define EXPORT_H
+#ifndef codegen_H
+#define codegen_H
 
 
 #include <stdio.h>
@@ -16,9 +16,9 @@
 
 
 /* prototypes */
-void export_make(FILE *fp, vector_t *nodes);
-void export_header(FILE *fp, vector_t *nodes);
-void export_source(FILE *fp, vector_t *nodes);
+void codegen_make(FILE *fp, vector_t *nodes);
+void codegen_header(FILE *fp, vector_t *nodes);
+void codegen_source(FILE *fp, vector_t *nodes);
 
 
-#endif // EXPORT_H
+#endif // codegen_H

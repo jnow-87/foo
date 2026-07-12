@@ -303,14 +303,14 @@ char *strupr(char const *s, char *buf, size_t n){
 	return buf;
 }
 
-char *strcident(char const *s){
+char *strcidtfr(char const *s){
 	static char _s[NAME_MAX + 1];
 
 
-	return strcident_r(s, _s, NAME_MAX + 1);
+	return strcidtfr_r(s, _s, NAME_MAX + 1);
 }
 
-char *strcident_r(char const *s, char *buf, size_t n){
+char *strcidtfr_r(char const *s, char *buf, size_t n){
 	size_t i;
 
 

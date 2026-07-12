@@ -13,52 +13,56 @@
 #include <sys/register.h>
 #include <sys/types.h>
 #include <sys/vector.h>
-#include <attr.h>
-#include <devtree.tab.h>
-#include <nodes.h>
+#include <parser.tab.h>
+#include "attr.h"
+#include "node.h"
 
 
 /* local/static prototypes */
+static int eval_asserts(node_t *node);
+
 static int index_add(node_t *node);
 static node_t *index_query(char const *name);
 
 
 /* static variables */
 static vector_t node_index = VECTOR_INITIALISER(sizeof(node_t*));
-static node_t *memory_nodes,
-			  *device_nodes;
+static node_t *nodes;
 
 
 /* global functions */
 int nodes_init(void){
-	int r = 0;
 	vector_t attrs = VECTOR_INITIALISER(sizeof(attr_t));
 
 
-	if(attr_enlist(&attrs, attr_init(&(attr_t){}, "compatible", AT_STRING, 0, &ATTR_VALUE(p, ""))) != 0)
+	if(attr_enlist(&attrs, attr_init(&(attr_t){}, "compatible", ET_STRING, 0, EXPR_STR(""))) != 0)
 		return -1;
 
-	r |= type_add("memory_root", &VECTOR_INITIALISER(sizeof(attr_t)), 0x0);
-	r |= type_add("devices_root", &attrs, 0x0);
-
-	if(r != 0)
+	if(type_create("root", &attrs, 0x0) != 0)
 		return -1;
 
-	memory_nodes = node_create("memory_root", type_lookup("memory_root"), 0x0);
-	device_nodes = node_create("device_root", type_lookup("devices_root"), 0x0);
+	nodes = type_instantiate(type_lookup("root"), "root", &attrs, 0x0);
 
-	if(memory_nodes == 0x0 || device_nodes == 0x0)
+	if(nodes == 0x0)
 		return -1;
 
-	return attr_enlist(&device_nodes->attrs, attr_init(&(attr_t){}, "compatible", AT_STRING, 0, &ATTR_VALUE(p, "")));
+	return 0;
 }
 
-node_t *nodes_root(type_cat_t category){
-	switch(category){
-	case TC_MEMORY:	return memory_nodes;
-	case TC_DEVICE:	return device_nodes;
-	default:		return 0x0;
+node_t *nodes_root(){
+	return nodes;
+}
+
+int nodes_assert(void){
+	node_t *node;
+
+
+	list_for_each(nodes, node){
+		if(eval_asserts(node) != 0)
+			return -1;
 	}
+
+	return 0;
 }
 
 node_t *node_create(char const *name, type_t *type, node_t *childs){
@@ -74,6 +78,7 @@ node_t *node_create(char const *name, type_t *type, node_t *childs){
 	if(vector_init(&node->attrs, sizeof(attr_t), type->attrs.size) != 0)
 		goto err_1;
 
+	// TODO who should own the name memory, cf. node_destroy(), which free's it
 	node->name = name;
 	node->type = type;
 
@@ -101,19 +106,9 @@ void node_destroy(node_t *node){
 	free(node);
 }
 
-int node_child_add(node_t *parent, node_t *child){
-	if(parent != nodes_root(parent->type->category) && parent->type->category != child->type->category){
-		return devtree_parser_error("%s: %s invalid child node type, expecting %s",
-			parent->name,
-			child->name,
-			type_strcat(parent->type->category)
-		);
-	}
-
+void node_child_add(node_t *parent, node_t *child){
 	child->parent = parent;
 	list_add_tail(parent->childs, child);
-
-	return 0;
 }
 
 node_t *node_ref(char const *name){
@@ -147,4 +142,20 @@ static node_t *index_query(char const *name){
 	}
 
 	return 0x0;
+}
+
+static int eval_asserts(node_t *node){
+	assert_t *assert;
+	expr_arg_t r;
+
+	// TODO add a test case that checks an assert triggers also after
+	// 		an attribute of an existing node is updated
+	// TODO consider checking asserts on node creation an each time 
+	// 		a node's attributes are modified
+	list_for_each(node->type->asserts, assert){
+		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || r.is_array || r.value.i != 0)
+			return -1;
+	}
+
+	return 0;
 }

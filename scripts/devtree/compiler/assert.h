@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <sys/vector.h>
+#include "expr.h"
 
 
 /* macros */
@@ -24,15 +25,13 @@ typedef struct assert_t{
 	struct assert_t *prev,
 					*next;
 
-	char const *expr,
-			   *msg;
+	expr_t *expr;
+	char const *msg;
 } assert_t;
 
 
 /* prototypes */
-assert_t *assert_create(char const *expr, char const *msg);
-int assert_check(assert_t *assert, vector_t *attrs);
-int assert_export(FILE *fp, assert_t *assert, vector_t *attrs);
+assert_t *assert_create(expr_t *expr, char const *msg);
 
 
 #endif // DEVTREE_ASSERT_H
