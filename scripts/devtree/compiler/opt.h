@@ -11,9 +11,6 @@
 #define OPTIONS_H
 
 
-#include <types.h>
-
-
 /* types */
 typedef enum{
 	FMT_C = 1,

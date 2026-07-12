@@ -13,32 +13,26 @@ hostbin-y := dtc dtc-test
 
 dtc-test-y := \
 	test.o \
-	options.o \
-	export.o \
+	opt.o \
+	codegen.o \
 	nodes.o \
-	attr.o \
-	asserts.o \
+	assert.o \
+	attrs.o \
 	types.o \
-	devtree.lex.o \
-	devtree.tab.o \
-	assert.lex.o \
-	eval.lex.o \
-	eval.tab.o \
+	lexer.lex.o \
+	parser.tab.o \
 	expr.o
 
 dtc-y := \
 	main.o \
-	options.o \
-	export.o \
-	nodes.o \
+	opt.o \
+	codegen.o \
+	node.o \
+	assert.o \
 	attr.o \
-	asserts.o \
-	types.o \
-	devtree.lex.o \
-	devtree.tab.o \
-	assert.lex.o \
-	eval.lex.o \
-	eval.tab.o \
+	type.o \
+	lexer.lex.o \
+	parser.tab.o \
 	expr.o
 
 # ensure a rebuild if indirect dependencies are updated
@@ -46,16 +40,14 @@ dtc-y += $(build_tree)/sys/libhost.a
 dtc-yaccflags-y := -Wcounterexamples
 
 # additional dependencies for generated headers
-$(loc_build_tree)/devtree.tab.host.o: $(loc_build_tree)/devtree.lex.host.o
-$(loc_build_tree)/devtree.lex.host.o: $(loc_build_tree)/devtree.tab.c
-$(loc_build_tree)/eval.tab.host.o: $(loc_build_tree)/eval.lex.host.o
-$(loc_build_tree)/eval.lex.host.o: $(loc_build_tree)/eval.tab.c
-$(loc_build_tree)/main.host.o: $(loc_build_tree)/devtree.tab.c
+$(loc_build_tree)/parser.tab.host.o: $(loc_build_tree)/lexer.lex.host.o
+$(loc_build_tree)/lexer.lex.host.o: $(loc_build_tree)/parser.tab.c
+$(loc_build_tree)/main.host.o: $(loc_build_tree)/parser.tab.c
 
 
 hostcppflags-y := \
 	-I$(src_tree)/include \
-	-I$(loc_src_tree)/include \
+	-I$(loc_src_tree)/ \
 	-I$(loc_build_tree) \
 	-I/usr/include
 

@@ -12,10 +12,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/vector.h>
-#include <devtree.tab.h>
-#include <export.h>
-#include <nodes.h>
-#include <options.h>
+#include <parser.tab.h>
+#include "codegen.h"
+#include "node.h"
+#include "opt.h"
 
 
 /* local/static prototypes */
@@ -23,7 +23,6 @@ static int collect_nodes(vector_t *nodes);
 static FILE *output_file(char const *file);
 
 
-// TODO rename export to compile
 // TODO check memory allocation, especially free
 // TODO overall review
 // TODO extend parser to support gcc preproc line information
@@ -48,6 +47,12 @@ int main(int argc, char **argv){
 	if(devtreeparse(options.ifile_name) != 0)
 		goto end;
 
+	printf("parsed\n");
+	return 0;
+
+	if(nodes_assert() != 0)
+		goto end;
+
 	/* write output file */
 	if(collect_nodes(&nodes) != 0)
 		goto end;
@@ -55,9 +60,9 @@ int main(int argc, char **argv){
 	ofile = output_file(options.ofile_name);
 
 	switch(options.ofile_format){
-	case FMT_HEADER:	export_header(ofile, &nodes); break;
-	case FMT_C:			export_source(ofile, &nodes); break;
-	case FMT_MAKE:		export_make(ofile, &nodes); break;
+	case FMT_HEADER:	codegen_header(ofile, &nodes); break;
+	case FMT_C:			codegen_source(ofile, &nodes); break;
+	case FMT_MAKE:		codegen_make(ofile, &nodes); break;
 	}
 
 	if(options.ofile_name != 0x0)
@@ -88,10 +93,8 @@ static int collect_nodes(vector_t *nodes){
 				return -1;
 		}
 	}
-	else{
-		r |= vector_add(nodes, &(node_t*){ nodes_root(TC_MEMORY) });
-		r |= vector_add(nodes, &(node_t*){ nodes_root(TC_DEVICE) });
-	}
+	else
+		r |= vector_add(nodes, &(node_t*){ nodes_root() });
 
 	return r;
 }

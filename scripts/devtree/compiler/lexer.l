@@ -13,7 +13,7 @@
 
 %{
 	#include <stdlib.h>
-	#include <devtree.tab.h>
+	#include <parser.tab.h>
 
 
 	/* macros */
@@ -48,7 +48,7 @@
 %}
 
 	/* typedef */
-"typedef"					{ return TYPEDEF; }
+"typedef"						{ return TYPEDEF; }
 
 	/* node attributes */
 "addr"							{ return NA_ADDR; }

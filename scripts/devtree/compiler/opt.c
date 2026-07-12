@@ -12,8 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <options.h>
-#include <types.h>
+#include "opt.h"
 
 
 /* local/static prototypes */

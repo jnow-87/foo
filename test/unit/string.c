@@ -355,17 +355,17 @@ TEST(strupr){
 	return -r;
 }
 
-TEST(strcident){
+TEST(strcidtfr){
 	int r = 0;
 	char s[8];
 
 
-	r |= TEST_STR_EQ(strcident(""), "");
-	r |= TEST_STR_EQ(strcident("foobar"), "foobar");
-	r |= TEST_STR_EQ(strcident("foo_bar"), "foo_bar");
-	r |= TEST_STR_EQ(strcident("foo-bar"), "foo_bar");
+	r |= TEST_STR_EQ(strcidtfr(""), "");
+	r |= TEST_STR_EQ(strcidtfr("foobar"), "foobar");
+	r |= TEST_STR_EQ(strcidtfr("foo_bar"), "foo_bar");
+	r |= TEST_STR_EQ(strcidtfr("foo-bar"), "foo_bar");
 
-	r |= TEST_STR_EQ(strcident_r("foo_bar", s, 5), "foo_b");
+	r |= TEST_STR_EQ(strcidtfr_r("foo_bar", s, 5), "foo_b");
 
 	return -r;
 }
