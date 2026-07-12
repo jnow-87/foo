@@ -16,10 +16,10 @@
 #include <sys/list.h>
 #include <sys/string.h>
 #include <sys/vector.h>
-#include <asserts.h>
-#include <devtree.tab.h>
-#include <nodes.h>
-#include <options.h>
+#include <parser.tab.h>
+#include "assert.h"
+#include "node.h"
+#include "opt.h"
 
 
 /* macros */
@@ -38,33 +38,40 @@ typedef enum{
 	GUARD_BOTTOM,
 } include_guard_location_t;
 
-typedef void (*write_attr_t)(FILE *fp, node_t *node, char const *node_ident);
+typedef enum{
+	NC_MEMORY = 0,
+	NC_DEVICE
+} node_cat_t;
+
+typedef void (*write_attr_t)(FILE *fp, node_t *node, char const *node_idtfr);
 
 
 /* local/static prototypes */
 static void traverse(FILE *fp, node_t *node, write_attr_t write_attr);
 
-static void makevars(FILE *fp, node_t *node, char const *node_ident);
-static void macros(FILE *fp, node_t *node, char const *node_ident);
-static void declaration(FILE *fp, node_t *node, char const *node_ident);
-static void definition(FILE *fp, node_t *node, char const *node_ident);
+static void makevars(FILE *fp, node_t *node, char const *node_idtfr);
+static void macros(FILE *fp, node_t *node, char const *node_idtfr);
+static void declaration(FILE *fp, node_t *node, char const *node_idtfr);
+static void definition(FILE *fp, node_t *node, char const *node_idtfr);
 
-static void def_asserts(FILE *fp, node_t *node, char const *node_ident);
-static void def_childs(FILE *fp, node_t *node, char const *node_ident);
-static void def_payload(FILE *fp, node_t *node, char const *node_ident);
-static void def_attributes(FILE *fp, node_t *node, char const *node_ident);
+static void def_childs(FILE *fp, node_t *node, char const *node_idtfr);
+static void def_payload(FILE *fp, node_t *node, char const *node_idtfr);
+static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr);
 
 static void file_header(FILE *fp, char const *start_comment, char const *end_comment);
 static void section_header(FILE *fp, char const *start_comment, char const *end_comment, char const *s, ...);
-static void src_node_header(FILE *fp, char const *node_ident);
+static void src_node_header(FILE *fp, char const *node_idtfr);
 static void include_guard(FILE *fp, include_guard_location_t loc);
 static void includes(FILE *fp);
 
 static int def_attr_ignore(node_t *node, attr_t *attr);
 
+static node_cat_t node_cat(node_t *node);
+static char const *node_strcat(node_cat_t cat);
+
 
 /* global functions */
-void export_make(FILE *fp, vector_t *nodes){
+void codegen_make(FILE *fp, vector_t *nodes){
 	node_t **node;
 
 
@@ -76,7 +83,7 @@ void export_make(FILE *fp, vector_t *nodes){
 	}
 }
 
-void export_header(FILE *fp, vector_t *nodes){
+void codegen_header(FILE *fp, vector_t *nodes){
 	node_t **node;
 
 
@@ -91,7 +98,7 @@ void export_header(FILE *fp, vector_t *nodes){
 	include_guard(fp, GUARD_BOTTOM);
 }
 
-void export_source(FILE *fp, vector_t *nodes){
+void codegen_source(FILE *fp, vector_t *nodes){
 	node_t **node;
 
 
@@ -111,22 +118,22 @@ void export_source(FILE *fp, vector_t *nodes){
 /* local functions */
 static void traverse(FILE *fp, node_t *node, write_attr_t write_attr){
 	size_t name_len = strlen(node->name);
-	char node_ident[name_len + 1];
+	char node_idtfr[name_len + 1];
 	node_t *child;
 
 
-	strcident_r(node->name, node_ident, name_len);
-	write_attr(fp, node, node_ident);
+	strcidtfr_r(node->name, node_idtfr, name_len);
+	write_attr(fp, node, node_idtfr);
 
 	list_for_each(node->childs, child)
 		traverse(fp, child, write_attr);
 }
 
-static void makevars(FILE *fp, node_t *node, char const *node_ident){
+static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 	char node_name[DEVTREE_STRMAX],
 		 attr_name[DEVTREE_STRMAX];
 	attr_t *attr;
-	attr_value_t *v;
+	expr_arg_t v;
 
 
 #ifdef CONFIG_X86
@@ -136,25 +143,25 @@ static void makevars(FILE *fp, node_t *node, char const *node_ident){
 		return;
 #endif // CONFIG_X86
 
-	strupr(node_ident, node_name, sizeof(node_name));
+	strupr(node_idtfr, node_name, sizeof(node_name));
 
 	vector_for_each(&node->attrs, attr){
 		strupr(attr->name, attr_name, sizeof(attr_name));
-		v = &attr->value;
+		expr_evaluate(attr->value, &v, 0x0);
 
-		if(attr->flags & AF_ARRAY)
+		if(v.is_array)
 			continue;
 
-		switch(attr->type){
-		case AT_INT8:	// fall through
-		case AT_INT16:	// fall through
-		case AT_INT32:	// fall through
-		case AT_INT64:
-			fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v->i);
+		switch(v.type){
+		case ET_INT8:	// fall through
+		case ET_INT16:	// fall through
+		case ET_INT32:	// fall through
+		case ET_INT64:
+			fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v.value.i);
 			break;
 
-		case AT_ADDR:	fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, v->i); break;
-		case AT_STRING:	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, v->p); break;
+		case ET_ADDR:	fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, v.value.i); break;
+		case ET_STRING:	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, v.value.p); break;
 
 		default:
 			break;
@@ -162,14 +169,14 @@ static void makevars(FILE *fp, node_t *node, char const *node_ident){
 	}
 }
 
-static void macros(FILE *fp, node_t *node, char const *node_ident){
+static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 	char node_name[DEVTREE_STRMAX],
 		 attr_name[DEVTREE_STRMAX];
 	attr_t *attr;
-	attr_value_t *v;
+	expr_arg_t v;
 
 
-	strupr(node_ident, node_name, sizeof(node_name));
+	strupr(node_idtfr, node_name, sizeof(node_name));
 
 	vector_for_each(&node->attrs, attr){
 #ifdef CONFIG_X86
@@ -184,21 +191,21 @@ static void macros(FILE *fp, node_t *node, char const *node_ident){
 #endif // CONFIG_X86
 
 		strupr(attr->name, attr_name, sizeof(attr_name));
-		v = &attr->value;
+		expr_evaluate(attr->value, &v, 0x0);
 
-		if(attr->flags & AF_ARRAY)
+		if(v.is_array)
 			continue;
 
-		switch(attr->type){
-		case AT_INT8:	// fall through
-		case AT_INT16:	// fall through
-		case AT_INT32:	// fall through
-		case AT_INT64:
-			fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v->i);
+		switch(v.type){
+		case ET_INT8:	// fall through
+		case ET_INT16:	// fall through
+		case ET_INT32:	// fall through
+		case ET_INT64:
+			fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v.value.i);
 			break;
 
-		case AT_ADDR:	fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, v->i); break;
-		case AT_STRING:	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, v->p); break;
+		case ET_ADDR:	fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, v.value.i); break;
+		case ET_STRING:	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, v.value.p); break;
 
 		default:
 			break;
@@ -206,64 +213,47 @@ static void macros(FILE *fp, node_t *node, char const *node_ident){
 	}
 }
 
-static void declaration(FILE *fp, node_t *node, char const *node_ident){
-	fprintf(fp, "devtree_%s_t const __dt_%s;\n", type_strcat(node->type->category), node_ident);
+static void declaration(FILE *fp, node_t *node, char const *node_idtfr){
+	fprintf(fp, "devtree_%s_t const __dt_%s;\n", node_strcat(node_cat(node)), node_idtfr);
 }
 
-static void definition(FILE *fp, node_t *node, char const *node_ident){
-	src_node_header(fp, node_ident);
+static void definition(FILE *fp, node_t *node, char const *node_idtfr){
+	node_cat_t cat = node_cat(node);
 
-	def_childs(fp, node, node_ident);
 
-	if(node->type->category == TC_DEVICE)
-		def_payload(fp, node, node_ident);
+	src_node_header(fp, node_idtfr);
 
-	fprintf(fp, "devtree_%s_t const __dt_%s = {\n", type_strcat(node->type->category), node_ident);
+	def_childs(fp, node, node_idtfr);
 
-	switch(node->type->category){
-	case TC_DEVICE:
+	if(cat == NC_DEVICE)
+		def_payload(fp, node, node_idtfr);
+
+	fprintf(fp, "devtree_%s_t const __dt_%s = {\n", node_strcat(cat), node_idtfr);
+
+	switch(cat){
+	case NC_DEVICE:
 		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		fprintf(fp, "\t.compatible = \"%s\",\n", attr_get(&node->attrs, "compatible", false)->value.p);
+		fprintf(fp, "\t.compatible = \"%s\",\n", attr_value(attr_query(&node->attrs, "compatible", false))->value.p);
 
 		if(node->attrs.size > 1)
-			fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_ident);
+			fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_idtfr);
 		else
 			fprintf(fp, "\t.payload = 0x0,\n");
 		break;
 
-	case TC_MEMORY:
+	case NC_MEMORY:
 		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		def_attributes(fp, node, node_ident);
-		break;
-
-	default:
-		WARN(node, "unexpected node type (%d)\n", node->type);
+		def_attributes(fp, node, node_idtfr);
 		break;
 	}
 
-	if(!list_empty(node->childs))	fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_ident);
+	if(!list_empty(node->childs))	fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_idtfr);
 	else							fprintf(fp, "\t.childs = 0x0,\n");
 
 	fprintf(fp, "};\n\n\n");
-
-	def_asserts(fp, node, node_ident);
 }
 
-static void def_asserts(FILE *fp, node_t *node, char const *node_ident){
-	assert_t *assert;
-
-
-	list_for_each(node->type->asserts, assert){
-		fprintf(fp, "_Static_assert(");
-		assert_export(fp, assert, &node->attrs);
-		fprintf(fp, ", \"%s: %s\");\n", node_ident, assert->msg);
-	}
-
-	if(node->type->asserts)
-		fprintf(fp, "\n");
-}
-
-static void def_childs(FILE *fp, node_t *node, char const *node_ident){
+static void def_childs(FILE *fp, node_t *node, char const *node_idtfr){
 	node_t *child;
 
 
@@ -271,19 +261,19 @@ static void def_childs(FILE *fp, node_t *node, char const *node_ident){
 		return;
 
 	fprintf(fp, "devtree_%s_t const * const __dt_%s_childs[] = {\n"
-		, type_strcat(list_first(node->childs)->type->category)
-		, node_ident
+		, node_strcat(node_cat(list_first(node->childs)))
+		, node_idtfr
 	);
 
 	list_for_each(node->childs, child)
-		fprintf(fp, "\t&__dt_%s,\n", strcident(child->name));
+		fprintf(fp, "\t&__dt_%s,\n", strcidtfr(child->name));
 
 	fprintf(fp, "\t0x0\n};\n\n");
 }
 
-static void def_payload(FILE *fp, node_t *node, char const *node_ident){
+static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 	attr_t *attr;
-	attr_value_t *v;
+	expr_arg_t v;
 
 
 	// struct definition
@@ -293,23 +283,24 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 		if(def_attr_ignore(node, attr))
 			continue;
 
-		v = &attr->value;
-
 		switch(attr->type){
-		case AT_INT8:	// fall through
-		case AT_INT16:	// fall through
-		case AT_INT32:	// fall through
-		case AT_INT64:
-			fprintf(fp, "\tuint%u_t %s", attr_type_size(attr->type) * 8, attr->name);
+		case ET_INT8:	// fall through
+		case ET_INT16:	// fall through
+		case ET_INT32:	// fall through
+		case ET_INT64:
+			fprintf(fp, "\tuint%u_t %s", expr_type_size(attr->type) * 8, attr->name);
 			break;
 
-		case AT_ADDR:	fprintf(fp, "\tvoid *%s", attr->name); break;
-		case AT_STRING:	fprintf(fp, "\tchar *%s", attr->name); break;
-		default:		WARN(node, "unexpected attribute type \n", attr_type_name(attr->type)); break;
+		case ET_ADDR:	fprintf(fp, "\tvoid *%s", attr->name); break;
+		case ET_STRING:	fprintf(fp, "\tchar *%s", attr->name); break;
+		default:		WARN(node, "unexpected attribute type \n", expr_type_name(attr->type)); break;
 		}
 
-		if(attr->flags & AF_ARRAY)
-			fprintf(fp, "[%zu]", v->arr.items.size);
+
+		expr_evaluate(attr->value, &v, 0x0);
+
+		if(v.is_array)
+			fprintf(fp, "[%zu]", v.value.array.items.size);
 
 		fprintf(fp, ";\n");
 	}
@@ -317,14 +308,15 @@ static void def_payload(FILE *fp, node_t *node, char const *node_ident){
 	fprintf(fp, "}\n");
 
 	// data
-	fprintf(fp, " const __dt_%s_payload = {\n", node_ident);
-	def_attributes(fp, node, node_ident);
+	fprintf(fp, " const __dt_%s_payload = {\n", node_idtfr);
+	def_attributes(fp, node, node_idtfr);
 	fprintf(fp, "};\n\n");
 }
 
-static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
+static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 	attr_t *attr;
-	attr_value_t *v;
+	expr_t *e;
+	expr_arg_t v;
 	vector_t *items;
 
 
@@ -332,23 +324,25 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
 		if(def_attr_ignore(node, attr))
 			continue;
 
-		v = &attr->value;
+		expr_evaluate(attr->value, &v, 0x0);
 
-		if(attr->flags & AF_ARRAY){
-			items = &v->arr.items;
+		if(v.is_array){
+			items = &v.value.array.items;
 			fprintf(fp, "\t.%s = {\n", attr->name);
 
-			vector_for_each(items, v){
+			vector_for_each(items, e){
+				expr_evaluate(e, &v, 0x0);
+
 				switch(attr->type){
-				case AT_INT8:	// fall through
-				case AT_INT16:	// fall through
-				case AT_INT32:	// fall through
-				case AT_INT64:
-					fprintf(fp, "\t\t%u,\n", v->i);
+				case ET_INT8:	// fall through
+				case ET_INT16:	// fall through
+				case ET_INT32:	// fall through
+				case ET_INT64:
+					fprintf(fp, "\t\t%u,\n", v.value.i);
 					break;
 
-				case AT_ADDR:	fprintf(fp, "\t\t(void*)%#x,\n", v->p); break;
-				case AT_STRING:	fprintf(fp, "\t\t\"%s\",\n", v->p); break;
+				case ET_ADDR:	fprintf(fp, "\t\t(void*)%#x,\n", v.value.p); break;
+				case ET_STRING:	fprintf(fp, "\t\t\"%s\",\n", v.value.p); break;
 
 				default:
 					break;
@@ -359,21 +353,20 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_ident){
 		}
 		else{
 			switch(attr->type){
-			case AT_INT8:	// fall through
-			case AT_INT16:	// fall through
-			case AT_INT32:	// fall through
-			case AT_INT64:
-				fprintf(fp, "\t.%s = %u,\n", attr->name, v->i);
+			case ET_INT8:	// fall through
+			case ET_INT16:	// fall through
+			case ET_INT32:	// fall through
+			case ET_INT64:
+				fprintf(fp, "\t.%s = %u,\n", attr->name, v.value.i);
 				break;
 
-			case AT_ADDR:	fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, v->i); break;
-			case AT_STRING:	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, v->p); break;
+			case ET_ADDR:	fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, v.value.i); break;
+			case ET_STRING:	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, v.value.p); break;
 
 			default:
 				break;
 			}
 		}
-
 	}
 }
 
@@ -400,8 +393,8 @@ static void section_header(FILE *fp, char const *start_comment, char const *end_
 	fprintf(fp, " %s\n", end_comment);
 }
 
-static void src_node_header(FILE *fp, char const *node_ident){
-	fprintf(fp, "// __dt_%s\n", node_ident);
+static void src_node_header(FILE *fp, char const *node_idtfr){
+	fprintf(fp, "// __dt_%s\n", node_idtfr);
 }
 
 static void include_guard(FILE *fp, include_guard_location_t loc){
@@ -455,10 +448,27 @@ static void includes(FILE *fp){
 }
 
 static int def_attr_ignore(node_t *node, attr_t *attr){
-	if(node->type->category == TC_DEVICE){
+	if(node_cat(node) == NC_DEVICE){
 		if(strcmp(attr->name, "compatible") == 0)
 			return 1;
 	}
 
 	return 0;
+}
+
+// TODO remove category and update kernel to only use devtree_node_t
+static node_cat_t node_cat(node_t *node){
+	attr_t *attr;
+
+
+	vector_for_each(&node->attrs, attr){
+		if(strcmp(attr->name, "compatible") != 0 && strcmp(attr->name, "base") != 0 && strcmp(attr->name, "size") != 0)
+			return NC_DEVICE;
+	}
+
+	return NC_MEMORY;
+}
+
+static char const *node_strcat(node_cat_t cat){
+	return (cat == NC_MEMORY) ? "memory" : "device";
 }
