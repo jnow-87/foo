@@ -13,9 +13,9 @@
 
 #include <sys/types.h>
 #include <sys/vector.h>
-#include <asserts.h>
-#include <attr.h>
-#include <types.h>
+#include "assert.h"
+#include "attr.h"
+#include "type.h"
 
 
 /* types */
@@ -27,18 +27,19 @@ typedef struct node_t{
 
 	char const *name;
 	type_t *type;
-	vector_t attrs;
+	attr_vec_t attrs;
 } node_t;
 
 
 /* prototypes */
 int nodes_init(void);
-node_t *nodes_root(type_cat_t category);
+node_t *nodes_root();
+int nodes_assert(void);
 
 node_t *node_create(char const *name, type_t *type, node_t *childs);
 void node_destroy(node_t *node);
 
-int node_child_add(node_t *parent, node_t *child);
+void node_child_add(node_t *parent, node_t *child);
 
 node_t *node_ref(char const *name);
 

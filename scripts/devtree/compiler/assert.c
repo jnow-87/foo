@@ -8,12 +8,12 @@
 
 
 #include <stdlib.h>
-#include <assert.h>
-#include <devtree.tab.h>
+#include <parser.tab.h>
+#include "assert.h"
 
 
 /* global functions */
-assert_t *assert_create(char const *expr, char const *msg){
+assert_t *assert_create(expr_t *expr, char const *msg){
 	assert_t *assert;
 
 
