@@ -22,7 +22,7 @@
  * TODO
  *   should there be two types of attributes, one for nodes one for types
  *   type attributes allow expressions
- *   node attributes allow only literal expression, i.e. expr_arg_t
+ *   node attributes allow only literal expression, i.e. expr_value_t
  *
  *   type, array_limit and has_value should then only be needed for type attributes
  *   has_value should be removable, since value is now a pointer
@@ -53,7 +53,7 @@ attr_t *attr_assign(attr_t *attr, expr_t *value);
 attr_t *attr_query(attr_vec_t *attrs, char const *name, bool maybe_undef);
 attr_t *attr_query_typed(attr_vec_t *attrs, char const *name, expr_type_t type, bool maybe_undef);
 
-expr_arg_t *attr_value(attr_t *attr);
+expr_value_t *attr_value(attr_t *attr);
 
 
 #endif // DEVTREE_ATTRS_H

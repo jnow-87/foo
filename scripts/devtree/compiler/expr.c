@@ -16,7 +16,7 @@
 
 
 /* local/static prototypes */
-static expr_arg_t *resolve_ref(expr_arg_t *arg, void *ctx, expr_arg_t *res);
+static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res);
 
 //static attr_type_t types_compatible(attr_t *a0, attr_t *a1, bool check_array_size, char const *descr);
 //static attr_type_t type_common(attr_t *a0, attr_t *a1);
@@ -116,8 +116,8 @@ err:
 	return devtree_parser_error("%s: attribute copy failed", src->name);
 */}
 
-expr_arg_t *expr_evaluate(expr_t *expr, expr_arg_t *result, void *ctx){
-	expr_arg_t arg0,
+expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, void *ctx){
+	expr_value_t arg0,
 			   arg1;
 
 
@@ -133,95 +133,95 @@ expr_arg_t *expr_evaluate(expr_t *expr, expr_arg_t *result, void *ctx){
 	return expr->op(&arg0, &arg1, result);
 }
 
-expr_arg_t *expr_literal(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_literal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	*res = *arg0;
 
 	return res;
 }
 
-expr_arg_t *expr_reference(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_reference(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return 0x0;
 }
 
-expr_arg_t *expr_add(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_sub(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_sub(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_mul(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_mul(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_div(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_div(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_lshift(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_lshift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_rshift(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_rshift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_mod(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_mod(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_eq(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_neq(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_neq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_lesser(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_lesser(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_lesser_eq(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_lesser_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_greater(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_greater(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_greater_eq(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_greater_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_bit_and(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_bit_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_bit_or(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_bit_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_bit_xor(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_bit_xor(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_log_and(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_log_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
-expr_arg_t *expr_log_or(expr_arg_t *arg0, expr_arg_t *arg1, expr_arg_t *res){
+expr_value_t *expr_log_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	return res;
 }
 
 
 /* local functions */
-static expr_arg_t *resolve_ref(expr_arg_t *arg, void *ctx, expr_arg_t *res){
+static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res){
 	attr_t *ref;
 
 
-	ref = attr_query(ctx, arg->value.p, false);
+	ref = attr_query(ctx, arg->p, false);
 
 	if(ref == 0x0)
 		return 0x0;

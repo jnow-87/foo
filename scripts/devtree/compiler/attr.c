@@ -86,7 +86,7 @@ attr_t *attr_query_typed(attr_vec_t *attrs, char const *name, expr_type_t type, 
 	return 0x0;
 }
 
-expr_arg_t *attr_value(attr_t *attr){
+expr_value_t *attr_value(attr_t *attr){
 	// TODO should the function instead call expr_evaluate() to avoid the check for expr_literal
 	// 		and be callable for all attribute, either ones with literal and non-literal values
 	if(attr->value->op != expr_literal){

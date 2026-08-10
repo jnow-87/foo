@@ -146,14 +146,14 @@ static node_t *index_query(char const *name){
 
 static int eval_asserts(node_t *node){
 	assert_t *assert;
-	expr_arg_t r;
+	expr_value_t r;
 
 	// TODO add a test case that checks an assert triggers also after
 	// 		an attribute of an existing node is updated
-	// TODO consider checking asserts on node creation an each time 
+	// TODO consider checking asserts on node creation an each time
 	// 		a node's attributes are modified
 	list_for_each(node->type->asserts, assert){
-		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || r.is_array || r.value.i != 0)
+		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || r.is_array || r.i != 0)
 			return -1;
 	}
 
