@@ -133,7 +133,7 @@ static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 	char node_name[DEVTREE_STRMAX],
 		 attr_name[DEVTREE_STRMAX];
 	attr_t *attr;
-	expr_arg_t v;
+	expr_value_t v;
 
 
 #ifdef CONFIG_X86
@@ -157,11 +157,11 @@ static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 		case ET_INT16:	// fall through
 		case ET_INT32:	// fall through
 		case ET_INT64:
-			fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v.value.i);
+			fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v.i);
 			break;
 
-		case ET_ADDR:	fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, v.value.i); break;
-		case ET_STRING:	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, v.value.p); break;
+		case ET_ADDR:	fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, v.i); break;
+		case ET_STRING:	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, v.p); break;
 
 		default:
 			break;
@@ -173,7 +173,7 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 	char node_name[DEVTREE_STRMAX],
 		 attr_name[DEVTREE_STRMAX];
 	attr_t *attr;
-	expr_arg_t v;
+	expr_value_t v;
 
 
 	strupr(node_idtfr, node_name, sizeof(node_name));
@@ -201,11 +201,11 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 		case ET_INT16:	// fall through
 		case ET_INT32:	// fall through
 		case ET_INT64:
-			fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v.value.i);
+			fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v.i);
 			break;
 
-		case ET_ADDR:	fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, v.value.i); break;
-		case ET_STRING:	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, v.value.p); break;
+		case ET_ADDR:	fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, v.i); break;
+		case ET_STRING:	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, v.p); break;
 
 		default:
 			break;
@@ -233,7 +233,7 @@ static void definition(FILE *fp, node_t *node, char const *node_idtfr){
 	switch(cat){
 	case NC_DEVICE:
 		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		fprintf(fp, "\t.compatible = \"%s\",\n", attr_value(attr_query(&node->attrs, "compatible", false))->value.p);
+		fprintf(fp, "\t.compatible = \"%s\",\n", attr_value(attr_query(&node->attrs, "compatible", false))->p);
 
 		if(node->attrs.size > 1)
 			fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_idtfr);
@@ -273,7 +273,7 @@ static void def_childs(FILE *fp, node_t *node, char const *node_idtfr){
 
 static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 	attr_t *attr;
-	expr_arg_t v;
+	expr_value_t v;
 
 
 	// struct definition
@@ -300,7 +300,7 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 		expr_evaluate(attr->value, &v, 0x0);
 
 		if(v.is_array)
-			fprintf(fp, "[%zu]", v.value.array.items.size);
+			fprintf(fp, "[%zu]", v.array.items.size);
 
 		fprintf(fp, ";\n");
 	}
@@ -316,7 +316,7 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 	attr_t *attr;
 	expr_t *e;
-	expr_arg_t v;
+	expr_value_t v;
 	vector_t *items;
 
 
@@ -327,10 +327,12 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 		expr_evaluate(attr->value, &v, 0x0);
 
 		if(v.is_array){
-			items = &v.value.array.items;
+			items = &v.array.items;
 			fprintf(fp, "\t.%s = {\n", attr->name);
 
 			vector_for_each(items, e){
+				// TODO this needs an update, since an array contains expr_value_t type value
+				/*
 				expr_evaluate(e, &v, 0x0);
 
 				switch(attr->type){
@@ -338,7 +340,7 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 				case ET_INT16:	// fall through
 				case ET_INT32:	// fall through
 				case ET_INT64:
-					fprintf(fp, "\t\t%u,\n", v.value.i);
+					fprintf(fp, "\t\t%u,\n", v.i);
 					break;
 
 				case ET_ADDR:	fprintf(fp, "\t\t(void*)%#x,\n", v.value.p); break;
@@ -347,6 +349,7 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 				default:
 					break;
 				}
+				*/
 			}
 
 			fprintf(fp, "\t},\n");
@@ -357,11 +360,11 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 			case ET_INT16:	// fall through
 			case ET_INT32:	// fall through
 			case ET_INT64:
-				fprintf(fp, "\t.%s = %u,\n", attr->name, v.value.i);
+				fprintf(fp, "\t.%s = %u,\n", attr->name, v.i);
 				break;
 
-			case ET_ADDR:	fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, v.value.i); break;
-			case ET_STRING:	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, v.value.p); break;
+			case ET_ADDR:	fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, v.i); break;
+			case ET_STRING:	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, v.p); break;
 
 			default:
 				break;

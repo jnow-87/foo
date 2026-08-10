@@ -103,7 +103,8 @@ node_t *type_instantiate(type_t *type, char const *name, vector_t *attrs, node_t
 		attr = *tattr;
 
 		// TODO check if this check should be here or higher up in the function
-		if(nattr->value->op != expr_literal){
+		// 		EOP_* should not be refernced outside of expr.c and the parser
+		if(nattr->value->op != EOP_LITERAL){
 			devtree_parser_error("%s: cannot assign non-literal expression", nattr->name);
 			goto err_1;
 		}
