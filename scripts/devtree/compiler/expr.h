@@ -20,6 +20,9 @@
 #define EXPR_INT_FIXED(size)	ET_INT##size
 #define EXPR_ARRAY_UNLIMITED	((size_t)-1)
 
+#define EXPR_TYPE_ENUM(v, is_int)	(v << 1 | (is_int ? 0x1 : 0x0))
+#define EXPR_TYPE_IS_INT(type)		(type | 0x1)
+
 #define EXPR_ARRAY_INITIALISER() ((expr_array_t){ \
 	.items = VECTOR_INITIALISER(sizeof(expr_value_t)), \
 	.limit = EXPR_ARRAY_UNLIMITED, \
@@ -32,7 +35,7 @@
 })
 
 #define EXPR_LITERAL(_arg) (&(expr_t){ \
-	.op = expr_literal, \
+	.op = EOP_LITERAL, \
 	.arg0 = _arg, \
 	.arg1 = 0x0, \
 })
@@ -48,18 +51,41 @@ struct expr_value_t;
 
 
 /* types */
-typedef struct expr_value_t * (*expr_op_t)(struct expr_value_t *arg0, struct expr_value_t *arg1, struct expr_value_t *res);
+typedef enum{
+	ET_UNDEF = EXPR_TYPE_ENUM(0, false),
+	ET_INT8 = EXPR_TYPE_ENUM(1, true),
+	ET_INT16 = EXPR_TYPE_ENUM(2, true),
+	ET_INT32 = EXPR_TYPE_ENUM(3, true),
+	ET_INT64 = EXPR_TYPE_ENUM(4, true),
+	ET_ADDR = EXPR_TYPE_ENUM(5, false),
+	ET_STRING = EXPR_TYPE_ENUM(6, false),
+	ET_EXPR = EXPR_TYPE_ENUM(7, false),
+	ET_NUM_TYPES
+} expr_type_t;
 
 typedef enum{
-	ET_UNDEF = 0,
-	ET_INT8,
-	ET_INT16,
-	ET_INT32,
-	ET_INT64,
-	ET_ADDR,
-	ET_STRING,
-	ET_EXPR,
-} expr_type_t;
+	EOP_LITERAL = 0x1,
+	EOP_REFERENCE = 0x2,
+	EOP_ADD = 0x4,
+	EOP_SUBTRACT = 0x8,
+	EOP_MULTIPLY = 0x10,
+	EOP_DIVIDE = 0x20,
+	EOP_LEFT_SHIFT = 0x40,
+	EOP_RIGHT_SHIFT = 0x80,
+	EOP_MODULO = 0x100,
+	EOP_EQUAL = 0x200,
+	EOP_UNEQUAL = 0x400,
+	EOP_LESSER = 0x800,
+	EOP_LESSER_EQUAL = 0x1000,
+	EOP_GREATER = 0x2000,
+	EOP_GREATER_EQUAL = 0x4000,
+	EOP_BIT_AND = 0x8000,
+	EOP_BIT_OR = 0x10000,
+	EOP_BIT_XOR = 0x20000,
+	EOP_LOG_AND = 0x40000,
+	EOP_LOG_OR = 0x80000,
+	EOP_ALL = 0xfffff
+} expr_op_t;
 
 typedef struct{
 	vector_t items;
@@ -99,27 +125,6 @@ int expr_array_add(expr_t *array, expr_t *expr);
 int expr_copy(expr_t *dest, expr_t *src);
 
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, void *ctx);	// TODO make ctx a attr_vec_t
-
-expr_value_t *expr_literal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_reference(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_sub(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_mul(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_div(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_lshift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_rshift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_mod(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_neq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_lesser(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_lesser_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_greater(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_greater_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_bit_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_bit_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_bit_xor(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_log_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
-expr_value_t *expr_log_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
 
 
 #endif // DEVTREE_EXPR_H

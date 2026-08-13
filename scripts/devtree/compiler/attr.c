@@ -52,7 +52,10 @@ attr_t *attr_assign(attr_t *attr, expr_t *value){
 	if(expr_type_check(value, attr->type) != 0)
 		return 0x0;
 
-/* TODO is it needed to check or update the array limit here?
+/* TODO is it needed to
+ * 	- check the array limit: yes, only if it matches the assignment is allowed
+ * 	- update the array limit: unclear
+ *
 	if((attr->flags & AF_ARRAY) && attr->value.arr.limit != ATTR_ARRAY_UNLIMITED)
 		v.arr.limit = attr->value.arr.limit;
 */
@@ -87,9 +90,9 @@ attr_t *attr_query_typed(attr_vec_t *attrs, char const *name, expr_type_t type, 
 }
 
 expr_value_t *attr_value(attr_t *attr){
-	// TODO should the function instead call expr_evaluate() to avoid the check for expr_literal
+	// TODO should the function instead call expr_evaluate() to avoid the check for EOP_LITERAL
 	// 		and be callable for all attribute, either ones with literal and non-literal values
-	if(attr->value->op != expr_literal){
+	if(attr->value->op != EOP_LITERAL){
 		devtree_parser_error("%s: attribute value is not a literal", attr->name);
 
 		return 0x0;

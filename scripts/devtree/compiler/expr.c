@@ -15,15 +15,72 @@
 #include "expr.h"
 
 
+/* types */
+typedef expr_value_t *(*op_cb_t)(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+
+
 /* local/static prototypes */
 static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res);
 
-//static attr_type_t types_compatible(attr_t *a0, attr_t *a1, bool check_array_size, char const *descr);
-//static attr_type_t type_common(attr_t *a0, attr_t *a1);
+static int types_compatible(expr_type_t t0, expr_type_t t1);
+static int op_defined(expr_op_t op, expr_value_t *val);
+static int range_check(expr_value_t *value, expr_type_t type);
+
+static size_t type_size(expr_type_t type);
+static char const *type_name(expr_type_t type);
+
+static char const *op_name(expr_op_t op);
+
+static expr_value_t *op_literal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_reference(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_subtract(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_multiply(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_divide(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_left_shift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_right_shift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_modulo(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_equal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_not_equal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_lesser(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_lesser_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_greater(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_greater_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_bit_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_bit_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_bit_xor(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_log_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+static expr_value_t *op_log_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
+
+
+/* static variables */
+static op_cb_t ops[] = {
+	[EOP_LITERAL] = op_literal,
+	[EOP_REFERENCE] = op_reference,
+	[EOP_ADD] = op_add,
+	[EOP_SUBTRACT] = op_subtract,
+	[EOP_MULTIPLY] = op_multiply,
+	[EOP_DIVIDE] = op_divide,
+	[EOP_LEFT_SHIFT] = op_left_shift,
+	[EOP_RIGHT_SHIFT] = op_right_shift,
+	[EOP_MODULO] = op_modulo,
+	[EOP_EQUAL] = op_equal,
+	[EOP_UNEQUAL] = op_not_equal,
+	[EOP_LESSER] = op_lesser,
+	[EOP_LESSER_EQUAL] = op_lesser_eq,
+	[EOP_GREATER] = op_greater,
+	[EOP_GREATER_EQUAL] = op_greater_eq,
+	[EOP_BIT_AND] = op_bit_and,
+	[EOP_BIT_OR] = op_bit_or,
+	[EOP_BIT_XOR] = op_bit_xor,
+	[EOP_LOG_AND] = op_log_and,
+	[EOP_LOG_OR] = op_log_or,
+};
+
+
 //static int type_cast(attr_t *attr, attr_type_t type, attr_flags_t flags);
 //static bool type_is_int(attr_type_t type);
 //
-//static int range_check(attr_t *attr, attr_value_t *value);
 //static char const *op_name(attr_op_t op);
 //static int math_valid(attr_t *a0, attr_t *a1, attr_op_t op);
 
@@ -38,8 +95,8 @@ static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res
 expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1){
 	// TODO consider who should free arg0 and arg1 if both are literals
 	// TODO check if both args are literals, if so, evaluate the expression instead
-	if(arg0->op == expr_literal && arg1->op == expr_literal){
-		op(arg0->arg0, arg1->arg0, expr->arg0);
+	if(arg0->op == EOP_LITERAL && arg1->op == EOP_LITERAL){
+		ops[EOP_LITERAL](arg0->arg0, arg1->arg0, expr->arg0);
 		expr_destroy(arg1);
 
 		return expr;
@@ -118,101 +175,25 @@ err:
 
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, void *ctx){
 	expr_value_t arg0,
-			   arg1;
+				 arg1;
 
 
-	if(expr->op == expr_literal)
-		return expr_literal(expr->arg0, 0x0, result);
+	if(expr->op == EOP_LITERAL)
+		return op_literal(expr->arg0, 0x0, result);
 
-	if(expr->op == expr_reference)
+	if(expr->op == EOP_REFERENCE)
 		return resolve_ref(expr->arg0, ctx, result);
 
-	expr_evaluate(expr, &arg0, ctx);
-	expr_evaluate(expr, &arg1, ctx);
+	if(expr_evaluate(expr, &arg0, ctx) == 0x0 || expr_evaluate(expr, &arg1, ctx) == 0x0)
+		return 0x0;
 
-	return expr->op(&arg0, &arg1, result);
-}
+	if(types_compatible(arg0.type, arg1.type) != 0)
+		return 0x0;
 
-expr_value_t *expr_literal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	*res = *arg0;
+	if(op_defined(expr->op, &arg0) != 0 || op_defined(expr->op, &arg1) != 0)
+		return 0x0;
 
-	return res;
-}
-
-expr_value_t *expr_reference(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return 0x0;
-}
-
-expr_value_t *expr_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_sub(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_mul(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_div(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_lshift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_rshift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_mod(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_neq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_lesser(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_lesser_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_greater(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_greater_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_bit_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_bit_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_bit_xor(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_log_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
-}
-
-expr_value_t *expr_log_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	return res;
+	return ops[expr->op](&arg0, &arg1, result);
 }
 
 
@@ -230,6 +211,210 @@ static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res
 
 	return res;
 }
+
+static int types_compatible(expr_type_t t0, expr_type_t t1){
+	bool ints = EXPR_TYPE_IS_INT(t0) || EXPR_TYPE_IS_INT(t1),
+		 addrs = t0 == ET_ADDR || t1 == ET_ADDR,
+		 strs = t0 == ET_STRING || t1 == ET_STRING,
+		 undefs = t0 == ET_UNDEF || t1 == ET_UNDEF,
+		 exprs = t0 == ET_EXPR || t1 == ET_EXPR;
+
+
+	if((t0 == t1 || ((ints || addrs) && !strs)) && !exprs && !undefs)
+		return 0;
+
+	return devtree_parser_error("incompatible types %s and %s", type_name(t0), type_name(t1));
+}
+
+static int op_defined(expr_op_t op, expr_value_t *val){
+	static unsigned int valid_ops[] = {
+		[ET_UNDEF] = 0x0,
+		[ET_INT8] = EOP_ALL,
+		[ET_INT16] = EOP_ALL,
+		[ET_INT32] = EOP_ALL,
+		[ET_INT64] = EOP_ALL,
+		[ET_ADDR] = EOP_LITERAL | EOP_REFERENCE | EOP_ADD | EOP_SUBTRACT | EOP_EQUAL | EOP_UNEQUAL | EOP_LESSER | EOP_LESSER_EQUAL | EOP_GREATER | EOP_GREATER_EQUAL,
+		[ET_STRING] = EOP_LITERAL | EOP_REFERENCE | EOP_ADD,
+		[ET_EXPR] = 0x0,
+		[ET_NUM_TYPES] = 0x0,
+	};
+
+
+	if(((valid_ops[val->type] & op) == 0) || (val->is_array && op != EOP_ADD)){
+		return devtree_parser_error("undefined operation %s for type %s%s"
+			, op_name(op)
+			, type_name(val->type)
+			, val->is_array ? "array" : ""
+		);
+	}
+
+	return 0;
+}
+
+static int range_check(expr_value_t *value, expr_type_t type){
+	EXPR_INT_T lim;
+	vector_t *arr;
+
+
+	if(!EXPR_TYPE_IS_INT(type))
+		return 0;
+
+	lim = (((EXPR_INT_T)1 << ((type_size(type) * 8) - 1)) << 1) - 1;
+
+	if(value->is_array){
+		arr = &value->array.items;
+
+		vector_for_each(arr, value){
+			if(value->i > lim)
+				goto err;
+		}
+	}
+	else if(value->i > lim)
+		goto err;
+
+	return 0;
+
+
+err:
+	return devtree_parser_error("integer out of range %lu > %lu", value->i, lim);
+}
+
+static size_t type_size(expr_type_t type){
+	switch(type){
+	case ET_ADDR:	return sizeof(void*);
+	case ET_INT8:	return 1;
+	case ET_INT16:	return 2;
+	case ET_INT32:	return 4;
+	case ET_INT64:	return 8;
+	default:		return 1;
+	}
+}
+
+static char const *type_name(expr_type_t type){
+	switch(type){
+	case ET_INT8:	return "int8";
+	case ET_INT16:	return "int16";
+	case ET_INT32:	return "int32";
+	case ET_INT64:	return "int64";
+	case ET_ADDR:	return "addr";
+	case ET_STRING:	return "string";
+	case ET_EXPR:	return "expr";
+	default:		return "undef";
+	}
+}
+
+static char const *op_name(expr_op_t op){
+	switch(op){
+	case EOP_LITERAL:		return "literal";
+	case EOP_REFERENCE:		return "reference";
+	case EOP_ADD:			return "add";
+	case EOP_SUBTRACT:		return "subtract";
+	case EOP_MULTIPLY:		return "multiply";
+	case EOP_DIVIDE:		return "divide";
+	case EOP_LEFT_SHIFT:	return "left_shift";
+	case EOP_RIGHT_SHIFT:	return "right_shift";
+	case EOP_MODULO:		return "modulo";
+	case EOP_EQUAL:			return "equal";
+	case EOP_UNEQUAL:		return "unequal";
+	case EOP_LESSER:		return "lesser";
+	case EOP_LESSER_EQUAL:	return "lesser equal";
+	case EOP_GREATER:		return "greater";
+	case EOP_GREATER_EQUAL:	return "greater equal";
+	case EOP_BIT_AND:		return "bit_and";
+	case EOP_BIT_OR:		return "bit_or";
+	case EOP_BIT_XOR:		return "bit_xor";
+	case EOP_LOG_AND:		return "log_and";
+	case EOP_LOG_OR:		return "log_or";
+	default:				return "unknown";
+	}
+}
+
+static expr_value_t *op_literal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	*res = *arg0;
+
+	return res;
+}
+
+static expr_value_t *op_reference(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	// NOTE this function is only used as "enum" for expr_op_t, the actual implementation
+	// 		is in resolve_ref(), since it needs a ctx to resolve the reference, which the
+	// 		other operations don't need and thus is not part of the interface
+	return 0x0;
+}
+
+static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_subtract(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_multiply(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_divide(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_left_shift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_right_shift(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_modulo(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_equal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_not_equal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_lesser(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_lesser_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_greater(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_greater_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_bit_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_bit_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_bit_xor(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_log_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+static expr_value_t *op_log_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	return res;
+}
+
+
 
 //attr_t *attr_math(attr_t *a0, attr_t *a1, attr_op_t op, bool resolve){
 //	char *s;
@@ -299,16 +484,6 @@ static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res
 //	return (type == ET_INT8 || type == ET_INT16 || type == ET_INT32 || type == ET_INT64);
 //}
 //
-//size_t attr_type_size(attr_type_t type){
-//	switch(type){
-//	case ET_ADDR:	return sizeof(void*);
-//	case ET_INT8:	return 1;
-//	case ET_INT16:	return 2;
-//	case ET_INT32:	return 4;
-//	case ET_INT64:	return 8;
-//	default:		return 1;
-//	}
-//}
 //
 //static int array_add(attr_t *attr, attr_value_t *v){
 //	if(vector_add(&attr->value.arr.items, v) != 0)
@@ -319,136 +494,7 @@ static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res
 //	return 0;
 //}
 //
-//static attr_type_t types_compatible(attr_t *a0, attr_t *a1, bool check_array_size, char const *descr){
-//	char const *name = a0->name ? a0->name : (a1->name ? a1->name : descr);
-//	size_t limit;
-//	attr_type_t common_type;
 //
-//
-//	common_type = type_common(a0, a1);
-//
-///*
-//	if(a0->type == ET_UNDEF){
-//		a0->type = a1->type;
-//
-//		if(a1->flags & AF_ARRAY){
-//			a0->flags |= AF_ARRAY;
-//			a0->value.arr.limit = ATTR_ARRAY_UNLIMITED;
-//		}
-//
-//		return true;
-//	}
-//*/
-//
-//	if(common_type != ET_UNDEF && (a0->type == ET_UNDEF || a1->type == ET_UNDEF))
-//		return common_type;
-//
-//	if(common_type == ET_UNDEF || (a0->flags & AF_ARRAY) != (a1->flags & AF_ARRAY)){
-//		devtree_parser_error("%s: incompatible types %s%s and %s%s",
-//			name,
-//			expr_type_name(a0->type), (a0->flags & AF_ARRAY) ? " array" : "",
-//			expr_type_name(a1->type), (a1->flags & AF_ARRAY) ? " array" : ""
-//		);
-//
-//		return ET_UNDEF;
-//	}
-//
-//	if(check_array_size && (a0->flags & AF_ARRAY)){
-//		limit = a1->value.arr.limit;
-//
-//		if(limit == ATTR_ARRAY_UNLIMITED)
-//			limit = a1->value.arr.items.size;
-//
-//		if(a0->value.arr.limit != ATTR_ARRAY_UNLIMITED && a0->value.arr.limit != limit){
-//			devtree_parser_error("%s: incompatible array sizes %zu and %zu",
-//				name,
-//				a0->value.arr.limit,
-//				limit
-//			);
-//
-//			return ET_UNDEF;
-//		}
-//	}
-//
-//	return common_type;
-//}
-//
-//static attr_type_t type_common(attr_t *a0, attr_t *a1){
-//	if(a0->type == a1->type || a1->type == ET_UNDEF)
-//		return a0->type;
-//
-//	if(a0->type == ET_UNDEF)
-//		return a1->type;
-//
-//	if(a0->type == ET_STRING || a1->type == ET_STRING)
-//		return ET_UNDEF;
-//
-//	if(type_is_int(a0->type) && type_is_int(a1->type))
-//		return MAX(a0->type, a1->type);
-//
-//	return ET_ADDR;
-//}
-//
-//static int type_cast(attr_t *attr, attr_type_t type, attr_flags_t flags){
-//	attr_value_t *v;
-//
-//
-//	if(attr->type == ET_UNDEF){
-//		attr->value.arr.limit = ATTR_ARRAY_UNLIMITED;
-//		attr->type = type;
-//		attr->flags = flags;
-//	}
-//
-//	if(attr->type == type)
-//		return 0;
-//
-//	if(type == ET_UNDEF || type == ET_STRING || attr->type == ET_STRING){
-//		return devtree_parser_error("%s: unable to cast from %s to %s",
-//			attr->name,
-//			expr_type_name(attr->type),
-//			expr_type_name(type)
-//		);
-//	}
-//
-//	attr->type = type;
-//	attr->flags = flags;
-//
-//	// there is no cast needed for different integer types since they all use attr_value_t::i
-//	if(type_is_int(type))
-//		return 0;
-//
-//	if(flags & AF_ARRAY){
-//		vector_for_each(&attr->value.arr.items, v){
-//			v->p = (void*)v->i; break;
-//		}
-//	}
-//	else
-//		attr->value.p = (void*)attr->value.i;
-//
-//	return 0;
-//}
-//
-//static int range_check(attr_t *attr, attr_value_t *value){
-//	ATTR_INT_TYPE lim;
-//	attr_value_t *v;
-//
-//
-//	if(!type_is_int(attr->type))
-//		return 0;
-//
-//	lim = (((ATTR_INT_TYPE)1 << ((attr_type_size(attr->type) * 8) - 1)) << 1) - 1;
-//
-//	if(attr->flags & AF_ARRAY){
-//		vector_for_each(&value->arr.items, v){
-//			if(v->i > lim)
-//				return devtree_parser_error("%s: out of range %lu > %lu", attr->name, v->i, lim);
-//		}
-//	}
-//	else if(value->i > lim)
-//		return devtree_parser_error("%s: out of range %lu > %lu", attr->name, value->i, lim);
-//
-//	return 0;
-//}
 //
 //static char const *op_name(attr_op_t op){
 //	switch(op){
@@ -523,21 +569,4 @@ static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res
 //			expr_type_name(a1->type)
 //		);
 //	}
-//}
-//
-//char const *expr_type_name(expr_type_t type){
-//	static char const *names[] = {
-//		"undef",
-//		"int8",
-//		"int16",
-//		"int32",
-//		"int64",
-//		"addr",
-//		"string",
-//	};
-//
-//	if(type < 0 || type > ET_STRING)
-//		type = ET_UNDEF;
-//
-//	return names[type];
 //}
