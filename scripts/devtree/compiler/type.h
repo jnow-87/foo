@@ -11,10 +11,9 @@
 #define DEVTREE_TYPES_H
 
 
-#include <stdbool.h>
-#include <sys/vector.h>
+#include <sys/types.h>
 #include "assert.h"
-#include "attr.h"
+#include "attrvec.h"
 
 
 /* incomplete types */
@@ -28,14 +27,14 @@ typedef struct type_t{
 
 	char const *name;
 	assert_t *asserts;
-	attr_vec_t attrs;
+	attrvec_t attrs;
 } type_t;
 
 
 /* prototypes */
-int type_create(char const *name, attr_vec_t *attrs, assert_t *asserts);
+int type_create(char const *name, attrvec_t *attrs, assert_t *asserts);
 type_t *type_lookup(char const *name);
-struct node_t *type_instantiate(type_t *type, char const *name, attr_vec_t *attrs, struct node_t *childs);
+struct node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, struct node_t *childs);
 
 
 #endif // DEVTREE_TYPES_H
