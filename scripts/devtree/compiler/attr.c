@@ -14,7 +14,6 @@
 #include <sys/math.h>
 #include <sys/register.h>
 #include <sys/types.h>
-#include <sys/vector.h>
 #include <parser.tab.h>
 #include "attr.h"
 
@@ -35,16 +34,6 @@ attr_t *attr_init(attr_t *attr, char const *name, expr_type_t type, size_t array
 	return attr_assign(attr, value);
 }
 
-int attr_enlist(attr_vec_t *attrs, attr_t *attr){
-	if(attr_query(attrs, attr->name, true) != 0x0)
-		return devtree_parser_error("%s: attribute already defined", attr->name);
-
-	if(vector_add(attrs, attr) != 0)
-		return devtree_parser_error("%s: adding attribute failed", attr->name);
-
-	return 0;
-}
-
 attr_t *attr_assign(attr_t *attr, expr_t *value){
 	if(value == 0x0)
 		return attr;
@@ -62,31 +51,6 @@ attr_t *attr_assign(attr_t *attr, expr_t *value){
 	attr->value = value;
 
 	return attr;
-}
-
-attr_t *attr_query(attr_vec_t *attrs, char const *name, bool maybe_undef){
-	return attr_query_typed(attrs, name, ET_UNDEF, maybe_undef);
-}
-
-attr_t *attr_query_typed(attr_vec_t *attrs, char const *name, expr_type_t type, bool maybe_undef){
-	attr_t *attr;
-
-
-	vector_for_each(attrs, attr){
-		if(strcmp(attr->name, name) == 0){
-			if(type == ET_UNDEF || attr->type == type)
-				return attr;
-
-			devtree_parser_error("%s: invalid type %s, expecting %s", name, expr_type_name(attr->type), expr_type_name(type));
-
-			return 0x0;
-		}
-	}
-
-	if(!maybe_undef)
-		devtree_parser_error("%s: undefined attribute", name);
-
-	return 0x0;
 }
 
 expr_value_t *attr_value(attr_t *attr){
