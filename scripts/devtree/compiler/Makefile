@@ -17,7 +17,8 @@ dtc-test-y := \
 	codegen.o \
 	nodes.o \
 	assert.o \
-	attrs.o \
+	attr.o \
+	attrvec.o \
 	types.o \
 	lexer.lex.o \
 	parser.tab.o \
@@ -30,6 +31,7 @@ dtc-y := \
 	node.o \
 	assert.o \
 	attr.o \
+	attrvec.o \
 	type.o \
 	lexer.lex.o \
 	parser.tab.o \

@@ -18,6 +18,7 @@
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "assert.h"
+#include "attrvec.h"
 #include "node.h"
 #include "opt.h"
 
@@ -145,7 +146,7 @@ static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 
 	strupr(node_idtfr, node_name, sizeof(node_name));
 
-	vector_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs, attr){
 		strupr(attr->name, attr_name, sizeof(attr_name));
 		expr_evaluate(attr->value, &v, 0x0);
 
@@ -178,7 +179,7 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 
 	strupr(node_idtfr, node_name, sizeof(node_name));
 
-	vector_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs, attr){
 #ifdef CONFIG_X86
 		// NOTE On x86 the kernel heap is allocated dynamically and the devtree script only contains
 		// 		an artificial base address. However, since DEVTREE_HEAP_BASE is assumed to be valid
@@ -233,7 +234,7 @@ static void definition(FILE *fp, node_t *node, char const *node_idtfr){
 	switch(cat){
 	case NC_DEVICE:
 		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		fprintf(fp, "\t.compatible = \"%s\",\n", attr_value(attr_query(&node->attrs, "compatible", false))->p);
+		fprintf(fp, "\t.compatible = \"%s\",\n", attr_value(attrvec_query(&node->attrs, "compatible", false))->p);
 
 		if(node->attrs.size > 1)
 			fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_idtfr);
@@ -279,7 +280,7 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 	// struct definition
 	fprintf(fp, "struct{\n");
 
-	vector_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs, attr){
 		if(def_attr_ignore(node, attr))
 			continue;
 
@@ -320,7 +321,7 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 	vector_t *items;
 
 
-	vector_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs, attr){
 		if(def_attr_ignore(node, attr))
 			continue;
 
@@ -464,7 +465,7 @@ static node_cat_t node_cat(node_t *node){
 	attr_t *attr;
 
 
-	vector_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs, attr){
 		if(strcmp(attr->name, "compatible") != 0 && strcmp(attr->name, "base") != 0 && strcmp(attr->name, "size") != 0)
 			return NC_DEVICE;
 	}

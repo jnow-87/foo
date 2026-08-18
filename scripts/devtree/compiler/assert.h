@@ -12,7 +12,6 @@
 
 
 #include <stdio.h>
-#include <sys/vector.h>
 #include "expr.h"
 
 

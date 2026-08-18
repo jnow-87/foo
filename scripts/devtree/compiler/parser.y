@@ -62,14 +62,14 @@
 		node_t *_nref = node_ref(node_name); \
 		EABORT(_nref == 0x0); \
 		\
-		attr_t *_aref = attr_query(&_nref->attrs, attr_name, false); \
+		attr_t *_aref = attrvec_query(&_nref->attrs, attr_name, false); \
 		EABORT(_aref == 0x0); \
 		\
 		_aref; \
 	})
 
 	#define TYPE_RESET(type){ \
-		(type).attrs = VECTOR_INITIALISER(sizeof(attr_vec_t)); \
+		(type).attrs = ATTRVEC_INITIALISER(); \
 		(type).asserts = 0x0; \
 	}
 
@@ -81,7 +81,7 @@
 	})
 
 	#define NODE_RESET(node){ \
-		(node).attrs = VECTOR_INITIALISER(sizeof(attr_vec_t)); \
+		(node).attrs = ATTRVEC_INITIALISER(); \
 		(node).childs = 0x0; \
 	}
 
@@ -109,6 +109,8 @@
 	#include <sys/list.h>
 	#include <sys/vector.h>
 	#include "assert.h"
+	#include "attr.h"
+	#include "attrvec.h"
 	#include "expr.h"
 	#include "node.h"
 	#include "type.h"
