@@ -15,6 +15,7 @@
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "attr.h"
+#include "attrvec.h"
 #include "node.h"
 
 
@@ -32,10 +33,10 @@ static node_t *nodes;
 
 /* global functions */
 int nodes_init(void){
-	vector_t attrs = VECTOR_INITIALISER(sizeof(attr_t));
+	attrvec_t attrs = ATTRVEC_INITIALISER();
 
 
-	if(attr_enlist(&attrs, attr_init(&(attr_t){}, "compatible", ET_STRING, 0, EXPR_STR(""))) != 0)
+	if(attrvec_add(&attrs, attr_init(&(attr_t){}, "compatible", ET_STRING, 0, EXPR_STR(""))) != 0)
 		return -1;
 
 	if(type_create("root", &attrs, 0x0) != 0)
@@ -75,7 +76,7 @@ node_t *node_create(char const *name, type_t *type, node_t *childs){
 	if(node == 0x0)
 		goto err_0;
 
-	if(vector_init(&node->attrs, sizeof(attr_t), type->attrs.size) != 0)
+	if(attrvec_init(&node->attrs, type->attrs.size) != 0)
 		goto err_1;
 
 	// TODO who should own the name memory, cf. node_destroy(), which free's it
@@ -101,7 +102,7 @@ err_0:
 }
 
 void node_destroy(node_t *node){
-	vector_destroy(&node->attrs);
+	attrvec_destroy(&node->attrs);
 	free((char*)node->name);
 	free(node);
 }

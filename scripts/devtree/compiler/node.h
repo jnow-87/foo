@@ -12,9 +12,8 @@
 
 
 #include <sys/types.h>
-#include <sys/vector.h>
 #include "assert.h"
-#include "attr.h"
+#include "attrvec.h"
 #include "type.h"
 
 
@@ -27,7 +26,7 @@ typedef struct node_t{
 
 	char const *name;
 	type_t *type;
-	attr_vec_t attrs;
+	attrvec_t attrs;
 } node_t;
 
 

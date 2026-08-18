@@ -12,6 +12,7 @@
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "attr.h"
+#include "attrvec.h"
 #include "expr.h"
 
 
@@ -122,14 +123,21 @@ void expr_destroy(expr_t *expr){
 	free(expr);
 }
 
+expr_type_t expr_type(expr_t *expr){
+	return ET_EXPR;
+}
+
 size_t expr_type_size(expr_type_t type){
 	return 0;
 }
 
 int expr_type_check(expr_t *expr, expr_type_t type){
+	// TODO is a range check necessary?
 //	if(range_check(attr, &v) != 0)
 //		return -1;
-//
+
+//	return types_compatible(expr->, `<expr_type_t t1>`
+
 	return 0;
 }
 
@@ -173,7 +181,7 @@ err:
 	return devtree_parser_error("%s: attribute copy failed", src->name);
 */}
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, void *ctx){
+expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
 	expr_value_t arg0,
 				 arg1;
 
@@ -202,7 +210,7 @@ static expr_value_t *resolve_ref(expr_value_t *arg, void *ctx, expr_value_t *res
 	attr_t *ref;
 
 
-	ref = attr_query(ctx, arg->p, false);
+	ref = attrvec_query(ctx, arg->p, false);
 
 	if(ref == 0x0)
 		return 0x0;

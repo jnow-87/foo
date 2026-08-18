@@ -11,8 +11,9 @@
 #define DEVTREE_EXPR_H
 
 
-#include <stdbool.h>
+#include <sys/types.h>
 #include <sys/vector.h>
+#include "attrvec.h"
 
 
 /* macros */
@@ -51,7 +52,7 @@ struct expr_value_t;
 
 
 /* types */
-typedef enum{
+typedef enum expr_type_t{
 	ET_UNDEF = EXPR_TYPE_ENUM(0, false),
 	ET_INT8 = EXPR_TYPE_ENUM(1, true),
 	ET_INT16 = EXPR_TYPE_ENUM(2, true),
@@ -117,6 +118,7 @@ expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
 expr_t *expr_alloc(expr_t *expr);
 void expr_destroy(expr_t *expr);
 
+expr_type_t expr_type(expr_t *expr);
 size_t expr_type_size(expr_type_t type);
 int expr_type_check(expr_t *expr, expr_type_t type);
 char const *expr_type_name(expr_type_t type);
@@ -124,7 +126,7 @@ char const *expr_type_name(expr_type_t type);
 int expr_array_add(expr_t *array, expr_t *expr);
 int expr_copy(expr_t *dest, expr_t *src);
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, void *ctx);	// TODO make ctx a attr_vec_t
+expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx);
 
 
 #endif // DEVTREE_EXPR_H
