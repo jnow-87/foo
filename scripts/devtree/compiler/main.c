@@ -50,9 +50,6 @@ int main(int argc, char **argv){
 	printf("parsed\n");
 	return 0;
 
-	if(nodes_assert() != 0)
-		goto end;
-
 	/* write output file */
 	if(collect_nodes(&nodes) != 0)
 		goto end;

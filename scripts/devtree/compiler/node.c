@@ -16,14 +16,13 @@
 #include <parser.tab.h>
 #include "attr.h"
 #include "attrvec.h"
+#include "expr.h"
 #include "node.h"
 
 
 /* local/static prototypes */
-static int eval_asserts(node_t *node);
-
 static int index_add(node_t *node);
-static node_t *index_query(char const *name);
+static int index_query(char const *name, size_t *idx);
 
 
 /* static variables */
@@ -36,7 +35,7 @@ int nodes_init(void){
 	attrvec_t attrs = ATTRVEC_INITIALISER();
 
 
-	if(attrvec_add(&attrs, attr_init(&(attr_t){}, "compatible", ET_STRING, 0, EXPR_STR(""))) != 0)
+	if(attrvec_add(&attrs, attr_init(&(attr_t){}, "compatible", ET_STRING, 0, &EXPR_STR(""))) != 0)
 		return -1;
 
 	if(type_create("root", &attrs, 0x0) != 0)
@@ -52,18 +51,6 @@ int nodes_init(void){
 
 node_t *nodes_root(){
 	return nodes;
-}
-
-int nodes_assert(void){
-	node_t *node;
-
-
-	list_for_each(nodes, node){
-		if(eval_asserts(node) != 0)
-			return -1;
-	}
-
-	return 0;
 }
 
 node_t *node_create(char const *name, type_t *type, node_t *childs){
@@ -84,7 +71,7 @@ node_t *node_create(char const *name, type_t *type, node_t *childs){
 	node->type = type;
 
 	list_for_each(childs, child)
-		node_child_add(node, child);
+		list_add_tail(node->childs, child);
 
 	if(index_add(node) != 0)
 		goto err_1;
@@ -102,50 +89,31 @@ err_0:
 }
 
 void node_destroy(node_t *node){
+	size_t idx;
+
+
+	if(index_query(node->name, &idx) == 0)
+		vector_rm(&node_index, idx);
+
 	attrvec_destroy(&node->attrs);
 	free((char*)node->name);
 	free(node);
 }
 
-void node_child_add(node_t *parent, node_t *child){
-	child->parent = parent;
-	list_add_tail(parent->childs, child);
-}
-
 node_t *node_ref(char const *name){
-	node_t *node;
+	size_t idx;
 
 
-	node = index_query(name);
-
-	if(node == 0x0)
+	if(index_query(name, &idx) == -1){
 		devtree_parser_error("%s: undefined reference", name);
 
-	return node;
-}
-
-
-/* local functions */
-static int index_add(node_t *node){
-	if(index_query(node->name) != 0x0)
-		return devtree_parser_error("%s: node already defined", node->name);
-
-	return vector_add(&node_index, &node);
-}
-
-static node_t *index_query(char const *name){
-	node_t **node;
-
-
-	vector_for_each(&node_index, node){
-		if(strcmp((*node)->name, name) == 0)
-			return *node;
+		return 0x0;
 	}
 
-	return 0x0;
+	return *((node_t**)vector_get(&node_index, idx));
 }
 
-static int eval_asserts(node_t *node){
+int node_asserts_eval(node_t *node){
 	assert_t *assert;
 	expr_value_t r;
 
@@ -154,9 +122,50 @@ static int eval_asserts(node_t *node){
 	// TODO consider checking asserts on node creation an each time
 	// 		a node's attributes are modified
 	list_for_each(node->type->asserts, assert){
-		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || r.is_array || r.i != 0)
-			return -1;
+		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || !EXPR_TYPE_IS_INT(r.type) || r.is_array || r.i == 0)
+			return devtree_parser_error("assertion failed: %s", assert->msg);
 	}
 
 	return 0;
+}
+
+int node_attr_update(node_t *node, attr_t *attr, expr_op_t op, expr_t *arg){
+	expr_t e = EXPR(op, EXPR_VALUE_EXPR(attr->value), EXPR_VALUE_EXPR(arg));
+	expr_value_t r;
+
+
+	if(expr_evaluate(&e, &r, &node->attrs) == 0x0)
+		return -1;
+
+	attr->value->arg0 = r;
+
+	return node_asserts_eval(node);
+}
+
+
+/* local functions */
+static int index_add(node_t *node){
+	size_t idx;
+
+
+	if(index_query(node->name, &idx) != -1)
+		return devtree_parser_error("%s: node already defined", node->name);
+
+	return vector_add(&node_index, &node);
+}
+
+static int index_query(char const *name, size_t *idx){
+	node_t **node;
+
+
+	*idx = 0;
+
+	vector_for_each(&node_index, node){
+		if(strcmp((*node)->name, name) == 0)
+			return 0;
+
+		(*idx)++;
+	}
+
+	return -1;
 }
