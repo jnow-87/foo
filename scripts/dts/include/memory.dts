@@ -13,6 +13,8 @@
 
 /* types */
 typedef{
+	string compatible = "memory";
+
 	addr base;
 	int32 size;
 } memory;

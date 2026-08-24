@@ -14,18 +14,18 @@
 
 /* global functions */
 assert_t *assert_create(expr_t *expr, char const *msg){
-	assert_t *assert;
+	assert_t *a;
 
 
-	assert = malloc(sizeof(assert_t));
+	a = malloc(sizeof(assert_t));
 
-	if(assert == 0x0)
+	if(a == 0x0)
 		goto err;
 
-	assert->expr = expr;
-	assert->msg = msg;
+	a->expr = expr;
+	a->msg = msg;
 
-	return assert;
+	return a;
 
 
 err:

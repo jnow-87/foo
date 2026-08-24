@@ -13,6 +13,7 @@
 
 #include <sys/types.h>
 #include "assert.h"
+#include "attr.h"
 #include "attrvec.h"
 #include "type.h"
 
@@ -21,7 +22,6 @@
 typedef struct node_t{
 	struct node_t *prev,
 				  *next,
-				  *parent,
 				  *childs;
 
 	char const *name;
@@ -33,14 +33,14 @@ typedef struct node_t{
 /* prototypes */
 int nodes_init(void);
 node_t *nodes_root();
-int nodes_assert(void);
 
 node_t *node_create(char const *name, type_t *type, node_t *childs);
 void node_destroy(node_t *node);
 
-void node_child_add(node_t *parent, node_t *child);
-
 node_t *node_ref(char const *name);
+
+int node_asserts_eval(node_t *node);
+int node_attr_update(node_t *node, attr_t *attr, expr_op_t op, expr_t *arg);
 
 
 #endif // DEVTREE_NODE_H
