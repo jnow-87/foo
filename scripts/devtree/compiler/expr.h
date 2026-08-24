@@ -22,7 +22,7 @@
 #define EXPR_ARRAY_UNLIMITED	((size_t)-1)
 
 #define EXPR_TYPE_ENUM(v, is_int)	(v << 1 | (is_int ? 0x1 : 0x0))
-#define EXPR_TYPE_IS_INT(type)		(type | 0x1)
+#define EXPR_TYPE_IS_INT(type)		((bool)(type | 0x1))
 
 #define EXPR_ARRAY_INITIALISER() ((expr_array_t){ \
 	.items = VECTOR_INITIALISER(sizeof(expr_value_t)), \
@@ -119,8 +119,8 @@ expr_t *expr_alloc(expr_t *expr);
 void expr_destroy(expr_t *expr);
 
 expr_type_t expr_type(expr_t *expr);
-size_t expr_type_size(expr_type_t type);
 int expr_type_check(expr_t *expr, expr_type_t type);
+size_t expr_type_size(expr_type_t type);
 char const *expr_type_name(expr_type_t type);
 
 int expr_array_add(expr_t *array, expr_t *expr);

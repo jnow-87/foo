@@ -40,8 +40,6 @@ typedef struct attr_t{
 	expr_t *value;
 } attr_t;
 
-typedef vector_t attr_vec_t;
-
 
 /* prototypes */
 attr_t *attr_init(attr_t *attr, char const *name, expr_type_t type, size_t array_limit, expr_t *value);
