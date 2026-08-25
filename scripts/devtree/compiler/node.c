@@ -36,7 +36,7 @@ int nodes_init(void){
 	attrvec_t attrs = ATTRVEC_INITIALISER();
 
 
-	if(attrvec_add(&attrs, attr_init(&(attr_t){}, "compatible", ET_STRING, 0, EXPR_STR(""))) != 0)
+	if(attrvec_add(&attrs, attr_init(&(attr_t){}, "compatible", ET_STRING, 0, &EXPR_STR(""))) != 0)
 		return -1;
 
 	if(type_create("root", &attrs, 0x0) != 0)

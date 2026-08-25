@@ -29,26 +29,28 @@
 	.limit = EXPR_ARRAY_UNLIMITED, \
 })
 
-#define EXPR_ARG(_type, _is_array, _field, _value) (&(expr_value_t){ \
+#define EXPR_VALUE(_type, _is_array, _field, _value) ((expr_value_t){ \
 	.type = _type, \
 	.is_array = _is_array, \
 	._field = _value, \
 })
 
-#define EXPR_LITERAL(_arg) (&(expr_t){ \
+#define EXPR_LITERAL(_arg) ((expr_t){ \
 	.op = EOP_LITERAL, \
 	.arg0 = _arg, \
-	.arg1 = 0x0, \
+	.arg1 = { 0 }, \
 })
 
-#define EXPR_INT(size, val)	EXPR_LITERAL(EXPR_ARG(EXPR_INT_FIXED(size), false, i, val))
-#define EXPR_ADDR(val)		EXPR_LITERAL(EXPR_ARG(ET_ADDR, false, p, val))
-#define EXPR_STR(val)		EXPR_LITERAL(EXPR_ARG(ET_STRING, false, p, val))
-#define EXPR_ARRAY(type)	EXPR_LITERAL(EXPR_ARG(type, true, array, EXPR_ARRAY_INITIALISER()))
+#define EXPR_EXPR(_expr) EXPR_VALUE(ET_EXPR, false, expr, _expr)
+
+#define EXPR_INT(size, val)	EXPR_LITERAL(EXPR_VALUE(EXPR_INT_FIXED(size), false, i, val))
+#define EXPR_ADDR(val)		EXPR_LITERAL(EXPR_VALUE(ET_ADDR, false, p, val))
+#define EXPR_STR(val)		EXPR_LITERAL(EXPR_VALUE(ET_STRING, false, p, val))
+#define EXPR_ARRAY(type)	EXPR_LITERAL(EXPR_VALUE(type, true, array, EXPR_ARRAY_INITIALISER()))
 
 
 /* incomplete types */
-struct expr_value_t;
+struct expr_t;
 
 
 /* types */
@@ -94,29 +96,29 @@ typedef struct{
 } expr_array_t;
 
 typedef struct{
-	expr_op_t op;
-
-	struct expr_value_t *arg0,
-						*arg1;
-} expr_t;
-
-typedef struct expr_value_t{
 	expr_type_t type;
 	bool is_array;
 
 	union{
 		EXPR_INT_T i;
 		void *p;
-		expr_t expr;
+		struct expr_t *expr;
 		expr_array_t array;
 	};
 } expr_value_t;
 
+typedef struct expr_t{
+	expr_op_t op;
+
+	expr_value_t arg0,
+				 arg1;
+} expr_t;
+
 
 /* prototypes */
-expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
+expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1, attrvec_t *ctx);
 expr_t *expr_alloc(expr_t *expr);
-void expr_destroy(expr_t *expr);
+void expr_free(expr_t *expr);
 
 expr_type_t expr_type(expr_t *expr);
 int expr_type_check(expr_t *expr, expr_type_t type);

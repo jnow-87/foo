@@ -62,5 +62,5 @@ expr_value_t *attr_value(attr_t *attr){
 		return 0x0;
 	}
 
-	return attr->value->arg0;
+	return &attr->value->arg0;
 }
