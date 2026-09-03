@@ -10,6 +10,7 @@
 #include <config/config.h>
 #include <sys/types.h>
 #include <sys/limits.h>
+#include <sys/memory.h>
 #include <sys/string.h>
 #include <sys/errno.h>
 #include <sys/math.h>
@@ -22,7 +23,20 @@ static char const *strchr_base(char const *s, int c, char const *end);
 
 /* global functions */
 char *strcpy(char *dest, char const *src){
-	return memcpy(dest, src, strlen(src) + 1);
+	return strncpy(dest, src, strlen(src) + 1);
+}
+
+char *strdup(char const *s){
+	size_t n = strlen(s);
+	char *r;
+
+
+	r = sys_malloc(n + 1);
+
+	if(r != 0x0)
+		strncpy(r, s, n);
+
+	return r;
 }
 
 size_t strlen(char const *s){

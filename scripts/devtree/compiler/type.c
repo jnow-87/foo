@@ -65,6 +65,8 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 		   *nattr;
 	attr_t attr;
 	node_t *node;
+	expr_t expr;
+	expr_value_t val;
 
 
 	/* check attributes */
@@ -81,7 +83,7 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 	attrvec_for_each(&type->attrs, tattr){
 		nattr = attrvec_query(attrs, tattr->name, true);
 
-		if(nattr == 0x0 && !tattr->has_value){
+		if(nattr == 0x0 && tattr->value == 0x0){
 			devtree_parser_error("%s: missing attribute %s", name, tattr->name);
 			goto err_0;
 		}
@@ -101,15 +103,15 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 	attrvec_for_each(&type->attrs, tattr){
 		nattr = attrvec_query(attrs, tattr->name, true);
 		attr = *tattr;
+		expr = (nattr != 0x0) ? *nattr->value : *tattr->value;
 
 		// TODO check if this check should be here or higher up in the function
-		// 		EOP_* should not be refernced outside of expr.c and the parser
-		if(nattr->value->op != EOP_LITERAL){
-			devtree_parser_error("%s: cannot assign non-literal expression", nattr->name);
+		if(expr_evaluate(&expr, &val, &node->attrs) == 0x0){
+			devtree_parser_error("%s: cannot evaluate expression", nattr->name);
 			goto err_1;
 		}
 
-		if(nattr != 0x0 && attr_assign(&attr, nattr->value) == 0x0)
+		if(attr_assign(&attr, expr_alloc(&EXPR_LITERAL(val))) == 0x0 || attr.value == 0x0)
 			goto err_1;
 
 		if(attrvec_add(&node->attrs, &attr) != 0)

@@ -23,8 +23,7 @@
  *   type attributes allow expressions
  *   node attributes allow only literal expression, i.e. expr_value_t
  *
- *   type, array_limit and has_value should then only be needed for type attributes
- *   has_value should be removable, since value is now a pointer
+ *   type and array_limit should then only be needed for type attributes
  */
 
 
@@ -35,7 +34,6 @@ typedef struct attr_t{
 
 	expr_type_t type;
 	size_t array_limit;
-	bool has_value;
 
 	expr_t *value;
 } attr_t;

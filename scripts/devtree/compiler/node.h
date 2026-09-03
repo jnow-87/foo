@@ -21,7 +21,6 @@
 typedef struct node_t{
 	struct node_t *prev,
 				  *next,
-				  *parent,
 				  *childs;
 
 	char const *name;
@@ -37,8 +36,6 @@ int nodes_assert(void);
 
 node_t *node_create(char const *name, type_t *type, node_t *childs);
 void node_destroy(node_t *node);
-
-void node_child_add(node_t *parent, node_t *child);
 
 node_t *node_ref(char const *name);
 

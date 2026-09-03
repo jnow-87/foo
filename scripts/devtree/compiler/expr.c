@@ -36,6 +36,8 @@ static expr_value_t *resolve_ref(expr_value_t *arg, attrvec_t *ctx, expr_value_t
 static int types_compatible(expr_type_t t0, expr_type_t t1, bool any_array);
 static int op_defined(expr_op_t op, expr_value_t *val);
 static int range_check(expr_value_t *value, expr_type_t type);
+static int copy_value(expr_value_t *dest, expr_value_t *src);
+static void free_value(expr_value_t *val);
 
 static expr_value_t *op_literal(expr_value_t *arg0, expr_value_t *res);
 static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
@@ -108,39 +110,7 @@ static char const *op_name[] = {
 };
 
 
-
-// TODO
-// 	- make expr_create() to evaluate an expression of args are literals
-// 	- add attr type "reference"
-// 	- update expr_evaluate() to throw an error if a reference cannot be resolved
-
 /* global functions */
-expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1, attrvec_t *ctx){
-	// TODO who should own the memory, either if evaluate worked and if it didn't
-	expr_value_t r;
-
-
-	expr->op = op;
-	expr->arg0 = EXPR_EXPR(arg0);
-	expr->arg1 = EXPR_EXPR(arg1);
-
-	if(expr_evaluate(expr, &r, ctx) == 0x0){
-		expr->arg0 = EXPR_EXPR(expr_alloc(arg0));
-		expr->arg1 = EXPR_EXPR(expr_alloc(arg1));
-
-		if(expr->arg0.expr == 0x0 || expr->arg1.expr == 0x0){
-			expr_free(expr->arg0.expr);
-			expr_free(expr->arg1.expr);
-
-			return 0x0;
-		}
-	}
-	else
-		*expr = EXPR_LITERAL(r);
-
-	return expr;
-}
-
 expr_t *expr_alloc(expr_t *expr){
 	expr_t *e;
 
@@ -148,19 +118,67 @@ expr_t *expr_alloc(expr_t *expr){
 	e = malloc(sizeof(expr_t));
 
 	if(e == 0x0){
-		devtree_parser_error("error allocating expression: %s", strerror(errno));
+		devtree_parser_error("error allocating expression");
 
 		return 0x0;
 	}
 
-	*e = *expr;
+	if(expr != 0x0)
+		*e = *expr;
 
 	return e;
 }
 
 void expr_free(expr_t *expr){
-	// TODO recursively free nested expressions
+	if(expr == 0x0)
+		return;
+
+	free_value(&expr->arg0);
+	free_value(&expr->arg1);
+
 	free(expr);
+}
+
+expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
+	expr_value_t arg0,
+				 arg1;
+
+
+	if(expr->op == EOP_LITERAL)
+		return op_literal(&expr->arg0, result);
+
+	if(expr->op == EOP_REFERENCE)
+		return resolve_ref(&expr->arg0, ctx, result);
+
+	if(expr_evaluate(expr->arg0.expr, &arg0, ctx) == 0x0 || expr_evaluate(expr->arg1.expr, &arg1, ctx) == 0x0)
+		return 0x0;
+
+	if(types_compatible(arg0.type, arg1.type, arg0.is_array || arg1.is_array) != 0)
+		return 0x0;
+
+	if(op_defined(expr->op, &arg0) != 0 || op_defined(expr->op, &arg1) != 0)
+		return 0x0;
+
+	result->type = expr_type(expr);
+	result->is_array = arg0.is_array || arg1.is_array;
+
+	if(ops[expr->op](&arg0, &arg1, result) == 0x0){
+		devtree_parser_error("operation %s failed", op_name[expr->op]);
+
+		return 0x0;
+	}
+
+	return result;
+}
+
+// TODO maybe update to already return the result
+// 		then expr_init() might no longer be needed, since its call to expr_evaluate() is no longer needed
+int expr_evaluable(expr_op_t op, expr_value_t *arg0, expr_value_t *arg1, attrvec_t *ctx){
+	expr_t e = EXPR(op, *arg0, *arg1);
+	expr_value_t r;
+
+
+	return -(expr_evaluate(&e, &r, ctx) == 0x0);
 }
 
 expr_type_t expr_type(expr_t *expr){
@@ -174,8 +192,8 @@ expr_type_t expr_type(expr_t *expr){
 	if(expr->op & (EOP_EQUAL | EOP_UNEQUAL | EOP_LESSER | EOP_LESSER_EQUAL | EOP_GREATER | EOP_GREATER_EQUAL | EOP_LOG_AND | EOP_LOG_OR))
 		return ET_INT8;
 
-	t0 = expr->arg0.type;
-	t1 = expr->arg1.type;
+	t0 = expr_type(expr->arg0.expr);
+	t1 = expr_type(expr->arg1.expr);
 
 	if(t0 == t1 || t1 == ET_UNDEF)
 		return t0;
@@ -232,6 +250,12 @@ int expr_array_add(expr_t *array, expr_t *expr){
 	if(!array->arg0.is_array)
 		return devtree_parser_error("appending to something not an array");
 
+	if(array->arg0.type == ET_UNDEF)
+		array->arg0.type = expr->arg0.type;
+
+	if(types_compatible(array->arg0.type, expr->arg0.type, true) != 0)
+		return -1;
+
 	if(vector_add(&arr->items, &(expr_value_t){ .expr = expr }) != 0)
 		return devtree_parser_error("adding to array failed");
 
@@ -241,58 +265,46 @@ int expr_array_add(expr_t *array, expr_t *expr){
 }
 
 int expr_copy(expr_t *dest, expr_t *src){
-	*dest = *src;
+	dest->op = src->op;
 
-/* TODO impl, cf. attr_copy()
-	if(src->flags & AF_ARRAY){
-		dest->value.arr.limit = src->value.arr.limit;
+	if(copy_value(&dest->arg0, &src->arg0) != 0)
+		goto err_0;
 
-		if(vector_copy(&dest->value.arr.items, &src->value.arr.items) != 0)
-			goto err;
-	}
-	else if(src->type == ET_STRING){
-		dest->value.p = strdup(src->value.p);
+	if(copy_value(&dest->arg1, &src->arg1) != 0)
+		goto err_1;
 
-		if(dest->value.p == 0x0)
-			goto err;
-	}
-*/
 	return 0;
 
-/*
-err:
-	return devtree_parser_error("%s: attribute copy failed", src->name);
-*/}
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
-	expr_value_t arg0,
-				 arg1;
+err_1:
+	free_value(&dest->arg0);
 
+err_0:
+	return -1;
+}
 
-	if(expr->op == EOP_LITERAL)
-		return op_literal(&expr->arg0, result);
+#include <stdio.h>
+void expr_print(expr_t *expr, int indent){
+	printf("\n%*.*s%s: ", indent, indent, "", op_name[expr->op]);
+	expr_value_print(&expr->arg0, indent);
 
-	if(expr->op == EOP_REFERENCE)
-		return resolve_ref(&expr->arg0, ctx, result);
+	if((expr->op & (EOP_LITERAL | EOP_REFERENCE)) == 0)
+		expr_value_print(&expr->arg1, indent);
+}
 
-	if(expr_evaluate(expr, &arg0, ctx) == 0x0 || expr_evaluate(expr, &arg1, ctx) == 0x0)
-		return 0x0;
-
-	if(types_compatible(arg0.type, arg1.type, arg0.is_array || arg1.is_array) != 0)
-		return 0x0;
-
-	if(op_defined(expr->op, &arg0) != 0 || op_defined(expr->op, &arg1) != 0)
-		return 0x0;
-
-	result->type = expr_type(expr);
-
-	if(ops[expr->op](&arg0, &arg1, result) == 0x0){
-		devtree_parser_error("operation %s failed", op_name[expr->op]);
-
-		return 0x0;
+void expr_value_print(expr_value_t *value, int indent){
+	if(value->is_array){
+		printf("array");
+		return;
 	}
 
-	return result;
+	switch(value->type){
+	case ET_UNDEF:	printf("undef"); break;
+	case ET_ADDR:	printf("%p", value->p); break;
+	case ET_STRING:	printf("%s", value->p); break;
+	case ET_EXPR:	expr_print(value->expr, indent + 1); break;
+	default:		printf("%d", value->i); break;
+	}
 }
 
 
@@ -300,6 +312,9 @@ expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
 static expr_value_t *resolve_ref(expr_value_t *arg, attrvec_t *ctx, expr_value_t *res){
 	attr_t *ref;
 
+
+	if(ctx == 0x0)
+		return 0x0;
 
 	ref = attrvec_query(ctx, arg->p, false);
 
@@ -375,6 +390,71 @@ static int range_check(expr_value_t *value, expr_type_t type){
 
 err:
 	return devtree_parser_error("integer out of range %lu > %lu", value->i, lim);
+}
+
+static int copy_value(expr_value_t *dest, expr_value_t *src){
+	*dest = *src;
+
+	if(src->is_array){
+		dest->array.limit = src->array.limit;
+
+		if(vector_copy(&dest->array.items, &src->array.items) != 0)
+			goto err;
+
+		return 0;
+	}
+
+	switch(src->type){
+	case ET_STRING:
+		dest->p = strdup(src->p);
+
+		if(dest->p == 0x0)
+			goto err;
+
+		break;
+
+	case ET_EXPR:
+		dest->expr = expr_alloc(0x0);
+
+		if(dest->expr == 0x0 || expr_copy(dest->expr, src->expr) != 0)
+			goto err;
+
+	default:
+		break;
+	}
+
+	return 0;
+
+
+err:
+	return devtree_parser_error("copy expression");
+}
+
+static void free_value(expr_value_t *val){
+	expr_value_t *el;
+
+
+	if(val->is_array){
+		vector_for_each(&val->array.items, el)
+			expr_free(el->expr);
+
+		vector_destroy(&val->array.items);
+
+		return;
+	}
+
+	switch(val->type){
+	case ET_STRING:
+		free(val->p);
+		break;
+
+	case ET_EXPR:
+		expr_free(val->expr);
+		break;
+
+	default:
+		break;
+	}
 }
 
 static expr_value_t *op_literal(expr_value_t *arg, expr_value_t *res){

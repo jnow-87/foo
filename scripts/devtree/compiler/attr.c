@@ -29,7 +29,6 @@ attr_t *attr_init(attr_t *attr, char const *name, expr_type_t type, size_t array
 	attr->name = name;
 	attr->type = type;
 	attr->array_limit = array_limit;
-	attr->has_value = false;
 
 	return attr_assign(attr, value);
 }

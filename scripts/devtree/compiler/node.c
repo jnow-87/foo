@@ -84,7 +84,7 @@ node_t *node_create(char const *name, type_t *type, node_t *childs){
 	node->type = type;
 
 	list_for_each(childs, child)
-		node_child_add(node, child);
+		list_add_tail(node->childs, child);
 
 	if(index_add(node) != 0)
 		goto err_1;
@@ -105,11 +105,6 @@ void node_destroy(node_t *node){
 	attrvec_destroy(&node->attrs);
 	free((char*)node->name);
 	free(node);
-}
-
-void node_child_add(node_t *parent, node_t *child){
-	child->parent = parent;
-	list_add_tail(parent->childs, child);
 }
 
 node_t *node_ref(char const *name){

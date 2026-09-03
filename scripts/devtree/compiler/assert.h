@@ -11,12 +11,7 @@
 #define DEVTREE_ASSERT_H
 
 
-#include <stdio.h>
 #include "expr.h"
-
-
-/* macros */
-#define ASSERT_TOKEN	256
 
 
 /* types */
