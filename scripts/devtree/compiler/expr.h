@@ -67,15 +67,14 @@ struct expr_t;
 
 /* types */
 typedef enum expr_type_t{
-	ET_UNDEF = EXPR_TYPE_ENUM(0, false),
-	ET_INT8 = EXPR_TYPE_ENUM(1, true),
-	ET_INT16 = EXPR_TYPE_ENUM(2, true),
-	ET_INT32 = EXPR_TYPE_ENUM(3, true),
-	ET_INT64 = EXPR_TYPE_ENUM(4, true),
-	ET_ADDR = EXPR_TYPE_ENUM(5, false),
-	ET_STRING = EXPR_TYPE_ENUM(6, false),
-	ET_EXPR = EXPR_TYPE_ENUM(7, false),
-	ET_NUM_TYPES
+	ET_UNDEF = EXPR_TYPE_ENUM(0x0, false),
+	ET_INT8 = EXPR_TYPE_ENUM(0x1, true),
+	ET_INT16 = EXPR_TYPE_ENUM(0x2, true),
+	ET_INT32 = EXPR_TYPE_ENUM(0x4, true),
+	ET_INT64 = EXPR_TYPE_ENUM(0x8, true),
+	ET_ADDR = EXPR_TYPE_ENUM(0x10, false),
+	ET_STRING = EXPR_TYPE_ENUM(0x20, false),
+	ET_EXPR = EXPR_TYPE_ENUM(0x40, false),
 } expr_type_t;
 
 typedef enum{

@@ -297,7 +297,7 @@ type-body : %empty										{ TYPE_RESET($$); }
 		  | type-body ';'								{ $$ = $1; }
 		  | type-body assert ';'						{ $$ = $1; list_add_tail($$.asserts, $2); }
 		  | type-body type-attr ';'						{ $$ = $1; ATTRVEC_ADD(&$$.attrs, &$2); }
-		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; ATTRVEC_ADD(&$$.attrs, ATTR_ASSIGN(&$2, &$4)); }
+		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; ATTRVEC_ADD(&$$.attrs, ATTR_ASSIGN(&$2, EXPR_ALLOC(&$4))); }
 		  ;
 
 type-attr : builtin-type IDFR							{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
@@ -321,7 +321,7 @@ node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = TYPE_INSTANTIATE($3, STRALLO
 
 node-args : %empty										{ NODE_RESET($$); devtreeunput(','); }
 		  | node-args ',' node							{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; ATTRVEC_ADD(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){ }, STRALLOC($3), expr_type(&$5), 0, 0x0), &$5)); }
+		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; ATTRVEC_ADD(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){ }, STRALLOC($3), expr_type(&$5), 0, 0x0), EXPR_ALLOC(&$5))); }
 		  ;
 
 /* expression */
@@ -486,7 +486,7 @@ static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1)
 		if(arg0 == 0x0 || arg1 == 0x0)
 			goto err;
 
-		*expr = EXPR(op, EXPR_VALUE_EXPR(arg0), EXPR_VALUE_EXPR(arg0));
+		*expr = EXPR(op, EXPR_VALUE_EXPR(arg0), EXPR_VALUE_EXPR(arg1));
 	}
 	else{
 		*expr = EXPR_LITERAL(r);

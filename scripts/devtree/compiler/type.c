@@ -105,7 +105,6 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 		attr = *tattr;
 		expr = (nattr != 0x0) ? *nattr->value : *tattr->value;
 
-		// TODO check if this check should be here or higher up in the function
 		if(expr_evaluate(&expr, &val, &node->attrs) == 0x0){
 			devtree_parser_error("%s: cannot evaluate expression", nattr->name);
 			goto err_1;
@@ -118,7 +117,11 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 			goto err_1;
 	}
 
+	// TODO should attrs really be destroyed here
 	attrvec_destroy(attrs);
+
+	if(node_eval_asserts(node) != 0)
+		goto err_1;
 
 	return node;
 

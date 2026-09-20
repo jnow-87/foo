@@ -20,8 +20,6 @@
 
 
 /* local/static prototypes */
-static int eval_asserts(node_t *node);
-
 static int index_add(node_t *node);
 static node_t *index_query(char const *name);
 
@@ -52,18 +50,6 @@ int nodes_init(void){
 
 node_t *nodes_root(){
 	return nodes;
-}
-
-int nodes_assert(void){
-	node_t *node;
-
-
-	list_for_each(nodes, node){
-		if(eval_asserts(node) != 0)
-			return -1;
-	}
-
-	return 0;
 }
 
 node_t *node_create(char const *name, type_t *type, node_t *childs){
@@ -119,6 +105,22 @@ node_t *node_ref(char const *name){
 	return node;
 }
 
+int node_eval_asserts(node_t *node){
+	assert_t *assert;
+	expr_value_t r;
+
+	// TODO add a test case that checks an assert triggers also after
+	// 		an attribute of an existing node is updated
+	// TODO consider checking asserts on node creation an each time
+	// 		a node's attributes are modified
+	list_for_each(node->type->asserts, assert){
+		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || !EXPR_TYPE_IS_INT(r.type) || r.is_array || r.i == 0)
+			return devtree_parser_error("assertion failed: %s", assert->msg);
+	}
+
+	return 0;
+}
+
 
 /* local functions */
 static int index_add(node_t *node){
@@ -138,20 +140,4 @@ static node_t *index_query(char const *name){
 	}
 
 	return 0x0;
-}
-
-static int eval_asserts(node_t *node){
-	assert_t *assert;
-	expr_value_t r;
-
-	// TODO add a test case that checks an assert triggers also after
-	// 		an attribute of an existing node is updated
-	// TODO consider checking asserts on node creation an each time
-	// 		a node's attributes are modified
-	list_for_each(node->type->asserts, assert){
-		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || r.is_array || r.i != 0)
-			return -1;
-	}
-
-	return 0;
 }

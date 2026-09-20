@@ -162,6 +162,12 @@ expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
 	result->type = expr_type(expr);
 	result->is_array = arg0.is_array || arg1.is_array;
 
+	if(result->type & (ET_UNDEF | ET_EXPR)){
+		devtree_parser_error("invalid expression result type %s", expr_type_name(result->type));
+
+		return 0x0;
+	}
+
 	if(ops[expr->op](&arg0, &arg1, result) == 0x0){
 		devtree_parser_error("operation %s failed", op_name[expr->op]);
 
@@ -349,7 +355,6 @@ static int op_defined(expr_op_t op, expr_value_t *val){
 		[ET_ADDR] = EOP_LITERAL | EOP_SUBTRACT | EOP_REFERENCE | EOP_ADD | EOP_EQUAL | EOP_UNEQUAL | EOP_LESSER | EOP_LESSER_EQUAL | EOP_GREATER | EOP_GREATER_EQUAL,
 		[ET_STRING] = EOP_LITERAL | EOP_REFERENCE | EOP_ADD,
 		[ET_EXPR] = 0x0,
-		[ET_NUM_TYPES] = 0x0,
 	};
 
 
@@ -542,37 +547,37 @@ static expr_value_t *op_modulo(expr_value_t *arg0, expr_value_t *arg1, expr_valu
 }
 
 static expr_value_t *op_equal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	res->i = (arg0->p == arg1->p);
+	res->i = (arg0->i == arg1->i);
 
 	return res;
 }
 
 static expr_value_t *op_unequal(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	res->i = (arg0->p != arg1->p);
+	res->i = (arg0->i != arg1->i);
 
 	return res;
 }
 
 static expr_value_t *op_lesser(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	res->i = (arg0->p < arg1->p);
+	res->i = (arg0->i < arg1->i);
 
 	return res;
 }
 
 static expr_value_t *op_lesser_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	res->i = (arg0->p <= arg1->p);
+	res->i = (arg0->i <= arg1->i);
 
 	return res;
 }
 
 static expr_value_t *op_greater(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	res->i = (arg0->p > arg1->p);
+	res->i = (arg0->i > arg1->i);
 
 	return res;
 }
 
 static expr_value_t *op_greater_eq(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
-	res->i = (arg0->p >= arg1->p);
+	res->i = (arg0->i >= arg1->i);
 
 	return res;
 }

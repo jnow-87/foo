@@ -32,12 +32,12 @@ typedef struct node_t{
 /* prototypes */
 int nodes_init(void);
 node_t *nodes_root();
-int nodes_assert(void);
 
 node_t *node_create(char const *name, type_t *type, node_t *childs);
 void node_destroy(node_t *node);
 
 node_t *node_ref(char const *name);
+int node_eval_asserts(node_t *node);
 
 
 #endif // DEVTREE_NODE_H
