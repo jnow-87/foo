@@ -13,6 +13,7 @@
 
 #include <sys/types.h>
 #include "assert.h"
+#include "attr.h"
 #include "attrvec.h"
 #include "type.h"
 
@@ -37,7 +38,9 @@ node_t *node_create(char const *name, type_t *type, node_t *childs);
 void node_destroy(node_t *node);
 
 node_t *node_ref(char const *name);
-int node_eval_asserts(node_t *node);
+
+int node_asserts_eval(node_t *node);
+int node_attr_update(node_t *node, attr_t *attr, expr_op_t op, expr_t *arg);
 
 
 #endif // DEVTREE_NODE_H

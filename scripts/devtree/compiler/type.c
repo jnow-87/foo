@@ -120,7 +120,7 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 	// TODO should attrs really be destroyed here
 	attrvec_destroy(attrs);
 
-	if(node_eval_asserts(node) != 0)
+	if(node_asserts_eval(node) != 0)
 		goto err_1;
 
 	return node;

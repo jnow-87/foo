@@ -71,11 +71,15 @@
 		_assi; \
 	})
 
-	#define ATTR_REF(node_name, attr_name)({ \
-		node_t *_nref = node_ref(node_name); \
-		EABORT(_nref == 0x0); \
+	#define NODE_REF(name)({ \
+		node_t *_ref = node_ref(name); \
+		EABORT(_ref == 0x0); \
 		\
-		attr_t *_aref = attrvec_query(&_nref->attrs, attr_name, false); \
+		_ref; \
+	})
+
+	#define ATTR_REF(node_ref, attr_name)({ \
+		attr_t *_aref = attrvec_query(&node_ref->attrs, attr_name, false); \
 		EABORT(_aref == 0x0); \
 		\
 		_aref; \
@@ -108,6 +112,9 @@
 		(node).attrs = ATTRVEC_INITIALISER(); \
 		(node).childs = 0x0; \
 	}
+
+	#define NODE_ATTR_UPDATE(attr_ref, op, expr) \
+		EABORT(node_attr_update(attr_ref.node_p, attr_ref.attr_p, op, expr) != 0)
 
 	#define EXPR_INIT(expr, op, arg0, arg1)({ \
 		EABORT(expr_init(expr, op, arg0, arg1) == 0x0); \
@@ -181,9 +188,13 @@ static int devtreeerror(char const *file, char const *s);
 /* parser union type */
 %union{
 	char *str_p;
-	attr_t *attr_p;
 	node_t *node_p;
 	assert_t *assert_p;
+
+	struct{
+		attr_t *attr_p;
+		node_t *node_p;
+	} attr_ref;
 
 	type_t type;
 	node_t node;
@@ -239,7 +250,6 @@ static int devtreeerror(char const *file, char const *s);
 %token DIVIDEEQ
 %token MODULOEQ
 %token UNARYPLUS
-%token UNARYMINUS
 
 // asserts
 %token ASSERT
@@ -268,7 +278,7 @@ static int devtreeerror(char const *file, char const *s);
 %type <expr> unary
 %type <expr> value
 
-%type <attr_p> attr-ref
+%type <attr_ref> attr-ref
 %type <expr> array
 %type <expr> array-body
 %type <expr> const
@@ -375,22 +385,20 @@ multiplicative : unary									{ $$ = $1; }
 			   ;
 
 // TODO check for proper memory clearance
-unary : attr-ref UNARYPLUS								{ $$ = *$1->value; ATTR_ASSIGN($1, EXPR_INIT($1->value, EOP_ADD, $1->value, &EXPR_INT(64, 1))); }
-	  | attr-ref UNARYMINUS								{ $$ = *$1->value; ATTR_ASSIGN($1, EXPR_INIT($1->value, EOP_SUBTRACT, $1->value, &EXPR_INT(64, 1))); }
-	  | UNARYPLUS attr-ref								{ ATTR_ASSIGN($2, EXPR_INIT($2->value, EOP_ADD, $2->value, &EXPR_INT(64, 1))); $$ = *$2->value; }
-	  | UNARYMINUS attr-ref								{ ATTR_ASSIGN($2, EXPR_INIT($2->value, EOP_SUBTRACT, $2->value, &EXPR_INT(64, 1))); $$ = *$2->value; }
+unary : attr-ref UNARYPLUS								{ $$ = *($1.attr_p->value); NODE_ATTR_UPDATE($1, EOP_ADD, &EXPR_INT(64, 1)); }
+	  | UNARYPLUS attr-ref								{ NODE_ATTR_UPDATE($2, EOP_ADD, &EXPR_INT(64, 1)); $$ = *($2.attr_p->value); }
 	  | value											{ $$ = $1; }
 	  ;
 
 value : const											{ $$ = $1; }
 	  | array											{ $$ = $1; }
-	  | attr-ref										{ EXPR_COPY(&$$, $1->value); }
+	  | attr-ref										{ EXPR_COPY(&$$, $1.attr_p->value); }
 	  | '(' expression ')'								{ $$ = $2; }
 	  | IDFR											{ $$ = EXPR_REF(STRALLOC($1)); }
 	  ;
 
 /* values */
-attr-ref : IDFR '.' IDFR								{ $$ = ATTR_REF($1, $3); };
+attr-ref : IDFR '.' IDFR								{ $$.node_p = NODE_REF($1); $$.attr_p = ATTR_REF($$.node_p, $3); };
 
 array : '[' array-body ']'								{ $$ = $2; }
 	  | '[' array-body ',' ']'							{ $$ = $2; }

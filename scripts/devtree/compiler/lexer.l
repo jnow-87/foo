@@ -105,7 +105,6 @@
 \/=		{ return DIVIDEEQ; }
 %=		{ return MODULOEQ; }
 \+\+	{ return UNARYPLUS; }
---		{ return UNARYMINUS; }
 
 
 	/* general patterns */

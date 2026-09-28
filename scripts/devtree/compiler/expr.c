@@ -192,8 +192,11 @@ expr_type_t expr_type(expr_t *expr){
 				t1;
 
 
-	if(expr->op & (EOP_LITERAL | EOP_REFERENCE))
+	if(expr->op == EOP_LITERAL)
 		return expr->arg0.type;
+
+	if(expr->op == EOP_REFERENCE)
+		return ET_UNDEF;
 
 	if(expr->op & (EOP_EQUAL | EOP_UNEQUAL | EOP_LESSER | EOP_LESSER_EQUAL | EOP_GREATER | EOP_GREATER_EQUAL | EOP_LOG_AND | EOP_LOG_OR))
 		return ET_INT8;

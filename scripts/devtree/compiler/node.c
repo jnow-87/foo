@@ -16,12 +16,13 @@
 #include <parser.tab.h>
 #include "attr.h"
 #include "attrvec.h"
+#include "expr.h"
 #include "node.h"
 
 
 /* local/static prototypes */
 static int index_add(node_t *node);
-static node_t *index_query(char const *name);
+static int index_query(char const *name, size_t *idx);
 
 
 /* static variables */
@@ -88,24 +89,31 @@ err_0:
 }
 
 void node_destroy(node_t *node){
+	size_t idx;
+
+
+	if(index_query(node->name, &idx) == 0)
+		vector_rm(&node_index, idx);
+
 	attrvec_destroy(&node->attrs);
 	free((char*)node->name);
 	free(node);
 }
 
 node_t *node_ref(char const *name){
-	node_t *node;
+	size_t idx;
 
 
-	node = index_query(name);
-
-	if(node == 0x0)
+	if(index_query(name, &idx) == -1){
 		devtree_parser_error("%s: undefined reference", name);
 
-	return node;
+		return 0x0;
+	}
+
+	return *((node_t**)vector_get(&node_index, idx));
 }
 
-int node_eval_asserts(node_t *node){
+int node_asserts_eval(node_t *node){
 	assert_t *assert;
 	expr_value_t r;
 
@@ -121,23 +129,43 @@ int node_eval_asserts(node_t *node){
 	return 0;
 }
 
+int node_attr_update(node_t *node, attr_t *attr, expr_op_t op, expr_t *arg){
+	expr_t e = EXPR(op, EXPR_VALUE_EXPR(attr->value), EXPR_VALUE_EXPR(arg));
+	expr_value_t r;
+
+
+	if(expr_evaluate(&e, &r, &node->attrs) == 0x0)
+		return -1;
+
+	attr->value->arg0 = r;
+
+	return node_asserts_eval(node);
+}
+
 
 /* local functions */
 static int index_add(node_t *node){
-	if(index_query(node->name) != 0x0)
+	size_t idx;
+
+
+	if(index_query(node->name, &idx) != -1)
 		return devtree_parser_error("%s: node already defined", node->name);
 
 	return vector_add(&node_index, &node);
 }
 
-static node_t *index_query(char const *name){
+static int index_query(char const *name, size_t *idx){
 	node_t **node;
 
 
+	*idx = 0;
+
 	vector_for_each(&node_index, node){
 		if(strcmp((*node)->name, name) == 0)
-			return *node;
+			return 0;
+
+		(*idx)++;
 	}
 
-	return 0x0;
+	return -1;
 }
