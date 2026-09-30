@@ -35,7 +35,10 @@
 
 	// helper
 	#define STRALLOC(s)({ \
-		void *_s = stralloc(s); \
+		void *_s = strdup(s); \
+		if(_s == 0x0) \
+			devtree_parser_error("string allocation failed"); \
+		\
 		EABORT(_s == 0x0); \
 		\
 		_s; \
@@ -105,6 +108,8 @@
 		node_t *_r = type_instantiate(TYPE_LOOKUP(type_name), node_name, &_n->attrs, _n->childs); \
 		EABORT(_r == 0x0); \
 		\
+		attrvec_destroy(&_n->attrs); /* TODO avoid freeing the entire vector, only reset it */ \
+		\
 		_r; \
 	})
 
@@ -144,7 +149,6 @@
 static int devtreeerror(char const *file, char const *s);
 	static int cleanup(void);
 	static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
-	static void *stralloc(char const *s);
 %}
 
 %code requires{
@@ -510,29 +514,6 @@ static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1)
 err:
 	expr_free(arg0);
 	expr_free(arg1);
-
-	return 0x0;
-}
-
-static void *stralloc(char const *s){
-	size_t len;
-	char *x;
-
-
-	len = strlen(s);
-	x = malloc(len + 1);
-
-	if(x == 0x0)
-		goto err;
-
-	memcpy(x, s, len);
-	x[len] = 0;
-
-	return x;
-
-
-err:
-	devtree_parser_error("string allocation failed");
 
 	return 0x0;
 }

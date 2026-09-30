@@ -34,7 +34,7 @@ char *strdup(char const *s){
 	r = sys_malloc(n + 1);
 
 	if(r != 0x0)
-		strncpy(r, s, n);
+		strncpy(r, s, n + 1);
 
 	return r;
 }

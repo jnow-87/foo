@@ -33,6 +33,8 @@ typedef struct type_t{
 
 /* prototypes */
 int type_create(char const *name, attrvec_t *attrs, assert_t *asserts);
+void types_destroy(void);
+
 type_t *type_lookup(char const *name);
 struct node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, struct node_t *childs);
 
