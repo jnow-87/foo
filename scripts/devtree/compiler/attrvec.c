@@ -7,6 +7,7 @@
 
 
 
+#include <stdlib.h>
 #include <sys/string.h>
 #include <sys/types.h>
 #include <sys/vector.h>
@@ -22,6 +23,16 @@ int attrvec_init(attrvec_t *attrs, size_t n){
 }
 
 void attrvec_destroy(attrvec_t *attrs){
+	attr_t *attr;
+
+
+	attrvec_for_each(attrs, attr){
+		if(attr->value)
+			expr_free(attr->value);
+
+		free((void*)attr->name);
+	}
+
 	vector_destroy(attrs);
 }
 
@@ -44,7 +55,7 @@ attr_t *attrvec_query_typed(attrvec_t *attrs, char const *name, expr_type_t type
 
 
 	attrvec_for_each(attrs, attr){
-		if(strcmp(attr->name, name) == 0){
+		if(attr->name != 0x0 && strcmp(attr->name, name) == 0){
 			if(type == ET_UNDEF || attr->type == type)
 				return attr;
 

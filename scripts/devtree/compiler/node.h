@@ -31,7 +31,7 @@ typedef struct node_t{
 
 
 /* prototypes */
-int nodes_init(void);
+void nodes_destroy(void);
 node_t *nodes_root();
 
 node_t *node_create(char const *name, type_t *type, node_t *childs);

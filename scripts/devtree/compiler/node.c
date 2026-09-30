@@ -27,30 +27,29 @@ static int index_query(char const *name, size_t *idx);
 
 /* static variables */
 static vector_t node_index = VECTOR_INITIALISER(sizeof(node_t*));
-static node_t *nodes;
+static node_t nodes = (node_t){
+	.prev = 0x0,
+	.next = 0x0,
+	.childs = 0x0,
+	.name = "root",
+	.type = 0x0,
+	.attrs = ATTRVEC_INITIALISER(),
+};
 
 
 /* global functions */
-int nodes_init(void){
-	attrvec_t attrs = ATTRVEC_INITIALISER();
-
-
-	if(attrvec_add(&attrs, attr_init(&(attr_t){}, "compatible", ET_STRING, 0, &EXPR_STR(""))) != 0)
-		return -1;
-
-	if(type_create("root", &attrs, 0x0) != 0)
-		return -1;
-
-	nodes = type_instantiate(type_lookup("root"), "root", &attrs, 0x0);
-
-	if(nodes == 0x0)
-		return -1;
-
-	return 0;
+node_t *nodes_root(){
+	return &nodes;
 }
 
-node_t *nodes_root(){
-	return nodes;
+void nodes_destroy(void){
+	node_t *node;
+
+
+	list_for_each(nodes.childs, node)
+		node_destroy(node);
+
+	vector_destroy(&node_index);
 }
 
 node_t *node_create(char const *name, type_t *type, node_t *childs){
@@ -90,7 +89,11 @@ err_0:
 
 void node_destroy(node_t *node){
 	size_t idx;
+	node_t *child;
 
+
+	list_for_each(node->childs, child)
+		node_destroy(child);
 
 	if(index_query(node->name, &idx) == 0)
 		vector_rm(&node_index, idx);

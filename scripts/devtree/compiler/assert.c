@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <parser.tab.h>
 #include "assert.h"
+#include "expr.h"
 
 
 /* global functions */
@@ -32,4 +33,11 @@ err:
 	devtree_parser_error("assert allocation failed");
 
 	return 0x0;
+}
+
+// TODO align names, _destroy vs _free
+void assert_destroy(assert_t *assert){
+	expr_free(assert->expr);
+	free((void*)assert->msg);
+	free(assert);
 }
