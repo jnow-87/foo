@@ -61,6 +61,36 @@
 	/* asserts */
 "assert"						{ return ASSERT; }
 
+	/* operators */
+=								{ return ASSIGN; }
+==								{ return EQUAL; }
+!=								{ return UNEQUAL; }
+\<								{ return LESSER; }
+>								{ return GREATER; }
+\<<								{ return LEFTSHIFT; }
+>>								{ return RIGHTSHIFT; }
+\+								{ return PLUS; }
+-								{ return MINUS; }
+\*								{ return MULTIPLY; }
+\/								{ return DIVIDE; }
+%								{ return MODULO; }
+&&								{ return LOGAND; }
+\|\|							{ return LOGOR; }
+&								{ return BITAND; }
+\|								{ return BITOR; }
+\^								{ return BITXOR; }
+\<=								{ return LESSEREQ; }
+>=								{ return GREATEREQ; }
+\<<=							{ return LSHIFTEQ; }
+>>=								{ return RSHIFTEQ; }
+\+=								{ return PLUSEQ; }
+-=								{ return MINUSEQ; }
+\*=								{ return MULTIPLYEQ; }
+\/=								{ return DIVIDEEQ; }
+%=								{ return MODULOEQ; }
+\+\+							{ return UNARYPLUS; }
+
+
 	/* comments */
 \/\/.*\r?\n						{ INC_LINE }
 \/\*							{ BEGIN MULTI_LINE_COMMENT; }
@@ -76,36 +106,6 @@
 
 	/* integer */
 (0x)?[0-9a-fA-F]+				{ devtreelval.i = strtol(devtreetext, 0x0, 0); return INT; }
-
-	/* operators */
-=		{ return ASSIGN; }
-==		{ return EQUAL; }
-!=		{ return UNEQUAL; }
-\<		{ return LESSER; }
->		{ return GREATER; }
-\<<		{ return LEFTSHIFT; }
->>		{ return RIGHTSHIFT; }
-\+		{ return PLUS; }
--		{ return MINUS; }
-\*		{ return MULTIPLY; }
-\/		{ return DIVIDE; }
-%		{ return MODULO; }
-&&		{ return LOGAND; }
-\|\|	{ return LOGOR; }
-&		{ return BITAND; }
-\|		{ return BITOR; }
-\^		{ return BITXOR; }
-\<=		{ return LESSEREQ; }
->=		{ return GREATEREQ; }
-\<<=	{ return LSHIFTEQ; }
->>=		{ return RSHIFTEQ; }
-\+=		{ return PLUSEQ; }
--=		{ return MINUSEQ; }
-\*=		{ return MULTIPLYEQ; }
-\/=		{ return DIVIDEEQ; }
-%=		{ return MODULOEQ; }
-\+\+	{ return UNARYPLUS; }
-
 
 	/* general patterns */
 \r?\n							{ INC_LINE }
