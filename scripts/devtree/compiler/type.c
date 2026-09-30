@@ -48,6 +48,27 @@ int type_create(char const *name, attrvec_t *attrs, assert_t *asserts){
 	return 0;
 }
 
+void asserts_destroy(assert_t *asserts){
+	assert_t *assert;
+
+
+	list_for_each(asserts, assert){
+		assert_destroy(assert);
+	}
+}
+
+void types_destroy(void){
+	type_t *type;
+
+
+	list_for_each(types, type){
+		asserts_destroy(type->asserts);
+		attrvec_destroy(&type->attrs);
+		free((void*)type->name);
+		free(type);
+	}
+}
+
 type_t *type_lookup(char const *name){
 	type_t *type;
 
@@ -65,7 +86,7 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 		   *nattr;
 	attr_t attr;
 	node_t *node;
-	expr_t expr;
+	expr_t *expr;
 	expr_value_t val;
 
 
@@ -102,23 +123,36 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 	// create node attribute list
 	attrvec_for_each(&type->attrs, tattr){
 		nattr = attrvec_query(attrs, tattr->name, true);
-		attr = *tattr;
-		expr = (nattr != 0x0) ? *nattr->value : *tattr->value;
 
-		if(expr_evaluate(&expr, &val, &node->attrs) == 0x0){
-			devtree_parser_error("%s: cannot evaluate expression", nattr->name);
-			goto err_1;
+		if(nattr != 0x0){
+			attr = *nattr;
+
+			nattr->name = 0x0;
+			nattr->value = 0x0;
+
+			expr = attr.value;
+		}
+		else{
+			attr = *tattr;
+			attr.name = strdup(attr.name);
+			attr.value = expr_alloc(0x0);
+
+			expr = tattr->value;
 		}
 
-		if(attr_assign(&attr, expr_alloc(&EXPR_LITERAL(val))) == 0x0 || attr.value == 0x0)
-			goto err_1;
+		if(expr_evaluate(expr, &val, &node->attrs) == 0x0){
+			devtree_parser_error("%s: cannot evaluate expression", nattr->name);
+			goto err_2;
+		}
+
+		*(attr.value)= EXPR_LITERAL(val);
+
+		if(attr_assign(&attr, attr.value) == 0x0)
+			goto err_2;
 
 		if(attrvec_add(&node->attrs, &attr) != 0)
-			goto err_1;
+			goto err_2;
 	}
-
-	// TODO should attrs really be destroyed here
-	attrvec_destroy(attrs);
 
 	if(node_asserts_eval(node) != 0)
 		goto err_1;
@@ -126,8 +160,15 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 	return node;
 
 
+err_2:
+	free((void*)attr.name);
+	expr_free(attr.value);
+
 err_1:
+	// TODO check if a separate label is needed to jump to from within the loop
+	// 		to only free expr and attr.name
 	node_destroy(node);
+
 
 err_0:
 	return 0x0;

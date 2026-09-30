@@ -16,6 +16,7 @@
 #include "codegen.h"
 #include "node.h"
 #include "opt.h"
+#include "type.h"
 
 
 /* local/static prototypes */
@@ -40,15 +41,12 @@ int main(int argc, char **argv){
 
 	opt_parse(argc, argv);
 
-	if(nodes_init() != 0)
-		goto end;
-
 	/* parse device tree */
 	if(devtreeparse(options.ifile_name) != 0)
 		goto end;
 
 	printf("parsed\n");
-	return 0;
+	goto end;
 
 	/* write output file */
 	if(collect_nodes(&nodes) != 0)
@@ -69,6 +67,8 @@ int main(int argc, char **argv){
 
 end:
 	vector_destroy(&nodes);
+	nodes_destroy();
+	types_destroy();
 
 	return -r;
 }
