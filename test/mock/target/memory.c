@@ -17,8 +17,5 @@ void *__malloc(size_t size);
 
 /* global functions */
 void *malloc(size_t size){
-	if(memmock_alloc_fail < 0 || memmock_alloc_fail-- > 0)
-		return __malloc(size);
-
-	return 0x0;
+	return MEMMOCK_ALLOC_FAIL(1, size) ? 0x0 : __malloc(size);
 }

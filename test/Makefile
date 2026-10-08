@@ -30,7 +30,7 @@ uttest-y += \
 	$(linker_scripts) \
 	$(build_tree)/lib/libbrick.a
 
-main.utest-cppflags := -DTESTS=unit
+main.utest-cppflags := -DTESTS=unit -DTEST_MEMMOCK
 
 ifeq ($(CONFIG_CODE_COVERAGE),y)
   uttest-$(CONFIG_X86) += $(build_tree)/arch/x86/gcov/libgcov.a

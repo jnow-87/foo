@@ -23,6 +23,7 @@
 
 #include <sys/compiler.h>
 #include <sys/escape.h>
+#include <test/memory.h>
 #include <test/test.h>
 
 
@@ -62,6 +63,10 @@ int main(int argc, char **argv){
 
 		r = (test->call() != 0);
 		results[r]++;
+
+#ifdef TEST_MEMMOCK
+		memmock_reset();
+#endif // TEST_MEMMOCK
 
 		printf("%s%s" RESET_ATTR "\n",
 			((char const *[]){ FG_GREEN, FG_RED }[r]),
