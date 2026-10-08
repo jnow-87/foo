@@ -29,6 +29,7 @@
 
 /* prototypes */
 char *strcpy(char *dest, char const *src);
+char *strdup(char const *s);
 size_t strlen(char const *s);
 int strcmp(char const *s0, char const *s1);
 size_t strcnt(char const *s, char c);
