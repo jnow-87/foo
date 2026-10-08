@@ -242,7 +242,7 @@
 #define __list_for_each(head, el, next_name) \
 	el = head; \
 	\
-	for(typeof(head) next=((head) == 0x0 ? 0x0 : (head)->next_name); (el)!=0x0; (el)=(next_name), next=(next == 0x0 ? 0 : next->next_name))
+	for(typeof(head) next=((head) == 0x0 ? 0x0 : (head)->next_name); (el)!=0x0; (el)=next, next=(next == 0x0 ? 0x0 : next->next_name))
 
 
 /* types */
