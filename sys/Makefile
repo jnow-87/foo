@@ -17,6 +17,7 @@ obj-y := \
 	mutex.o \
 	list1.o \
 	list2.o \
+	math.o \
 	register.o \
 	vector.o \
 	devtree.o \
@@ -42,6 +43,7 @@ hostobj-y := \
 	linebuf.o \
 	list1.o \
 	list2.o \
+	math.o \
 	register.o \
 	vector.o \
 	devtree.o \
@@ -60,6 +62,7 @@ libbrick-y := \
 	ctype.o \
 	list1.o \
 	list2.o \
+	math.o \
 	register.o \
 	vector.o \
 	devtree.o \
@@ -87,6 +90,7 @@ hostlib-y += libhost.a
 libhost-y := \
 	list1.o \
 	list2.o \
+	math.o \
 	register.o \
 	string.o \
 	vector.o \
