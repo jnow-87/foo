@@ -22,9 +22,14 @@ coverage: test
 		gcda_files=$$(find $(build_tree) -name '*.gcda'); \
 		\
 		for file in $${gcda_files}; do \
-			gcov -b $${file} > /dev/null; \
+			stem=$$(basename $${file} | cut -d '.' -f 1); \
 			tgt_name=$$(echo $${file} | sed -e 's/gcda$$/gcov/'); \
-			mv *.gcov $${tgt_name}; \
+			\
+			gcov -b $${file} > /dev/null; \
+			gcov_name=$$(ls $${stem}*.gcov | tail -1); \
+			\
+			mv $${gcov_name} $${tgt_name} || exit 1; \
+			rm -f *.gcov; \
 		done; \
 		\
 		[ "$${gcda_files}" != "" ] || { echo $(call fg,red,"error")": no coverage data found"; exit 1; }; \
