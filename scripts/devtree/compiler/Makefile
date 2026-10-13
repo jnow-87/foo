@@ -9,20 +9,7 @@
 
 obj-y := devicetree.o
 hostobj-y := devicetree.o
-hostbin-y := dtc dtc-test
-
-dtc-test-y := \
-	test.o \
-	opt.o \
-	codegen.o \
-	nodes.o \
-	assert.o \
-	attr.o \
-	attrvec.o \
-	types.o \
-	lexer.lex.o \
-	parser.tab.o \
-	expr.o
+hostbin-y := dtc
 
 dtc-y := \
 	main.o \
@@ -35,7 +22,8 @@ dtc-y := \
 	type.o \
 	lexer.lex.o \
 	parser.tab.o \
-	expr.o
+	expr.o \
+	strmap.o
 
 # ensure a rebuild if indirect dependencies are updated
 dtc-y += $(build_tree)/sys/libhost.a

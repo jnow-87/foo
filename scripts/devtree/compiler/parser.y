@@ -21,121 +21,54 @@
 	#include <lexer.lex.h>
 	#include "assert.h"
 	#include "node.h"
+	#include "strmap.h"
 	#include "type.h"
 
 
 	/* macros */
 	#define YYDEBUG	1
 
-	// parser error message
+	// parser abort on error
 	#define EABORT(expr){ \
 		if(expr) \
 			YYERROR; \
 	}
 
+	#define EABORT_VAL(op, type, cmp, tmp_name)({ \
+		type tmp_name = op; \
+		EABORT(tmp_name cmp); \
+		tmp_name; \
+	})
+
 	// helper
-	#define STRALLOC(s)({ \
-		void *_s = strdup(s); \
-		if(_s == 0x0) \
-			devtree_parser_error("string allocation failed"); \
-		\
-		EABORT(_s == 0x0); \
-		\
-		_s; \
-	})
+	#define TYPE_ATTR_ADD(type, attr)				EABORT(type_attr_add_clean(type, attr) != 0)
+	#define TYPE_LOOKUP(name)						EABORT_VAL(type_lookup(name), type_t *, == 0x0, _type)
 
-	#define EXPR_ALLOC(e)({ \
-		expr_t *_e = expr_alloc(e); \
-		EABORT(_e == 0x0); \
-		\
-		_e; \
-	})
+	#define TYPE_INSTANTIATE(type_name, node_name, attrs, childs) \
+		EABORT_VAL(type_instantiate_clean(type_name, node_name, attrs, childs), node_t *, == 0x0, _inst)
 
-	#define EXPR_COPY(dest, src) \
-		EABORT(expr_copy(dest, src) != 0);
+	#define NODE_ATTR_ADD(node, attr)				EABORT(node_attr_add_clean(node, attr) != 0)
+	#define NODE_ATTR_UPDATE(attr_ref, op, expr)	EABORT(node_attr_update(attr_ref.node_p, attr_ref.attr_p, op, expr) != 0)
+	#define NODE_REF(name)							EABORT_VAL(node_ref(name), node_t *, == 0x0, _nref)
 
-	#define EXPR_ARRAY_ADD(array, el) \
-		EABORT(expr_array_add(array, el) != 0);
+	#define ASSERT_CREATE(expr, msg)				EABORT_VAL(assert_create(expr, msg), assert_t *, == 0x0, _ass)
 
-	#define ATTR_INIT(attr, name, type, array_limit, value)({ \
-		attr_t *_ini = attr; \
-		EABORT(attr_init(_ini, name, type, array_limit, value) == 0x0); \
-		\
-		_ini; \
-	})
+	#define EXPR_COPY(dest, src)					EABORT(expr_copy(dest, src) != 0);
+	#define EXPR_ARRAY_ADD(array, el)				EABORT(expr_array_add(array, el) != 0);
+	#define EXPR_ALLOC(e)							EABORT_VAL(expr_alloc(e), expr_t *, == 0x0, _expr)
+	#define EXPR_INIT(expr, op, arg0, arg1)			EABORT_VAL(expr_init(expr, op, arg0, arg1), expr_t *, == 0x0, _eini)
 
-	#define ATTRVEC_ADD(attrs, attr) \
-		EABORT(attrvec_add(attrs, attr) != 0)
+	#define ATTR_ASSIGN(attr, value)				EABORT_VAL(attr_assign(attr, value), attr_t *, == 0x0, _assi)
+	#define ATTR_REF(node_ref, attr_name)			EABORT_VAL(attrvec_query(&node_ref->attrs, attr_name, false), attr_t *, == 0x0, _aref)
 
-	#define ATTR_ASSIGN(attr, value)({ \
-		attr_t *_assi = attr; \
-		EABORT(attr_assign(_assi, value) == 0x0) \
-		\
-		_assi; \
-	})
+	#define ATTR_INIT(attr, name, type, array_limit, value) \
+		EABORT_VAL(attr_init(attr, name, type, array_limit, value), attr_t *, == 0x0, _aini)
 
-	#define NODE_REF(name)({ \
-		node_t *_ref = node_ref(name); \
-		EABORT(_ref == 0x0); \
-		\
-		_ref; \
-	})
+	#define TYPE_CREATE(name, attrs, asserts)		EABORT(type_create_clean(name, attrs, asserts) != 0)
 
-	#define ATTR_REF(node_ref, attr_name)({ \
-		attr_t *_aref = attrvec_query(&node_ref->attrs, attr_name, false); \
-		EABORT(_aref == 0x0); \
-		\
-		_aref; \
-	})
+	#define STRALLOC(s)								EABORT_VAL(strmap_add(s), char const *, == 0x0, _s)
 
-	#define TYPE_CREATE(name, attrs, asserts) \
-		EABORT(type_create(name, attrs, asserts) != 0);
-
-	#define TYPE_RESET(type){ \
-		(type).attrs = ATTRVEC_INITIALISER(); \
-		(type).asserts = 0x0; \
-	}
-
-	#define TYPE_LOOKUP(name)({ \
-		type_t *_t = type_lookup(name); \
-		EABORT(_t == 0x0); \
-		\
-		_t; \
-	})
-
-	#define TYPE_INSTANTIATE(type_name, node_name, node)({ \
-		node_t *_n = node; \
-		node_t *_r = type_instantiate(TYPE_LOOKUP(type_name), node_name, &_n->attrs, _n->childs); \
-		EABORT(_r == 0x0); \
-		\
-		attrvec_destroy(&_n->attrs); /* TODO avoid freeing the entire vector, only reset it */ \
-		\
-		_r; \
-	})
-
-	#define NODE_RESET(node){ \
-		(node).attrs = ATTRVEC_INITIALISER(); \
-		(node).childs = 0x0; \
-	}
-
-	#define NODE_ATTR_UPDATE(attr_ref, op, expr) \
-		EABORT(node_attr_update(attr_ref.node_p, attr_ref.attr_p, op, expr) != 0)
-
-	#define EXPR_INIT(expr, op, arg0, arg1)({ \
-		EABORT(expr_init(expr, op, arg0, arg1) == 0x0); \
-		expr; \
-	})
-
-	#define ASSERT_CREATE(expr, msg)({ \
-		assert_t *_a; \
-		_a = assert_create(expr, msg); \
-		EABORT(_a == 0x0); \
-		\
-		_a; \
-	})
-
-
-	/* local/static variables */
+	/* static variables */
 	static FILE *fp = 0;
 	static char const *dt_script = 0x0;
 	static bool erroneous = false;
@@ -146,9 +79,21 @@
 
 
 	/* local/static prototypes */
-static int devtreeerror(char const *file, char const *s);
+	static int devtreeerror(char const *file, char const *s);
 	static int cleanup(void);
+
 	static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
+	static int type_attr_add_clean(type_t *type, attr_t *attr);
+	static int type_create_clean(char const *name, attrvec_t *attrs, assert_t *asserts);
+	static int type_reset(type_t *type, bool clean);
+	static node_t *type_instantiate_clean(char const *type_name, char const *node_name, attrvec_t *attrs, node_t *childs);
+
+	static int node_attr_add_clean(node_t *node, attr_t *attr);
+	static int node_reset(node_t *node, bool clean);
+
+	static int attrvec_add_clean(attrvec_t *attrs, attr_t *attr);
+	static int attr_reset(attr_t *attr, bool clean);
+	static int expr_reset(expr_t *expr, bool clean);
 %}
 
 %code requires{
@@ -191,7 +136,7 @@ static int devtreeerror(char const *file, char const *s);
 
 /* parser union type */
 %union{
-	char *str_p;
+	char const *str_p;
 	node_t *node_p;
 	assert_t *assert_p;
 
@@ -202,12 +147,17 @@ static int devtreeerror(char const *file, char const *s);
 
 	type_t type;
 	node_t node;
-	attr_t type_attr;
+	attr_t attr;
 	expr_t expr;
 	expr_type_t builtin_type;
 	EXPR_INT_T i;
 	char s[DEVTREE_STRMAX];
 }
+
+%destructor { type_reset(&$$, true); } <type>
+%destructor { node_reset(&$$, true); } <node>
+%destructor { attr_reset(&$$, true); } <attr>
+%destructor { expr_reset(&$$, true); } <expr>
 
 /* terminals */
 // general
@@ -260,7 +210,7 @@ static int devtreeerror(char const *file, char const *s);
 
 /* non-terminals */
 %type <type> type-body
-%type <type_attr> type-attr
+%type <attr> type-attr
 %type <assert_p> assert
 
 %type <node_p> node
@@ -307,11 +257,11 @@ devtree : %empty										{ }
 typedef : TYPEDEF '{' type-body '}' IDFR				{ TYPE_CREATE(STRALLOC($5), &$3.attrs, $3.asserts); }
 		;
 
-type-body : %empty										{ TYPE_RESET($$); }
+type-body : %empty										{ type_reset(&$$, false); }
 		  | type-body ';'								{ $$ = $1; }
 		  | type-body assert ';'						{ $$ = $1; list_add_tail($$.asserts, $2); }
-		  | type-body type-attr ';'						{ $$ = $1; ATTRVEC_ADD(&$$.attrs, &$2); }
-		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; ATTRVEC_ADD(&$$.attrs, ATTR_ASSIGN(&$2, EXPR_ALLOC(&$4))); }
+		  | type-body type-attr ';'						{ $$ = $1; TYPE_ATTR_ADD(&$$, &$2); }
+		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; TYPE_ATTR_ADD(&$$, ATTR_ASSIGN(&$2, EXPR_ALLOC(&$4))); }
 		  ;
 
 type-attr : builtin-type IDFR							{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
@@ -329,13 +279,13 @@ builtin-type : NA_STRING								{ $$ = ET_STRING; }
 assert : ASSERT '(' expression ',' string ')'			{ $$ = ASSERT_CREATE(EXPR_ALLOC(&$3), $5); };
 
 /* nodes */
-node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = TYPE_INSTANTIATE($3, STRALLOC($1), &$5); }
-	 | IDFR ASSIGN IDFR '(' node-args ',' ')'			{ $$ = TYPE_INSTANTIATE($3, STRALLOC($1), &$5); }
+node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = TYPE_INSTANTIATE($3, STRALLOC($1), &$5.attrs, $5.childs); }
+	 | IDFR ASSIGN IDFR '(' node-args ',' ')'			{ $$ = TYPE_INSTANTIATE($3, STRALLOC($1), &$5.attrs, $5.childs); }
 	 ;
 
-node-args : %empty										{ NODE_RESET($$); devtreeunput(','); }
+node-args : %empty										{ node_reset(&$$, false); devtreeunput(','); }
 		  | node-args ',' node							{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; ATTRVEC_ADD(&$$.attrs, ATTR_ASSIGN(ATTR_INIT(&(attr_t){ }, STRALLOC($3), expr_type(&$5), 0, 0x0), EXPR_ALLOC(&$5))); }
+		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; NODE_ATTR_ADD(&$$, ATTR_INIT(&(attr_t){ }, STRALLOC($3), expr_type(&$5), 0, EXPR_ALLOC(&$5))); }
 		  ;
 
 /* expression */
@@ -502,6 +452,9 @@ static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1)
 	}
 	else{
 		*expr = EXPR_LITERAL(r);
+		expr_value_free(&arg0->arg0);
+		expr_value_free(&arg1->arg0);
+
 		printf("  reduced to");
 		expr_print(expr, 3);
 	}
@@ -516,4 +469,96 @@ err:
 	expr_free(arg1);
 
 	return 0x0;
+}
+
+static int type_attr_add_clean(type_t *type, attr_t *attr){
+	if(attrvec_add_clean(&type->attrs, attr) != 0){
+		asserts_destroy(type->asserts);
+
+		return -1;
+	}
+
+	return 0;
+}
+
+
+static int attrvec_add_clean(attrvec_t *attrs, attr_t *attr){
+	if(attrvec_add(attrs, attr) != 0){
+		if(attr->value)
+			expr_free(attr->value);
+
+		attrvec_destroy(attrs);
+
+		return -1;
+	}
+
+	return 0;
+}
+
+static int type_create_clean(char const *name, attrvec_t *attrs, assert_t *asserts){
+	if(type_create(name, attrs, asserts) != 0)
+		return type_reset(&(type_t){ .attrs = *attrs, .asserts = asserts }, true);
+
+	return 0;
+}
+
+static int type_reset(type_t *type, bool clean){
+	if(clean){
+		asserts_destroy(type->asserts);
+		attrvec_destroy(&type->attrs);
+	}
+
+	type->attrs = ATTRVEC_INITIALISER();
+	type->asserts = 0x0;
+
+	return -1;
+}
+
+static node_t *type_instantiate_clean(char const *type_name, char const *node_name, attrvec_t *attrs, node_t *childs){
+	node_t *n = 0x0;
+	type_t *t;
+
+
+	t = type_lookup(type_name);
+
+	if(t != 0x0)
+		n = type_instantiate(t, node_name, attrs, childs);
+
+	attrvec_destroy(attrs); /* TODO avoid freeing the entire vector, only reset it */
+
+	return n;
+}
+
+static int node_attr_add_clean(node_t *node, attr_t *attr){
+	return attrvec_add_clean(&node->attrs, attr);
+}
+
+static int node_reset(node_t *node, bool clean){
+	if(clean)
+		attrvec_destroy(&node->attrs);
+
+	node->attrs = ATTRVEC_INITIALISER();
+	node->childs = 0x0;
+
+	return -1;
+}
+
+static int attr_reset(attr_t *attr, bool clean){
+	if(clean && attr->value)
+		expr_free(attr->value);
+
+	memset(attr, 0, sizeof(attr_t));
+
+	return -1;
+}
+
+static int expr_reset(expr_t *expr, bool clean){
+	if(clean){
+		expr_value_free(&expr->arg0);
+		expr_value_free(&expr->arg1);
+	}
+
+	memset(expr, 0, sizeof(expr_t));
+
+	return -1;
 }
