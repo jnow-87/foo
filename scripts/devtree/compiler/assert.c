@@ -36,8 +36,12 @@ err:
 }
 
 // TODO align names, _destroy vs _free
-void assert_destroy(assert_t *assert){
-	expr_free(assert->expr);
-	free((void*)assert->msg);
-	free(assert);
+void asserts_destroy(assert_t *asserts){
+	assert_t *a;
+
+
+	list_for_each(asserts, a){
+		expr_free(a->expr);
+		free(a);
+	}
 }

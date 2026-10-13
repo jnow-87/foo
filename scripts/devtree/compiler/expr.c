@@ -15,6 +15,7 @@
 #include "attr.h"
 #include "attrvec.h"
 #include "expr.h"
+#include "strmap.h"
 
 
 /* macros */
@@ -37,7 +38,6 @@ static int types_compatible(expr_type_t t0, expr_type_t t1, bool any_array);
 static int op_defined(expr_op_t op, expr_value_t *val);
 static int range_check(expr_value_t *value, expr_type_t type);
 static int copy_value(expr_value_t *dest, expr_value_t *src);
-static void free_value(expr_value_t *val);
 
 static expr_value_t *op_literal(expr_value_t *arg0, expr_value_t *res);
 static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
@@ -60,6 +60,7 @@ static expr_value_t *op_log_and(expr_value_t *arg0, expr_value_t *arg1, expr_val
 static expr_value_t *op_log_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
 
 static int add_array(expr_value_t *arr, expr_value_t *arg);
+static char const *add_str(char const *s0, char const *s1);
 
 
 /* static variables */
@@ -133,10 +134,27 @@ void expr_free(expr_t *expr){
 	if(expr == 0x0)
 		return;
 
-	free_value(&expr->arg0);
-	free_value(&expr->arg1);
+	expr_value_free(&expr->arg0);
+	expr_value_free(&expr->arg1);
 
 	free(expr);
+}
+
+void expr_value_free(expr_value_t *val){
+	expr_value_t *el;
+
+
+	if(val->is_array){
+		vector_for_each(&val->array.items, el)
+			expr_free(el->expr);
+
+		vector_destroy(&val->array.items);
+
+		return;
+	}
+
+	if(val->type == ET_EXPR)
+		expr_free(val->expr);
 }
 
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
@@ -174,17 +192,14 @@ expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
 		return 0x0;
 	}
 
+	// TODO
+	// 	- check if it can be avoided to frequently allocate and free
+	// 	- if it cannot be avoided, make sure expr_value_free() is called
+	// 	  in all cases within this function
+	expr_value_free(&arg0);
+	expr_value_free(&arg1);
+
 	return result;
-}
-
-// TODO maybe update to already return the result
-// 		then expr_init() might no longer be needed, since its call to expr_evaluate() is no longer needed
-int expr_evaluable(expr_op_t op, expr_value_t *arg0, expr_value_t *arg1, attrvec_t *ctx){
-	expr_t e = EXPR(op, *arg0, *arg1);
-	expr_value_t r;
-
-
-	return -(expr_evaluate(&e, &r, ctx) == 0x0);
 }
 
 expr_type_t expr_type(expr_t *expr){
@@ -286,7 +301,7 @@ int expr_copy(expr_t *dest, expr_t *src){
 
 
 err_1:
-	free_value(&dest->arg0);
+	expr_value_free(&dest->arg0);
 
 err_0:
 	return -1;
@@ -413,14 +428,6 @@ static int copy_value(expr_value_t *dest, expr_value_t *src){
 	}
 
 	switch(src->type){
-	case ET_STRING:
-		dest->p = strdup(src->p);
-
-		if(dest->p == 0x0)
-			goto err;
-
-		break;
-
 	case ET_EXPR:
 		dest->expr = expr_alloc(0x0);
 
@@ -436,33 +443,6 @@ static int copy_value(expr_value_t *dest, expr_value_t *src){
 
 err:
 	return devtree_parser_error("copy expression");
-}
-
-static void free_value(expr_value_t *val){
-	expr_value_t *el;
-
-
-	if(val->is_array){
-		vector_for_each(&val->array.items, el)
-			expr_free(el->expr);
-
-		vector_destroy(&val->array.items);
-
-		return;
-	}
-
-	switch(val->type){
-	case ET_STRING:
-		free(val->p);
-		break;
-
-	case ET_EXPR:
-		expr_free(val->expr);
-		break;
-
-	default:
-		break;
-	}
 }
 
 static expr_value_t *op_literal(expr_value_t *arg, expr_value_t *res){
@@ -485,14 +465,10 @@ static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t
 		else								return 0x0;
 	}
 	else if(arg0->type == ET_STRING){
-		res->p = malloc(strlen(arg0->p) + strlen(arg1->p) + 1);
+		res->p = add_str(arg0->p, arg1->p);
 
-		if(res->p == 0x0){
-			devtree_parser_error("out of memory");
+		if(res->p == 0x0)
 			return 0x0;
-		}
-
-		sprintf(res->p, "%s%s", arg0->p, arg1->p);
 	}
 	else
 		return 0x0;
@@ -634,4 +610,13 @@ static int add_array(expr_value_t *arr, expr_value_t *arg){
 	}
 
 	return 0;
+}
+
+static char const *add_str(char const *s0, char const *s1){
+	char r[strlen(s0) + strlen(s1) + 1];
+
+
+	sprintf(r, "%s%s", s0, s1);
+
+	return strmap_add(r);
 }

@@ -16,6 +16,7 @@
 #include "codegen.h"
 #include "node.h"
 #include "opt.h"
+#include "strmap.h"
 #include "type.h"
 
 
@@ -69,6 +70,7 @@ end:
 	vector_destroy(&nodes);
 	nodes_destroy();
 	types_destroy();
+	strmap_destroy();
 
 	return -r;
 }

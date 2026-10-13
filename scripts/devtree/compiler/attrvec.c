@@ -29,8 +29,6 @@ void attrvec_destroy(attrvec_t *attrs){
 	attrvec_for_each(attrs, attr){
 		if(attr->value)
 			expr_free(attr->value);
-
-		free((void*)attr->name);
 	}
 
 	vector_destroy(attrs);
