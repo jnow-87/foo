@@ -22,7 +22,7 @@
 #define EXPR_ARRAY_UNLIMITED	((size_t)-1)
 
 #define EXPR_TYPE_ENUM(v, is_int)	(v << 1 | (is_int ? 0x1 : 0x0))
-#define EXPR_TYPE_IS_INT(type)		((bool)(type | 0x1))
+#define EXPR_TYPE_IS_INT(type)		((bool)(type & 0x1))
 
 #define EXPR_ARRAY_INITIALISER() ((expr_array_t){ \
 	.items = VECTOR_INITIALISER(sizeof(expr_value_t)), \
@@ -112,7 +112,7 @@ typedef struct{
 
 	union{
 		EXPR_INT_T i;
-		void *p;
+		void const *p;
 		struct expr_t *expr;
 		expr_array_t array;
 	};
@@ -129,6 +129,7 @@ typedef struct expr_t{
 /* prototypes */
 expr_t *expr_alloc(expr_t *expr);
 void expr_free(expr_t *expr);
+void expr_value_free(expr_value_t *val);
 
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx);
 int expr_evaluable(expr_op_t op, expr_value_t *arg0, expr_value_t *arg1i, attrvec_t *ctx);

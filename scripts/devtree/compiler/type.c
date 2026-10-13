@@ -48,15 +48,6 @@ int type_create(char const *name, attrvec_t *attrs, assert_t *asserts){
 	return 0;
 }
 
-void asserts_destroy(assert_t *asserts){
-	assert_t *assert;
-
-
-	list_for_each(asserts, assert){
-		assert_destroy(assert);
-	}
-}
-
 void types_destroy(void){
 	type_t *type;
 
@@ -64,7 +55,6 @@ void types_destroy(void){
 	list_for_each(types, type){
 		asserts_destroy(type->asserts);
 		attrvec_destroy(&type->attrs);
-		free((void*)type->name);
 		free(type);
 	}
 }
@@ -134,7 +124,6 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 		}
 		else{
 			attr = *tattr;
-			attr.name = strdup(attr.name);
 			attr.value = expr_alloc(0x0);
 
 			expr = tattr->value;
@@ -161,14 +150,12 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 
 
 err_2:
-	free((void*)attr.name);
 	expr_free(attr.value);
 
 err_1:
 	// TODO check if a separate label is needed to jump to from within the loop
 	// 		to only free expr and attr.name
 	node_destroy(node);
-
 
 err_0:
 	return 0x0;

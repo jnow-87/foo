@@ -27,6 +27,9 @@ int vector_init(vector_t *v, size_t dt_size, size_t capa){
 }
 
 void vector_reset(vector_t *v){
+	if(v->capacity == 0)
+		return;
+
 	sys_free(v->buf);
 
 	v->capacity = 0;

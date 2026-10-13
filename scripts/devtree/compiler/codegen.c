@@ -167,6 +167,8 @@ static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 		default:
 			break;
 		}
+
+		expr_value_free(&v);
 	}
 }
 
@@ -211,6 +213,8 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 		default:
 			break;
 		}
+
+		expr_value_free(&v);
 	}
 }
 
@@ -303,6 +307,8 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 		if(v.is_array)
 			fprintf(fp, "[%zu]", v.array.items.size);
 
+		expr_value_free(&v);
+
 		fprintf(fp, ";\n");
 	}
 
@@ -371,6 +377,8 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 				break;
 			}
 		}
+
+		expr_value_free(&v);
 	}
 }
 

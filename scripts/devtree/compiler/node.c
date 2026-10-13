@@ -79,7 +79,7 @@ node_t *node_create(char const *name, type_t *type, node_t *childs){
 
 
 err_1:
-	free(node);
+	node_destroy(node);
 
 err_0:
 	devtree_parser_error("%s: node allocation failed", name);
@@ -99,7 +99,6 @@ void node_destroy(node_t *node){
 		vector_rm(&node_index, idx);
 
 	attrvec_destroy(&node->attrs);
-	free((char*)node->name);
 	free(node);
 }
 
@@ -125,8 +124,15 @@ int node_asserts_eval(node_t *node){
 	// TODO consider checking asserts on node creation an each time
 	// 		a node's attributes are modified
 	list_for_each(node->type->asserts, assert){
-		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || !EXPR_TYPE_IS_INT(r.type) || r.is_array || r.i == 0)
+		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || !EXPR_TYPE_IS_INT(r.type) || r.is_array || r.i == 0){
+			// TODO check if any of the expr_value_free() calls in the project are needed
+			// 		they were introduced to free string value, but since strings are now
+			// 		handled via strmap this is no longer needed, can any of the other
+			// 		cases handled in expr_value_free() occur
+			expr_value_free(&r);
+
 			return devtree_parser_error("assertion failed: %s", assert->msg);
+		}
 	}
 
 	return 0;
@@ -140,6 +146,7 @@ int node_attr_update(node_t *node, attr_t *attr, expr_op_t op, expr_t *arg){
 	if(expr_evaluate(&e, &r, &node->attrs) == 0x0)
 		return -1;
 
+	expr_value_free(&attr->value->arg0);
 	attr->value->arg0 = r;
 
 	return node_asserts_eval(node);
