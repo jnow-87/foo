@@ -138,19 +138,19 @@ TEST(patmat_error){
 
 	/* malloc fails */
 	// fail patmat_init
-	memmock_alloc_fail = 0;
+	memmock_alloc_fail_in = 0;
 	r |= TEST_PTR_EQ(patmat_init(0x0, 0), 0x0);
 
 	// fail pattern_init 1st
-	memmock_alloc_fail = 1;
+	memmock_alloc_fail_in = 1;
 	r |= TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
 
 	// fail pattern_init 2nd
-	memmock_alloc_fail = 2;
+	memmock_alloc_fail_in = 2;
 	r |= TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
 
 	// fail pattern_init 3rd
-	memmock_alloc_fail = 3;
+	memmock_alloc_fail_in = 3;
 	r |= TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
 
 	return -r;

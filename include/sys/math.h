@@ -17,6 +17,8 @@
 # include <math.h>
 #endif // BUILD_HOST
 
+#include <sys/types.h>
+
 
 /* macros */
 #define ABS(v)({ \
@@ -66,5 +68,9 @@ float powf(float x, float y);
 long double powl(long double x, long double y);
 # endif // CONFIG_NOFLOAT
 #endif // BUILD_HOST
+
+size_t prime_next(size_t n);
+bool isprime(size_t n);
+
 
 #endif // SYS_MATH_H

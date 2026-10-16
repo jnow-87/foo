@@ -7,6 +7,7 @@
 
 
 
+#include <stdlib.h>
 #include <sys/compiler.h>
 #include <sys/ctype.h>
 #include <sys/errno.h>
@@ -43,6 +44,18 @@ TEST(strcmp){
 	r |= TEST_INT_EQ(strncmp("foobar", "foo", 3), 0);
 	r |= TEST_INT_EQ(strncmp("foobar", "barbar", 3), 1);
 	r |= TEST_INT_EQ(strncmp("barbar", "foobar", 3), -1);
+
+	return -r;
+}
+
+TEST(strdup){
+	int r = 0;
+	char *s;
+
+
+	ASSERT_PTR_NEQ((s = strdup("foo")), 0x0);
+	r |= TEST_STR_EQ(s, "foo");
+	free(s);
 
 	return -r;
 }

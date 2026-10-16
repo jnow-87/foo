@@ -10,6 +10,7 @@
 # target
 obj-y := \
 	escape.o \
+	map.o \
 	math.o \
 	memmock.o \
 	string.o \
@@ -33,6 +34,7 @@ obj-$(CONFIG_KERNEL_NET) += inet.o
 # host
 hostobj-y := \
 	escape.o \
+	map.o \
 	math.o \
 	memmock.o \
 	string.o \

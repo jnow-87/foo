@@ -34,7 +34,7 @@ TEST(vector_init){
 
 	vector_destroy(&v);
 
-	memmock_alloc_fail = 0;
+	memmock_alloc_fail_in = 0;
 	r |= TEST_INT_EQ(vector_init(&v, 0, 0), -1);
 
 	return -r;
@@ -84,7 +84,7 @@ TEST(vector_add){
 
 	r |= TEST_INT_EQ(vector_add(&v, &x), 0);
 
-	memmock_alloc_fail = 0;
+	memmock_alloc_fail_in = 0;
 	r |= TEST_INT_EQ(vector_add(&v, &x), -1);
 
 	vector_destroy(&v);

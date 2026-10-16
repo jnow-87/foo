@@ -18,15 +18,9 @@ void *__libc_calloc(size_t n, size_t size);
 
 /* global functions */
 void *malloc(size_t size){
-	if(memmock_alloc_fail < 0 || memmock_alloc_fail-- > 0)
-		return __libc_malloc(size);
-
-	return 0x0;
+	return MEMMOCK_ALLOC_FAIL(1, size) ? 0x0 : __libc_malloc(size);
 }
 
 void *calloc(size_t n, size_t size){
-	if(memmock_alloc_fail < 0 || memmock_alloc_fail-- > 0)
-		return __libc_calloc(n, size);
-
-	return 0x0;
+	return MEMMOCK_ALLOC_FAIL(n, size) ? 0x0 : __libc_calloc(n, size);
 }
