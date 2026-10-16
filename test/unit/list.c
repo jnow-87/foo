@@ -278,6 +278,7 @@ TEST(list_find){
 
 	/* list_find() */
 	r |= TEST_PTR_EQ(list_find(head, el, 2), 0x0);
+	r |= TEST_PTR_EQ(list_find_str(head, s_ptr, "1"), 0x0);
 
 	INIT_EL();
 
