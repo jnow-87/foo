@@ -215,7 +215,8 @@
 	\
 	LIST_TYPE_COMPAT2(*head); \
 	\
-	(typeof(head))_list2_find_str((list2_t*)_head, offsetofvar(*_head, member), str, n, ((void*)(_head->member) == (void*)(&(_head->member)) ? true : false)); \
+	(_head == 0x0) ? 0x0 : \
+		(typeof(head))_list2_find_str((list2_t*)_head, offsetofvar(*_head, member), str, n, ((void*)(_head->member) == (void*)(&(_head->member)) ? true : false)); \
 })
 
 #define list_find_strn_safe(head, member, str, n, mtx)({ \
