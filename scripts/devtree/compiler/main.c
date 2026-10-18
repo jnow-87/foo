@@ -25,12 +25,9 @@ static int collect_nodes(vector_t *nodes);
 static FILE *output_file(char const *file);
 
 
-// TODO check memory allocation, especially free
 // TODO overall review
 // TODO extend parser to support gcc preproc line information
 // 		update scripts/build/compile.make::preproc_file, removing -P to get them
-//
-// TODO simplify ternary operators via bool casts as done in 1e177e4fac19aabf2ecec6424231105d047a4875
 
 
 /* global functions */
@@ -67,10 +64,10 @@ int main(int argc, char **argv){
 	r = 0;
 
 end:
-	vector_destroy(&nodes);
-	nodes_destroy();
-	types_destroy();
-	strmap_destroy();
+	vector_reset(&nodes);
+	nodes_free();
+	types_free();
+	strmap_free();
 
 	return -r;
 }

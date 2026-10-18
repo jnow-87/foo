@@ -14,7 +14,7 @@
 
 
 /* global functions */
-assert_t *assert_create(expr_t *expr, char const *msg){
+assert_t *assert_alloc(expr_t *expr, char const *msg){
 	assert_t *a;
 
 
@@ -35,8 +35,7 @@ err:
 	return 0x0;
 }
 
-// TODO align names, _destroy vs _free
-void asserts_destroy(assert_t *asserts){
+void asserts_free(assert_t *asserts){
 	assert_t *a;
 
 

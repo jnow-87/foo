@@ -21,7 +21,7 @@
 
 
 /* local/static prototypes */
-static int index_add(node_t *node);
+static int index_add(char const *name, node_t *node);
 static int index_query(char const *name, size_t *idx);
 
 
@@ -42,19 +42,18 @@ node_t *nodes_root(){
 	return &nodes;
 }
 
-void nodes_destroy(void){
+void nodes_free(void){
 	node_t *node;
 
 
 	list_for_each(nodes.childs, node)
-		node_destroy(node);
+		node_free(node);
 
-	vector_destroy(&node_index);
+	vector_reset(&node_index);
 }
 
-node_t *node_create(char const *name, type_t *type, node_t *childs){
-	node_t *node,
-		   *child;
+node_t *node_alloc(char const *name, type_t *type, node_t *childs){
+	node_t *node;
 
 
 	node = calloc(1, sizeof(node_t));
@@ -62,24 +61,25 @@ node_t *node_create(char const *name, type_t *type, node_t *childs){
 	if(node == 0x0)
 		goto err_0;
 
-	if(attrvec_init(&node->attrs, type->attrs.size) != 0)
+	// set a dummy name to avoid segfaults and, in case of an error, avoid
+	// node_free() from removing a node with the same name from the index
+	node->name = "";
+	node->childs = childs;
+
+	if(attrvec_alloc(&node->attrs, type->attrs.size) != 0)
 		goto err_1;
 
-	// TODO who should own the name memory, cf. node_destroy(), which free's it
+	if(index_add(name, node) != 0)
+		goto err_1;
+
 	node->name = name;
 	node->type = type;
-
-	list_for_each(childs, child)
-		list_add_tail(node->childs, child);
-
-	if(index_add(node) != 0)
-		goto err_1;
 
 	return node;
 
 
 err_1:
-	node_destroy(node);
+	node_free(node);
 
 err_0:
 	devtree_parser_error("%s: node allocation failed", name);
@@ -87,18 +87,18 @@ err_0:
 	return 0x0;
 }
 
-void node_destroy(node_t *node){
+void node_free(node_t *node){
 	size_t idx;
 	node_t *child;
 
 
 	list_for_each(node->childs, child)
-		node_destroy(child);
+		node_free(child);
 
 	if(index_query(node->name, &idx) == 0)
 		vector_rm(&node_index, idx);
 
-	attrvec_destroy(&node->attrs);
+	attrvec_free(&node->attrs);
 	free(node);
 }
 
@@ -119,10 +119,6 @@ int node_asserts_eval(node_t *node){
 	assert_t *assert;
 	expr_value_t r;
 
-	// TODO add a test case that checks an assert triggers also after
-	// 		an attribute of an existing node is updated
-	// TODO consider checking asserts on node creation an each time
-	// 		a node's attributes are modified
 	list_for_each(node->type->asserts, assert){
 		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || !EXPR_TYPE_IS_INT(r.type) || r.is_array || r.i == 0){
 			// TODO check if any of the expr_value_free() calls in the project are needed
@@ -131,7 +127,7 @@ int node_asserts_eval(node_t *node){
 			// 		cases handled in expr_value_free() occur
 			expr_value_free(&r);
 
-			return devtree_parser_error("assertion failed: %s", assert->msg);
+			return devtree_parser_error("%s: assertion failed: %s", node->name, assert->msg);
 		}
 	}
 
@@ -154,12 +150,12 @@ int node_attr_update(node_t *node, attr_t *attr, expr_op_t op, expr_t *arg){
 
 
 /* local functions */
-static int index_add(node_t *node){
+static int index_add(char const *name, node_t *node){
 	size_t idx;
 
 
-	if(index_query(node->name, &idx) != -1)
-		return devtree_parser_error("%s: node already defined", node->name);
+	if(index_query(name, &idx) != -1)
+		return devtree_parser_error("%s: node already defined", name);
 
 	return vector_add(&node_index, &node);
 }

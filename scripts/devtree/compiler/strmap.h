@@ -12,7 +12,7 @@
 
 
 /* prototypes */
-void strmap_destroy(void);
+void strmap_free(void);
 char const *strmap_add(char const *s);
 
 

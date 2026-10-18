@@ -18,11 +18,11 @@
 
 
 /* global functions */
-int attrvec_init(attrvec_t *attrs, size_t n){
+int attrvec_alloc(attrvec_t *attrs, size_t n){
 	return vector_init(attrs, sizeof(attr_t), n);
 }
 
-void attrvec_destroy(attrvec_t *attrs){
+void attrvec_free(attrvec_t *attrs){
 	attr_t *attr;
 
 
@@ -31,7 +31,7 @@ void attrvec_destroy(attrvec_t *attrs){
 			expr_free(attr->value);
 	}
 
-	vector_destroy(attrs);
+	vector_reset(attrs);
 }
 
 int attrvec_add(attrvec_t *attrs, attr_t *attr){

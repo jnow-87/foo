@@ -31,11 +31,11 @@ typedef struct node_t{
 
 
 /* prototypes */
-void nodes_destroy(void);
+void nodes_free(void);
 node_t *nodes_root();
 
-node_t *node_create(char const *name, type_t *type, node_t *childs);
-void node_destroy(node_t *node);
+node_t *node_alloc(char const *name, type_t *type, node_t *childs);
+void node_free(node_t *node);
 
 node_t *node_ref(char const *name);
 

@@ -41,6 +41,7 @@
 	})
 
 	// helper
+	#define TYPE_ALLOC(name, attrs, asserts)		EABORT(type_alloc_clean(name, attrs, asserts) != 0)
 	#define TYPE_ATTR_ADD(type, attr)				EABORT(type_attr_add_clean(type, attr) != 0)
 	#define TYPE_LOOKUP(name)						EABORT_VAL(type_lookup(name), type_t *, == 0x0, _type)
 
@@ -51,20 +52,18 @@
 	#define NODE_ATTR_UPDATE(attr_ref, op, expr)	EABORT(node_attr_update(attr_ref.node_p, attr_ref.attr_p, op, expr) != 0)
 	#define NODE_REF(name)							EABORT_VAL(node_ref(name), node_t *, == 0x0, _nref)
 
-	#define ASSERT_CREATE(expr, msg)				EABORT_VAL(assert_create(expr, msg), assert_t *, == 0x0, _ass)
+	#define ASSERT_ALLOC(expr, msg)					EABORT_VAL(assert_alloc(expr, msg), assert_t *, == 0x0, _ass)
 
+	#define EXPR_INIT(expr, op, arg0, arg1)			EABORT_VAL(expr_init(expr, op, arg0, arg1), expr_t *, == 0x0, _eini)
+	#define EXPR_ALLOC(e)							EABORT_VAL(expr_alloc(e), expr_t *, == 0x0, _expr)
 	#define EXPR_COPY(dest, src)					EABORT(expr_copy(dest, src) != 0);
 	#define EXPR_ARRAY_ADD(array, el)				EABORT(expr_array_add(array, el) != 0);
-	#define EXPR_ALLOC(e)							EABORT_VAL(expr_alloc(e), expr_t *, == 0x0, _expr)
-	#define EXPR_INIT(expr, op, arg0, arg1)			EABORT_VAL(expr_init(expr, op, arg0, arg1), expr_t *, == 0x0, _eini)
-
-	#define ATTR_ASSIGN(attr, value)				EABORT_VAL(attr_assign(attr, value), attr_t *, == 0x0, _assi)
-	#define ATTR_REF(node_ref, attr_name)			EABORT_VAL(attrvec_query(&node_ref->attrs, attr_name, false), attr_t *, == 0x0, _aref)
 
 	#define ATTR_INIT(attr, name, type, array_limit, value) \
 		EABORT_VAL(attr_init(attr, name, type, array_limit, value), attr_t *, == 0x0, _aini)
 
-	#define TYPE_CREATE(name, attrs, asserts)		EABORT(type_create_clean(name, attrs, asserts) != 0)
+	#define ATTR_ASSIGN(attr, value)				EABORT_VAL(attr_assign(attr, value), attr_t *, == 0x0, _assi)
+	#define ATTR_REF(node_ref, attr_name)			EABORT_VAL(attrvec_query(&node_ref->attrs, attr_name, false), attr_t *, == 0x0, _aref)
 
 	#define STRALLOC(s)								EABORT_VAL(strmap_add(s), char const *, == 0x0, _s)
 
@@ -82,18 +81,21 @@
 	static int devtreeerror(char const *file, char const *s);
 	static int cleanup(void);
 
-	static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
-	static int type_attr_add_clean(type_t *type, attr_t *attr);
-	static int type_create_clean(char const *name, attrvec_t *attrs, assert_t *asserts);
+	static int type_alloc_clean(char const *name, attrvec_t *attrs, assert_t *asserts);
 	static int type_reset(type_t *type, bool clean);
+	static int type_attr_add_clean(type_t *type, attr_t *attr);
 	static node_t *type_instantiate_clean(char const *type_name, char const *node_name, attrvec_t *attrs, node_t *childs);
 
 	static int node_attr_add_clean(node_t *node, attr_t *attr);
 	static int node_reset(node_t *node, bool clean);
 
-	static int attrvec_add_clean(attrvec_t *attrs, attr_t *attr);
-	static int attr_reset(attr_t *attr, bool clean);
+	static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
 	static int expr_reset(expr_t *expr, bool clean);
+
+	static int attrvec_add_clean(attrvec_t *attrs, attr_t *attr);
+
+	static int attr_reset(attr_t *attr, bool clean);
+
 %}
 
 %code requires{
@@ -127,6 +129,7 @@
 
 	if(fp == 0x0){
 		fprintf(stderr, "read device tree script \"%s\" failed \"%s\"\n", file, strerror(errno));
+
 		return 1;
 	}
 
@@ -254,7 +257,7 @@ devtree : %empty										{ }
 		;
 
 /* typedef */
-typedef : TYPEDEF '{' type-body '}' IDFR				{ TYPE_CREATE(STRALLOC($5), &$3.attrs, $3.asserts); }
+typedef : TYPEDEF '{' type-body '}' IDFR				{ TYPE_ALLOC(STRALLOC($5), &$3.attrs, $3.asserts); }
 		;
 
 type-body : %empty										{ type_reset(&$$, false); }
@@ -276,7 +279,7 @@ builtin-type : NA_STRING								{ $$ = ET_STRING; }
 			 | NA_INT64									{ $$ = ET_INT64; }
 			 ;
 
-assert : ASSERT '(' expression ',' string ')'			{ $$ = ASSERT_CREATE(EXPR_ALLOC(&$3), $5); };
+assert : ASSERT '(' expression ',' string ')'			{ $$ = ASSERT_ALLOC(EXPR_ALLOC(&$3), $5); };
 
 /* nodes */
 node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = TYPE_INSTANTIATE($3, STRALLOC($1), &$5.attrs, $5.childs); }
@@ -338,7 +341,6 @@ multiplicative : unary									{ $$ = $1; }
 			   | multiplicative MODULO unary			{ EXPR_INIT(&$$, EOP_MODULO, &$1, &$3); }
 			   ;
 
-// TODO check for proper memory clearance
 unary : attr-ref UNARYPLUS								{ $$ = *($1.attr_p->value); NODE_ATTR_UPDATE($1, EOP_ADD, &EXPR_INT(64, 1)); }
 	  | UNARYPLUS attr-ref								{ NODE_ATTR_UPDATE($2, EOP_ADD, &EXPR_INT(64, 1)); $$ = *($2.attr_p->value); }
 	  | value											{ $$ = $1; }
@@ -432,71 +434,8 @@ static int cleanup(void){
 	return r ? -1 : 0;
 }
 
-static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1){
-	expr_value_t r;
-
-
-	*expr = EXPR(op, EXPR_VALUE_EXPR(arg0), EXPR_VALUE_EXPR(arg1));
-	expr_print(expr, 1);
-	printf("\n");
-
-	if(expr_evaluate(expr, &r, 0x0) == 0x0){
-		printf("  unable to reduce");
-		arg0 = expr_alloc(arg0);
-		arg1 = expr_alloc(arg1);
-
-		if(arg0 == 0x0 || arg1 == 0x0)
-			goto err;
-
-		*expr = EXPR(op, EXPR_VALUE_EXPR(arg0), EXPR_VALUE_EXPR(arg1));
-	}
-	else{
-		*expr = EXPR_LITERAL(r);
-		expr_value_free(&arg0->arg0);
-		expr_value_free(&arg1->arg0);
-
-		printf("  reduced to");
-		expr_print(expr, 3);
-	}
-
-	printf("\n");
-
-	return expr;
-
-
-err:
-	expr_free(arg0);
-	expr_free(arg1);
-
-	return 0x0;
-}
-
-static int type_attr_add_clean(type_t *type, attr_t *attr){
-	if(attrvec_add_clean(&type->attrs, attr) != 0){
-		asserts_destroy(type->asserts);
-
-		return -1;
-	}
-
-	return 0;
-}
-
-
-static int attrvec_add_clean(attrvec_t *attrs, attr_t *attr){
-	if(attrvec_add(attrs, attr) != 0){
-		if(attr->value)
-			expr_free(attr->value);
-
-		attrvec_destroy(attrs);
-
-		return -1;
-	}
-
-	return 0;
-}
-
-static int type_create_clean(char const *name, attrvec_t *attrs, assert_t *asserts){
-	if(type_create(name, attrs, asserts) != 0)
+static int type_alloc_clean(char const *name, attrvec_t *attrs, assert_t *asserts){
+	if(type_alloc(name, attrs, asserts) != 0)
 		return type_reset(&(type_t){ .attrs = *attrs, .asserts = asserts }, true);
 
 	return 0;
@@ -504,14 +443,24 @@ static int type_create_clean(char const *name, attrvec_t *attrs, assert_t *asser
 
 static int type_reset(type_t *type, bool clean){
 	if(clean){
-		asserts_destroy(type->asserts);
-		attrvec_destroy(&type->attrs);
+		asserts_free(type->asserts);
+		attrvec_free(&type->attrs);
 	}
 
 	type->attrs = ATTRVEC_INITIALISER();
 	type->asserts = 0x0;
 
 	return -1;
+}
+
+static int type_attr_add_clean(type_t *type, attr_t *attr){
+	if(attrvec_add_clean(&type->attrs, attr) != 0){
+		asserts_free(type->asserts);
+
+		return -1;
+	}
+
+	return 0;
 }
 
 static node_t *type_instantiate_clean(char const *type_name, char const *node_name, attrvec_t *attrs, node_t *childs){
@@ -524,7 +473,7 @@ static node_t *type_instantiate_clean(char const *type_name, char const *node_na
 	if(t != 0x0)
 		n = type_instantiate(t, node_name, attrs, childs);
 
-	attrvec_destroy(attrs); /* TODO avoid freeing the entire vector, only reset it */
+	attrvec_free(attrs);
 
 	return n;
 }
@@ -535,7 +484,7 @@ static int node_attr_add_clean(node_t *node, attr_t *attr){
 
 static int node_reset(node_t *node, bool clean){
 	if(clean)
-		attrvec_destroy(&node->attrs);
+		attrvec_free(&node->attrs);
 
 	node->attrs = ATTRVEC_INITIALISER();
 	node->childs = 0x0;
@@ -543,13 +492,35 @@ static int node_reset(node_t *node, bool clean){
 	return -1;
 }
 
-static int attr_reset(attr_t *attr, bool clean){
-	if(clean && attr->value)
-		expr_free(attr->value);
+static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1){
+	expr_value_t r;
 
-	memset(attr, 0, sizeof(attr_t));
 
-	return -1;
+	*expr = EXPR(op, EXPR_VALUE_EXPR(arg0), EXPR_VALUE_EXPR(arg1));
+
+	if(expr_evaluate(expr, &r, 0x0) == 0x0){
+		arg0 = expr_alloc(arg0);
+		arg1 = expr_alloc(arg1);
+
+		if(arg0 == 0x0 || arg1 == 0x0)
+			goto err;
+
+		*expr = EXPR(op, EXPR_VALUE_EXPR(arg0), EXPR_VALUE_EXPR(arg1));
+	}
+	else{
+		*expr = EXPR_LITERAL(r);
+		expr_value_free(&arg0->arg0);
+		expr_value_free(&arg1->arg0);
+	}
+
+	return expr;
+
+
+err:
+	expr_free(arg0);
+	expr_free(arg1);
+
+	return 0x0;
 }
 
 static int expr_reset(expr_t *expr, bool clean){
@@ -559,6 +530,28 @@ static int expr_reset(expr_t *expr, bool clean){
 	}
 
 	memset(expr, 0, sizeof(expr_t));
+
+	return -1;
+}
+
+static int attrvec_add_clean(attrvec_t *attrs, attr_t *attr){
+	if(attrvec_add(attrs, attr) != 0){
+		if(attr->value)
+			expr_free(attr->value);
+
+		attrvec_free(attrs);
+
+		return -1;
+	}
+
+	return 0;
+}
+
+static int attr_reset(attr_t *attr, bool clean){
+	if(clean && attr->value)
+		expr_free(attr->value);
+
+	memset(attr, 0, sizeof(attr_t));
 
 	return -1;
 }
