@@ -34,7 +34,7 @@ TEST_LONG(exit, "exit"){
 	errnum = 0;
 
 	for(size_t i=0; i<NTHREAD; i++)
-		ASSERT_INT_NEQ(thread_create(thread, 0x0), 0);
+		ASSERT_INT_NEQ(thread_spawn(thread, 0x0), 0);
 
 	return thread(0x0);
 }

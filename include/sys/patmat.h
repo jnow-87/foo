@@ -64,8 +64,8 @@ typedef struct{
 
 
 /* prototypes */
-patmat_t *patmat_init(char const **patterns, ssize_t npat);
-void patmat_destroy(patmat_t *pm);
+patmat_t *patmat_alloc(char const **patterns, ssize_t npat);
+void patmat_free(patmat_t *pm);
 void patmat_reset(patmat_t *pm);
 
 ssize_t patmat_get_results(patmat_t *pm, void **results);

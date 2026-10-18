@@ -15,7 +15,7 @@
 
 
 /* global functions */
-pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args){
+pid_t process_spawn(void *binary, bin_type_t bin_type, char const *name, char const *args){
 	sc_process_t p;
 
 
@@ -26,7 +26,7 @@ pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char c
 	p.args = args;
 	p.args_len = strlen(args);
 
-	if(sc(SC_PROCCREATE, &p) != 0)
+	if(sc(SC_PROCSPAWN, &p) != 0)
 		return 0;
 
 	return p.pid;

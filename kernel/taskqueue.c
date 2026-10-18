@@ -23,7 +23,7 @@
  * 			0x0 in case of an error, with errno being set appropriately
  * 				E_NOMEM		not enough memory to allocate the queue
  */
-ktask_queue_t *ktask_queue_create(void){
+ktask_queue_t *ktask_queue_alloc(void){
 	ktask_queue_t *queue;
 
 
@@ -43,7 +43,7 @@ ktask_queue_t *ktask_queue_create(void){
  *
  * \param	queue	queue to destroy
  */
-void ktask_queue_destroy(ktask_queue_t *queue){
+void ktask_queue_free(ktask_queue_t *queue){
 	ktask_queue_entry_t *e;
 
 

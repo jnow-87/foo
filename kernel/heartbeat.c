@@ -53,7 +53,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	heartbeat.time_ms = ktimer_ms();
 	heartbeat.idx = 0;
 
-	if(ktask_create(task, &heartbeat, sizeof(dev_data_t), 0x0, true) != 0)
+	if(ktask_spawn(task, &heartbeat, sizeof(dev_data_t), 0x0, true) != 0)
 		goto err;
 
 	gpio_write(dti, mask, mask);

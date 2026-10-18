@@ -50,7 +50,7 @@ static int event_inval(x86_hw_op_t *op);
 static int overlay_malloc(void *param);
 static int overlay_free(void *param);
 
-static int overlay_thread_create(void *param);
+static int overlay_thread_spawn(void *param);
 
 static int overlay_sigregister(void *param);
 
@@ -96,7 +96,7 @@ static x86_sc_overlay_t overlays[] = {
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
-	{ .call = overlay_thread_create,	.loc = OLOC_POST },
+	{ .call = overlay_thread_spawn,		.loc = OLOC_POST },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
 	{ .call = 0x0,						.loc = OLOC_NONE },
@@ -325,7 +325,7 @@ static int overlay_free(void *param){
 	return 0;
 }
 
-static int overlay_thread_create(void *param){
+static int overlay_thread_spawn(void *param){
 	sc_thread_t *p = (sc_thread_t*)param;
 
 

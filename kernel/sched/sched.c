@@ -194,7 +194,7 @@ static int init(void){
 	}
 
 	/* create init process */
-	this_p = process_create(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, fs_root);
+	this_p = process_alloc(kopt.init_bin, kopt.init_type, "init", kopt.init_arg, fs_root);
 
 	if(this_p == 0x0)
 		goto err;
@@ -203,7 +203,7 @@ static int init(void){
 	thread_transition(this_p->threads, READY);
 
 	/* create cleanup task */
-	if(ktask_create(cleanup, 0x0, 0, 0x0, true) != 0)
+	if(ktask_spawn(cleanup, 0x0, 0, 0x0, true) != 0)
 		goto err;
 
 	return 0;
@@ -370,11 +370,11 @@ static void cleanup(void *payload){
 		/* destroy thread and potentially parent process */
 		this_p = this_t->parent;
 		DEBUG("cleanup thread %s.%d\n", this_p->name, this_t->tid);
-		thread_destroy(this_t);
+		thread_free(this_t);
 
 		if(list_empty_safe(this_p->threads, &this_p->mtx)){
 			DEBUG("cleanup process %s\n", this_p->name);
-			process_destroy(this_p);
+			process_free(this_p);
 		}
 	}
 

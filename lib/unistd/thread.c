@@ -13,14 +13,14 @@
 
 
 /* global functions */
-tid_t thread_create(int (*entry)(void *), void *arg){
+tid_t thread_spawn(int (*entry)(void *), void *arg){
 	sc_thread_t p;
 
 
 	p.entry = entry;
 	p.arg = arg;
 
-	if(sc(SC_THREADCREATE, &p) != 0)
+	if(sc(SC_THREADSPAWN, &p) != 0)
 		return 0;
 
 	return p.tid;

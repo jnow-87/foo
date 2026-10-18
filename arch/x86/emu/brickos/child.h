@@ -38,8 +38,8 @@ typedef struct{
 
 
 /* prototypes */
-child_t *child_create(char const *name);
-void child_destroy(child_t *child);
+child_t *child_spawn(char const *name);
+void child_reap(child_t *child);
 
 void child_add_pipe(child_t *child, int fileno_rd, int fileno_wr);
 void child_fork(child_t *child, char **argv);

@@ -22,7 +22,7 @@
 
 
 /* global functions */
-thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entry, void *thread_arg){
+thread_t *thread_alloc(struct process_t *this_p, tid_t tid, thread_entry_t entry, void *thread_arg){
 	thread_t *this_t;
 	thread_ctx_t *ctx;
 
@@ -79,7 +79,7 @@ err_0:
 	return 0;
 }
 
-void thread_destroy(struct thread_t *this_t){
+void thread_free(struct thread_t *this_t){
 	process_t *this_p = this_t->parent;
 	thread_dtor_t *dtor;
 
@@ -92,7 +92,7 @@ void thread_destroy(struct thread_t *this_t){
 	}
 
 	page_free(this_p, this_t->stack);
-	usignal_destroy(this_t);
+	usignal_drop(this_t);
 
 	kfree(this_t);
 }

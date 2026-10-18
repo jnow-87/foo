@@ -69,8 +69,8 @@ typedef struct thread_t{
 
 
 /* prototypes */
-thread_t *thread_create(struct process_t *this_p, tid_t tid, thread_entry_t entry, void *thread_arg);
-void thread_destroy(struct thread_t *this_t);
+thread_t *thread_alloc(struct process_t *this_p, tid_t tid, thread_entry_t entry, void *thread_arg);
+void thread_free(struct thread_t *this_t);
 
 void thread_ctx_push(thread_ctx_t *ctx);
 thread_ctx_t *thread_ctx_pop(void);

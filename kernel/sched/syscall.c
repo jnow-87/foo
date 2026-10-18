@@ -22,10 +22,10 @@
 /* static/local prototypes */
 static int sc_hdlr_sched_yield(void *param);
 
-static int sc_hdlr_process_create(void *param);
+static int sc_hdlr_process_spawn(void *param);
 static int sc_hdlr_process_info(void *param);
 
-static int sc_hdlr_thread_create(void *param);
+static int sc_hdlr_thread_spawn(void *param);
 static int sc_hdlr_thread_info(void *param);
 static int sc_hdlr_nice(void *param);
 static int sc_hdlr_exit(void *param);
@@ -39,11 +39,11 @@ static int init(void){
 	/* register syscalls */
 	r |= sc_register(SC_SCHEDYIELD, sc_hdlr_sched_yield);
 
-	r |= sc_register(SC_PROCCREATE, sc_hdlr_process_create);
+	r |= sc_register(SC_PROCSPAWN, sc_hdlr_process_spawn);
 	r |= sc_register(SC_PROCINFO, sc_hdlr_process_info);
 
 	r |= sc_register(SC_EXIT, sc_hdlr_exit);
-	r |= sc_register(SC_THREADCREATE, sc_hdlr_thread_create);
+	r |= sc_register(SC_THREADSPAWN, sc_hdlr_thread_spawn);
 	r |= sc_register(SC_THREADINFO, sc_hdlr_thread_info);
 	r |= sc_register(SC_NICE, sc_hdlr_nice);
 
@@ -58,7 +58,7 @@ static int sc_hdlr_sched_yield(void *param){
 	return 0;
 }
 
-static int sc_hdlr_process_create(void *param){
+static int sc_hdlr_process_spawn(void *param){
 	sc_process_t *p = (sc_process_t*)param;
 	char name[p->name_len + 1];
 	char args[p->args_len + 1];
@@ -78,7 +78,7 @@ static int sc_hdlr_process_create(void *param){
 	/* create process */
 	DEBUG("create process \"%s\" with args \"%s\"\n", name, args);
 
-	new = process_create(p->binary, p->bin_type, p->name, p->args, this_p->cwd);
+	new = process_alloc(p->binary, p->bin_type, p->name, p->args, this_p->cwd);
 
 	if(new == 0x0)
 		return -errno;
@@ -101,7 +101,7 @@ static int sc_hdlr_process_info(void *param){
 	return 0;
 }
 
-static int sc_hdlr_thread_create(void *param){
+static int sc_hdlr_thread_spawn(void *param){
 	sc_thread_t *p = (sc_thread_t*)param;
 	thread_t *new;
 	process_t *this_p;
@@ -112,7 +112,7 @@ static int sc_hdlr_thread_create(void *param){
 	DEBUG("create thread for \"%s\" at %p, arg %p\n", this_p->name, p->entry, p->arg);
 
 	mutex_lock(&this_p->mtx);
-	new = thread_create(this_p, list_last(this_p->threads)->tid + 1, p->entry, p->arg);
+	new = thread_alloc(this_p, list_last(this_p->threads)->tid + 1, p->entry, p->arg);
 	mutex_unlock(&this_p->mtx);
 
 	if(new == 0x0)

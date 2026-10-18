@@ -82,7 +82,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(dtd->rx_int == 0 || dti->cfg->int_num != 0)
 		goto_errno(err_0, E_INVAL);
 
-	brdg = bridge_create(0x0, dtd, dti);
+	brdg = bridge_alloc(0x0, dtd, dti);
 
 	if(brdg == 0)
 		goto err_0;
@@ -106,7 +106,7 @@ err_2:
 	kfree(i2c);
 
 err_1:
-	bridge_destroy(brdg);
+	bridge_free(brdg);
 
 err_0:
 	return 0x0;

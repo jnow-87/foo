@@ -81,8 +81,8 @@ fs_node_t *rootfs_mkdir(char const *path, int fs_id){
 			/* no matching node found, try to create it */
 			// if its the last part of path, create the target node with fs_id
 			// otherwise create an intermediate node in rootfs
-			if(path[n] == 0)	node = fs_node_create(node->parent, path, n, FT_DIR, 0x0, fs_id);
-			else				node = fs_node_create(node->parent, path, n, FT_DIR, 0x0, rootfs_id);
+			if(path[n] == 0)	node = fs_node_alloc(node->parent, path, n, FT_DIR, 0x0, fs_id);
+			else				node = fs_node_alloc(node->parent, path, n, FT_DIR, 0x0, rootfs_id);
 
 			if(node == 0x0)
 				goto err;
@@ -116,7 +116,7 @@ int rootfs_rmdir(fs_node_t *node){
 		goto_errno(err, E_INUSE);
 
 	INFO("release file system from \"%s\"\n", node->name);
-	r = fs_node_destroy(node);
+	r = fs_node_free(node);
 
 	fs_unlock();
 
@@ -155,8 +155,8 @@ static int init(void){
 	/* init fs_root */
 	memset(&dummy, 0, sizeof(dummy));
 
-	fs_root = fs_node_create(&dummy, "/", 1, FT_DIR, 0x0, rootfs_id);
-	fs_node_destroy(fs_root->childs->next);		// remove the ".." child
+	fs_root = fs_node_alloc(&dummy, "/", 1, FT_DIR, 0x0, rootfs_id);
+	fs_node_free(fs_root->childs->next);		// remove the ".." child
 
 	if(fs_root == 0x0)
 		goto err_1;
@@ -239,7 +239,7 @@ static int open_unsafe(fs_node_t *start, char const *path, f_mode_t mode, proces
 			}
 
 			// create node
-			start = fs_node_create(start, path, n, type, file, rootfs_id);
+			start = fs_node_alloc(start, path, n, type, file, rootfs_id);
 
 			if(start == 0x0)
 				goto err;
@@ -422,7 +422,7 @@ static int node_rm_unsafe(fs_node_t *start, char const *path){
 		if(start->payload)
 			file_free(start->payload);
 
-		return fs_node_destroy(start);
+		return fs_node_free(start);
 
 	case -2:
 		/* file system boundary reached, hence call subsequent file system handler */

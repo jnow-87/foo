@@ -32,7 +32,7 @@ TEST(vector_init){
 	r |= TEST_INT_EQ(v.size, 0);
 	r |= TEST_INT_EQ(v.dt_size, sizeof(int));
 
-	vector_destroy(&v);
+	vector_reset(&v);
 
 	memmock_alloc_fail_in = 0;
 	r |= TEST_INT_EQ(vector_init(&v, 0, 0), -1);
@@ -40,13 +40,13 @@ TEST(vector_init){
 	return -r;
 }
 
-TEST(vector_destroy){
+TEST(vector_reset){
 	int r = 0;
 	vector_t v;
 
 
 	r |= TEST_INT_EQ(vector_init(&v, sizeof(int), 20), 0);
-	vector_destroy(&v);
+	vector_reset(&v);
 
 	r |= TEST_INT_EQ(v.capacity, 0);
 	r |= TEST_INT_EQ(v.size, 0);
@@ -87,7 +87,7 @@ TEST(vector_add){
 	memmock_alloc_fail_in = 0;
 	r |= TEST_INT_EQ(vector_add(&v, &x), -1);
 
-	vector_destroy(&v);
+	vector_reset(&v);
 
 	return -r;
 }
@@ -129,7 +129,7 @@ TEST(vector_rm){
 
 	vector_rm(&v, 3);
 
-	vector_destroy(&v);
+	vector_reset(&v);
 
 	return -r;
 }
@@ -154,7 +154,7 @@ TEST(vector_get){
 
 	r |= TEST_PTR_EQ(vector_get(&v, 5), 0x0);
 
-	vector_destroy(&v);
+	vector_reset(&v);
 
 	return -r;
 }
@@ -181,7 +181,7 @@ TEST(vector_foreach){
 		x += 10;
 	}
 
-	vector_destroy(&v);
+	vector_reset(&v);
 
 	return -r;
 }

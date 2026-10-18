@@ -44,8 +44,8 @@ static int sc_hdlr_timer(void *param);
 static void timer_hdlr(void *payload);
 static void timer_thread_dtor(thread_t *this_t, void *payload);
 
-static int timer_create(signal_t sig, uint32_t period_us);
-static void timer_destroy(timer_t *timer);
+static int timer_alloc(signal_t sig, uint32_t period_us);
+static void timer_free(timer_t *timer);
 
 
 /* static variables */
@@ -96,14 +96,14 @@ static int sc_hdlr_timer(void *param){
 
 
 	if(p->period_us != 0)
-		return timer_create(p->sig, p->period_us);
+		return timer_alloc(p->sig, p->period_us);
 
 	timer = list_find_safe(timers, sig, p->sig, &timers_mtx);
 
 	if(timer == 0x0)
 		return_errno(E_INVAL);
 
-	timer_destroy(timer);
+	timer_free(timer);
 
 	return 0;
 }
@@ -116,10 +116,10 @@ static void timer_hdlr(void *payload){
 }
 
 static void timer_thread_dtor(thread_t *this_t, void *payload){
-	timer_destroy(payload);
+	timer_free(payload);
 }
 
-static int timer_create(signal_t sig, uint32_t period_us){
+static int timer_alloc(signal_t sig, uint32_t period_us){
 	thread_t *this_t;
 	timer_t *timer;
 
@@ -144,13 +144,13 @@ static int timer_create(signal_t sig, uint32_t period_us){
 
 
 err_1:
-	timer_destroy(timer);
+	timer_free(timer);
 
 err_0:
 	return -errno;
 }
 
-static void timer_destroy(timer_t *timer){
+static void timer_free(timer_t *timer){
 	thread_dtor_release(timer->thread, timer_thread_dtor, timer);
 	ktimer_abort(&timer->timer);
 	kfree(timer);

@@ -29,8 +29,8 @@ typedef enum{
 
 
 /* prototypes */
-int brickos_init_childs(void);
-void brickos_destroy_childs(void);
+int brickos_spawn_childs(void);
+void brickos_reap_childs(void);
 
 char const *brickos_child_name(pid_t pid);
 

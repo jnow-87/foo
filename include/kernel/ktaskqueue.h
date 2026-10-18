@@ -32,8 +32,8 @@ typedef struct ktask_queue_t{
 
 
 /* prototypes */
-ktask_queue_t *ktask_queue_create(void);
-void ktask_queue_destroy(ktask_queue_t *queue);
+ktask_queue_t *ktask_queue_alloc(void);
+void ktask_queue_free(ktask_queue_t *queue);
 void ktask_queue_flush(ktask_queue_t *queue);
 
 int ktask_queue_enqueue(ktask_queue_t *queue, struct ktask_t *task);

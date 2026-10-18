@@ -58,8 +58,8 @@ typedef struct process_t{
 
 
 /* prototypes */
-process_t *process_create(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd);
-void process_destroy(process_t *this_p);
+process_t *process_alloc(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd);
+void process_free(process_t *this_p);
 
 process_t *process_find(pid_t pid);
 

@@ -22,8 +22,8 @@ typedef struct{
 
 
 /* local/static prototypes */
-static int pattern_init(patmat_pattern_t *pat, char const *text);
-static void pattern_destroy(patmat_pattern_t *pat);
+static int pattern_alloc(patmat_pattern_t *pat, char const *text);
+static void pattern_free(patmat_pattern_t *pat);
 static void pattern_reset(patmat_pattern_t *pat);
 
 static patmat_state_t pattern_match(patmat_pattern_t *pat, char c);
@@ -47,7 +47,7 @@ STATIC_ASSERT(sizeof_array(matcher) == PMS_MAX);
 
 
 /* global functions */
-patmat_t *patmat_init(char const **patterns, ssize_t npat){
+patmat_t *patmat_alloc(char const **patterns, ssize_t npat){
 	patmat_t *pm;
 
 
@@ -57,7 +57,7 @@ patmat_t *patmat_init(char const **patterns, ssize_t npat){
 		goto err_0;
 
 	for(ssize_t i=0; i<npat; i++){
-		if(pattern_init(pm->patterns + i, patterns[i]) != 0)
+		if(pattern_alloc(pm->patterns + i, patterns[i]) != 0)
 			goto err_1;
 	}
 
@@ -68,15 +68,15 @@ patmat_t *patmat_init(char const **patterns, ssize_t npat){
 
 
 err_1:
-	patmat_destroy(pm);
+	patmat_free(pm);
 
 err_0:
 	return 0x0;
 }
 
-void patmat_destroy(patmat_t *pm){
+void patmat_free(patmat_t *pm){
 	for(ssize_t i=0; i<pm->npat; i++)
-		pattern_destroy(pm->patterns + i);
+		pattern_free(pm->patterns + i);
 
 	sys_free(pm);
 }
@@ -165,7 +165,7 @@ ssize_t patmat_match_string(patmat_t *pm, char const *s){
 /**
  * \pre		pat is zero initialised
  */
-static int pattern_init(patmat_pattern_t *pat, char const *text){
+static int pattern_alloc(patmat_pattern_t *pat, char const *text){
 	size_t spec = 0;
 
 
@@ -206,13 +206,13 @@ static int pattern_init(patmat_pattern_t *pat, char const *text){
 
 
 err_1:
-	pattern_destroy(pat);
+	pattern_free(pat);
 
 err_0:
 	return -1;
 }
 
-static void pattern_destroy(patmat_pattern_t *pat){
+static void pattern_free(patmat_pattern_t *pat){
 	for(size_t i=0; i<pat->nspec && pat->specs; i++)
 		sys_free(pat->specs[i]);
 

@@ -50,7 +50,7 @@ TEST(patmat){
 	patmat_t *pm;
 
 
-	pm = patmat_init(patterns, sizeof_array(patterns));
+	pm = patmat_alloc(patterns, sizeof_array(patterns));
 
 	/* special cases */
 	r |= TEST_INT_EQ(test(pm, "19 ", 0, 1, (expect_t[]){{ .type = -1, .result.i = 19 }}), -1);
@@ -109,7 +109,7 @@ TEST(patmat){
 	r |= test(pm, "foodeadbeefbar", PM_NOMATCH, 0, 0x0);
 //		(expect_t[]){{ .type = PMS_STR, .result.s =  "deadbeef" }}
 
-	patmat_destroy(pm);
+	patmat_free(pm);
 
 	return -r;
 }
@@ -132,26 +132,26 @@ TEST(patmat_error){
 	r |= TEST_INT_EQ(patmat_match_char(0x0, -1), PM_NOMATCH);
 
 	/* invalid specifier */
-	r |= TEST_PTR_EQ(patmat_init(patterns_invalid, 1), 0x0);
-	r |= TEST_PTR_EQ(patmat_init(patterns_invalid + 1, 1), 0x0);
-	r |= TEST_PTR_EQ(patmat_init(patterns_invalid + 2, 1), 0x0);
+	r |= TEST_PTR_EQ(patmat_alloc(patterns_invalid, 1), 0x0);
+	r |= TEST_PTR_EQ(patmat_alloc(patterns_invalid + 1, 1), 0x0);
+	r |= TEST_PTR_EQ(patmat_alloc(patterns_invalid + 2, 1), 0x0);
 
 	/* malloc fails */
-	// fail patmat_init
+	// fail patmat_alloc
 	memmock_alloc_fail_in = 0;
-	r |= TEST_PTR_EQ(patmat_init(0x0, 0), 0x0);
+	r |= TEST_PTR_EQ(patmat_alloc(0x0, 0), 0x0);
 
 	// fail pattern_init 1st
 	memmock_alloc_fail_in = 1;
-	r |= TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
+	r |= TEST_PTR_EQ(patmat_alloc(patterns, 1), 0x0);
 
 	// fail pattern_init 2nd
 	memmock_alloc_fail_in = 2;
-	r |= TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
+	r |= TEST_PTR_EQ(patmat_alloc(patterns, 1), 0x0);
 
 	// fail pattern_init 3rd
 	memmock_alloc_fail_in = 3;
-	r |= TEST_PTR_EQ(patmat_init(patterns, 1), 0x0);
+	r |= TEST_PTR_EQ(patmat_alloc(patterns, 1), 0x0);
 
 	return -r;
 }
