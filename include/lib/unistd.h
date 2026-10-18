@@ -70,11 +70,11 @@ int statat(char const *dir, char const *path, stat_t *stat);
 int fstat(int fd, stat_t *stat);
 
 // process control
-pid_t process_create(void *binary, bin_type_t bin_type, char const *name, char const *args);
+pid_t process_spawn(void *binary, bin_type_t bin_type, char const *name, char const *args);
 int process_info(process_info_t *info);
 
 // thread control
-tid_t thread_create(int (*entry)(void *), void *arg);
+tid_t thread_spawn(int (*entry)(void *), void *arg);
 int thread_info(thread_info_t *info);
 int nice(int inc);
 
@@ -109,11 +109,11 @@ int sleep(size_t ms, size_t us);
 
 // process and thread control
 #ifndef CONFIG_SC_SCHED
-# define process_create(binary, bin_type, name, args) \
-											CALL_DISABLED(process_create, CONFIG_SC_SCHED)
+# define process_spawn(binary, bin_type, name, args) \
+											CALL_DISABLED(process_spawn, CONFIG_SC_SCHED)
 # define process_info(info)					CALL_DISABLED(process_info, CONFIG_SC_SCHED)
 
-# define thread_create(enry, arg)			CALL_DISABLED(thread_create, CONFIG_SC_SCHED)
+# define thread_spawn(enry, arg)			CALL_DISABLED(thread_spawn, CONFIG_SC_SCHED)
 # define thread_info(info)					CALL_DISABLED(thread_info, CONFIG_SC_SCHED)
 # define nice(inc)							CALL_DISABLED(nice, CONFIG_SC_SCHED)
 #endif // CONFIG_SC_SCHED

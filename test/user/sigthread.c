@@ -55,7 +55,7 @@ TEST(sigthread){
 	for(i=0; i<NSIG; i++)
 		r |= TEST_INT_EQ(signal(SIGNAL + i, hdlr), 0);
 
-	ASSERT_INT_NEQ(tid = thread_create(thread, "foo"), 0);
+	ASSERT_INT_NEQ(tid = thread_spawn(thread, "foo"), 0);
 
 	for(i=0; i<NSIG; i++){
 		r |= TEST_INT_EQ(signal_send(SIGNAL + i, pinfo.pid, tid), 0);

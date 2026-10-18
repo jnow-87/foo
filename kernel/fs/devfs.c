@@ -47,7 +47,7 @@ devfs_dev_t *devfs_dev_register(char const *name, devfs_ops_t *ops, void *payloa
 	if(dev == 0x0)
 		goto err_0;
 
-	node = fs_node_create(devfs_root, name, strlen(name), FT_CHR, dev, devfs_id);
+	node = fs_node_alloc(devfs_root, name, strlen(name), FT_CHR, dev, devfs_id);
 
 	if(node == 0x0)
 		goto err_1;
@@ -77,7 +77,7 @@ int devfs_dev_release(devfs_dev_t *dev){
 	if(node == 0x0)
 		goto_errno(err, E_INVAL);
 
-	if(fs_node_destroy(node) != 0)
+	if(fs_node_free(node) != 0)
 		goto err;
 
 	fs_unlock();

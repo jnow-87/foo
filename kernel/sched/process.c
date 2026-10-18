@@ -26,7 +26,7 @@ static mutex_t ptable_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-process_t *process_create(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd){
+process_t *process_alloc(void *binary, bin_type_t bin_type, char const *name, char const *args, fs_node_t *cwd){
 	char *argp;
 	process_t *this_p;
 	thread_t *this_t;
@@ -96,7 +96,7 @@ process_t *process_create(void *binary, bin_type_t bin_type, char const *name, c
 
 	/* create first thread */
 	this_p->threads = 0x0;
-	this_t = thread_create(this_p, 0, 0x0, argp);
+	this_t = thread_alloc(this_p, 0, 0x0, argp);
 
 	if(this_t == 0x0)
 		goto err_3;
@@ -120,7 +120,7 @@ err_0:
 	return 0x0;
 }
 
-void process_destroy(process_t *this_p){
+void process_free(process_t *this_p){
 	thread_t *this_t;
 	page_t *page;
 	fs_filed_t *fd;
@@ -131,7 +131,7 @@ void process_destroy(process_t *this_p){
 
 	/* destroy all threads */
 	list_for_each(this_p->threads, this_t)
-		thread_destroy(this_t);
+		thread_free(this_t);
 
 	/* clear file system handles */
 	list_for_each(this_p->fds, fd){

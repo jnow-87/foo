@@ -22,7 +22,7 @@ child_t *brickos_childs[BOS_NCHILDS] = { 0x0 };
 
 
 /* global functions */
-int brickos_init_childs(void){
+int brickos_spawn_childs(void){
 	char *argv[] = {
 		opts.kernel_image,
 		opts.rootfs,
@@ -34,8 +34,8 @@ int brickos_init_childs(void){
 
 	argv_sort(argv);
 
-	KERNEL = child_create("kernel");
-	APP = child_create("app");
+	KERNEL = child_spawn("kernel");
+	APP = child_spawn("app");
 
 	for(size_t i=0; i<BOS_NCHILDS; i++){
 		if(brickos_childs[i] == 0x0)
@@ -56,15 +56,15 @@ int brickos_init_childs(void){
 
 
 err:
-	brickos_destroy_childs();
+	brickos_reap_childs();
 
 	return -1;
 }
 
-void brickos_destroy_childs(void){
+void brickos_reap_childs(void){
 	for(size_t i=0; i<BOS_NCHILDS; i++){
 		if(brickos_childs[i])
-			child_destroy(brickos_childs[i]);
+			child_reap(brickos_childs[i]);
 	}
 }
 

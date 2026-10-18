@@ -155,7 +155,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(esp == 0x0)
 		goto err_0;
 
-	esp->rx.parser = patmat_init(rx_patterns, sizeof_array(rx_patterns));
+	esp->rx.parser = patmat_alloc(rx_patterns, sizeof_array(rx_patterns));
 
 	if(esp->rx.parser == 0x0)
 		goto err_1;
@@ -201,7 +201,7 @@ static void *probe(char const *name, void *dt_data, void *dt_itf){
 	if(term->configure != 0x0 && term->configure(&term_cfg, term->cfg, term->hw) != 0)
 		goto err_5;
 
-	if(ktask_create(rx_task, &esp, sizeof(esp_t*), 0x0, true) != 0)
+	if(ktask_spawn(rx_task, &esp, sizeof(esp_t*), 0x0, true) != 0)
 		goto err_5;
 
 	return 0x0;
@@ -218,7 +218,7 @@ err_3:
 	kfree(rxbuf);
 
 err_2:
-	patmat_destroy(esp->rx.parser);
+	patmat_free(esp->rx.parser);
 
 err_1:
 	kfree(esp);

@@ -28,7 +28,7 @@ typedef struct usignal_t{
 
 /* prototypes */
 int usignal_send(struct thread_t *this_t, signal_t num);
-void usignal_destroy(struct thread_t *this_t);
+void usignal_drop(struct thread_t *this_t);
 
 thread_ctx_t *usignal_entry(usignal_t *sig, struct thread_t *this_t, thread_ctx_t *ctx);
 thread_ctx_t *usignal_return(usignal_t *sig, struct thread_t *this_t, thread_ctx_t *ctx);

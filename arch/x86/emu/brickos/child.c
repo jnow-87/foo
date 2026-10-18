@@ -35,7 +35,7 @@ static int io_wrapper(int fd, void *buf, ssize_t n, io_call_t call);
 
 
 /* global functions */
-child_t *child_create(char const *name){
+child_t *child_spawn(char const *name){
 	child_t *child;
 	char *_name;
 
@@ -56,7 +56,7 @@ child_t *child_create(char const *name){
 	return child;
 }
 
-void child_destroy(child_t *child){
+void child_reap(child_t *child){
 	child_pipe_t *pipe;
 
 

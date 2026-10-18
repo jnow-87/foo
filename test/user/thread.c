@@ -32,10 +32,10 @@ static tid_t volatile tids_ref[NTHREAD],
 
 /* local functions */
 /**
- * \brief	test to verify thread_create() works and passes the correct arguments.
+ * \brief	test to verify thread_spawn() works and passes the correct arguments.
  * 			also sleep() and mutex functions are tested.
  */
-TEST(thread_create){
+TEST(thread_spawn){
 	int r = 0;
 	size_t i;
 	tid_t tid;
@@ -46,7 +46,7 @@ TEST(thread_create){
 
 	/* create threads */
 	for(i=0; i<NTHREAD; i++){
-		ASSERT_INT_NEQ(tid = thread_create(thread, (void*)(tids_info + i)), 0);
+		ASSERT_INT_NEQ(tid = thread_spawn(thread, (void*)(tids_info + i)), 0);
 		tids_ref[i] = tid;
 	}
 

@@ -41,7 +41,7 @@ static mutex_t bridge_mtx = MUTEX_INITIALISER();
 
 
 /* global functions */
-bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
+bridge_t *bridge_alloc(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
 	bridge_t *brdg;
 
 
@@ -92,13 +92,13 @@ bridge_t *bridge_create(bridge_ops_t *ops, bridge_cfg_t *cfg, void *hw){
 
 
 err_1:
-	bridge_destroy(brdg);
+	bridge_free(brdg);
 
 err_0:
 	return 0x0;
 }
 
-void bridge_destroy(bridge_t *brdg){
+void bridge_free(bridge_t *brdg){
 	bridge_cfg_t *cfg = brdg->cfg;
 	bridge_dgram_t *dgram;
 
@@ -134,7 +134,7 @@ int16_t bridge_write(bridge_t *brdg, void *buf, uint8_t n){
 
 /* local functions */
 static void *probe(char const *name, void *dt_data, void *dt_itf){
-	return bridge_create(0x0, dt_data, 0x0);
+	return bridge_alloc(0x0, dt_data, 0x0);
 }
 
 driver_probe("bridge,itf", probe);

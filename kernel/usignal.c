@@ -57,7 +57,7 @@ int usignal_send(thread_t *this_t, signal_t num){
 	return 0;
 }
 
-void usignal_destroy(struct thread_t *this_t){
+void usignal_drop(struct thread_t *this_t){
 	thread_ctx_t *ctx;
 	usignal_t *sig;
 

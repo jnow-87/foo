@@ -26,7 +26,7 @@ int vector_init(vector_t *v, size_t dt_size, size_t capa){
 	return 0;
 }
 
-void vector_destroy(vector_t *v){
+void vector_reset(vector_t *v){
 	sys_free(v->buf);
 
 	v->capacity = 0;

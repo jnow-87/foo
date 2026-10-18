@@ -48,7 +48,7 @@ static mutex_t task_mtx = MUTEX_INITIALISER();
  * 				E_NOMEM		not enough memory to allocate the task
  * 				E_NOIMP		kernel task queues are disabled
  */
-int ktask_create(ktask_hdlr_t hdlr, void *payload, size_t size, ktask_queue_t *dep_queue, bool recurring){
+int ktask_spawn(ktask_hdlr_t hdlr, void *payload, size_t size, ktask_queue_t *dep_queue, bool recurring){
 	ktask_t *task;
 
 

@@ -41,7 +41,7 @@ typedef struct ktask_t{
 
 
 /* prototypes */
-int ktask_create(ktask_hdlr_t hdlr, void *payload, size_t size, ktask_queue_t *dep_queue, bool recurring);
+int ktask_spawn(ktask_hdlr_t hdlr, void *payload, size_t size, ktask_queue_t *dep_queue, bool recurring);
 
 void ktask_complete(ktask_t *task);
 void ktask_cancel(ktask_t *task);

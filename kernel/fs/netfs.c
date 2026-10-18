@@ -257,7 +257,7 @@ static int close(fs_filed_t *fd, process_t *this_p){
 
 	fs_fd_free(fd, this_p);
 
-	if(fs_node_destroy(fd->node) != 0)
+	if(fs_node_free(fd->node) != 0)
 		goto end;
 
 	while(sock->type == SOCK_STREAM){
@@ -394,7 +394,7 @@ static int accept(socket_t *sock, sock_addr_t *addr, size_t *addr_len){
 
 	if(client == 0x0){
 		fs_fd_free(fd, this_p);
-		fs_node_destroy(fd->node);
+		fs_node_free(fd->node);
 
 		return -1;
 	}
@@ -484,7 +484,7 @@ static fs_filed_t *create_filed(process_t *this_p){
 
 	itoa(sock_id, 10, name, 4);
 
-	node = fs_node_create(netfs_root, name, strlen(name), FT_REG, 0x0, netfs_id);
+	node = fs_node_alloc(netfs_root, name, strlen(name), FT_REG, 0x0, netfs_id);
 
 	if(node == 0x0)
 		goto err_0;
@@ -499,7 +499,7 @@ static fs_filed_t *create_filed(process_t *this_p){
 
 
 err_1:
-	fs_node_destroy(node);
+	fs_node_free(node);
 
 err_0:
 	atomic_add(&sock_id, -1);

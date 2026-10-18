@@ -109,7 +109,7 @@ int main(int argc, char **argv){
 		term_noncanon();
 
 	/* create brickos child proceses */
-	if(brickos_init_childs() != 0)
+	if(brickos_spawn_childs() != 0)
 		EEXIT("creating child processes failed\n");
 
 	/* create threads */
@@ -249,7 +249,7 @@ static void cleanup(void){
 	}
 
 	DEBUG(1, "terminating child processes\n");
-	brickos_destroy_childs();
+	brickos_reap_childs();
 
 	term_default();
 

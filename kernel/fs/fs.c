@@ -242,7 +242,7 @@ int fs_fd_wait(fs_filed_t *fd, ksignal_t *sig, mutex_t *mtx){
 	return 0;
 }
 
-fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *payload, int fs_id){
+fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *payload, int fs_id){
 	fs_t *fs;
 	fs_node_t *node;
 
@@ -291,10 +291,10 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 
 	/* add '.' and '..' nodes for directories */
 	if(type == FT_DIR){
-		if(fs_node_create(node, ".", 1, FT_LNK, node, fs_id) == 0x0)
+		if(fs_node_alloc(node, ".", 1, FT_LNK, node, fs_id) == 0x0)
 			goto err_1;
 
-		if(fs_node_create(node, "..", 2, FT_LNK, parent, parent->fs_id) == 0x0)
+		if(fs_node_alloc(node, "..", 2, FT_LNK, parent, parent->fs_id) == 0x0)
 			goto err_1;
 	}
 
@@ -304,7 +304,7 @@ fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, 
 
 
 err_1:
-	fs_node_destroy(node);
+	fs_node_free(node);
 
 err_0:
 	fs_unlock();
@@ -312,7 +312,7 @@ err_0:
 	return 0x0;
 }
 
-int fs_node_destroy(fs_node_t *node){
+int fs_node_free(fs_node_t *node){
 	fs_node_t *child;
 
 
@@ -322,7 +322,7 @@ int fs_node_destroy(fs_node_t *node){
 		goto_errno(err, E_INUSE);
 
 	list_for_each(node->childs, child){
-		if(fs_node_destroy(child) != 0)
+		if(fs_node_free(child) != 0)
 			goto err;
 	}
 

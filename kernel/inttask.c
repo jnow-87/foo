@@ -23,7 +23,7 @@ void itask_queue_init(itask_queue_t *queue){
 	mutex_init(&queue->mtx, MTX_NOINT);
 }
 
-void itask_queue_destroy(itask_queue_t *queue){
+void itask_queue_flush(itask_queue_t *queue){
 	while(itask_payload(queue, 0x0)){
 		itask_complete(queue, E_END);
 	}

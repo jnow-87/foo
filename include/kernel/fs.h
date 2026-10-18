@@ -217,8 +217,8 @@ void fs_fd_release(fs_filed_t *fd);
 int fs_fd_wait(fs_filed_t *fd, ksignal_t *sig, mutex_t *mtx);
 
 // file node operations
-fs_node_t *fs_node_create(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *payload, int fs_id);
-int fs_node_destroy(fs_node_t *node);
+fs_node_t *fs_node_alloc(fs_node_t *parent, char const *name, size_t name_len, file_type_t type, void *payload, int fs_id);
+int fs_node_free(fs_node_t *node);
 int fs_node_find(fs_node_t **start, char const **path);
 
 
