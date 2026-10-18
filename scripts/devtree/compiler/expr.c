@@ -148,7 +148,7 @@ void expr_value_free(expr_value_t *val){
 		vector_for_each(&val->array.items, el)
 			expr_free(el->expr);
 
-		vector_destroy(&val->array.items);
+		vector_reset(&val->array.items);
 
 		return;
 	}

@@ -25,7 +25,7 @@ static map_t strmap = MAP_INITIALISER(hash, kmatch, kvalloc, kvfree);
 
 
 /* global functions */
-void strmap_destroy(void){
+void strmap_free(void){
 	map_free(&strmap);
 }
 

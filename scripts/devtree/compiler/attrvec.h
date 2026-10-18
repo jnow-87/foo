@@ -30,8 +30,8 @@ typedef vector_t attrvec_t;
 
 
 /* prototypes */
-int attrvec_init(attrvec_t *v, size_t n);
-void attrvec_destroy(attrvec_t *v);
+int attrvec_alloc(attrvec_t *v, size_t n);
+void attrvec_free(attrvec_t *v);
 
 int attrvec_add(attrvec_t *v, struct attr_t *attr);
 
