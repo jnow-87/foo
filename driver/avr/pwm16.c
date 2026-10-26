@@ -213,7 +213,7 @@ static int config_set(pwm_cfg_t *cfg, dt_data_t *dtd){
 				| (0x3 << TCCRA_WGM0)
 				;
 
-	regs->tccrb = ((cfg->mode == PWM_FAST ? 0x1 : 0x0) << TCCRB_WGM2)
+	regs->tccrb = ((cfg->mode == PWM_FAST) << TCCRB_WGM2)
 				| (0x0 << TCCRB_WGM3)
 				| (0x0 << TCCRB_ICNC)
 				| (0x0 << TCCRB_ICES)

@@ -19,7 +19,7 @@ size_t prime_next(size_t n){
 
 	// ensure n is an odd number or, if it already is, skip
 	// ahead to the next one in case n already is a prime
-	n = (n % 2 == 0) ? n + 1 : n + 2;
+	n += (n % 2 == 0) ? 1 : 2;
 
 	while(!isprime(n))
 		n += 2;

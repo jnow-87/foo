@@ -168,8 +168,8 @@ void child_fork(child_t *child, char **argv){
 				break;
 			}
 
-			r |= (dup2(p->pipe_rd[1], p->tgt_fileno[1]) == -1 ? 1 : 0);
-			r |= (dup2(p->pipe_wr[0], p->tgt_fileno[0]) == -1 ? 1 : 0);
+			r |= (dup2(p->pipe_rd[1], p->tgt_fileno[1]) == -1);
+			r |= (dup2(p->pipe_wr[0], p->tgt_fileno[0]) == -1);
 
 			nclose(p->pipe_rd, 2);
 			nclose(p->pipe_wr, 2);

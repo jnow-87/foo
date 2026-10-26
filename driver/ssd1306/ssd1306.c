@@ -124,7 +124,7 @@ static int configure(vram_cfg_t *cfg, void *hw){
 			CMD_DSP_MODE_NORM,
 			CMD_LAY_VSHIFT, 0x0,
 			CMD_LAY_START_ROW | 0x0,
-			CMD_LAY_REMAP_COLS | ((cfg->flags & VRFL_MIRROR_HOR) ? 0x1 : 0x0),
+			CMD_LAY_REMAP_COLS | ((bool)(cfg->flags & VRFL_MIRROR_HOR)),
 			CMD_LAY_REMAP_ROWS | ((cfg->flags & VRFL_MIRROR_VERT) ? 0x8 : 0x0),
 			CMD_DSP_CONTRAST, cfg->contrast,
 			CMD_LAY_COLS, 0, cfg->width - 1,
