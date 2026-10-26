@@ -77,8 +77,8 @@ void rp2040_pads_init(void){
 		rp2040_pad_init(i, &pad_func_cfgs[MIN(plt->gpio_funcsel[i], sizeof_array(pad_func_cfgs) - 1)]);
 	}
 
-	BANK0_VOLTAGE_SELECT = plt->gpio_v33 ? 0 : 1;
-	BANK1_VOLTAGE_SELECT = plt->gpio_v33 ? 0 : 1;
+	BANK0_VOLTAGE_SELECT = !((bool)plt->gpio_v33);
+	BANK1_VOLTAGE_SELECT = !((bool)plt->gpio_v33);
 }
 
 int rp2040_pad_init(uint8_t pad, rp2040_pad_cfg_t *cfg){

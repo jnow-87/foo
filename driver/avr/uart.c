@@ -144,8 +144,8 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 	regs->ucsra = 0x0 << UCSRA_U2X;
 	regs->ucsrb = (0x1 << UCSRB_RXEN)
 				| (0x1 << UCSRB_TXEN)
-				| ((dtd->rx_int ? 0x1 : 0x0) << UCSRB_RXCIE)
-				| ((dtd->tx_int ? 0x1 : 0x0) << UCSRB_TXCIE)
+				| (((bool)dtd->rx_int) << UCSRB_RXCIE)
+				| (((bool)dtd->tx_int) << UCSRB_TXCIE)
 				;
 
 	// set baudrate

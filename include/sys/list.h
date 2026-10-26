@@ -215,7 +215,7 @@
 	\
 	LIST_TYPE_COMPAT2(*head); \
 	\
-	(typeof(head))_list2_find_str((list2_t*)_head, offsetofvar(*_head, member), str, n, ((void*)(_head->member) == (void*)(&(_head->member)) ? true : false)); \
+	(typeof(head))_list2_find_str((list2_t*)_head, offsetofvar(*_head, member), str, n, ((void*)(_head->member) == (void*)(&(_head->member)))); \
 })
 
 #define list_find_strn_safe(head, member, str, n, mtx)({ \
@@ -226,7 +226,7 @@
 	_el; \
 })
 
-#define list_empty(head) (((head) == 0x0) ? true : false)
+#define list_empty(head) (((head) == 0x0))
 
 #define list_empty_safe(head, mtx)({ \
 	int _r; \

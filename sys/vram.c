@@ -27,5 +27,5 @@ bool vram_isdirty(uint16_t page, uint8_t *dirty){
 
 void vram_makedirty(uint16_t page, uint8_t *dirty, bool set){
 	dirty[page >> 3] &= ~(0x1 << (page & 0x7));
-	dirty[page >> 3] |= ((set ? 0x1 : 0x0) << (page & 0x7));
+	dirty[page >> 3] |= (set << (page & 0x7));
 }

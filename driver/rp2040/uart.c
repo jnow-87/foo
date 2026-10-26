@@ -164,16 +164,16 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 	regs->uartlcr = (0x0 << UARTLCR_SPS)
 				  | (cfg->csize << UARTLCR_WLEN)
 				  | (cfg->stopb << UARTLCR_STP2)
-				  | ((cfg->parity ? 1 : 0) << UARTLCR_PEN)
-				  | ((cfg->parity == UART_PARITY_EVEN ? 0x1 : 0x0) << UARTLCR_EPS)
+				  | (((bool)cfg->parity) << UARTLCR_PEN)
+				  | (((cfg->parity == UART_PARITY_EVEN)) << UARTLCR_EPS)
 				  | (0x1 << UARTLCR_FEN)
 				  | (0x0 << UARTLCR_BRK)
 				  ;
 
 	// interrupts
-	regs->uartimsc = ((dtd->vrx_int ? 0x1 : 0x0) << UARTIMSC_RXIM)
-				   | ((dtd->vrx_int ? 0x1 : 0x0) << UARTIMSC_RTIM)
-				   | ((dtd->vtx_int ? 0x1 : 0x0) << UARTIMSC_TXIM)
+	regs->uartimsc = (((bool)dtd->vrx_int) << UARTIMSC_RXIM)
+				   | (((bool)dtd->vrx_int) << UARTIMSC_RTIM)
+				   | (((bool)dtd->vtx_int) << UARTIMSC_TXIM)
 				   ;
 
 	/* enable */

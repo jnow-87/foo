@@ -50,9 +50,9 @@ size_t ringbuf_left(ringbuf_t *ring){
 }
 
 bool ringbuf_empty(ringbuf_t *ring){
-	return ((ring->rd + 1) % ring->size != ring->wr) ? false : true;
+	return ((ring->rd + 1) % ring->size == ring->wr);
 }
 
 bool ringbuf_full(ringbuf_t *ring){
-	return ring->wr == ring->rd ? true : false;
+	return (ring->wr == ring->rd);
 }

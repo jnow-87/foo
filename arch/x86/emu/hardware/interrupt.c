@@ -109,7 +109,7 @@ void hw_int_request(int num, void *payload, x86_priv_t src, unsigned int tid){
 	req->payload = payload;
 	req->src = src;
 	req->tid = tid;
-	req->synchronous = (src == PRIV_HARDWARE) ? true : false;
+	req->synchronous = (src == PRIV_HARDWARE);
 
 	pthread_mutex_init(&req->mtx, 0x0);
 	pthread_cond_init(&req->sig, 0x0);

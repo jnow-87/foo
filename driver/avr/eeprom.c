@@ -239,7 +239,7 @@ static void write_byte(uint8_t b, size_t offset, dt_data_t *dtd){
 		: [eecr_p] "e" (&regs->eecr),
 		  [eecr] "r" (regs->eecr),
 		  [prot_mask] "i" (0x1 << EECR_EEMPE),
-		  [write_mask] "r" (0x1 << EECR_EEPE | ((dtd->int_num ? 0x1 : 0x0) << EECR_EERIE))
+		  [write_mask] "r" (0x1 << EECR_EEPE | (((bool)dtd->int_num) << EECR_EERIE))
 	);
 
 	int_enable(ie);

@@ -116,7 +116,7 @@ static int configure(term_cfg_t *term_cfg, void *hw_cfg, void *hw){
 	// interface configuration
 	regs->spsr = (((pres_bits[cfg->prescaler] & 0x4) >> 2) << SPSR_SPI2X);
 	regs->spcr = (0x1 << SPCR_SPE)
-			   | ((dtd->int_num ? 0x1 : 0x0) << SPCR_SPIE)
+			   | (((bool)dtd->int_num) << SPCR_SPIE)
 			   | (cfg->dev_mode << SPCR_MSTR)
 			   | (cfg->data_order << SPCR_DORD)
 			   | ((cfg->sample_mode >= SPI_SAMPLE_MODE_2) << SPCR_CPOL)
