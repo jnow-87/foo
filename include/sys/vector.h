@@ -23,7 +23,7 @@
 }
 
 #define vector_for_each(v, p) \
-	for(p=(v)->buf; p<(typeof(p))((v)->buf+(v)->dt_size*(v)->size); p++)
+	for(p=(v)->buf; p<(typeof(p))((v)->buf+(v)->dt_size*(v)->size); p=((void*)p)+(v)->dt_size)
 
 
 /* types */
