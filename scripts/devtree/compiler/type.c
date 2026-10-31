@@ -19,7 +19,7 @@
 
 
 /* local/static prototypes */
-static int lint(attrvec_t *attrs);
+static int lint(type_attrvec_t *attrs);
 
 
 /* static variables */
@@ -27,7 +27,7 @@ static type_t *types = 0x0;
 
 
 /* global functions */
-int type_alloc(char const *name, attrvec_t *attrs, assert_t *asserts){
+int type_alloc(char const *name, type_attrvec_t *attrs, assert_t *asserts){
 	type_t *type;
 
 
@@ -54,7 +54,7 @@ void types_free(void){
 
 	list_for_each(types, type){
 		asserts_free(type->asserts);
-		attrvec_free(&type->attrs);
+		attrvec_free(&type->attrs.v);
 		free(type);
 	}
 }
@@ -71,19 +71,17 @@ type_t *type_lookup(char const *name){
 	return type;
 }
 
-node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_t *childs){
-	attr_t *tattr,
-		   *nattr;
-	attr_t attr;
+node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, node_t *childs){
+	type_attr_t *tattr;
+	node_attr_t *nattr;
+	node_attr_t attr;
 	node_t *node;
-	expr_t *expr;
-	expr_value_t val;
 
 
 	/* check attributes */
 	// ensure no additonal attributes are defined
-	attrvec_for_each(attrs, nattr){
-		if(attrvec_query(&type->attrs, nattr->name, true) != 0x0)
+	attrvec_for_each(&attrs->v, nattr){
+		if(attrvec_query(&type->attrs.v, nattr->name, true) != 0x0)
 			continue;
 
 		devtree_parser_error("%s: undefined attribute %s for type %s", name, nattr->name, type->name);
@@ -91,8 +89,8 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 	}
 
 	// ensure all required attributes are defined
-	attrvec_for_each(&type->attrs, tattr){
-		nattr = attrvec_query(attrs, tattr->name, true);
+	attrvec_for_each(&type->attrs.v, tattr){
+		nattr = (node_attr_t*)attrvec_query(&attrs->v, tattr->name, true);
 
 		if(nattr == 0x0 && tattr->value == 0x0){
 			devtree_parser_error("%s: missing attribute %s", name, tattr->name);
@@ -111,35 +109,27 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 		goto err_0;
 
 	// create node attribute list
-	attrvec_for_each(&type->attrs, tattr){
-		nattr = attrvec_query(attrs, tattr->name, true);
+	attrvec_for_each(&type->attrs.v, tattr){
+		nattr = (node_attr_t*)attrvec_query(&attrs->v, tattr->name, true);
 
-		if(nattr != 0x0){
-			attr = *nattr;
+		if(nattr == 0x0){
+			attr.name = tattr->name;
+			attr.value = expr_value_alloc(0x0);
 
-			nattr->name = 0x0;
-			nattr->value = 0x0;
+			if(attr.value == 0x0)
+				goto err_1;
 
-			expr = attr.value;
+			if(expr_evaluate(tattr->value, attr.value, &node->attrs) == 0x0){
+				devtree_parser_error("%s: cannot evaluate expression", nattr->name);
+				goto err_2;
+			}
 		}
 		else{
-			attr = *tattr;
-			attr.value = expr_alloc(0x0);
-
-			expr = tattr->value;
+			attr = *nattr;
+			nattr->value = 0x0;
 		}
 
-		if(expr_evaluate(expr, &val, &node->attrs) == 0x0){
-			devtree_parser_error("%s: cannot evaluate expression", nattr->name);
-			goto err_2;
-		}
-
-		*(attr.value)= EXPR_LITERAL(val);
-
-		if(attr_assign(&attr, attr.value) == 0x0)
-			goto err_2;
-
-		if(attrvec_add(&node->attrs, &attr) != 0)
+		if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)
 			goto err_2;
 	}
 
@@ -150,7 +140,7 @@ node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, node_
 
 
 err_2:
-	expr_free(attr.value);
+	expr_value_free(attr.value, true);
 
 err_1:
 	// TODO check if a separate label is needed to jump to from within the loop
@@ -163,19 +153,19 @@ err_0:
 
 
 /* local functions */
-static int lint(attrvec_t *attrs){
+static int lint(type_attrvec_t *attrs){
 	int missing = 0;
-	attr_t *comp;
+	type_attr_t *comp;
 
 
-	comp = attrvec_query_typed(attrs, "compatible", ET_STRING, false);
+	comp = type_attrvec_query(attrs, "compatible", ET_STRING, false);
 
 	if(comp == 0x0)
 		return -1;
 
 	if(strcmp(comp->name, "memory") == 0){
-		missing |= (attrvec_query_typed(attrs, "base", ET_ADDR, false) == 0x0);
-		missing |= (attrvec_query_typed(attrs, "size", ET_INT32, false) == 0x0);
+		missing |= (type_attrvec_query(attrs, "base", ET_ADDR, false) == 0x0);
+		missing |= (type_attrvec_query(attrs, "size", ET_INT32, false) == 0x0);
 	}
 
 	return -missing;

@@ -32,7 +32,7 @@ typedef expr_value_t *(*op_cb_t)(expr_value_t *arg0, expr_value_t *arg1, expr_va
 
 
 /* local/static prototypes */
-static expr_value_t *resolve_ref(expr_value_t *arg, attrvec_t *ctx, expr_value_t *res);
+static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_value_t *res);
 
 static int types_compatible(expr_type_t t0, expr_type_t t1, bool any_array);
 static int op_defined(expr_op_t op, expr_value_t *val);
@@ -134,30 +134,44 @@ void expr_free(expr_t *expr){
 	if(expr == 0x0)
 		return;
 
-	expr_value_free(&expr->arg0);
-	expr_value_free(&expr->arg1);
+	expr_value_free(&expr->arg0, false);
+	expr_value_free(&expr->arg1, false);
 
 	free(expr);
 }
 
-void expr_value_free(expr_value_t *val){
+expr_value_t *expr_value_alloc(expr_value_t *value){
+	expr_value_t *r;
+
+
+	r = malloc(sizeof(expr_value_t));
+
+	if(r != 0x0 && value != 0x0)
+		*r = *value;
+
+	return r;
+}
+
+void expr_value_free(expr_value_t *value, bool free_base){
+	// TODO it is not nice to have free_base, all objects that store expr_value_t
+	// 		shall either store a pointer or an instance
 	expr_value_t *el;
 
 
-	if(val->is_array){
-		vector_for_each(&val->array.items, el)
+	if(value->is_array){
+		vector_for_each(&value->array.items, el)
 			expr_free(el->expr);
 
-		vector_reset(&val->array.items);
-
-		return;
+		vector_reset(&value->array.items);
 	}
+	else if(value->type == ET_EXPR)
+		expr_free(value->expr);
 
-	if(val->type == ET_EXPR)
-		expr_free(val->expr);
+	if(free_base)
+		free(value);
 }
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
+expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *ctx){
 	expr_value_t arg0,
 				 arg1;
 
@@ -196,8 +210,8 @@ expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx){
 	// 	- check if it can be avoided to frequently allocate and free
 	// 	- if it cannot be avoided, make sure expr_value_free() is called
 	// 	  in all cases within this function
-	expr_value_free(&arg0);
-	expr_value_free(&arg1);
+	expr_value_free(&arg0, false);
+	expr_value_free(&arg1, false);
 
 	return result;
 }
@@ -301,7 +315,7 @@ int expr_copy(expr_t *dest, expr_t *src){
 
 
 err_1:
-	expr_value_free(&dest->arg0);
+	expr_value_free(&dest->arg0, false);
 
 err_0:
 	return -1;
@@ -333,19 +347,19 @@ void expr_value_print(expr_value_t *value, int indent){
 
 
 /* local functions */
-static expr_value_t *resolve_ref(expr_value_t *arg, attrvec_t *ctx, expr_value_t *res){
-	attr_t *ref;
+static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_value_t *res){
+	node_attr_t *ref;
 
 
 	if(ctx == 0x0)
 		return 0x0;
 
-	ref = attrvec_query(ctx, arg->p, false);
+	ref = (node_attr_t*)attrvec_query(&ctx->v, arg->p, false);
 
 	if(ref == 0x0)
 		return 0x0;
 
-	*res = ref->value->arg0;
+	*res = *ref->value;
 
 	return res;
 }

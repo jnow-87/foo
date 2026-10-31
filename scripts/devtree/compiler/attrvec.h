@@ -16,7 +16,9 @@
 
 
 /* macros */
-#define ATTRVEC_INITIALISER()	VECTOR_INITIALISER(sizeof(attr_t))
+#define TYPE_ATTRVEC_INITIALISER()	(type_attrvec_t){ .v = VECTOR_INITIALISER(sizeof(type_attr_t)) }
+#define NODE_ATTRVEC_INITIALISER()	(node_attrvec_t){ .v = VECTOR_INITIALISER(sizeof(node_attr_t)) }
+
 #define attrvec_for_each		vector_for_each
 
 
@@ -28,15 +30,23 @@ enum expr_type_t;
 /* types */
 typedef vector_t attrvec_t;
 
+typedef struct{
+	attrvec_t v;
+} type_attrvec_t;
+
+typedef struct{
+	attrvec_t v;
+} node_attrvec_t;
+
 
 /* prototypes */
-int attrvec_alloc(attrvec_t *v, size_t n);
+int attrvec_alloc(attrvec_t *attrs, size_t type_size, size_t n);
 void attrvec_free(attrvec_t *v);
 
-int attrvec_add(attrvec_t *v, struct attr_t *attr);
+int attrvec_add(attrvec_t *attrs, struct attr_t *attr, size_t attr_size);
 
 struct attr_t *attrvec_query(attrvec_t *attrs, char const *name, bool maybe_undef);
-struct attr_t *attrvec_query_typed(attrvec_t *attrs, char const *name, enum expr_type_t type, bool maybe_undef);
+struct type_attr_t *type_attrvec_query(type_attrvec_t *attrs, char const *name, enum expr_type_t type, bool maybe_undef);
 
 
 

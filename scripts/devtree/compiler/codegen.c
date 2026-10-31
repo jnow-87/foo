@@ -65,7 +65,7 @@ static void src_node_header(FILE *fp, char const *node_idtfr);
 static void include_guard(FILE *fp, include_guard_location_t loc);
 static void includes(FILE *fp);
 
-static int def_attr_ignore(node_t *node, attr_t *attr);
+static int def_attr_ignore(node_t *node, node_attr_t *attr);
 
 static node_cat_t node_cat(node_t *node);
 static char const *node_strcat(node_cat_t cat);
@@ -133,8 +133,8 @@ static void traverse(FILE *fp, node_t *node, write_attr_t write_attr){
 static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 	char node_name[DEVTREE_STRMAX],
 		 attr_name[DEVTREE_STRMAX];
-	attr_t *attr;
-	expr_value_t v;
+	node_attr_t *attr;
+	expr_value_t *v;
 
 
 #ifdef CONFIG_X86
@@ -146,42 +146,40 @@ static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 
 	strupr(node_idtfr, node_name, sizeof(node_name));
 
-	attrvec_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs.v, attr){
 		strupr(attr->name, attr_name, sizeof(attr_name));
-		expr_evaluate(attr->value, &v, 0x0);
+		v = attr->value;
 
-		if(v.is_array)
+		if(v->is_array)
 			continue;
 
-		switch(v.type){
+		switch(v->type){
 		case ET_INT8:	// fall through
 		case ET_INT16:	// fall through
 		case ET_INT32:	// fall through
 		case ET_INT64:
-			fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v.i);
+			fprintf(fp, "DEVTREE_%s_%s := %#u\n", node_name, attr_name, v->i);
 			break;
 
-		case ET_ADDR:	fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, v.i); break;
-		case ET_STRING:	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, v.p); break;
+		case ET_ADDR:	fprintf(fp, "DEVTREE_%s_%s := %#x\n", node_name, attr_name, v->i); break;
+		case ET_STRING:	fprintf(fp, "DEVTREE_%s_%s := %#s\n", node_name, attr_name, v->p); break;
 
 		default:
 			break;
 		}
-
-		expr_value_free(&v);
 	}
 }
 
 static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 	char node_name[DEVTREE_STRMAX],
 		 attr_name[DEVTREE_STRMAX];
-	attr_t *attr;
-	expr_value_t v;
+	node_attr_t *attr;
+	expr_value_t *v;
 
 
 	strupr(node_idtfr, node_name, sizeof(node_name));
 
-	attrvec_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs.v, attr){
 #ifdef CONFIG_X86
 		// NOTE On x86 the kernel heap is allocated dynamically and the devtree script only contains
 		// 		an artificial base address. However, since DEVTREE_HEAP_BASE is assumed to be valid
@@ -194,27 +192,25 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 #endif // CONFIG_X86
 
 		strupr(attr->name, attr_name, sizeof(attr_name));
-		expr_evaluate(attr->value, &v, 0x0);
+		v = attr->value;
 
-		if(v.is_array)
+		if(v->is_array)
 			continue;
 
-		switch(v.type){
+		switch(v->type){
 		case ET_INT8:	// fall through
 		case ET_INT16:	// fall through
 		case ET_INT32:	// fall through
 		case ET_INT64:
-			fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v.i);
+			fprintf(fp, "#define DEVTREE_%s_%s %#u\n", node_name, attr_name, v->i);
 			break;
 
-		case ET_ADDR:	fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, v.i); break;
-		case ET_STRING:	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, v.p); break;
+		case ET_ADDR:	fprintf(fp, "#define DEVTREE_%s_%s %#x\n", node_name, attr_name, v->i); break;
+		case ET_STRING:	fprintf(fp, "#define DEVTREE_%s_%s %#s\n", node_name, attr_name, v->p); break;
 
 		default:
 			break;
 		}
-
-		expr_value_free(&v);
 	}
 }
 
@@ -238,9 +234,9 @@ static void definition(FILE *fp, node_t *node, char const *node_idtfr){
 	switch(cat){
 	case NC_DEVICE:
 		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		fprintf(fp, "\t.compatible = \"%s\",\n", attr_value(attrvec_query(&node->attrs, "compatible", false))->p);
+		fprintf(fp, "\t.compatible = \"%s\",\n", ((node_attr_t*)attrvec_query(&node->attrs.v, "compatible", false))->value->p);
 
-		if(node->attrs.size > 1)
+		if(node->attrs.v.size > 1)
 			fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_idtfr);
 		else
 			fprintf(fp, "\t.payload = 0x0,\n");
@@ -277,37 +273,35 @@ static void def_childs(FILE *fp, node_t *node, char const *node_idtfr){
 }
 
 static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
-	attr_t *attr;
-	expr_value_t v;
+	node_attr_t *attr;
+	expr_value_t *v;
 
 
 	// struct definition
 	fprintf(fp, "struct{\n");
 
-	attrvec_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs.v, attr){
+		v = attr->value;
+
 		if(def_attr_ignore(node, attr))
 			continue;
 
-		switch(attr->type){
+		switch(v->type){
 		case ET_INT8:	// fall through
 		case ET_INT16:	// fall through
 		case ET_INT32:	// fall through
 		case ET_INT64:
-			fprintf(fp, "\tuint%u_t %s", expr_type_size(attr->type) * 8, attr->name);
+			fprintf(fp, "\tuint%u_t %s", expr_type_size(v->type) * 8, attr->name);
 			break;
 
 		case ET_ADDR:	fprintf(fp, "\tvoid *%s", attr->name); break;
 		case ET_STRING:	fprintf(fp, "\tchar *%s", attr->name); break;
-		default:		WARN(node, "unexpected attribute type \n", expr_type_name(attr->type)); break;
+		default:		WARN(node, "unexpected attribute type \n", expr_type_name(v->type)); break;
 		}
 
 
-		expr_evaluate(attr->value, &v, 0x0);
-
-		if(v.is_array)
-			fprintf(fp, "[%zu]", v.array.items.size);
-
-		expr_value_free(&v);
+		if(v->is_array)
+			fprintf(fp, "[%zu]", v->array.items.size);
 
 		fprintf(fp, ";\n");
 	}
@@ -321,20 +315,20 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 }
 
 static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
-	attr_t *attr;
+	node_attr_t *attr;
 	expr_t *e;
-	expr_value_t v;
+	expr_value_t *v;
 	vector_t *items;
 
 
-	attrvec_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs.v, attr){
 		if(def_attr_ignore(node, attr))
 			continue;
 
-		expr_evaluate(attr->value, &v, 0x0);
+		v = attr->value;
 
-		if(v.is_array){
-			items = &v.array.items;
+		if(v->is_array){
+			items = &v->array.items;
 			fprintf(fp, "\t.%s = {\n", attr->name);
 
 			vector_for_each(items, e){
@@ -362,23 +356,21 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 			fprintf(fp, "\t},\n");
 		}
 		else{
-			switch(attr->type){
+			switch(v->type){
 			case ET_INT8:	// fall through
 			case ET_INT16:	// fall through
 			case ET_INT32:	// fall through
 			case ET_INT64:
-				fprintf(fp, "\t.%s = %u,\n", attr->name, v.i);
+				fprintf(fp, "\t.%s = %u,\n", attr->name, v->i);
 				break;
 
-			case ET_ADDR:	fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, v.i); break;
-			case ET_STRING:	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, v.p); break;
+			case ET_ADDR:	fprintf(fp, "\t.%s = (void*)%#x,\n", attr->name, v->i); break;
+			case ET_STRING:	fprintf(fp, "\t.%s = \"%s\",\n", attr->name, v->p); break;
 
 			default:
 				break;
 			}
 		}
-
-		expr_value_free(&v);
 	}
 }
 
@@ -459,7 +451,7 @@ static void includes(FILE *fp){
 	);
 }
 
-static int def_attr_ignore(node_t *node, attr_t *attr){
+static int def_attr_ignore(node_t *node, node_attr_t *attr){
 	if(node_cat(node) == NC_DEVICE){
 		if(strcmp(attr->name, "compatible") == 0)
 			return 1;
@@ -470,10 +462,10 @@ static int def_attr_ignore(node_t *node, attr_t *attr){
 
 // TODO remove category and update kernel to only use devtree_node_t
 static node_cat_t node_cat(node_t *node){
-	attr_t *attr;
+	node_attr_t *attr;
 
 
-	attrvec_for_each(&node->attrs, attr){
+	attrvec_for_each(&node->attrs.v, attr){
 		if(strcmp(attr->name, "compatible") != 0 && strcmp(attr->name, "base") != 0 && strcmp(attr->name, "size") != 0)
 			return NC_DEVICE;
 	}

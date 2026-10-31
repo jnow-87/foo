@@ -129,9 +129,10 @@ typedef struct expr_t{
 /* prototypes */
 expr_t *expr_alloc(expr_t *expr);
 void expr_free(expr_t *expr);
-void expr_value_free(expr_value_t *val);
+expr_value_t *expr_value_alloc(expr_value_t *value);
+void expr_value_free(expr_value_t *value, bool free_base);
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, attrvec_t *ctx);
+expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *ctx);
 int expr_evaluable(expr_op_t op, expr_value_t *arg0, expr_value_t *arg1i, attrvec_t *ctx);
 
 expr_type_t expr_type(expr_t *expr);

@@ -42,15 +42,21 @@
 
 	// helper
 	#define TYPE_ALLOC(name, attrs, asserts)		EABORT(type_alloc_clean(name, attrs, asserts) != 0)
-	#define TYPE_ATTR_ADD(type, attr)				EABORT(type_attr_add_clean(type, attr) != 0)
 	#define TYPE_LOOKUP(name)						EABORT_VAL(type_lookup(name), type_t *, == 0x0, _type)
+	#define TYPE_ATTR_ADD(type, attr)				EABORT(type_attr_add_clean(type, attr) != 0)
+
+	#define TYPE_ATTR_INIT(attr, name, type, array_limit, value) \
+		EABORT_VAL(type_attr_init(attr, name, type, array_limit, value), type_attr_t *, == 0x0, _tini)
 
 	#define TYPE_INSTANTIATE(type_name, node_name, attrs, childs) \
 		EABORT_VAL(type_instantiate_clean(type_name, node_name, attrs, childs), node_t *, == 0x0, _inst)
 
-	#define NODE_ATTR_ADD(node, attr)				EABORT(node_attr_add_clean(node, attr) != 0)
+	#define NODE_ATTR_ADD(node, name, expr)			EABORT(node_attr_add(node, name, expr) != 0)
 	#define NODE_ATTR_UPDATE(attr_ref, op, expr)	EABORT(node_attr_update(attr_ref.node_p, attr_ref.attr_p, op, expr) != 0)
 	#define NODE_REF(name)							EABORT_VAL(node_ref(name), node_t *, == 0x0, _nref)
+
+	#define NODE_ATTR_INIT(attr, name, value) \
+		EABORT_VAL(node_attr_init(attr, name, value), node_attr_t *, == 0x0, _nini)
 
 	#define ASSERT_ALLOC(expr, msg)					EABORT_VAL(assert_alloc(expr, msg), assert_t *, == 0x0, _ass)
 
@@ -59,11 +65,8 @@
 	#define EXPR_COPY(dest, src)					EABORT(expr_copy(dest, src) != 0);
 	#define EXPR_ARRAY_ADD(array, el)				EABORT(expr_array_add(array, el) != 0);
 
-	#define ATTR_INIT(attr, name, type, array_limit, value) \
-		EABORT_VAL(attr_init(attr, name, type, array_limit, value), attr_t *, == 0x0, _aini)
-
-	#define ATTR_ASSIGN(attr, value)				EABORT_VAL(attr_assign(attr, value), attr_t *, == 0x0, _assi)
-	#define ATTR_REF(node_ref, attr_name)			EABORT_VAL(attrvec_query(&node_ref->attrs, attr_name, false), attr_t *, == 0x0, _aref)
+	#define ATTR_ASSIGN(attr, value)				EABORT_VAL(type_attr_assign(attr, value), type_attr_t *, == 0x0, _assi)
+	#define ATTR_REF(node_ref, attr_name)			EABORT_VAL(attrvec_query(&node_ref->attrs.v, attr_name, false), attr_t *, == 0x0, _aref)
 
 	#define STRALLOC(s)								EABORT_VAL(strmap_add(s), char const *, == 0x0, _s)
 
@@ -81,20 +84,18 @@
 	static int devtreeerror(char const *file, char const *s);
 	static int cleanup(void);
 
-	static int type_alloc_clean(char const *name, attrvec_t *attrs, assert_t *asserts);
+	static int type_alloc_clean(char const *name, type_attrvec_t *attrs, assert_t *asserts);
 	static int type_reset(type_t *type, bool clean);
-	static int type_attr_add_clean(type_t *type, attr_t *attr);
-	static node_t *type_instantiate_clean(char const *type_name, char const *node_name, attrvec_t *attrs, node_t *childs);
+	static int type_attr_add_clean(type_t *type, type_attr_t *attr);
+	static node_t *type_instantiate_clean(char const *type_name, char const *node_name, node_attrvec_t *attrs, node_t *childs);
 
-	static int node_attr_add_clean(node_t *node, attr_t *attr);
+	static int node_attr_add(node_t *node, char const *name, expr_t *value);
 	static int node_reset(node_t *node, bool clean);
 
 	static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
 	static int expr_reset(expr_t *expr, bool clean);
 
-	static int attrvec_add_clean(attrvec_t *attrs, attr_t *attr);
-
-	static int attr_reset(attr_t *attr, bool clean);
+	static int attr_reset(type_attr_t *attr, bool clean);
 
 %}
 
@@ -144,13 +145,13 @@
 	assert_t *assert_p;
 
 	struct{
-		attr_t *attr_p;
+		node_attr_t *attr_p;
 		node_t *node_p;
 	} attr_ref;
 
 	type_t type;
 	node_t node;
-	attr_t attr;
+	type_attr_t attr;
 	expr_t expr;
 	expr_type_t builtin_type;
 	EXPR_INT_T i;
@@ -267,8 +268,8 @@ type-body : %empty										{ type_reset(&$$, false); }
 		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; TYPE_ATTR_ADD(&$$, ATTR_ASSIGN(&$2, EXPR_ALLOC(&$4))); }
 		  ;
 
-type-attr : builtin-type IDFR							{ ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
-		  | builtin-type IDFR '[' INT ']'				{ ATTR_INIT(&$$, STRALLOC($2), $1, $4, 0x0); }
+type-attr : builtin-type IDFR							{ TYPE_ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
+		  | builtin-type IDFR '[' INT ']'				{ TYPE_ATTR_INIT(&$$, STRALLOC($2), $1, $4, 0x0); }
 		  ;
 
 builtin-type : NA_STRING								{ $$ = ET_STRING; }
@@ -288,7 +289,7 @@ node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = TYPE_INSTANTIATE($3, STRALLO
 
 node-args : %empty										{ node_reset(&$$, false); devtreeunput(','); }
 		  | node-args ',' node							{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; NODE_ATTR_ADD(&$$, ATTR_INIT(&(attr_t){ }, STRALLOC($3), expr_type(&$5), 0, EXPR_ALLOC(&$5))); }
+		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; NODE_ATTR_ADD(&$$, STRALLOC($3), &$5); }
 		  ;
 
 /* expression */
@@ -341,20 +342,20 @@ multiplicative : unary									{ $$ = $1; }
 			   | multiplicative MODULO unary			{ EXPR_INIT(&$$, EOP_MODULO, &$1, &$3); }
 			   ;
 
-unary : attr-ref UNARYPLUS								{ $$ = *($1.attr_p->value); NODE_ATTR_UPDATE($1, EOP_ADD, &EXPR_INT(64, 1)); }
-	  | UNARYPLUS attr-ref								{ NODE_ATTR_UPDATE($2, EOP_ADD, &EXPR_INT(64, 1)); $$ = *($2.attr_p->value); }
+unary : attr-ref UNARYPLUS								{ $$ = EXPR_LITERAL(*($1.attr_p->value)); NODE_ATTR_UPDATE($1, EOP_ADD, &EXPR_INT(64, 1)); }
+	  | UNARYPLUS attr-ref								{ NODE_ATTR_UPDATE($2, EOP_ADD, &EXPR_INT(64, 1)); $$ = EXPR_LITERAL(*($2.attr_p->value)); }
 	  | value											{ $$ = $1; }
 	  ;
 
 value : const											{ $$ = $1; }
 	  | array											{ $$ = $1; }
-	  | attr-ref										{ EXPR_COPY(&$$, $1.attr_p->value); }
+	  | attr-ref										{ EXPR_COPY(&$$, &EXPR_LITERAL(*$1.attr_p->value)); }
 	  | '(' expression ')'								{ $$ = $2; }
 	  | IDFR											{ $$ = EXPR_REF(STRALLOC($1)); }
 	  ;
 
 /* values */
-attr-ref : IDFR '.' IDFR								{ $$.node_p = NODE_REF($1); $$.attr_p = ATTR_REF($$.node_p, $3); };
+attr-ref : IDFR '.' IDFR								{ $$.node_p = NODE_REF($1); $$.attr_p = (node_attr_t*)ATTR_REF($$.node_p, $3); };
 
 array : '[' array-body ']'								{ $$ = $2; }
 	  | '[' array-body ',' ']'							{ $$ = $2; }
@@ -434,7 +435,7 @@ static int cleanup(void){
 	return r ? -1 : 0;
 }
 
-static int type_alloc_clean(char const *name, attrvec_t *attrs, assert_t *asserts){
+static int type_alloc_clean(char const *name, type_attrvec_t *attrs, assert_t *asserts){
 	if(type_alloc(name, attrs, asserts) != 0)
 		return type_reset(&(type_t){ .attrs = *attrs, .asserts = asserts }, true);
 
@@ -444,18 +445,22 @@ static int type_alloc_clean(char const *name, attrvec_t *attrs, assert_t *assert
 static int type_reset(type_t *type, bool clean){
 	if(clean){
 		asserts_free(type->asserts);
-		attrvec_free(&type->attrs);
+		attrvec_free(&type->attrs.v);
 	}
 
-	type->attrs = ATTRVEC_INITIALISER();
+	type->attrs = TYPE_ATTRVEC_INITIALISER();
 	type->asserts = 0x0;
 
 	return -1;
 }
 
-static int type_attr_add_clean(type_t *type, attr_t *attr){
-	if(attrvec_add_clean(&type->attrs, attr) != 0){
+static int type_attr_add_clean(type_t *type, type_attr_t *attr){
+	if(attrvec_add(&type->attrs.v, (attr_t*)attr, sizeof(type_attr_t)) != 0){
+		if(attr->value)
+			expr_free(attr->value);
+
 		asserts_free(type->asserts);
+		attrvec_free(&type->attrs.v);
 
 		return -1;
 	}
@@ -463,7 +468,7 @@ static int type_attr_add_clean(type_t *type, attr_t *attr){
 	return 0;
 }
 
-static node_t *type_instantiate_clean(char const *type_name, char const *node_name, attrvec_t *attrs, node_t *childs){
+static node_t *type_instantiate_clean(char const *type_name, char const *node_name, node_attrvec_t *attrs, node_t *childs){
 	node_t *n = 0x0;
 	type_t *t;
 
@@ -473,20 +478,44 @@ static node_t *type_instantiate_clean(char const *type_name, char const *node_na
 	if(t != 0x0)
 		n = type_instantiate(t, node_name, attrs, childs);
 
-	attrvec_free(attrs);
+	attrvec_free(&attrs->v);
 
 	return n;
 }
 
-static int node_attr_add_clean(node_t *node, attr_t *attr){
-	return attrvec_add_clean(&node->attrs, attr);
+static int node_attr_add(node_t *node, char const *name, expr_t *value){
+	expr_value_t *v;
+	node_attr_t attr;
+
+
+	v = expr_value_alloc(0x0);
+
+	if(v == 0x0 || expr_evaluate(value, v, 0x0) == 0x0)
+		goto err_0;
+
+	if(node_attr_init(&attr, name, v) == 0x0)
+		goto err_1;
+
+	if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)
+		goto err_1;
+
+	return 0;
+
+
+err_1:
+	expr_value_free(v, true);
+
+err_0:
+	attrvec_free(&node->attrs.v);
+
+	return -1;
 }
 
 static int node_reset(node_t *node, bool clean){
 	if(clean)
-		attrvec_free(&node->attrs);
+		attrvec_free(&node->attrs.v);
 
-	node->attrs = ATTRVEC_INITIALISER();
+	node->attrs = NODE_ATTRVEC_INITIALISER();
 	node->childs = 0x0;
 
 	return -1;
@@ -509,8 +538,8 @@ static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1)
 	}
 	else{
 		*expr = EXPR_LITERAL(r);
-		expr_value_free(&arg0->arg0);
-		expr_value_free(&arg1->arg0);
+		expr_value_free(&arg0->arg0, false);
+		expr_value_free(&arg1->arg0, false);
 	}
 
 	return expr;
@@ -525,8 +554,8 @@ err:
 
 static int expr_reset(expr_t *expr, bool clean){
 	if(clean){
-		expr_value_free(&expr->arg0);
-		expr_value_free(&expr->arg1);
+		expr_value_free(&expr->arg0, false);
+		expr_value_free(&expr->arg1, false);
 	}
 
 	memset(expr, 0, sizeof(expr_t));
@@ -534,24 +563,11 @@ static int expr_reset(expr_t *expr, bool clean){
 	return -1;
 }
 
-static int attrvec_add_clean(attrvec_t *attrs, attr_t *attr){
-	if(attrvec_add(attrs, attr) != 0){
-		if(attr->value)
-			expr_free(attr->value);
-
-		attrvec_free(attrs);
-
-		return -1;
-	}
-
-	return 0;
-}
-
-static int attr_reset(attr_t *attr, bool clean){
+static int attr_reset(type_attr_t *attr, bool clean){
 	if(clean && attr->value)
 		expr_free(attr->value);
 
-	memset(attr, 0, sizeof(attr_t));
+	memset(attr, 0, sizeof(type_attr_t));
 
 	return -1;
 }

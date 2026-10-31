@@ -1,0 +1,66 @@
+/* good cases */
+typedef{
+	string compatible = "default";
+	assert(i < 3, "i >= 3");
+
+	int8 i = (1 + 2) * 3;
+	int8 j = i + 2;
+	int8 x = 1 + 2 | (2 || 3) && 3 & 4 ^ 1;
+	addr p = 0x10;
+} dev_single;
+
+foo = dev_single(compatible="aa" + "c", i=0);
+bar = dev_single(compatible="bb", j=2, i=1);
+with_childs = dev_single(compatible="a", i=0, c0 = dev_single(i=1), c1 = dev_single(i=0));
+
+
+/* errors */
+typedef{
+	assert(i < 3, "i >= 3");
+
+	// attr already defined
+	string compatible = "default";
+	string compatible = "default" + "_" + "_";
+
+	// syntax error
+	-
+
+	int8 i = 1;
+} dev_err;
+
+// node defined multiple times
+twice = dev_single(i=0);
+twice = dev_single(i=1);
+twice = dev_single(i=1);
+
+// failing assert
+fail_ass = dev_single(i=(twice.i++));
+
+// undefined attribute
+bar = dev_single(xx=1, compatible="bb", j=2, i=1);
+
+// undefined reference
+bar = dev_single(compatible="bb", i=undef.j, j=2);
+
+// undefined type
+bar = unknown();
+
+
+/* test cases */
+// ** asserts
+// - assert triggers when creating a node
+// - assert triggers when a nodes attribute is modified later
+// - unkown attrbute in assert expression
+//
+// ** typedef
+// - attribute with the same name already defined
+//
+// ** nodes
+// - node with and without childs
+// - attribute reference
+// - attribute reference with pre- and post-increment
+// - unknown attribute reference
+// - node with the same name already defined
+// - node with unknown attribute
+// - node with unkown type
+// - array usage -- manually test valgrind on array usage and failures

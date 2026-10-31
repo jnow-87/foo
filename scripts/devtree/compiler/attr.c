@@ -19,7 +19,7 @@
 
 
 /* global functions */
-attr_t *attr_init(attr_t *attr, char const *name, expr_type_t type, size_t array_limit, expr_t *value){
+type_attr_t *type_attr_init(type_attr_t *attr, char const *name, expr_type_t type, size_t array_limit, expr_t *value){
 	if(name == 0x0){
 		devtree_parser_error("cannot create unnamed attribute");
 
@@ -30,10 +30,23 @@ attr_t *attr_init(attr_t *attr, char const *name, expr_type_t type, size_t array
 	attr->type = type;
 	attr->array_limit = array_limit;
 
-	return attr_assign(attr, value);
+	return type_attr_assign(attr, value);
 }
 
-attr_t *attr_assign(attr_t *attr, expr_t *value){
+node_attr_t *node_attr_init(node_attr_t *attr, char const *name, expr_value_t *value){
+	if(name == 0x0){
+		devtree_parser_error("cannot create unnamed attribute");
+
+		return 0x0;
+	}
+
+	attr->name = name;
+	attr->value = value;
+
+	return attr;
+}
+
+type_attr_t *type_attr_assign(type_attr_t *attr, expr_t *value){
 	if(value == 0x0)
 		return attr;
 
@@ -52,7 +65,7 @@ attr_t *attr_assign(attr_t *attr, expr_t *value){
 	return attr;
 }
 
-expr_value_t *attr_value(attr_t *attr){
+expr_value_t *type_attr_value(type_attr_t *attr){
 	// TODO should the function instead call expr_evaluate() to avoid the check for EOP_LITERAL
 	// 		and be callable for all attribute, either ones with literal and non-literal values
 	if(attr->value->op != EOP_LITERAL){

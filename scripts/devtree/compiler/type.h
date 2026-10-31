@@ -27,16 +27,16 @@ typedef struct type_t{
 
 	char const *name;
 	assert_t *asserts;
-	attrvec_t attrs;
+	type_attrvec_t attrs;
 } type_t;
 
 
 /* prototypes */
-int type_alloc(char const *name, attrvec_t *attrs, assert_t *asserts);
+int type_alloc(char const *name, type_attrvec_t *attrs, assert_t *asserts);
 void types_free(void);
 
 type_t *type_lookup(char const *name);
-struct node_t *type_instantiate(type_t *type, char const *name, attrvec_t *attrs, struct node_t *childs);
+struct node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, struct node_t *childs);
 
 
 #endif // DEVTREE_TYPES_H

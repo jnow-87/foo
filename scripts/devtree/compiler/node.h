@@ -26,7 +26,7 @@ typedef struct node_t{
 
 	char const *name;
 	type_t *type;
-	attrvec_t attrs;
+	node_attrvec_t attrs;
 } node_t;
 
 
@@ -40,7 +40,7 @@ void node_free(node_t *node);
 node_t *node_ref(char const *name);
 
 int node_asserts_eval(node_t *node);
-int node_attr_update(node_t *node, attr_t *attr, expr_op_t op, expr_t *arg);
+int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg);
 
 
 #endif // DEVTREE_NODE_H

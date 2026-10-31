@@ -33,7 +33,7 @@ static node_t nodes = (node_t){
 	.childs = 0x0,
 	.name = "root",
 	.type = 0x0,
-	.attrs = ATTRVEC_INITIALISER(),
+	.attrs = NODE_ATTRVEC_INITIALISER(),
 };
 
 
@@ -66,7 +66,7 @@ node_t *node_alloc(char const *name, type_t *type, node_t *childs){
 	node->name = "";
 	node->childs = childs;
 
-	if(attrvec_alloc(&node->attrs, type->attrs.size) != 0)
+	if(attrvec_alloc(&node->attrs.v, sizeof(node_attr_t), type->attrs.v.size) != 0)
 		goto err_1;
 
 	if(index_add(name, node) != 0)
@@ -98,7 +98,7 @@ void node_free(node_t *node){
 	if(index_query(node->name, &idx) == 0)
 		vector_rm(&node_index, idx);
 
-	attrvec_free(&node->attrs);
+	attrvec_free(&node->attrs.v);
 	free(node);
 }
 
@@ -125,7 +125,7 @@ int node_asserts_eval(node_t *node){
 			// 		they were introduced to free string value, but since strings are now
 			// 		handled via strmap this is no longer needed, can any of the other
 			// 		cases handled in expr_value_free() occur
-			expr_value_free(&r);
+			expr_value_free(&r, false);
 
 			return devtree_parser_error("%s: assertion failed: %s", node->name, assert->msg);
 		}
@@ -134,16 +134,16 @@ int node_asserts_eval(node_t *node){
 	return 0;
 }
 
-int node_attr_update(node_t *node, attr_t *attr, expr_op_t op, expr_t *arg){
-	expr_t e = EXPR(op, EXPR_VALUE_EXPR(attr->value), EXPR_VALUE_EXPR(arg));
-	expr_value_t r;
+int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg){
+	expr_t e = EXPR(op, EXPR_VALUE_EXPR(&EXPR_LITERAL(*attr->value)), EXPR_VALUE_EXPR(arg));
+	expr_value_t *r = expr_value_alloc(0x0);
 
 
-	if(expr_evaluate(&e, &r, &node->attrs) == 0x0)
+	if(r == 0x0 || expr_evaluate(&e, r, &node->attrs) == 0x0)
 		return -1;
 
-	expr_value_free(&attr->value->arg0);
-	attr->value->arg0 = r;
+	expr_value_free(attr->value, true);
+	attr->value = r;
 
 	return node_asserts_eval(node);
 }
