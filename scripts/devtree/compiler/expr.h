@@ -65,7 +65,6 @@ typedef enum expr_type_t{
 	ET_INT64 = EXPR_TYPE_ENUM(0x8, true),
 	ET_ADDR = EXPR_TYPE_ENUM(0x10, false),
 	ET_STRING = EXPR_TYPE_ENUM(0x20, false),
-	ET_EXPR = EXPR_TYPE_ENUM(0x40, false),
 } expr_type_t;
 
 typedef enum{
@@ -105,7 +104,6 @@ typedef struct{
 	union{
 		EXPR_INT_T i;
 		void const *p;
-		struct expr_t *expr;
 		expr_array_t array;
 	};
 } expr_value_t;

@@ -160,12 +160,10 @@ void expr_value_free(expr_value_t *value, bool free_base){
 
 	if(value->is_array){
 		vector_for_each(&value->array.items, el)
-			expr_free(el->expr);
+			expr_value_free(el, false);
 
 		vector_reset(&value->array.items);
 	}
-	else if(value->type == ET_EXPR)
-		expr_free(value->expr);
 
 	if(free_base)
 		free(value);
@@ -210,7 +208,7 @@ expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *
 	result->type = expr_type(expr);
 	result->is_array = arg0.is_array || arg1.is_array;
 
-	if(result->type & (ET_UNDEF | ET_EXPR)){
+	if(result->type & ET_UNDEF){
 		devtree_parser_error("invalid expression result type %s", expr_type_name(result->type));
 
 		return 0x0;
@@ -292,7 +290,6 @@ char const *expr_type_name(expr_type_t type){
 	case ET_INT64:	return "int64";
 	case ET_ADDR:	return "addr";
 	case ET_STRING:	return "string";
-	case ET_EXPR:	return "expr";
 	default:		return "undef";
 	}
 }
@@ -301,6 +298,9 @@ int expr_array_add(expr_t *array, expr_t *expr){
 	expr_array_t *arr = &array->literal.array;
 	expr_type_t etype = expr_type(expr);
 
+
+	if(expr->op != EOP_LITERAL)
+		return devtree_parser_error("array elements have to be literals");
 
 	if(!array->literal.is_array)
 		return devtree_parser_error("appending to something not an array");
@@ -311,7 +311,7 @@ int expr_array_add(expr_t *array, expr_t *expr){
 	if(types_compatible(array->literal.type, etype, true) != 0)
 		return -1;
 
-	if(vector_add(&arr->items, &(expr_value_t){ .expr = expr }) != 0)
+	if(vector_add(&arr->items, &expr->literal) != 0)
 		return devtree_parser_error("adding to array failed");
 
 	arr->limit = MAX(arr->limit, arr->items.size);
@@ -341,11 +341,10 @@ static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_va
 static int types_compatible(expr_type_t t0, expr_type_t t1, bool any_array){
 	uint8_t ints = EXPR_TYPE_IS_INT(t0) + EXPR_TYPE_IS_INT(t1),
 			addrs = (t0 == ET_ADDR) + (t1 == ET_ADDR),
-			exprs = (t0 == ET_EXPR) + (t1 == ET_EXPR),
 			undefs = (t0 == ET_UNDEF) + (t1 == ET_UNDEF);
 
 
-	if((exprs + undefs == 0) && ((t0 == t1) || (!any_array && (ints + addrs == 2)) || (ints == 2)))
+	if((undefs == 0) && ((t0 == t1) || (!any_array && (ints + addrs == 2)) || (ints == 2)))
 		return 0;
 
 	return devtree_parser_error("incompatible types %s and %s", expr_type_name(t0), expr_type_name(t1));
@@ -360,7 +359,6 @@ static int op_defined(expr_op_t op, expr_value_t *val){
 		[ET_INT64] = EOP_ALL,
 		[ET_ADDR] = EOP_LITERAL | EOP_SUBTRACT | EOP_REFERENCE | EOP_ADD | EOP_EQUAL | EOP_UNEQUAL | EOP_LESSER | EOP_LESSER_EQUAL | EOP_GREATER | EOP_GREATER_EQUAL,
 		[ET_STRING] = EOP_LITERAL | EOP_REFERENCE | EOP_ADD,
-		[ET_EXPR] = 0x0,
 	};
 
 
