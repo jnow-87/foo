@@ -18,7 +18,7 @@
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "assert.h"
-#include "attrvec.h"
+#include "attr.h"
 #include "node.h"
 #include "opt.h"
 

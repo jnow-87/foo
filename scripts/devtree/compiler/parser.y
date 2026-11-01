@@ -104,7 +104,6 @@
 	#include <sys/vector.h>
 	#include "assert.h"
 	#include "attr.h"
-	#include "attrvec.h"
 	#include "expr.h"
 	#include "node.h"
 	#include "type.h"
@@ -445,7 +444,7 @@ static int type_alloc_clean(char const *name, type_attrvec_t *attrs, assert_t *a
 static int type_reset(type_t *type, bool clean){
 	if(clean){
 		asserts_free(type->asserts);
-		attrvec_free(&type->attrs.v);
+		attrvec_reset(&type->attrs.v);
 	}
 
 	type->attrs = TYPE_ATTRVEC_INITIALISER();
@@ -460,7 +459,7 @@ static int type_attr_add_clean(type_t *type, type_attr_t *attr){
 			expr_free(attr->value);
 
 		asserts_free(type->asserts);
-		attrvec_free(&type->attrs.v);
+		attrvec_reset(&type->attrs.v);
 
 		return -1;
 	}
@@ -478,7 +477,7 @@ static node_t *type_instantiate_clean(char const *type_name, char const *node_na
 	if(t != 0x0)
 		n = type_instantiate(t, node_name, attrs, childs);
 
-	attrvec_free(&attrs->v);
+	attrvec_reset(&attrs->v);
 
 	return n;
 }
@@ -501,14 +500,14 @@ static int node_attr_add(node_t *node, char const *name, expr_t *value){
 
 
 err:
-	attrvec_free(&node->attrs.v);
+	attrvec_reset(&node->attrs.v);
 
 	return -1;
 }
 
 static int node_reset(node_t *node, bool clean){
 	if(clean)
-		attrvec_free(&node->attrs.v);
+		attrvec_reset(&node->attrs.v);
 
 	node->attrs = NODE_ATTRVEC_INITIALISER();
 	node->childs = 0x0;

@@ -13,7 +13,6 @@
 
 #include <sys/types.h>
 #include <sys/vector.h>
-#include "attrvec.h"
 
 
 /* macros */
@@ -53,7 +52,7 @@
 
 
 /* incomplete types */
-struct expr_t;
+struct node_attrvec_t;
 
 
 /* types */
@@ -124,8 +123,7 @@ void expr_free(expr_t *expr);
 expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src);
 void expr_value_reset(expr_value_t *value);
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *ctx);
-int expr_evaluable(expr_op_t op, expr_value_t *arg0, expr_value_t *arg1i, attrvec_t *ctx);
+expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attrvec_t *ctx);
 
 expr_type_t expr_type(expr_t *expr);
 int expr_type_check(expr_t *expr, expr_type_t type);

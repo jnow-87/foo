@@ -15,7 +15,6 @@
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "attr.h"
-#include "attrvec.h"
 #include "expr.h"
 #include "node.h"
 
@@ -66,7 +65,7 @@ node_t *node_alloc(char const *name, type_t *type, node_t *childs){
 	node->name = "";
 	node->childs = childs;
 
-	if(attrvec_alloc(&node->attrs.v, sizeof(node_attr_t), type->attrs.v.size) != 0)
+	if(attrvec_init(&node->attrs.v, sizeof(node_attr_t), type->attrs.v.size) != 0)
 		goto err_1;
 
 	if(index_add(name, node) != 0)
@@ -98,7 +97,7 @@ void node_free(node_t *node){
 	if(index_query(node->name, &idx) == 0)
 		vector_rm(&node_index, idx);
 
-	attrvec_free(&node->attrs.v);
+	attrvec_reset(&node->attrs.v);
 	free(node);
 }
 
@@ -115,23 +114,17 @@ node_t *node_ref(char const *name){
 	return *((node_t**)vector_get(&node_index, idx));
 }
 
-int node_asserts_eval(node_t *node){
-	assert_t *assert;
-	expr_value_t r;
+node_attr_t *node_attr_init(node_attr_t *attr, char const *name, expr_value_t *value){
+	if(name == 0x0){
+		devtree_parser_error("cannot create unnamed attribute");
 
-	list_for_each(node->type->asserts, assert){
-		if(expr_evaluate(assert->expr, &r, &node->attrs) == 0x0 || !EXPR_TYPE_IS_INT(r.type) || r.is_array || r.i == 0){
-			// TODO check if any of the expr_value_free() calls in the project are needed
-			// 		they were introduced to free string value, but since strings are now
-			// 		handled via strmap this is no longer needed, can any of the other
-			// 		cases handled in expr_value_free() occur
-			expr_value_reset(&r);
-
-			return devtree_parser_error("%s: assertion failed: %s", node->name, assert->msg);
-		}
+		return 0x0;
 	}
 
-	return 0;
+	attr->name = name;
+	attr->value = *value;
+
+	return attr;
 }
 
 int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg){
@@ -145,7 +138,7 @@ int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg)
 	expr_value_reset(&attr->value);
 	attr->value = r;
 
-	return node_asserts_eval(node);
+	return asserts_eval(node->type->asserts, &node->attrs, node->name);
 }
 
 

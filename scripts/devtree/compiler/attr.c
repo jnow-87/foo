@@ -7,60 +7,59 @@
 
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/compiler.h>
-#include <sys/math.h>
-#include <sys/register.h>
+#include <sys/string.h>
 #include <sys/types.h>
+#include <sys/vector.h>
 #include <parser.tab.h>
 #include "attr.h"
+#include "expr.h"
 
 
 /* global functions */
-type_attr_t *type_attr_init(type_attr_t *attr, char const *name, expr_type_t type, size_t array_limit, expr_t *value){
-	if(name == 0x0){
-		devtree_parser_error("cannot create unnamed attribute");
-
-		return 0x0;
-	}
-
-	attr->name = name;
-	attr->type = type;
-	attr->array_limit = array_limit;
-
-	return type_attr_assign(attr, value);
+int attrvec_init(attrvec_t *attrs, size_t type_size, size_t n){
+	return vector_init(attrs, type_size, n);
 }
 
-node_attr_t *node_attr_init(node_attr_t *attr, char const *name, expr_value_t *value){
-	if(name == 0x0){
-		devtree_parser_error("cannot create unnamed attribute");
+void attrvec_reset(attrvec_t *attrs){
+	attr_t *attr;
 
-		return 0x0;
+
+	// TODO shall the branch be based on the size?
+	attrvec_for_each(attrs, attr){
+		if(attrs->dt_size == sizeof(type_attr_t) && ((type_attr_t*)attr)->value != 0x0)
+			expr_free(((type_attr_t*)attr)->value);
+
+		if(attrs->dt_size == sizeof(node_attr_t))
+			expr_value_reset(&((node_attr_t*)attr)->value);
 	}
 
-	attr->name = name;
-	attr->value = *value;
-
-	return attr;
+	vector_reset(attrs);
 }
 
-type_attr_t *type_attr_assign(type_attr_t *attr, expr_t *value){
-	if(value == 0x0)
-		return attr;
+int attrvec_add(attrvec_t *attrs, attr_t *attr, size_t attr_size){
+	if(attrs->dt_size != attr_size)
+		return devtree_parser_error("%s: attribute of invalid type", attr->name);
 
-	if(expr_type_check(value, attr->type) != 0)
-		return 0x0;
+	if(attrvec_query(attrs, attr->name, true) != 0x0)
+		return devtree_parser_error("%s: attribute already defined", attr->name);
 
-/* TODO is it needed to
- * 	- check the array limit: yes, only if it matches the assignment is allowed
- * 	- update the array limit: unclear
- *
-	if((attr->flags & AF_ARRAY) && attr->value.arr.limit != ATTR_ARRAY_UNLIMITED)
-		v.arr.limit = attr->value.arr.limit;
-*/
-	attr->value = value;
+	if(vector_add(attrs, attr) != 0)
+		return devtree_parser_error("%s: adding attribute failed", attr->name);
 
-	return attr;
+	return 0;
+}
+
+attr_t *attrvec_query(attrvec_t *attrs, char const *name, bool maybe_undef){
+	attr_t *attr;
+
+
+	attrvec_for_each(attrs, attr){
+		if(attr->name != 0x0 && strcmp(attr->name, name) == 0)
+			return attr;
+	}
+
+	if(!maybe_undef)
+		devtree_parser_error("%s: undefined attribute", name);
+
+	return 0x0;
 }

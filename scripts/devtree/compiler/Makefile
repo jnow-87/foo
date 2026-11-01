@@ -18,7 +18,6 @@ dtc-y := \
 	node.o \
 	assert.o \
 	attr.o \
-	attrvec.o \
 	type.o \
 	lexer.lex.o \
 	parser.tab.o \

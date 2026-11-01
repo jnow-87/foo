@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/list.h>
+#include <sys/types.h>
 #include <parser.tab.h>
 #include "assert.h"
 #include "attr.h"
@@ -54,7 +55,7 @@ void types_free(void){
 
 	list_for_each(types, type){
 		asserts_free(type->asserts);
-		attrvec_free(&type->attrs.v);
+		attrvec_reset(&type->attrs.v);
 		free(type);
 	}
 }
@@ -129,7 +130,7 @@ node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, 
 			goto err_2;
 	}
 
-	if(node_asserts_eval(node) != 0)
+	if(asserts_eval(node->type->asserts, &node->attrs, node->name) != 0)
 		goto err_1;
 
 	return node;
@@ -144,6 +145,60 @@ err_1:
 	node_free(node);
 
 err_0:
+	return 0x0;
+}
+
+type_attr_t *type_attr_init(type_attr_t *attr, char const *name, expr_type_t type, size_t array_limit, expr_t *value){
+	if(name == 0x0){
+		devtree_parser_error("cannot create unnamed attribute");
+
+		return 0x0;
+	}
+
+	attr->name = name;
+	attr->type = type;
+	attr->array_limit = array_limit;
+
+	return type_attr_assign(attr, value);
+}
+
+type_attr_t *type_attr_assign(type_attr_t *attr, expr_t *value){
+	if(value == 0x0)
+		return attr;
+
+	if(expr_type_check(value, attr->type) != 0)
+		return 0x0;
+
+/* TODO is it needed to
+ * 	- check the array limit: yes, only if it matches the assignment is allowed
+ * 	- update the array limit: unclear
+ *
+	if((attr->flags & AF_ARRAY) && attr->value.arr.limit != ATTR_ARRAY_UNLIMITED)
+		v.arr.limit = attr->value.arr.limit;
+*/
+	attr->value = value;
+
+	return attr;
+}
+
+struct type_attr_t *type_attrvec_query(type_attrvec_t *attrs, char const *name, enum expr_type_t type, bool maybe_undef){
+	type_attr_t *attr;
+
+
+	attrvec_for_each(&attrs->v, attr){
+		if(attr->name != 0x0 && strcmp(attr->name, name) == 0){
+			if(type == ET_UNDEF || attr->type == type)
+				return attr;
+
+			devtree_parser_error("%s: invalid type %s, expecting %s", name, expr_type_name(attr->type), expr_type_name(type));
+
+			return 0x0;
+		}
+	}
+
+	if(!maybe_undef)
+		devtree_parser_error("%s: undefined attribute", name);
+
 	return 0x0;
 }
 

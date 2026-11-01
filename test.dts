@@ -29,6 +29,9 @@ typedef{
 	int8 i = 1;
 } dev_err;
 
+// assert fail
+assert_fail = dev_single(i = 3);
+
 // node defined multiple times
 twice = dev_single(i=0);
 twice = dev_single(i=1);

@@ -14,8 +14,8 @@
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "attr.h"
-#include "attrvec.h"
 #include "expr.h"
+#include "node.h"
 #include "strmap.h"
 
 
@@ -171,7 +171,7 @@ void expr_value_reset(expr_value_t *value){
 	value->is_array = false;
 }
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *ctx){
+expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attrvec_t *ctx){
 	expr_value_t arg0,
 				 arg1;
 
