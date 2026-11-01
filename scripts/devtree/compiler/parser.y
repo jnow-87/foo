@@ -62,7 +62,7 @@
 
 	#define EXPR_INIT(expr, op, arg0, arg1)			EABORT_VAL(expr_init(expr, op, arg0, arg1), expr_t *, == 0x0, _eini)
 	#define EXPR_ALLOC(e)							EABORT_VAL(expr_alloc(e), expr_t *, == 0x0, _expr)
-	#define EXPR_COPY(dest, src)					EABORT(expr_copy(dest, src) != 0);
+	#define EXPR_VALUE_DUP(dest, src)				EABORT_VAL(expr_value_dup(dest, src), expr_value_t *, == 0x0, _val)
 	#define EXPR_ARRAY_ADD(array, el)				EABORT(expr_array_add(array, el) != 0);
 
 	#define ATTR_ASSIGN(attr, value)				EABORT_VAL(type_attr_assign(attr, value), type_attr_t *, == 0x0, _assi)
@@ -349,7 +349,7 @@ unary : attr-ref UNARYPLUS								{ $$ = EXPR_LITERAL(*($1.attr_p->value)); NODE
 
 value : const											{ $$ = $1; }
 	  | array											{ $$ = $1; }
-	  | attr-ref										{ EXPR_COPY(&$$, &EXPR_LITERAL(*$1.attr_p->value)); }
+	  | attr-ref										{ $$ = EXPR_LITERAL(*EXPR_VALUE_DUP(&(expr_value_t){ }, $1.attr_p->value)); }
 	  | '(' expression ')'								{ $$ = $2; }
 	  | IDFR											{ $$ = EXPR_REF(STRALLOC($1)); }
 	  ;
@@ -525,7 +525,7 @@ static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1)
 	expr_value_t r;
 
 
-	*expr = EXPR(op, EXPR_VALUE_EXPR(arg0), EXPR_VALUE_EXPR(arg1));
+	*expr = EXPR_CALC(op, arg0, arg1);
 
 	if(expr_evaluate(expr, &r, 0x0) == 0x0){
 		arg0 = expr_alloc(arg0);
@@ -534,12 +534,12 @@ static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1)
 		if(arg0 == 0x0 || arg1 == 0x0)
 			goto err;
 
-		*expr = EXPR(op, EXPR_VALUE_EXPR(arg0), EXPR_VALUE_EXPR(arg1));
+		*expr = EXPR_CALC(op, arg0, arg1);
 	}
 	else{
 		*expr = EXPR_LITERAL(r);
-		expr_value_free(&arg0->arg0, false);
-		expr_value_free(&arg1->arg0, false);
+		expr_value_free(&arg0->literal, false);
+		expr_value_free(&arg1->literal, false);
 	}
 
 	return expr;
@@ -554,8 +554,9 @@ err:
 
 static int expr_reset(expr_t *expr, bool clean){
 	if(clean){
-		expr_value_free(&expr->arg0, false);
-		expr_value_free(&expr->arg1, false);
+		expr_value_free(&expr->literal, false);
+		expr_free(expr->arg0);
+		expr_free(expr->arg1);
 	}
 
 	memset(expr, 0, sizeof(expr_t));

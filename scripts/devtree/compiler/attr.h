@@ -61,7 +61,6 @@ ENSURE_ATTR_TYPE(node_attr_t);
 type_attr_t *type_attr_init(type_attr_t *attr, char const *name, expr_type_t type, size_t array_limit, expr_t *value);
 node_attr_t *node_attr_init(node_attr_t *attr, char const *name, expr_value_t *value);
 type_attr_t *type_attr_assign(type_attr_t *attr, expr_t *value);
-expr_value_t *type_attr_value(type_attr_t *attr);
 
 
 #endif // DEVTREE_ATTRS_H

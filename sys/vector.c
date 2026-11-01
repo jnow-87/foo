@@ -36,7 +36,7 @@ void vector_reset(vector_t *v){
 	v->size = 0;
 }
 
-int vector_copy(vector_t *dest, vector_t *src){
+int vector_dup(vector_t *dest, vector_t *src){
 	// TODO especially test that after-copy modifications to the either src or dest do not impact the other one
 
 	*dest = *src;

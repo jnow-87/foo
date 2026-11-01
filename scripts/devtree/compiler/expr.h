@@ -35,30 +35,21 @@
 	._field = _value, \
 })
 
-#define EXPR_LITERAL(_arg) ((expr_t){ \
-	.op = EOP_LITERAL, \
-	.arg0 = _arg, \
-	.arg1 = { 0 }, \
+#define EXPR(_op, _literal, _arg0, _arg1) ((expr_t){ \
+	.op = _op, \
+	.literal = _literal, \
+	.arg0 = _arg0, \
+	.arg1 = _arg1, \
 })
 
-#define EXPR_VALUE_EXPR(_expr)	EXPR_VALUE(ET_EXPR, false, expr, _expr)
-
-#define EXPR_REF(_name)		((expr_t){ \
-	.op = EOP_REFERENCE, \
-	.arg0 = EXPR_VALUE(ET_STRING, false, p, _name), \
-	.arg1 = { 0 }, \
-})
+#define EXPR_CALC(op, arg0, arg1)	EXPR(op, { 0 }, arg0, arg1)
+#define EXPR_REF(_name)				EXPR(EOP_REFERENCE, EXPR_VALUE(ET_STRING, false, p, _name), 0x0, 0x0)
+#define EXPR_LITERAL(val) 			EXPR(EOP_LITERAL, val, 0x0, 0x0)
 
 #define EXPR_INT(size, val)	EXPR_LITERAL(EXPR_VALUE(EXPR_INT_FIXED(size), false, i, val))
 #define EXPR_ADDR(val)		EXPR_LITERAL(EXPR_VALUE(ET_ADDR, false, p, val))
 #define EXPR_STR(val)		EXPR_LITERAL(EXPR_VALUE(ET_STRING, false, p, val))
 #define EXPR_ARRAY(type)	EXPR_LITERAL(EXPR_VALUE(type, true, array, EXPR_ARRAY_INITIALISER()))
-
-#define EXPR(_op, _arg0, _arg1) ((expr_t){ \
-	.op = _op, \
-	.arg0 = _arg0, \
-	.arg1 = _arg1, \
-})
 
 
 /* incomplete types */
@@ -78,6 +69,7 @@ typedef enum expr_type_t{
 } expr_type_t;
 
 typedef enum{
+	EOP_UNDEF = 0x0,
 	EOP_LITERAL = 0x1,
 	EOP_REFERENCE = 0x2,
 	EOP_ADD = 0x4,
@@ -121,16 +113,19 @@ typedef struct{
 typedef struct expr_t{
 	expr_op_t op;
 
-	expr_value_t arg0,
-				 arg1;
+	expr_value_t literal;
+	struct expr_t *arg0,
+				  *arg1;
 } expr_t;
 
 
 /* prototypes */
 expr_t *expr_alloc(expr_t *expr);
 void expr_free(expr_t *expr);
+
 expr_value_t *expr_value_alloc(expr_value_t *value);
 void expr_value_free(expr_value_t *value, bool free_base);
+expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src);
 
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *ctx);
 int expr_evaluable(expr_op_t op, expr_value_t *arg0, expr_value_t *arg1i, attrvec_t *ctx);
@@ -141,10 +136,6 @@ size_t expr_type_size(expr_type_t type);
 char const *expr_type_name(expr_type_t type);
 
 int expr_array_add(expr_t *array, expr_t *expr);
-int expr_copy(expr_t *dest, expr_t *src);
-
-void expr_print(expr_t *expr, int indent);
-void expr_value_print(expr_value_t *value, int indent);
 
 
 #endif // DEVTREE_EXPR_H

@@ -135,7 +135,7 @@ int node_asserts_eval(node_t *node){
 }
 
 int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg){
-	expr_t e = EXPR(op, EXPR_VALUE_EXPR(&EXPR_LITERAL(*attr->value)), EXPR_VALUE_EXPR(arg));
+	expr_t e = EXPR_CALC(op, arg, &EXPR_LITERAL(*attr->value));
 	expr_value_t *r = expr_value_alloc(0x0);
 
 

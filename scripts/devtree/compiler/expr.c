@@ -8,6 +8,7 @@
 
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/math.h>
 #include <sys/string.h>
 #include <sys/vector.h>
@@ -37,9 +38,7 @@ static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_va
 static int types_compatible(expr_type_t t0, expr_type_t t1, bool any_array);
 static int op_defined(expr_op_t op, expr_value_t *val);
 static int range_check(expr_value_t *value, expr_type_t type);
-static int copy_value(expr_value_t *dest, expr_value_t *src);
 
-static expr_value_t *op_literal(expr_value_t *arg0, expr_value_t *res);
 static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
 static expr_value_t *op_subtract(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
 static expr_value_t *op_multiply(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
@@ -134,8 +133,9 @@ void expr_free(expr_t *expr){
 	if(expr == 0x0)
 		return;
 
-	expr_value_free(&expr->arg0, false);
-	expr_value_free(&expr->arg1, false);
+	expr_value_free(&expr->literal, false);
+	expr_free(expr->arg0);
+	expr_free(expr->arg1);
 
 	free(expr);
 }
@@ -144,7 +144,7 @@ expr_value_t *expr_value_alloc(expr_value_t *value){
 	expr_value_t *r;
 
 
-	r = malloc(sizeof(expr_value_t));
+	r = calloc(1, sizeof(expr_value_t));
 
 	if(r != 0x0 && value != 0x0)
 		*r = *value;
@@ -171,18 +171,34 @@ void expr_value_free(expr_value_t *value, bool free_base){
 		free(value);
 }
 
+expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src){
+	*dest = *src;
+
+	if(src->is_array){
+		dest->array.limit = src->array.limit;
+
+		if(vector_dup(&dest->array.items, &src->array.items) != 0){
+			devtree_parser_error("duplicating expression src");
+
+			return 0x0;
+		}
+	}
+
+	return dest;
+}
+
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *ctx){
 	expr_value_t arg0,
 				 arg1;
 
 
 	if(expr->op == EOP_LITERAL)
-		return op_literal(&expr->arg0, result);
+		return memcpy(result, &expr->literal, sizeof(expr_value_t));
 
 	if(expr->op == EOP_REFERENCE)
-		return resolve_ref(&expr->arg0, ctx, result);
+		return resolve_ref(&expr->literal, ctx, result);
 
-	if(expr_evaluate(expr->arg0.expr, &arg0, ctx) == 0x0 || expr_evaluate(expr->arg1.expr, &arg1, ctx) == 0x0)
+	if(expr_evaluate(expr->arg0, &arg0, ctx) == 0x0 || expr_evaluate(expr->arg1, &arg1, ctx) == 0x0)
 		return 0x0;
 
 	if(types_compatible(arg0.type, arg1.type, arg0.is_array || arg1.is_array) != 0)
@@ -222,7 +238,7 @@ expr_type_t expr_type(expr_t *expr){
 
 
 	if(expr->op == EOP_LITERAL)
-		return expr->arg0.type;
+		return expr->literal.type;
 
 	if(expr->op == EOP_REFERENCE)
 		return ET_UNDEF;
@@ -230,8 +246,8 @@ expr_type_t expr_type(expr_t *expr){
 	if(expr->op & (EOP_EQUAL | EOP_UNEQUAL | EOP_LESSER | EOP_LESSER_EQUAL | EOP_GREATER | EOP_GREATER_EQUAL | EOP_LOG_AND | EOP_LOG_OR))
 		return ET_INT8;
 
-	t0 = expr_type(expr->arg0.expr);
-	t1 = expr_type(expr->arg1.expr);
+	t0 = expr_type(expr->arg0);
+	t1 = expr_type(expr->arg1);
 
 	if(t0 == t1 || t1 == ET_UNDEF)
 		return t0;
@@ -282,16 +298,17 @@ char const *expr_type_name(expr_type_t type){
 }
 
 int expr_array_add(expr_t *array, expr_t *expr){
-	expr_array_t *arr = &array->arg0.array;
+	expr_array_t *arr = &array->literal.array;
+	expr_type_t etype = expr_type(expr);
 
 
-	if(!array->arg0.is_array)
+	if(!array->literal.is_array)
 		return devtree_parser_error("appending to something not an array");
 
-	if(array->arg0.type == ET_UNDEF)
-		array->arg0.type = expr->arg0.type;
+	if(array->literal.type == ET_UNDEF)
+		array->literal.type = etype;
 
-	if(types_compatible(array->arg0.type, expr->arg0.type, true) != 0)
+	if(types_compatible(array->literal.type, etype, true) != 0)
 		return -1;
 
 	if(vector_add(&arr->items, &(expr_value_t){ .expr = expr }) != 0)
@@ -300,49 +317,6 @@ int expr_array_add(expr_t *array, expr_t *expr){
 	arr->limit = MAX(arr->limit, arr->items.size);
 
 	return 0;
-}
-
-int expr_copy(expr_t *dest, expr_t *src){
-	dest->op = src->op;
-
-	if(copy_value(&dest->arg0, &src->arg0) != 0)
-		goto err_0;
-
-	if(copy_value(&dest->arg1, &src->arg1) != 0)
-		goto err_1;
-
-	return 0;
-
-
-err_1:
-	expr_value_free(&dest->arg0, false);
-
-err_0:
-	return -1;
-}
-
-#include <stdio.h>
-void expr_print(expr_t *expr, int indent){
-	printf("\n%*.*s%s: ", indent, indent, "", op_name[expr->op]);
-	expr_value_print(&expr->arg0, indent);
-
-	if((expr->op & (EOP_LITERAL | EOP_REFERENCE)) == 0)
-		expr_value_print(&expr->arg1, indent);
-}
-
-void expr_value_print(expr_value_t *value, int indent){
-	if(value->is_array){
-		printf("array");
-		return;
-	}
-
-	switch(value->type){
-	case ET_UNDEF:	printf("undef"); break;
-	case ET_ADDR:	printf("%p", value->p); break;
-	case ET_STRING:	printf("%s", value->p); break;
-	case ET_EXPR:	expr_print(value->expr, indent + 1); break;
-	default:		printf("%d", value->i); break;
-	}
 }
 
 
@@ -427,42 +401,6 @@ static int range_check(expr_value_t *value, expr_type_t type){
 
 err:
 	return devtree_parser_error("integer out of range %lu > %lu", value->i, lim);
-}
-
-static int copy_value(expr_value_t *dest, expr_value_t *src){
-	*dest = *src;
-
-	if(src->is_array){
-		dest->array.limit = src->array.limit;
-
-		if(vector_copy(&dest->array.items, &src->array.items) != 0)
-			goto err;
-
-		return 0;
-	}
-
-	switch(src->type){
-	case ET_EXPR:
-		dest->expr = expr_alloc(0x0);
-
-		if(dest->expr == 0x0 || expr_copy(dest->expr, src->expr) != 0)
-			goto err;
-
-	default:
-		break;
-	}
-
-	return 0;
-
-
-err:
-	return devtree_parser_error("copy expression");
-}
-
-static expr_value_t *op_literal(expr_value_t *arg, expr_value_t *res){
-	*res = *arg;
-
-	return res;
 }
 
 static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){

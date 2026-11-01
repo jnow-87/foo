@@ -64,15 +64,3 @@ type_attr_t *type_attr_assign(type_attr_t *attr, expr_t *value){
 
 	return attr;
 }
-
-expr_value_t *type_attr_value(type_attr_t *attr){
-	// TODO should the function instead call expr_evaluate() to avoid the check for EOP_LITERAL
-	// 		and be callable for all attribute, either ones with literal and non-literal values
-	if(attr->value->op != EOP_LITERAL){
-		devtree_parser_error("%s: attribute value is not a literal", attr->name);
-
-		return 0x0;
-	}
-
-	return &attr->value->arg0;
-}
