@@ -206,10 +206,6 @@ expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attr
 		return 0x0;
 	}
 
-	// TODO
-	// 	- check if it can be avoided to frequently allocate and free
-	// 	- if it cannot be avoided, make sure expr_value_free() is called
-	// 	  in all cases within this function
 	expr_value_reset(&arg0);
 	expr_value_reset(&arg1);
 

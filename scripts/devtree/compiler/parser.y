@@ -444,7 +444,7 @@ static int type_alloc_clean(char const *name, type_attrvec_t *attrs, assert_t *a
 static int type_reset(type_t *type, bool clean){
 	if(clean){
 		asserts_free(type->asserts);
-		attrvec_reset(&type->attrs.v);
+		type_attrvec_reset(&type->attrs);
 	}
 
 	type->attrs = TYPE_ATTRVEC_INITIALISER();
@@ -459,7 +459,7 @@ static int type_attr_add_clean(type_t *type, type_attr_t *attr){
 			expr_free(attr->value);
 
 		asserts_free(type->asserts);
-		attrvec_reset(&type->attrs.v);
+		type_attrvec_reset(&type->attrs);
 
 		return -1;
 	}
@@ -477,7 +477,7 @@ static node_t *type_instantiate_clean(char const *type_name, char const *node_na
 	if(t != 0x0)
 		n = type_instantiate(t, node_name, attrs, childs);
 
-	attrvec_reset(&attrs->v);
+	node_attrvec_reset(attrs);
 
 	return n;
 }
@@ -500,14 +500,14 @@ static int node_attr_add(node_t *node, char const *name, expr_t *value){
 
 
 err:
-	attrvec_reset(&node->attrs.v);
+	node_attrvec_reset(&node->attrs);
 
 	return -1;
 }
 
 static int node_reset(node_t *node, bool clean){
 	if(clean)
-		attrvec_reset(&node->attrs.v);
+		node_attrvec_reset(&node->attrs);
 
 	node->attrs = NODE_ATTRVEC_INITIALISER();
 	node->childs = 0x0;

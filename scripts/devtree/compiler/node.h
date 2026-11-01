@@ -60,5 +60,7 @@ node_t *node_ref(char const *name);
 node_attr_t *node_attr_init(node_attr_t *attr, char const *name, expr_value_t *value);
 int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg);
 
+void node_attrvec_reset(node_attrvec_t *attrs);
+
 
 #endif // DEVTREE_NODE_H

@@ -60,6 +60,7 @@ type_attr_t *type_attr_init(type_attr_t *attr, char const *name, expr_type_t typ
 type_attr_t *type_attr_assign(type_attr_t *attr, expr_t *value);
 
 struct type_attr_t *type_attrvec_query(type_attrvec_t *attrs, char const *name, enum expr_type_t type, bool maybe_undef);
+void type_attrvec_reset(type_attrvec_t *attrs);
 
 
 #endif // DEVTREE_TYPES_H

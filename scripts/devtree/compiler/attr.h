@@ -34,7 +34,6 @@ typedef vector_t attrvec_t;
 
 /* prototypes */
 int attrvec_init(attrvec_t *attrs, size_t type_size, size_t n);
-void attrvec_reset(attrvec_t *v);
 
 int attrvec_add(attrvec_t *attrs, attr_t *attr, size_t attr_size);
 attr_t *attrvec_query(attrvec_t *attrs, char const *name, bool maybe_undef);

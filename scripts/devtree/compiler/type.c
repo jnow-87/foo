@@ -55,7 +55,7 @@ void types_free(void){
 
 	list_for_each(types, type){
 		asserts_free(type->asserts);
-		attrvec_reset(&type->attrs.v);
+		type_attrvec_reset(&type->attrs);
 		free(type);
 	}
 }
@@ -200,6 +200,16 @@ struct type_attr_t *type_attrvec_query(type_attrvec_t *attrs, char const *name, 
 		devtree_parser_error("%s: undefined attribute", name);
 
 	return 0x0;
+}
+
+void type_attrvec_reset(type_attrvec_t *attrs){
+	type_attr_t *attr;
+
+
+	attrvec_for_each(&attrs->v, attr)
+		expr_free(attr->value);
+
+	vector_reset(&attrs->v);
 }
 
 

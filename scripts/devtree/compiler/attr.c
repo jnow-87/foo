@@ -20,22 +20,6 @@ int attrvec_init(attrvec_t *attrs, size_t type_size, size_t n){
 	return vector_init(attrs, type_size, n);
 }
 
-void attrvec_reset(attrvec_t *attrs){
-	attr_t *attr;
-
-
-	// TODO shall the branch be based on the size?
-	attrvec_for_each(attrs, attr){
-		if(attrs->dt_size == sizeof(type_attr_t) && ((type_attr_t*)attr)->value != 0x0)
-			expr_free(((type_attr_t*)attr)->value);
-
-		if(attrs->dt_size == sizeof(node_attr_t))
-			expr_value_reset(&((node_attr_t*)attr)->value);
-	}
-
-	vector_reset(attrs);
-}
-
 int attrvec_add(attrvec_t *attrs, attr_t *attr, size_t attr_size){
 	if(attrs->dt_size != attr_size)
 		return devtree_parser_error("%s: attribute of invalid type", attr->name);

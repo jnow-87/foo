@@ -97,7 +97,7 @@ void node_free(node_t *node){
 	if(index_query(node->name, &idx) == 0)
 		vector_rm(&node_index, idx);
 
-	attrvec_reset(&node->attrs.v);
+	node_attrvec_reset(&node->attrs);
 	free(node);
 }
 
@@ -139,6 +139,16 @@ int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg)
 	attr->value = r;
 
 	return asserts_eval(node->type->asserts, &node->attrs, node->name);
+}
+
+void node_attrvec_reset(node_attrvec_t *attrs){
+	node_attr_t *attr;
+
+
+	attrvec_for_each(&attrs->v, attr)
+		expr_value_reset(&attr->value);
+
+	vector_reset(&attrs->v);
 }
 
 
