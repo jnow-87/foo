@@ -51,7 +51,7 @@ ENSURE_ATTR_TYPE(type_attr_t);
 
 typedef struct node_attr_t{
 	char const *name;
-	expr_value_t *value;
+	expr_value_t value;
 } node_attr_t;
 
 ENSURE_ATTR_TYPE(node_attr_t);

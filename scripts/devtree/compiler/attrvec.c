@@ -31,8 +31,8 @@ void attrvec_free(attrvec_t *attrs){
 		if(attrs->dt_size == sizeof(type_attr_t) && ((type_attr_t*)attr)->value != 0x0)
 			expr_free(((type_attr_t*)attr)->value);
 
-		if(attrs->dt_size == sizeof(node_attr_t) && ((node_attr_t*)attr)->value != 0x0)
-			expr_value_free(((node_attr_t*)attr)->value, true);
+		if(attrs->dt_size == sizeof(node_attr_t))
+			expr_value_reset(&((node_attr_t*)attr)->value);
 	}
 
 	vector_reset(attrs);

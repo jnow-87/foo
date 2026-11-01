@@ -133,40 +133,11 @@ void expr_free(expr_t *expr){
 	if(expr == 0x0)
 		return;
 
-	expr_value_free(&expr->literal, false);
+	expr_value_reset(&expr->literal);
 	expr_free(expr->arg0);
 	expr_free(expr->arg1);
 
 	free(expr);
-}
-
-expr_value_t *expr_value_alloc(expr_value_t *value){
-	expr_value_t *r;
-
-
-	r = calloc(1, sizeof(expr_value_t));
-
-	if(r != 0x0 && value != 0x0)
-		*r = *value;
-
-	return r;
-}
-
-void expr_value_free(expr_value_t *value, bool free_base){
-	// TODO it is not nice to have free_base, all objects that store expr_value_t
-	// 		shall either store a pointer or an instance
-	expr_value_t *el;
-
-
-	if(value->is_array){
-		vector_for_each(&value->array.items, el)
-			expr_value_free(el, false);
-
-		vector_reset(&value->array.items);
-	}
-
-	if(free_base)
-		free(value);
 }
 
 expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src){
@@ -183,6 +154,21 @@ expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src){
 	}
 
 	return dest;
+}
+
+void expr_value_reset(expr_value_t *value){
+	expr_value_t *el;
+
+
+	if(value->is_array){
+		vector_for_each(&value->array.items, el)
+			expr_value_reset(el);
+
+		vector_reset(&value->array.items);
+	}
+
+	value->type = ET_UNDEF;
+	value->is_array = false;
 }
 
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *ctx){
@@ -224,8 +210,8 @@ expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, node_attrvec_t *
 	// 	- check if it can be avoided to frequently allocate and free
 	// 	- if it cannot be avoided, make sure expr_value_free() is called
 	// 	  in all cases within this function
-	expr_value_free(&arg0, false);
-	expr_value_free(&arg1, false);
+	expr_value_reset(&arg0);
+	expr_value_reset(&arg1);
 
 	return result;
 }
@@ -333,7 +319,7 @@ static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_va
 	if(ref == 0x0)
 		return 0x0;
 
-	*res = *ref->value;
+	*res = ref->value;
 
 	return res;
 }

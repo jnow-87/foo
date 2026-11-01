@@ -125,7 +125,7 @@ int node_asserts_eval(node_t *node){
 			// 		they were introduced to free string value, but since strings are now
 			// 		handled via strmap this is no longer needed, can any of the other
 			// 		cases handled in expr_value_free() occur
-			expr_value_free(&r, false);
+			expr_value_reset(&r);
 
 			return devtree_parser_error("%s: assertion failed: %s", node->name, assert->msg);
 		}
@@ -135,14 +135,14 @@ int node_asserts_eval(node_t *node){
 }
 
 int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg){
-	expr_t e = EXPR_CALC(op, arg, &EXPR_LITERAL(*attr->value));
-	expr_value_t *r = expr_value_alloc(0x0);
+	expr_t e = EXPR_CALC(op, arg, &EXPR_LITERAL(attr->value));
+	expr_value_t r;
 
 
-	if(r == 0x0 || expr_evaluate(&e, r, &node->attrs) == 0x0)
+	if(expr_evaluate(&e, &r, &node->attrs) == 0x0)
 		return -1;
 
-	expr_value_free(attr->value, true);
+	expr_value_reset(&attr->value);
 	attr->value = r;
 
 	return node_asserts_eval(node);

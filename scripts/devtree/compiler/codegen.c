@@ -148,7 +148,7 @@ static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 
 	attrvec_for_each(&node->attrs.v, attr){
 		strupr(attr->name, attr_name, sizeof(attr_name));
-		v = attr->value;
+		v = &attr->value;
 
 		if(v->is_array)
 			continue;
@@ -192,7 +192,7 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 #endif // CONFIG_X86
 
 		strupr(attr->name, attr_name, sizeof(attr_name));
-		v = attr->value;
+		v = &attr->value;
 
 		if(v->is_array)
 			continue;
@@ -234,7 +234,7 @@ static void definition(FILE *fp, node_t *node, char const *node_idtfr){
 	switch(cat){
 	case NC_DEVICE:
 		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		fprintf(fp, "\t.compatible = \"%s\",\n", ((node_attr_t*)attrvec_query(&node->attrs.v, "compatible", false))->value->p);
+		fprintf(fp, "\t.compatible = \"%s\",\n", ((node_attr_t*)attrvec_query(&node->attrs.v, "compatible", false))->value.p);
 
 		if(node->attrs.v.size > 1)
 			fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_idtfr);
@@ -281,7 +281,7 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 	fprintf(fp, "struct{\n");
 
 	attrvec_for_each(&node->attrs.v, attr){
-		v = attr->value;
+		v = &attr->value;
 
 		if(def_attr_ignore(node, attr))
 			continue;
@@ -325,7 +325,7 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 		if(def_attr_ignore(node, attr))
 			continue;
 
-		v = attr->value;
+		v = &attr->value;
 
 		if(v->is_array){
 			items = &v->array.items;

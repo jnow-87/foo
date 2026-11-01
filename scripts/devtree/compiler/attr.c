@@ -41,7 +41,7 @@ node_attr_t *node_attr_init(node_attr_t *attr, char const *name, expr_value_t *v
 	}
 
 	attr->name = name;
-	attr->value = value;
+	attr->value = *value;
 
 	return attr;
 }

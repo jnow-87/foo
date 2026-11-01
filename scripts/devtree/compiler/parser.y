@@ -342,14 +342,14 @@ multiplicative : unary									{ $$ = $1; }
 			   | multiplicative MODULO unary			{ EXPR_INIT(&$$, EOP_MODULO, &$1, &$3); }
 			   ;
 
-unary : attr-ref UNARYPLUS								{ $$ = EXPR_LITERAL(*($1.attr_p->value)); NODE_ATTR_UPDATE($1, EOP_ADD, &EXPR_INT(64, 1)); }
-	  | UNARYPLUS attr-ref								{ NODE_ATTR_UPDATE($2, EOP_ADD, &EXPR_INT(64, 1)); $$ = EXPR_LITERAL(*($2.attr_p->value)); }
+unary : attr-ref UNARYPLUS								{ $$ = EXPR_LITERAL($1.attr_p->value); NODE_ATTR_UPDATE($1, EOP_ADD, &EXPR_INT(64, 1)); }
+	  | UNARYPLUS attr-ref								{ NODE_ATTR_UPDATE($2, EOP_ADD, &EXPR_INT(64, 1)); $$ = EXPR_LITERAL($2.attr_p->value); }
 	  | value											{ $$ = $1; }
 	  ;
 
 value : const											{ $$ = $1; }
 	  | array											{ $$ = $1; }
-	  | attr-ref										{ $$ = EXPR_LITERAL(*EXPR_VALUE_DUP(&(expr_value_t){ }, $1.attr_p->value)); }
+	  | attr-ref										{ $$ = EXPR_LITERAL(*EXPR_VALUE_DUP(&(expr_value_t){ }, &$1.attr_p->value)); }
 	  | '(' expression ')'								{ $$ = $2; }
 	  | IDFR											{ $$ = EXPR_REF(STRALLOC($1)); }
 	  ;
@@ -484,28 +484,23 @@ static node_t *type_instantiate_clean(char const *type_name, char const *node_na
 }
 
 static int node_attr_add(node_t *node, char const *name, expr_t *value){
-	expr_value_t *v;
+	expr_value_t v;
 	node_attr_t attr;
 
 
-	v = expr_value_alloc(0x0);
+	if(expr_evaluate(value, &v, 0x0) == 0x0)
+		goto err;
 
-	if(v == 0x0 || expr_evaluate(value, v, 0x0) == 0x0)
-		goto err_0;
-
-	if(node_attr_init(&attr, name, v) == 0x0)
-		goto err_1;
+	if(node_attr_init(&attr, name, &v) == 0x0)
+		goto err;
 
 	if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)
-		goto err_1;
+		goto err;
 
 	return 0;
 
 
-err_1:
-	expr_value_free(v, true);
-
-err_0:
+err:
 	attrvec_free(&node->attrs.v);
 
 	return -1;
@@ -538,8 +533,8 @@ static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1)
 	}
 	else{
 		*expr = EXPR_LITERAL(r);
-		expr_value_free(&arg0->literal, false);
-		expr_value_free(&arg1->literal, false);
+		expr_value_reset(&arg0->literal);
+		expr_value_reset(&arg1->literal);
 	}
 
 	return expr;
@@ -554,7 +549,7 @@ err:
 
 static int expr_reset(expr_t *expr, bool clean){
 	if(clean){
-		expr_value_free(&expr->literal, false);
+		expr_value_reset(&expr->literal);
 		expr_free(expr->arg0);
 		expr_free(expr->arg1);
 	}

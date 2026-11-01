@@ -114,19 +114,15 @@ node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, 
 
 		if(nattr == 0x0){
 			attr.name = tattr->name;
-			attr.value = expr_value_alloc(0x0);
 
-			if(attr.value == 0x0)
-				goto err_1;
-
-			if(expr_evaluate(tattr->value, attr.value, &node->attrs) == 0x0){
+			if(expr_evaluate(tattr->value, &attr.value, &node->attrs) == 0x0){
 				devtree_parser_error("%s: cannot evaluate expression", nattr->name);
-				goto err_2;
+				goto err_1;
 			}
 		}
 		else{
 			attr = *nattr;
-			nattr->value = 0x0;
+			nattr->value.type = ET_UNDEF;
 		}
 
 		if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)
@@ -140,7 +136,7 @@ node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, 
 
 
 err_2:
-	expr_value_free(attr.value, true);
+	expr_value_reset(&attr.value);
 
 err_1:
 	// TODO check if a separate label is needed to jump to from within the loop
