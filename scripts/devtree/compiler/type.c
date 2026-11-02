@@ -122,8 +122,8 @@ node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, 
 			}
 		}
 		else{
-			attr = *nattr;
-			nattr->value.type = ET_UNDEF;
+			attr.name = nattr->name;
+			expr_value_mv(&attr.value, &nattr->value);
 		}
 
 		if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)

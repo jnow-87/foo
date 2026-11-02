@@ -121,6 +121,7 @@ expr_t *expr_alloc(expr_t *expr);
 void expr_free(expr_t *expr);
 
 expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src);
+expr_value_t *expr_value_mv(expr_value_t *dest, expr_value_t *src);
 void expr_value_reset(expr_value_t *value);
 
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attrvec_t *ctx);

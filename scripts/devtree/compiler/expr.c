@@ -156,11 +156,20 @@ expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src){
 	return dest;
 }
 
+expr_value_t *expr_value_mv(expr_value_t *dest, expr_value_t *src){
+	*dest = *src;
+
+	src->type = ET_UNDEF;
+	src->is_array = false;
+
+	return dest;
+}
+
 void expr_value_reset(expr_value_t *value){
 	expr_value_t *el;
 
 
-	if(value->is_array){
+	if(value->type != ET_UNDEF && value->is_array){
 		vector_for_each(&value->array.items, el)
 			expr_value_reset(el);
 
@@ -284,7 +293,7 @@ int expr_array_add(expr_t *array, expr_t *expr){
 	if(expr->op != EOP_LITERAL)
 		return devtree_parser_error("array elements have to be literals");
 
-	if(!array->literal.is_array)
+	if(array->op != EOP_LITERAL || !array->literal.is_array)
 		return devtree_parser_error("appending to something not an array");
 
 	if(array->literal.type == ET_UNDEF)
@@ -296,7 +305,7 @@ int expr_array_add(expr_t *array, expr_t *expr){
 	if(vector_add(&arr->items, &expr->literal) != 0)
 		return devtree_parser_error("adding to array failed");
 
-	arr->limit = MAX(arr->limit, arr->items.size);
+	arr->limit = MIN(arr->limit, arr->items.size);
 
 	return 0;
 }
