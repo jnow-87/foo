@@ -13,20 +13,16 @@
 
 #include <sys/types.h>
 #include <sys/vector.h>
+#include "array.h"
 
 
 /* macros */
 #define EXPR_INT_T				unsigned long int
+#define EXPR_ARRAY_T			expr_value_t
 #define EXPR_INT_FIXED(size)	ET_INT##size
-#define EXPR_ARRAY_UNLIMITED	((size_t)-1)
 
 #define EXPR_TYPE_ENUM(v, is_int)	(v << 1 | (is_int ? 0x1 : 0x0))
 #define EXPR_TYPE_IS_INT(type)		((bool)(type & 0x1))
-
-#define EXPR_ARRAY_INITIALISER() ((expr_array_t){ \
-	.items = VECTOR_INITIALISER(sizeof(expr_value_t)), \
-	.limit = EXPR_ARRAY_UNLIMITED, \
-})
 
 #define EXPR_VALUE(_type, _is_array, _field, _value) ((expr_value_t){ \
 	.type = _type, \
@@ -45,10 +41,10 @@
 #define EXPR_REF(_name)				EXPR(EOP_REFERENCE, EXPR_VALUE(ET_STRING, false, p, _name), 0x0, 0x0)
 #define EXPR_LITERAL(val) 			EXPR(EOP_LITERAL, val, 0x0, 0x0)
 
-#define EXPR_INT(size, val)	EXPR_LITERAL(EXPR_VALUE(EXPR_INT_FIXED(size), false, i, val))
-#define EXPR_ADDR(val)		EXPR_LITERAL(EXPR_VALUE(ET_ADDR, false, p, val))
-#define EXPR_STR(val)		EXPR_LITERAL(EXPR_VALUE(ET_STRING, false, p, val))
-#define EXPR_ARRAY(type)	EXPR_LITERAL(EXPR_VALUE(type, true, array, EXPR_ARRAY_INITIALISER()))
+#define EXPR_INT(size, val)		EXPR_LITERAL(EXPR_VALUE(EXPR_INT_FIXED(size), false, i, val))
+#define EXPR_ADDR(val)			EXPR_LITERAL(EXPR_VALUE(ET_ADDR, false, p, val))
+#define EXPR_STR(val)			EXPR_LITERAL(EXPR_VALUE(ET_STRING, false, p, val))
+#define EXPR_ARRAY(type, val)	EXPR_LITERAL(EXPR_VALUE(type, true, array, val))
 
 
 /* incomplete types */
@@ -92,18 +88,13 @@ typedef enum{
 } expr_op_t;
 
 typedef struct{
-	vector_t items;
-	size_t limit;
-} expr_array_t;
-
-typedef struct{
 	expr_type_t type;
 	bool is_array;
 
 	union{
 		EXPR_INT_T i;
 		void const *p;
-		expr_array_t array;
+		array_t *array;
 	};
 } expr_value_t;
 
@@ -118,16 +109,16 @@ typedef struct expr_t{
 
 /* prototypes */
 expr_t *expr_alloc(expr_t *expr);
+void expr_reset(expr_t *expr);
 void expr_free(expr_t *expr);
 
-expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src);
 expr_value_t *expr_value_mv(expr_value_t *dest, expr_value_t *src);
 void expr_value_reset(expr_value_t *value);
 
 expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attrvec_t *ctx);
 
 expr_type_t expr_type(expr_t *expr);
-int expr_type_check(expr_t *expr, expr_type_t type);
+int expr_type_check(expr_t *expr, expr_type_t type, bool is_array, size_t array_limit);
 size_t expr_type_size(expr_type_t type);
 char const *expr_type_name(expr_type_t type);
 

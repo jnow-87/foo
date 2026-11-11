@@ -25,7 +25,7 @@ static int rehash(map_t *map);
 
 
 /* global functions */
-void map_free(map_t *map){
+void map_reset(map_t *map){
 	map_entry_t *e;
 
 
@@ -40,7 +40,8 @@ void map_free(map_t *map){
 	*map = MAP_INITIALISER(map->hash, map->kmatch, map->kvalloc, map->kvfree);
 }
 
-int map_add(map_t *map, void *key, void *value){
+void *map_add(map_t *map, void *key, void *value){
+	void *v;
 	map_entry_t *e;
 
 
@@ -49,8 +50,10 @@ int map_add(map_t *map, void *key, void *value){
 			goto err_0;
 	}
 
-	if(map_lookup(map, key) != 0x0)
-		return 1;
+	v = map_lookup(map, key);
+
+	if(v != 0x0)
+		return v;
 
 	e = sys_malloc(sizeof(map_entry_t));
 
@@ -65,14 +68,14 @@ int map_add(map_t *map, void *key, void *value){
 
 	add(map, e);
 
-	return 0;
+	return e->value;
 
 
 err_1:
 	sys_free(e);
 
 err_0:
-	return -1;
+	return 0x0;
 }
 
 void *map_lookup(map_t *map, void *key){

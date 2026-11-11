@@ -1,5 +1,4 @@
 /* good cases */
-// TODO should it be possible to have a default array with references to other members?
 typedef{
 	string compatible = "default";
 	assert(i < 3, "i >= 3");
@@ -68,3 +67,7 @@ bar = unknown();
 // - node with unknown attribute
 // - node with unkown type
 // - array usage -- manually test valgrind on array usage and failures
+// - pre- and post-increments
+//
+// ** generated code
+// - attribute types match

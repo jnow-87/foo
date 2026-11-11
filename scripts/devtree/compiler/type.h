@@ -56,7 +56,7 @@ void types_free(void);
 type_t *type_lookup(char const *name);
 node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, node_t *childs);
 
-type_attr_t *type_attr_init(type_attr_t *attr, char const *name, expr_type_t type, size_t array_limit, expr_t *value);
+int type_attr_init(type_attr_t *attr, char const *name, expr_type_t type, bool is_array, size_t array_limit);
 type_attr_t *type_attr_assign(type_attr_t *attr, expr_t *value);
 
 struct type_attr_t *type_attrvec_query(type_attrvec_t *attrs, char const *name, enum expr_type_t type, bool maybe_undef);

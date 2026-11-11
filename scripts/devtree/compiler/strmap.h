@@ -12,8 +12,8 @@
 
 
 /* prototypes */
-void strmap_free(void);
-char const *strmap_add(char const *s);
+void str_cache_reset(void);
+char const *str_cache_add(char const *s);
 
 
 #endif // STRMAP_H

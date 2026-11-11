@@ -51,9 +51,9 @@ TEST(map_cycle){
 	memset(&stats, 0, sizeof(stats));
 
 	// add multiple keys whereas one is attempted twice, which must fail
-	r |= TEST_INT_EQ(map_add(&map, "ab", ""), 0);
-	r |= TEST_INT_EQ(map_add(&map, "ba", ""), 0);
-	r |= TEST_INT_EQ(map_add(&map, "ba", ""), 1);
+	r |= TEST_PTR_NEQ(map_add(&map, "ab", ""), 0x0);
+	r |= TEST_PTR_NEQ((s = map_add(&map, "ba", "")), 0x0);
+	r |= TEST_PTR_EQ(map_add(&map, "ba", ""), s);
 	r |= TEST_INT_EQ(map.size, 2);
 
 	// lookup a non-existing key
@@ -63,7 +63,7 @@ TEST(map_cycle){
 	ASSERT_PTR_NEQ((s = map_lookup(&map, "ab")), 0x0); r |= TEST_STR_EQ(s, "ab");
 	ASSERT_PTR_NEQ((s = map_lookup(&map, "ba")), 0x0); r |= TEST_STR_EQ(s, "ba");
 
-	map_free(&map);
+	map_reset(&map);
 
 	r |= TEST_INT_EQ(stats.kvalloc_called, 2);
 	r |= TEST_INT_EQ(stats.kvfree_called, 2);
@@ -82,14 +82,14 @@ TEST(map_rehash){
 	memset(&stats, 0, sizeof(stats));
 
 	// ensure at least two keys map to the same map entry
-	r |= TEST_INT_EQ(map_add(&map, "ab", ""), 0);
-	r |= TEST_INT_EQ(map_add(&map, "ba", ""), 0);
+	r |= TEST_PTR_NEQ(map_add(&map, "ab", ""), 0x0);
+	r |= TEST_PTR_NEQ(map_add(&map, "ba", ""), 0x0);
 	r |= TEST_INT_NEQ(map.capacity, 0);
 	capa = map.capacity;
 
 	// add new key until the map capacity changes, i.e. a rehash happened
 	while(capa == map.capacity){
-		r |= TEST_INT_EQ(map_add(&map, text, ""), 0);
+		r |= TEST_PTR_NEQ(map_add(&map, text, ""), 0x0);
 		text[0] += 1;
 	}
 
@@ -108,7 +108,7 @@ TEST(map_rehash){
 	// ensure rehash does not reallocate any keys
 	r |= TEST_INT_EQ(stats.kvalloc_called, map.size);
 
-	map_free(&map);
+	map_reset(&map);
 
 	return -r;
 }
@@ -123,21 +123,21 @@ TEST(map_out_of_memory){
 
 	// fail table allocation
 	alloc_fail = FAIL_TABLE;
-	r |= TEST_INT_EQ(map_add(&map, "f", ""), -1);
+	r |= TEST_PTR_EQ(map_add(&map, "f", ""), 0x0);
 	r |= TEST_INT_EQ(stats.alloc_mock_fail, FAIL_TABLE);
 	r |= TEST_INT_EQ(map.capacity, 0);
 	r |= TEST_INT_EQ(map.size, 0);
 
 	// fail table entry allocation
 	alloc_fail = FAIL_TABLE_ENTRY;
-	r |= TEST_INT_EQ(map_add(&map, "f", ""), -1);
+	r |= TEST_PTR_EQ(map_add(&map, "f", ""), 0x0);
 	r |= TEST_INT_EQ(stats.alloc_mock_fail, FAIL_TABLE_ENTRY);
 	r |= TEST_INT_NEQ(map.capacity, 0);
 	r |= TEST_INT_EQ(map.size, 0);
 
 	// fail key-value allocation
 	alloc_fail = FAIL_KEY_VALUE;
-	r |= TEST_INT_EQ(map_add(&map, "f", ""), -1);
+	r |= TEST_PTR_EQ(map_add(&map, "f", ""), 0x0);
 	r |= TEST_INT_EQ(stats.alloc_mock_fail, FAIL_KEY_VALUE);
 	r |= TEST_INT_NEQ(map.capacity, 0);
 	r |= TEST_INT_EQ(map.size, 0);

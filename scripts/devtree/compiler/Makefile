@@ -22,7 +22,8 @@ dtc-y := \
 	lexer.lex.o \
 	parser.tab.o \
 	expr.o \
-	strmap.o
+	strmap.o \
+	array.o
 
 # ensure a rebuild if indirect dependencies are updated
 dtc-y += $(build_tree)/sys/libhost.a

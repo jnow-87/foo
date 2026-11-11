@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <sys/math.h>
 #include <sys/string.h>
+#include <sys/types.h>
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "attr.h"
@@ -35,7 +36,7 @@ typedef expr_value_t *(*op_cb_t)(expr_value_t *arg0, expr_value_t *arg1, expr_va
 /* local/static prototypes */
 static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_value_t *res);
 
-static int types_compatible(expr_type_t t0, expr_type_t t1, bool any_array);
+static int types_compatible(expr_type_t t0, expr_type_t t1, bool t0_is_array, bool t1_is_array);
 static int op_defined(expr_op_t op, expr_value_t *val);
 static int range_check(expr_value_t *value, expr_type_t type);
 
@@ -58,7 +59,7 @@ static expr_value_t *op_bit_xor(expr_value_t *arg0, expr_value_t *arg1, expr_val
 static expr_value_t *op_log_and(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
 static expr_value_t *op_log_or(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
 
-static int add_array(expr_value_t *arr, expr_value_t *arg);
+static array_t *add_array(expr_value_t *arr, expr_value_t *arg);
 static char const *add_str(char const *s0, char const *s1);
 
 
@@ -129,31 +130,20 @@ expr_t *expr_alloc(expr_t *expr){
 	return e;
 }
 
-void expr_free(expr_t *expr){
-	if(expr == 0x0)
-		return;
-
+void expr_reset(expr_t *expr){
 	expr_value_reset(&expr->literal);
 	expr_free(expr->arg0);
 	expr_free(expr->arg1);
 
-	free(expr);
+	memset(expr, 0, sizeof(expr_t));
 }
 
-expr_value_t *expr_value_dup(expr_value_t *dest, expr_value_t *src){
-	*dest = *src;
+void expr_free(expr_t *expr){
+	if(expr == 0x0)
+		return;
 
-	if(src->is_array){
-		dest->array.limit = src->array.limit;
-
-		if(vector_dup(&dest->array.items, &src->array.items) != 0){
-			devtree_parser_error("duplicating expression src");
-
-			return 0x0;
-		}
-	}
-
-	return dest;
+	expr_reset(expr);
+	free(expr);
 }
 
 expr_value_t *expr_value_mv(expr_value_t *dest, expr_value_t *src){
@@ -169,11 +159,11 @@ void expr_value_reset(expr_value_t *value){
 	expr_value_t *el;
 
 
-	if(value->type != ET_UNDEF && value->is_array){
-		vector_for_each(&value->array.items, el)
+	if(value->type != ET_UNDEF && value->is_array && !value->array->cached){
+		vector_for_each(&value->array->items, el)
 			expr_value_reset(el);
 
-		vector_reset(&value->array.items);
+		array_free(value->array);
 	}
 
 	value->type = ET_UNDEF;
@@ -194,7 +184,7 @@ expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attr
 	if(expr_evaluate(expr->arg0, &arg0, ctx) == 0x0 || expr_evaluate(expr->arg1, &arg1, ctx) == 0x0)
 		return 0x0;
 
-	if(types_compatible(arg0.type, arg1.type, arg0.is_array || arg1.is_array) != 0)
+	if(types_compatible(arg0.type, arg1.type, arg0.is_array, arg1.is_array) != 0)
 		return 0x0;
 
 	if(op_defined(expr->op, &arg0) != 0 || op_defined(expr->op, &arg1) != 0)
@@ -253,12 +243,29 @@ expr_type_t expr_type(expr_t *expr){
 	return ET_ADDR;
 }
 
-int expr_type_check(expr_t *expr, expr_type_t type){
-	// TODO is a range check necessary?
-//	if(range_check(attr, &v) != 0)
-//		return -1;
+int expr_type_check(expr_t *expr, expr_type_t type, bool is_array, size_t array_limit){
+	bool expr_is_array = (expr->op == EOP_LITERAL && expr->literal.is_array);
+	array_t *arr;
 
-	return types_compatible(expr_type(expr), type, false);
+
+	if(types_compatible(expr_type(expr), type, expr_is_array, is_array))
+		return -1;
+
+	if(is_array){
+		// TODO shpuld this already be caught in types_compatible()?
+		if(!expr_is_array)
+			return devtree_parser_error("mixing array and non-array type");
+
+		arr = expr->literal.array;
+
+		if(array_limit != arr->items.size)
+			return devtree_parser_error("incompatible array sizes %zu and %zu", array_limit, arr->items.size);
+	}
+
+	if(expr->op == EOP_LITERAL)
+		return range_check(&expr->literal, type);
+
+	return 0;
 }
 
 size_t expr_type_size(expr_type_t type){
@@ -286,12 +293,15 @@ char const *expr_type_name(expr_type_t type){
 }
 
 int expr_array_add(expr_t *array, expr_t *expr){
-	expr_array_t *arr = &array->literal.array;
+	array_t *arr = array->literal.array;
 	expr_type_t etype = expr_type(expr);
 
 
 	if(expr->op != EOP_LITERAL)
 		return devtree_parser_error("array elements have to be literals");
+
+	if(expr->literal.is_array)
+		return devtree_parser_error("nested arrays are not supported");
 
 	if(array->op != EOP_LITERAL || !array->literal.is_array)
 		return devtree_parser_error("appending to something not an array");
@@ -299,14 +309,13 @@ int expr_array_add(expr_t *array, expr_t *expr){
 	if(array->literal.type == ET_UNDEF)
 		array->literal.type = etype;
 
-	if(types_compatible(array->literal.type, etype, true) != 0)
+	if(types_compatible(array->literal.type, etype, true, expr->literal.is_array) != 0)
 		return -1;
 
-	if(vector_add(&arr->items, &expr->literal) != 0)
+	if(array_add(&arr, &expr->literal) == 0x0)
 		return devtree_parser_error("adding to array failed");
 
-	arr->limit = MIN(arr->limit, arr->items.size);
-
+	// TODO somewhere check that array limit and size match during assignments
 	return 0;
 }
 
@@ -329,16 +338,23 @@ static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_va
 	return res;
 }
 
-static int types_compatible(expr_type_t t0, expr_type_t t1, bool any_array){
+static int types_compatible(expr_type_t t0, expr_type_t t1, bool t0_is_array, bool t1_is_array){
 	uint8_t ints = EXPR_TYPE_IS_INT(t0) + EXPR_TYPE_IS_INT(t1),
 			addrs = (t0 == ET_ADDR) + (t1 == ET_ADDR),
-			undefs = (t0 == ET_UNDEF) + (t1 == ET_UNDEF);
+			undefs = (t0 == ET_UNDEF) + (t1 == ET_UNDEF),
+			arrays = (t0_is_array || t1_is_array);
 
 
-	if((undefs == 0) && ((t0 == t1) || (!any_array && (ints + addrs == 2)) || (ints == 2)))
+	// TODO is it wanted that arrays might only be of the same type
+	if((undefs == 0) && ((t0 == t1) || (!arrays && (ints + addrs == 2)) || (ints == 2)))
 		return 0;
 
-	return devtree_parser_error("incompatible types %s and %s", expr_type_name(t0), expr_type_name(t1));
+	return devtree_parser_error("incompatible types %s%s and %s%s"
+		, expr_type_name(t0)
+		, t0_is_array ? "array" : ""
+		, expr_type_name(t1)
+		, t1_is_array ? "array" : ""
+	);
 }
 
 static int op_defined(expr_op_t op, expr_value_t *val){
@@ -365,8 +381,8 @@ static int op_defined(expr_op_t op, expr_value_t *val){
 }
 
 static int range_check(expr_value_t *value, expr_type_t type){
+	expr_value_t *e = value;
 	EXPR_INT_T lim;
-	vector_t *arr;
 
 
 	if(!EXPR_TYPE_IS_INT(type))
@@ -375,10 +391,8 @@ static int range_check(expr_value_t *value, expr_type_t type){
 	lim = (((EXPR_INT_T)1 << ((expr_type_size(type) * 8) - 1)) << 1) - 1;
 
 	if(value->is_array){
-		arr = &value->array.items;
-
-		vector_for_each(arr, value){
-			if(value->i > lim)
+		vector_for_each(&value->array->items, e){
+			if(e->i > lim)
 				goto err;
 		}
 	}
@@ -389,15 +403,15 @@ static int range_check(expr_value_t *value, expr_type_t type){
 
 
 err:
-	return devtree_parser_error("integer out of range %lu > %lu", value->i, lim);
+	return devtree_parser_error("integer %lu out of %s range (limit=%lu)", e->i, expr_type_name(type), lim);
 }
 
 static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
 	if(arg0->is_array || arg1->is_array){
 		res->is_array = true;
-		res->array = EXPR_ARRAY_INITIALISER();
+		res->array = arg0->is_array ? add_array(arg0, arg1) : add_array(arg1, arg0);
 
-		if(add_array(res, arg0) != 0 || add_array(res, arg1) != 0)
+		if(res->array == 0x0)
 			return 0x0;
 	}
 	else if(EXPR_TYPE_IS_INT(arg0->type)){
@@ -532,25 +546,19 @@ static expr_value_t *op_log_or(expr_value_t *arg0, expr_value_t *arg1, expr_valu
 	return res;
 }
 
-static int add_array(expr_value_t *arr, expr_value_t *arg){
+static array_t *add_array(expr_value_t *arr, expr_value_t *arg){
 	expr_value_t *v;
 
 
-	if(!arg->is_array){
-		if(vector_add(&arr->array.items, arg) != 0)
-			return -1;
+	if(!arg->is_array)
+		return array_add(&arr->array, arg);
 
-		arr->array.limit = MAX(arr->array.limit, arr->array.items.size);
-
-		return 0;
+	vector_for_each(&arg->array->items, v){
+		if(array_add(&arr->array, v) == 0x0)
+			return 0x0;
 	}
 
-	vector_for_each(&arg->array.items, v){
-		if(add_array(arr, v) != 0)
-			return -1;
-	}
-
-	return 0;
+	return arr->array;
 }
 
 static char const *add_str(char const *s0, char const *s1){
@@ -559,5 +567,5 @@ static char const *add_str(char const *s0, char const *s1){
 
 	sprintf(r, "%s%s", s0, s1);
 
-	return strmap_add(r);
+	return str_cache_add(r);
 }

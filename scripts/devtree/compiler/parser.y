@@ -19,6 +19,7 @@
 	#include <string.h>
 	#include <sys/escape.h>
 	#include <lexer.lex.h>
+	#include "array.h"
 	#include "assert.h"
 	#include "node.h"
 	#include "strmap.h"
@@ -43,10 +44,10 @@
 	// helper
 	#define TYPE_ALLOC(name, attrs, asserts)		EABORT(type_alloc_clean(name, attrs, asserts) != 0)
 	#define TYPE_LOOKUP(name)						EABORT_VAL(type_lookup(name), type_t *, == 0x0, _type)
-	#define TYPE_ATTR_ADD(type, attr)				EABORT(type_attr_add_clean(type, attr) != 0)
+	#define TYPE_ATTR_ADD(type, attr, value)		EABORT(type_attr_add_clean(type, attr, value) != 0)
 
-	#define TYPE_ATTR_INIT(attr, name, type, array_limit, value) \
-		EABORT_VAL(type_attr_init(attr, name, type, array_limit, value), type_attr_t *, == 0x0, _tini)
+	#define TYPE_ATTR_INIT(attr, name, type, is_array, array_limit) \
+		EABORT(type_attr_init(attr, name, type, is_array, array_limit) != 0)
 
 	#define TYPE_INSTANTIATE(type_name, node_name, attrs, childs) \
 		EABORT_VAL(type_instantiate_clean(type_name, node_name, attrs, childs), node_t *, == 0x0, _inst)
@@ -62,13 +63,14 @@
 
 	#define EXPR_INIT(expr, op, arg0, arg1)			EABORT_VAL(expr_init(expr, op, arg0, arg1), expr_t *, == 0x0, _eini)
 	#define EXPR_ALLOC(e)							EABORT_VAL(expr_alloc(e), expr_t *, == 0x0, _expr)
-	#define EXPR_VALUE_DUP(dest, src)				EABORT_VAL(expr_value_dup(dest, src), expr_value_t *, == 0x0, _val)
-	#define EXPR_ARRAY_ADD(array, el)				EABORT(expr_array_add(array, el) != 0);
+	#define EXPR_ARRAY_ADD(array, el)				EABORT(expr_array_add_clean(array, el) != 0);
 
-	#define ATTR_ASSIGN(attr, value)				EABORT_VAL(type_attr_assign(attr, value), type_attr_t *, == 0x0, _assi)
 	#define ATTR_REF(node_ref, attr_name)			EABORT_VAL(attrvec_query(&node_ref->attrs.v, attr_name, false), attr_t *, == 0x0, _aref)
 
-	#define STRALLOC(s)								EABORT_VAL(strmap_add(s), char const *, == 0x0, _s)
+	#define STR_ALLOC(s)							EABORT_VAL(str_cache_add(s), char const *, == 0x0, _s)
+	#define ARRAY_ALLOC()							EABORT_VAL(array_alloc(sizeof(EXPR_ARRAY_T)), array_t *, == 0x0, _a)
+	#define ARRAY_CACHE(arr)						EABORT_VAL(array_cache_add(arr), array_t *, == 0x0, _a)
+
 
 	/* static variables */
 	static FILE *fp = 0;
@@ -86,14 +88,14 @@
 
 	static int type_alloc_clean(char const *name, type_attrvec_t *attrs, assert_t *asserts);
 	static int type_reset(type_t *type, bool clean);
-	static int type_attr_add_clean(type_t *type, type_attr_t *attr);
+	static int type_attr_add_clean(type_t *type, type_attr_t *attr, expr_t *value);
 	static node_t *type_instantiate_clean(char const *type_name, char const *node_name, node_attrvec_t *attrs, node_t *childs);
 
 	static int node_attr_add(node_t *node, char const *name, expr_t *value);
 	static int node_reset(node_t *node, bool clean);
 
 	static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
-	static int expr_reset(expr_t *expr, bool clean);
+	static int expr_array_add_clean(expr_t *arr, expr_t *expr);
 
 	static int attr_reset(type_attr_t *attr, bool clean);
 
@@ -160,7 +162,7 @@
 %destructor { type_reset(&$$, true); } <type>
 %destructor { node_reset(&$$, true); } <node>
 %destructor { attr_reset(&$$, true); } <attr>
-%destructor { expr_reset(&$$, true); } <expr>
+%destructor { expr_reset(&$$); } <expr>
 
 /* terminals */
 // general
@@ -257,18 +259,18 @@ devtree : %empty										{ }
 		;
 
 /* typedef */
-typedef : TYPEDEF '{' type-body '}' IDFR				{ TYPE_ALLOC(STRALLOC($5), &$3.attrs, $3.asserts); }
+typedef : TYPEDEF '{' type-body '}' IDFR				{ TYPE_ALLOC(STR_ALLOC($5), &$3.attrs, $3.asserts); }
 		;
 
 type-body : %empty										{ type_reset(&$$, false); }
 		  | type-body ';'								{ $$ = $1; }
 		  | type-body assert ';'						{ $$ = $1; list_add_tail($$.asserts, $2); }
-		  | type-body type-attr ';'						{ $$ = $1; TYPE_ATTR_ADD(&$$, &$2); }
-		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; TYPE_ATTR_ADD(&$$, ATTR_ASSIGN(&$2, EXPR_ALLOC(&$4))); }
+		  | type-body type-attr ';'						{ $$ = $1; TYPE_ATTR_ADD(&$$, &$2, 0x0); }
+		  | type-body type-attr ASSIGN expression ';'	{ $$ = $1; TYPE_ATTR_ADD(&$$, &$2, EXPR_ALLOC(&$4)); }
 		  ;
 
-type-attr : builtin-type IDFR							{ TYPE_ATTR_INIT(&$$, STRALLOC($2), $1, 0, 0x0); }
-		  | builtin-type IDFR '[' INT ']'				{ TYPE_ATTR_INIT(&$$, STRALLOC($2), $1, $4, 0x0); }
+type-attr : builtin-type IDFR							{ TYPE_ATTR_INIT(&$$, STR_ALLOC($2), $1, false, 0); }
+		  | builtin-type IDFR '[' INT ']'				{ TYPE_ATTR_INIT(&$$, STR_ALLOC($2), $1, true, $4); }
 		  ;
 
 builtin-type : NA_STRING								{ $$ = ET_STRING; }
@@ -282,13 +284,13 @@ builtin-type : NA_STRING								{ $$ = ET_STRING; }
 assert : ASSERT '(' expression ',' string ')'			{ $$ = ASSERT_ALLOC(EXPR_ALLOC(&$3), $5); };
 
 /* nodes */
-node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = TYPE_INSTANTIATE($3, STRALLOC($1), &$5.attrs, $5.childs); }
-	 | IDFR ASSIGN IDFR '(' node-args ',' ')'			{ $$ = TYPE_INSTANTIATE($3, STRALLOC($1), &$5.attrs, $5.childs); }
+node : IDFR ASSIGN IDFR '(' node-args ')'				{ $$ = TYPE_INSTANTIATE($3, STR_ALLOC($1), &$5.attrs, $5.childs); }
+	 | IDFR ASSIGN IDFR '(' node-args ',' ')'			{ $$ = TYPE_INSTANTIATE($3, STR_ALLOC($1), &$5.attrs, $5.childs); }
 	 ;
 
 node-args : %empty										{ node_reset(&$$, false); devtreeunput(','); }
 		  | node-args ',' node							{ $$ = $1; list_add_tail($$.childs, $3); }
-		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; NODE_ATTR_ADD(&$$, STRALLOC($3), &$5); }
+		  | node-args ',' IDFR ASSIGN expression		{ $$ = $1; NODE_ATTR_ADD(&$$, STR_ALLOC($3), &$5); }
 		  ;
 
 /* expression */
@@ -347,10 +349,10 @@ unary : attr-ref UNARYPLUS								{ $$ = EXPR_LITERAL($1.attr_p->value); NODE_AT
 	  ;
 
 value : const											{ $$ = $1; }
-	  | array											{ $$ = $1; }
-	  | attr-ref										{ $$ = EXPR_LITERAL(*EXPR_VALUE_DUP(&(expr_value_t){ }, &$1.attr_p->value)); }
+	  | array											{ $$ = EXPR_ARRAY($$.literal.type, ARRAY_CACHE(&($1.literal.array))); }
+	  | attr-ref										{ $$ = EXPR_LITERAL($1.attr_p->value); }
 	  | '(' expression ')'								{ $$ = $2; }
-	  | IDFR											{ $$ = EXPR_REF(STRALLOC($1)); }
+	  | IDFR											{ $$ = EXPR_REF(STR_ALLOC($1)); }
 	  ;
 
 /* values */
@@ -360,7 +362,7 @@ array : '[' array-body ']'								{ $$ = $2; }
 	  | '[' array-body ',' ']'							{ $$ = $2; }
 	  ;
 
-array-body : %empty										{ $$ = EXPR_ARRAY(ET_UNDEF); devtreeunput(','); }
+array-body : %empty										{ $$ = EXPR_ARRAY(ET_UNDEF, ARRAY_ALLOC()); devtreeunput(','); }
 		   | array-body ',' expression					{ $$ = $1; EXPR_ARRAY_ADD(&$$, &$3); }
 		   ;
 
@@ -368,7 +370,7 @@ const : INT												{ $$ = EXPR_INT(64, $1); }
 	  | string											{ $$ = EXPR_STR($1); }
 	  ;
 
-string : STRING											{ $$ = STRALLOC($1); };
+string : STRING											{ $$ = STR_ALLOC($1); };
 
 
 %%
@@ -453,18 +455,24 @@ static int type_reset(type_t *type, bool clean){
 	return -1;
 }
 
-static int type_attr_add_clean(type_t *type, type_attr_t *attr){
-	if(attrvec_add(&type->attrs.v, (attr_t*)attr, sizeof(type_attr_t)) != 0){
-		if(attr->value)
-			expr_free(attr->value);
+static int type_attr_add_clean(type_t *type, type_attr_t *attr, expr_t *value){
+	if(value != 0x0 && type_attr_assign(attr, value) == 0x0)
+		goto err;
 
-		asserts_free(type->asserts);
-		type_attrvec_reset(&type->attrs);
-
-		return -1;
-	}
+	if(attrvec_add(&type->attrs.v, (attr_t*)attr, sizeof(type_attr_t)) != 0)
+		goto err;
 
 	return 0;
+
+
+err:
+	if(value)
+		expr_free(value);
+
+	asserts_free(type->asserts);
+	type_attrvec_reset(&type->attrs);
+
+	return -1;
 }
 
 static node_t *type_instantiate_clean(char const *type_name, char const *node_name, node_attrvec_t *attrs, node_t *childs){
@@ -546,16 +554,14 @@ err:
 	return 0x0;
 }
 
-static int expr_reset(expr_t *expr, bool clean){
-	if(clean){
-		expr_value_reset(&expr->literal);
-		expr_free(expr->arg0);
-		expr_free(expr->arg1);
+static int expr_array_add_clean(expr_t *arr, expr_t *expr){
+	if(expr_array_add(arr, expr) != 0){
+		expr_reset(arr);
+
+		return -1;
 	}
 
-	memset(expr, 0, sizeof(expr_t));
-
-	return -1;
+	return 0;
 }
 
 static int attr_reset(type_attr_t *attr, bool clean){

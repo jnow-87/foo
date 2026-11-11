@@ -301,7 +301,7 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 
 
 		if(v->is_array)
-			fprintf(fp, "[%zu]", v->array.items.size);
+			fprintf(fp, "[%zu]", v->array->items.size);
 
 		fprintf(fp, ";\n");
 	}
@@ -316,9 +316,8 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 
 static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 	node_attr_t *attr;
-	expr_t *e;
-	expr_value_t *v;
-	vector_t *items;
+	expr_value_t *v,
+				 *e;
 
 
 	attrvec_for_each(&node->attrs.v, attr){
@@ -328,29 +327,23 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 		v = &attr->value;
 
 		if(v->is_array){
-			items = &v->array.items;
 			fprintf(fp, "\t.%s = {\n", attr->name);
 
-			vector_for_each(items, e){
-				// TODO this needs an update, since an array contains expr_value_t type value
-				/*
-				expr_evaluate(e, &v, 0x0);
-
-				switch(attr->type){
+			vector_for_each(&v->array->items, e){
+				switch(v->type){
 				case ET_INT8:	// fall through
 				case ET_INT16:	// fall through
 				case ET_INT32:	// fall through
 				case ET_INT64:
-					fprintf(fp, "\t\t%u,\n", v.i);
+					fprintf(fp, "\t\t%u,\n", e->i);
 					break;
 
-				case ET_ADDR:	fprintf(fp, "\t\t(void*)%#x,\n", v.value.p); break;
-				case ET_STRING:	fprintf(fp, "\t\t\"%s\",\n", v.value.p); break;
+				case ET_ADDR:	fprintf(fp, "\t\t(void*)%#x,\n", e->p); break;
+				case ET_STRING:	fprintf(fp, "\t\t\"%s\",\n", e->p); break;
 
 				default:
 					break;
 				}
-				*/
 			}
 
 			fprintf(fp, "\t},\n");

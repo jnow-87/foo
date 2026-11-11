@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <sys/vector.h>
 #include <parser.tab.h>
+#include "array.h"
 #include "codegen.h"
 #include "node.h"
 #include "opt.h"
@@ -28,8 +29,6 @@ static FILE *output_file(char const *file);
 // TODO overall review
 // TODO extend parser to support gcc preproc line information
 // 		update scripts/build/compile.make::preproc_file, removing -P to get them
-
-
 /* global functions */
 int main(int argc, char **argv){
 	int r = -1;
@@ -69,7 +68,8 @@ end:
 	vector_reset(&nodes);
 	nodes_free();
 	types_free();
-	strmap_free();
+	array_cache_free();
+	str_cache_reset();
 
 	return -r;
 }

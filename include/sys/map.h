@@ -49,9 +49,9 @@ typedef struct{
 
 
 /* prototypes */
-void map_free(map_t *map);
+void map_reset(map_t *map);
 
-int map_add(map_t *map, void *key, void *value);
+void *map_add(map_t *map, void *key, void *value);
 void *map_lookup(map_t *map, void *key);
 
 

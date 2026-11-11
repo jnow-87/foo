@@ -98,9 +98,8 @@ node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, 
 			goto err_0;
 		}
 
-		// TODO update once type checking is final
-//		if(nattr != 0x0 && (!attr_type_compatible(tattr, nattr) || attr_range_check(tattr, &nattr->value) != 0))
-//			goto err;
+		if(nattr != 0x0 && expr_type_check(&EXPR_LITERAL(nattr->value), tattr->type, tattr->array_limit != 0, tattr->array_limit) != 0)
+			goto err_0;
 	}
 
 	/* create node */
@@ -123,8 +122,13 @@ node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, 
 		}
 		else{
 			attr.name = nattr->name;
+			// TODO test if mv is needed, the only use-case should be avoiding to free
+			// 		arrays that are in use, however, since expr_value_reset() checks if
+			// 		an array is cached this should not be needed
 			expr_value_mv(&attr.value, &nattr->value);
 		}
+
+		attr.value.type = tattr->type;
 
 		if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)
 			goto err_2;
@@ -148,34 +152,27 @@ err_0:
 	return 0x0;
 }
 
-type_attr_t *type_attr_init(type_attr_t *attr, char const *name, expr_type_t type, size_t array_limit, expr_t *value){
-	if(name == 0x0){
-		devtree_parser_error("cannot create unnamed attribute");
+int type_attr_init(type_attr_t *attr, char const *name, expr_type_t type, bool is_array, size_t array_limit){
+	if(name == 0x0)
+		return devtree_parser_error("cannot create unnamed attribute");
 
-		return 0x0;
-	}
+	if(is_array && array_limit == 0)
+		return devtree_parser_error("invalid array size 0");
 
 	attr->name = name;
 	attr->type = type;
 	attr->array_limit = array_limit;
 
-	return type_attr_assign(attr, value);
+	return 0;
 }
 
 type_attr_t *type_attr_assign(type_attr_t *attr, expr_t *value){
 	if(value == 0x0)
 		return attr;
 
-	if(expr_type_check(value, attr->type) != 0)
+	if(expr_type_check(value, attr->type, attr->array_limit != 0, attr->array_limit) != 0)
 		return 0x0;
 
-/* TODO is it needed to
- * 	- check the array limit: yes, only if it matches the assignment is allowed
- * 	- update the array limit: unclear
- *
-	if((attr->flags & AF_ARRAY) && attr->value.arr.limit != ATTR_ARRAY_UNLIMITED)
-		v.arr.limit = attr->value.arr.limit;
-*/
 	attr->value = value;
 
 	return attr;

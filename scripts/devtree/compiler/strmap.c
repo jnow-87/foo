@@ -21,34 +21,33 @@ static void kvfree(void *key, void *value);
 
 
 /* static variables */
-static map_t strmap = MAP_INITIALISER(hash, kmatch, kvalloc, kvfree);
+static map_t str_cache = MAP_INITIALISER(hash, kmatch, kvalloc, kvfree);
 
 
 /* global functions */
-void strmap_free(void){
-	map_free(&strmap);
+void str_cache_reset(void){
+	map_reset(&str_cache);
 }
 
-char const *strmap_add(char const *s){
-	if(map_add(&strmap, (void*)s, "") < 0){
+char const *str_cache_add(char const *s){
+	s = map_add(&str_cache, (void*)s, (void*)s);
+
+	if(s == 0x0)
 		devtree_parser_error("out of memory");
 
-		return 0x0;
-	}
-
-	return map_lookup(&strmap, (void*)s);
+	return s;
 }
 
 
 /* local functions */
 static size_t hash(void *key){
-	size_t v = 0;
+	size_t h = 0;
 
 
 	for(char *s=key; *s!=0; s++)
-		v += *s;
+		h += *s;
 
-	return v;
+	return h;
 }
 
 static int kmatch(void *key0, void *key1){
