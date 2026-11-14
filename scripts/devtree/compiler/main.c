@@ -44,9 +44,6 @@ int main(int argc, char **argv){
 
 	printf("parsed\n");
 
-	if(!options.test_en)
-		goto end;
-
 	/* write output file */
 	if(collect_nodes(&nodes) != 0)
 		goto end;

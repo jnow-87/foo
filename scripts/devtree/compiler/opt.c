@@ -25,7 +25,6 @@ opt_t options = {
 	.ofile_name = 0x0,
 	.nodes = 0x0,
 	.ofile_format = FMT_C,
-	.test_en = false,
 };
 
 
@@ -37,15 +36,13 @@ void opt_parse(int argc, char **argv){
 		{ .name = "format",	.val = 'f',	.has_arg = required_argument,	.flag = 0x0 },
 		{ .name = "nodes",	.val = 'n',	.has_arg = required_argument,	.flag = 0x0 },
 		{ .name = "help",	.val = 'h',	.has_arg = no_argument,			.flag = 0x0 },
-		{ .name = "testing",	.val = 't',	.has_arg = no_argument,			.flag = 0x0 },
 		{ 0, 0, 0, 0}
 	};
 
 
 	/* parse options */
-	while((opt = getopt_long(argc, argv, "o:f:n:vht", long_opt, 0x0)) != -1){
+	while((opt = getopt_long(argc, argv, "o:f:n:vh", long_opt, 0x0)) != -1){
 		switch(opt){
-		case 't':	options.test_en = true; break;
 		case 'h':	help(argv[0], 0x0); break;
 		case 'o':	options.ofile_name = optarg; break;
 		case 'n':	options.nodes = optarg; break;

@@ -24,9 +24,6 @@ typedef struct{
 	char *nodes;
 
 	output_file_type_t ofile_format;
-
-	// TODO remove
-	bool test_en;
 } opt_t;
 
 
