@@ -351,9 +351,9 @@ static int types_compatible(expr_type_t t0, expr_type_t t1, bool t0_is_array, bo
 
 	return devtree_parser_error("incompatible types %s%s and %s%s"
 		, expr_type_name(t0)
-		, t0_is_array ? "array" : ""
+		, t0_is_array ? " array" : ""
 		, expr_type_name(t1)
-		, t1_is_array ? "array" : ""
+		, t1_is_array ? " array" : ""
 	);
 }
 
@@ -373,7 +373,7 @@ static int op_defined(expr_op_t op, expr_value_t *val){
 		return devtree_parser_error("undefined operation %s for type %s%s"
 			, op_name[op]
 			, expr_type_name(val->type)
-			, val->is_array ? "array" : ""
+			, val->is_array ? " array" : ""
 		);
 	}
 

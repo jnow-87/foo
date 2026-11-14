@@ -135,7 +135,6 @@ int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg)
 	if(expr_evaluate(&e, &r, &node->attrs) == 0x0)
 		return -1;
 
-	expr_value_reset(&attr->value);
 	attr->value = r;
 
 	return asserts_eval(node->type->asserts, &node->attrs, node->name);

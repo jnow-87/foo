@@ -31,6 +31,9 @@ typedef{
 // assert fail
 assert_fail = dev_single(i = 3);
 
+// indirect out-of-range error
+out_of_type_range = dev_single(i=255);
+
 // node defined multiple times
 twice = dev_single(i=0);
 twice = dev_single(i=1);

@@ -51,15 +51,8 @@ int asserts_eval(assert_t *asserts, node_attrvec_t *ctx, char const *obj_name){
 	expr_value_t r;
 
 	list_for_each(asserts, assert){
-		if(expr_evaluate(assert->expr, &r, ctx) == 0x0 || !EXPR_TYPE_IS_INT(r.type) || r.is_array || r.i == 0){
-			// TODO
-			//  - test expr_value_reset() with arrays
-			//  - check that all calls to expr_evaluate() call expr_value_reset() if needed and don't call it if
-			//    either the source expresssion or the result are meant to be used afterwards
-			expr_value_reset(&r);
-
+		if(expr_evaluate(assert->expr, &r, ctx) == 0x0 || !EXPR_TYPE_IS_INT(r.type) || r.is_array || r.i == 0)
 			return devtree_parser_error("%s: assertion failed: %s", obj_name, assert->msg);
-		}
 	}
 
 	return 0;

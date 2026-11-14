@@ -113,22 +113,22 @@ node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, 
 		nattr = (node_attr_t*)attrvec_query(&attrs->v, tattr->name, true);
 
 		if(nattr == 0x0){
-			attr.name = tattr->name;
-
 			if(expr_evaluate(tattr->value, &attr.value, &node->attrs) == 0x0){
 				devtree_parser_error("%s: cannot evaluate expression", nattr->name);
 				goto err_1;
 			}
+
+			attr.value.type = tattr->type;
+			attr.name = tattr->name;
+
+			if(expr_type_check(&EXPR_LITERAL(attr.value), tattr->type, tattr->array_limit != 0, tattr->array_limit) != 0)
+				goto err_2;
 		}
 		else{
-			attr.name = nattr->name;
-			// TODO test if mv is needed, the only use-case should be avoiding to free
-			// 		arrays that are in use, however, since expr_value_reset() checks if
-			// 		an array is cached this should not be needed
 			expr_value_mv(&attr.value, &nattr->value);
+			attr.value.type = tattr->type;
+			attr.name = nattr->name;
 		}
-
-		attr.value.type = tattr->type;
 
 		if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)
 			goto err_2;
@@ -144,8 +144,6 @@ err_2:
 	expr_value_reset(&attr.value);
 
 err_1:
-	// TODO check if a separate label is needed to jump to from within the loop
-	// 		to only free expr and attr.name
 	node_free(node);
 
 err_0:
