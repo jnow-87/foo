@@ -252,7 +252,6 @@ int expr_type_check(expr_t *expr, expr_type_t type, bool is_array, size_t array_
 		return -1;
 
 	if(is_array){
-		// TODO shpuld this already be caught in types_compatible()?
 		if(!expr_is_array)
 			return devtree_parser_error("mixing array and non-array type");
 
@@ -315,7 +314,6 @@ int expr_array_add(expr_t *array, expr_t *expr){
 	if(array_add(&arr, &expr->literal) == 0x0)
 		return devtree_parser_error("adding to array failed");
 
-	// TODO somewhere check that array limit and size match during assignments
 	return 0;
 }
 
@@ -345,8 +343,7 @@ static int types_compatible(expr_type_t t0, expr_type_t t1, bool t0_is_array, bo
 			arrays = (t0_is_array || t1_is_array);
 
 
-	// TODO is it wanted that arrays might only be of the same type
-	if((undefs == 0) && ((t0 == t1) || (!arrays && (ints + addrs == 2)) || (ints == 2)))
+	if((undefs == 0) && ((t0 == t1) || (ints == 2) || (!arrays && (ints + addrs == 2))))
 		return 0;
 
 	return devtree_parser_error("incompatible types %s%s and %s%s"
@@ -550,13 +547,17 @@ static array_t *add_array(expr_value_t *arr, expr_value_t *arg){
 	expr_value_t *v;
 
 
-	if(!arg->is_array)
-		return array_add(&arr->array, arg);
-
-	vector_for_each(&arg->array->items, v){
-		if(array_add(&arr->array, v) == 0x0)
-			return 0x0;
+	if(arg->is_array){
+		vector_for_each(&arg->array->items, v){
+			if(array_add(&arr->array, v) == 0x0)
+				break;
+		}
 	}
+	else
+		array_add(&arr->array, arg);
+
+	if(arr->array != 0x0 && array_cache_add(&arr->array) == 0x0)
+		return 0x0;
 
 	return arr->array;
 }

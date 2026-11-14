@@ -63,7 +63,7 @@
 
 	#define EXPR_INIT(expr, op, arg0, arg1)			EABORT_VAL(expr_init(expr, op, arg0, arg1), expr_t *, == 0x0, _eini)
 	#define EXPR_ALLOC(e)							EABORT_VAL(expr_alloc(e), expr_t *, == 0x0, _expr)
-	#define EXPR_ARRAY_ADD(array, el)				EABORT(expr_array_add_clean(array, el) != 0);
+	#define EXPR_ARRAY_ADD(arr, el)					EABORT(expr_array_add_clean(arr, el) != 0);
 
 	#define ATTR_REF(node_ref, attr_name)			EABORT_VAL(attrvec_query(&node_ref->attrs.v, attr_name, false), attr_t *, == 0x0, _aref)
 

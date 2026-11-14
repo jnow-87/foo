@@ -85,7 +85,6 @@ array_t *array_add(array_t **arr, void *val){
 			goto err_1;
 
 		dup->cached = false;
-
 		*arr = dup;
 	}
 

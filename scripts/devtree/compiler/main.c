@@ -65,6 +65,7 @@ int main(int argc, char **argv){
 	r = 0;
 
 end:
+	printf("cleanup\n");
 	vector_reset(&nodes);
 	nodes_free();
 	types_free();
