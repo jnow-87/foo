@@ -14,6 +14,8 @@
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "array.h"
+#include "expr.h"
+
 
 
 /* local/static prototypes */
@@ -50,14 +52,16 @@ void array_cache_free(void){
 	map_reset(&array_cache);
 }
 
-array_t *array_alloc(size_t type_size){
+array_t *array_alloc(void){
 	array_t *arr;
 
 
 	arr = malloc(sizeof(array_t));
 
-	if(arr != 0x0)
-		*arr = ARRAY_INITIALISER(type_size);
+	if(arr != 0x0){
+		arr->items = VECTOR_INITIALISER(sizeof(expr_value_t));
+		arr->cached = false;
+	}
 
 	return arr;
 }
@@ -103,11 +107,11 @@ err_0:
 static size_t hash(void *key){
 	size_t h = 0;
 	array_t *arr = (array_t*)key;
-	size_t size = arr->items.dt_size * arr->items.size;
+	expr_value_t *v;
 
 
-	for(char *c=arr->items.buf; c<(char*)(arr->items.buf+size); c++)
-		h += *c;
+	vector_for_each(&arr->items, v)
+		h += v->is_array + v->i;
 
 	return h;
 }

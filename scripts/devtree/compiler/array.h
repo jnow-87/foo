@@ -15,13 +15,6 @@
 #include <sys/vector.h>
 
 
-/* macros */
-#define ARRAY_INITIALISER(dt_size) ((array_t){ \
-	.items = VECTOR_INITIALISER(dt_size), \
-	.cached = false, \
-})
-
-
 /* types */
 typedef struct{
 	vector_t items;
@@ -33,7 +26,7 @@ typedef struct{
 array_t *array_cache_add(array_t **arr);
 void array_cache_free(void);
 
-array_t *array_alloc(size_t type_size);
+array_t *array_alloc(void);
 void array_free(array_t *arr);
 array_t *array_add(array_t **arr, void *val);
 

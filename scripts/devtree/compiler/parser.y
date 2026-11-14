@@ -68,7 +68,7 @@
 	#define ATTR_REF(node_ref, attr_name)			EABORT_VAL(attrvec_query(&node_ref->attrs.v, attr_name, false), attr_t *, == 0x0, _aref)
 
 	#define STR_ALLOC(s)							EABORT_VAL(str_cache_add(s), char const *, == 0x0, _s)
-	#define ARRAY_ALLOC()							EABORT_VAL(array_alloc(sizeof(EXPR_ARRAY_T)), array_t *, == 0x0, _a)
+	#define ARRAY_ALLOC()							EABORT_VAL(array_alloc(), array_t *, == 0x0, _a)
 	#define ARRAY_CACHE(arr)						EABORT_VAL(array_cache_add(arr), array_t *, == 0x0, _a)
 
 
@@ -538,11 +538,8 @@ static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1)
 
 		*expr = EXPR_CALC(op, arg0, arg1);
 	}
-	else{
+	else
 		*expr = EXPR_LITERAL(r);
-		expr_value_reset(&arg0->literal);
-		expr_value_reset(&arg1->literal);
-	}
 
 	return expr;
 

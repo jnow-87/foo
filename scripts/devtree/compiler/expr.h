@@ -18,7 +18,6 @@
 
 /* macros */
 #define EXPR_INT_T				unsigned long int
-#define EXPR_ARRAY_T			expr_value_t
 #define EXPR_INT_FIXED(size)	ET_INT##size
 
 #define EXPR_TYPE_ENUM(v, is_int)	(v << 1 | (is_int ? 0x1 : 0x0))
