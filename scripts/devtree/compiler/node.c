@@ -128,13 +128,18 @@ node_attr_t *node_attr_init(node_attr_t *attr, char const *name, expr_value_t *v
 }
 
 int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg){
-	expr_t e = EXPR_CALC(op, arg, &EXPR_LITERAL(attr->value));
+	expr_value_t *v = &attr->value;
+	expr_t e = EXPR_CALC(op, arg, &EXPR_LITERAL(*v));
 	expr_value_t r;
 
 
 	if(expr_evaluate(&e, &r, &node->attrs) == 0x0)
 		return -1;
 
+	if(expr_type_check(&EXPR_LITERAL(r), v->type, v->is_array, 0) != 0)
+		return -1;
+
+	r.type = v->type;
 	attr->value = r;
 
 	return asserts_eval(node->type->asserts, &node->attrs, node->name);
