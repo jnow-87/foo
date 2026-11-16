@@ -33,22 +33,21 @@
 
 /* types */
 #ifndef ASM
-typedef struct devtree_device_t{
+typedef struct devtree_node_t{
 	char const *name,
 			   *compatible;
 
 	void const *payload;
 
-	struct devtree_device_t const * const *childs;
-} devtree_device_t;
+	struct devtree_node_t const * const *childs;
+} devtree_node_t;
 
-typedef struct devtree_memory_t{
-	char const *name;
+// TODO may remove mem and arch payloads, if they can be defined via the types in the device tree
+// TODO check where devtree_arch_payload() was used 'vim /devtree_find(.*,platform' and try to replace macro uses with a static expression
+typedef struct{
 	void *base;
 	uint32_t size;
-
-	struct devtree_memory_t const * const *childs;
-} devtree_memory_t;
+} devtree_memory_payload_t;
 
 typedef struct{
 	uint8_t addr_width,
@@ -62,25 +61,25 @@ typedef struct{
 
 	uint32_t timer_cycle_time_us;
 } devtree_arch_payload_t;
+
+typedef int (*devtree_action_t)(devtree_node_t const *node, size_t level, void *data);
+typedef int (*devtree_filter_t)(devtree_node_t const *node);
 #endif // ASM
 
 
 /* prototypes */
 #ifndef ASM
-devtree_device_t const *devtree_find_device_by_name(devtree_device_t const *root, char const *name);
-devtree_device_t const *devtree_find_device_by_comp(devtree_device_t const *root, char const *comp);
+void const *devtree_find(char const *comp, char const *name);
+void devtree_traverse(devtree_action_t action, devtree_filter_t filter, void *data);
 
-devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root, char const *name);
-
-void const *devtree_arch_payload(char const *comp);
+int devtree_filter_device(devtree_node_t const *node);
+int devtree_filter_memory(devtree_node_t const *node);
 #endif // ASM
 
 
 /* external variables */
 #ifndef ASM
-extern devtree_device_t const __dt_device_root;
-extern devtree_memory_t const __dt_memory_root;
-extern devtree_device_t const __dt_arch;
+extern devtree_node_t const __dt_root;
 #endif // ASM
 
 

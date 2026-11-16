@@ -11,85 +11,70 @@
 # include <kernel/panic.h>
 #endif // BUILD_KERNEL
 
-#include <sys/compiler.h>
 #include <sys/devtree.h>
 #include <sys/errno.h>
 #include <sys/string.h>
 #include <sys/types.h>
 
 
-/* types */
-typedef void const * (*traverse_t)(void const *root, char const *ref);
-
-
 /* local/static prototypes */
-static void const *find(void const *root, void const *childs, size_t key_offset, char const *ref, traverse_t traverse);
+static devtree_node_t const *find(devtree_node_t const *node, char const *comp, char const *name);
+static void traverse(devtree_node_t const *node, devtree_action_t action, devtree_filter_t filter, size_t level, void *data);
 
 
 /* global functions */
-devtree_device_t const *devtree_find_device_by_name(devtree_device_t const *root, char const *name){
-	return find(root, root->childs, offsetof(devtree_device_t, name), name, (traverse_t)devtree_find_device_by_name);
-}
+void const *devtree_find(char const *comp, char const *name){
+	devtree_node_t const *node;
 
-devtree_device_t const *devtree_find_device_by_comp(devtree_device_t const *root, char const *comp){
-	return find(root, root->childs, offsetof(devtree_device_t, compatible), comp, (traverse_t)devtree_find_device_by_comp);
-}
 
-devtree_memory_t const *devtree_find_memory_by_name(devtree_memory_t const *root, char const *name){
-	return find(root, root->childs, offsetof(devtree_memory_t, name), name, (traverse_t)devtree_find_memory_by_name);
-}
+	node = find(&__dt_root, comp, name);
 
-// TODO check where devtree_arch_payload() is used and try to replace macro uses with a static expression
-void const *devtree_arch_payload(char const *comp){
-//	devtree_device_t root = {
-//		.name = "",
-//		.compatible = "",
-//		.payload = 0x0,
-//		.childs = __dt_arch.childs,
-//	};
-//	devtree_device_t const *node;
-//
-//
-//	node = devtree_find_device_by_comp(&root, comp);
-//
-//	if(node == 0x0 || node->payload == 0x0){
-//#ifdef BUILD_KERNEL
-//		kpanic("devtree arch node \"%s\" not defined\n", comp);
-//#endif // BUILD_KERNEL
-//		goto_errno(err, E_INVAL);
-//	}
-//
-//	return (node == 0x0) ? 0x0 : node->payload;
-//
-//
-//err:
+	if(node == 0x0 || node->payload == 0x0){
+#ifdef BUILD_KERNEL
+		kpanic("no matching devtree node for name=\"%\", comp=\"%s\"\n", name, comp);
+#endif // BUILD_KERNEL
+		goto_errno(err, E_INVAL);
+	}
+
+	return node->payload;
+
+
+err:
 	return 0x0;
+}
+
+void devtree_traverse(devtree_action_t action, devtree_filter_t filter, void *data){
+	traverse(&__dt_root, action, filter, 0, data);
+}
+
+int devtree_filter_device(devtree_node_t const *node){
+	return (strcmp(node->compatible, "memory") != 0);
+}
+
+int devtree_filter_memory(devtree_node_t const *node){
+	return strcmp(node->compatible, "memory");
 }
 
 
 /* local functions */
-static void const *find(void const *root, void const *_childs, size_t key_offset, char const *ref, traverse_t traverse){
-	char **childs = (char**)_childs;
-	void const *child;
+static devtree_node_t const *find(devtree_node_t const *node, char const *comp, char const *name){
+	if((name == 0x0 || strcmp(node->name, name) == 0) && (comp == 0x0 || strcmp(node->compatible, comp) == 0))
+		return node;
 
+	for(devtree_node_t const * const *child=node->childs; child!=0x0 && *child!=0x0; child++){
+		node = find(*child, comp, name);
 
-	if(strcmp(*((char**)((char*)root + key_offset)), ref) == 0)
-		return root;
-
-	if(childs == 0x0)
-		return 0x0;
-
-	for(size_t i=0; childs[i]!=0x0; i++){
-		if(strcmp(childs[i] + key_offset, ref) == 0)
-			return childs[i];
-	}
-
-	for(size_t i=0; childs[i]!=0x0; i++){
-		child = traverse(childs[i], ref);
-
-		if(child != 0x0)
-			return child;
+		if(node != 0x0)
+			return node;
 	}
 
 	return 0x0;
+}
+
+static void traverse(devtree_node_t const *node, devtree_action_t action, devtree_filter_t filter, size_t level, void *data){
+	if((filter == 0x0 || filter(node) == 0) && action(node, level, data) != 0)
+		return;
+
+	for(devtree_node_t const * const *child=node->childs; child!=0x0 && *child!=0x0; child++)
+		traverse(*child, action, filter, level + 1, data);
 }

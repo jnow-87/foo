@@ -21,20 +21,20 @@ extern driver_t __driver_base[],
 
 
 /* local/static prototypes */
-static void probe_childs(devtree_device_t const * const *childs, void *itf);
-static void probe(devtree_device_t const *node, void *itf);
-static driver_t *match_driver(devtree_device_t const *node);
+static void probe_childs(devtree_node_t const * const *childs, void *itf);
+static void probe(devtree_node_t const *node, void *itf);
+static driver_t *match_driver(devtree_node_t const *node);
 
 
 /* global functions */
 void driver_load(void){
 	INFO("load drivers\n");
-	probe_childs(__dt_device_root.childs, 0x0);
+	probe_childs(__dt_root.childs, 0x0);
 }
 
 
 /* local functions */
-static void probe_childs(devtree_device_t const * const *childs, void *itf){
+static void probe_childs(devtree_node_t const * const *childs, void *itf){
 	if(childs == 0x0)
 		return;
 
@@ -43,7 +43,7 @@ static void probe_childs(devtree_device_t const * const *childs, void *itf){
 	}
 }
 
-static void probe(devtree_device_t const *node, void *itf){
+static void probe(devtree_node_t const *node, void *itf){
 	driver_t *drv;
 
 
@@ -81,7 +81,7 @@ err_0:
 	reset_errno();
 }
 
-static driver_t *match_driver(devtree_device_t const *node){
+static driver_t *match_driver(devtree_node_t const *node){
 	for(driver_t *e=__driver_base; e!=__driver_end; e++){
 		if(strcmp(e->compatible, node->compatible) == 0)
 			return e;

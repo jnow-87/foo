@@ -162,55 +162,53 @@ static int checks(void){
 
 static int check_dev_single(char const *name, char const *compatible, dev_single_payload_t *payload){
 	int r = 0;
-	devtree_device_t const *dev;
+	dev_single_payload_t const *pl;
 
 
 	TEST_LOG("test: dev=\"%s\"\n", name);
-	dev = devtree_find_device_by_name(&__dt_device_root, name);
-	ASSERT_PTR_NEQ(dev, 0x0);
+	pl = devtree_find(compatible, name);
+	ASSERT_PTR_NEQ(pl, 0x0);
 
-	r |= TEST_STR_EQ(dev->compatible, compatible);
-	r |= TEST_INT_EQ(((dev_single_payload_t*)dev->payload)->i, payload->i);
-	r |= TEST_PTR_EQ(((dev_single_payload_t*)dev->payload)->p, payload->p);
+	r |= TEST_INT_EQ(pl->i, payload->i);
+	r |= TEST_PTR_EQ(pl->p, payload->p);
 
 	return r;
 }
 
 static int check_dev_array(char const *name, char const *compatible, dev_array_payload_t *payload){
 	int r = 0;
-	devtree_device_t const *dev;
+	dev_array_payload_t const *pl;
 
 
 	TEST_LOG("test: dev=\"%s\"\n", name);
-	dev = devtree_find_device_by_name(&__dt_device_root, name);
-	ASSERT_PTR_NEQ(dev, 0x0);
+	pl = devtree_find(compatible, name);
+	ASSERT_PTR_NEQ(pl, 0x0);
 
-	r |= TEST_STR_EQ(dev->compatible, compatible);
-	r |= TEST_INT_EQ(((dev_array_payload_t*)dev->payload)->i[0], payload->i[0]);
-	r |= TEST_INT_EQ(((dev_array_payload_t*)dev->payload)->i[1], payload->i[1]);
-	r |= TEST_INT_EQ(((dev_array_payload_t*)dev->payload)->i[2], payload->i[2]);
-	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[0], payload->s[0]);
-	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[1], payload->s[1]);
-	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[2], payload->s[2]);
-	r |= TEST_STR_EQ(((dev_array_payload_t*)dev->payload)->s[3], payload->s[3]);
-	r |= TEST_PTR_EQ(((dev_array_payload_t*)dev->payload)->p[0], payload->p[0]);
-	r |= TEST_PTR_EQ(((dev_array_payload_t*)dev->payload)->p[1], payload->p[1]);
-	r |= TEST_PTR_EQ(((dev_array_payload_t*)dev->payload)->p[2], payload->p[2]);
+	r |= TEST_INT_EQ(pl->i[0], payload->i[0]);
+	r |= TEST_INT_EQ(pl->i[1], payload->i[1]);
+	r |= TEST_INT_EQ(pl->i[2], payload->i[2]);
+	r |= TEST_STR_EQ(pl->s[0], payload->s[0]);
+	r |= TEST_STR_EQ(pl->s[1], payload->s[1]);
+	r |= TEST_STR_EQ(pl->s[2], payload->s[2]);
+	r |= TEST_STR_EQ(pl->s[3], payload->s[3]);
+	r |= TEST_PTR_EQ(pl->p[0], payload->p[0]);
+	r |= TEST_PTR_EQ(pl->p[1], payload->p[1]);
+	r |= TEST_PTR_EQ(pl->p[2], payload->p[2]);
 
 	return r;
 }
 
 static int check_memory(char const *name, void *base, uint32_t size){
 	int r = 0;
-	devtree_memory_t const *mem;
+	devtree_memory_payload_t const *pl;
 
 
 	TEST_LOG("test: memory=\"%s\"\n", name);
-	mem = devtree_find_memory_by_name(&__dt_memory_root, name);
-	ASSERT_PTR_NEQ(mem, 0x0);
+	pl = devtree_find("memory", name);
+	ASSERT_PTR_NEQ(pl, 0x0);
 
-	r |= TEST_PTR_EQ(mem->base, base);
-	r |= TEST_INT_EQ(mem->size, size);
+	r |= TEST_PTR_EQ(pl->base, base);
+	r |= TEST_INT_EQ(pl->size, size);
 
 	return r;
 }

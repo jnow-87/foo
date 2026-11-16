@@ -188,12 +188,12 @@ static int overlay_exit(void *param){
 
 static int overlay_mmap(void *param){
 	sc_fs_t kparam;
-	devtree_memory_t *kheap;
+	devtree_memory_payload_t const *kheap;
 	process_t *this_p;
 
 
 	this_p = sched_running()->parent;
-	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "heap");
+	kheap = devtree_find("memory", "heap");
 
 	if(copy_from_user(&kparam, param, sizeof(kparam), this_p) != 0)
 		return -errno;

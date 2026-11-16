@@ -68,7 +68,7 @@ void rp2040_pads_init(void){
 	rp2040_platform_cfg_t const *plt;
 
 
-	plt = devtree_arch_payload("rp2040,platform");
+	plt = devtree_find("rp2040,platform", 0x0);
 
 	rp2040_resets_release((0x1 << RP2040_RST_PADS_BANK0) | (0x1 << RP2040_RST_IO_BANK0));
 

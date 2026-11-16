@@ -78,15 +78,15 @@ static int plugin_ioverflow_det(FILE *ofile, char *bin_type){
 		unsigned int i;
 		char c[4];
 	} filler;
-	devtree_memory_t const *node;
+	devtree_memory_payload_t const *pl;
 
 
-	node = devtree_find_memory_by_name(&__dt_memory_root, "kernel-flash");
+	pl = devtree_find("memory", "kernel-flash");
 
-	if(node == 0x0)
+	if(pl == 0x0)
 		return -1;
 
-	filler.i = 0x940e0000 | ((ptrdiff_t)(node->base + INT_IOVFL * INT_VEC0_LEN) / 2);
+	filler.i = 0x940e0000 | ((ptrdiff_t)(pl->base + INT_IOVFL * INT_VEC0_LEN) / 2);
 	filler.i = htonl(filler.i);
 
 	c = filler.c[1];

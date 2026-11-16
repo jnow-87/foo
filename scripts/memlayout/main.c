@@ -17,7 +17,7 @@
 
 
 /* macros */
-#define ERROR(msg, ...) fprintf(stderr, FG("error", RED) ": " msg, __VA_ARGS__)
+#define ERROR(msg, ...) ({ fprintf(stderr, FG("error", RED) ": " msg, __VA_ARGS__); 1; })
 
 #define CONTAINS(n0, n1)({ \
 	typeof(n0) _n0 = n0; \
@@ -38,11 +38,12 @@
 
 
 /* local/static prototypes */
-static void print_layout(devtree_memory_t const *node, bool top_level);
+static int print(devtree_node_t const *node, size_t level, void *data);
 
 static int check_availability(void);
-static int check_bounds(devtree_memory_t const *node);
-static int check_overlap(devtree_memory_t const *node);
+static int check_child_is_memory(devtree_node_t const *node, size_t level, void *data);
+static int check_bounds(devtree_node_t const *node, size_t level, void *data);
+static int check_overlap(devtree_node_t const *node, size_t level, void *data);
 
 
 /* global functions */
@@ -51,12 +52,17 @@ int main(int argc, char **argv){
 
 
 	if(argc == 1){
-		print_layout(&__dt_memory_root, false);
+		devtree_traverse(print, 0x0, 0x0);
 	}
 	else if(strcmp(argv[1], "-c") == 0 || strcmp(argv[1], "--check") == 0){
 		r |= check_availability();
-		r |= check_bounds(&__dt_memory_root);
-		r |= check_overlap(&__dt_memory_root);
+
+		devtree_traverse(check_child_is_memory, devtree_filter_memory, &r);
+
+		if(r == 0){
+			devtree_traverse(check_bounds, devtree_filter_memory, &r);
+			devtree_traverse(check_overlap, devtree_filter_memory, &r);
+		}
 	}
 	else{
 		printf("invalid option \n");
@@ -73,36 +79,41 @@ int main(int argc, char **argv){
 /**
  * \brief	print the memory nodes defined in the device tree
  */
-static void print_layout(devtree_memory_t const *node, bool top_level){
-	char name[node != 0x0 ? strlen(node->name) : 1];
+static int print(devtree_node_t const *node, size_t level, void *data){
+	static size_t top_level = 0;
+	size_t name_len = strlen(node->name);
+	char name[name_len + 1];
+	devtree_memory_payload_t const *pl;
 
 
-	if(node == 0x0)
-		return;
+	if(level == 0)
+		top_level = 0;
 
-	if(node != &__dt_memory_root){
-		strcpy(name, node->name);
+	if(strcmp(node->compatible, "memory") != 0)
+		return 0;
 
-		for(size_t i=0; i<strlen(name); i++){
-			if(name[i] == '_')
-				name[i] = ' ';
-		}
+	if(top_level == 0)
+		top_level = level;
 
-		if(top_level){
-			printf("\n" ATTR(BG(FG("%s:", BLACK), WHITE), UNDERLINE) "\n" BG(FG("         target         base          end        size               ", BLACK), WHITE) "\n", name);
+	strcpy(name, node->name);
 
-			if(node->size != 0)
-				printf(ATTR("%20.20s", BOLD) ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n\n", "total", node->base, node->base + node->size - 1, node->size / 1024.0, node->size);
-		}
-		else
-			printf(ATTR("%20.20s", BOLD) ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", name, node->base, node->base + node->size - 1, node->size / 1024.0, node->size);
+	for(size_t i=0; i<name_len; i++){
+		if(name[i] == '_')
+			name[i] = ' ';
 	}
 
-	if(node->childs == 0x0)
-		return;
+	pl = node->payload;
 
-	for(size_t i=0; node->childs[i]!=0x0; i++)
-		print_layout(node->childs[i], (node == &__dt_memory_root));
+	if(level == top_level){
+		printf("\n" ATTR(BG(FG("%s:", BLACK), WHITE), UNDERLINE) "\n" BG(FG("         target         base          end        size               ", BLACK), WHITE) "\n", name);
+
+		if(pl->size != 0)
+			printf(ATTR("%20.20s", BOLD) ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n\n", "total", pl->base, pl->base + pl->size - 1, pl->size / 1024.0, pl->size);
+	}
+	else
+		printf(ATTR("%20.20s", BOLD) ": 0x%8.8x - 0x%8.8x %8.2fk (%#8.8x)\n", name, pl->base, pl->base + pl->size - 1, pl->size / 1024.0, pl->size);
+
+	return 0;
 }
 
 /**
@@ -114,7 +125,7 @@ static int check_availability(void){
 
 
 	for(size_t i=0; i<sizeof_array(required_nodes); i++){
-		if(devtree_find_memory_by_name(&__dt_memory_root, required_nodes[i]) == 0x0){
+		if(devtree_find("memory", required_nodes[i]) == 0x0){
 			ERROR("device tree lacks node \"%s\"\n", required_nodes[i]);
 			r++;
 		}
@@ -123,56 +134,83 @@ static int check_availability(void){
 	return -r;
 }
 
+
+/**
+ * \brief	check that all child nodes of a memory node are also memory nodes
+ */
+static int check_child_is_memory(devtree_node_t const *node, size_t level, void *data){
+	int r = 0;
+	devtree_node_t const *child;
+
+
+	if(node->childs == 0x0)
+		return 0;
+
+	for(size_t i=0; node->childs[i]!=0x0; i++){
+		child = node->childs[i];
+
+		if(devtree_filter_memory(child) != 0)
+			r |= ERROR("child node \"%s\" of memory node \"%s\" is not a memory node\n", child->name, node->name);
+	}
+
+	*((int*)data) |= r;
+
+	return 0;
+}
+
 /**
  * \brief	check if all address ranges of child nodes are within the range of
  * 			the parent node
  */
-static int check_bounds(devtree_memory_t const *node){
+static int check_bounds(devtree_node_t const *node, size_t level, void *data){
 	int r = 0;
+	devtree_memory_payload_t const *pl = node->payload;
+	devtree_node_t const *child;
 
 
-	if(node == 0x0 || node->childs == 0x0)
+	if(node->childs == 0x0 || pl->size == 0)
 		return 0;
 
 	for(size_t i=0; node->childs[i]!=0x0; i++){
-		r -= check_bounds(node->childs[i]);
+		child = node->childs[i];
 
-		if(node->size == 0)
-			continue;
-
-		if(!CONTAINS(node, node->childs[i])){
-			ERROR("memory node \"%s\" address range is outside of parent node \"%s\"\n", node->childs[i]->name, node->name);
-			r++;
-		}
+		if(!CONTAINS(pl, (devtree_memory_payload_t*)child->payload))
+			r |= ERROR("memory node \"%s\" address range is outside of parent node \"%s\"\n", child->name, node->name);
 	}
 
-	return -r;
+	*((int*)data) |= r;
+
+	return 0;
 }
 
 
 /**
  * \brief	check if sibling nodes have overlapping address ranges
  */
-static int check_overlap(devtree_memory_t const *node){
+static int check_overlap(devtree_node_t const *node, size_t level, void *data){
 	int r = 0;
+	devtree_memory_payload_t const *pl0,
+								   *pl1;
 
 
-	if(node == 0x0 || node->childs == 0x0)
+	if(node->childs == 0x0)
 		return 0;
 
 	for(size_t i=0; node->childs[i]!=0x0; i++){
-		r -= check_overlap(node->childs[i]);
+		pl0 = node->childs[i]->payload;
 
 		for(size_t j=i+1; node->childs[j]!=0x0; j++){
-			if(node->childs[i]->size == 0 || node->childs[j]->size == 0)
+			pl1 = node->childs[j]->payload;
+
+			if(pl0->size == 0 || pl1->size == 0)
 				continue;
 
-			if(OVERLAPS(node->childs[i], node->childs[j])){
-				ERROR("memory node \"%s\" has overlapping address range with node \"%s\"\n", node->childs[i]->name, node->childs[j]->name);
-				r++;
-			}
+			if(OVERLAPS(pl0, pl1))
+				r |= ERROR("memory nodes \"%s\" and \"%s\" have overlapping address ranges\n", node->childs[i]->name, node->childs[j]->name);
 		}
 	}
 
-	return -r;
+	*((int*)data) |= r;
+
+	return 0;
 }

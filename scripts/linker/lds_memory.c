@@ -19,7 +19,7 @@
 
 
 /* local/static prototypes */
-static void export_memory_node(devtree_memory_t const *node, FILE *file);
+static int export(devtree_node_t const *node, size_t level, void *data);
 
 
 /* global functions */
@@ -53,7 +53,7 @@ int main(int argc, char **argv){
 	}
 
 	fprintf(ofile, "MEMORY {\n");
-	export_memory_node(&__dt_memory_root, ofile);
+	devtree_traverse(export, devtree_filter_memory, ofile);
 	fprintf(ofile, "}\n");
 
 	fclose(ofile);
@@ -63,17 +63,11 @@ int main(int argc, char **argv){
 
 
 /* local functions */
-static void export_memory_node(devtree_memory_t const *node, FILE *file){
-	devtree_memory_t const *child;
+static int export(devtree_node_t const *node, size_t level, void *data){
+	devtree_memory_payload_t const *pl = node->payload;
 
 
-	if(node->childs == 0x0)
-		return;
+	fprintf(data, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", strcidtfr(node->name), (unsigned long int)pl->base, pl->size);
 
-	for(size_t i=0; node->childs[i]!=0x0; i++){
-		child = node->childs[i];
-
-		fprintf(file, "%20s : ORIGIN = %#10lx, LENGTH = %u\n", strcident(child->name), (unsigned long int)child->base, child->size);
-		export_memory_node(child, file);
-	}
+	return 0;
 }

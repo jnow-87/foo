@@ -268,8 +268,8 @@ TEST(gpio_signal){
 
 static int setup(char const *dev_name, dev_type_t type, int *fd, gpio_masks_t *cfg){
 	char name[strlen(dev_name) + 6];
-	devtree_device_t const *dt_parent,
-						   *dt_node;
+	void *dev_pl;
+	gpio_masks_t const *dev_masks;
 	dt_data_port_t *port_cfg;
 	dt_data_pin_t *pin_cfg;
 
@@ -283,23 +283,23 @@ static int setup(char const *dev_name, dev_type_t type, int *fd, gpio_masks_t *c
 	if(*fd == -1)
 		return -1;
 
-	dt_parent = devtree_find_device_by_name(&__dt_device_root, DEV_PARENT);
-	dt_node = devtree_find_device_by_name(&__dt_device_root, dev_name);
+	dev_masks = devtree_finde(0x0, DEV_PARENT);
+	dev_pl = devtree_find(0x0, dev_name);
 
-	if(dt_parent == 0x0 || dt_node == 0x0)
+	if(dev_masks == 0x0 || dev_pl == 0x0)
 		return -1;
 
-	cfg->invert_mask = ((gpio_masks_t*)dt_parent->payload)->invert_mask;
+	cfg->invert_mask = dev_mask->invert_mask;
 
 	if(type == TYPE_PORT){
-		port_cfg = (dt_data_port_t*)dt_node->payload;
+		port_cfg = (dt_data_port_t*)dev_pl;
 
 		cfg->in_mask = port_cfg->in_mask;
 		cfg->out_mask = port_cfg->out_mask;
 		cfg->int_mask = port_cfg->int_mask;
 	}
 	else{
-		pin_cfg = (dt_data_pin_t*)dt_node->payload;
+		pin_cfg = (dt_data_pin_t*)dev_pl;
 
 		if(pin_cfg->mode & 0x1)
 			cfg->in_mask = (0x1 << pin_cfg->pin);

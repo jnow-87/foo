@@ -62,10 +62,10 @@ int x86_copy_to_user(void *user, void const *kernel, size_t n, struct process_t 
 }
 
 void x86_memory_cleanup(void){
-	devtree_memory_t *kheap;
+	devtree_memory_payload_t const *kheap;
 
 
-	kheap = (devtree_memory_t*)devtree_find_memory_by_name(&__dt_memory_root, "heap");
+	kheap = devtree_find_memory_by_name(&__dt_memory_root, "heap");
 	lnx_shmrm(kheap_shmid, kheap->base);
 }
 

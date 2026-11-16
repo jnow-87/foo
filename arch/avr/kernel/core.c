@@ -97,7 +97,7 @@ static int init(void){
 	avr_platform_cfg_t const *plt;
 
 
-	plt = (avr_platform_cfg_t*)devtree_arch_payload("avr,platform");
+	plt = (avr_platform_cfg_t*)devtree_find("avr,platform", 0x0);
 
 	/* set system clock prescaler */
 	mreg_w_sync(CLKPR, plt->system_clock_prescaler, CLKPR_CLKPCE);

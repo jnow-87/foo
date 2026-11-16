@@ -32,7 +32,7 @@
 #define SIO_BASE		0xd0000000
 
 // clocks
-#define RP2040_PLATFORM_CONFIG		((rp2040_platform_cfg_t const*)devtree_arch_payload("rp2040,platform"))
+#define RP2040_PLATFORM_CONFIG		((rp2040_platform_cfg_t const*)devtree_find("rp2040,platform", 0x0))
 #define RP2040_SYSTEM_CLOCK_HZ		(RP2040_PLATFORM_CONFIG->system_clock_khz * 1000)
 #define RP2040_REF_CLOCK_HZ			(RP2040_PLATFORM_CONFIG->crystal_clock_khz * 1000)
 #define RP2040_PERI_CLOCK_HZ		(RP2040_PLATFORM_CONFIG->peri_clock_khz * 1000)
