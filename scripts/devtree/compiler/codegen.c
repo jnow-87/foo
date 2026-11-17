@@ -15,6 +15,7 @@
 #include <sys/limits.h>
 #include <sys/list.h>
 #include <sys/string.h>
+#include <sys/types.h>
 #include <sys/vector.h>
 #include <parser.tab.h>
 #include "assert.h"
@@ -39,11 +40,6 @@ typedef enum{
 	GUARD_BOTTOM,
 } include_guard_location_t;
 
-typedef enum{
-	NC_MEMORY = 0,
-	NC_DEVICE
-} node_cat_t;
-
 typedef void (*write_attr_t)(FILE *fp, node_t *node, char const *node_idtfr);
 
 
@@ -65,10 +61,7 @@ static void src_node_header(FILE *fp, char const *node_idtfr);
 static void include_guard(FILE *fp, include_guard_location_t loc);
 static void includes(FILE *fp);
 
-static int def_attr_ignore(node_t *node, node_attr_t *attr);
-
-static node_cat_t node_cat(node_t *node);
-static char const *node_strcat(node_cat_t cat);
+static bool no_payload_attr(node_attr_t *attr);
 
 
 /* global functions */
@@ -150,7 +143,7 @@ static void makevars(FILE *fp, node_t *node, char const *node_idtfr){
 		strupr(attr->name, attr_name, sizeof(attr_name));
 		v = &attr->value;
 
-		if(v->is_array)
+		if(v->is_array || no_payload_attr(attr))
 			continue;
 
 		switch(v->type){
@@ -186,7 +179,7 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 		// 		by macros such as KERNEL_STACK(), instead of using the constant from the devtree, the
 		// 		macro redirects to the actual devicetree node.
 		if(strcmp(node->name, "heap") == 0 && strcmp(attr->name, "base") == 0){
-			fprintf(fp, "#define DEVTREE_HEAP_BASE (devtree_find_memory_by_name(&__dt_memory_root, \"heap\")->base)\n");
+			fprintf(fp, "#define DEVTREE_HEAP_BASE (((devtree_memory_payload_t*)devtree_find(\"memory\", \"heap\"))->base)\n");
 			continue;
 		}
 #endif // CONFIG_X86
@@ -194,7 +187,7 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 		strupr(attr->name, attr_name, sizeof(attr_name));
 		v = &attr->value;
 
-		if(v->is_array)
+		if(v->is_array || no_payload_attr(attr))
 			continue;
 
 		switch(v->type){
@@ -215,38 +208,22 @@ static void macros(FILE *fp, node_t *node, char const *node_idtfr){
 }
 
 static void declaration(FILE *fp, node_t *node, char const *node_idtfr){
-	fprintf(fp, "devtree_%s_t const __dt_%s;\n", node_strcat(node_cat(node)), node_idtfr);
+	fprintf(fp, "devtree_node_t const __dt_%s;\n", node_idtfr);
 }
 
 static void definition(FILE *fp, node_t *node, char const *node_idtfr){
-	node_cat_t cat = node_cat(node);
-
-
 	src_node_header(fp, node_idtfr);
 
 	def_childs(fp, node, node_idtfr);
+	def_payload(fp, node, node_idtfr);
 
-	if(cat == NC_DEVICE)
-		def_payload(fp, node, node_idtfr);
+	fprintf(fp, "devtree_node_t const __dt_%s = {\n", node_idtfr);
 
-	fprintf(fp, "devtree_%s_t const __dt_%s = {\n", node_strcat(cat), node_idtfr);
+	fprintf(fp, "\t.name = \"%s\",\n", node->name);
+	fprintf(fp, "\t.compatible = \"%s\",\n", ((node_attr_t*)attrvec_query(&node->attrs.v, "compatible", false))->value.p);
 
-	switch(cat){
-	case NC_DEVICE:
-		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		fprintf(fp, "\t.compatible = \"%s\",\n", ((node_attr_t*)attrvec_query(&node->attrs.v, "compatible", false))->value.p);
-
-		if(node->attrs.v.size > 1)
-			fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_idtfr);
-		else
-			fprintf(fp, "\t.payload = 0x0,\n");
-		break;
-
-	case NC_MEMORY:
-		fprintf(fp, "\t.name = \"%s\",\n", node->name);
-		def_attributes(fp, node, node_idtfr);
-		break;
-	}
+	if(node->attrs.v.size > 1)	fprintf(fp, "\t.payload = &__dt_%s_payload,\n", node_idtfr);
+	else						fprintf(fp, "\t.payload = 0x0,\n");
 
 	if(!list_empty(node->childs))	fprintf(fp, "\t.childs = __dt_%s_childs,\n", node_idtfr);
 	else							fprintf(fp, "\t.childs = 0x0,\n");
@@ -261,10 +238,7 @@ static void def_childs(FILE *fp, node_t *node, char const *node_idtfr){
 	if(list_empty(node->childs))
 		return;
 
-	fprintf(fp, "devtree_%s_t const * const __dt_%s_childs[] = {\n"
-		, node_strcat(node_cat(list_first(node->childs)))
-		, node_idtfr
-	);
+	fprintf(fp, "devtree_node_t const * const __dt_%s_childs[] = {\n", node_idtfr);
 
 	list_for_each(node->childs, child)
 		fprintf(fp, "\t&__dt_%s,\n", strcidtfr(child->name));
@@ -281,10 +255,10 @@ static void def_payload(FILE *fp, node_t *node, char const *node_idtfr){
 	fprintf(fp, "struct{\n");
 
 	attrvec_for_each(&node->attrs.v, attr){
-		v = &attr->value;
-
-		if(def_attr_ignore(node, attr))
+		if(no_payload_attr(attr))
 			continue;
+
+		v = &attr->value;
 
 		switch(v->type){
 		case ET_INT8:	// fall through
@@ -321,7 +295,7 @@ static void def_attributes(FILE *fp, node_t *node, char const *node_idtfr){
 
 
 	attrvec_for_each(&node->attrs.v, attr){
-		if(def_attr_ignore(node, attr))
+		if(no_payload_attr(attr))
 			continue;
 
 		v = &attr->value;
@@ -444,28 +418,6 @@ static void includes(FILE *fp){
 	);
 }
 
-static int def_attr_ignore(node_t *node, node_attr_t *attr){
-	if(node_cat(node) == NC_DEVICE){
-		if(strcmp(attr->name, "compatible") == 0)
-			return 1;
-	}
-
-	return 0;
-}
-
-// TODO remove category and update kernel to only use devtree_node_t
-static node_cat_t node_cat(node_t *node){
-	node_attr_t *attr;
-
-
-	attrvec_for_each(&node->attrs.v, attr){
-		if(strcmp(attr->name, "compatible") != 0 && strcmp(attr->name, "base") != 0 && strcmp(attr->name, "size") != 0)
-			return NC_DEVICE;
-	}
-
-	return NC_MEMORY;
-}
-
-static char const *node_strcat(node_cat_t cat){
-	return (cat == NC_MEMORY) ? "memory" : "device";
+static bool no_payload_attr(node_attr_t *attr){
+	return (strcmp(attr->name, "compatible") == 0);
 }

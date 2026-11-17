@@ -27,6 +27,9 @@ static FILE *output_file(char const *file);
 
 
 // TODO overall review
+// TODO check TODO
+// TODO check git-log for wip messages, e.g. "wip - [foo-bar]"
+// TODO tranfer test-cases from test.dts and array.dts
 // TODO extend parser to support gcc preproc line information
 // 		update scripts/build/compile.make::preproc_file, removing -P to get them
 /* global functions */
@@ -36,13 +39,14 @@ int main(int argc, char **argv){
 	vector_t nodes = VECTOR_INITIALISER(sizeof(node_t*));
 
 
+	if(nodes_init() != 0)
+		goto end;
+
 	opt_parse(argc, argv);
 
 	/* parse device tree */
 	if(devtreeparse(options.ifile_name) != 0)
 		goto end;
-
-	printf("parsed\n");
 
 	/* write output file */
 	if(collect_nodes(&nodes) != 0)
@@ -62,7 +66,6 @@ int main(int argc, char **argv){
 	r = 0;
 
 end:
-	printf("cleanup\n");
 	vector_reset(&nodes);
 	nodes_free();
 	types_free();

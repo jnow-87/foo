@@ -113,7 +113,7 @@ node_t *type_instantiate(type_t *type, char const *name, node_attrvec_t *attrs, 
 		nattr = (node_attr_t*)attrvec_query(&attrs->v, tattr->name, true);
 
 		if(nattr == 0x0){
-			if(expr_evaluate(tattr->value, &attr.value, &node->attrs) == 0x0){
+			if(expr_evaluate(tattr->value, &attr.value, &node->attrs) != 0){
 				devtree_parser_error("%s: cannot evaluate expression", nattr->name);
 				goto err_1;
 			}

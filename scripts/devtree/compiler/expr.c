@@ -21,6 +21,8 @@
 
 
 /* macros */
+#define VALID_ADDR_OPS	(EOP_SUBTRACT | EOP_ADD | EOP_EQUAL | EOP_UNEQUAL | EOP_LESSER | EOP_LESSER_EQUAL | EOP_GREATER | EOP_GREATER_EQUAL)
+
 #define INT_OP(a0, a1, r, op){ \
 	r->i = a0->i op a1->i; \
 	\
@@ -34,10 +36,10 @@ typedef expr_value_t *(*op_cb_t)(expr_value_t *arg0, expr_value_t *arg1, expr_va
 
 
 /* local/static prototypes */
-static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_value_t *res);
+static int resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_value_t *res);
 
 static int types_compatible(expr_type_t t0, expr_type_t t1, bool t0_is_array, bool t1_is_array);
-static int op_defined(expr_op_t op, expr_value_t *val);
+static int op_defined(expr_op_t op, expr_value_t *v0, expr_value_t *v1);
 static int range_check(expr_value_t *value, expr_type_t type);
 
 static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res);
@@ -170,45 +172,46 @@ void expr_value_reset(expr_value_t *value){
 	value->is_array = false;
 }
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attrvec_t *ctx){
+int expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attrvec_t *ctx){
+	int r = 0;
 	expr_value_t arg0,
 				 arg1;
 
 
-	if(expr->op == EOP_LITERAL)
-		return memcpy(result, &expr->literal, sizeof(expr_value_t));
+	if(expr->op == EOP_LITERAL){
+		memcpy(result, &expr->literal, sizeof(expr_value_t));
+
+		return 0;
+	}
 
 	if(expr->op == EOP_REFERENCE)
-		return resolve_ref(&expr->literal, ctx, result);
+		return (resolve_ref(&expr->literal, ctx, result) != 0) ? 1 : 0;
 
-	if(expr_evaluate(expr->arg0, &arg0, ctx) == 0x0 || expr_evaluate(expr->arg1, &arg1, ctx) == 0x0)
-		return 0x0;
+	r |= expr_evaluate(expr->arg0, &arg0, ctx);
+	r |= expr_evaluate(expr->arg1, &arg1, ctx);
+
+	if(r != 0)
+		return r;
 
 	if(types_compatible(arg0.type, arg1.type, arg0.is_array, arg1.is_array) != 0)
-		return 0x0;
+		return -1;
 
-	if(op_defined(expr->op, &arg0) != 0 || op_defined(expr->op, &arg1) != 0)
-		return 0x0;
+	if(op_defined(expr->op, &arg0, &arg1) != 0)
+		return -1;
 
 	result->type = expr_type(expr);
 	result->is_array = arg0.is_array || arg1.is_array;
 
-	if(result->type & ET_UNDEF){
-		devtree_parser_error("invalid expression result type %s", expr_type_name(result->type));
+	if(result->type & ET_UNDEF)
+		return devtree_parser_error("invalid expression result type %s", expr_type_name(result->type));
 
-		return 0x0;
-	}
-
-	if(ops[expr->op](&arg0, &arg1, result) == 0x0){
-		devtree_parser_error("operation %s failed", op_name[expr->op]);
-
-		return 0x0;
-	}
+	if(ops[expr->op](&arg0, &arg1, result) == 0x0)
+		return devtree_parser_error("operation %s failed", op_name[expr->op]);
 
 	expr_value_reset(&arg0);
 	expr_value_reset(&arg1);
 
-	return result;
+	return 0;
 }
 
 expr_type_t expr_type(expr_t *expr){
@@ -253,7 +256,7 @@ int expr_type_check(expr_t *expr, expr_type_t type, bool is_array, size_t array_
 
 	if(is_array){
 		if(!expr_is_array)
-			return devtree_parser_error("mixing array and non-array type");
+			return devtree_parser_error("mixing array and non-array types");
 
 		arr = expr->literal.array;
 
@@ -319,31 +322,30 @@ int expr_array_add(expr_t *array, expr_t *expr){
 
 
 /* local functions */
-static expr_value_t *resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_value_t *res){
+static int resolve_ref(expr_value_t *arg, node_attrvec_t *ctx, expr_value_t *res){
 	node_attr_t *ref;
 
 
 	if(ctx == 0x0)
-		return 0x0;
+		return -1;
 
 	ref = (node_attr_t*)attrvec_query(&ctx->v, arg->p, false);
 
 	if(ref == 0x0)
-		return 0x0;
+		return -1;
 
 	*res = ref->value;
 
-	return res;
+	return 0;
 }
 
 static int types_compatible(expr_type_t t0, expr_type_t t1, bool t0_is_array, bool t1_is_array){
 	uint8_t ints = EXPR_TYPE_IS_INT(t0) + EXPR_TYPE_IS_INT(t1),
 			addrs = (t0 == ET_ADDR) + (t1 == ET_ADDR),
-			undefs = (t0 == ET_UNDEF) + (t1 == ET_UNDEF),
-			arrays = (t0_is_array || t1_is_array);
+			undefs = (t0 == ET_UNDEF) + (t1 == ET_UNDEF);
 
 
-	if((undefs == 0) && ((t0 == t1) || (ints == 2) || (!arrays && (ints + addrs == 2))))
+	if((undefs == 0) && ((t0 == t1) || (ints + addrs == 2)))
 		return 0;
 
 	return devtree_parser_error("incompatible types %s%s and %s%s"
@@ -354,27 +356,39 @@ static int types_compatible(expr_type_t t0, expr_type_t t1, bool t0_is_array, bo
 	);
 }
 
-static int op_defined(expr_op_t op, expr_value_t *val){
-	static unsigned int valid_ops[] = {
-		[ET_UNDEF] = 0x0,
-		[ET_INT8] = EOP_ALL,
-		[ET_INT16] = EOP_ALL,
-		[ET_INT32] = EOP_ALL,
-		[ET_INT64] = EOP_ALL,
-		[ET_ADDR] = EOP_LITERAL | EOP_SUBTRACT | EOP_REFERENCE | EOP_ADD | EOP_EQUAL | EOP_UNEQUAL | EOP_LESSER | EOP_LESSER_EQUAL | EOP_GREATER | EOP_GREATER_EQUAL,
-		[ET_STRING] = EOP_LITERAL | EOP_REFERENCE | EOP_ADD,
-	};
+static int op_defined(expr_op_t op, expr_value_t *v0, expr_value_t *v1){
+	uint8_t	addrs = (v0->type == ET_ADDR) + (v1->type == ET_ADDR),
+			strs = (v0->type == ET_STRING) + (v1->type == ET_STRING),
+			undefs = (v0->type == ET_UNDEF) + (v1->type == ET_UNDEF);
 
 
-	if(((valid_ops[val->type] & op) == 0) || (val->is_array && op != EOP_ADD)){
-		return devtree_parser_error("undefined operation %s for type %s%s"
-			, op_name[op]
-			, expr_type_name(val->type)
-			, val->is_array ? " array" : ""
-		);
-	}
+	// all values need to have a type
+	if(undefs != 0)
+		goto err;
+
+	// strings are only compatible with strings and only via addition
+	if(strs == 1 || (strs != 0 && op != EOP_ADD))
+		goto err;
+
+	// address must not be added or subtracted
+	if(addrs == 2 && ((op & (EOP_ADD | EOP_SUBTRACT)) != 0))
+		goto err;
+
+	// invalid operations on addresses
+	if(addrs != 0 && ((op & VALID_ADDR_OPS) == 0))
+		goto err;
 
 	return 0;
+
+
+err:
+	return devtree_parser_error("undefined operation %s for types %s%s and %s%s"
+		, op_name[op]
+		, expr_type_name(v0->type)
+		, v0->is_array ? " array" : ""
+		, expr_type_name(v1->type)
+		, v1->is_array ? " array" : ""
+	);
 }
 
 static int range_check(expr_value_t *value, expr_type_t type){
@@ -404,6 +418,10 @@ err:
 }
 
 static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t *res){
+	uint8_t ints = EXPR_TYPE_IS_INT(arg0->type) + EXPR_TYPE_IS_INT(arg1->type),
+			addrs = (arg0->type == ET_ADDR) + (arg1->type == ET_ADDR);
+
+
 	if(arg0->is_array || arg1->is_array){
 		res->is_array = true;
 		res->array = arg0->is_array ? add_array(arg0, arg1) : add_array(arg1, arg0);
@@ -411,16 +429,18 @@ static expr_value_t *op_add(expr_value_t *arg0, expr_value_t *arg1, expr_value_t
 		if(res->array == 0x0)
 			return 0x0;
 	}
-	else if(EXPR_TYPE_IS_INT(arg0->type)){
-		if(EXPR_TYPE_IS_INT(arg1->type))	INT_OP(arg0, arg1, res, +)
-		else if(arg1->type == ET_ADDR)		res->p = arg0->i + arg1->p;
-		else								return 0x0;
-	}
 	else if(arg0->type == ET_STRING){
 		res->p = add_str(arg0->p, arg1->p);
 
 		if(res->p == 0x0)
 			return 0x0;
+	}
+	else if(ints == 1 && addrs == 1){
+		if(arg0->type == ET_ADDR)	res->p = arg0->p + arg1->i;
+		else						res->p = arg0->i + arg1->p;
+	}
+	else if(ints == 2){
+		INT_OP(arg0, arg1, res, +);
 	}
 	else
 		return 0x0;

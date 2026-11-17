@@ -114,7 +114,7 @@ void expr_free(expr_t *expr);
 expr_value_t *expr_value_mv(expr_value_t *dest, expr_value_t *src);
 void expr_value_reset(expr_value_t *value);
 
-expr_value_t *expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attrvec_t *ctx);
+int expr_evaluate(expr_t *expr, expr_value_t *result, struct node_attrvec_t *ctx);
 
 expr_type_t expr_type(expr_t *expr);
 int expr_type_check(expr_t *expr, expr_type_t type, bool is_array, size_t array_limit);

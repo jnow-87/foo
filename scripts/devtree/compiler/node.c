@@ -17,6 +17,7 @@
 #include "attr.h"
 #include "expr.h"
 #include "node.h"
+#include "strmap.h"
 
 
 /* local/static prototypes */
@@ -37,8 +38,8 @@ static node_t nodes = (node_t){
 
 
 /* global functions */
-node_t *nodes_root(){
-	return &nodes;
+int nodes_init(void){
+	return node_attr_add(&nodes, str_cache_add("compatible"), &EXPR_STR(str_cache_add("")));
 }
 
 void nodes_free(void){
@@ -49,6 +50,10 @@ void nodes_free(void){
 		node_free(node);
 
 	vector_reset(&node_index);
+}
+
+node_t *nodes_root(void){
+	return &nodes;
 }
 
 node_t *node_alloc(char const *name, type_t *type, node_t *childs){
@@ -114,17 +119,26 @@ node_t *node_ref(char const *name){
 	return *((node_t**)vector_get(&node_index, idx));
 }
 
-node_attr_t *node_attr_init(node_attr_t *attr, char const *name, expr_value_t *value){
-	if(name == 0x0){
-		devtree_parser_error("cannot create unnamed attribute");
+int node_attr_add(node_t *node, char const *name, expr_t *value){
+	node_attr_t attr = (node_attr_t){ .name = name };
 
-		return 0x0;
-	}
 
-	attr->name = name;
-	attr->value = *value;
+	if(name == 0x0)
+		return devtree_parser_error("cannot create unnamed attribute");
 
-	return attr;
+	if(expr_evaluate(value, &attr.value, 0x0) != 0)
+		goto err;
+
+	if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)
+		goto err;
+
+	return 0;
+
+
+err:
+	node_attrvec_reset(&node->attrs);
+
+	return -1;
 }
 
 int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg){
@@ -133,7 +147,7 @@ int node_attr_update(node_t *node, node_attr_t *attr, expr_op_t op, expr_t *arg)
 	expr_value_t r;
 
 
-	if(expr_evaluate(&e, &r, &node->attrs) == 0x0)
+	if(expr_evaluate(&e, &r, &node->attrs) != 0)
 		return -1;
 
 	if(expr_type_check(&EXPR_LITERAL(r), v->type, v->is_array, 0) != 0)

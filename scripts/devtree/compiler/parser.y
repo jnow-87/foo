@@ -56,9 +56,6 @@
 	#define NODE_ATTR_UPDATE(attr_ref, op, expr)	EABORT(node_attr_update(attr_ref.node_p, attr_ref.attr_p, op, expr) != 0)
 	#define NODE_REF(name)							EABORT_VAL(node_ref(name), node_t *, == 0x0, _nref)
 
-	#define NODE_ATTR_INIT(attr, name, value) \
-		EABORT_VAL(node_attr_init(attr, name, value), node_attr_t *, == 0x0, _nini)
-
 	#define ASSERT_ALLOC(expr, msg)					EABORT_VAL(assert_alloc(expr, msg), assert_t *, == 0x0, _ass)
 
 	#define EXPR_INIT(expr, op, arg0, arg1)			EABORT_VAL(expr_init(expr, op, arg0, arg1), expr_t *, == 0x0, _eini)
@@ -91,7 +88,6 @@
 	static int type_attr_add_clean(type_t *type, type_attr_t *attr, expr_t *value);
 	static node_t *type_instantiate_clean(char const *type_name, char const *node_name, node_attrvec_t *attrs, node_t *childs);
 
-	static int node_attr_add(node_t *node, char const *name, expr_t *value);
 	static int node_reset(node_t *node, bool clean);
 
 	static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1);
@@ -322,8 +318,8 @@ equality : relational									{ $$ = $1; }
 
 relational : shift										{ $$ = $1; }
 		   | relational LESSER shift					{ EXPR_INIT(&$$, EOP_LESSER, &$1, &$3); }
-		   | relational GREATER shift					{ EXPR_INIT(&$$, EOP_LESSER_EQUAL, &$1, &$3); }
-		   | relational LESSEREQ shift					{ EXPR_INIT(&$$, EOP_GREATER, &$1, &$3); }
+		   | relational LESSEREQ shift					{ EXPR_INIT(&$$, EOP_LESSER_EQUAL, &$1, &$3); }
+		   | relational GREATER shift					{ EXPR_INIT(&$$, EOP_GREATER, &$1, &$3); }
 		   | relational GREATEREQ shift					{ EXPR_INIT(&$$, EOP_GREATER_EQUAL, &$1, &$3); }
 		   ;
 
@@ -490,29 +486,6 @@ static node_t *type_instantiate_clean(char const *type_name, char const *node_na
 	return n;
 }
 
-static int node_attr_add(node_t *node, char const *name, expr_t *value){
-	expr_value_t v;
-	node_attr_t attr;
-
-
-	if(expr_evaluate(value, &v, 0x0) == 0x0)
-		goto err;
-
-	if(node_attr_init(&attr, name, &v) == 0x0)
-		goto err;
-
-	if(attrvec_add(&node->attrs.v, (attr_t*)&attr, sizeof(node_attr_t)) != 0)
-		goto err;
-
-	return 0;
-
-
-err:
-	node_attrvec_reset(&node->attrs);
-
-	return -1;
-}
-
 static int node_reset(node_t *node, bool clean){
 	if(clean)
 		node_attrvec_reset(&node->attrs);
@@ -524,30 +497,37 @@ static int node_reset(node_t *node, bool clean){
 }
 
 static expr_t *expr_init(expr_t *expr, expr_op_t op, expr_t *arg0, expr_t *arg1){
-	expr_value_t r;
+	int r;
+	expr_value_t v;
 
 
 	*expr = EXPR_CALC(op, arg0, arg1);
 
-	if(expr_evaluate(expr, &r, 0x0) == 0x0){
+	r = expr_evaluate(expr, &v, 0x0);
+
+	if(r > 0){
 		arg0 = expr_alloc(arg0);
 		arg1 = expr_alloc(arg1);
 
 		if(arg0 == 0x0 || arg1 == 0x0)
-			goto err;
+			goto err_1;
 
 		*expr = EXPR_CALC(op, arg0, arg1);
 	}
+	else if(r == 0){
+		*expr = EXPR_LITERAL(v);
+	}
 	else
-		*expr = EXPR_LITERAL(r);
+		goto err_0;
 
 	return expr;
 
 
-err:
+err_1:
 	expr_free(arg0);
 	expr_free(arg1);
 
+err_0:
 	return 0x0;
 }
 
