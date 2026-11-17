@@ -9,7 +9,7 @@
 
 hostbin-y := dtinfo
 
-dtinfo-y := main.o sys/
+dtinfo-y := main.o sys/ scripts/devtree/
 
 
 hostcppflags-y := -Iinclude

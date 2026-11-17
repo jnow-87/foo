@@ -9,7 +9,7 @@
 
 hostbin-y := gen_lds_memory
 
-gen_lds_memory-y := lds_memory.o sys/
+gen_lds_memory-y := lds_memory.o sys/ scripts/devtree/
 
 
 hostcppflags-y := -Iinclude

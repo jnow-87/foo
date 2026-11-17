@@ -9,7 +9,7 @@
 
 hostbin-y := memlayout
 
-memlayout-y := main.o sys/
+memlayout-y := main.o sys/ scripts/devtree/
 
 
 hostcppflags-y := -Iinclude

@@ -9,7 +9,7 @@
 
 hostbin-y := gen_lds_plugin
 
-gen_lds_plugin-y := plugin.o sys/
+gen_lds_plugin-y := plugin.o sys/ scripts/devtree/
 
 
 hostcppflags-y := -Iinclude

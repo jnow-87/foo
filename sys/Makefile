@@ -22,7 +22,7 @@ obj-y := \
 	register.o \
 	vector.o \
 	devtree.o \
-	scripts/devtree/compiler/
+	scripts/devtree/
 
 obj-$(CONFIG_KERNEL_LOG) += stream.o
 obj-$(CONFIG_SYS_RINGBUFFER) += ringbuf.o
@@ -49,7 +49,6 @@ hostobj-y := \
 	register.o \
 	vector.o \
 	devtree.o \
-	scripts/devtree/compiler/ \
 	patmat.o \
 	inet.o
 
@@ -69,7 +68,7 @@ libbrick-y := \
 	register.o \
 	vector.o \
 	devtree.o \
-	scripts/devtree/compiler/
+	scripts/devtree/
 
 libbrick-$(CONFIG_SC_DYNMEM) += memblock.o
 libbrick-$(CONFIG_LIB_MUTEX) += mutex.o
