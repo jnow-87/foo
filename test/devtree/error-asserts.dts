@@ -7,11 +7,37 @@
 
 
 
-// error-string: type: invalid type definition
-devicetype{
+// error-string: syntax error, unexpected '}', expecting end of file or IDFR or TYPEDEF or ';'
+typedef{
 	string compatible = "";
 	int8 i[2];
 
-	// error-string: i: asserts do not support array types
-	assert("i[0] == 1", "arrays not supported");
+	// error-string: syntax error, unexpected '\['
+	assert(i[0] == 1, "arrays not supported");
 } type;
+
+typedef{
+	string compatible = "";
+
+	int8 i;
+	assert(i >= 9 + 1, "i smaller 10");
+} dev;
+
+typedef{
+	string compatible = "";
+
+	addr base;
+	int32 size;
+
+	assert(size > 10, "size too small");
+} memory;
+
+
+// error-string: v0: assertion failed: i smaller 10
+v0 = dev(i=8);
+
+// error-string: v1: assertion failed: i smaller 10
+v1 = dev(i=9);
+
+// error-string: m: assertion failed: size too small
+m = memory(base=0x0, size=1);

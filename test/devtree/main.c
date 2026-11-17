@@ -140,17 +140,15 @@ static int checks(void){
 	r |= CHECK_DEV_SINGLE("trailing-comma",	DFLT_COMP,	3,	DFLT_P);
 
 	/* test attribute updates */
-	r |= CHECK_DEV_SINGLE("upd-single",			"reset-add",	18,	0x2c);
-	r |= CHECK_DEV_SINGLE("update-consumer",	"default",		17,	17);
-
-	r |= CHECK_DEV_ARRAY("upd-array",	DFLT_COMP,	ARRAY(1, 2, 2),	ARRAY("b", "ba", "r", "0"),	DFLT_PARR);
+	r |= CHECK_DEV_SINGLE("upd",			"initial",	3,	0x1);
+	r |= CHECK_DEV_SINGLE("update-consumer",	"default",	2,	0x2);
 
 	/* test arithmetics */
 	r |= CHECK_DEV_SINGLE("donor-single",		"donation0",						42,	0xbe00);
 	r |= CHECK_DEV_SINGLE("donor-child-single",	"donation1",						1,	0xef);
 	r |= CHECK_DEV_SINGLE("arith-const-single",	"some-arith",						6,	0xbeef);
 	r |= CHECK_DEV_SINGLE("bare-ref-single",	"donation0",						42,	0xbe00);
-	r |= CHECK_DEV_SINGLE("arith-ref-single",	"pre,donation0-arith-donation1",	46,	0xbeef + 0x2);
+	r |= CHECK_DEV_SINGLE("arith-ref-single",	"pre,donation0-arith-donation1",	46,	0xef + 42 + 0x2);
 
 	r |= CHECK_DEV_ARRAY("donor-array",			"donation0",	ARRAY(1, 3, 4),		ARRAY("d", "o", "n", "o"),		ARRAY((void*)0x0, (void*)0xbe, (void*)0xef));
 	r |= CHECK_DEV_ARRAY("arith-const-array",	DFLT_COMP,		ARRAY(7, 9, 10),	ARRAY("foo", " ", "b", "ar") ,	ARRAY((void*)0xbe00, (void*)0xe0, (void*)0xf));

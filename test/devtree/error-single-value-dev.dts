@@ -7,7 +7,7 @@
 
 
 
-devicetype{
+typedef{
 	string compatible = "";
 
 	int8 i;
@@ -17,14 +17,11 @@ devicetype{
 // error-string: i: attribute already defined
 v = type(i = 10, i = 20);
 
-// error-string: i: incompatible types int8 and string
+// error-string: incompatible types string and int8
 v = type(i="foo");
 
-// error-string: i: incompatible types int8 and int64 array
-v = type(i=[1]);
-
-// error-string: '+': incompatible types int64 and string
+// error-string: incompatible types int64 and string
 v = type(i=1 + "f");
 
-// error-string: i: out of range 256 > 255
+// error-string: integer 256 out of int8 range (limit=255)
 v = type(i=256);

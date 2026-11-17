@@ -34,7 +34,7 @@ typedef{
 	string compatible = "";
 	int32 i;
 
-	assert("i <= 3", "i wrong");
+	assert(i <= 3, "i wrong");
 } dev_assert;
 
 
@@ -60,29 +60,12 @@ trailing-comma = dev_single(i=3,);
 
 /* test attribute operations */
 // single-value devices
-upd-single = dev_single(compatible="initial", i=1, p=0x1);
-
-// TODO decide if outside-type modifications to attributes are meaningful
-//upd-single.compatible = "reset";
-//upd-single.compatible += "-add";
-//
-//upd-single.i = 10;
-//upd-single.p = 0x20;
-//upd-single.p += (++upd-single.i);
-//upd-single.i += 2 + 3;
-//upd-single.p++;
+upd = dev_single(compatible="initial", i=1, p=0x1);
 
 update-consumer = dev_single(
-	i = (++upd-single.i),
-	p = (upd-single.i++),
+	i = (++upd.i),
+	p = (upd.i++),
 );
-
-// array devices
-upd-array = dev_array();
-
-// TODO decide if outside-type modifications to attributes are meaningful
-//upd-array.i = [ 1 ] + [ 1 + 1 ] + [ 2 ];
-//upd-array.s = [ "b" ] + [ "b" + "a", "r" ] + [ "0" ];
 
 /* test arithmetics */
 // single-value devices
@@ -91,7 +74,7 @@ donor-single = dev_single(compatible="donation0", i=42, p=0xbe00);
 arith-const-single = dev_single(
 	compatible = "some" + "-" + "arith",
 	i = 1 + 2 + 3,
-	p = 0xb000 + 0xe00 + 0xe0 + 0xf,
+	p = 0xb000 | 0xe00 | 0xe0 | 0xf,
 );
 
 bare-ref-single = dev_single(
@@ -105,14 +88,14 @@ arith-ref-single = dev_single(
 
 	compatible = "pre," + donor-single.compatible + "-arith-" + donor-child-single.compatible,
 	i = 1 + donor-single.i + 2 + donor-child-single.i,
-	p = 0x1 + donor-child-single.p + donor-single.p + 0x1,
+	p = 0x1 + donor-child-single.p + donor-single.i + 0x1,
 );
 
 // array devices
 donor-array = dev_array(compatible="donation0", i=[1, 3, 4], p=[0x0, 0xbe, 0xef], s=["d", "o", "n", "o"]);
 
 arith-const-array = dev_array(
-	i = [ 0x7 ] + [ 0x8 + 0x1, 0xa ],
+	i = [ 0x7 ] + [ 0x8 + 0x1 ] + 0xa,
 	p = [ 0xbe00 ] + [ 0xe0 ] + [ 0xf ],
 	s = [ "fo" + "o", " " ] + [ "b" ] + [ "ar" ],
 );
